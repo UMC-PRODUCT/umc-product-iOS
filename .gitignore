@@ -1,18 +1,15 @@
-# Edit at https://www.toptal.com/developers/gitignore?templates=macos,swift,cocoapods
-
-### CocoaPods ###
-## CocoaPods GitIgnore Template
-
-# CocoaPods - Only use to conserve bandwidth / Save time on Pushing
-#           - Also handy if you have a large number of dependant pods
-#           - AS PER https://guides.cocoapods.org/using/using-cocoapods.html NEVER IGNORE THE LOCK FILE
-Pods/
+# Created by https://www.toptal.com/developers/gitignore/api/swift,macos,xcode,swiftpackagemanager
+# Edit at https://www.toptal.com/developers/gitignore?templates=swift,macos,xcode,swiftpackagemanager
 
 ### macOS ###
 # General
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Icon must end with two \r
+Icon
+
 
 # Thumbnails
 ._*
@@ -69,7 +66,6 @@ DerivedData/
 *.ipa
 *.dSYM.zip
 *.dSYM
-*.xcuserstate
 
 ## Playgrounds
 timeline.xctimeline
@@ -80,8 +76,7 @@ playground.xcworkspace
 # Packages/
 # Package.pins
 # Package.resolved
-#*.xcodeproj
-*.xcconfig
+# *.xcodeproj
 # Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
 # hence it is not needed unless you have added a package configuration file to your project
 # .swiftpm
@@ -94,7 +89,7 @@ playground.xcworkspace
 # https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
 # Pods/
 # Add this line if you want to avoid checking in source code from the Xcode workspace
-*.xcworkspace
+# *.xcworkspace
 
 # Carthage
 # Add this line if you want to avoid checking in source code from Carthage dependencies.
@@ -123,4 +118,23 @@ fastlane/test_output
 
 iOSInjectionProject/
 
-# End of https://www.toptal.com/developers/gitignore/api/macos,swift,cocoapods
+### SwiftPackageManager ###
+Packages
+xcuserdata
+*.xcodeproj
+
+
+### Xcode ###
+
+## Xcode 8 and earlier
+
+### Xcode Patch ###
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+/*.gcno
+**/xcshareddata/WorkspaceSettings.xcsettings
+
+# End of https://www.toptal.com/developers/gitignore/api/swift,macos,xcode,swiftpackagemanager
