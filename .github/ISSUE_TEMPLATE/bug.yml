@@ -1,0 +1,20 @@
+name: 🐛 버그 수정
+description: 발견한 문제를 빠르게 메모해두세요!
+title: "🐛 Bug: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 🔍 문제 설명
+      placeholder: ex. 화면 진입 시 앱 종료됨
+    validations:
+      required: true
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: 🔧 수정할 내용
+      placeholder: 어떻게 고칠 계획인지 간단히 적어보세요.
+    validations:
+      required: false

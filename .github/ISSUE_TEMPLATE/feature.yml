@@ -1,0 +1,23 @@
+name: ✨ 기능 추가
+description: 새로 구현하고 싶은 기능이 있다면 적어주세요.
+title: "✨ Feature: "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: 📌 요약
+      placeholder: 어떤 기능인지 간단히 써주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: ✅ 할 일
+      value: "- [ ] "
+      placeholder: |
+        - [ ] UI 레이아웃
+        - [ ] API 연동
+    validations:
+      required: false

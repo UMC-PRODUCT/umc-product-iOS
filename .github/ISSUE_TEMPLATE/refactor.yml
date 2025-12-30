@@ -1,0 +1,28 @@
+name: ♻️ 리팩토링
+description: 코드 정리 또는 구조 개선 시 사용합니다.
+title: "♻️ Refactor: "
+labels: ["Refactor"]
+body:
+  - type: textarea
+    id: refactor-reason
+    attributes:
+      label: 🤔 리팩토링 이유
+      placeholder: ex) 뷰모델에서 네트워크 로직이 분리되지 않음
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: 📦 리팩토링 범위
+      placeholder: ex) SearchViewModel, SearchUseCase
+    validations:
+      required: true
+
+  - type: textarea
+    id: effect
+    attributes:
+      label: 💥 기대 효과
+      placeholder: ex) 역할 분리로 테스트 용이성 증가
+    validations:
+      required: false

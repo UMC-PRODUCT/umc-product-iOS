@@ -1,0 +1,23 @@
+name: 📄 문서 작업
+description: 문서 생성 또는 갱신이 필요할 때 사용합니다.
+title: "📄 Docs: "
+labels: ["Docs"]
+body:
+  - type: textarea
+    id: doc-target
+    attributes:
+      label: 📌 문서 작업 대상
+      placeholder: ex) README.md, API 명세서
+    validations:
+      required: true
+
+  - type: textarea
+    id: task
+    attributes:
+      label: 🛠 작업 내용
+      value: "- [ ] "
+      placeholder: |
+        - [ ] 기존 구조 설명 보완
+        - [ ] 사용 예시 추가
+    validations:
+      required: true

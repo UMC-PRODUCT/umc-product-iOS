@@ -1,0 +1,30 @@
+name: 🍀 기타 작업
+description: 분류되지 않는 기타 작업을 관리할 때 사용합니다.
+title: "🍀 ETC: "
+labels: ["Chore"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 🏷️ 설명
+      placeholder: ex) Xcode 빌드 세팅 변경 필요
+    validations:
+      required: true
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: 🤔 배경
+      placeholder: 왜 이 작업이 필요한가요?
+    validations:
+      required: false
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: ✅ 작업 내용
+      value: "- [ ] "
+      placeholder: |
+        - [ ] 설정 파일 수정
+    validations:
+      required: true
