@@ -1,20 +1,52 @@
 name: 🐛 버그 수정
-description: 발견한 문제를 빠르게 메모해두세요!
+description: 발견한 버그를 수정할 때 사용합니다.
 title: "🐛 Bug: "
 labels: ["bug"]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: 🔍 문제 설명
-      placeholder: ex. 화면 진입 시 앱 종료됨
+      label: 🔍 문제 상황
+      placeholder: 어떤 문제가 발생했나요?
     validations:
       required: true
 
   - type: textarea
-    id: fix
+    id: reproduce
     attributes:
-      label: 🔧 수정할 내용
-      placeholder: 어떻게 고칠 계획인지 간단히 적어보세요.
+      label: 🔄 재현 단계
+      value: |
+        1.
+        2.
+        3.
+      placeholder: |
+        1. 앱 실행
+        2. 로그인 화면 진입
+        3. 버튼 클릭 시 크래시
     validations:
       required: false
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: ✅ 완료 조건
+      value: |
+        - [ ]
+      placeholder: |
+        - [ ] 버그 원인 파악
+        - [ ] 수정 구현
+        - [ ] 재현 시나리오 테스트
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: 📐 예상 크기
+      options:
+        - S (1-2시간)
+        - M (반나절)
+        - L (1일)
+      default: 0
+    validations:
+      required: true
