@@ -20,6 +20,30 @@ body:
       required: true
 
   - type: textarea
+    id: tasks
+    attributes:
+      label: ✅ 완료 조건
+      value: |
+        - [ ]
+      placeholder: |
+        - [ ] 기존 로직 분리
+        - [ ] 테스트 통과 확인
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: 📐 예상 크기
+      options:
+        - S (1-2시간)
+        - M (반나절)
+        - L (1일)
+      default: 1
+    validations:
+      required: true
+
+  - type: textarea
     id: effect
     attributes:
       label: 💥 기대 효과

@@ -1,23 +1,45 @@
 name: ✨ 기능 추가
-description: 새로 구현하고 싶은 기능이 있다면 적어주세요.
+description: 새로운 기능을 구현할 때 사용합니다.
 title: "✨ Feature: "
 labels: ["feature"]
 body:
   - type: textarea
     id: summary
     attributes:
-      label: 📌 요약
-      placeholder: 어떤 기능인지 간단히 써주세요.
+      label: 📌 작업 목적
+      placeholder: 왜 이 기능이 필요한가요? 한 줄로 요약해주세요.
     validations:
       required: true
 
   - type: textarea
     id: tasks
     attributes:
-      label: ✅ 할 일
-      value: "- [ ] "
+      label: ✅ 완료 조건
+      value: |
+        - [ ]
       placeholder: |
-        - [ ] UI 레이아웃
+        - [ ] UI 레이아웃 구현
         - [ ] API 연동
+        - [ ] 에러 처리
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: 📐 예상 크기
+      options:
+        - S (1-2시간)
+        - M (반나절)
+        - L (1일)
+      default: 1
+    validations:
+      required: true
+
+  - type: input
+    id: related
+    attributes:
+      label: 🔗 관련 정보
+      placeholder: Figma 링크, 관련 이슈 번호 등
     validations:
       required: false

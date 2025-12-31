@@ -6,7 +6,7 @@ body:
   - type: textarea
     id: design-goal
     attributes:
-      label: 📌 반영 목표
+      label: 📌 작업 목적
       description: 디자인 반영의 핵심 내용을 작성해주세요.
       placeholder: ex) 하단 탭바를 새 디자인으로 교체
     validations:
@@ -15,11 +15,24 @@ body:
   - type: textarea
     id: tasks
     attributes:
-      label: 📋 작업 항목
-      value: "- [ ] "
+      label: ✅ 완료 조건
+      value: |
+        - [ ]
       placeholder: |
         - [ ] UI 구성 변경
         - [ ] 애니메이션 처리
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: 📐 예상 크기
+      options:
+        - S (1-2시간)
+        - M (반나절)
+        - L (1일)
+      default: 1
     validations:
       required: true
 

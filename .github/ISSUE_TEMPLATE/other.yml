@@ -6,7 +6,7 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: 🏷️ 설명
+      label: 📌 작업 목적
       placeholder: ex) Xcode 빌드 세팅 변경 필요
     validations:
       required: true
@@ -22,9 +22,22 @@ body:
   - type: textarea
     id: tasks
     attributes:
-      label: ✅ 작업 내용
-      value: "- [ ] "
+      label: ✅ 완료 조건
+      value: |
+        - [ ]
       placeholder: |
         - [ ] 설정 파일 수정
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: 📐 예상 크기
+      options:
+        - S (1-2시간)
+        - M (반나절)
+        - L (1일)
+      default: 0
     validations:
       required: true
