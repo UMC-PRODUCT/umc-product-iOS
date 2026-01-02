@@ -9,10 +9,11 @@ import SwiftUI
 
 // MARK: - MainButton
 
-/// 앱 전체에서 사용하는 기본 버튼 컴포넌트
+/// 앱 전체에서 사용하는 기본 버튼 컴포넌트 (Container-Presenter 패턴)
 ///
 /// 필수 파라미터만 포함하고, 추가 기능은 ViewModifier로 확장
 /// 스타일은 외부에서 `.buttonStyle()` 으로 적용
+/// 내부적으로 `MainButtonContent`를 Equatable 처리하여 렌더링 최적화
 ///
 /// - Important: `buttonSize()`, `loading()` 은 `buttonStyle()` 보다 먼저 호출
 ///
@@ -34,7 +35,6 @@ struct MainButton: View {
     private let title: String
     private let action: () -> Void
 
-    @Environment(\.isEnabled) private var isEnabled
     @Environment(\.mainButtonSize) private var size
     @Environment(\.mainButtonIsLoading) private var isLoading
 
@@ -53,36 +53,45 @@ struct MainButton: View {
 
     var body: some View {
         Button(action: action) {
-            buttonContent
-                .font(size.font)
-                .frame(maxWidth: .infinity)
-                .frame(height: size.height)
+            MainButtonContent(
+                title: title, size: size, isLoading: isLoading)
+            .equatable()
         }
         .disabled(isLoading)
     }
+}
 
-    // MARK: - Private Views
+// MARK: - MainButtonContent (Presenter)
 
-    @ViewBuilder
-    private var buttonContent: some View {
-        if isLoading {
-            ProgressView()
-        } else {
-            Text(title)
+/// MainButton의 렌더링 담당 (Equatable로 최적화)
+private struct MainButtonContent: View, Equatable {
+    let title: String
+    let size: MainButtonSize
+    let isLoading: Bool
+    
+    static func == (lhs: MainButtonContent, rhs: MainButtonContent) -> Bool {
+        lhs.isLoading == rhs.isLoading &&
+        lhs.title == rhs.title &&
+        lhs.size == rhs.size
+    }
+
+    var body: some View {
+        Group {
+            if isLoading {
+                ProgressView()
+            } else {
+                Text(title)
+            }
         }
+        .font(size.font)
+        .frame(maxWidth: .infinity)
+        .frame(height: size.height)
     }
 }
 
-// MARK: - MainButton + AnyMainButton + Equatable
+// MARK: - MainButton + AnyMainButton
 
-extension MainButton: AnyMainButton, Equatable {
-    /// View Rendering 최적화: 클로저 비교 문제 해결
-    /// - `title`만 비교하여 불필요한 재렌더링 방지
-    /// - `action` 클로저는 UI 출력에 영향 없으므로 제외
-    static func == (lhs: MainButton, rhs: MainButton) -> Bool {
-        lhs.title == rhs.title
-    }
-}
+extension MainButton: AnyMainButton { }
 
 // MARK: - Preview
 
