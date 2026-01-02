@@ -20,10 +20,13 @@ struct ContentView: View {
             Text("디자인 시스템 테스트")
                 .appFont(.body, color: .textSecondary)
 
-            Button("Primary Button") { }
+            MainButton("Glass Button") { }
+                .buttonStyle(.glass)
+            
+            MainButton("Primary Button") { }
                 .buttonStyle(.primary)
 
-            Button("Secondary Button") { }
+            MainButton("Secondary Button") { }
                 .buttonStyle(.secondary)
         }
         .padding()
