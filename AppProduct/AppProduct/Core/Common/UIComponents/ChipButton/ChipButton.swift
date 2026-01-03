@@ -13,7 +13,7 @@ struct ChipButton: View {
     
     // MARK: - Properties
     private let title: String
-    private let isSelected: Bool
+    private var isSelected: Bool
     private let action: () -> Void
     
     @Environment(\.chipButtonSize) private var size
@@ -50,7 +50,7 @@ struct ChipButton: View {
 private struct ChipButtonContent: View, Equatable {
     let title: String
     let size: ChipButtonSize
-    let isSelected: Bool
+    var isSelected: Bool
     
     static func == (lhs: ChipButtonContent, rhs: ChipButtonContent) -> Bool {
         lhs.title == rhs.title &&
@@ -66,7 +66,7 @@ private struct ChipButtonContent: View, Equatable {
             .frame(height: size.height)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.primary100 : Color.primary400)
+                    .fill(isSelected ? Color.primary400 : Color.primary100)
             )
     }
 }
@@ -78,14 +78,19 @@ extension ChipButton: AnyChipButton { }
 // MARK: - Preview
 
 #Preview("ChipButton with LiquidGlass") {
-    VStack(spacing: 15) {
-        HStack(spacing: 8) {
-            ChipButton("Small", isSelected: false) { }
-                .buttonSize(.small)
-            ChipButton("Medium", isSelected: true) { }
-                .buttonSize(.medium)
-            ChipButton("Large", isSelected: true) { }
-                .buttonSize(.large)
+    struct Demo: View {
+            @State private var selected = false
+
+            var body: some View {
+                VStack(spacing: 15) {
+                    HStack(spacing: 8) {
+                        ChipButton("chip", isSelected: selected) {
+                            selected.toggle()
+                        }
+                        .buttonSize(.large)
+                    }
+                }
+            }
         }
-    }
+        return Demo()
 }
