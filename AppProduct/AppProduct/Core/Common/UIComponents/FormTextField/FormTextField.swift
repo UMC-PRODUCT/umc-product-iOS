@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// TODO: 색상, 수치 변경 필요 - [김미주] 26.01.04
+
 struct FormTextField: View {
     // MARK: - Properties
 
@@ -14,8 +16,8 @@ struct FormTextField: View {
     private let placeholder: String
     @Binding private var text: String
 
-    @Environment(\.formTextFieldIsSecure) private var isSecure
     @Environment(\.formTextFieldIsDisabled) private var isDisabled
+    @FocusState private var isFocused: Bool
 
     // MARK: - Initializer
 
@@ -32,10 +34,11 @@ struct FormTextField: View {
             title: title,
             placeholder: placeholder,
             text: $text,
-            isSecure: isSecure,
             isDisabled: isDisabled
         )
         .equatable()
+        .focused($isFocused)
+        .environment(\.formTextFieldIsFocused, isFocused)
         .disabled(isDisabled)
     }
 }
@@ -47,14 +50,13 @@ private struct FormTextFieldContent: View, Equatable {
     let placeholder: String
     @Binding var text: String
 
-    let isSecure: Bool
     let isDisabled: Bool
+    @Environment(\.formTextFieldIsFocused) private var isFocused
 
     static func == (lhs: FormTextFieldContent, rhs: FormTextFieldContent) -> Bool {
         lhs.title == rhs.title &&
             lhs.placeholder == rhs.placeholder &&
             lhs.text == rhs.text &&
-            lhs.isSecure == rhs.isSecure &&
             lhs.isDisabled == rhs.isDisabled
     }
 
@@ -64,15 +66,17 @@ private struct FormTextFieldContent: View, Equatable {
                 Text(title)
             }
 
-            Group {
-                if isSecure {
-                    SecureField(placeholder, text: $text)
-                } else {
-                    TextField(placeholder, text: $text)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 40)
+            TextField(placeholder, text: $text)
+                .textInputAutocapitalization(.never)
+                .foregroundStyle(isDisabled ? .gray : .black)
+                .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity)
+                .frame(height: 40)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(isDisabled ? Color.neutral200 : .clear)
+                        .stroke(isFocused ? .black : .gray, lineWidth: 1)
+                )
         }
     }
 }
@@ -86,7 +90,7 @@ extension FormTextField: AnyFormTextField {}
         @State private var text: String = ""
 
         var body: some View {
-            VStack {
+            VStack(spacing: 20) {
                 FormTextField(
                     title: "이메일",
                     placeholder: "이메일을 입력해 주세요",
@@ -94,19 +98,13 @@ extension FormTextField: AnyFormTextField {}
                 )
 
                 FormTextField(
-                    title: "비밀번호",
-                    placeholder: "비밀번호를 입력해 주세요",
-                    text: $text
-                )
-                .secure()
-
-                FormTextField(
                     title: "비활성화",
                     placeholder: "입력할 수 없습니다",
                     text: $text
                 )
-                .disabled()
+                .formDisabled()
             }
+            .padding()
         }
     }
 
