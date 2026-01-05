@@ -38,15 +38,3 @@ body:
         - [ ] 재현 시나리오 테스트
     validations:
       required: true
-
-  - type: dropdown
-    id: size
-    attributes:
-      label: 📐 예상 크기
-      options:
-        - S (1-2시간)
-        - M (반나절)
-        - L (1일)
-      default: 0
-    validations:
-      required: true
