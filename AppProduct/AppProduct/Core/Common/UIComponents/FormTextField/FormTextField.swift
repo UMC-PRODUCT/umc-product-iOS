@@ -13,7 +13,7 @@ struct FormTextField: View {
     // MARK: - Properties
 
     private let title: String?
-    private let placeholder: String
+    private let placeholder: String?
     private let icon: Image?
     @Binding private var text: String
 
@@ -22,7 +22,11 @@ struct FormTextField: View {
 
     // MARK: - Initializer
 
-    init(title: String?, placeholder: String, icon: Image?, text: Binding<String>) {
+    init(title: String? = nil,
+         placeholder: String? = nil,
+         icon: Image? = nil,
+         text: Binding<String>)
+    {
         self.title = title
         self.placeholder = placeholder
         self.icon = icon
@@ -60,7 +64,7 @@ struct FormTextField: View {
 
 private struct FormTextFieldContent: View, Equatable {
     let title: String?
-    let placeholder: String
+    let placeholder: String?
     let icon: Image?
     @Binding var text: String
 
@@ -85,7 +89,7 @@ private struct FormTextFieldContent: View, Equatable {
                     icon
                         .foregroundStyle(.gray)
                 }
-                TextField(placeholder, text: $text)
+                TextField(placeholder ?? "", text: $text)
                     .textInputAutocapitalization(.never)
                     .foregroundStyle(isDisabled ? .gray : .black)
             }
@@ -115,6 +119,10 @@ extension FormTextField: AnyFormTextField {}
                     title: "이메일",
                     placeholder: "이메일을 입력해 주세요",
                     icon: Image(systemName: "square.and.arrow.up"),
+                    text: $text
+                )
+
+                FormTextField(
                     text: $text
                 )
 
