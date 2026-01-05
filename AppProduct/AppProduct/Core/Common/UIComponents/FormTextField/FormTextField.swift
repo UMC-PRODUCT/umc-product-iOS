@@ -14,6 +14,7 @@ struct FormTextField: View {
 
     private let title: String?
     private let placeholder: String
+    private let icon: Image?
     @Binding private var text: String
 
     @Environment(\.formTextFieldIsDisabled) private var isDisabled
@@ -21,9 +22,10 @@ struct FormTextField: View {
 
     // MARK: - Initializer
 
-    init(title: String?, placeholder: String, text: Binding<String>) {
+    init(title: String?, placeholder: String, icon: Image?, text: Binding<String>) {
         self.title = title
         self.placeholder = placeholder
+        self.icon = icon
         self._text = text
     }
 
@@ -33,6 +35,7 @@ struct FormTextField: View {
         FormTextFieldContent(
             title: title,
             placeholder: placeholder,
+            icon: icon,
             text: $text,
             isDisabled: isDisabled
         )
@@ -58,6 +61,7 @@ struct FormTextField: View {
 private struct FormTextFieldContent: View, Equatable {
     let title: String?
     let placeholder: String
+    let icon: Image?
     @Binding var text: String
 
     let isDisabled: Bool
@@ -76,17 +80,23 @@ private struct FormTextFieldContent: View, Equatable {
                 Text(title)
             }
 
-            TextField(placeholder, text: $text)
-                .textInputAutocapitalization(.never)
-                .foregroundStyle(isDisabled ? .gray : .black)
-                .padding(.horizontal, 10)
-                .frame(maxWidth: .infinity)
-                .frame(height: 40)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(isDisabled ? Color.neutral200 : .clear)
-                        .stroke(isFocused ? .black : .gray, lineWidth: 1)
-                )
+            HStack {
+                if let icon {
+                    icon
+                        .foregroundStyle(.gray)
+                }
+                TextField(placeholder, text: $text)
+                    .textInputAutocapitalization(.never)
+                    .foregroundStyle(isDisabled ? .gray : .black)
+            }
+            .padding(.horizontal, 10)
+            .frame(maxWidth: .infinity)
+            .frame(height: 40)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isDisabled ? Color.neutral200 : .clear)
+                    .stroke(isFocused ? .black : .gray, lineWidth: 1)
+            )
         }
     }
 }
@@ -104,12 +114,14 @@ extension FormTextField: AnyFormTextField {}
                 FormTextField(
                     title: "이메일",
                     placeholder: "이메일을 입력해 주세요",
+                    icon: Image(systemName: "square.and.arrow.up"),
                     text: $text
                 )
 
                 FormTextField(
                     title: "비활성화",
                     placeholder: "입력할 수 없습니다",
+                    icon: Image(systemName: "square.and.arrow.up"),
                     text: $text
                 )
                 .formDisabled()
