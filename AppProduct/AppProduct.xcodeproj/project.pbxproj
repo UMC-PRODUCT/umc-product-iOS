@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0EEC14C02F0B92B400345AD8 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 0EEC14BF2F0B92B400345AD8 /* Alamofire */; };
-		0EEC14C22F0B92B400345AD8 /* AlamofireDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 0EEC14C12F0B92B400345AD8 /* AlamofireDynamic */; };
 		0EEC14C52F0B92CD00345AD8 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = 0EEC14C42F0B92CD00345AD8 /* CombineMoya */; };
 		0EEC14C72F0B92CD00345AD8 /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = 0EEC14C62F0B92CD00345AD8 /* Moya */; };
 		0EEC14CA2F0B92EF00345AD8 /* KakaoSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 0EEC14C92F0B92EF00345AD8 /* KakaoSDK */; };
@@ -39,7 +38,6 @@
 				0EEC14D02F0B92EF00345AD8 /* KakaoSDKCertCore in Frameworks */,
 				0EEC14C02F0B92B400345AD8 /* Alamofire in Frameworks */,
 				0EEC14CA2F0B92EF00345AD8 /* KakaoSDK in Frameworks */,
-				0EEC14C22F0B92B400345AD8 /* AlamofireDynamic in Frameworks */,
 				0EEC14D52F0B92FA00345AD8 /* Kingfisher in Frameworks */,
 				0EEC14D22F0B92EF00345AD8 /* KakaoSDKCommon in Frameworks */,
 				0EEC14C72F0B92CD00345AD8 /* Moya in Frameworks */,
@@ -89,7 +87,6 @@
 			name = AppProduct;
 			packageProductDependencies = (
 				0EEC14BF2F0B92B400345AD8 /* Alamofire */,
-				0EEC14C12F0B92B400345AD8 /* AlamofireDynamic */,
 				0EEC14C42F0B92CD00345AD8 /* CombineMoya */,
 				0EEC14C62F0B92CD00345AD8 /* Moya */,
 				0EEC14C92F0B92EF00345AD8 /* KakaoSDK */,
@@ -420,11 +417,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0EEC14BE2F0B92B400345AD8 /* XCRemoteSwiftPackageReference "Alamofire" */;
 			productName = Alamofire;
-		};
-		0EEC14C12F0B92B400345AD8 /* AlamofireDynamic */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0EEC14BE2F0B92B400345AD8 /* XCRemoteSwiftPackageReference "Alamofire" */;
-			productName = AlamofireDynamic;
 		};
 		0EEC14C42F0B92CD00345AD8 /* CombineMoya */ = {
 			isa = XCSwiftPackageProductDependency;
