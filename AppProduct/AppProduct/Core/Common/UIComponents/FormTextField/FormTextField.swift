@@ -39,6 +39,16 @@ struct FormTextField: View {
         .equatable()
         .focused($isFocused)
         .environment(\.formTextFieldIsFocused, isFocused)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard, content: {
+                Spacer()
+                Button {
+                    isFocused = false
+                } label: {
+                    Image(systemName: "keyboard.chevron.compact.down")
+                }
+            })
+        }
         .disabled(isDisabled)
     }
 }
