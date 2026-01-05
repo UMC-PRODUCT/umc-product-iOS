@@ -13,7 +13,7 @@ struct ChipButton: View {
     
     // MARK: - Properties
     private let title: String
-    private var isSelected: Bool
+    private let isSelected: Bool
     private let action: () -> Void
     
     @Environment(\.chipButtonSize) private var size
@@ -45,12 +45,12 @@ struct ChipButton: View {
     }
 }
 
-// MARK: - MainButtonContent (Presenter)
+// MARK: - ChipButtonContent (Presenter)
 
 private struct ChipButtonContent: View, Equatable {
     let title: String
     let size: ChipButtonSize
-    var isSelected: Bool
+    let isSelected: Bool
     
     static func == (lhs: ChipButtonContent, rhs: ChipButtonContent) -> Bool {
         lhs.title == rhs.title &&
@@ -77,7 +77,7 @@ extension ChipButton: AnyChipButton { }
 
 // MARK: - Preview
 
-#Preview("ChipButton with LiquidGlass") {
+#Preview("ChipButton") {
     struct Demo: View {
             @State private var selected = false
 

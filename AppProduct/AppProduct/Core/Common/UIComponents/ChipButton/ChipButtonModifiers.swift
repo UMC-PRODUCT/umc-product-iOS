@@ -22,14 +22,6 @@ struct ChipButtonSizeModifier: ViewModifier {
     }
 }
 
-struct ChipButtonIsSelectedModifier: ViewModifier {
-    let isSelected: Bool
-    
-    func body(content: Content) -> some View {
-        content.environment(\.chipButtonIsSelected, isSelected)
-    }
-}
-
 // MARK: - AnyChipButton Extension
 
 extension AnyChipButton {
@@ -38,9 +30,5 @@ extension AnyChipButton {
     /// - Parameter size: small, medium, large
     func buttonSize(_ size: ChipButtonSize) -> some View {
         self.modifier(ChipButtonSizeModifier(size: size))
-    }
-    
-    func selected(_ isSelected: Bool) -> some View {
-        self.modifier(ChipButtonIsSelectedModifier(isSelected: isSelected))
     }
 }
