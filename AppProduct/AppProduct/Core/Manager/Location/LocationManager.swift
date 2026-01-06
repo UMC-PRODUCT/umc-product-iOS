@@ -33,6 +33,8 @@ enum LocationError: LocalizedError {
 
 final class LocationManager: NSObject {
 
+    // MARK: - Property
+
     private(set) var currentLocation: CLLocationCoordinate2D?
     private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
     private(set) var isAuthorized: Bool = false
@@ -50,6 +52,8 @@ final class LocationManager: NSObject {
     static let geofenceRadius: CLLocationDistance = AttendancePolicy.geofenceRadius
     private let monitorName = "AttendanceGeofenceMonitor"
 
+    // MARK: - Lifecycle
+
     override init() {
         super.init()
         manager.delegate = self
@@ -60,7 +64,9 @@ final class LocationManager: NSObject {
     deinit {
         monitorTask?.cancel()
     }
-    
+
+    // MARK: - Location
+
     func requestAuthorization() {
         manager.requestWhenInUseAuthorization()
     }
@@ -93,7 +99,9 @@ final class LocationManager: NSObject {
             manager.requestLocation()
         }
     }
-    
+
+    // MARK: - Geofence
+
     func startGeofenceMonitoring(
         at coordinate: CLLocationCoordinate2D,
         identifier: String,
@@ -142,7 +150,9 @@ final class LocationManager: NSObject {
         isInsideGeofence = false
         geofenceEvent = nil
     }
-    
+
+    // MARK: - Private
+
     private func distance(
         from: CLLocationCoordinate2D,
         to: CLLocationCoordinate2D
@@ -230,6 +240,8 @@ final class LocationManager: NSObject {
         }
     }
 }
+
+// MARK: - CLLocationManagerDelegate
 
 extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
