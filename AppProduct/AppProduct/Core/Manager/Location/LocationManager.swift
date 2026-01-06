@@ -32,23 +32,24 @@ enum LocationError: LocalizedError {
 }
 
 final class LocationManager: NSObject {
-    var currentLocation: CLLocationCoordinate2D?
-    var authorizationStatus: CLAuthorizationStatus = .notDetermined
-    var isAuthorized: Bool = false
-    var locationError: Error?
-    
-    var activeGeofencedId: String?
-    var isInsideGeofence: Bool = false
-    var geofenceEvent: GeofenceEvent?
-    
+
+    private(set) var currentLocation: CLLocationCoordinate2D?
+    private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
+    private(set) var isAuthorized: Bool = false
+    private(set) var locationError: Error?
+
+    private(set) var activeGeofenceId: String?
+    private(set) var isInsideGeofence: Bool = false
+    private(set) var geofenceEvent: GeofenceEvent?
+
     private let manager = CLLocationManager()
     private var locationContinuation: CheckedContinuation<CLLocationCoordinate2D, Error>?
     private var monitor: CLMonitor?
     private var monitorTask: Task<Void, Never>?
-    
+
     static let geofenceRadius: CLLocationDistance = AttendancePolicy.geofenceRadius
     private let monitorName = "AttendanceGeofenceMonitor"
-    
+
     override init() {
         super.init()
         manager.delegate = self
@@ -98,22 +99,22 @@ final class LocationManager: NSObject {
         identifier: String,
         radius: CLLocationDistance
     ) async {
-        if activeGeofencedId == identifier {
+        if activeGeofenceId == identifier {
             checkCurrentLocationInGeofence(center: coordinate, radius: radius)
         }
         
-        if let currentId = activeGeofencedId {
+        if let currentId = activeGeofenceId {
             await monitor?.remove(currentId)
         }
         
         if monitor == nil {
-            monitor = await CLMonitor(identifier)
+            monitor = await CLMonitor(monitorName)
             startMonitoringEvents()
         }
         
         let condition = CLMonitor.CircularGeographicCondition(center: coordinate, radius: radius)
         await monitor?.add(condition, identifier: identifier, assuming: .unsatisfied)
-        activeGeofencedId = identifier
+        activeGeofenceId = identifier
         
         checkCurrentLocationInGeofence(center: coordinate, radius: radius)
     }
@@ -121,8 +122,8 @@ final class LocationManager: NSObject {
     func stopGeofenceMonitoring(identifier: String) async {
         await monitor?.remove(identifier)
         
-        if activeGeofencedId == identifier {
-            activeGeofencedId = nil
+        if activeGeofenceId == identifier {
+            activeGeofenceId = nil
             isInsideGeofence = false
         }
     }
@@ -137,24 +138,26 @@ final class LocationManager: NSObject {
             }
         }
         
-        activeGeofencedId = nil
+        activeGeofenceId = nil
         isInsideGeofence = false
         geofenceEvent = nil
     }
     
+    private func distance(
+        from: CLLocationCoordinate2D,
+        to: CLLocationCoordinate2D
+    ) -> CLLocationDistance {
+        let fromLocation = CLLocation(latitude: from.latitude, longitude: from.longitude)
+        let toLocation = CLLocation(latitude: to.latitude, longitude: to.longitude)
+        return fromLocation.distance(from: toLocation)
+    }
+
     private func checkCurrentLocationInGeofence(
         center: CLLocationCoordinate2D,
         radius: CLLocationDistance = geofenceRadius
     ) {
         guard let location = currentLocation else { return }
-        
-        let currentLoc = CLLocation(latitude: location.latitude, longitude: location.longitude)
-        
-        let centerLoc = CLLocation(latitude: center.latitude, longitude: center.longitude)
-        
-        let distance = currentLoc.distance(from: centerLoc)
-        
-        isInsideGeofence = distance <= radius
+        isInsideGeofence = distance(from: location, to: center) <= radius
     }
     
     private func updateAuthorizationStatus(_ status: CLAuthorizationStatus) {
@@ -195,9 +198,9 @@ final class LocationManager: NSObject {
             break
             
         case .unmonitored:
-            if activeGeofencedId == event.identifier {
+            if activeGeofenceId == event.identifier {
                 isInsideGeofence = false
-                activeGeofencedId = nil
+                activeGeofenceId = nil
                 geofenceEvent = nil
             }
             
@@ -208,23 +211,19 @@ final class LocationManager: NSObject {
     
     private func updateGeofenceStatus() {
         guard let current = currentLocation,
-              let _ = activeGeofencedId else { return }
-        
+              let _ = activeGeofenceId else { return }
+
         Task {
             guard let monitor = monitor else { return }
-            
+
             for identifier in await monitor.identifiers {
                 guard let record = await monitor.record(for: identifier) else { continue }
-                
+
                 if let condition = record.condition as? CLMonitor.CircularGeographicCondition {
-                    let currentLoc = CLLocation(latitude: current.latitude, longitude: current.longitude)
-                    
-                    let centerLoc = CLLocation(latitude: condition.center.latitude,
-                                               longitude: condition.center.longitude)
-                    let distance = currentLoc.distance(from: centerLoc)
-                    
+                    let dist = distance(from: current, to: condition.center)
+
                     await MainActor.run {
-                        self.isInsideGeofence = distance <= condition.radius
+                        self.isInsideGeofence = dist <= condition.radius
                     }
                 }
             }
