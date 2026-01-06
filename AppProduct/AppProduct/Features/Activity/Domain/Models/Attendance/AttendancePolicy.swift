@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import CoreLocation
 
 enum AttendancePolicy {
-    static let geofenceRadius: Double = 50.0
+    static let geofenceRadius: CLLocationDistance = 50.0
     static let lateThresholdMinutes: Int = 10
 }
