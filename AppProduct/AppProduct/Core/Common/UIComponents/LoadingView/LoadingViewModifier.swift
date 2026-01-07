@@ -7,56 +7,40 @@
 
 import SwiftUI
 
-// MARK: - AnyLoadingView Protocol
+// MARK: - LoadingViewModifier
 
-/// LoadingView 전용 프로토콜
-/// 이 프로토콜을 준수하는 View만 LoadingView modifier 사용 가능
-protocol AnyLoadingView: View { }
-
-
-// MARK: - ViewModifiers
-
-struct LoadingViewSizeModifier: ViewModifier {
-    let size: LoadingViewSize
+struct LoadingViewModifier: ViewModifier {
+    
+    /// LoadingMessage
+    enum LoadingMessage: String {
+        case basicLoading = "이동중이에요!"
+        case loginLoading = "로그인 중이에요!"
+        case assignmentLoading = "과제를 제출하고 있어요!"
+        case noticeLoading = "공지를 보내는 중이에요!"
+    }
+    
+    let loadingMessage: LoadingMessage
+    let controlSize: ControlSize
     
     func body(content: Content) -> some View {
-        content.environment(\.loadingViewSize, size)
+        content
+            .overlay(content: {
+                ZStack {
+                    Color.black.opacity(0.5)
+                    
+                    ProgressView(label: {
+                        Text(loadingMessage.rawValue)
+                    })
+                    .controlSize(controlSize)
+                }
+            })
     }
 }
 
-struct LoadingViewIsPresentedModifier: ViewModifier {
-    @Binding var isPresented: Bool
-    
-    func body(content: Content) -> some View {
-        content.environment(\.loadingViewIsPresented, isPresented)
-    }
-}
+// MARK: - LoadingView Extension
 
-struct LoadingViewMessageModifier: ViewModifier {
-    let message: String
-    
-    func body(content: Content) -> some View {
-        content.environment(\.loadingViewMessage, message)
-    }
-}
-
-// MARK: - AnyLoadingView Extension
-
-extension AnyLoadingView {
-    
-    /// 로딩 사이즈 설정
-    /// - Parameter size: small, large
-    func loadingSize(_ size: LoadingViewSize) -> some View {
-        self.modifier(LoadingViewSizeModifier(size: size))
-    }
-    
-    /// 로딩 isPresented
-    func presented(_ isPresented: Binding<Bool>) -> some View {
-        self.modifier(LoadingViewIsPresentedModifier(isPresented: isPresented))
-    }
-    
-    /// 로딩 메시지 설정
-    func loadingMessage(_ message: String) -> some View {
-        self.modifier(LoadingViewMessageModifier(message: message))
+extension View {
+    func loadingModifier(loadingMessage: LoadingViewModifier.LoadingMessage, controlSize: ControlSize) -> some View {
+        self.modifier(LoadingViewModifier(loadingMessage: loadingMessage, controlSize: controlSize))
     }
 }
