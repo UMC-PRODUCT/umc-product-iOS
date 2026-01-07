@@ -27,7 +27,7 @@ enum ValidationError: Error, LocalizedError, Equatable {
     /// 두 필드 값 불일치 (비밀번호 확인 등)
     case mismatch(field1: String, field2: String)
 
-    /// 이미 사용 중인 값 (닉네임, 이메일 등)
+    /// 이미 사용 중인 값 (이메일 등)
     case alreadyInUse(field: String)
 
     // MARK: - LocalizedError
