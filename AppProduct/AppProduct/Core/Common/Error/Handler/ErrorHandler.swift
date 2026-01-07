@@ -9,16 +9,74 @@ import Foundation
 import Moya
 import os.log
 
-/// 전역 에러 처리기
-/// - 에러 로깅, 분석 데이터 수집, 에러 변환을 담당
+/// 앱 전역에서 발생하는 에러를 중앙 집중식으로 처리하는 핸들러.
+///
+/// Mediator 패턴을 적용하여 여러 ViewModel에서 발생하는 에러를 한 곳에서 수집하고 처리합니다.
+///
+/// ErrorHandler의 역할:
+/// 1. 에러 변환: `MoyaError`, `URLError` 등을 ``AppError``로 통합
+/// 2. 로깅: `os.log`를 사용하여 에러 정보 기록
+/// 3. 분석: Firebase, Sentry 등 외부 서비스로 에러 데이터 전송
+/// 4. 특수 처리: 401 Unauthorized → 자동 로그아웃
+/// 5. UI 바인딩: ``currentError``를 통해 View에서 Alert 표시
+///
+/// ## Usage
+///
+/// **App에서 Environment로 주입:**
+///
+/// ```swift
+/// @main
+/// struct AppProductApp: App {
+///     @State private var errorHandler = ErrorHandler()
+///
+///     var body: some Scene {
+///         WindowGroup {
+///             ContentView()
+///                 .environment(errorHandler)
+///                 .globalErrorAlert(errorHandler: errorHandler)
+///         }
+///     }
+/// }
+/// ```
+///
+/// **ViewModel에서 에러 처리:**
+///
+/// ```swift
+/// func fetchNotices() async {
+///     do {
+///         notices = try await useCase.execute()
+///     } catch {
+///         errorHandler.handle(error, context: ErrorContext(
+///             feature: "Notice",
+///             action: "fetchList",
+///             retryAction: { [weak self] in await self?.fetchNotices() }
+///         ))
+///     }
+/// }
+/// ```
+///
+/// - Important: 모든 에러를 ErrorHandler로 보내지 마세요.
+///   `severity`가 `.critical`인 에러만 전역 처리하고,
+///   나머지는 ``Loadable`` 패턴으로 화면별 처리하세요.
+///
+/// - Warning: 현재 특수 에러 처리는 `NotificationCenter`를 사용합니다.
+///   추후 `AppState + Environment` 패턴으로 리팩터링 예정입니다.
+///
+/// - SeeAlso: ``ErrorContext``, ``AppError``, ``PresentableError``, ``Loadable``
 @Observable
 final class ErrorHandler {
+
     // MARK: - Property
 
-    /// 현재 표시할 에러 (View에서 바인딩)
+    /// 현재 표시해야 할 에러.
+    ///
+    /// View에서 이 값을 관찰하여 에러 Alert을 표시합니다.
+    /// `nil`이면 에러가 없는 상태입니다.
+    ///
+    /// - Note: 외부에서 직접 수정할 수 없습니다. ``handle(_:context:)``를 사용하세요.
     private(set) var currentError: PresentableError?
 
-    /// 에러 로거
+    /// 에러 로깅에 사용되는 Logger.
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "AppProduct",
         category: "ErrorHandler"
@@ -26,29 +84,37 @@ final class ErrorHandler {
 
     // MARK: - Init
 
+    /// ErrorHandler를 초기화합니다.
+    ///
+    /// App 레벨에서 한 번만 생성하고 Environment로 주입합니다.
     init() {}
 
-    // MARK: - Error Handling
+    // MARK: - Public Methods
 
-    /// 에러 처리 진입점
+    /// 에러를 처리합니다.
+    ///
+    /// 에러 처리의 단일 진입점입니다. 다음 순서로 처리합니다:
+    /// 1. `Error` → ``AppError`` 변환
+    /// 2. os.log로 로깅
+    /// 3. Analytics 전송
+    /// 4. 특수 케이스 처리 (401 → 로그아웃)
+    /// 5. ``currentError`` 설정 → View에서 Alert 표시
+    ///
     /// - Parameters:
-    ///   - error: 발생한 에러
-    ///   - context: 에러 발생 컨텍스트 (화면명, 작업명 등)
+    ///   - error: 발생한 에러. ``AppError``, `MoyaError`, `URLError` 등 모든 `Error` 타입 가능.
+    ///   - context: 에러 발생 위치와 재시도 정보를 담은 컨텍스트.
+    ///
+    /// - Precondition: Main Thread에서 호출해야 합니다.
     func handle(_ error: Error, context: ErrorContext) {
         let appError = convert(error)
 
-        // 1. 로깅
         log(appError, context: context)
-
-        // 2. 분석 데이터 전송 (선택적)
         trackError(appError, context: context)
 
-        // 3. 특수 처리 (401 -> 로그아웃 등)
         if handleSpecialCases(appError, context: context) {
             return
         }
 
-        // 4. 표시용 에러 설정
         currentError = PresentableError(
             error: appError,
             context: context,
@@ -59,56 +125,55 @@ final class ErrorHandler {
         )
     }
 
-    /// 에러 초기화
+    /// 현재 표시 중인 에러를 초기화합니다.
+    ///
+    /// 에러 Alert이 닫힐 때 자동으로 호출됩니다.
     func clearError() {
         currentError = nil
     }
 
-    // MARK: - Error Conversion
+    // MARK: - Private Methods
 
-    /// 임의의 Error를 AppError로 변환
+    /// 임의의 Error를 AppError로 변환합니다.
+    ///
+    /// - Parameter error: 변환할 에러.
+    /// - Returns: 통합된 ``AppError``.
+    ///
+    /// - Note: 지원 타입: `AppError`, `APIError`, `AuthError`, `ValidationError`,
+    ///   `DomainError`, `MoyaError`, `URLError`, `DecodingError`
     private func convert(_ error: Error) -> AppError {
-        // 이미 AppError인 경우
         if let appError = error as? AppError {
             return appError
         }
 
-        // APIError인 경우
         if let apiError = error as? APIError {
             return .api(apiError)
         }
 
-        // ValidationError인 경우
         if let validationError = error as? ValidationError {
             return .validation(validationError)
         }
 
-        // AuthError인 경우
         if let authError = error as? AuthError {
             return .auth(authError)
         }
 
-        // DomainError인 경우
         if let domainError = error as? DomainError {
             return .domain(domainError)
         }
 
-        // MoyaError 변환
         if let moyaError = error as? MoyaError {
             return moyaError.toAppError()
         }
 
-        // URLError 변환
         if let urlError = error as? URLError {
             return .api(convertURLError(urlError))
         }
 
-        // DecodingError 변환
         if let decodingError = error as? DecodingError {
             return .api(.decodingFailed(detail: describeDecodingError(decodingError)))
         }
 
-        // 알 수 없는 에러
         return .unknown(message: error.localizedDescription)
     }
 
@@ -144,6 +209,9 @@ final class ErrorHandler {
 
     // MARK: - Logging
 
+    /// 에러를 os.log로 기록합니다.
+    ///
+    /// 로그 레벨은 에러의 ``AppError/severity``에 따라 결정됩니다.
     private func log(_ error: AppError, context: ErrorContext) {
         let message = """
         [Error] \(context.feature)/\(context.action)
@@ -164,9 +232,11 @@ final class ErrorHandler {
 
     // MARK: - Analytics
 
+    /// 에러를 외부 분석 서비스로 전송합니다.
+    ///
+    /// - Todo: Firebase Analytics, Sentry 등 연동
     private func trackError(_ error: AppError, context: ErrorContext) {
         // TODO: Firebase Analytics, Sentry 등 연동 - [25.01.07] 이재원
-        // AnalyticsService.track(event: .error(error, context))
     }
 
     // MARK: - Special Cases
@@ -174,17 +244,17 @@ final class ErrorHandler {
     // TODO: [Refactor] NotificationCenter → AppState + Environment 패턴으로 리팩터링 예정 - [25.01.07] 이재원
     // 현재: NotificationCenter 사용 (타입 안전하지 않음)
     // 개선: AppState를 주입받아 직접 상태 변경 (DIContainer 구현 후)
-    //
-    // 리팩터링 예시:
-    // ```swift
-    // private var appState: AppState?
-    //
-    // case .api(.unauthorized), .auth(.sessionExpired):
-    //     appState?.handleSessionExpired()
-    //     return true
-    // ```
 
-    /// 특수 에러 처리 (true 반환 시 일반 처리 스킵)
+    /// 특수 에러를 처리합니다.
+    ///
+    /// Alert 표시 대신 앱 전체 상태 변경이 필요한 에러를 처리합니다.
+    ///
+    /// - Parameters:
+    ///   - error: 처리할 에러.
+    ///   - context: 에러 컨텍스트.
+    /// - Returns: 특수 처리가 수행되었으면 `true`.
+    ///
+    /// - Warning: 현재 `NotificationCenter`를 사용합니다. 추후 리팩터링 필요.
     private func handleSpecialCases(_ error: AppError, context: ErrorContext) -> Bool {
         switch error {
         case .api(.unauthorized), .auth(.sessionExpired):
@@ -201,13 +271,3 @@ final class ErrorHandler {
     }
 }
 
-// MARK: - Notification Names
-
-// TODO: [Refactor] AppState 도입 후 제거 예정 - [25.01.07] 이재원
-extension Notification.Name {
-    /// 인증 세션 만료
-    static let authSessionExpired = Notification.Name("authSessionExpired")
-
-    /// 승인 대기 화면으로 이동
-    static let navigateToPendingApproval = Notification.Name("navigateToPendingApproval")
-}
