@@ -20,9 +20,9 @@ struct StudyManagementCard: View {
         List {
             ForEach(1..<10) { _ in
                 HStack {
-                    ImagePresenter(studyManagementItem: studyManagementItem)
-                    TextPresenter(studyManagementItem: studyManagementItem)
-                    ChevronPresenter()
+                    StudyImagePresenter(studyManagementItem: studyManagementItem)
+                    StudyTextPresenter(studyManagementItem: studyManagementItem)
+                    StudyChevronPresenter()
                 }
                 .padding(16)
                 .overlay(
@@ -47,7 +47,7 @@ struct StudyManagementCard: View {
 
 // MARK: - ImagePresenter
 /// 프로필 사진
-struct ImagePresenter: View, Equatable {
+struct StudyImagePresenter: View, Equatable {
     
     let studyManagementItem: StudyManagementItem
     
@@ -62,7 +62,7 @@ struct ImagePresenter: View, Equatable {
 
 // MARK: - TextPresenter
 /// 이름, 파트, 학교, 과제제출명
-struct TextPresenter: View, Equatable {
+struct StudyTextPresenter: View, Equatable {
     
     let studyManagementItem: StudyManagementItem
     
@@ -108,7 +108,7 @@ struct TextPresenter: View, Equatable {
 
 // MARK: - ChevronPresenter
 /// 스와이프 표시
-struct ChevronPresenter: View, Equatable {
+struct StudyChevronPresenter: View, Equatable {
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: "chevron.right")
