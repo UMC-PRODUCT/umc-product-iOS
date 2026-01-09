@@ -15,17 +15,22 @@ struct HomeScheduleItem: View {
     // MARK: - Properties
 
     private let model: HomeScheduleItemModel
+    private let action: () -> Void
 
     // MARK: - Init
 
-    init(model: HomeScheduleItemModel) {
+    init(model: HomeScheduleItemModel, action: @escaping () -> Void) {
         self.model = model
+        self.action = action
     }
 
     // MARK: - Body
 
     var body: some View {
-        HomeScheduleItemPresenter(model: model)
+        Button(action: action) {
+            HomeScheduleItemPresenter(model: model)
+        }
+        .disabled(model.isDone)
     }
 }
 
@@ -59,6 +64,7 @@ private struct HomeScheduleItemPresenter: View, Equatable {
             VStack(alignment: .leading, spacing: 2.5) {
                 Text(model.title)
                     .font(.system(size: 14).bold())
+                    .foregroundStyle(.black)
                 Text("\(formatTime(model.date)) • \(model.type)")
                     .font(.system(size: 12))
                     .foregroundStyle(.gray)
@@ -71,6 +77,7 @@ private struct HomeScheduleItemPresenter: View, Equatable {
                 if !model.isDone {
                     Text(formatDDay(model.date))
                         .font(.system(size: 12))
+                        .foregroundStyle(.gray)
                         .padding(.vertical, 2)
                         .padding(.horizontal, 8)
                         .background(
@@ -151,7 +158,9 @@ private struct HomeScheduleItemPresenter: View, Equatable {
                             date: date2,
                             title: "아이디어톤",
                             type: "행사"
-                        )
+                        ), action: {
+                            print("1번 행사")
+                        }
                     )
 
                     HomeScheduleItem(
@@ -159,7 +168,9 @@ private struct HomeScheduleItemPresenter: View, Equatable {
                             date: date1,
                             title: "아이디어톤",
                             type: "행사"
-                        )
+                        ), action: {
+                            print("2번 행사")
+                        }
                     )
                 }
                 .padding()
