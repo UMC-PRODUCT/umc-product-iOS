@@ -7,12 +7,12 @@
 
 import Foundation
 
-struct Coordinate: Hashable {
+struct Coordinate: Hashable, Codable {
     let latitude: Double
     let longitude: Double
-    
-    func distance(to other: Coordinate) -> Double {
-        // CLLocation 활용한 거리 계산
-        return 0.0
+
+    init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
     }
 }
