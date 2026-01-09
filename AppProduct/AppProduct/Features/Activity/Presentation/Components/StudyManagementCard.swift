@@ -12,40 +12,29 @@ import SwiftUI
 struct StudyManagementCard: View {
     
     // MARK: - Property
+    
     let studyManagementItem: StudyManagementItem
 
     // MARK: - Body
     
     var body: some View {
-        List {
-            ForEach(1..<10) { _ in
-                HStack {
-                    StudyImagePresenter(studyManagementItem: studyManagementItem)
-                    StudyTextPresenter(studyManagementItem: studyManagementItem)
-                    StudyChevronPresenter()
-                }
-                .padding(16)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.border)
-                )
-                .swipeActions(edge: .leading) {
-                    Button(action: {}, label: {
-                        SwipeButtonPresenter(swipeButtonType: .best)
-                    })
-                    Button(action: {}, label: {
-                        SwipeButtonPresenter(swipeButtonType: .review)
-                    })
-                }
-                .listRowSeparator(.hidden)
-            }
+        HStack(spacing: 15) {
+            StudyImagePresenter(studyManagementItem: studyManagementItem)
+            StudyTextPresenter(studyManagementItem: studyManagementItem)
+            Spacer()
+            StudyChevronPresenter()
         }
-        .listStyle(.plain)
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(Color.border)
+        )
     }
 }
 
 
-// MARK: - ImagePresenter
+// MARK: - StudyImagePresenter
 /// 프로필 사진
 struct StudyImagePresenter: View, Equatable {
     
@@ -60,7 +49,7 @@ struct StudyImagePresenter: View, Equatable {
     }
 }
 
-// MARK: - TextPresenter
+// MARK: - StudyTextPresenter
 /// 이름, 파트, 학교, 과제제출명
 struct StudyTextPresenter: View, Equatable {
     
@@ -78,7 +67,7 @@ struct StudyTextPresenter: View, Equatable {
                     .padding(.vertical, 2)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.border)
+                            .strokeBorder(Color.border)
                             .foregroundStyle(.clear)
                     )
             }
@@ -106,7 +95,7 @@ struct StudyTextPresenter: View, Equatable {
     }
 }
 
-// MARK: - ChevronPresenter
+// MARK: - StudyChevronPresenter
 /// 스와이프 표시
 struct StudyChevronPresenter: View, Equatable {
     var body: some View {
@@ -123,47 +112,9 @@ struct StudyChevronPresenter: View, Equatable {
 }
 
 
-// MARK: - SwipeButtonPresenter
-/// 왼쪽 스와이프 시 보이는 버튼(베스트, 검토)
-struct SwipeButtonPresenter: View, Equatable {
-    
-    let swipeButtonType: SwipeButtonType
-    
-    enum SwipeButtonType: String {
-        case best = "베스트"
-        case review = "검토"
-        
-        var icon: Image {
-            switch self {
-            case .best:
-                return Image(systemName: "gift")
-            case .review:
-                return Image(systemName: "checkmark.circle")
-            }
-        }
-        
-        var color: Color {
-            switch self {
-            case .best:
-                return .warning700
-            case .review:
-                return .primary700
-            }
-        }
-    }
-    
-    var body: some View {
-        HStack(spacing: 3) {
-            swipeButtonType.icon
-            
-            Text(swipeButtonType.rawValue)
-        }
-        .foregroundStyle(swipeButtonType.color)
-    }
-}
-
-
 // MARK: - Preview
-#Preview {
+
+#Preview(traits: .sizeThatFitsLayout) {
     StudyManagementCard(studyManagementItem: StudyManagementItem(profile: .profile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기"))
+        
 }
