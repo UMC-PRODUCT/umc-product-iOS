@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// MARK: - SwipeButtonPresenter
+// MARK: - StudySwipeButton
 /// 왼쪽 스와이프 시 보이는 버튼(베스트, 검토)
 struct StudySwipeButton: View, Equatable {
     
@@ -50,5 +50,9 @@ struct StudySwipeButton: View, Equatable {
 }
 
 #Preview(traits: .sizeThatFitsLayout) {
-    StudySwipeButton(swipeButtonType: .best)
+    HStack {
+        StudySwipeButton(swipeButtonType: .best)
+        
+        StudySwipeButton(swipeButtonType: .review)
+    }
 }
