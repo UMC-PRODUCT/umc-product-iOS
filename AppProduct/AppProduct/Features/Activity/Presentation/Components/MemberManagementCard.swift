@@ -23,6 +23,10 @@ struct MemberManagementCard: View {
             MemberTextPresenter(memberManagementItem: memberManagementItem)
             Spacer()
             MemberPenaltyPresenter(memberManagementItem: memberManagementItem)
+            Image(systemName: "chevron.right")
+                .resizable()
+                .frame(width: 4, height: 8)
+                .foregroundStyle(Color.border)
         }
         .padding(16)
         .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -143,6 +147,7 @@ struct MemberBadgePresenter: View {
             )
     }
 }
+
 
 // MARK: - Preview
 
