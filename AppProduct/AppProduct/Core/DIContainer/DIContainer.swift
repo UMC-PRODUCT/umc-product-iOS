@@ -112,3 +112,15 @@ final class DIContainer {
         cachedInstances.removeValue(forKey: key)
     }
 }
+
+// MARK: - 앱 의존성 구성
+extension DIContainer {
+    
+    /// 앱에서 사용하는 모든 의존성을 등록한 DIContainer를 반환합니다.
+    static func configured() -> DIContainer {
+        let container = DIContainer()
+        container.register(NavigationRouter.self) { NavigationRouter() }
+        container.register(UseCaseProvider.self) { UseCaseProvider() }
+        return container
+    }
+}
