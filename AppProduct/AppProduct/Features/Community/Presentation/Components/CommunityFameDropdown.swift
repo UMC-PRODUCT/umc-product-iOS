@@ -12,7 +12,7 @@ struct CommunityFameDropdown: ViewModifier {
     let category: String
     
     init(category: String) {
-        self.category = "전체"
+        self.category = category
     }
     
     func body(content: Content) -> some View {
@@ -34,5 +34,11 @@ struct CommunityFameDropdown: ViewModifier {
                         .foregroundStyle(Color.background)
                 }
             }
+    }
+}
+
+extension View {
+    func communityFameDropdownOverlay(category: String) -> some View {
+        self.modifier(CommunityFameDropdown(category: category))
     }
 }
