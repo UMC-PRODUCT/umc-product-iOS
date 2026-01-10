@@ -7,9 +7,14 @@
 
 import SwiftUI
 
+// MARK: - CoreStudyManagementList
 struct CoreStudyManagementList: View {
     
+    // MARK: - Property
+    
     let studyManagementItem: StudyManagementItem
+    
+    // MARK: - Body
     
     var body: some View {
         HStack(spacing: 12) {
@@ -28,6 +33,8 @@ struct CoreStudyManagementList: View {
     }
 }
 
+// MARK: - CoreStudyTextPresenter
+/// 이름, 파트, 과제명
 struct CoreStudyTextPresenter: View {
     
     let name: String
@@ -56,6 +63,8 @@ struct CoreStudyTextPresenter: View {
     }
 }
 
-#Preview {
+// MARK: - Preview
+
+#Preview (traits: .sizeThatFitsLayout){
     CoreStudyManagementList(studyManagementItem: StudyManagementItem(profile: .profile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: StudySubmitState.examine))
 }
