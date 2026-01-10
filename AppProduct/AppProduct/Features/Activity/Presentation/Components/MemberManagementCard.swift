@@ -20,9 +20,14 @@ struct MemberManagementCard: View {
     var body: some View {
         HStack(spacing: 15) {
             MemberImagePresenter(memberManagementItem: memberManagementItem)
-            MemberTextPresenter(memberManagementItem: memberManagementItem)
+            MemberTextPresenter(
+                name: memberManagementItem.name,
+                generation: memberManagementItem.generation,
+                position: memberManagementItem.position,
+                part: memberManagementItem.part
+                )
             Spacer()
-            MemberPenaltyPresenter(memberManagementItem: memberManagementItem)
+            MemberPenaltyPresenter(penalty: memberManagementItem.penalty)
             Image(systemName: "chevron.right")
                 .resizable()
                 .frame(width: 4, height: 8)
@@ -61,28 +66,31 @@ struct MemberImagePresenter: View {
 /// 멤버 정보
 struct MemberTextPresenter: View {
     
-    let memberManagementItem: MemberManagementItem
+    let name: String
+    let generation: String
+    let position: String
+    let part: String
     
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
-                Text(memberManagementItem.name)
+                Text(name)
                     .font(.app(.footnote, weight: .bold))
                 
                 Rectangle()
                     .frame(width: 1, height: 16)
                     .foregroundStyle(Color.border)
                 
-                Text(memberManagementItem.generation)
+                Text(generation)
                     .font(.app(.caption1, weight: .regular))
                     .foregroundStyle(Color.neutral500)
             }
             HStack {
-                Text(memberManagementItem.position)
+                Text(position)
                     .font(.app(.caption1, weight: .regular))
                     .foregroundStyle(Color.neutral700)
                 
-                Text(memberManagementItem.part)
+                Text(part)
                     .font(.app(.caption1, weight: .regular))
                     .foregroundStyle(Color.neutral500)
             }
@@ -96,13 +104,13 @@ struct MemberTextPresenter: View {
 /// - 0이 아닐 때: 경고 + 점수
 struct MemberPenaltyPresenter: View {
     
-    let memberManagementItem: MemberManagementItem
+    let penalty: Double
     
     var body: some View {
-        if memberManagementItem.penalty != 0 {
+        if penalty != 0 {
             HStack(spacing: 3) {
                 Text("경고")
-                Text(String(format: "%.1f", memberManagementItem.penalty))
+                Text(String(format: "%.1f", penalty))
             }
             .font(.app(.caption1, weight: .bold))
             .foregroundStyle(Color.danger500)
@@ -153,13 +161,13 @@ struct MemberBadgePresenter: View {
 
 #Preview(traits: .sizeThatFitsLayout) {
     VStack {
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: true))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: true, managementTeam: .challenger))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: false))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: false, managementTeam: .challenger))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "9기", position: "Challenger", part: "Spring Boot", penalty: 1.0, badge: true))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "9기", position: "Challenger", part: "Spring Boot", penalty: 1.0, badge: true, managementTeam: .challenger))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 1.0, badge: false))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 1.0, badge: false, managementTeam: .partLeader))
         
     }
 }
