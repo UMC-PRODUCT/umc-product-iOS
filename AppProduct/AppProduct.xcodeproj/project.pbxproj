@@ -16,6 +16,8 @@
 		0EEC14D02F0B92EF00345AD8 /* KakaoSDKCertCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0EEC14CF2F0B92EF00345AD8 /* KakaoSDKCertCore */; };
 		0EEC14D22F0B92EF00345AD8 /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 0EEC14D12F0B92EF00345AD8 /* KakaoSDKCommon */; };
 		0EEC14D52F0B92FA00345AD8 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 0EEC14D42F0B92FA00345AD8 /* Kingfisher */; };
+		1F3173D62F127A5000601344 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3173D52F127A5000601344 /* FirebaseCore */; };
+		1F3173D82F127A5000601344 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3173D72F127A5000601344 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,8 +59,10 @@
 				0EEC14D52F0B92FA00345AD8 /* Kingfisher in Frameworks */,
 				0EEC14D22F0B92EF00345AD8 /* KakaoSDKCommon in Frameworks */,
 				0EEC14C72F0B92CD00345AD8 /* Moya in Frameworks */,
+				1F3173D62F127A5000601344 /* FirebaseCore in Frameworks */,
 				0EEC14C52F0B92CD00345AD8 /* CombineMoya in Frameworks */,
 				0EEC14CE2F0B92EF00345AD8 /* KakaoSDKCert in Frameworks */,
+				1F3173D82F127A5000601344 /* FirebaseMessaging in Frameworks */,
 				0EEC14CC2F0B92EF00345AD8 /* KakaoSDKAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -120,6 +124,8 @@
 				0EEC14CF2F0B92EF00345AD8 /* KakaoSDKCertCore */,
 				0EEC14D12F0B92EF00345AD8 /* KakaoSDKCommon */,
 				0EEC14D42F0B92FA00345AD8 /* Kingfisher */,
+				1F3173D52F127A5000601344 /* FirebaseCore */,
+				1F3173D72F127A5000601344 /* FirebaseMessaging */,
 			);
 			productName = AppProduct;
 			productReference = 0E6380A92F02F1020060E4D9 /* AppProduct.app */;
@@ -181,6 +187,7 @@
 				0EEC14C32F0B92CD00345AD8 /* XCRemoteSwiftPackageReference "Moya" */,
 				0EEC14C82F0B92EF00345AD8 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 				0EEC14D32F0B92FA00345AD8 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				1F3173D42F127A5000601344 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0E6380AA2F02F1020060E4D9 /* Products */;
@@ -534,6 +541,14 @@
 				minimumVersion = 8.6.2;
 			};
 		};
+		1F3173D42F127A5000601344 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -581,6 +596,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0EEC14D32F0B92FA00345AD8 /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		1F3173D52F127A5000601344 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F3173D42F127A5000601344 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		1F3173D72F127A5000601344 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F3173D42F127A5000601344 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
