@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// MARK: - DropdownView
+/// SourceDropdownView를 눌렀을 때 펼쳐짐
 fileprivate struct DropdownView: View {
     
     @Binding var config: DropdownConfig
@@ -26,6 +28,8 @@ fileprivate struct DropdownView: View {
     }
 }
 
+// MARK: - SourceDropdownView
+/// Dropdown되기 전 보이는 뷰
 struct SourceDropdownView: View {
     
     @Binding var config: DropdownConfig
@@ -81,6 +85,7 @@ extension View {
     }
 }
 
-#Preview {
+// MARK: - Preview
+#Preview (traits: .sizeThatFitsLayout) {
     SourceDropdownView(config: .constant(DropdownConfig(school: "가천대학교", count: 35)))
 }
