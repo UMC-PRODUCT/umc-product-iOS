@@ -21,7 +21,7 @@ enum NoticeType: String, Equatable {
     var textColor: Color {
         switch self {
         case .essential:
-            return .primary600
+            return .indigo500
         default:
             return .white
         }
@@ -30,9 +30,9 @@ enum NoticeType: String, Equatable {
     var backgroundColor: Color {
         switch self {
         case .essential:
-            return .primary100
+            return .indigo100
         default:
-            return .primary600
+            return .indigo500
         }
     }
 }

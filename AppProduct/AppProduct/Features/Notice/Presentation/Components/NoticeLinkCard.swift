@@ -27,12 +27,12 @@ struct NoticeLinkCard: View {
             Image(systemName: "chevron.right")
                 .resizable()
                 .frame(width: 4, height: 8)
-                .foregroundStyle(Color.border)
+                .foregroundStyle(Color.grey400)
         }
         .padding(12)
         .background {
             RoundedRectangle(cornerRadius: 14)
-                .foregroundStyle(Color.primary100)
+                .foregroundStyle(Color.indigo100)
         }
     }
 }
@@ -43,11 +43,11 @@ struct LinkIconPresenter: View {
         Image(systemName: "link")
             .resizable()
             .frame(width: 20, height: 20)
-            .foregroundStyle(Color.primary700)
+            .foregroundStyle(Color.grey100)
             .padding(10)
             .background {
                 RoundedRectangle(cornerRadius: 10)
-                    .foregroundStyle(Color.primary200)
+                    .foregroundStyle(Color.grey400)
             }
     }
 }
@@ -64,7 +64,7 @@ struct LinkTextPresenter: View {
             
             Text(url)
                 .font(.app(.caption1, weight: .regular))
-                .foregroundStyle(Color.neutral700)
+                .foregroundStyle(Color.grey700)
         }
     }
 }
