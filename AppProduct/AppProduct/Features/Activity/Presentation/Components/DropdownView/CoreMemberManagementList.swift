@@ -35,7 +35,7 @@ struct CoreMemberTextPresenter: View {
                 .font(.app(.callout, weight: .bold))
             Text(part)
                 .font(.app(.subheadline, weight: .regular))
-                .foregroundStyle(Color.neutral500)
+                .foregroundStyle(Color.grey500)
         }
     }
 }
