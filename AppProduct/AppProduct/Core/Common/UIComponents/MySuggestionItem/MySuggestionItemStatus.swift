@@ -22,14 +22,14 @@ enum MySuggestionItemStatus {
 
     var mainColor: Color {
         switch self {
-        case .answered: return .success500
+        case .answered: return .green500
         case .pending: return .black
         }
     }
 
     var subColor: Color {
         switch self {
-        case .answered: return .success100
+        case .answered: return .green100
         case .pending: return .gray
         }
     }

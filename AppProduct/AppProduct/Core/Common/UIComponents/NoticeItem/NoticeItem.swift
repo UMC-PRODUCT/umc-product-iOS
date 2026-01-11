@@ -86,7 +86,7 @@ private struct NoticeItemPresenter: View, Equatable {
             VStack(alignment: .leading, spacing: 4) {
                 Text(model.title)
                     .font(.system(size: 16).bold())
-                    .foregroundStyle(model.mustRead ? Color.primary900 : .black)
+                    .foregroundStyle(model.mustRead ? Color.indigo100 : .black)
                     .lineLimit(1)
 
                 Text(model.content)
@@ -140,7 +140,7 @@ private struct NoticeItemPresenter: View, Equatable {
     struct NoticeItemPreview: View {
         var body: some View {
             ZStack {
-                Color.neutral100
+                Color.grey100
 
                 VStack {
                     NoticeItem(

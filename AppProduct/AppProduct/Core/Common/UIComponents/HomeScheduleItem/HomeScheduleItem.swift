@@ -150,7 +150,7 @@ private struct HomeScheduleItemPresenter: View, Equatable {
 
         var body: some View {
             ZStack {
-                Color.neutral100
+                Color.grey100
 
                 VStack(spacing: 20) {
                     HomeScheduleItem(

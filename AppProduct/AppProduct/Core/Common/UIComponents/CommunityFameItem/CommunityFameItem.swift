@@ -123,7 +123,7 @@ private struct CommunityFameItemPresenter: View, Equatable {
     struct CommunityFameItemPreview: View {
         var body: some View {
             ZStack {
-                Color.neutral100
+                Color.grey100
 
                 VStack {
                     CommunityFameItem(

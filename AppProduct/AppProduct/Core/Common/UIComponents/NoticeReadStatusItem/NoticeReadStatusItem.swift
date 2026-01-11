@@ -94,7 +94,7 @@ private struct NoticeReadStatusItemPresenter: View, Equatable {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color.neutral100)
+                .fill(Color.grey100)
         )
     }
 }
