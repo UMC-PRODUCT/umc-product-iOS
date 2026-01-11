@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreLocation
+import MapKit
 
 final class LocationManager: NSObject {
 
@@ -28,6 +29,16 @@ final class LocationManager: NSObject {
 
     static let geofenceRadius: CLLocationDistance = AttendancePolicy.geofenceRadius
     private let monitorName = "AttendanceGeofenceMonitor"
+    
+    // Computed Property
+    
+    var currentCoordinate: Coordinate? {
+        guard let currentLocation = currentLocation else {
+            return nil
+        }
+        
+        return .init(latitude: currentLocation.latitude, longitude: currentLocation.longitude)
+    }
 
     // MARK: - Lifecycle
 
@@ -74,6 +85,36 @@ final class LocationManager: NSObject {
         return try await withCheckedThrowingContinuation { continuation in
             locationContinuation = continuation
             manager.requestLocation()
+        }
+    }
+
+    // MARK: - Reverse Geocoding
+
+    /// 좌표를 주소 문자열로 변환
+    /// - Parameter coordinate: 변환할 좌표
+    /// - Returns: 주소 문자열 (예: "서울특별시 강남구 테헤란로 123")
+    /// - Throws: LocationError.geocodingFailed
+    func reverseGeocode(coordinate: Coordinate) async throws -> String {
+        let location = CLLocation(
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude
+        )
+
+        guard let request = MKReverseGeocodingRequest(location: location) else {
+            throw LocationError.geocodingFailed("요청을 생성할 수 없습니다.")
+        }
+
+        do {
+            let mapItems = try await request.mapItems
+            guard let address = mapItems.first?.address else {
+                throw LocationError.geocodingFailed("주소 정보가 없습니다.")
+            }
+            
+            return address.fullAddress
+        } catch let error as LocationError {
+            throw error
+        } catch {
+            throw LocationError.geocodingFailed(error.localizedDescription)
         }
     }
 

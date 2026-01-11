@@ -11,7 +11,8 @@ enum LocationError: LocalizedError {
     case notAuthorized
     case locationFailed(String)
     case timeout
-    
+    case geocodingFailed(String)
+
     var errorDescription: String? {
         switch self {
         case .notAuthorized:
@@ -20,6 +21,8 @@ enum LocationError: LocalizedError {
             return "위치를 가져올 수 없습니다. \(message)"
         case .timeout:
             return "위치 요청 시간이 초과되었습니다."
+        case .geocodingFailed(let message):
+            return "주소를 가져올 수 없습니다. \(message)"
         }
     }
 }
