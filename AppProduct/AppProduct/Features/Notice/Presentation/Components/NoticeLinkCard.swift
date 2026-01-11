@@ -22,23 +22,28 @@ struct NoticeLinkCard: View {
     
     // MARK: - Body
     var body: some View {
-        HStack {
-            LinkIconPresenter()
+        Button(action: {
             
-            LinkTextPresenter(url: noticeLinkItem.url)
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .resizable()
-                .frame(width: Constants.chevronSize.width, height: Constants.chevronSize.height)
-                .foregroundStyle(Color.border)
+        }) {
+            HStack {
+                LinkIconPresenter()
+                
+                LinkTextPresenter(url: noticeLinkItem.url)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .resizable()
+                    .frame(width: Constants.chevronSize.width, height: Constants.chevronSize.height)
+                    .foregroundStyle(Color.border)
+            }
+            .padding(Constants.innerPadding)
+            .background {
+                RoundedRectangle(cornerRadius: Constants.radius)
+                    .foregroundStyle(Color.primary100)
+            }
         }
-        .padding(Constants.innerPadding)
-        .background {
-            RoundedRectangle(cornerRadius: Constants.radius)
-                .foregroundStyle(Color.primary100)
-        }
+        .glassEffect(in: .rect(cornerRadius: Constants.radius))
     }
 }
 
@@ -86,6 +91,7 @@ struct LinkTextPresenter: View {
         VStack(alignment: .leading, spacing: Constants.vstackSpacing) {
             Text("관련 링크 바로가기")
                 .font(.app(.subheadline, weight: .bold))
+                .foregroundStyle(Color.black)
             
             Text(url)
                 .font(.app(.caption1, weight: .regular))
