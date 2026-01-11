@@ -11,27 +11,8 @@ struct ContentView: View {
     @Environment(\.di) var di
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(Color.primary500)
-
-            Text("Hello, world!")
-                .appFont(.headline, weight: .bold, color: .textPrimary)
-
-            Text("디자인 시스템 테스트")
-                .appFont(.body, color: .textSecondary)
-
-            MainButton("Glass Button") { }
-                .buttonStyle(.glass)
-            
-            MainButton("Primary Button") { }
-                .buttonStyle(.primary)
-
-            MainButton("Secondary Button") { }
-                .buttonStyle(.secondary)
+            Text("11")
         }
-        .padding()
-        .background(Color.background)
     }
 }
 

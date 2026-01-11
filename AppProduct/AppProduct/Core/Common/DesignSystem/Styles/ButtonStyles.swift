@@ -7,9 +7,7 @@
 
 import SwiftUI
 
-// MARK: - Constants
-
-// TODO: 디자인 시스템 확정 후 SpacingTokens로 교체 - [이재원] 26.01.01
+// MARK: - Constant
 private enum ButtonConstants {
     static let height: CGFloat = 44
     static let cornerRadius: CGFloat = 8
@@ -25,14 +23,13 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.app(.body, weight: .bold))
-            .foregroundStyle(Color.neutral000)
+            .appFont(.body, color: .grey000)
             .frame(maxWidth: .infinity)
             .frame(height: ButtonConstants.height)
             .background(
                 isEnabled
-                    ? (configuration.isPressed ? Color.primary600 : Color.primary500)
-                    : Color.neutral400
+                    ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
+                    : Color.grey400
             )
             .clipShape(RoundedRectangle(cornerRadius: ButtonConstants.cornerRadius))
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
@@ -53,8 +50,8 @@ struct SecondaryButtonStyle: ButtonStyle {
             .font(.app(.body, weight: .bold))
             .foregroundStyle(
                 isEnabled
-                    ? (configuration.isPressed ? Color.primary600 : Color.primary500)
-                    : Color.neutral400
+                    ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
+                    : Color.grey400
             )
             .frame(maxWidth: .infinity)
             .frame(height: ButtonConstants.height)
@@ -63,8 +60,8 @@ struct SecondaryButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: ButtonConstants.cornerRadius)
                     .stroke(
                         isEnabled
-                            ? (configuration.isPressed ? Color.primary600 : Color.primary500)
-                            : Color.neutral400,
+                            ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
+                            : Color.grey400,
                         lineWidth: 1.5
                     )
             )
@@ -84,13 +81,13 @@ struct DestructiveButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.app(.body, weight: .bold))
-            .foregroundStyle(Color.neutral000)
+            .foregroundStyle(Color.grey000)
             .frame(maxWidth: .infinity)
             .frame(height: ButtonConstants.height)
             .background(
                 isEnabled
-                    ? (configuration.isPressed ? Color.danger700 : Color.danger500)
-                    : Color.neutral400
+                    ? (configuration.isPressed ? Color.red700 : Color.red500)
+                    : Color.grey400
             )
             .clipShape(RoundedRectangle(cornerRadius: ButtonConstants.cornerRadius))
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
@@ -111,8 +108,8 @@ struct TextButtonStyle: ButtonStyle {
             .font(.app(.body))
             .foregroundStyle(
                 isEnabled
-                    ? (configuration.isPressed ? Color.primary600 : Color.primary500)
-                    : Color.neutral400
+                    ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
+                    : Color.grey400
             )
             .opacity(configuration.isPressed ? 0.7 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)

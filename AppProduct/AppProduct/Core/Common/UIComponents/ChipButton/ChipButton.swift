@@ -60,13 +60,13 @@ private struct ChipButtonContent: View, Equatable {
     
     var body: some View {
         Text(title)
-            .foregroundStyle(Color.neutral900)
+            .foregroundStyle(Color.grey900)
             .font(size.font)
             .padding(.horizontal, 8)
             .frame(height: size.height)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.primary400 : Color.primary100)
+                    .fill(isSelected ? Color.indigo400 : Color.indigo100)
             )
     }
 }

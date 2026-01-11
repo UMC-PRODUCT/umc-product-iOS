@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 90;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -51,7 +51,6 @@
 /* Begin PBXFrameworksBuildPhase section */
 		0E6380A62F02F1020060E4D9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				0EEC14D02F0B92EF00345AD8 /* KakaoSDKCertCore in Frameworks */,
 				0EEC14C02F0B92B400345AD8 /* Alamofire in Frameworks */,
@@ -65,14 +64,11 @@
 				1F3173D82F127A5000601344 /* FirebaseMessaging in Frameworks */,
 				0EEC14CC2F0B92EF00345AD8 /* KakaoSDKAuth in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		1F75B98E2F123E6500B97089 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -107,8 +103,6 @@
 				0E6380A72F02F1020060E4D9 /* Resources */,
 			);
 			buildRules = (
-			);
-			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
 				0E6380AB2F02F1020060E4D9 /* AppProduct */,
@@ -148,8 +142,6 @@
 				1F75B9922F123E6500B97089 /* AppProductTests */,
 			);
 			name = AppProductTests;
-			packageProductDependencies = (
-			);
 			productName = AppProductTests;
 			productReference = 1F75B9912F123E6500B97089 /* AppProductTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -181,7 +173,6 @@
 				Base,
 			);
 			mainGroup = 0E6380A02F02F1020060E4D9;
-			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0EEC14BE2F0B92B400345AD8 /* XCRemoteSwiftPackageReference "Alamofire" */,
 				0EEC14C32F0B92CD00345AD8 /* XCRemoteSwiftPackageReference "Moya" */,
@@ -189,7 +180,7 @@
 				0EEC14D32F0B92FA00345AD8 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				1F3173D42F127A5000601344 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 90;
 			productRefGroup = 0E6380AA2F02F1020060E4D9 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -203,34 +194,26 @@
 /* Begin PBXResourcesBuildPhase section */
 		0E6380A72F02F1020060E4D9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		1F75B98F2F123E6500B97089 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0E6380A52F02F1020060E4D9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		1F75B98D2F123E6500B97089 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -243,7 +226,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		0E6380B22F02F1050060E4D9 /* Debug */ = {
+		0E6380B22F02F1050060E4D9 /* Debug configuration for PBXProject "AppProduct" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -307,7 +290,7 @@
 			};
 			name = Debug;
 		};
-		0E6380B32F02F1050060E4D9 /* Release */ = {
+		0E6380B32F02F1050060E4D9 /* Release configuration for PBXProject "AppProduct" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -364,7 +347,7 @@
 			};
 			name = Release;
 		};
-		0E6380B52F02F1050060E4D9 /* Debug */ = {
+		0E6380B52F02F1050060E4D9 /* Debug configuration for PBXNativeTarget "AppProduct" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -400,7 +383,7 @@
 			};
 			name = Debug;
 		};
-		0E6380B62F02F1050060E4D9 /* Release */ = {
+		0E6380B62F02F1050060E4D9 /* Release configuration for PBXNativeTarget "AppProduct" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -436,7 +419,7 @@
 			};
 			name = Release;
 		};
-		1F75B9982F123E6500B97089 /* Debug */ = {
+		1F75B9982F123E6500B97089 /* Debug configuration for PBXNativeTarget "AppProductTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -456,7 +439,7 @@
 			};
 			name = Debug;
 		};
-		1F75B9992F123E6500B97089 /* Release */ = {
+		1F75B9992F123E6500B97089 /* Release configuration for PBXNativeTarget "AppProductTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -482,28 +465,25 @@
 		0E6380A42F02F1020060E4D9 /* Build configuration list for PBXProject "AppProduct" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0E6380B22F02F1050060E4D9 /* Debug */,
-				0E6380B32F02F1050060E4D9 /* Release */,
+				0E6380B22F02F1050060E4D9 /* Debug configuration for PBXProject "AppProduct" */,
+				0E6380B32F02F1050060E4D9 /* Release configuration for PBXProject "AppProduct" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		0E6380B42F02F1050060E4D9 /* Build configuration list for PBXNativeTarget "AppProduct" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0E6380B52F02F1050060E4D9 /* Debug */,
-				0E6380B62F02F1050060E4D9 /* Release */,
+				0E6380B52F02F1050060E4D9 /* Debug configuration for PBXNativeTarget "AppProduct" */,
+				0E6380B62F02F1050060E4D9 /* Release configuration for PBXNativeTarget "AppProduct" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		1F75B9972F123E6500B97089 /* Build configuration list for PBXNativeTarget "AppProductTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1F75B9982F123E6500B97089 /* Debug */,
-				1F75B9992F123E6500B97089 /* Release */,
+				1F75B9982F123E6500B97089 /* Debug configuration for PBXNativeTarget "AppProductTests" */,
+				1F75B9992F123E6500B97089 /* Release configuration for PBXNativeTarget "AppProductTests" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
