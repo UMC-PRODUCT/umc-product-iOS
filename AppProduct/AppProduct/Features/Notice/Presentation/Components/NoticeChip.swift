@@ -8,15 +8,15 @@
 import SwiftUI
 
 // MARK: - NoticeChip
+/// 공지 화면: 공지 상세화면 공지 구분 칩
 struct NoticeChip: View {
     
     // MARK: - Property
-    let text: String
     let noticeType: NoticeType
     
     // MARK: - Body
     var body: some View {
-        Text(text)
+        Text(noticeType.rawValue)
             .font(.app(.caption1, weight: .regular))
             .foregroundStyle(noticeType.textColor)
             .padding(.horizontal, 7)
@@ -29,11 +29,12 @@ struct NoticeChip: View {
 }
 
 // MARK: - Preview
-
 #Preview(traits: .sizeThatFitsLayout) {
     HStack {
-        NoticeChip(text: "중앙", noticeType: .target)
-        
-        NoticeChip(text: "필독", noticeType: .essential)
+        NoticeChip(noticeType: .core)
+        NoticeChip(noticeType: .branch)
+        NoticeChip(noticeType: .campus)
+        NoticeChip(noticeType: .part)
+        NoticeChip(noticeType: .essential)
     }
 }
