@@ -9,44 +9,59 @@ import Foundation
 import KakaoSDKAuth
 import KakaoSDKUser
 
-class KakaoLoginManager {
-    func fetchAccessToken(completion: @escaping (Result<String, Error>) -> Void) {
-        if UserApi.isKakaoTalkLoginAvailable() {
-            UserApi.shared.loginWithKakaoTalk { oauthToken, error in
-                if let error = error {
-                    completion(.failure(error))
-                } else if let oauthToken = oauthToken {
-                    completion(.success(oauthToken.accessToken))
+class KakaoLoginManager { 
+    enum KakaoLoginError: Error {
+        case tokenNotFound
+        case userInfoNotFound
+        case emailNotFound
+        case nicknameNotFound
+    }
+    
+    func fetchAccessToken() async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            if UserApi.isKakaoTalkLoginAvailable() {
+                UserApi.shared.loginWithKakaoTalk { oauthToken, error in 
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                    } else if let oauthToken = oauthToken {
+                        continuation.resume(returning: oauthToken.accessToken)
+                    } else {
+                        continuation.resume(throwing: KakaoLoginError.tokenNotFound)
+                    }
                 }
-            }
-        } else {
-            UserApi.shared.loginWithKakaoAccount { oauthToken, error in
-                if let error = error {
-                    completion(.failure(error))
-                } else if let oauthToken = oauthToken {
-                    completion(.success(oauthToken.accessToken))
+            } else {
+                UserApi.shared.loginWithKakaoAccount { oauthToken, error in 
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                    } else if let oauthToken = oauthToken {
+                        continuation.resume(returning: oauthToken.accessToken)
+                    } else {
+                        continuation.resume(throwing: KakaoLoginError.tokenNotFound)
+                    }
                 }
             }
         }
     }
-
-    func getUserEmail(accessToken: String, completion: @escaping (Result<String, Error>) -> Void) {
-        UserApi.shared.me { user, error in
-            if let error = error {
-                completion(.failure(error))
-            } else if let user = user, let email = user.kakaoAccount?.email {
-                completion(.success(email))
+    
+    func getUserEmail() async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            UserApi.shared.me { user , error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                } else if let email = user?.kakaoAccount?.email {
+                    continuation.resume(returning: email)
+                } else {
+                    continuation.resume(throwing: KakaoLoginError.emailNotFound)
+                }
             }
         }
     }
-
-    func getUserName(completion: @escaping (Result<String, Error>) -> Void) {
-        UserApi.shared.me { user, error in
-            if let error = error {
-                completion(.failure(error))
-            } else if let user = user, let nickname = user.kakaoAccount?.profile?.nickname {
-                completion(.success(nickname))
-            }
-        }
+    
+    func login() async throws -> (accessToken: String, email: String) {
+        let accessToken = try await fetchAccessToken()
+        
+        async let email = getUserEmail()
+        
+        return try await (accessToken, email)
     }
 }
