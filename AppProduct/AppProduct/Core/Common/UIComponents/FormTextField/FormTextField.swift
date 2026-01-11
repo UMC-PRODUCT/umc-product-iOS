@@ -100,7 +100,7 @@ private struct FormTextFieldContent: View, Equatable {
             .frame(height: 40)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isDisabled ? Color.neutral200 : .clear)
+                    .fill(isDisabled ? Color.grey200 : .clear)
                     .stroke(isFocused ? .black : .gray, lineWidth: 1)
             )
         }
