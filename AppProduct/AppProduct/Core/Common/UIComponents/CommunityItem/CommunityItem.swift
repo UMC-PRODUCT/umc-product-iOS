@@ -11,7 +11,7 @@ import SwiftUI
 
 private enum Constant {
     static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 16, trailing: 16)
-    static let mainBoxRadius: CGFloat = 20
+    static let mainBoxRadius: CGFloat = 20 
     // tag + status
     static let tagFontSize: CGFloat = 12
     static let tagPadding: EdgeInsets = .init(top: 3, leading: 7, bottom: 3, trailing: 7)
