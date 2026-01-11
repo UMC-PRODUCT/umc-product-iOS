@@ -40,72 +40,93 @@ private struct CommunityItemPresenter: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading) {
-            // 태그 + 상태
-            HStack {
-                Text(model.tag.text)
-                    .font(.system(size: 12))
-                    .padding(.vertical, 3)
-                    .padding(.horizontal, 7)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(.gray.opacity(0.2))
-                            .strokeBorder(.gray)
-                    )
-                Spacer()
-                Text(model.status.text)
-                    .font(.system(size: 10))
-                    .foregroundStyle(model.status.mainColor)
-                    .padding(.vertical, 3)
-                    .padding(.horizontal, 7)
-                    .background(
-                        Capsule()
-                            .fill(model.status.subColor)
-                    )
-            }
-
-            // 내용
-            VStack(alignment: .leading, spacing: 4) {
-                Text(model.title)
-                    .font(.system(size: 16).bold())
-
-                HStack(spacing: 8) {
-                    Text(model.location)
-                    Text("•")
-                    Text(model.userName)
-                    Text("•")
-                    Text(model.createdAt)
-                }
-                .font(.system(size: 12))
-                .foregroundStyle(.gray)
-            }
-
+            TagSection(model: model)
+            ContentSection(model: model)
             Divider()
-
-            // 좋아요 + 댓글
-            HStack(spacing: 12) {
-                HStack(spacing: 4) {
-                    Image(systemName: "heart")
-                        .resizable()
-                        .frame(width: 12, height: 12)
-                    Text(String(model.likeCount))
-                        .font(.system(size: 12))
-                }
-
-                HStack(spacing: 4) {
-                    Image(systemName: "bubble")
-                        .resizable()
-                        .frame(width: 12, height: 12)
-                    Text(String(model.commentCount))
-                        .font(.system(size: 12))
-                }
-            }
-            .foregroundStyle(.gray)
+            CountSection(model: model)
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(.white)
         )
+    }
+}
+
+// 태그 + 상태
+private struct TagSection: View, Equatable {
+    let model: CommunityItemModel
+
+    var body: some View {
+        HStack {
+            Text(model.tag.text)
+                .font(.system(size: 12))
+                .padding(.vertical, 3)
+                .padding(.horizontal, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.gray.opacity(0.2))
+                        .strokeBorder(.gray)
+                )
+            Spacer()
+            Text(model.status.text)
+                .font(.system(size: 10))
+                .foregroundStyle(model.status.mainColor)
+                .padding(.vertical, 3)
+                .padding(.horizontal, 7)
+                .background(
+                    Capsule()
+                        .fill(model.status.subColor)
+                )
+        }
+    }
+}
+
+// 내용
+private struct ContentSection: View, Equatable {
+    let model: CommunityItemModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(model.title)
+                .font(.system(size: 16).bold())
+
+            HStack(spacing: 8) {
+                Text(model.location)
+                Text("•")
+                Text(model.userName)
+                Text("•")
+                Text(model.createdAt)
+            }
+            .font(.system(size: 12))
+            .foregroundStyle(.gray)
+        }
+    }
+}
+
+// 좋아요 + 댓글
+private struct CountSection: View, Equatable {
+    let model: CommunityItemModel
+
+    var body: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 4) {
+                Image(systemName: "heart")
+                    .resizable()
+                    .frame(width: 12, height: 12)
+                Text(String(model.likeCount))
+                    .font(.system(size: 12))
+            }
+
+            HStack(spacing: 4) {
+                Image(systemName: "bubble")
+                    .resizable()
+                    .frame(width: 12, height: 12)
+                Text(String(model.commentCount))
+                    .font(.system(size: 12))
+            }
+        }
+        .foregroundStyle(.gray)
     }
 }
 
