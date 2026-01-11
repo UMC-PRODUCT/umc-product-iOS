@@ -8,15 +8,21 @@
 import Foundation
 import SwiftUI
 
-enum NoticeType {
-    case essential
-    case target
+
+// MARK: - NoticeType
+/// NoticeChip에 쓰이는 enum
+enum NoticeType: String, Equatable {
+    case essential = "필독"
+    case core = "중앙"
+    case branch = "지부"
+    case campus = "교내"
+    case part = "파트"
     
     var textColor: Color {
         switch self {
         case .essential:
             return .primary600
-        case .target:
+        default:
             return .white
         }
     }
@@ -25,7 +31,7 @@ enum NoticeType {
         switch self {
         case .essential:
             return .primary100
-        case .target:
+        default:
             return .primary600
         }
     }
