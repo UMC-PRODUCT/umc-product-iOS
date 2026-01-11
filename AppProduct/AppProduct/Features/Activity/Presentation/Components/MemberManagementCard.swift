@@ -26,13 +26,13 @@ struct MemberManagementCard: View {
             Image(systemName: "chevron.right")
                 .resizable()
                 .frame(width: 4, height: 8)
-                .foregroundStyle(Color.border)
+                .foregroundStyle(Color.grey400)
         }
         .padding(16)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.border, lineWidth: 1)
+                .stroke(Color.grey200, lineWidth: 1)
         )
     }
 }
@@ -71,20 +71,20 @@ struct MemberTextPresenter: View {
                 
                 Rectangle()
                     .frame(width: 1, height: 16)
-                    .foregroundStyle(Color.border)
+                    .foregroundStyle(Color.grey300)
                 
                 Text(memberManagementItem.generation)
                     .font(.app(.caption1, weight: .regular))
-                    .foregroundStyle(Color.neutral500)
+                    .foregroundStyle(Color.grey900)
             }
             HStack {
                 Text(memberManagementItem.position)
                     .font(.app(.caption1, weight: .regular))
-                    .foregroundStyle(Color.neutral700)
+                    .foregroundStyle(Color.grey500)
                 
                 Text(memberManagementItem.part)
                     .font(.app(.caption1, weight: .regular))
-                    .foregroundStyle(Color.neutral500)
+                    .foregroundStyle(Color.grey500)
             }
         }
     }
@@ -105,24 +105,24 @@ struct MemberPenaltyPresenter: View {
                 Text(String(format: "%.1f", memberManagementItem.penalty))
             }
             .font(.app(.caption1, weight: .bold))
-            .foregroundStyle(Color.danger500)
+            .foregroundStyle(Color.red700)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background (
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.danger100)
-                    .strokeBorder(Color.danger300, lineWidth: 0.5)
+                    .fill(Color.red100)
+                    .strokeBorder(Color.red300, lineWidth: 0.5)
             )
         }
         else {
             Text("Clean ✨")
                 .font(.app(.caption1, weight: .regular))
-                .foregroundStyle(Color.neutral500)
+                .foregroundStyle(Color.grey700)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background (
                     RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(Color.border, lineWidth: 0.5)
+                        .strokeBorder(Color.grey000, lineWidth: 0.5)
                 )
         }
     }
@@ -139,7 +139,7 @@ struct MemberBadgePresenter: View {
             .resizable()
             .frame(width: 8, height: 8)
             .padding(3)
-            .background(Color.warning300)
+            .background(Color.yellow300)
             .clipShape(Circle())
             .overlay(
                 Circle()
