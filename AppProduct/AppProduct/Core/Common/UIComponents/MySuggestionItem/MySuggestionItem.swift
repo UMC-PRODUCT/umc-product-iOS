@@ -116,7 +116,7 @@ private struct MySuggestionItemPresenter: View, Equatable {
     struct SuggestionPreview: View {
         var body: some View {
             ZStack {
-                Color.neutral100
+                Color.grey000
 
                 MySuggestionItem(
                     model: .init(

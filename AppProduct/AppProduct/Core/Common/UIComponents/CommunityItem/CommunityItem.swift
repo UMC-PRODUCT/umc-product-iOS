@@ -113,7 +113,7 @@ private struct CommunityItemPresenter: View, Equatable {
     struct CommunityItemPreview: View {
         var body: some View {
             ZStack {
-                Color.neutral100
+                Color.grey100
 
                 CommunityItem(
                     model: .init(
