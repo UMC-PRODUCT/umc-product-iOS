@@ -35,12 +35,12 @@ struct NoticeLinkCard: View {
                 Image(systemName: "chevron.right")
                     .resizable()
                     .frame(width: Constants.chevronSize.width, height: Constants.chevronSize.height)
-                    .foregroundStyle(Color.border)
+                    .foregroundStyle(Color.grey400)
             }
             .padding(Constants.innerPadding)
             .background {
                 RoundedRectangle(cornerRadius: Constants.radius)
-                    .foregroundStyle(Color.primary100)
+                    .foregroundStyle(Color.indigo100)
             }
         }
         .glassEffect(in: .rect(cornerRadius: Constants.radius))
@@ -64,11 +64,11 @@ struct LinkIconPresenter: View {
         Image(systemName: "link")
             .resizable()
             .frame(width: Constants.linkIconSize.width, height: Constants.linkIconSize.height)
-            .foregroundStyle(Color.primary700)
+            .foregroundStyle(Color.grey100)
             .padding(Constants.iconPadding)
             .background {
                 RoundedRectangle(cornerRadius: Constants.iconCornerRadius)
-                    .foregroundStyle(Color.primary200)
+                    .foregroundStyle(Color.indigo400)
             }
     }
 }
@@ -95,7 +95,7 @@ struct LinkTextPresenter: View {
             
             Text(url)
                 .font(.app(.caption1, weight: .regular))
-                .foregroundStyle(Color.neutral700)
+                .foregroundStyle(Color.grey700)
         }
     }
 }
