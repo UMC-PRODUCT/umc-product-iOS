@@ -29,9 +29,9 @@ struct StudySwipeButton: View, Equatable {
         var color: Color {
             switch self {
             case .best:
-                return .warning700
+                return .yellow700
             case .review:
-                return .primary700
+                return .green900
             }
         }
     }

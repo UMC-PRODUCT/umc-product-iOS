@@ -28,7 +28,7 @@ struct StudyManagementCard: View {
         .frame(maxWidth: .infinity)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(Color.border)
+                .strokeBorder(.grey000)
         )
     }
 }
@@ -60,6 +60,7 @@ struct StudyTextPresenter: View, Equatable {
             HStack {
                 Text(studyManagementItem.name)
                     .font(.app(.callout, weight: .bold))
+                    .foregroundStyle(.grey800)
                     
                 Text(studyManagementItem.part)
                     .font(.app(.caption2, weight: .regular))
@@ -67,7 +68,7 @@ struct StudyTextPresenter: View, Equatable {
                     .padding(.vertical, 2)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(Color.border)
+                            .strokeBorder(.grey000)
                             .foregroundStyle(.clear)
                     )
             }
@@ -75,11 +76,11 @@ struct StudyTextPresenter: View, Equatable {
             HStack {
                 Text(studyManagementItem.school)
                     .font(.app(.footnote, weight: .regular))
-                    .foregroundStyle(Color.neutral700)
+                    .foregroundStyle(Color.grey600)
                 
                 Rectangle()
                     .frame(width: 1, height: 16)
-                    .foregroundStyle(Color.border)
+                    .foregroundStyle(Color.grey600)
                 
                 HStack(spacing: 5) {
                     Image(systemName: "text.document")
@@ -89,7 +90,7 @@ struct StudyTextPresenter: View, Equatable {
                     Text(studyManagementItem.title)
                         .font(.app(.footnote, weight: .regular))
                 }
-                .foregroundStyle(Color.primary500)
+                .foregroundStyle(Color.grey600)
             }
         }
     }
@@ -107,7 +108,7 @@ struct StudyChevronPresenter: View, Equatable {
             Text("스와이프")
                 .font(.app(.caption2, weight: .regular))
         }
-        .foregroundStyle(Color.border)
+        .foregroundStyle(Color.grey600)
     }
 }
 
