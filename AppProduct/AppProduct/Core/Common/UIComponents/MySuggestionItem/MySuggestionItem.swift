@@ -51,6 +51,7 @@ struct MySuggestionItem: View {
 
     var body: some View {
         MySuggestionItemPresenter(model: model)
+            .equatable()
     }
 }
 
