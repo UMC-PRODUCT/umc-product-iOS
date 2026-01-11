@@ -14,15 +14,22 @@ struct NoticeChip: View {
     // MARK: - Property
     let noticeType: NoticeType
     
+    // MARK: - Constants
+    fileprivate enum NoticeChipConstants {
+        static let horizonPadding: CGFloat = 7
+        static let verticalPadding: CGFloat = 3
+        static let radius: CGFloat = 8
+    }
+    
     // MARK: - Body
     var body: some View {
         Text(noticeType.rawValue)
             .font(.app(.caption1, weight: .regular))
             .foregroundStyle(noticeType.textColor)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
+            .padding(.horizontal, NoticeChipConstants.horizonPadding)
+            .padding(.vertical, NoticeChipConstants.verticalPadding)
             .background {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: NoticeChipConstants.radius)
                     .foregroundStyle(noticeType.backgroundColor)
             }
     }
