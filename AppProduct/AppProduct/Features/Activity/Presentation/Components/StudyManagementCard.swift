@@ -148,7 +148,7 @@ private struct StudyBottomTextPresenter: View, Equatable {
                 Text(studyManagementItem.title)
                     .font(.app(.footnote, weight: .regular))
             }
-            .foregroundStyle(Color.grey600)
+            .foregroundStyle(Color.indigo400)
         }
     }
 }
