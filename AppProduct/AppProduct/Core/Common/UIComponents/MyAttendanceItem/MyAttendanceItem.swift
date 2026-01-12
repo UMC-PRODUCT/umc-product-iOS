@@ -7,6 +7,18 @@
 
 import SwiftUI
 
+// MARK: - Constant
+
+private enum Constant {
+    static let mainHSpacing: CGFloat = 16
+    // status
+    static let statusPadding: EdgeInsets = .init(top: 2, leading: 7, bottom: 2, trailing: 7)
+    static let statusRadius: CGFloat = 8
+    // content
+    static let contentPadding: EdgeInsets = .init(top: 12, leading: 12, bottom: 12, trailing: 12)
+    static let contentRadius: CGFloat = 10
+}
+
 // MARK: - MyAttendanceItem
 
 // 활동 탭 - 출석 체크 - 나의 출석 현황
@@ -26,6 +38,7 @@ struct MyAttendanceItem: View {
 
     var body: some View {
         MyAttendanceItemPresenter(model: model)
+            .equatable()
     }
 }
 
@@ -39,61 +52,34 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     }
 
     var body: some View {
-        HStack(spacing: 13) {
+        HStack(spacing: Constant.mainHSpacing) {
             // 주차
             Text(model.week)
-                .font(.system(size: 14).bold())
-                .foregroundStyle(.gray)
+                .appFont(.subheadlineEmphasis, color: .gray)
 
             HStack {
                 // 제목 + 날짜
                 VStack(alignment: .leading) {
                     Text(model.title)
-                        .font(.system(size: 14).bold())
-                    Text(formatDate(model.date))
-                        .font(.system(size: 12))
-                        .foregroundStyle(.gray)
+                        .appFont(.subheadlineEmphasis, color: .black)
+                    Text(model.date.toMonthDay())
+                        .appFont(.caption1, color: .gray)
                 }
 
                 Spacer()
 
                 Text(model.status.text)
-                    .font(.system(size: 12).bold())
+                    .appFont(.caption1Emphasis, color: .white)
                     .foregroundStyle(.white)
-                    .padding(.vertical, 2)
-                    .padding(.horizontal, 7)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(model.status.color)
-                    )
+                    .padding(Constant.statusPadding)
+                    .background(model.status.color, in: RoundedRectangle(cornerRadius: Constant.statusRadius))
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(.gray.opacity(0.1))
-            )
+            .padding(Constant.contentPadding)
+            .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.contentRadius))
         }
-    }
-
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM.dd"
-        formatter.locale = Locale(identifier: "ko_KR")
-        return formatter.string(from: date)
     }
 }
 
 #Preview {
-    struct MyAttendanceItemPreview: View {
-        var body: some View {
-            VStack(spacing: 20) {
-                MyAttendanceItem(model: .init(week: "3주차", title: "정기 세션", date: Date(), status: .present))
-                MyAttendanceItem(model: .init(week: "2주차", title: "블라블라", date: Date(), status: .late))
-                MyAttendanceItem(model: .init(week: "1주차", title: "OT", date: Date(), status: .absent))
-            }
-            .padding()
-        }
-    }
-
-    return MyAttendanceItemPreview()
+    MyAttendanceItem(model: .init(week: "3주차", title: "정기 세션", date: Date(), status: .present))
 }
