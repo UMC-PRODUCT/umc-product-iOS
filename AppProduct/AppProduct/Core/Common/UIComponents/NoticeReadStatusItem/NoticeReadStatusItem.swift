@@ -7,6 +7,24 @@
 
 import SwiftUI
 
+// MARK: - Constant
+
+private enum Constant {
+    static let mainHSpacing: CGFloat = 12
+    static let mainPadding: CGFloat = 12
+    static let mainRadius: CGFloat = 20
+    // profile
+    static let profileSize: CGSize = .init(width: 40, height: 40)
+    // user
+    static let userInfoVSpacing: CGFloat = 4
+    static let userInfoHSpacing: CGFloat = 8
+    static let partTagPadding: EdgeInsets = .init(top: 2, leading: 6, bottom: 2, trailing: 6)
+    static let partTagRadius: CGFloat = 8
+    // isRead
+    static let readIconSize: CGFloat = 16
+    static let unReadCircleSize: CGSize = .init(width: 8, height: 8)
+}
+
 // MARK: - NoticeReadStatusItem
 
 /// 공지 탭 - 공지 글 내부 - 공지 열람 확인 리스트
@@ -26,6 +44,7 @@ struct NoticeReadStatusItem: View {
 
     var body: some View {
         NoticeReadStatusItemPresenter(model: model)
+            .equatable()
     }
 }
 
@@ -39,94 +58,68 @@ private struct NoticeReadStatusItemPresenter: View, Equatable {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Constant.mainHSpacing) {
             // 프로필 이미지
             if model.profileImage != nil {
                 model.profileImage
             } else {
                 Text(model.userName.prefix(1))
-                    .font(.system(size: 12).bold())
-                    .frame(width: 40, height: 40)
-                    .background(
-                        Circle()
-                            .fill(.white)
-                    )
+                    .appFont(.caption1Emphasis, color: .black)
+                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
+                    .background(.white, in: Circle())
             }
 
-            VStack(alignment: .leading, spacing: 2.5) {
-                // 이름 + 파트
-                HStack(spacing: 6) {
-                    Text(model.userName)
-                        .font(.system(size: 14).bold())
-                        .foregroundStyle(.black)
-                    Text(model.part)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.gray)
-                        .padding(.vertical, 2)
-                        .padding(.horizontal, 6)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.white)
-                                .strokeBorder(.gray.opacity(0.2))
-                        )
-                }
-
-                // 지역 + 대학
-                Text("\(model.location) | \(model.campus)")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.gray)
-            }
+            UserInfoSection(model: model)
 
             Spacer()
 
             if model.isRead {
                 Image(systemName: "checkmark.circle")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 15, height: 15)
+                    .font(.system(size: Constant.readIconSize))
                     .foregroundStyle(.green)
             } else {
                 Circle()
                     .fill(.red)
-                    .frame(width: 8, height: 8)
+                    .frame(width: Constant.unReadCircleSize.width, height: Constant.unReadCircleSize.height)
             }
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.grey100)
-        )
+        .padding(Constant.mainPadding)
+        .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.mainRadius))
+    }
+}
+
+private struct UserInfoSection: View, Equatable {
+    let model: NoticeReadStatusItemModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Constant.userInfoVSpacing) {
+            // 이름 + 파트
+            HStack(spacing: Constant.userInfoHSpacing) {
+                Text(model.userName)
+                    .appFont(.subheadlineEmphasis, color: .black)
+                Text(model.part)
+                    .appFont(.caption2, color: .gray)
+                    .padding(Constant.partTagPadding)
+                    .background(.white, in: RoundedRectangle(cornerRadius: Constant.partTagRadius))
+                    .overlay(RoundedRectangle(cornerRadius: Constant.partTagRadius).strokeBorder(.grey200))
+            }
+
+            // 지역 + 대학
+            Text("\(model.location) | \(model.campus)")
+                .appFont(.caption1, color: .gray)
+        }
     }
 }
 
 #Preview {
-    struct NoticeReadStatusItemPreview: View {
-        var body: some View {
-            VStack {
-                NoticeReadStatusItem(
-                    model: .init(
-                        profileImage: nil,
-                        userName: "김피엠",
-                        part: "PM",
-                        location: "서울",
-                        campus: "중앙대",
-                        isRead: true
-                    )
-                )
-
-                NoticeReadStatusItem(
-                    model: .init(
-                        profileImage: nil,
-                        userName: "이애플",
-                        part: "iOS",
-                        location: "부산/경남",
-                        campus: "부산대",
-                        isRead: false
-                    )
-                )
-            }
-            .padding()
-        }
-    }
-    return NoticeReadStatusItemPreview()
+    NoticeReadStatusItem(
+        model: .init(
+            profileImage: nil,
+            userName: "이애플",
+            part: "iOS",
+            location: "부산/경남",
+            campus: "부산대",
+            isRead: false
+        )
+    )
 }
