@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct MemberManagementItem: Identifiable {
+struct MemberManagementItem: Identifiable, Equatable {
     let id: UUID = .init()
     let profile: ImageResource
     let name: String
