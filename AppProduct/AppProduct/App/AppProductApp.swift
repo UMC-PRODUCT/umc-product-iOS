@@ -13,7 +13,7 @@ struct AppProductApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            Text("1")
             //!!!: - 사용 시 주석 풀기
                 .environment(\.di, container)
         }
