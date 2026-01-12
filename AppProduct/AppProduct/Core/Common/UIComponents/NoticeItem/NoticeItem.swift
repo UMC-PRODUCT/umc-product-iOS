@@ -15,19 +15,13 @@ private enum Constant {
     static let mainBoxRadius: CGFloat = 20
     // top
     static let topHSpacing: CGFloat = 8
-    static let tagFontSize: CGFloat = 10
     static let tagPadding: EdgeInsets = .init(top: 2, leading: 5, bottom: 2, trailing: 5)
     static let mustReadIconSpacing: CGFloat = 4
     static let mustReadIconSize: CGFloat = 12
-    static let mustReadFontSize: CGFloat = 12
     static let alertCircleSize: CGSize = .init(width: 8, height: 8)
-    static let dateFontSize: CGFloat = 12
     // content
     static let contentSpacing: CGFloat = 4
-    static let titleFontSize: CGFloat = 16
-    static let contentFontSize: CGFloat = 14
     // bottom
-    static let bottomInfoFontSize: CGFloat = 12
     static let bottomIconSize: CGFloat = 12
 }
 
@@ -81,8 +75,7 @@ private struct TopSection: View, Equatable {
     var body: some View {
         HStack(spacing: Constant.topHSpacing) {
             Text(model.tag.text)
-                .font(.system(size: Constant.tagFontSize))
-                .foregroundStyle(model.tag.textColor)
+                .appFont(.caption2, color: model.tag.textColor)
                 .padding(Constant.tagPadding)
                 .background(model.tag.backColor, in: Capsule())
                 .overlay(Capsule().strokeBorder(model.tag.borderColor))
@@ -92,7 +85,7 @@ private struct TopSection: View, Equatable {
                     Image(systemName: "pin.fill")
                         .font(.system(size: Constant.mustReadIconSize))
                     Text("필독")
-                        .font(.system(size: Constant.mustReadFontSize).bold())
+                        .appFont(.caption1Emphasis)
                 }
                 .foregroundStyle(.blue)
             }
@@ -106,8 +99,7 @@ private struct TopSection: View, Equatable {
             }
 
             Text(model.date.toYearMonthDay())
-                .font(.system(size: Constant.dateFontSize))
-                .foregroundStyle(.gray)
+                .appFont(.caption1, color: .gray)
         }
     }
 }
@@ -119,13 +111,11 @@ private struct ContentSection: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.contentSpacing) {
             Text(model.title)
-                .font(.system(size: Constant.titleFontSize).bold())
-                .foregroundStyle(model.mustRead ? Color.indigo900 : .black)
+                .appFont(.calloutEmphasis, color: model.mustRead ? Color.indigo900 : .black)
                 .lineLimit(1)
 
             Text(model.content)
-                .font(.system(size: Constant.contentFontSize))
-                .foregroundStyle(.gray)
+                .appFont(.footnote, color: .gray)
                 .lineLimit(2)
         }
     }
@@ -153,8 +143,7 @@ private struct BottomSection: View, Equatable {
 
             Text("조회 \(model.viewCount)")
         }
-        .font(.system(size: Constant.bottomInfoFontSize))
-        .foregroundStyle(.gray)
+        .appFont(.caption1, color: .gray)
     }
 }
 

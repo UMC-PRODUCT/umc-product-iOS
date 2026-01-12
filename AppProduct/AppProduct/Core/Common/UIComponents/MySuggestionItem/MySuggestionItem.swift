@@ -15,20 +15,12 @@ private enum Constant {
     static let mainPadding: CGFloat = 16
     static let mainBoxRadius: CGFloat = 20
     // status
-    static let statusFontSize: CGFloat = 10
     static let statusPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
-    // date
-    static let dateFontSize: CGFloat = 12
     // question
-    static let questionTitleFontSize: CGFloat = 14
-    static let questionContentFontSize: CGFloat = 12
     static let questionContentPadding: EdgeInsets = .init(top: 12, leading: 12, bottom: 12, trailing: 12)
     static let questionContentBoxRadius: CGFloat = 10
     // answer
-    static let answerIconFontSize: CGFloat = 10
     static let answerIconPadding: EdgeInsets = .init(top: 7, leading: 7, bottom: 7, trailing: 7)
-    static let answerTitleFontSize: CGFloat = 12
-    static let answerContentFontSize: CGFloat = 12
     static let answerVSpacing: CGFloat = 4
 }
 
@@ -85,8 +77,7 @@ private struct TopSection: View, Equatable {
     var body: some View {
         HStack {
             Text(model.status.text)
-                .font(.system(size: Constant.statusFontSize))
-                .foregroundStyle(model.status.mainColor)
+                .appFont(.caption2, color: model.status.mainColor)
                 .padding(Constant.statusPadding)
                 .background(model.status.subColor, in: Capsule())
                 .overlay(Capsule().strokeBorder(model.status.mainColor))
@@ -94,7 +85,7 @@ private struct TopSection: View, Equatable {
             Spacer()
 
             Text(model.date.toYearMonthDay())
-                .font(.system(size: Constant.dateFontSize))
+                .appFont(.caption1, color: .black)
         }
     }
 }
@@ -105,10 +96,10 @@ private struct QuestionSection: View, Equatable {
 
     var body: some View {
         Text(model.title)
-            .font(.system(size: Constant.questionTitleFontSize).bold())
+            .appFont(.subheadlineEmphasis, color: .black)
 
         Text(model.question)
-            .font(.system(size: Constant.questionContentFontSize))
+            .appFont(.caption1, color: .black)
             .padding(Constant.questionContentPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.questionContentBoxRadius))
@@ -122,19 +113,16 @@ private struct AnswerSection: View, Equatable {
     var body: some View {
         HStack(alignment: .top) {
             Text("A")
-                .font(.system(size: Constant.answerIconFontSize))
-                .foregroundStyle(.indigo900)
+                .appFont(.caption2, color: .indigo900)
                 .padding(Constant.answerIconPadding)
                 .background(.indigo100, in: Circle())
 
             VStack(alignment: .leading, spacing: Constant.answerVSpacing) {
                 Text("운영진 답변")
-                    .font(.system(size: Constant.answerTitleFontSize).bold())
-                    .foregroundStyle(.indigo900)
+                    .appFont(.caption1Emphasis, color: .indigo900)
 
                 Text(model.answer ?? "")
-                    .font(.system(size: Constant.answerContentFontSize))
-                    .foregroundStyle(.black)
+                    .appFont(.caption1, color: .black)
             }
         }
     }
