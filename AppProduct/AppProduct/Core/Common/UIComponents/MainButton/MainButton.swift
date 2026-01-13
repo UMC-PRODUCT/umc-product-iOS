@@ -52,11 +52,16 @@ struct MainButton: View {
     // MARK: - Body
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            if !isLoading {
+                action()
+            }
+        }) {
             MainButtonContent(
                 title: title, size: size, isLoading: isLoading)
             .equatable()
         }
+        .padding(.bottom, DefaultConstant.defaultBtnPadding)
         .disabled(isLoading)
     }
 }
