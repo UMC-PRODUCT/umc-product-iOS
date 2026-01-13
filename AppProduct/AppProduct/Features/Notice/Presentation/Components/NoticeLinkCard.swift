@@ -11,7 +11,8 @@ import SwiftUI
 struct NoticeLinkCard: View {
     
     // MARK: - Property
-    let noticeLinkItem: NoticeLinkItem
+    let url: String
+    @Environment(\.openURL) var openURL
     
     // MARK: - Constants
     fileprivate enum Constants {
@@ -23,24 +24,24 @@ struct NoticeLinkCard: View {
     // MARK: - Body
     var body: some View {
         Button(action: {
-            
+            openURL(URL(string: url)!)
         }) {
             HStack {
                 LinkIconPresenter()
                 
-                LinkTextPresenter(url: noticeLinkItem.url)
+                LinkTextPresenter(url: url)
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
                     .resizable()
                     .frame(width: Constants.chevronSize.width, height: Constants.chevronSize.height)
-                    .foregroundStyle(Color.border)
+                    .foregroundStyle(Color.grey400)
             }
             .padding(Constants.innerPadding)
             .background {
                 RoundedRectangle(cornerRadius: Constants.radius)
-                    .foregroundStyle(Color.primary100)
+                    .foregroundStyle(Color.indigo100)
             }
         }
         .glassEffect(in: .rect(cornerRadius: Constants.radius))
@@ -64,11 +65,11 @@ struct LinkIconPresenter: View {
         Image(systemName: "link")
             .resizable()
             .frame(width: Constants.linkIconSize.width, height: Constants.linkIconSize.height)
-            .foregroundStyle(Color.primary700)
+            .foregroundStyle(Color.grey100)
             .padding(Constants.iconPadding)
             .background {
                 RoundedRectangle(cornerRadius: Constants.iconCornerRadius)
-                    .foregroundStyle(Color.primary200)
+                    .foregroundStyle(Color.indigo400)
             }
     }
 }
@@ -95,13 +96,14 @@ struct LinkTextPresenter: View {
             
             Text(url)
                 .font(.app(.caption1, weight: .regular))
-                .foregroundStyle(Color.neutral700)
+                .foregroundStyle(Color.grey700)
         }
     }
 }
 
 
 // MARK: - Preview
+// url을 https:// 까지 입력해야 정상작동!
 #Preview(traits: .sizeThatFitsLayout) {
-    NoticeLinkCard(noticeLinkItem: NoticeLinkItem(url: "www.naver.com"))
+    NoticeLinkCard(url: "https://www.naver.com")
 }

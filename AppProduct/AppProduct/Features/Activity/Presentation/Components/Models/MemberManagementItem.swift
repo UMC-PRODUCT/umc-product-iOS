@@ -28,27 +28,27 @@ enum ManagementTeam: String {
     
     var textColor: Color {
         switch self {
-        case .president: return .accent700
-        case .vicePresident: return .primary600
-        case .partLeader: return .success500
+        case .president: return .red100
+        case .vicePresident: return .indigo100
+        case .partLeader: return .green500
         case .challenger: return .clear
         }
     }
     
     var backgroundColor: Color {
         switch self {
-        case .president: return .accent100
-        case .vicePresident: return .primary100
-        case .partLeader: return .success100
+        case .president: return .red300
+        case .vicePresident: return .indigo400
+        case .partLeader: return .green100
         case .challenger: return .clear
         }
     }
     
     var borderColor: Color {
         switch self {
-        case .president: return .accent300
-        case .vicePresident: return .primary300
-        case .partLeader: return .success300
+        case .president: return .red500
+        case .vicePresident: return .indigo700
+        case .partLeader: return .green300
         case .challenger: return .clear
         }
     }
