@@ -112,13 +112,28 @@ struct SignUpView: View {
     }
     
     private var mainBtn: some View {
-        MainButton("다음", action: {
-            print("다음")
+        MainButton("완료", action: {
+            signUpCompleted()
         })
+        .loading($viewModel.isLoading)
         .tint(.indigo500)
         .disabled(!viewModel.isFormValid)
         .buttonStyle(.glassProminent)
         .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+    }
+    
+    private func signUpCompleted() {
+        Task {
+            let results = await viewModel.requestPermission(
+                notification: true,
+                location: true,
+                photo: true 
+            )
+            
+            #if DEBUG
+            print("권한 요청: \(results)")
+            #endif
+        }
     }
 }
 

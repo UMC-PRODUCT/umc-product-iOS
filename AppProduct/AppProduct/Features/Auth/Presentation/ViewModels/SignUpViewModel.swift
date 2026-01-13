@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import UserNotifications
+import Photos
 
 
 @Observable
@@ -30,6 +32,8 @@ class SignUpViewModel {
         selectedUniv != nil &&
         isEmailVerified
     }
+    
+    var isLoading: Bool = false
 
     // MARK: - Methods
     /// 이메일 인증번호 요청
@@ -43,5 +47,40 @@ class SignUpViewModel {
 
         self.emailCode = code
         self.isEmailVerified = true
+    }
+}
+
+// MARK: - PermissionRequest
+extension SignUpViewModel {
+    func requestPermission(notification: Bool, location: Bool, photo: Bool) async -> [String: Bool] {
+        var request: [String: Bool] = [:]
+        
+        if notification {
+            do {
+                let granted = try await UNUserNotificationCenter.current()
+                    .requestAuthorization(options: [.alert, .badge, .sound])
+                request["notification"] = granted
+            } catch {
+                request["notification"] = false
+            }
+            try? await Task.sleep(for: .milliseconds(200))
+        }
+        
+        if location {
+            LocationManager.shared.requestAuthorization()
+            
+            try? await Task.sleep(for: .milliseconds(1))
+            request["location"] = LocationManager.shared.isAuthorized
+            
+            try? await Task.sleep(for: .milliseconds(200))
+        }
+        
+        if photo {
+            let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+            request["photo"] = (status == .authorized || status == .limited)
+        }
+        
+        return request
+        
     }
 }
