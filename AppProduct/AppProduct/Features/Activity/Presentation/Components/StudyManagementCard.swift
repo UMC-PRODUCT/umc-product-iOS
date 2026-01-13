@@ -28,7 +28,7 @@ struct StudyManagementCard: View {
         .frame(maxWidth: .infinity)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(Color.border)
+                .strokeBorder(Color.grey400)
         )
     }
 }
@@ -67,7 +67,7 @@ struct StudyTextPresenter: View, Equatable {
                     .padding(.vertical, 2)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(Color.border)
+                            .strokeBorder(Color.grey400)
                             .foregroundStyle(.clear)
                     )
             }
@@ -75,11 +75,11 @@ struct StudyTextPresenter: View, Equatable {
             HStack {
                 Text(studyManagementItem.school)
                     .font(.app(.footnote, weight: .regular))
-                    .foregroundStyle(Color.neutral700)
+                    .foregroundStyle(Color.grey600)
                 
                 Rectangle()
                     .frame(width: 1, height: 16)
-                    .foregroundStyle(Color.border)
+                    .foregroundStyle(Color.grey400)
                 
                 HStack(spacing: 5) {
                     Image(systemName: "text.document")
@@ -89,7 +89,7 @@ struct StudyTextPresenter: View, Equatable {
                     Text(studyManagementItem.title)
                         .font(.app(.footnote, weight: .regular))
                 }
-                .foregroundStyle(Color.primary500)
+                .foregroundStyle(Color.indigo600)
             }
         }
     }
@@ -107,7 +107,7 @@ struct StudyChevronPresenter: View, Equatable {
             Text("스와이프")
                 .font(.app(.caption2, weight: .regular))
         }
-        .foregroundStyle(Color.border)
+        .foregroundStyle(Color.grey400)
     }
 }
 
