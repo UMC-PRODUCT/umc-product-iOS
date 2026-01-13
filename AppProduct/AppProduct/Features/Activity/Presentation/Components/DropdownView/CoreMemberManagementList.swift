@@ -7,9 +7,14 @@
 
 import SwiftUI
 
+// MARK: - CoreMemberManagementList
 struct CoreMemberManagementList: View {
     
+    // MARK: - Property
+    
     let memberManagementItem: MemberManagementItem
+    
+    // MARK: - Body
     
     var body: some View {
         HStack {
@@ -24,6 +29,8 @@ struct CoreMemberManagementList: View {
     }
 }
 
+// MARK: - CoreMemberTextPresenter
+/// 이름, 파트
 struct CoreMemberTextPresenter: View {
     
     let name: String
@@ -40,6 +47,10 @@ struct CoreMemberTextPresenter: View {
     }
 }
 
+// MARK: - ManagementTeamBadgePresenter
+/// 운영진 뱃지
+/// - 회장, 부회장, 파트장
+/// - 챌린저일 때 나타나지않음
 struct ManagementTeamBadgePresenter: View {
     
     let managementTeam: ManagementTeam
@@ -57,6 +68,8 @@ struct ManagementTeamBadgePresenter: View {
             }
     }
 }
+
+// MARK: - Preview
 
 #Preview(traits: .sizeThatFitsLayout) {
     VStack(spacing: 4) {
