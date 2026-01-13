@@ -52,13 +52,13 @@ struct CoreStudyTextPresenter: View {
                     .padding(.vertical, 2)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(Color.border)
+                            .strokeBorder(Color.grey300)
                             .foregroundStyle(.clear)
                     )
             }
             Text(title)
                 .font(.app(.caption1, weight: .regular))
-                .foregroundStyle(Color.neutral500)
+                .foregroundStyle(Color.indigo500)
         }
     }
 }

@@ -46,7 +46,7 @@ struct SourceDropdownView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.clear)
-                        .strokeBorder(Color.border)
+                        .strokeBorder(Color.grey100)
                 )
             
             Spacer()
@@ -54,7 +54,7 @@ struct SourceDropdownView: View {
             Image(systemName: "chevron.down")
                 .resizable()
                 .frame(width: 8, height: 4)
-                .foregroundStyle(Color.neutral800)
+                .foregroundStyle(Color.grey900)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
