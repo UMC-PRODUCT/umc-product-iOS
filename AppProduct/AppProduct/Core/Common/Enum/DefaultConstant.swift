@@ -16,7 +16,7 @@ enum DefaultConstant {
     static let defaultCornerRadius: CGFloat = 20
     static let defaultContentBottomMargins: CGFloat = 40
     static let defaultContentTopMargins: CGFloat = 20
-    static let defaultBtnPadding: CGFloat = 8
+    static let defaultBtnPadding: CGFloat = 10
     static let defaultTextFieldPadding: CGFloat = 14
     static let defaultTopCapsuleSpacing: CGFloat = 10
     

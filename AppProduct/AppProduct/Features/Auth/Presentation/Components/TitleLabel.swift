@@ -22,12 +22,14 @@ struct TitleLabel: View {
     var body: some View {
         HStack(spacing: Constants.titleSpacing, content: {
             Text(title)
-                .appFont(.body, color: .grey900)
+                .font(.system(size: 18))
+                .fontWeight(.heavy)
             
             if isRequired {
                 Text("*")
                     .appFont(.body, color: .red)
             }
         })
+        .padding(.leading, 12)
     }
 }

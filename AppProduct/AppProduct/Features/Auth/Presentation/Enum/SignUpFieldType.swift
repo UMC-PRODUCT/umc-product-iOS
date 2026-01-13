@@ -7,9 +7,10 @@
 
 import Foundation
 import SwiftUI
+import UIKit
 
 
-enum SignUpFieldType: CaseIterable {
+enum SignUpFieldType: Hashable, CaseIterable {
     case name
     case nickname
     case email
@@ -41,7 +42,7 @@ enum SignUpFieldType: CaseIterable {
     var placeholder: String {
         switch self {
         case .name: return "실명을 입력하세요"
-        case .nickname: return "활동할 닉네임을 입력하세요"
+        case .nickname: return "닉네임을 입력하세요"
         case .email: return "example@univ.ac.kr"
         case .univ: return "학교를 선택하세요"
         }

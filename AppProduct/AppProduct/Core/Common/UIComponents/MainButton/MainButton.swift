@@ -61,6 +61,7 @@ struct MainButton: View {
                 title: title, size: size, isLoading: isLoading)
             .equatable()
         }
+        .padding(.bottom, DefaultConstant.defaultBtnPadding)
         .disabled(isLoading)
     }
 }
