@@ -30,7 +30,7 @@ struct AppProductApp: App {
                 Text("!1")
             })
             .navigationDestination(isPresented: $show, destination: {
-                SignUpView()
+                SeasonCard(type: .days(10))
             })
         }
     }

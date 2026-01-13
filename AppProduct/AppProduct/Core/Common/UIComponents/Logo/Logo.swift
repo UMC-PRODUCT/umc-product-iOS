@@ -11,8 +11,13 @@ struct Logo: View {
     // MARK: - Property
     @Environment(\.colorScheme) var mode
     
+    let logoSize: CGFloat
+    
+    init(logoSize: CGFloat = 200) {
+        self.logoSize = logoSize
+    }
+    
     private enum Constants {
-        static let logoSize: CGFloat = 200
         static let logoVspacing: CGFloat = 16
         static let logoSubtitle: String = "University Makeus Challenge"
     }
@@ -23,7 +28,7 @@ struct Logo: View {
             Image(logoImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: Constants.logoSize)
+                .frame(width: self.logoSize)
             
             Text(Constants.logoSubtitle)
                 .appFont(.title3, color: .grey900)
