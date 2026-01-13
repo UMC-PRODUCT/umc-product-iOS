@@ -10,16 +10,18 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constant {
-    static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 16, trailing: 16)
-    static let mainBoxRadius: CGFloat = 8
-    static let mainVSpacing: CGFloat = 8
+    static let mainPadding: EdgeInsets = .init(top: 24, leading: 24, bottom: 24, trailing: 24)
+    static let concentricRadius: CGFloat = 40
+    static let mainVSpacing: CGFloat = 24
     // tag + status
     static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
     static let statusPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
     // content
-    static let contentVSpacing: CGFloat = 4
+    static let contentVSpacing: CGFloat = 12
+    // profile
+    static let profileSize: CGSize = .init(width: 30, height: 30)
     // count
-    static let countHSpacing: CGFloat = 12
+    static let bottomHSpacing: CGFloat = 8
     static let countIconSpacing: CGFloat = 4
 }
 
@@ -57,16 +59,21 @@ private struct CommunityItemPresenter: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.mainVSpacing) {
-            TagSection(model: model)
+            TopSection(model: model)
             ContentSection(model: model)
+            BottomSection(model: model)
         }
         .padding(Constant.mainPadding)
-        .background(.grey000, in: RoundedRectangle(cornerRadius: Constant.mainBoxRadius))
+        .background(
+            ContainerRelativeShape()
+                .fill(.grey000)
+        )
+        .containerShape(.rect(cornerRadius: Constant.concentricRadius))
     }
 }
 
-// 태그 + 상태
-private struct TagSection: View, Equatable {
+// 태그 + 상태 + 시간
+private struct TopSection: View, Equatable {
     let model: CommunityItemModel
 
     var body: some View {
@@ -79,6 +86,9 @@ private struct TagSection: View, Equatable {
                 .appFont(.caption1Emphasis, color: .grey000)
                 .padding(Constant.statusPadding)
                 .glassEffect(.regular.tint(.indigo500))
+            Spacer()
+            Text(model.createdAt)
+                .appFont(.caption1, color: .grey500)
         }
     }
 }
@@ -90,35 +100,48 @@ private struct ContentSection: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.contentVSpacing) {
             Text(model.title)
-                .appFont(.title3Emphasis, color: .grey900)
+                .appFont(.title2Emphasis, color: .grey900)
 
-            HStack {
-                Text("\(model.location) • \(model.userName) • \(model.createdAt)")
-                    .appFont(.caption1, color: .grey700)
-                Spacer()
-                CountSection(model: model)
-            }
+            Text(model.content)
+                .appFont(.body, color: .grey600)
+                .lineLimit(2)
         }
     }
 }
 
-// 좋아요 + 댓글
-private struct CountSection: View, Equatable {
+// 작성자 + 좋아요 + 댓글
+private struct BottomSection: View, Equatable {
     let model: CommunityItemModel
 
     var body: some View {
-        HStack(spacing: Constant.countHSpacing) {
+        HStack(spacing: Constant.bottomHSpacing) {
+            // 프로필 이미지
+            if model.profileImage != nil {
+                model.profileImage
+            } else {
+                Text(model.userName.prefix(1))
+                    .appFont(.caption2Emphasis, color: .grey500)
+                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
+                    .background(.grey100, in: Circle())
+            }
+            // 이름 + 파트
+            Text("\(model.userName) • \(model.part)")
+
+            Spacer()
+
+            // 좋아요 + 댓글
             HStack(spacing: Constant.countIconSpacing) {
                 Image(systemName: "heart")
+                    .foregroundStyle(.red500)
                 Text(String(model.likeCount))
             }
-
             HStack(spacing: Constant.countIconSpacing) {
                 Image(systemName: "bubble")
+                    .foregroundStyle(.indigo500)
                 Text(String(model.commentCount))
             }
         }
-        .appFont(.caption1, color: .grey500)
+        .appFont(.caption1Emphasis, color: .grey500)
     }
 }
 
@@ -128,8 +151,10 @@ private struct CountSection: View, Equatable {
             tag: .question,
             status: .recruiting,
             title: "React Hook 질문있습니다",
-            location: "서울",
+            content: "useEffect 의존성 배열 관련해서 질문이 있습니다... 코드가 자꾸 무한 루프에 빠지는데 로직 점검 부탁드려요!",
+            profileImage: nil,
             userName: "이코딩",
+            part: "Web",
             createdAt: "1시간 전",
             likeCount: 5,
             commentCount: 3
