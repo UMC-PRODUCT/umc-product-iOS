@@ -26,7 +26,7 @@ enum CommunityItemStatus {
         switch self {
         case .upcoming: return .green
         case .recruiting: return .blue
-        case .closed: return .black
+        case .closed: return .grey900
         }
     }
 

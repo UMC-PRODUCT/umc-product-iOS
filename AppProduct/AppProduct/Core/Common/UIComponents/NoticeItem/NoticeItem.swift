@@ -111,7 +111,7 @@ private struct ContentSection: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.contentSpacing) {
             Text(model.title)
-                .appFont(.calloutEmphasis, color: model.mustRead ? Color.indigo900 : .black)
+                .appFont(.calloutEmphasis, color: model.mustRead ? Color.indigo900 : .grey900)
                 .lineLimit(1)
 
             Text(model.content)

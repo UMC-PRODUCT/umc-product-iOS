@@ -76,7 +76,7 @@ private struct CommunityFameItemPresenter: View, Equatable {
                     Text("보기")
                         .appFont(.caption1)
                 }
-                .foregroundStyle(.black)
+                .foregroundStyle(.grey900)
                 .frame(width: Constant.buttonSize.width, height: Constant.buttonSize.height)
                 .background(.white, in: RoundedRectangle(cornerRadius: Constant.buttonRadius))
                 .overlay(RoundedRectangle(cornerRadius: Constant.buttonRadius).strokeBorder(.gray))
@@ -104,7 +104,7 @@ private struct ProfileSection: View, Equatable {
             model.profileImage
         } else {
             Text(model.userName.prefix(1))
-                .appFont(.callout, color: .black)
+                .appFont(.callout, color: .grey900)
                 .frame(width: Constant.profileCircleSize.width, height: Constant.profileCircleSize.height)
                 .background(.grey100, in: Circle())
         }
@@ -113,7 +113,7 @@ private struct ProfileSection: View, Equatable {
             // 이름 + 파트
             HStack(spacing: Constant.nameHSpacing) {
                 Text(model.userName)
-                    .appFont(.subheadlineEmphasis, color: .black)
+                    .appFont(.subheadlineEmphasis, color: .grey900)
                 Text(model.part)
                     .appFont(.caption2, color: .gray)
                     .padding(Constant.partTagPadding)

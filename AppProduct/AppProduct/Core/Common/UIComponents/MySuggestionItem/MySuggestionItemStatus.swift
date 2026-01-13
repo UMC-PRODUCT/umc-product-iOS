@@ -23,7 +23,7 @@ enum MySuggestionItemStatus {
     var mainColor: Color {
         switch self {
         case .answered: return .green500
-        case .pending: return .black
+        case .pending: return .grey900
         }
     }
 

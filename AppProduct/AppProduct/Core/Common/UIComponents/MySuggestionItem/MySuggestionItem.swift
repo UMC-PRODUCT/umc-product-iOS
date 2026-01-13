@@ -85,7 +85,7 @@ private struct TopSection: View, Equatable {
             Spacer()
 
             Text(model.date.toYearMonthDay())
-                .appFont(.caption1, color: .black)
+                .appFont(.caption1, color: .grey900)
         }
     }
 }
@@ -96,10 +96,10 @@ private struct QuestionSection: View, Equatable {
 
     var body: some View {
         Text(model.title)
-            .appFont(.subheadlineEmphasis, color: .black)
+            .appFont(.subheadlineEmphasis, color: .grey900)
 
         Text(model.question)
-            .appFont(.caption1, color: .black)
+            .appFont(.caption1, color: .grey900)
             .padding(Constant.questionContentPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.questionContentBoxRadius))
@@ -122,7 +122,7 @@ private struct AnswerSection: View, Equatable {
                     .appFont(.caption1Emphasis, color: .indigo900)
 
                 Text(model.answer ?? "")
-                    .appFont(.caption1, color: .black)
+                    .appFont(.caption1, color: .grey900)
             }
         }
     }

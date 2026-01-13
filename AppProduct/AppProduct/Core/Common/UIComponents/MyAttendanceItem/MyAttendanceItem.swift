@@ -61,7 +61,7 @@ private struct MyAttendanceItemPresenter: View, Equatable {
                 // 제목 + 날짜
                 VStack(alignment: .leading) {
                     Text(model.title)
-                        .appFont(.subheadlineEmphasis, color: .black)
+                        .appFont(.subheadlineEmphasis, color: .grey900)
                     Text(model.date.toMonthDay())
                         .appFont(.caption1, color: .gray)
                 }

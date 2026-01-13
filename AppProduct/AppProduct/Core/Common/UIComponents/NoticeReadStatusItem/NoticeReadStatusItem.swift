@@ -64,7 +64,7 @@ private struct NoticeReadStatusItemPresenter: View, Equatable {
                 model.profileImage
             } else {
                 Text(model.userName.prefix(1))
-                    .appFont(.caption1Emphasis, color: .black)
+                    .appFont(.caption1Emphasis, color: .grey900)
                     .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
                     .background(.white, in: Circle())
             }
@@ -96,7 +96,7 @@ private struct UserInfoSection: View, Equatable {
             // 이름 + 파트
             HStack(spacing: Constant.userInfoHSpacing) {
                 Text(model.userName)
-                    .appFont(.subheadlineEmphasis, color: .black)
+                    .appFont(.subheadlineEmphasis, color: .grey900)
                 Text(model.part)
                     .appFont(.caption2, color: .gray)
                     .padding(Constant.partTagPadding)

@@ -75,7 +75,7 @@ private struct TagSection: View, Equatable {
     var body: some View {
         HStack {
             Text(model.tag.text)
-                .appFont(.caption1, color: .black)
+                .appFont(.caption1, color: .grey900)
                 .padding(Constant.tagPadding)
                 .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.tagRadius))
             Spacer()
@@ -94,7 +94,7 @@ private struct ContentSection: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.contentVSpacing) {
             Text(model.title)
-                .appFont(.calloutEmphasis, color: .black)
+                .appFont(.calloutEmphasis, color: .grey900)
 
             HStack {
                 Text("\(model.location) • \(model.userName) • \(model.createdAt)")
