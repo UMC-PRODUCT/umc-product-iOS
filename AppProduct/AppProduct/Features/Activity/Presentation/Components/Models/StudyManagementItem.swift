@@ -15,4 +15,10 @@ struct StudyManagementItem: Identifiable, Equatable {
     let school: String
     let part: String
     let title: String
+    // CoreStudyManageItem
+    let state: StudySubmitState
+}
+
+enum StudySubmitState: String {
+    case examine = "검토"
 }
