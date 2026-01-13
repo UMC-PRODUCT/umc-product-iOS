@@ -78,14 +78,14 @@ private struct TopSection: View, Equatable {
 
     var body: some View {
         HStack {
-            Text(model.tag.text)
-                .appFont(.caption1Emphasis, color: .grey700)
+            Text(model.category.text)
+                .appFont(.caption1Emphasis, color: .indigo600)
                 .padding(Constant.tagPadding)
-                .glassEffect()
-            Text(model.status.text)
-                .appFont(.caption1Emphasis, color: .grey000)
+                .glassEffect(.regular.tint(.indigo100))
+            Text(model.tag.text)
+                .appFont(.caption1Emphasis, color: .yellow700)
                 .padding(Constant.statusPadding)
-                .glassEffect(.regular.tint(.indigo500))
+                .glassEffect(.regular.tint(.yellow100))
             Spacer()
             Text(model.createdAt)
                 .appFont(.caption1, color: .grey500)
@@ -148,8 +148,8 @@ private struct BottomSection: View, Equatable {
 #Preview(traits: .sizeThatFitsLayout) {
     CommunityItem(
         model: .init(
-            tag: .question,
-            status: .recruiting,
+            category: .question,
+            tag: .feedback,
             title: "React Hook 질문있습니다",
             content: "useEffect 의존성 배열 관련해서 질문이 있습니다... 코드가 자꾸 무한 루프에 빠지는데 로직 점검 부탁드려요!",
             profileImage: nil,

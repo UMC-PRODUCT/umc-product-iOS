@@ -9,8 +9,8 @@ import SwiftUI
 
 struct CommunityItemModel: Equatable, Identifiable {
     let id = UUID()
+    let category: CommunityItemCategory
     let tag: CommunityItemTag
-    let status: CommunityItemStatus
     let title: String
     let content: String
     let profileImage: Image?
