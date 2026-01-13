@@ -57,8 +57,11 @@ fileprivate struct BottomSocialBtns: View, Equatable {
     // MARK: - Body
     var body: some View {
         VStack(spacing: Constants.btnSpacing, content: {
-            ForEach(SocialType.allCases, id: \.self) {
-                $0.image
+            ForEach(SocialType.allCases, id: \.self) { btn in
+                Button(action: {}, label: {
+                    btn.image
+                })
+                .glassEffect(.regular.interactive())
             }
         })
     }

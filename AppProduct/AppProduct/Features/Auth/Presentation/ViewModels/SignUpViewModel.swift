@@ -72,7 +72,7 @@ extension SignUpViewModel {
             try? await Task.sleep(for: .milliseconds(1))
             request["location"] = LocationManager.shared.isAuthorized
             
-            try? await Task.sleep(for: .milliseconds(200))
+            try? await Task.sleep(for: .milliseconds(500))
         }
         
         if photo {

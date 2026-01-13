@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import KakaoSDKCommon
+import KakaoSDKAuth
 
 @main
 struct AppProductApp: App {
@@ -21,9 +23,6 @@ struct AppProductApp: App {
     }
     
     private var testView: some  View {
-        
-        
-        
         NavigationStack {
             Button(action: {
                 show.toggle()

@@ -87,6 +87,21 @@ struct SignUpView: View {
         }
     }
     
+    private var mainBtn: some View {
+        MainButton("완료", action: {
+            signUpCompleted()
+        })
+        .loading($viewModel.isLoading)
+        .tint(.indigo500)
+        .disabled(!viewModel.isFormValid)
+        .buttonStyle(.glassProminent)
+        .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+    }
+}
+
+// MARK: - Method
+
+extension SignUpView {
     private func binding(_ field: SignUpFieldType) -> Binding<String> {
         switch field {
         case .name:
@@ -111,23 +126,12 @@ struct SignUpView: View {
         focusedField = allCases[currentIndex + 1]
     }
     
-    private var mainBtn: some View {
-        MainButton("완료", action: {
-            signUpCompleted()
-        })
-        .loading($viewModel.isLoading)
-        .tint(.indigo500)
-        .disabled(!viewModel.isFormValid)
-        .buttonStyle(.glassProminent)
-        .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
-    }
-    
     private func signUpCompleted() {
         Task {
             let results = await viewModel.requestPermission(
                 notification: true,
                 location: true,
-                photo: true 
+                photo: true
             )
             
             #if DEBUG
