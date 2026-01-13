@@ -21,20 +21,4 @@ enum CommunityItemStatus {
         case .closed: return "마감"
         }
     }
-
-    var mainColor: Color {
-        switch self {
-        case .upcoming: return .green
-        case .recruiting: return .blue
-        case .closed: return .grey900
-        }
-    }
-
-    var subColor: Color {
-        switch self {
-        case .upcoming: return .green.opacity(0.3)
-        case .recruiting: return .blue.opacity(0.3)
-        case .closed: return .gray
-        }
-    }
 }

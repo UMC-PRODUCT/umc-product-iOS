@@ -18,11 +18,11 @@ enum CommunityItemTag {
     var text: String {
         switch self {
         case .question:
-            return "🔥질문"
+            return "질문"
         case .hobby:
-            return "⚽️취미"
+            return "취미"
         case .impromptu:
-            return "⚡️번개"
+            return "번개"
         }
     }
 }

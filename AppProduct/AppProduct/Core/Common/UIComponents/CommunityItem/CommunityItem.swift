@@ -11,17 +11,16 @@ import SwiftUI
 
 private enum Constant {
     static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 16, trailing: 16)
-    static let mainBoxRadius: CGFloat = 20
+    static let mainBoxRadius: CGFloat = 8
+    static let mainVSpacing: CGFloat = 8
     // tag + status
-    static let tagPadding: EdgeInsets = .init(top: 3, leading: 7, bottom: 3, trailing: 7)
-    static let tagRadius: CGFloat = 8
-    static let statusPadding: EdgeInsets = .init(top: 3, leading: 7, bottom: 3, trailing: 7)
+    static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
+    static let statusPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
     // content
     static let contentVSpacing: CGFloat = 4
     // count
     static let countHSpacing: CGFloat = 12
     static let countIconSpacing: CGFloat = 4
-    static let countIconSize: CGFloat = 12
 }
 
 // MARK: - CummunityItem
@@ -57,14 +56,12 @@ private struct CommunityItemPresenter: View, Equatable {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: Constant.mainVSpacing) {
             TagSection(model: model)
             ContentSection(model: model)
-            Divider()
-            CountSection(model: model)
         }
         .padding(Constant.mainPadding)
-        .background(.white, in: RoundedRectangle(cornerRadius: Constant.mainBoxRadius))
+        .background(.grey000, in: RoundedRectangle(cornerRadius: Constant.mainBoxRadius))
     }
 }
 
@@ -75,14 +72,13 @@ private struct TagSection: View, Equatable {
     var body: some View {
         HStack {
             Text(model.tag.text)
-                .appFont(.caption1, color: .grey900)
+                .appFont(.caption1Emphasis, color: .grey700)
                 .padding(Constant.tagPadding)
-                .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.tagRadius))
-            Spacer()
+                .glassEffect()
             Text(model.status.text)
-                .appFont(.caption2, color: model.status.mainColor)
+                .appFont(.caption1Emphasis, color: .grey000)
                 .padding(Constant.statusPadding)
-                .background(model.status.subColor, in: Capsule())
+                .glassEffect(.regular.tint(.indigo500))
         }
     }
 }
@@ -94,12 +90,14 @@ private struct ContentSection: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.contentVSpacing) {
             Text(model.title)
-                .appFont(.calloutEmphasis, color: .grey900)
+                .appFont(.title3Emphasis, color: .grey900)
 
             HStack {
                 Text("\(model.location) • \(model.userName) • \(model.createdAt)")
+                    .appFont(.caption1, color: .grey700)
+                Spacer()
+                CountSection(model: model)
             }
-            .appFont(.caption1, color: .gray)
         }
     }
 }
@@ -112,21 +110,19 @@ private struct CountSection: View, Equatable {
         HStack(spacing: Constant.countHSpacing) {
             HStack(spacing: Constant.countIconSpacing) {
                 Image(systemName: "heart")
-                    .font(.system(size: Constant.countIconSize))
                 Text(String(model.likeCount))
             }
 
             HStack(spacing: Constant.countIconSpacing) {
                 Image(systemName: "bubble")
-                    .font(.system(size: Constant.countIconSize))
                 Text(String(model.commentCount))
             }
         }
-        .appFont(.caption1, color: .gray)
+        .appFont(.caption1, color: .grey500)
     }
 }
 
-#Preview {
+#Preview(traits: .sizeThatFitsLayout) {
     CommunityItem(
         model: .init(
             tag: .question,
