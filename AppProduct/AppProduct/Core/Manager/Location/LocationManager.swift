@@ -12,7 +12,8 @@ import MapKit
 final class LocationManager: NSObject {
 
     // MARK: - Property
-
+    static let shared: LocationManager = .init()
+    
     private(set) var currentLocation: CLLocationCoordinate2D?
     private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
     private(set) var isAuthorized: Bool = false
