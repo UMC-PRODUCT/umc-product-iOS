@@ -111,19 +111,25 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
     }
 
     /// 출석 가능 시간 내인지 확인
-    func isWithinAttendanceTime(session: Session) throws -> Bool {
+    func isWithinAttendanceTime(session: Session) -> AttendenceStatus {
         let now = Date()
-        let threshold = TimeInterval(AttendancePolicy.lateThresholdMinutes * 60)
-        let startWindow = session.startTime.addingTimeInterval(-threshold)
-        let endWindow = session.endTime.addingTimeInterval(threshold)
+        let onTimeThresholdMinutes = TimeInterval(AttendancePolicy.onTimeThresholdMinutes * 60)
+        let lateThresholdMinutes = TimeInterval(AttendancePolicy.lateThresholdMinutes * 60)
+        let startTime = session.startTime
         
-        let isAvailableAttendance = now >= startWindow && now <= endWindow
-        
-        if !isAvailableAttendance {
-            throw DomainError.attendanceTimeExpired
+        if now < startTime.addingTimeInterval(-onTimeThresholdMinutes) {
+            return .pending
         }
-
-        return true
+        
+        if now <= startTime.addingTimeInterval(onTimeThresholdMinutes) {
+            return .present
+        }
+        
+        if now <= startTime.addingTimeInterval(lateThresholdMinutes) {
+            return .late
+        }
+        
+        return .absent
     }
     
     /// 지오코딩

@@ -12,6 +12,10 @@ struct AttendancePreviewData {
     static let container = DIContainer()
     static let errorHandler = ErrorHandler()
     static let challengerAttendanceUseCase = ChallengerAttendanceUseCase(repository: MockAttendanceRepository())
+    static let mapViewModel: BaseMapViewModel = .init(container: container, session: session, errorHandler: errorHandler)
+    static let attendanceViewModel: ChallengerAttendanceViewModel = .init(
+        container: container, errorHandler: errorHandler,
+        challengeAttendanceUseCase: challengerAttendanceUseCase, session: session, attendance: attendance)
         
     static let sessionId: SessionID = SessionID(value: "iOS_6")
     static let userId: UserID = UserID(value: "River_")
