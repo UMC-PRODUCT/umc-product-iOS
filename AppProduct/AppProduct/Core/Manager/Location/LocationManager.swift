@@ -10,7 +10,6 @@ import CoreLocation
 import MapKit
 
 final class LocationManager: NSObject {
-
     // MARK: - Property
     static let shared: LocationManager = .init()
     
@@ -43,7 +42,7 @@ final class LocationManager: NSObject {
 
     // MARK: - Lifecycle
 
-    override init() {
+    private override init() {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
