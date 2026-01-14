@@ -7,16 +7,14 @@
 
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constant {
-    static let listMargin: CGFloat = 16
-}
-
 struct CommunityView: View {
     // MARK: - Properties
 
     @State var vm: CommunityViewModel
+
+    private enum Constant {
+        static let listMargin: CGFloat = 16
+    }
 
     // MARK: - Init
 

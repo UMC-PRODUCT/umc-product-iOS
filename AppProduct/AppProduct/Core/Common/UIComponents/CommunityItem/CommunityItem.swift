@@ -80,16 +80,16 @@ private struct TopSection: View, Equatable {
     var body: some View {
         HStack {
             Text(model.category.text)
-                .appFont(.caption1Emphasis, color: .indigo600)
+                .appFont(.subheadlineEmphasis, color: .indigo600)
                 .padding(Constant.tagPadding)
                 .glassEffect(.regular.tint(.indigo100))
             Text(model.tag.text)
-                .appFont(.caption1Emphasis, color: .yellow700)
+                .appFont(.subheadlineEmphasis, color: .grey700)
                 .padding(Constant.statusPadding)
-                .glassEffect(.regular.tint(.yellow100))
+                .glassEffect(.regular.tint(.clear))
             Spacer()
             Text(model.createdAt)
-                .appFont(.caption1, color: .grey500)
+                .appFont(.subheadline, color: .grey500)
         }
     }
 }
@@ -101,10 +101,11 @@ private struct ContentSection: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.contentVSpacing) {
             Text(model.title)
-                .appFont(.title2Emphasis, color: .grey900)
+                .appFont(.title1Emphasis, color: .grey900)
+                .lineLimit(1)
 
             Text(model.content)
-                .appFont(.body, color: .grey600)
+                .appFont(.headline, color: .grey600)
                 .lineLimit(2)
         }
     }
@@ -121,7 +122,7 @@ private struct BottomSection: View, Equatable {
                 model.profileImage
             } else {
                 Text(model.userName.prefix(1))
-                    .appFont(.caption2Emphasis, color: .grey500)
+                    .appFont(.caption1Emphasis, color: .grey500)
                     .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
                     .background(.grey100, in: Circle())
             }
@@ -142,7 +143,7 @@ private struct BottomSection: View, Equatable {
                 Text(String(model.commentCount))
             }
         }
-        .appFont(.caption1Emphasis, color: .grey500)
+        .appFont(.subheadlineEmphasis, color: .grey500)
     }
 }
 
