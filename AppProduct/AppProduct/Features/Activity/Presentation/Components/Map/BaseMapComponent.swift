@@ -25,6 +25,7 @@ struct BaseMapComponent: View, Equatable {
         Map(position: $viewModel.cameraPosition) {
             geofenceOverlay
             sessionMaker
+            UserAnnotation()
         }
         .mapStyle(.standard)
         .mapControls {
@@ -42,6 +43,7 @@ struct BaseMapComponent: View, Equatable {
             Image(.Map.mapPin)
                 .resizable()
                 .scaledToFit()
+                .frame(width: 24, height: 24)
         }
     }
     

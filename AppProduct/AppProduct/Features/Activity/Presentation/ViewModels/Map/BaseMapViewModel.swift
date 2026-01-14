@@ -20,10 +20,9 @@ final class BaseMapViewModel {
     private(set) var userLocation: UserLocation?
     private(set) var geofenceCenter: CLLocationCoordinate2D?
     
-    private(set) var isVerifyLocation: Bool
     private(set) var isLoading: Bool = false
     
-    var currentAddress: String?
+    private(set) var sessionAddress: String?
     
     var isAuthorized: Bool {
         locationManager.isAuthorized
@@ -47,11 +46,13 @@ final class BaseMapViewModel {
         errorHandler: ErrorHandler
     ) {
         self.container = container
-        self.isVerifyLocation = false
         self.currentSession = session
         self.errorHandler = errorHandler
-        let region = Self.initializeRegion()
-        self.cameraPosition = .region(region)
+        self.cameraPosition = .region(.init(
+            center: .init(
+                latitude: session.location.latitude,
+                longitude: session.location.longitude),
+            span: .init(latitudeDelta: 0.0015, longitudeDelta: 0.0015)))
     }
     
     @MainActor
@@ -72,16 +73,26 @@ final class BaseMapViewModel {
     
     @MainActor
     func moveToSessionPlace() async {
-        withAnimation {
+        withAnimation(.easeIn(duration: DefaultConstant.animationTime)) {
             cameraPosition = .region(MKCoordinateRegion(
                 center: sessionLocation, span: .init(latitudeDelta: 0.005, longitudeDelta: 0.005)))
         }
     }
     
-    private static func initializeRegion() -> MKCoordinateRegion {
-        return MKCoordinateRegion(
-            // TODO: 초기화 로직 구현 필요 - [25.1.13] 이재원
-            center: .init(latitude: 37.582967, longitude: 127.010527),
-            span: .init(latitudeDelta: 0.003, longitudeDelta: 0.003))
+    func startLocationUpdate() {
+        LocationManager.shared.startLocationUpdating()
+    }
+    
+    func stopLocationUpdate() {
+        LocationManager.shared.stopLocationUpdating()
+    }
+
+    @MainActor
+    func updateAddressForSession() async {
+        do {
+            sessionAddress = try await locationManager.reverseGeocode(coordinate: currentSession.location)
+        } catch {
+            sessionAddress = nil
+        }
     }
 }
