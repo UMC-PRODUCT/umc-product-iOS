@@ -15,7 +15,7 @@ final class ChallengerAttendanceViewModel {
     private var challengeAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
 
     private(set) var currentSession: Session
-    
+
     /// 이번 세션에서 출석을 제출했는지 여부
     private(set) var hasSubmittedThisSession: Bool = false
 

@@ -135,7 +135,7 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
         // 그 이후는 마감
         return .expired
     }
-    
+
     /// 지오코딩
     func getAddressToCurrentLocation() async throws -> String {
         guard let coordinate = locationManager.currentCoordinate else {
