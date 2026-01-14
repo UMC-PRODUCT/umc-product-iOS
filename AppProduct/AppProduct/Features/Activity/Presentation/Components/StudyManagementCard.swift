@@ -40,7 +40,8 @@ struct StudyManagementCard: View, Equatable {
 
 // MARK: - StudyImagePresenter
 /// 프로필 사진
-private struct StudyImagePresenter: View, Equatable {
+/// CoreStudyManagementCard에서도 쓰이는 struct
+struct StudyImagePresenter: View, Equatable {
     
     // MARK: - Property
     let studyManagementItem: StudyManagementItem
@@ -181,7 +182,6 @@ private struct StudyChevronPresenter: View, Equatable {
 
 
 // MARK: - Preview
-
 #Preview(traits: .sizeThatFitsLayout) {
     StudyManagementCard(studyManagementItem: StudyManagementItem(profile: .profile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: .examine))
         

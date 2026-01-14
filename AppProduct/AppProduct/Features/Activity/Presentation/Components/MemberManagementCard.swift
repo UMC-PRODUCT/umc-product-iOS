@@ -45,7 +45,8 @@ struct MemberManagementCard: View, Equatable {
 
 // MARK: - MemberImagePresenter
 /// 프로필 사진, 뱃지
-private struct MemberImagePresenter: View, Equatable {
+/// CoreMemberManagementCard에서도 쓰이는 struct
+struct MemberImagePresenter: View, Equatable {
     
     // MARK: - Property
     let memberManagementItem: MemberManagementItem
@@ -218,7 +219,6 @@ private struct MemberBadgePresenter: View, Equatable {
 
 
 // MARK: - Preview
-
 #Preview(traits: .sizeThatFitsLayout) {
     VStack {
         MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: true, managementTeam: .challenger))

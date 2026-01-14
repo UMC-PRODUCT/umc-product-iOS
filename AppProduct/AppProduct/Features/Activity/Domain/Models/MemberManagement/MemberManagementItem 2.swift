@@ -8,7 +8,10 @@
 import Foundation
 import SwiftUI
 
-struct MemberManagementItem: Identifiable {
+// MARK: - MemberManagementItem
+/// - MemberManagementCard
+/// - CoreMemberManagementList
+struct MemberManagementItem: Identifiable, Equatable {
     let id: UUID = .init()
     let profile: ImageResource
     let name: String
@@ -17,6 +20,7 @@ struct MemberManagementItem: Identifiable {
     let part: String
     let penalty: Double
     let badge: Bool
+    // CoreManagementItem
     let managementTeam: ManagementTeam
 }
 

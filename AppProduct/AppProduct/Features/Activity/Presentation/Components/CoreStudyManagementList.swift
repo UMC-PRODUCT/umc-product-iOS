@@ -11,11 +11,9 @@ import SwiftUI
 struct CoreStudyManagementList: View {
     
     // MARK: - Property
-    
     let studyManagementItem: StudyManagementItem
     
     // MARK: - Body
-    
     var body: some View {
         HStack(spacing: 12) {
             StudyImagePresenter(studyManagementItem: studyManagementItem)
@@ -64,7 +62,6 @@ struct CoreStudyTextPresenter: View {
 }
 
 // MARK: - Preview
-
 #Preview (traits: .sizeThatFitsLayout){
     CoreStudyManagementList(studyManagementItem: StudyManagementItem(profile: .profile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: StudySubmitState.examine))
 }

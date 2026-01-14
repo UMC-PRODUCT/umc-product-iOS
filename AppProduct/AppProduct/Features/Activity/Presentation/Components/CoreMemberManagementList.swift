@@ -11,11 +11,9 @@ import SwiftUI
 struct CoreMemberManagementList: View {
     
     // MARK: - Property
-    
     let memberManagementItem: MemberManagementItem
     
     // MARK: - Body
-    
     var body: some View {
         HStack {
             MemberImagePresenter(memberManagementItem: memberManagementItem)
@@ -70,7 +68,6 @@ struct ManagementTeamBadgePresenter: View {
 }
 
 // MARK: - Preview
-
 #Preview(traits: .sizeThatFitsLayout) {
     VStack(spacing: 4) {
         CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 0, badge: false, managementTeam: .president))
