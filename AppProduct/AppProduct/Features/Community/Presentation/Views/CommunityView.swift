@@ -49,6 +49,7 @@ private struct MidSection: View {
         List(vm.items, rowContent: { item in
             CommunityItem(model: item)
                 .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
         })
         .listStyle(.plain)
         .scrollContentBackground(.hidden)

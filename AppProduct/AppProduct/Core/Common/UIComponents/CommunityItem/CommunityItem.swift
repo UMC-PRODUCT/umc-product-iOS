@@ -66,9 +66,10 @@ private struct CommunityItemPresenter: View, Equatable {
         .padding(Constant.mainPadding)
         .background(
             ContainerRelativeShape()
-                .fill(.grey000)
+                .fill(.grey100)
         )
         .containerShape(.rect(cornerRadius: Constant.concentricRadius))
+        .glass()
     }
 }
 
