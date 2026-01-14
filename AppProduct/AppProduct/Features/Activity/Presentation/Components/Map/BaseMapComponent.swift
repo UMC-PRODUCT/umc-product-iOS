@@ -34,6 +34,7 @@ struct BaseMapComponent: View, Equatable {
     }
 
     // MARK: - Body
+    
     var body: some View {
         Map(position: $viewModel.cameraPosition) {
             geofenceOverlay
@@ -47,6 +48,7 @@ struct BaseMapComponent: View, Equatable {
     }
     
     // MARK: - View Component
+    
     /// 세션 위치를 나타내는 핀 마커
     @MapContentBuilder
     private var sessionMaker: some MapContent {
