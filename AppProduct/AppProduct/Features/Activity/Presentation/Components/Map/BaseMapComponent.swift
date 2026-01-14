@@ -19,16 +19,16 @@ struct BaseMapComponent: View, Equatable {
 
     @Bindable private var viewModel: BaseMapViewModel
 
-    fileprivate enum Constants {
-        static let iconSize: CGFloat = 24
-    }
-
     // MARK: - Init
 
     init(viewModel: BaseMapViewModel) {
         self.viewModel = viewModel
     }
-
+    
+    fileprivate enum Constants {
+        static let iconSize: CGFloat = 24
+    }
+    
     static func == (lsh: Self, rhs: Self) -> Bool {
         return lsh.viewModel === rhs.viewModel
     }
@@ -45,9 +45,8 @@ struct BaseMapComponent: View, Equatable {
             MapCompass()
         }
     }
-
+    
     // MARK: - View Component
-
     /// 세션 위치를 나타내는 핀 마커
     @MapContentBuilder
     private var sessionMaker: some MapContent {
