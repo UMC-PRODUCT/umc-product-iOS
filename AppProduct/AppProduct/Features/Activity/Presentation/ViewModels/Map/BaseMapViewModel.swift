@@ -19,31 +19,31 @@ final class BaseMapViewModel {
     private var locationManager: LocationManager = .shared
     private(set) var currentSession: Session
     private var errorHandler: ErrorHandler
-    
+
     var cameraPosition: MapCameraPosition
     private(set) var userLocation: UserLocation?
     private(set) var geofenceCenter: CLLocationCoordinate2D?
-    
+
     private(set) var isLoading: Bool = false
-    
+
     private(set) var sessionAddress: String?
-    
+
     var isAuthorized: Bool {
         locationManager.isAuthorized
     }
-    
+
     var isUserInsideGeofence: Bool {
         locationManager.isInsideGeofence
     }
-    
+
     var currentLocation: CLLocationCoordinate2D? {
         locationManager.currentLocation
     }
-    
-    var sessionLocation: CLLocationCoordinate2D {        
+
+    var sessionLocation: CLLocationCoordinate2D {
         currentSession.toCLLocationCoordinate2D()
     }
-    
+
     init(
         container: DIContainer,
         session: Session,
@@ -58,20 +58,20 @@ final class BaseMapViewModel {
                 longitude: session.location.longitude),
             span: .init(latitudeDelta: 0.0015, longitudeDelta: 0.0015)))
     }
-    
+
     /// 출석용 지오펜스 모니터링 시작
     /// - Parameter sessionId: 모니터링할 세션 ID
     @MainActor
     func startGeofenceForAttendance(sessionId: SessionID) async {
         geofenceCenter = sessionLocation
-        
+
         await locationManager.startGeofenceMonitoring(
             at: sessionLocation,
             identifier: "Session_\(sessionId)",
             radius: AttendancePolicy.geofenceRadius
         )
     }
-    
+
     /// 지오펜스 모니터링 중지
     @MainActor
     func stopGeofence() async {
@@ -86,7 +86,7 @@ final class BaseMapViewModel {
                 center: sessionLocation, span: .init(latitudeDelta: 0.005, longitudeDelta: 0.005)))
         }
     }
-    
+
     /// 실시간 위치 업데이트 시작
     func startLocationUpdate() {
         LocationManager.shared.startLocationUpdating()
