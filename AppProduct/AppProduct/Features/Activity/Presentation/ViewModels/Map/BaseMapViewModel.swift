@@ -19,23 +19,23 @@ final class BaseMapViewModel {
     private var locationManager: LocationManager = .shared
     private(set) var sessionInfo: SessionInfo
     private var errorHandler: ErrorHandler
-    
+
     var cameraPosition: MapCameraPosition
     private(set) var userLocation: UserLocation?
     private(set) var geofenceCenter: CLLocationCoordinate2D?
-    
+
     private(set) var isLoading: Bool = false
-    
+
     private(set) var sessionAddress: String?
-    
+
     var isAuthorized: Bool {
         locationManager.isAuthorized
     }
-    
+
     var isUserInsideGeofence: Bool {
         locationManager.isInsideGeofence
     }
-    
+
     var currentLocation: CLLocationCoordinate2D? {
         locationManager.currentLocation
     }
@@ -58,7 +58,7 @@ final class BaseMapViewModel {
                 longitude: info.location.longitude),
             span: .init(latitudeDelta: 0.0015, longitudeDelta: 0.0015)))
     }
-    
+
     /// 출석용 지오펜스 모니터링 시작
     /// - Parameter info: 모니터링할 세션 정보
     @MainActor
@@ -86,7 +86,7 @@ final class BaseMapViewModel {
                 center: sessionLocation, span: .init(latitudeDelta: 0.005, longitudeDelta: 0.005)))
         }
     }
-    
+
     /// 실시간 위치 업데이트 시작
     func startLocationUpdate() {
         LocationManager.shared.startLocationUpdating()
