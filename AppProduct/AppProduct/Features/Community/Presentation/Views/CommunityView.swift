@@ -53,6 +53,18 @@ private struct MidSection: View {
         })
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .overlay {
+            if vm.items.isEmpty {
+                ContentUnavailableView {
+                    Label(
+                        "아직 작성된 글이 없습니다.",
+                        systemImage: "text.page.slash"
+                    )
+                } description: {
+                    Text("가장 먼저 글을 작성해 보세요!")
+                }
+            }
+        }
     }
 }
 
