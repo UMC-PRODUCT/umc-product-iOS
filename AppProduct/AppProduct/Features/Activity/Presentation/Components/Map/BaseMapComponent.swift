@@ -34,7 +34,6 @@ struct BaseMapComponent: View, Equatable {
     }
 
     // MARK: - Body
-
     var body: some View {
         Map(position: $viewModel.cameraPosition) {
             geofenceOverlay

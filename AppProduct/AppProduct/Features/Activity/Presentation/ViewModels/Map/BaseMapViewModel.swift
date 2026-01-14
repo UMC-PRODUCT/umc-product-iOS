@@ -77,7 +77,7 @@ final class BaseMapViewModel {
     func stopGeofence() async {
         await locationManager.stopAllGeofenceMonitoring()
     }
-    
+
     /// 카메라를 세션 위치로 애니메이션 이동
     @MainActor
     func moveToSessionPlace() async {

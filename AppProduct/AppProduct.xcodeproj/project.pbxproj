@@ -364,6 +364,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "출석체크를 위해 위치 정보를 사용합니다.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "게시글 작성을 위해 앨범에 접근합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "출석 체크를 위한 위치 정보를 사용합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -403,6 +404,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "출석체크를 위해 위치 정보를 사용합니다.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "게시글 작성을 위해 앨범에 접근합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "출석 체크를 위한 위치 정보를 사용합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
