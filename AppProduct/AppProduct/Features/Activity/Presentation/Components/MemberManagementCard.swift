@@ -219,7 +219,6 @@ private struct MemberBadgePresenter: View, Equatable {
 
 
 // MARK: - Preview
-
 #Preview(traits: .sizeThatFitsLayout) {
     VStack {
         MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: true, managementTeam: .challenger))
