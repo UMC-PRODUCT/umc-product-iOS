@@ -17,7 +17,7 @@ struct AttendancePreviewData {
     static let attendanceViewModel: ChallengerAttendanceViewModel = .init(
         container: container, errorHandler: errorHandler,
         challengeAttendanceUseCase: challengerAttendanceUseCase, session: session, attendance: attendance)
-        
+
     static let sessionId: SessionID = SessionID(value: "iOS_6")
     static let userId: UserID = UserID(value: "River_")
     static let coordinate: Coordinate = .init(latitude: 37.582967, longitude: 127.010527)
@@ -33,7 +33,7 @@ struct AttendancePreviewData {
                 fullAddress: "한성대학교", city: "서울시", district: "성북구"),
             verifiedAt: .now),
         reason: nil)
-    
+
     static let session: Session = .init(
         sessionId: SessionID(value: "iOS_6"),
         icon: "", title: "Alamofire 파헤치기",
@@ -43,16 +43,16 @@ struct AttendancePreviewData {
 
 struct AttendanceTestView: View {
     @Binding var show: Bool
-    
+
     var body: some View {
         VStack(spacing: 20) {
             Button("출석 화면 열기") {
                 show.toggle()
             }
             .buttonStyle(.borderedProminent)
-            
+
             Divider()
-            
+
             Text("승인 시뮬레이션").font(.headline)
             HStack {
                 Button("출석") {
