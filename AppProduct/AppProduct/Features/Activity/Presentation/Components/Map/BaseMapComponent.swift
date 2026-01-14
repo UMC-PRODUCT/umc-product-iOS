@@ -8,6 +8,11 @@
 import SwiftUI
 import MapKit
 
+/// 세션 위치와 지오펜스를 표시하는 기본 지도 컴포넌트
+///
+/// - 세션 마커: 스터디/세미나 장소 표시
+/// - 지오펜스 오버레이: 출석 가능 영역 시각화
+/// - 사용자 위치: UserAnnotation으로 현재 위치 표시
 struct BaseMapComponent: View, Equatable {
     @Bindable private var viewModel: BaseMapViewModel
     
@@ -15,6 +20,10 @@ struct BaseMapComponent: View, Equatable {
         viewModel: BaseMapViewModel,
     ) {
         self.viewModel = viewModel
+    }
+    
+    fileprivate enum Constants {
+        static let iconSize: CGFloat = 24
     }
     
     static func == (lsh: Self, rhs: Self) -> Bool {
@@ -33,6 +42,7 @@ struct BaseMapComponent: View, Equatable {
         }
     }
     
+    /// 세션 위치를 나타내는 핀 마커
     @MapContentBuilder
     private var sessionMaker: some MapContent {
         Annotation(
@@ -43,10 +53,11 @@ struct BaseMapComponent: View, Equatable {
             Image(.Map.mapPin)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 24, height: 24)
+                .frame(width: Constants.iconSize, height: Constants.iconSize)
         }
     }
     
+    /// 지오펜스 영역 오버레이 (출석 가능 범위)
     @MapContentBuilder
     private var geofenceOverlay: some MapContent {
         if let geofenceCenter = viewModel.geofenceCenter {

@@ -9,6 +9,10 @@ import Foundation
 import SwiftUI
 import MapKit
 
+/// 지도 뷰의 상태 및 위치 서비스를 관리하는 ViewModel
+///
+/// 세션 위치 표시, 지오펜싱 기반 출석 체크, 역지오코딩 등을 담당합니다.
+/// - Important: LocationManager.shared를 통해 위치 서비스에 접근
 @Observable
 final class BaseMapViewModel {
     private var container: DIContainer
@@ -55,6 +59,8 @@ final class BaseMapViewModel {
             span: .init(latitudeDelta: 0.0015, longitudeDelta: 0.0015)))
     }
     
+    /// 출석용 지오펜스 모니터링 시작
+    /// - Parameter sessionId: 모니터링할 세션 ID
     @MainActor
     func startGeofenceForAttendance(sessionId: SessionID) async {
         geofenceCenter = sessionLocation
@@ -66,11 +72,13 @@ final class BaseMapViewModel {
         )
     }
     
+    /// 지오펜스 모니터링 중지
     @MainActor
     func stopGeofence() async {
         await locationManager.stopAllGeofenceMonitoring()
     }
     
+    /// 카메라를 세션 위치로 애니메이션 이동
     @MainActor
     func moveToSessionPlace() async {
         withAnimation(.easeIn(duration: DefaultConstant.animationTime)) {
@@ -79,20 +87,24 @@ final class BaseMapViewModel {
         }
     }
     
+    /// 실시간 위치 업데이트 시작
     func startLocationUpdate() {
         LocationManager.shared.startLocationUpdating()
     }
-    
+
+    /// 실시간 위치 업데이트 중지
     func stopLocationUpdate() {
         LocationManager.shared.stopLocationUpdating()
     }
 
+    /// 세션 위치의 주소를 역지오코딩으로 조회
     @MainActor
     func updateAddressForSession() async {
         do {
             sessionAddress = try await locationManager.reverseGeocode(coordinate: currentSession.location)
         } catch {
-            sessionAddress = nil
+            errorHandler.handle(
+                error, context: .init(feature: "Activity", action: "updateAddressForSession"))
         }
     }
 }
