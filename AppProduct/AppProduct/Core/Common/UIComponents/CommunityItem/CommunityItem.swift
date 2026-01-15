@@ -7,32 +7,30 @@
 
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constant {
-    static let mainPadding: EdgeInsets = .init(top: 24, leading: 24, bottom: 24, trailing: 24)
-    static let concentricRadius: CGFloat = 40
-    static let mainVSpacing: CGFloat = 24
-    // tag + status
-    static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
-    static let statusPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
-    // content
-    static let contentVSpacing: CGFloat = 12
-    // profile
-    static let profileSize: CGSize = .init(width: 30, height: 30)
-    // count
-    static let bottomHSpacing: CGFloat = 8
-    static let countIconSpacing: CGFloat = 4
-}
-
 // MARK: - CummunityItem
 
 /// 커뮤니티 탭 - 리스트
 
-struct CommunityItem: View {
+struct CommunityItem: View, Equatable {
     // MARK: - Properties
 
     private let model: CommunityItemModel
+
+    private enum Constant {
+        static let mainPadding: EdgeInsets = .init(top: 24, leading: 24, bottom: 24, trailing: 24)
+        static let concentricRadius: CGFloat = 40
+        static let mainVSpacing: CGFloat = 24
+        // tag + status
+        static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
+        static let statusPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
+        // content
+        static let contentVSpacing: CGFloat = 12
+        // profile
+        static let profileSize: CGSize = .init(width: 30, height: 30)
+        // count
+        static let bottomHSpacing: CGFloat = 8
+        static let countIconSpacing: CGFloat = 4
+    }
 
     // MARK: - Init
 
@@ -40,28 +38,17 @@ struct CommunityItem: View {
         self.model = model
     }
 
-    // MARK: - Body
-
-    var body: some View {
-        CommunityItemPresenter(model: model)
-            .equatable()
-    }
-}
-
-// MARK: - Presenter
-
-private struct CommunityItemPresenter: View, Equatable {
-    let model: CommunityItemModel
-
-    static func == (lhs: CommunityItemPresenter, rhs: CommunityItemPresenter) -> Bool {
+    static func == (lhs: CommunityItem, rhs: CommunityItem) -> Bool {
         lhs.model == rhs.model
     }
 
+    // MARK: - Body
+
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.mainVSpacing) {
-            TopSection(model: model)
-            ContentSection(model: model)
-            BottomSection(model: model)
+            TopSection
+            ContentSection
+            BottomSection
         }
         .padding(Constant.mainPadding)
         .background(
@@ -71,13 +58,12 @@ private struct CommunityItemPresenter: View, Equatable {
         .containerShape(.rect(cornerRadius: Constant.concentricRadius))
         .glass()
     }
-}
 
-// 태그 + 상태 + 시간
-private struct TopSection: View, Equatable {
-    let model: CommunityItemModel
+    // MARK: - Top
 
-    var body: some View {
+    // 태그 + 상태 + 시간
+    @ViewBuilder
+    private var TopSection: some View {
         HStack {
             Text(model.category.text)
                 .appFont(.subheadlineEmphasis, color: .indigo600)
@@ -92,16 +78,15 @@ private struct TopSection: View, Equatable {
                 .appFont(.subheadline, color: .grey500)
         }
     }
-}
 
-// 내용
-private struct ContentSection: View, Equatable {
-    let model: CommunityItemModel
+    // MARK: - Content
 
-    var body: some View {
+    // 내용
+    @ViewBuilder
+    private var ContentSection: some View {
         VStack(alignment: .leading, spacing: Constant.contentVSpacing) {
             Text(model.title)
-                .appFont(.title1Emphasis, color: .grey900)
+                .appFont(.title2Emphasis, color: .grey900)
                 .lineLimit(1)
 
             Text(model.content)
@@ -109,13 +94,12 @@ private struct ContentSection: View, Equatable {
                 .lineLimit(2)
         }
     }
-}
 
-// 작성자 + 좋아요 + 댓글
-private struct BottomSection: View, Equatable {
-    let model: CommunityItemModel
+    // MARK: - Bottom
 
-    var body: some View {
+    // 작성자 + 좋아요 + 댓글
+    @ViewBuilder
+    private var BottomSection: some View {
         HStack(spacing: Constant.bottomHSpacing) {
             // 프로필 이미지
             if model.profileImage != nil {
