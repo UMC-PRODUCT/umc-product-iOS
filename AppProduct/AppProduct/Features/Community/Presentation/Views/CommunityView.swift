@@ -12,9 +12,7 @@ struct CommunityView: View {
 
     @State var vm: CommunityViewModel
 
-    private enum Constant {
-        static let listMargin: CGFloat = 16
-    }
+    private enum Constant {}
 
     // MARK: - Init
 
@@ -26,26 +24,23 @@ struct CommunityView: View {
 
     var body: some View {
         VStack {
-            TopSection()
-            MidSection(vm: $vm)
+            TopSection
+            MidSection
         }
     }
-}
 
-// MARK: - Section
+    // MARK: - Top
 
-private struct TopSection: View {
-    var body: some View {
+    private var TopSection: some View {
         Text("Top Section")
     }
-}
 
-private struct MidSection: View {
-    @Binding var vm: CommunityViewModel
+    // MARK: - Mid
 
-    var body: some View {
+    private var MidSection: some View {
         List(vm.items, rowContent: { item in
             CommunityItem(model: item)
+                .equatable()
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
         })
