@@ -19,17 +19,11 @@ struct CommunityItem: View, Equatable {
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 24, leading: 24, bottom: 24, trailing: 24)
         static let concentricRadius: CGFloat = 40
-        static let mainVSpacing: CGFloat = 24
         // tag + status
         static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
         static let statusPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
-        // content
-        static let contentVSpacing: CGFloat = 12
         // profile
         static let profileSize: CGSize = .init(width: 30, height: 30)
-        // count
-        static let bottomHSpacing: CGFloat = 8
-        static let countIconSpacing: CGFloat = 4
     }
 
     // MARK: - Init
@@ -45,7 +39,7 @@ struct CommunityItem: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Constant.mainVSpacing) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
             TopSection
             ContentSection
             BottomSection
@@ -84,7 +78,7 @@ struct CommunityItem: View, Equatable {
     // 내용
     @ViewBuilder
     private var ContentSection: some View {
-        VStack(alignment: .leading, spacing: Constant.contentVSpacing) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             Text(model.title)
                 .appFont(.title2Emphasis, color: .grey900)
                 .lineLimit(1)
@@ -100,7 +94,7 @@ struct CommunityItem: View, Equatable {
     // 작성자 + 좋아요 + 댓글
     @ViewBuilder
     private var BottomSection: some View {
-        HStack(spacing: Constant.bottomHSpacing) {
+        HStack(spacing: DefaultSpacing.spacing8) {
             // 프로필 이미지
             if model.profileImage != nil {
                 model.profileImage
@@ -116,12 +110,12 @@ struct CommunityItem: View, Equatable {
             Spacer()
 
             // 좋아요 + 댓글
-            HStack(spacing: Constant.countIconSpacing) {
+            HStack(spacing: DefaultSpacing.spacing4) {
                 Image(systemName: "heart")
                     .foregroundStyle(.red500)
                 Text(String(model.likeCount))
             }
-            HStack(spacing: Constant.countIconSpacing) {
+            HStack(spacing: DefaultSpacing.spacing4) {
                 Image(systemName: "bubble")
                     .foregroundStyle(.indigo500)
                 Text(String(model.commentCount))
