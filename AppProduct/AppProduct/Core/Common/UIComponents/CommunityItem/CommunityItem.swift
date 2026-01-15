@@ -56,7 +56,6 @@ struct CommunityItem: View, Equatable {
     // MARK: - Top
 
     // 태그 + 상태 + 시간
-    @ViewBuilder
     private var TopSection: some View {
         HStack {
             Text(model.category.text)
@@ -76,7 +75,6 @@ struct CommunityItem: View, Equatable {
     // MARK: - Content
 
     // 내용
-    @ViewBuilder
     private var ContentSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             Text(model.title)
@@ -92,7 +90,6 @@ struct CommunityItem: View, Equatable {
     // MARK: - Bottom
 
     // 작성자 + 좋아요 + 댓글
-    @ViewBuilder
     private var BottomSection: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             // 프로필 이미지
