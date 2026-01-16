@@ -56,6 +56,8 @@ struct ActivityCompactMapView: View {
 fileprivate struct LocationStatusBarView: View {
     @Bindable private var mapViewModel: BaseMapViewModel
     
+    @State private var animate = false
+    
     init(mapViewModel: BaseMapViewModel) {
         self.mapViewModel = mapViewModel
     }
@@ -63,12 +65,17 @@ fileprivate struct LocationStatusBarView: View {
     private enum Constants {
         static let statusBarPadding: CGFloat = 16
         static let verifyIconSize: CGFloat = 12
+        static let statusBarSpacing: CGFloat = 4
+        static let animationOffset: CGFloat = 250
+        static let animationTiming: CGFloat = 5
     }
     
     var body: some View {
-        HStack {
+        HStack(spacing: Constants.statusBarSpacing) {
             verifyLocationStatus
-            Spacer()
+
+            Spacer(minLength: 0)
+
             address
         }
         .padding(DefaultConstant.defaultBtnPadding)
@@ -78,7 +85,7 @@ fileprivate struct LocationStatusBarView: View {
     
     /// 지오펜스 내 위치 인증 상태 표시
     private var verifyLocationStatus: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Constants.statusBarSpacing) {
             Image(.Map.verifyLocation)
                 .resizable()
                 .frame(
@@ -89,7 +96,7 @@ fileprivate struct LocationStatusBarView: View {
                  ? "위치 인증됨" : "위치 미인증")
                 .appFont(.caption1,
                     color: mapViewModel.isUserInsideGeofence
-                    ? .indigo500 : .red500)
+                         ? .indigo500 : .red)
         }
     }
     
@@ -98,6 +105,18 @@ fileprivate struct LocationStatusBarView: View {
         Text(
             String(describing: mapViewModel.sessionAddress ?? "주소를 알 수 없습니다."))
             .appFont(.caption1, color: .grey600)
+            .offset(x: animate ? -Constants.animationOffset : 0)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .clipped()
+            .onAppear {
+                withAnimation(
+                    .linear(duration: Constants.animationTiming).repeatForever(autoreverses: false)) {
+                    animate = true
+                }
+            }
+            .onDisappear {
+                animate = false
+            }
     }
 }
 
