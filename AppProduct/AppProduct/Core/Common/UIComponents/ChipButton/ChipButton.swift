@@ -23,7 +23,6 @@ struct ChipButton: View {
     /// ChipButton 생성자
     /// - Parameters:
     ///   - title: 버튼 텍스트
-    ///   - icon: 버튼 체크 아이콘
     init(_ title: String, isSelected: Bool, action: @escaping () -> Void) {
         self.title = title
         self.isSelected = isSelected

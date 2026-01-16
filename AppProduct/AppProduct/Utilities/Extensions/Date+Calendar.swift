@@ -36,7 +36,7 @@ extension Date {
         return interval.start
     }
     
-    var endOfMont: Date {
+    var endOfMonth: Date {
         let calendar = Calendar.current
         guard let interval = calendar.dateInterval(of: .month, for: self) else {
             return self
@@ -44,7 +44,7 @@ extension Date {
         return interval.end
     }
     
-    func datesInMont() -> [Date] {
+    func datesInMonth() -> [Date] {
         let calendar = Calendar.current
         let startOfMonth = self.startOfMonth
         
