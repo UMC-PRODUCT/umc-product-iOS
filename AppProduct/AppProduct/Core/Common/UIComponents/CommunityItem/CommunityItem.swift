@@ -65,7 +65,7 @@ struct CommunityItem: View, Equatable {
             Text(model.tag.text)
                 .appFont(.subheadlineEmphasis, color: .grey700)
                 .padding(Constant.statusPadding)
-                .glassEffect(.regular.tint(.clear))
+                .glassEffect(.clear)
             Spacer()
             Text(model.createdAt)
                 .appFont(.subheadline, color: .grey500)
