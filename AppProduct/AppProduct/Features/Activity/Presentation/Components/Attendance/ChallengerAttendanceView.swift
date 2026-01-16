@@ -17,6 +17,8 @@ struct ChallengerAttendanceView: View, Equatable {
     @Bindable private var mapViewModel: BaseMapViewModel
     @Bindable private var attendanceViewModel: ChallengerAttendanceViewModel
     
+    @State private var showErrorAlert = false
+    
     private var userId: UserID
     
     init(
@@ -31,7 +33,7 @@ struct ChallengerAttendanceView: View, Equatable {
     
     static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.userId == rhs.userId
-        && lhs.attendanceViewModel.attendance.id == rhs.attendanceViewModel.attendance.id
+        && lhs.attendanceViewModel.attendanceState == rhs.attendanceViewModel.attendanceState
         && lhs.attendanceViewModel.currentSession.id == rhs.attendanceViewModel.currentSession.id
     }
     
@@ -51,6 +53,19 @@ struct ChallengerAttendanceView: View, Equatable {
             attendanceButton
             lateReasonButton
         }
+        .onChange(of: attendanceViewModel.attendanceState) { _, newValue in
+            if case .failed = newValue {
+                showErrorAlert = true
+            }
+        }
+        .alert("출석 실패", isPresented: $showErrorAlert) {
+            Button("확인", role: .cancel){}
+        } message: {
+            if case .failed(let error) = attendanceViewModel.attendanceState {
+                Text(error.errorDescription ?? "출석 처리 중 오류가 발생했습니다.")
+            }
+        }
+
     }
 
     // MARK: - View Component
@@ -61,6 +76,7 @@ struct ChallengerAttendanceView: View, Equatable {
                 await attendanceViewModel.attendanceBtnTapped(userId: userId)
             }
         }
+        .loading(.constant(attendanceViewModel.attendanceState.isLoading))
         .buttonStyle(.glassProminent)
         .disabled(!attendanceViewModel.isAttendanceAvailable)
     }

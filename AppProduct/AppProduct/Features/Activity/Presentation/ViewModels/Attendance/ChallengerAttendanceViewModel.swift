@@ -15,66 +15,68 @@ final class ChallengerAttendanceViewModel {
     private var challengeAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
 
     private(set) var currentSession: Session
+    
+    /// 이번 세션에서 출석을 제출했는지 여부
+    private(set) var hasSubmittedThisSession: Bool = false
 
     /// 출석 요청 상태 (idle → loading → loaded/failed)
     private(set) var attendanceState: Loadable<Attendance>
 
     // MARK: - Computed Property
 
-    var attendance: Attendance {
-        attendanceState.value ?? initialAttendance
+    /// 출석 상태
+    var attendanceStatusState: Loadable<AttendanceStatus> {
+        attendanceState.map { $0.status }
     }
 
-    var attendanceStatus: AttendanceStatus {
-        attendance.status
+    /// 출석 타입
+    var attendanceTypeState: Loadable<AttendanceType> {
+        attendanceState.map { $0.type }
     }
-
-    var attendanceType: AttendanceType {
-        attendance.type
-    }
-
-    var isLoading: Bool {
-        attendanceState.isLoading
-    }
-
-    var attendanceError: AppError? {
-        attendanceState.error
-    }
-
-    /// 이번 세션에서 출석을 제출했는지 여부
-    private(set) var hasSubmittedThisSession: Bool = false
 
     /// 현재 시간대 상태
     var currentTimeWindow: AttendanceTimeWindow {
         challengeAttendanceUseCase.isWithinAttendanceTime(session: currentSession)
     }
 
+    /// 이미 출석을 제출했는지 여부 (Loadable 상태 기반)
     var isAlreadySubmitted: Bool {
-        hasSubmittedThisSession || attendanceStatus != .pending
+        guard case .loaded(let attendance) = attendanceState else { return false }
+        return hasSubmittedThisSession || attendance.status != .pending
     }
 
-    /// 출석 버튼 활성화 조건
+    /// 출석 버튼 활성화 조건 (Loadable 상태 기반)
     var isAttendanceAvailable: Bool {
         currentTimeWindow == .onTime &&
         challengeAttendanceUseCase.isInsideGeofence &&
         challengeAttendanceUseCase.isLocationAuthorized &&
-        !isLoading &&
+        !attendanceState.isLoading &&
         !isAlreadySubmitted
     }
-    
+
+    /// 버튼 타이틀 (Loadable 상태별 분기)
     var buttonTitle: String {
-        if isLoading {
+        // 로딩 상태
+        if attendanceState.isLoading {
             return "출석 처리 중..."
         }
 
-        // 이번 세션에서 제출함 + 아직 pending → 승인 대기
-        if hasSubmittedThisSession, attendanceStatus == .pending {
-            return "승인 대기 중"
+        // 에러 상태
+        if attendanceState.error != nil {
+            return "다시 시도하기"
         }
 
-        // 최종 결정됨 (출석 / 지각 / 결석)
-        if attendanceStatus != .pending {
-            return attendanceStatus.displayText
+        // 로드 완료 상태
+        if case .loaded(let attendance) = attendanceState {
+            // 이번 세션에서 제출함 + 아직 pending → 승인 대기
+            if hasSubmittedThisSession, attendance.status == .pending {
+                return "승인 대기 중"
+            }
+
+            // 최종 결정됨 (출석 / 지각 / 결석)
+            if attendance.status != .pending {
+                return attendance.status.displayText
+            }
         }
 
         // 시간대 체크
@@ -89,10 +91,12 @@ final class ChallengerAttendanceViewModel {
             break  // 아래 조건들 계속 체크
         }
 
+        // 위치 권한 체크
         if !challengeAttendanceUseCase.isLocationAuthorized {
             return "위치 권한 필요"
         }
 
+        // 지오펜스 체크
         if !challengeAttendanceUseCase.isInsideGeofence {
             return "출석 범위 밖"
         }
@@ -103,6 +107,7 @@ final class ChallengerAttendanceViewModel {
     #if DEBUG
     /// 테스트용 상태 변경
     func simulateApproval(_ status: AttendanceStatus) {
+        guard case .loaded(let attendance) = attendanceState else { return }
         let updated = attendance.rejected(status: status)
         attendanceState = .loaded(updated)
     }
