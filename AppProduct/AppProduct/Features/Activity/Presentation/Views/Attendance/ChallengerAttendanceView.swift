@@ -7,67 +7,64 @@
 
 import SwiftUI
 
+/// 챌린저(일반 참여자)의 출석 체크 화면
+///
+/// 지도와 출석 버튼을 표시하며, 지오펜싱 상태에 따라 버튼 활성화를 제어합니다.
 struct ChallengerAttendanceView: View, Equatable {
     @Environment(\.di) private var container
     @Environment(ErrorHandler.self) private var errorHandler
     
     @Bindable private var mapViewModel: BaseMapViewModel
     @Bindable private var attendanceViewModel: ChallengerAttendanceViewModel
-    private var session: Session
-    private var attendance: Attendance
+    
     private var userId: UserID
     
     init(
-        challengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol,
         mapViewModel: BaseMapViewModel,
         attendanceViewModel: ChallengerAttendanceViewModel,
-        session: Session,
-        attendance: Attendance,
         userId: UserID
     ) {
         self.mapViewModel = mapViewModel
         self.attendanceViewModel = attendanceViewModel
-        self.session = session
-        self.attendance = attendance
         self.userId = userId
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
-        return lhs.attendance.id == rhs.attendance.id
-        && lhs.session.id == rhs.session.id
+        return lhs.userId == rhs.userId
+        && lhs.attendanceViewModel.attendance.id == rhs.attendanceViewModel.attendance.id
+        && lhs.attendanceViewModel.currentSession.id == rhs.attendanceViewModel.currentSession.id
     }
-    
+
+    // MARK: - Body
+
     var body: some View {
         VStack(spacing: 16) {
             ActivityCompactMapView(
                 container: container,
                 errorHandler: errorHandler,
-                session: session
+                session: attendanceViewModel.currentSession
             )
-            
             attendanceButton
         }
     }
-    
+
+    // MARK: - View Component
+
     private var attendanceButton: some View {
-        MainButton("현 위치로 출석체크") {
+        MainButton(attendanceViewModel.buttonTitle) {
             Task {
-                await attendanceViewModel.attendanceBtnTapped(
-                    session: session, userId: userId)
+                await attendanceViewModel.attendanceBtnTapped(userId: userId)
             }
-            print(attendanceViewModel.attendance)
         }
         .buttonStyle(.glassProminent)
+        .disabled(!attendanceViewModel.isAttendanceAvailable)
     }
 }
 
 #Preview {
     ChallengerAttendanceView(
-        challengerAttendanceUseCase: AttendancePreviewData.challengerAttendanceUseCase,
         mapViewModel: AttendancePreviewData.mapViewModel,
         attendanceViewModel: AttendancePreviewData.attendanceViewModel,
-        session: AttendancePreviewData.session,
-        attendance: AttendancePreviewData.attendance,
         userId: AttendancePreviewData.userId
     )
     .environment(\.di, AttendancePreviewData.container)

@@ -110,26 +110,30 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
         return try await repository.createAttendance(request: request)
     }
 
-    /// 출석 가능 시간 내인지 확인
-    func isWithinAttendanceTime(session: Session) -> AttendenceStatus {
+    /// 현재 시간이 어느 출석 시간대에 속하는지 확인
+    func isWithinAttendanceTime(session: Session) -> AttendanceTimeWindow {
         let now = Date()
-        let onTimeThresholdMinutes = TimeInterval(AttendancePolicy.onTimeThresholdMinutes * 60)
-        let lateThresholdMinutes = TimeInterval(AttendancePolicy.lateThresholdMinutes * 60)
+        let onTimeThreshold = TimeInterval(AttendancePolicy.onTimeThresholdMinutes * 60)
+        let lateThreshold = TimeInterval(AttendancePolicy.lateThresholdMinutes * 60)
         let startTime = session.startTime
-        
-        if now < startTime.addingTimeInterval(-onTimeThresholdMinutes) {
-            return .pending
+
+        // 세션 시작 - threshold 이전이면 너무 이름
+        if now < startTime.addingTimeInterval(-onTimeThreshold) {
+            return .tooEarly
         }
-        
-        if now <= startTime.addingTimeInterval(onTimeThresholdMinutes) {
-            return .present
+
+        // 세션 시작 ± threshold 내이면 정시 출석 가능
+        if now <= startTime.addingTimeInterval(onTimeThreshold) {
+            return .onTime
         }
-        
-        if now <= startTime.addingTimeInterval(lateThresholdMinutes) {
-            return .late
+
+        // 세션 시작 + lateThreshold 내이면 지각 시간대
+        if now <= startTime.addingTimeInterval(lateThreshold) {
+            return .lateWindow
         }
-        
-        return .absent
+
+        // 그 이후는 마감
+        return .expired
     }
     
     /// 지오코딩

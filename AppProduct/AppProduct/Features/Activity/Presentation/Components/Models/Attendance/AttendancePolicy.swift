@@ -1,5 +1,5 @@
 //
-//  AttendencePolicy.swift
+//  AttendancePolicy.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 1/5/26.

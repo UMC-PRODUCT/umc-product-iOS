@@ -7,12 +7,12 @@
 
 import Foundation
 
-struct Attendance: Identifiable {
+struct Attendance: Identifiable, Equatable {
     let id: UUID = .init()
     let sessionId: SessionID
     let userId: UserID
-    let type: AttendenceType
-    let status: AttendenceStatus
+    let type: AttendanceType
+    let status: AttendanceStatus
     let locationVerification: LocationVerification?
     let reason: String?
     let createdAt: Date = .now
@@ -25,7 +25,7 @@ struct Attendance: Identifiable {
         return copy(status: .pending)
     }
     
-    func rejected(status: AttendenceStatus) -> Self {
+    func rejected(status: AttendanceStatus) -> Self {
         return copy(status: status)
     }
     
@@ -38,8 +38,8 @@ struct Attendance: Identifiable {
     }
     
     private func copy(
-        type: AttendenceType? = nil,
-        status: AttendenceStatus? = nil,
+        type: AttendanceType? = nil,
+        status: AttendanceStatus? = nil,
         reason: String? = nil,
         locationVerification: LocationVerification? = nil
     ) -> Self {

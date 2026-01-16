@@ -7,23 +7,117 @@
 
 import Foundation
 
+/// 챌린저(일반 참여자)의 출석 관련 상태 및 액션을 관리하는 ViewModel
 @Observable
 final class ChallengerAttendanceViewModel {
     private var container: DIContainer
     private var errorHandler: ErrorHandler
     private var challengeAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
-    
+
     private(set) var currentSession: Session
-    private(set) var attendance: Attendance
-    
-    var attendanceStatus: AttendenceStatus {
+
+    /// 출석 요청 상태 (idle → loading → loaded/failed)
+    private(set) var attendanceState: Loadable<Attendance>
+
+    // MARK: - Computed Property
+
+    var attendance: Attendance {
+        attendanceState.value ?? initialAttendance
+    }
+
+    var attendanceStatus: AttendanceStatus {
         attendance.status
     }
-    
-    var attendanceType: AttendenceType {
+
+    var attendanceType: AttendanceType {
         attendance.type
     }
+
+    var isLoading: Bool {
+        attendanceState.isLoading
+    }
+
+    var attendanceError: AppError? {
+        attendanceState.error
+    }
+
+    /// 이번 세션에서 출석을 제출했는지 여부
+    private(set) var hasSubmittedThisSession: Bool = false
+
+    /// 현재 시간대 상태
+    var currentTimeWindow: AttendanceTimeWindow {
+        challengeAttendanceUseCase.isWithinAttendanceTime(session: currentSession)
+    }
+
+    var isAlreadySubmitted: Bool {
+        hasSubmittedThisSession || attendanceStatus != .pending
+    }
+
+    /// 출석 버튼 활성화 조건
+    var isAttendanceAvailable: Bool {
+        currentTimeWindow == .onTime &&
+        challengeAttendanceUseCase.isInsideGeofence &&
+        challengeAttendanceUseCase.isLocationAuthorized &&
+        !isLoading &&
+        !isAlreadySubmitted
+    }
     
+    var buttonTitle: String {
+        if isLoading {
+            return "출석 처리 중..."
+        }
+
+        // 이번 세션에서 제출함 + 아직 pending → 승인 대기
+        if hasSubmittedThisSession, attendanceStatus == .pending {
+            return "승인 대기 중"
+        }
+
+        // 최종 결정됨 (출석 / 지각 / 결석)
+        if attendanceStatus != .pending {
+            return attendanceStatus.displayText
+        }
+
+        // 시간대 체크
+        switch currentTimeWindow {
+        case .tooEarly:
+            return "아직 출석 시간이 아닙니다"
+        case .lateWindow:
+            return "지각 - 사유를 제출하세요"
+        case .expired:
+            return "출석 마감됨"
+        case .onTime:
+            break  // 아래 조건들 계속 체크
+        }
+
+        if !challengeAttendanceUseCase.isLocationAuthorized {
+            return "위치 권한 필요"
+        }
+
+        if !challengeAttendanceUseCase.isInsideGeofence {
+            return "출석 범위 밖"
+        }
+
+        return "현 위치로 출석체크"
+    }
+
+    #if DEBUG
+    /// 테스트용 상태 변경
+    func simulateApproval(_ status: AttendanceStatus) {
+        let updated = attendance.rejected(status: status)
+        attendanceState = .loaded(updated)
+    }
+
+    func simulateError(_ error: AppError) {
+        attendanceState = .failed(error)
+    }
+    #endif
+
+    // MARK: - Private
+
+    private let initialAttendance: Attendance
+
+    // MARK: - Init
+
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,
@@ -35,30 +129,82 @@ final class ChallengerAttendanceViewModel {
         self.errorHandler = errorHandler
         self.challengeAttendanceUseCase = challengeAttendanceUseCase
         self.currentSession = session
-        self.attendance = attendance
+        self.initialAttendance = attendance
+        self.attendanceState = .loaded(attendance)
     }
-    
-    func attendanceBtnTapped(session: Session, userId: UserID) async {
-        let attendanceStatus = challengeAttendanceUseCase.isWithinAttendanceTime(session: session)
+
+    // MARK: - Action
+
+    /// GPS 기반 출석 버튼 탭 처리
+    @MainActor
+    func attendanceBtnTapped(userId: UserID) async {
+        let timeWindow = challengeAttendanceUseCase.isWithinAttendanceTime(session: currentSession)
+
+        #if DEBUG
+        print("[Attendance] attendanceBtnTapped called")
+        print("[Attendance] timeWindow: \(timeWindow)")
+        print("[Attendance] session.startTime: \(currentSession.startTime)")
+        print("[Attendance] now: \(Date())")
+        #endif
+
+        // .onTime = 정시 출석 가능 시간대
+        guard timeWindow == .onTime else {
+            #if DEBUG
+            print("[Attendance] Guard failed - not in onTime window")
+            #endif
+            return
+        }
+
+        attendanceState = .loading
+
         do {
-            guard attendanceStatus == .pending else { return }
-            attendance = try await challengeAttendanceUseCase.requestGPSAttendance(
-                sessionId: session.sessionId, userId: userId)
+            let result = try await challengeAttendanceUseCase.requestGPSAttendance(
+                sessionId: currentSession.sessionId, userId: userId)
+            attendanceState = .loaded(result)
+            hasSubmittedThisSession = true
+
+        } catch let error as DomainError {
+            attendanceState = .failed(.domain(error))
         } catch {
-            errorHandler.handle(
-                error, context: .init(feature: "Activity", action: "attendanceBtnTapped"))
+            // 기타 에러 (네트워크 등)
+            attendanceState = .loaded(initialAttendance)
+            errorHandler.handle(error, context: .init(
+                feature: "Activity",
+                action: "attendanceBtnTapped",
+                retryAction: { [weak self] in
+                    await self?.attendanceBtnTapped(userId: userId)
+                }
+            ))
         }
     }
-    
-    func attendanceReaonBtnTapped(session: Session, userId: UserID, reason: String) async {
-        let attendanceStatus = challengeAttendanceUseCase.isWithinAttendanceTime(session: session)
+
+    /// 지각/결석 사유 제출 버튼 탭 처리
+    @MainActor
+    func attendanceReasonBtnTapped(userId: UserID, reason: String) async {
+        let timeWindow = challengeAttendanceUseCase.isWithinAttendanceTime(session: currentSession)
+        guard timeWindow == .lateWindow || timeWindow == .expired else { return }
+
+        attendanceState = .loading
+
         do {
-            guard attendanceStatus == .late, attendanceStatus == .absent else { return }
-            attendance = try await challengeAttendanceUseCase.submitLateReason(
-                sessionId: session.sessionId, userId: userId, reason: reason)
+            let result = try await challengeAttendanceUseCase.submitLateReason(
+                sessionId: currentSession.sessionId, userId: userId, reason: reason)
+            attendanceState = .loaded(result)
+            hasSubmittedThisSession = true
+
+        } catch let error as DomainError {
+            attendanceState = .failed(.domain(error))
+
         } catch {
-            errorHandler.handle(
-                error, context: .init(feature: "Activity", action: "attendanceReaonBtnTapped"))
+            // 기타 에러 (네트워크 등)
+            attendanceState = .loaded(initialAttendance)
+            errorHandler.handle(error, context: .init(
+                feature: "Activity",
+                action: "attendanceReasonBtnTapped",
+                retryAction: { [weak self] in
+                    await self?.attendanceReasonBtnTapped(userId: userId, reason: reason)
+                }
+            ))
         }
     }
 }

@@ -25,8 +25,8 @@ protocol ChallengerAttendanceUseCaseProtocol {
     /// - throws: DomainError.attendanceReasonRequired
     func submitAbsentReason(sessionId: SessionID, userId: UserID, reason: String) async throws -> Attendance
     
-    /// 출석 가능 시간 내인지 확인
-    func isWithinAttendanceTime(session: Session) -> AttendenceStatus
+    /// 현재 시간이 어느 출석 시간대에 속하는지 확인
+    func isWithinAttendanceTime(session: Session) -> AttendanceTimeWindow
     
     /// 현재 위치 좌표 통한 지오코딩
     /// - throws: LocationArror.locationFailed

@@ -7,8 +7,50 @@
 
 import Foundation
 
-/// 앱 전체에서 사용하는 통합 에러 타입
-/// - 모든 에러를 래핑하여 일관된 처리 제공
+/// 앱 전체에서 사용하는 통합 에러 타입.
+///
+/// 모든 에러를 래핑하여 일관된 처리를 제공합니다.
+/// ViewModel에서 에러 발생 시 이 타입으로 변환하여 처리합니다.
+///
+/// ## Usage
+///
+/// **ViewModel에서 에러 타입별 분기 처리:**
+///
+/// ```swift
+/// @MainActor
+/// func submit() async {
+///     state = .loading
+///
+///     do {
+///         let result = try await useCase.execute()
+///         state = .loaded(result)
+///
+///     } catch let error as DomainError {
+///         // 도메인 에러 → Loadable
+///         state = .failed(.domain(error))
+///
+///     } catch {
+///         // 기타 에러 → ErrorHandler (Alert) + 상태 복구
+///         state = .loaded(initialData)
+///         errorHandler.handle(error, context: .init(
+///             feature: "Feature",
+///             action: "submit",
+///             retryAction: { [weak self] in await self?.submit() }
+///         ))
+///     }
+/// }
+/// ```
+///
+/// **View에서 인라인 에러 표시:**
+///
+/// ```swift
+/// if let error = viewModel.state.error {
+///     Text(error.userMessage)
+///         .foregroundStyle(.red)
+/// }
+/// ```
+///
+/// - SeeAlso: ``ErrorHandler``, ``Loadable``, ``DomainError``
 enum AppError: Error, LocalizedError, Equatable {
     /// API 통신 에러
     case api(APIError)

@@ -29,7 +29,7 @@ final class OperatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol {
     }
 
     /// 개별 출석 승인
-    func approveAttendance(attendanceId: AttendenceID) async throws -> Attendance {
+    func approveAttendance(attendanceId: AttendanceID) async throws -> Attendance {
         try await repository.updateAttendanceStatus(
             attendanceId: attendanceId,
             status: .present,
@@ -44,7 +44,7 @@ final class OperatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol {
         var approvedAttendances: [Attendance] = []
         for attendance in pendingAttendances {
             let approved = try await repository.updateAttendanceStatus(
-                attendanceId: AttendenceID(value: attendance.id.uuidString),
+                attendanceId: AttendanceID(value: attendance.id.uuidString),
                 status: .present,
                 verification: nil
             )
@@ -55,7 +55,7 @@ final class OperatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol {
     }
 
     /// 출석 거부
-    func rejectAttendance(attendanceId: AttendenceID, reason: String) async throws -> Attendance {
+    func rejectAttendance(attendanceId: AttendanceID, reason: String) async throws -> Attendance {
         try await repository.updateAttendanceStatus(
             attendanceId: attendanceId,
             status: .absent,

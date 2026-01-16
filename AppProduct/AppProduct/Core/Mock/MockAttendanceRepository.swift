@@ -42,8 +42,8 @@ final class MockAttendanceRepository: AttendanceRepositoryProtocol {
     }
 
     func updateAttendanceStatus(
-        attendanceId: AttendenceID,
-        status: AttendenceStatus,
+        attendanceId: AttendanceID,
+        status: AttendanceStatus,
         verification: LocationVerification?
     ) async throws -> Attendance {
         return Attendance(

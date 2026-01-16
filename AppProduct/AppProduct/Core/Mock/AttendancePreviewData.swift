@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 #if DEBUG
 struct AttendancePreviewData {
@@ -36,7 +37,38 @@ struct AttendancePreviewData {
     static let session: Session = .init(
         sessionId: SessionID(value: "iOS_6"),
         icon: "", title: "Alamofire 파헤치기",
-        week: 6, startTime: Date.now, endTime: Date.now + 10,
+        week: 6, startTime: Date.now, endTime: Date.now + 100,
         location: .init(latitude: 37.582967, longitude: 127.010527))
+}
+
+struct AttendanceTestView: View {
+    @Binding var show: Bool
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Button("출석 화면 열기") {
+                show.toggle()
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Divider()
+            
+            Text("승인 시뮬레이션").font(.headline)
+            HStack {
+                Button("출석") {
+                    AttendancePreviewData.attendanceViewModel.simulateApproval(.present)
+                }
+                Button("지각") {
+                    AttendancePreviewData.attendanceViewModel.simulateApproval(.late)
+                }
+                Button("결석") {
+                    AttendancePreviewData.attendanceViewModel.simulateApproval(.absent)
+                }
+            }
+        }
+        .task {
+            LocationManager.shared.requestAuthorization()
+        }
+    }
 }
 #endif

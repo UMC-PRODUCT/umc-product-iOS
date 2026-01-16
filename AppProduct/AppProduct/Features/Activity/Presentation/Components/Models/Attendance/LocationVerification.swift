@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct LocationVerification {
+struct LocationVerification: Equatable {
     let isVerified: Bool
     let coordinate: Coordinate
     let address: Address
