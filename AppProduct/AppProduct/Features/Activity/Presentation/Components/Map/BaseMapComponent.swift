@@ -14,22 +14,27 @@ import MapKit
 /// - 지오펜스 오버레이: 출석 가능 영역 시각화
 /// - 사용자 위치: UserAnnotation으로 현재 위치 표시
 struct BaseMapComponent: View, Equatable {
+
+    // MARK: - Property
+
     @Bindable private var viewModel: BaseMapViewModel
-    
-    init(
-        viewModel: BaseMapViewModel,
-    ) {
-        self.viewModel = viewModel
-    }
-    
+
     fileprivate enum Constants {
         static let iconSize: CGFloat = 24
     }
-    
+
+    // MARK: - Init
+
+    init(viewModel: BaseMapViewModel) {
+        self.viewModel = viewModel
+    }
+
     static func == (lsh: Self, rhs: Self) -> Bool {
         return lsh.viewModel === rhs.viewModel
     }
-    
+
+    // MARK: - Body
+
     var body: some View {
         Map(position: $viewModel.cameraPosition) {
             geofenceOverlay
@@ -41,7 +46,9 @@ struct BaseMapComponent: View, Equatable {
             MapCompass()
         }
     }
-    
+
+    // MARK: - View Component
+
     /// 세션 위치를 나타내는 핀 마커
     @MapContentBuilder
     private var sessionMaker: some MapContent {
