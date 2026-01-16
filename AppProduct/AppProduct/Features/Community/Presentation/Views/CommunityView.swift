@@ -11,6 +11,8 @@ struct CommunityView: View {
     // MARK: - Properties
 
     @State var vm: CommunityViewModel
+    @State private var searchText: String = ""
+    @State private var isRecruiting: Bool = false
 
     private enum Constant {}
 
@@ -24,15 +26,27 @@ struct CommunityView: View {
 
     var body: some View {
         VStack {
-            TopSection
             MidSection
+        }
+        .navigation(naviTitle: .community, displayMode: .large)
+        .toolbar {
+            ToolbarMenu
         }
     }
 
-    // MARK: - Top
+    // MARK: - Toolbar
 
-    private var TopSection: some View {
-        Text("Top Section")
+    private var ToolbarMenu: some View {
+        Menu("Menu", systemImage: "ellipsis") {
+            Section {
+                // TODO: action 추가 - [김미주] 26.01.15
+                Button("전체") {}
+                Button("Hard", systemImage: "flame.fill") {}
+                Button("Soft", systemImage: "sun.max.fill") {}
+                Button("명예의전당", systemImage: "trophy.fill") {}
+            }
+            Toggle("모집중", isOn: $isRecruiting)
+        }
     }
 
     // MARK: - Mid
@@ -62,5 +76,7 @@ struct CommunityView: View {
 }
 
 #Preview {
-    CommunityView()
+    NavigationStack {
+        CommunityView()
+    }
 }
