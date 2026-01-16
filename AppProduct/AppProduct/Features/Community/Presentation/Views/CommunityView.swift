@@ -13,6 +13,7 @@ struct CommunityView: View {
     @State var vm: CommunityViewModel
     @State private var searchText: String = ""
     @State private var isRecruiting: Bool = false
+    @State private var isScrolled: Bool = false
 
     private enum Constant {}
 
@@ -25,12 +26,25 @@ struct CommunityView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack {
-            MidSection
-        }
-        .navigation(naviTitle: .community, displayMode: .large)
-        .toolbar {
-            ToolbarMenu
+        ScrollViewReader { proxy in
+            ListSection(proxy: proxy)
+                .navigation(naviTitle: .community, displayMode: .large)
+                .searchable(text: $searchText)
+                .searchToolbarBehavior(.minimize)
+                .onScrollGeometryChange(for: Bool.self) { geo in
+                    geo.contentOffset.y > 50
+                } action: { _, newValue in
+                    withAnimation {
+                        isScrolled = newValue
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(id: "menu") { ToolbarMenu }
+                    ToolbarSpacer()
+                    if isScrolled {
+                        ToolbarItem(id: "scroll") { ToolbarScrollToTop(proxy: proxy) }
+                    }
+                }
         }
     }
 
@@ -49,12 +63,23 @@ struct CommunityView: View {
         }
     }
 
-    // MARK: - Mid
+    private func ToolbarScrollToTop(proxy: ScrollViewProxy) -> some View {
+        Button("Top", systemImage: "chevron.up", action: {
+            withAnimation {
+                if let firstId = vm.items.first?.id {
+                    proxy.scrollTo(firstId, anchor: .top)
+                }
+            }
+        })
+    }
 
-    private var MidSection: some View {
+    // MARK: - List
+
+    private func ListSection(proxy: ScrollViewProxy) -> some View {
         List(vm.items, rowContent: { item in
             CommunityItem(model: item)
                 .equatable()
+                .id(item.id)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
         })
