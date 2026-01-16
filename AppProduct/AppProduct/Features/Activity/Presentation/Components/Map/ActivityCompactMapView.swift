@@ -39,8 +39,8 @@ struct ActivityCompactMapView: View {
                 LocationStatusBarView(mapViewModel: mapViewModel)
             }
             .task {
-                await mapViewModel.startGeofenceForAttendance(sessionId: session.sessionId)
-                await mapViewModel.updateAddressForSession()
+                await mapViewModel.startGeofenceForAttendance(session: session)
+                await mapViewModel.updateAddressForSession(session: session)
                 mapViewModel.startLocationUpdate()
             }
             .onDisappear {

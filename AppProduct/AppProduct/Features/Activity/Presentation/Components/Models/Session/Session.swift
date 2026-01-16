@@ -11,7 +11,7 @@ import Foundation
 ///
 /// 출석 체크, 일정 표시 등에 사용되는 세션 데이터 모델입니다.
 /// - Note: `id`는 SwiftUI List/ForEach용, `sessionId`는 서버 API용
-struct Session: Identifiable {
+struct Session: Identifiable, Equatable {
     let id: UUID = .init()
     let sessionId: SessionID
     let icon: String

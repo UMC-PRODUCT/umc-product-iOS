@@ -62,12 +62,12 @@ final class BaseMapViewModel {
     /// 출석용 지오펜스 모니터링 시작
     /// - Parameter sessionId: 모니터링할 세션 ID
     @MainActor
-    func startGeofenceForAttendance(sessionId: SessionID) async {
+    func startGeofenceForAttendance(session: Session) async {
         geofenceCenter = sessionLocation
 
         await locationManager.startGeofenceMonitoring(
             at: sessionLocation,
-            identifier: "Session_\(sessionId)",
+            identifier: "Session_\(session.sessionId)",
             radius: AttendancePolicy.geofenceRadius
         )
     }
@@ -80,7 +80,7 @@ final class BaseMapViewModel {
 
     /// 카메라를 세션 위치로 애니메이션 이동
     @MainActor
-    func moveToSessionPlace() async {
+    func moveToSessionPlace(session: Session) async {
         withAnimation(.easeIn(duration: DefaultConstant.animationTime)) {
             cameraPosition = .region(MKCoordinateRegion(
                 center: sessionLocation, span: .init(latitudeDelta: 0.005, longitudeDelta: 0.005)))
@@ -99,9 +99,9 @@ final class BaseMapViewModel {
 
     /// 세션 위치의 주소를 역지오코딩으로 조회
     @MainActor
-    func updateAddressForSession() async {
+    func updateAddressForSession(session: Session) async {
         do {
-            sessionAddress = try await locationManager.reverseGeocode(coordinate: currentSession.location)
+            sessionAddress = try await locationManager.reverseGeocode(coordinate: session.location)
         } catch {
             errorHandler.handle(
                 error, context: .init(feature: "Activity", action: "updateAddressForSession"))

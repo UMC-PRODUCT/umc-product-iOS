@@ -15,8 +15,10 @@ struct AttendancePreviewData {
     static let challengerAttendanceUseCase = ChallengerAttendanceUseCase(repository: MockAttendanceRepository())
     static let mapViewModel: BaseMapViewModel = .init(container: container, session: session, errorHandler: errorHandler)
     static let attendanceViewModel: ChallengerAttendanceViewModel = .init(
-        container: container, errorHandler: errorHandler,
-        challengeAttendanceUseCase: challengerAttendanceUseCase, session: session, attendance: attendance)
+        container: container,
+        errorHandler: errorHandler,
+        challengeAttendanceUseCase: challengerAttendanceUseCase
+    )
 
     static let sessionId: SessionID = SessionID(value: "iOS_6")
     static let userId: UserID = UserID(value: "River_")
@@ -39,6 +41,8 @@ struct AttendancePreviewData {
         icon: "", title: "Alamofire 파헤치기",
         week: 6, startTime: Date.now, endTime: Date.now + 100,
         location: .init(latitude: 37.582967, longitude: 127.010527))
+
+    static let sessionItem: SessionItem = .init(session: session, initialAttendance: attendance)
 }
 
 struct AttendanceTestView: View {
@@ -52,19 +56,6 @@ struct AttendanceTestView: View {
             .buttonStyle(.borderedProminent)
 
             Divider()
-
-            Text("승인 시뮬레이션").font(.headline)
-            HStack {
-                Button("출석") {
-                    AttendancePreviewData.attendanceViewModel.simulateApproval(.present)
-                }
-                Button("지각") {
-                    AttendancePreviewData.attendanceViewModel.simulateApproval(.late)
-                }
-                Button("결석") {
-                    AttendancePreviewData.attendanceViewModel.simulateApproval(.absent)
-                }
-            }
         }
         .task {
             LocationManager.shared.requestAuthorization()

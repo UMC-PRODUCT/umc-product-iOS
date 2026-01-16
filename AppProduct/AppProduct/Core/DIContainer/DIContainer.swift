@@ -121,6 +121,18 @@ extension DIContainer {
         let container = DIContainer()
         container.register(NavigationRouter.self) { NavigationRouter() }
         container.register(UseCaseProvider.self) { UseCaseProvider() }
+        
+        container.register(AttendanceRepositoryProtocol.self) {
+            MockAttendanceRepository() // TODO: 서버 연결시 실제 구현체로 변경 예정 - [25.01.16] 이재원
+        }
+        container.register(ChallengerAttendanceUseCaseProtocol.self) {
+            ChallengerAttendanceUseCase(repository: container.resolve(AttendanceRepositoryProtocol.self))
+        }
+        
+        container.register(OperatorAttendanceUseCaseProtocol.self) {
+            OperatorAttendanceUseCase(repository: container.resolve(AttendanceRepositoryProtocol.self))
+        }
+        
         return container
     }
 }
