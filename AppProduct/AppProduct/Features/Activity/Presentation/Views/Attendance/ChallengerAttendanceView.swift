@@ -34,17 +34,22 @@ struct ChallengerAttendanceView: View, Equatable {
         && lhs.attendanceViewModel.attendance.id == rhs.attendanceViewModel.attendance.id
         && lhs.attendanceViewModel.currentSession.id == rhs.attendanceViewModel.currentSession.id
     }
+    
+    private enum Constants {
+        static let verticalSpacing: CGFloat = 16
+    }
 
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Constants.verticalSpacing) {
             ActivityCompactMapView(
                 container: container,
                 errorHandler: errorHandler,
                 session: attendanceViewModel.currentSession
             )
             attendanceButton
+            lateReasonButton
         }
     }
 
@@ -58,6 +63,17 @@ struct ChallengerAttendanceView: View, Equatable {
         }
         .buttonStyle(.glassProminent)
         .disabled(!attendanceViewModel.isAttendanceAvailable)
+    }
+    
+    private var lateReasonButton: some View {
+        Button {
+            // 사유 제출 Sheet 활성화
+        } label: {
+            Text("위치 인증이 안 되나요? 사유 제출하기")
+                .appFont(.caption2, color: .grey500)
+                .underline()
+        }
+        .buttonStyle(.plain)
     }
 }
 
