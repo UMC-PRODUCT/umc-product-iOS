@@ -8,16 +8,22 @@
 import Foundation
 
 extension Date {
+    /// "yyyy.MM.dd" 형식으로 변환 (예: "2026.01.17")
     func toYearMonthDay() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy.MM.dd"
-        return formatter.string(from: self)
+        formatted(.dateTime.year().month(.twoDigits).day(.twoDigits))
+            .replacingOccurrences(of: "/", with: ".")
     }
 
+    /// "MM.dd" 형식으로 변환 (예: "01.17")
     func toMonthDay() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM.dd"
-        return formatter.string(from: self)
+        formatted(.dateTime.month(.twoDigits).day(.twoDigits))
+            .replacingOccurrences(of: "/", with: ".")
+    }
+
+    /// "HH:mm" 24시간제 형식으로 변환 (예: "14:30")
+    func toHourMinutes() -> String {
+        formatted(.dateTime.hour(
+            .twoDigits(amPM: .omitted)).minute(.twoDigits))
     }
     
     var timeAgoText: String {
