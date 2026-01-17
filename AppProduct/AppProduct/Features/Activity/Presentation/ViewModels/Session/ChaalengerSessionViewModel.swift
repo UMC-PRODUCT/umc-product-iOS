@@ -13,7 +13,7 @@ final class ChallengerSessionViewModel {
     private var errorHandler: ErrorHandler
     private var sessionState: Loadable<[Session]> = .idle
     private var sessionRespository: SessionRepositoryProtocol
-
+        
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,

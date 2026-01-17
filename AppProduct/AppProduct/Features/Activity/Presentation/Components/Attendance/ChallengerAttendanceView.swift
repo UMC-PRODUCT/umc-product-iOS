@@ -14,7 +14,7 @@ struct ChallengerAttendanceView: View, Equatable {
     @State private var mapViewModel: BaseMapViewModel
     @Bindable private var attendanceViewModel: ChallengerAttendanceViewModel
     @Namespace private var attendanceNamespace
-
+    
     private let userId: UserID
     private let container: DIContainer
     private let errorHandler: ErrorHandler
@@ -39,11 +39,11 @@ struct ChallengerAttendanceView: View, Equatable {
         self.attendanceViewModel = attendanceViewModel
         self.userId = userId
     }
-
+    
     static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.userId == rhs.userId
     }
-
+    
     private enum Constants {
         static let bottomPadding: CGFloat = 16
         static let attendanceActionId = "attendance-action"
@@ -105,7 +105,7 @@ struct ChallengerAttendanceView: View, Equatable {
         .buttonStyle(.glassProminent)
         .disabled(!attendanceViewModel.isAttendanceAvailable(for: session))
     }
-
+    
     private var lateReasonButton: some View {
         Button {
             // 사유 제출 Sheet 활성화

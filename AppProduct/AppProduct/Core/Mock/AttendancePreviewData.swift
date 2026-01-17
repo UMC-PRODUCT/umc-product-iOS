@@ -364,14 +364,14 @@ struct AttendanceStatusPreview: View {
 
 struct AttendanceTestView: View {
     @Binding var show: Bool
-
+    
     var body: some View {
         VStack(spacing: 20) {
             Button("출석 화면 열기") {
                 show.toggle()
             }
             .buttonStyle(.borderedProminent)
-
+            
             Divider()
         }
         .task {
@@ -389,24 +389,6 @@ struct AttendanceTestView: View {
         Color.grey100.ignoresSafeArea()
         PendingApprovalView()
             .padding()
-    }
-}
-
-#Preview("Pending Approval Session Card") {
-    ZStack {
-        Color.grey100.ignoresSafeArea()
-        VStack(spacing: 16) {
-            ChallengerSessionCard(
-                session: AttendancePreviewData.pendingApprovalSession,
-                isExpanded: false
-            )
-
-            ChallengerSessionCard(
-                session: AttendancePreviewData.pendingApprovalSession,
-                isExpanded: true
-            )
-        }
-        .padding()
     }
 }
 #endif
