@@ -89,11 +89,7 @@ struct BaseMapComponent: View, Equatable {
 
 #Preview {
     BaseMapComponent(viewModel: .init(
-        container: .init(),
-        session: .init(
-            sessionId: SessionID(value: "iOS_6"),
-            icon: "", title: "Alamofire 파헤치기",
-            week: 6, startTime: Date.now, endTime: Date.now + 10,
-            location: .init(latitude: 37.582967, longitude: 127.010527)),
-        errorHandler: .init()))
+        container: AttendancePreviewData.container,
+        session: AttendancePreviewData.session,
+        errorHandler: AttendancePreviewData.errorHandler))
 }

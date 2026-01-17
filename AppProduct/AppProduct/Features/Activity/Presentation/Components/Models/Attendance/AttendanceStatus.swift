@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 enum AttendanceStatus: String, CaseIterable {
     case pending
@@ -24,6 +25,23 @@ enum AttendanceStatus: String, CaseIterable {
             return "지각"
         case .absent:
             return "결석"
+        }
+    }
+    
+    var backgroundColor: Color {
+        switch self {
+        case .pending: .grey200
+        case .present: .green500
+        case .late: .yellow500
+        case .absent: .red500
+        }
+    }
+    
+    var fontColor: Color {
+        switch self {
+        case .pending: return .grey900
+        case .present, .late, .absent:
+            return .grey000
         }
     }
 }

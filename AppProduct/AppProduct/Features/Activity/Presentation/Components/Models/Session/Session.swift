@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// 스터디/세미나 세션 정보
 ///
@@ -14,7 +15,7 @@ import Foundation
 struct Session: Identifiable, Equatable {
     let id: UUID = .init()
     let sessionId: SessionID
-    let icon: String
+    let icon: ImageResource
     let title: String
     let week: Int
     let startTime: Date

@@ -14,15 +14,14 @@ struct ChallengerSessionView: View {
         container: DIContainer,
         errorHandler: ErrorHandler
     ) {
-        self._attendanceViewModel = .init(
-            wrappedValue: .init(container: container,
-                                errorHandler: errorHandler,
-                                challengeAttendanceUseCase: container.resolve(
-                                    ChallengerAttendanceUseCaseProtocol.self)))
+        self._attendanceViewModel = .init(wrappedValue: .init(
+            container: container,
+            errorHandler: errorHandler,
+            challengeAttendanceUseCase: container.resolve(ChallengerAttendanceUseCaseProtocol.self)))
     }
     
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Text("")
     }
 }
 
