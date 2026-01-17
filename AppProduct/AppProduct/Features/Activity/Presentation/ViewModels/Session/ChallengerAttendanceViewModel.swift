@@ -30,14 +30,14 @@ final class ChallengerAttendanceViewModel {
 
     /// GPS 기반 출석 버튼 탭 처리
     @MainActor
-    func attendanceBtnTapped(userId: UserID, sessionItem: SessionItem) async {
-        let session = sessionItem.session
-        let timeWindow = currentTimeWindow(for: session)
+    func attendanceBtnTapped(userId: UserID, session: Session) async {
+        let info = session.info
+        let timeWindow = currentTimeWindow(for: info)
 
         #if DEBUG
         print("[Attendance] attendanceBtnTapped called")
         print("[Attendance] timeWindow: \(timeWindow)")
-        print("[Attendance] session.startTime: \(session.startTime)")
+        print("[Attendance] info.startTime: \(info.startTime)")
         print("[Attendance] now: \(Date())")
         #endif
 
@@ -49,25 +49,25 @@ final class ChallengerAttendanceViewModel {
             return
         }
 
-        sessionItem.updateState(.loading)
+        session.updateState(.loading)
 
         do {
             let result = try await challengeAttendanceUseCase.requestGPSAttendance(
-                sessionId: session.sessionId, userId: userId)
-            sessionItem.updateState(.loaded(result))
+                sessionId: info.sessionId, userId: userId)
+            session.updateState(.loaded(result))
 
         } catch let error as DomainError {
-            sessionItem.updateState(.failed(.domain(error)))
+            session.updateState(.failed(.domain(error)))
         } catch {
             // 기타 에러 (네트워크 등)
-            if let prev = sessionItem.attendance {
-                sessionItem.updateState(.loaded(prev))
+            if let prev = session.attendance {
+                session.updateState(.loaded(prev))
             }
             errorHandler.handle(error, context: .init(
                 feature: "Activity",
                 action: "attendanceBtnTapped",
                 retryAction: { [weak self] in
-                    await self?.attendanceBtnTapped(userId: userId, sessionItem: sessionItem)
+                    await self?.attendanceBtnTapped(userId: userId, session: session)
                 }
             ))
         }
@@ -77,26 +77,26 @@ final class ChallengerAttendanceViewModel {
     @MainActor
     func attendanceReasonBtnTapped(
         userId: UserID,
-        sessionItem: SessionItem,
+        session: Session,
         reason: String
     ) async {
-        let session = sessionItem.session
-        let timeWindow = currentTimeWindow(for: session)
+        let info = session.info
+        let timeWindow = currentTimeWindow(for: info)
         guard timeWindow == .lateWindow || timeWindow == .expired else { return }
 
-        sessionItem.updateState(.loading)
-        
+        session.updateState(.loading)
+
         do {
             let result = try await challengeAttendanceUseCase.submitLateReason(
-                sessionId: session.sessionId, userId: userId, reason: reason)
-            sessionItem.updateState(.loaded(result))
+                sessionId: info.sessionId, userId: userId, reason: reason)
+            session.updateState(.loaded(result))
 
         } catch let error as DomainError {
-            sessionItem.updateState(.failed(.domain(error)))
+            session.updateState(.failed(.domain(error)))
         } catch {
             // 기타 에러 (네트워크 등)
-            if let attendance = sessionItem.attendance {
-                sessionItem.updateState(.loaded(attendance))
+            if let attendance = session.attendance {
+                session.updateState(.loaded(attendance))
             }
             errorHandler.handle(error, context: .init(
                 feature: "Activity",
@@ -104,7 +104,7 @@ final class ChallengerAttendanceViewModel {
                 retryAction: { [weak self] in
                     await self?.attendanceReasonBtnTapped(
                         userId: userId,
-                        sessionItem: sessionItem,
+                        session: session,
                         reason: reason
                     )
                 }
@@ -112,25 +112,25 @@ final class ChallengerAttendanceViewModel {
         }
     }
     
-    func isAttendanceAvailable(for item: SessionItem) -> Bool {
-        currentTimeWindow(for: item.session) == .onTime
+    func isAttendanceAvailable(for session: Session) -> Bool {
+        currentTimeWindow(for: session.info) == .onTime
         && challengeAttendanceUseCase.isInsideGeofence
         && challengeAttendanceUseCase.isLocationAuthorized
-        && !item.isLoading
-        && !item.hasSubmitted
+        && !session.isLoading
+        && !session.hasSubmitted
     }
-    
-    func buttonStyle(for item: SessionItem) -> String {
-        item.buttonTitle(
+
+    func buttonStyle(for session: Session) -> String {
+        session.buttonTitle(
             isLocationAuthorized: challengeAttendanceUseCase.isLocationAuthorized,
             isInsideGeofence: challengeAttendanceUseCase.isInsideGeofence,
-            timeWindow: challengeAttendanceUseCase.isWithinAttendanceTime(session: item.session)
+            timeWindow: challengeAttendanceUseCase.isWithinAttendanceTime(info: session.info)
         )
     }
-    
+
     // MARK: - Helper Methods
-    
-    private func currentTimeWindow(for session: Session) -> AttendanceTimeWindow {
-        challengeAttendanceUseCase.isWithinAttendanceTime(session: session)
+
+    private func currentTimeWindow(for info: SessionInfo) -> AttendanceTimeWindow {
+        challengeAttendanceUseCase.isWithinAttendanceTime(info: info)
     }
 }

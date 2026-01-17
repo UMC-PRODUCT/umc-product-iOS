@@ -13,13 +13,11 @@ import SwiftUI
 struct ChallengerAttendanceView: View, Equatable {
     @State private var mapViewModel: BaseMapViewModel
     @Bindable private var attendanceViewModel: ChallengerAttendanceViewModel
-
-    @State private var showErrorAlert = false
-
+    
     private let userId: UserID
     private let container: DIContainer
     private let errorHandler: ErrorHandler
-    private let item: SessionItem
+    private let session: Session
 
     init(
         container: DIContainer,
@@ -27,24 +25,24 @@ struct ChallengerAttendanceView: View, Equatable {
         mapViewModel: BaseMapViewModel,
         attendanceViewModel: ChallengerAttendanceViewModel,
         userId: UserID,
-        item: SessionItem
+        session: Session
     ) {
         self.container = container
         self.errorHandler = errorHandler
-        self.item = item
+        self.session = session
         self._mapViewModel = .init(
             wrappedValue: .init(
                 container: container,
-                session: item.session,
+                info: session.info,
                 errorHandler: errorHandler))
         self.attendanceViewModel = attendanceViewModel
         self.userId = userId
     }
-
+    
     static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.userId == rhs.userId
     }
-
+    
     private enum Constants {
         static let verticalSpacing: CGFloat = 16
     }
@@ -56,40 +54,26 @@ struct ChallengerAttendanceView: View, Equatable {
             ActivityCompactMapView(
                 container: container,
                 errorHandler: errorHandler,
-                session: item.session
+                info: session.info
             )
             attendanceButton
             lateReasonButton
         }
-        .onChange(of: item.attendanceLoadable) { _, newValue in
-            if case .failed = newValue {
-                showErrorAlert = true
-            }
-        }
-        .alert("출석 실패", isPresented: $showErrorAlert) {
-            Button("확인", role: .cancel){}
-        } message: {
-            if case .failed(let error) = item.attendanceLoadable {
-                Text(error.errorDescription ?? "출석 처리 중 오류가 발생했습니다.")
-            }
-        }
-
     }
 
     // MARK: - View Component
 
     private var attendanceButton: some View {
-        MainButton(attendanceViewModel.buttonStyle(for: item)) {
+        MainButton(attendanceViewModel.buttonStyle(for: session)) {
             Task {
                 await attendanceViewModel.attendanceBtnTapped(
-                    userId: userId, sessionItem: item)
+                    userId: userId, session: session)
             }
         }
-        .loading(.constant(item.isLoading))
         .buttonStyle(.glassProminent)
-        .disabled(!attendanceViewModel.isAttendanceAvailable(for: item))
+        .disabled(!attendanceViewModel.isAttendanceAvailable(for: session))
     }
-
+    
     private var lateReasonButton: some View {
         Button {
             // 사유 제출 Sheet 활성화
@@ -100,4 +84,15 @@ struct ChallengerAttendanceView: View, Equatable {
         }
         .buttonStyle(.plain)
     }
+}
+
+#Preview {
+    ChallengerAttendanceView(
+        container: AttendancePreviewData.container,
+        errorHandler: AttendancePreviewData.errorHandler,
+        mapViewModel: AttendancePreviewData.mapViewModel,
+        attendanceViewModel: AttendancePreviewData.attendanceViewModel,
+        userId: AttendancePreviewData.userId,
+        session: AttendancePreviewData.session
+    )
 }

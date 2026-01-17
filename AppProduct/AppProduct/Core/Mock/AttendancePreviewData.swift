@@ -13,7 +13,7 @@ struct AttendancePreviewData {
     static let container = DIContainer()
     static let errorHandler = ErrorHandler()
     static let challengerAttendanceUseCase = ChallengerAttendanceUseCase(repository: MockAttendanceRepository())
-    static let mapViewModel: BaseMapViewModel = .init(container: container, session: session, errorHandler: errorHandler)
+    static let mapViewModel: BaseMapViewModel = .init(container: container, info: sessionInfo, errorHandler: errorHandler)
     static let attendanceViewModel: ChallengerAttendanceViewModel = .init(
         container: container,
         errorHandler: errorHandler,
@@ -36,25 +36,25 @@ struct AttendancePreviewData {
             verifiedAt: .now),
         reason: nil)
 
-    static let session: Session = .init(
+    static let sessionInfo: SessionInfo = .init(
         sessionId: SessionID(value: "iOS_6"),
         icon: .Activity.profile, title: "Alamofire 파헤치기",
         week: 6, startTime: Date.now, endTime: Date.now + 100,
         location: .init(latitude: 37.582967, longitude: 127.010527))
 
-    static let sessionItem: SessionItem = .init(session: session, initialAttendance: attendance)
+    static let session: Session = .init(info: sessionInfo, initialAttendance: attendance)
 }
 
 struct AttendanceTestView: View {
     @Binding var show: Bool
-
+    
     var body: some View {
         VStack(spacing: 20) {
             Button("출석 화면 열기") {
                 show.toggle()
             }
             .buttonStyle(.borderedProminent)
-
+            
             Divider()
         }
         .task {

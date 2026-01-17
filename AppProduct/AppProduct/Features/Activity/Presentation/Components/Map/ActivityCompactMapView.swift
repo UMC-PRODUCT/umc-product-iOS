@@ -14,22 +14,22 @@ import SwiftUI
 /// - 하단 상태바: 위치 인증 상태, 주소 표시
 struct ActivityCompactMapView: View {
     @State private var mapViewModel: BaseMapViewModel
-    private var session: Session
+    private var info: SessionInfo
 
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,
-        session: Session
+        info: SessionInfo
     ) {
         self._mapViewModel = .init(
-            wrappedValue: .init(container: container, session: session, errorHandler: errorHandler))
-        self.session = session
+            wrappedValue: .init(container: container, info: info, errorHandler: errorHandler))
+        self.info = info
     }
-
+    
     private enum Constants {
         static let mapComponentHeight: CGFloat = 200
     }
-
+    
     var body: some View {
         BaseMapComponent(viewModel: mapViewModel)
             .equatable()
@@ -39,8 +39,8 @@ struct ActivityCompactMapView: View {
                 LocationStatusBarView(mapViewModel: mapViewModel)
             }
             .task {
-                await mapViewModel.startGeofenceForAttendance(session: session)
-                await mapViewModel.updateAddressForSession(session: session)
+                await mapViewModel.startGeofenceForAttendance(info: info)
+                await mapViewModel.updateAddressForSession(info: info)
                 mapViewModel.startLocationUpdate()
             }
             .onDisappear {
@@ -55,13 +55,13 @@ struct ActivityCompactMapView: View {
 /// 지도 하단의 위치 상태 표시바
 fileprivate struct LocationStatusBarView: View {
     @Bindable private var mapViewModel: BaseMapViewModel
-
+    
     @State private var animate = false
-
+    
     init(mapViewModel: BaseMapViewModel) {
         self.mapViewModel = mapViewModel
     }
-
+    
     private enum Constants {
         static let statusBarPadding: CGFloat = 16
         static let verifyIconSize: CGFloat = 12
@@ -69,7 +69,7 @@ fileprivate struct LocationStatusBarView: View {
         static let animationOffset: CGFloat = 250
         static let animationTiming: CGFloat = 5
     }
-
+    
     var body: some View {
         HStack(spacing: Constants.statusBarSpacing) {
             verifyLocationStatus
@@ -82,7 +82,7 @@ fileprivate struct LocationStatusBarView: View {
         .glassEffect()
         .safeAreaPadding(DefaultConstant.defaultSafeHorizon)
     }
-
+    
     /// 지오펜스 내 위치 인증 상태 표시
     private var verifyLocationStatus: some View {
         HStack(spacing: Constants.statusBarSpacing) {
@@ -91,7 +91,7 @@ fileprivate struct LocationStatusBarView: View {
                 .frame(
                     width: Constants.verifyIconSize,
                     height: Constants.verifyIconSize)
-
+            
             Text(mapViewModel.isUserInsideGeofence
                  ? "위치 인증됨" : "위치 미인증")
                 .appFont(.caption1,
@@ -99,7 +99,7 @@ fileprivate struct LocationStatusBarView: View {
                          ? .indigo500 : .red)
         }
     }
-
+    
     /// 세션 위치의 주소 (역지오코딩 결과)
     private var address: some View {
         Text(
@@ -124,10 +124,11 @@ fileprivate struct LocationStatusBarView: View {
     ActivityCompactMapView(
         container: AttendancePreviewData.container,
         errorHandler: AttendancePreviewData.errorHandler,
-        session: AttendancePreviewData.session
+        info: AttendancePreviewData.sessionInfo
     )
     .padding(.horizontal)
     .task {
         LocationManager.shared.requestAuthorization()
     }
 }
+

@@ -8,5 +8,5 @@
 import Foundation
 
 protocol SessionRepository {
-    func fetchSessionList() async throws -> [SessionItem]
+    func fetchSessionList() async throws -> [Session]
 }

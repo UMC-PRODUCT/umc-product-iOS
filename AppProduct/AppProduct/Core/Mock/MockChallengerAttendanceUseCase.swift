@@ -94,7 +94,7 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
         )
     }
 
-    func isWithinAttendanceTime(session: Session) -> AttendanceTimeWindow {
+    func isWithinAttendanceTime(info: SessionInfo) -> AttendanceTimeWindow {
         // Mock 설정이 있으면 그 값 사용
         if let mockWindow = mockTimeWindow {
             return mockWindow
@@ -104,7 +104,7 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
         let now = Date()
         let onTimeThreshold = TimeInterval(AttendancePolicy.onTimeThresholdMinutes * 60)
         let lateThreshold = TimeInterval(AttendancePolicy.lateThresholdMinutes * 60)
-        let startTime = session.startTime
+        let startTime = info.startTime
 
         if now < startTime.addingTimeInterval(-onTimeThreshold) {
             return .tooEarly

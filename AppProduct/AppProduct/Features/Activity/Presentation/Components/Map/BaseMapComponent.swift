@@ -53,7 +53,7 @@ struct BaseMapComponent: View, Equatable {
     @MapContentBuilder
     private var sessionMaker: some MapContent {
         Annotation(
-            viewModel.currentSession.title,
+            viewModel.sessionInfo.title,
             coordinate: viewModel.sessionLocation,
             anchor: .bottom
         ) {
@@ -90,6 +90,6 @@ struct BaseMapComponent: View, Equatable {
 #Preview {
     BaseMapComponent(viewModel: .init(
         container: AttendancePreviewData.container,
-        session: AttendancePreviewData.session,
+        info: AttendancePreviewData.sessionInfo,
         errorHandler: AttendancePreviewData.errorHandler))
 }

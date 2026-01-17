@@ -9,20 +9,20 @@ import SwiftUI
 
 struct ChallengerSessionCard: View, Equatable {
     private let isDarkMode: Bool
-    private let sessionItem: SessionItem
-    
-    private var session: Session {
-        sessionItem.session
+    private let session: Session
+
+    private var info: SessionInfo {
+        session.info
     }
-    
-    init(sessionItem: SessionItem, isDarkMode: Bool = false) {
-        self.sessionItem = sessionItem
+
+    init(session: Session, isDarkMode: Bool = false) {
+        self.session = session
         self.isDarkMode = isDarkMode
     }
-    
+
     static func == (lsh: Self, rhs: Self) -> Bool {
-        lsh.sessionItem.id == rhs.sessionItem.id
-        && lsh.sessionItem.attendanceStatus == rhs.sessionItem.attendanceStatus
+        lsh.session.id == rhs.session.id
+        && lsh.session.attendanceStatus == rhs.session.attendanceStatus
         && lsh.isDarkMode == rhs.isDarkMode
     }
     
@@ -39,34 +39,34 @@ struct ChallengerSessionCard: View, Equatable {
     }
     
     private var icon: some View {
-        Image(session.icon)
+        Image(info.icon)
             .resizable()
             .frame(width: 64, height: 64)
             .scaledToFit()
     }
-    
+
     private var contentSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(session.title)
+            Text(info.title)
                 .appFont(.title3, weight: .bold, color: isDarkMode ? .white : .black)
                 .lineLimit(1)
-            
-            Text(session.startTime.timeRange(to: session.endTime))
+
+            Text(info.startTime.timeRange(to: info.endTime))
                 .appFont(
                     .callout, color: .grey800)
         }
     }
-    
+
     private var statusSession: some View {
         HStack {
-            Text(sessionItem.attendanceStatus.displayText)
-                .appFont(.caption1Emphasis, color: sessionItem.attendanceStatus.fontColor)
+            Text(session.attendanceStatus.displayText)
+                .appFont(.caption1Emphasis, color: session.attendanceStatus.fontColor)
                 .frame(height: 36)
                 .padding(.horizontal)
                 .background(
-                    sessionItem.attendanceStatus.backgroundColor,
+                    session.attendanceStatus.backgroundColor,
                     in: ConcentricRectangle())
-            
+
             Image(systemName: "chevron.down")
                 .foregroundStyle(.gray)
         }
@@ -77,7 +77,7 @@ struct ChallengerSessionCard: View, Equatable {
     ZStack {
         Color.gray
         ChallengerSessionCard(
-            sessionItem: AttendancePreviewData.sessionItem,
+            session: AttendancePreviewData.session,
             isDarkMode: true
         )
     }

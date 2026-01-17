@@ -111,11 +111,11 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
     }
 
     /// 현재 시간이 어느 출석 시간대에 속하는지 확인
-    func isWithinAttendanceTime(session: Session) -> AttendanceTimeWindow {
+    func isWithinAttendanceTime(info: SessionInfo) -> AttendanceTimeWindow {
         let now = Date()
         let onTimeThreshold = TimeInterval(AttendancePolicy.onTimeThresholdMinutes * 60)
         let lateThreshold = TimeInterval(AttendancePolicy.lateThresholdMinutes * 60)
-        let startTime = session.startTime
+        let startTime = info.startTime
 
         // 세션 시작 - threshold 이전이면 너무 이름
         if now < startTime.addingTimeInterval(-onTimeThreshold) {
