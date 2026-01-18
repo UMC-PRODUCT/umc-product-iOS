@@ -7,31 +7,24 @@
 
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constant {
-    static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 16, trailing: 16)
-    static let mainBoxRadius: CGFloat = 20
-    // tag + status
-    static let tagPadding: EdgeInsets = .init(top: 3, leading: 7, bottom: 3, trailing: 7)
-    static let tagRadius: CGFloat = 8
-    static let statusPadding: EdgeInsets = .init(top: 3, leading: 7, bottom: 3, trailing: 7)
-    // content
-    static let contentVSpacing: CGFloat = 4
-    // count
-    static let countHSpacing: CGFloat = 12
-    static let countIconSpacing: CGFloat = 4
-    static let countIconSize: CGFloat = 12
-}
-
 // MARK: - CummunityItem
 
 /// 커뮤니티 탭 - 리스트
 
-struct CommunityItem: View {
+struct CommunityItem: View, Equatable {
     // MARK: - Properties
 
     private let model: CommunityItemModel
+
+    private enum Constant {
+        static let mainPadding: EdgeInsets = .init(top: 24, leading: 24, bottom: 24, trailing: 24)
+        static let concentricRadius: CGFloat = 40
+        // tag + status
+        static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
+        static let statusPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
+        // profile
+        static let profileSize: CGSize = .init(width: 30, height: 30)
+    }
 
     // MARK: - Init
 
@@ -39,101 +32,106 @@ struct CommunityItem: View {
         self.model = model
     }
 
-    // MARK: - Body
-
-    var body: some View {
-        CommunityItemPresenter(model: model)
-            .equatable()
-    }
-}
-
-// MARK: - Presenter
-
-private struct CommunityItemPresenter: View, Equatable {
-    let model: CommunityItemModel
-
-    static func == (lhs: CommunityItemPresenter, rhs: CommunityItemPresenter) -> Bool {
+    static func == (lhs: CommunityItem, rhs: CommunityItem) -> Bool {
         lhs.model == rhs.model
     }
 
+    // MARK: - Body
+
     var body: some View {
-        VStack(alignment: .leading) {
-            TagSection(model: model)
-            ContentSection(model: model)
-            Divider()
-            CountSection(model: model)
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
+            TopSection
+            ContentSection
+            BottomSection
         }
         .padding(Constant.mainPadding)
-        .background(.white, in: RoundedRectangle(cornerRadius: Constant.mainBoxRadius))
+        .background(
+            ContainerRelativeShape()
+                .fill(.grey100)
+        )
+        .containerShape(.rect(cornerRadius: Constant.concentricRadius))
+        .glass()
     }
-}
 
-// 태그 + 상태
-private struct TagSection: View, Equatable {
-    let model: CommunityItemModel
+    // MARK: - Top
 
-    var body: some View {
+    // 태그 + 상태 + 시간
+    private var TopSection: some View {
         HStack {
-            Text(model.tag.text)
-                .appFont(.caption1, color: .grey900)
+            Text(model.category.text)
+                .appFont(.subheadlineEmphasis, color: .indigo600)
                 .padding(Constant.tagPadding)
-                .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.tagRadius))
-            Spacer()
-            Text(model.status.text)
-                .appFont(.caption2, color: model.status.mainColor)
+                .glassEffect(.regular.tint(.indigo100))
+            Text(model.tag.text)
+                .appFont(.subheadlineEmphasis, color: .grey700)
                 .padding(Constant.statusPadding)
-                .background(model.status.subColor, in: Capsule())
+                .glassEffect(.clear)
+            Spacer()
+            Text(model.createdAt)
+                .appFont(.subheadline, color: .grey500)
         }
     }
-}
 
-// 내용
-private struct ContentSection: View, Equatable {
-    let model: CommunityItemModel
+    // MARK: - Content
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: Constant.contentVSpacing) {
+    // 내용
+    private var ContentSection: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             Text(model.title)
-                .appFont(.calloutEmphasis, color: .grey900)
+                .appFont(.title2Emphasis, color: .grey900)
+                .lineLimit(1)
 
-            HStack {
-                Text("\(model.location) • \(model.userName) • \(model.createdAt)")
-            }
-            .appFont(.caption1, color: .gray)
+            Text(model.content)
+                .appFont(.headline, color: .grey600)
+                .lineLimit(2)
         }
     }
-}
 
-// 좋아요 + 댓글
-private struct CountSection: View, Equatable {
-    let model: CommunityItemModel
+    // MARK: - Bottom
 
-    var body: some View {
-        HStack(spacing: Constant.countHSpacing) {
-            HStack(spacing: Constant.countIconSpacing) {
+    // 작성자 + 좋아요 + 댓글
+    private var BottomSection: some View {
+        HStack(spacing: DefaultSpacing.spacing8) {
+            // 프로필 이미지
+            if model.profileImage != nil {
+                model.profileImage
+            } else {
+                Text(model.userName.prefix(1))
+                    .appFont(.caption1Emphasis, color: .grey500)
+                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
+                    .background(.grey100, in: Circle())
+            }
+            // 이름 + 파트
+            Text("\(model.userName) • \(model.part)")
+
+            Spacer()
+
+            // 좋아요 + 댓글
+            HStack(spacing: DefaultSpacing.spacing4) {
                 Image(systemName: "heart")
-                    .font(.system(size: Constant.countIconSize))
+                    .foregroundStyle(.red500)
                 Text(String(model.likeCount))
             }
-
-            HStack(spacing: Constant.countIconSpacing) {
+            HStack(spacing: DefaultSpacing.spacing4) {
                 Image(systemName: "bubble")
-                    .font(.system(size: Constant.countIconSize))
+                    .foregroundStyle(.indigo500)
                 Text(String(model.commentCount))
             }
         }
-        .appFont(.caption1, color: .gray)
+        .appFont(.subheadlineEmphasis, color: .grey500)
     }
 }
 
-#Preview {
+#Preview(traits: .sizeThatFitsLayout) {
     CommunityItem(
         model: .init(
-            tag: .question,
-            status: .recruiting,
+            category: .question,
+            tag: .feedback,
             title: "React Hook 질문있습니다",
-            location: "서울",
+            content: "useEffect 의존성 배열 관련해서 질문이 있습니다... 코드가 자꾸 무한 루프에 빠지는데 로직 점검 부탁드려요!",
+            profileImage: nil,
             userName: "이코딩",
+            part: "Web",
             createdAt: "1시간 전",
             likeCount: 5,
             commentCount: 3
