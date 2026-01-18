@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-
-
 /// 홈 화면 패널티 카드
 struct PenaltyCard: View {
 

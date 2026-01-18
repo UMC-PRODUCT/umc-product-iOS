@@ -31,7 +31,7 @@ struct Logo: View {
                 .frame(width: self.logoSize)
             
             Text(Constants.logoSubtitle)
-                .appFont(.title3, color: .grey900)
+                .appFont(.title1, color: .grey900)
         })
     }
     

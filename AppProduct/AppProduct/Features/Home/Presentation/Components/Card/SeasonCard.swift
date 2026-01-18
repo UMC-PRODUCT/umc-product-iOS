@@ -118,7 +118,7 @@ struct SeasonCard: View, Equatable {
                 .fontWeight(.heavy)
             
             Text(type.valueTag)
-                .appFont(.headlineEmphasis, color: .grey600)
+                .appFont(.bodyEmphasis, color: .grey600)
         })
     }
 }

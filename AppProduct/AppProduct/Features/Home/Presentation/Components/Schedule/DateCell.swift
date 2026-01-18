@@ -16,7 +16,7 @@ struct DateCell: View {
     let isToday: Bool
 
     enum Constants {
-        static let cellSize: CGFloat = 48
+        static let cellSize: CGFloat = 40
         static let circleSize: CGFloat = 6
         static let todayBorderWidth: CGFloat = 2
     }
@@ -31,13 +31,14 @@ struct DateCell: View {
         VStack(spacing: DefaultSpacing.spacing4, content: {
             Text(day)
                 .appFont(.calloutEmphasis, color: textColor)
-                .frame(width: Constants.cellSize, height: Constants.cellSize)
+                .frame(maxWidth: .infinity)
+                .frame(height: Constants.cellSize)
                 .background(backgroundColor)
                 .clipShape(Circle())
                 .overlay {
                     if isToday && !isSelected {
                         Circle()
-                            .stroke(Color.indigo500, lineWidth: Constants.todayBorderWidth)
+                            .strokeBorder(Color.indigo500, lineWidth: Constants.todayBorderWidth)
                     }
                 }
                 .glass()
