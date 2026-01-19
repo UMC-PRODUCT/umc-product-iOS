@@ -55,16 +55,8 @@ struct CalendarGridCard: View, Equatable {
         .padding(Constants.padding)
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .fill(bgColor)
+                .fill(.grey000)
                 .glass()
-        }
-    }
-    
-    private var bgColor: Color {
-        if color == .dark {
-            return .grey100
-        } else {
-            return .white
         }
     }
     
