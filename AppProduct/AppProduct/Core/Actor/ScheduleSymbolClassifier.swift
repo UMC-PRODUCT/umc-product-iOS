@@ -9,14 +9,19 @@ import Foundation
 import FoundationModels
 
 actor ScheduleSymbolClassifier {
-    private let session: LanguageModelSession
+    static let shared = ScheduleSymbolClassifier()
 
-    init() {
+    private let session: LanguageModelSession
+    private var cache: [String: ScheduleIconCategory] = [:]
+
+    private init() {
         self.session = LanguageModelSession()
     }
 
-    /// 카테고리 전체 반환 (symbol, color 모두 사용 가능)
     func getCategory(_ title: String) async -> ScheduleIconCategory {
+        if let cached = cache[title] {
+            return cached
+        }
         let prompt = """
             다음 일정 제목을 분석하여 가장 적합한 카테고리 하나만 영어로 답하세요.
 
@@ -40,13 +45,17 @@ actor ScheduleSymbolClassifier {
 
         do {
             let response = try await session.respond(to: prompt, generating: ScheduleClassification.self)
-            return response.content.category
+            let category = response.content.category
+
+            cache[title] = category
+            return category
         } catch {
-            return .general
+            let fallback = ScheduleIconCategory.general
+            cache[title] = fallback
+            return fallback
         }
     }
 
-    /// 심볼만 반환 (하위 호환)
     func getSymbol(_ title: String) async -> String {
         await getCategory(title).symbol
     }

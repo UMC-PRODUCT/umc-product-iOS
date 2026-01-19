@@ -96,9 +96,17 @@ struct SeasonCard: View, Equatable {
             .padding(Constants.bottomSpacingValue)
             .background {
                 Circle()
-                    .fill(.white)
+                    .fill(bgColor)
                     .glass()
             }
+    }
+    
+    private var bgColor: Color {
+        if color == .dark {
+            return .grey600
+        } else {
+            return .white
+        }
     }
     
     // MARK: - Bottom

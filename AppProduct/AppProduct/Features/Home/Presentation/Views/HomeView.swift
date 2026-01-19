@@ -40,14 +40,7 @@ struct HomeView: View {
             }
             .toolbar {
                 ToolBarCollection.BellBtn(action: { print("hello") })
-                ToolBarCollection.Logo(
-                    image: logImage,
-                    action: {
-                        withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
-                            proxy.scrollTo(Constants.scrollId, anchor: .top)
-                        }
-                    }
-                )
+                ToolBarCollection.Logo(image: logImage)
             }
         }
     }
@@ -129,8 +122,8 @@ struct HomeView: View {
     }
     
     private var sectionContent: some View {
-        LazyVStack(spacing: 8) {
-            ForEach(viewModel.recentNoticeData, id:\.id) { data in
+        LazyVStack(spacing: DefaultSpacing.spacing8) {
+            ForEach(viewModel.recentNoticeData.prefix(5), id:\.id) { data in
                 RecentNoticeCard(data: data)
             }
         }

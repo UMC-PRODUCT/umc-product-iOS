@@ -12,6 +12,7 @@ struct CalendarGridCard: View, Equatable {
     // MARK: - Property
     @Binding var selectedDate: Date
     @Binding var month: Date
+    @Environment(\.colorScheme) var color
     let scheduledDates: Set<Date>
     
     @State private var dragOffset: CGFloat = 0
@@ -54,8 +55,16 @@ struct CalendarGridCard: View, Equatable {
         .padding(Constants.padding)
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .fill(.grey000)
+                .fill(bgColor)
                 .glass()
+        }
+    }
+    
+    private var bgColor: Color {
+        if color == .dark {
+            return .grey100
+        } else {
+            return .white
         }
     }
     

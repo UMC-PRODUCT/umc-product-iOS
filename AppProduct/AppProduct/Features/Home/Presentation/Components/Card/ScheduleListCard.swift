@@ -48,8 +48,7 @@ struct ScheduleListCard: View, Equatable {
         }
         .task(id: data.id) {
             isLoading = true
-            let classifier = ScheduleSymbolClassifier()
-            category = await classifier.getCategory(data.title)
+            category = await ScheduleSymbolClassifier.shared.getCategory(data.title)
             isLoading = false
         }
     }
@@ -85,12 +84,4 @@ struct ScheduleListCard: View, Equatable {
         ScheduleListCard(data: .init(title: "데모데이", subTitle: "테스트"))
     }
     .safeAreaPadding(.horizontal, 16)
-}
-
-#Playground {
-    let data = ScheduleData(title: "컨퍼런스", subTitle: "테스트")
-    @State var symbol: String = "calendar"
-    
-    let classifier = ScheduleSymbolClassifier()
-    symbol = await classifier.getSymbol(data.title)
 }

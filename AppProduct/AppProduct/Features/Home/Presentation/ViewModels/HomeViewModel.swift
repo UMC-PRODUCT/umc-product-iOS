@@ -102,6 +102,26 @@ class HomeViewModel {
             category: .operationsTeam,
             title: "14기 모집 공고 안내",
             createdAt: .now
+        ),
+        RecentNoticeData(
+            category: .operationsTeam,
+            title: "14기 모집 공고 안내",
+            createdAt: .now
+        ),
+        RecentNoticeData(
+            category: .operationsTeam,
+            title: "14기 모집 공고 안내",
+            createdAt: .now
+        ),
+        RecentNoticeData(
+            category: .operationsTeam,
+            title: "14기 모집 공고 안내",
+            createdAt: .now
+        ),
+        RecentNoticeData(
+            category: .operationsTeam,
+            title: "14기 모집 공고 안내",
+            createdAt: .now
         )
     ]
 

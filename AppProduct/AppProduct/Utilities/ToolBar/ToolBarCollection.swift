@@ -44,20 +44,19 @@ struct ToolBarCollection {
     /// 상단 로고 툴바
     struct Logo: ToolbarContent {
         let image: ImageResource
-        let action: () -> Void
+        @Namespace var namespace
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarLeading, content: {
-                Button(action: {
-                    action()
-                }, label: {
-                    Image(image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 80, height: 40)
-                        .padding(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
-                })
+                Image(image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 80, height: 40)
+                    .padding(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
+                    .disabled(true)
             })
+            .sharedBackgroundVisibility(.hidden)
+            .matchedTransitionSource(id: "logo", in: namespace)
         }
     }
 }
