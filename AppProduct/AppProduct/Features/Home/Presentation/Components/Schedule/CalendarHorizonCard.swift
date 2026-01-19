@@ -24,7 +24,7 @@ struct CalendarHorizonCard: View, Equatable {
 
     // MARK: - Constant
     private enum Constants {
-        static let pillHeight: CGFloat = 170
+        static let pillHeight: CGFloat = 200
     }
     
     // MARK: - Equatable
