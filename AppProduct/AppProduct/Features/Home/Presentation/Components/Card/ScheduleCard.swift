@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// 달력 리스트 및 캘린더 전환 카드
 struct ScheduleCard: View {
     @State private var selectedDate = Date()
     @State var scheduleMode: ScheduleMode = .grid

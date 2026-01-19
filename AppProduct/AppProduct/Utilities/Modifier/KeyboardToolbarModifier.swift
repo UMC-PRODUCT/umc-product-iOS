@@ -41,21 +41,21 @@ struct KeyboardToolbarModifier<Field: Hashable & CaseIterable>: ViewModifier {
                 
                 toolBarButton(action: {
                     focusedField = nil
-                }, image: "checkmark")
+                }, image: "checkmark", size: .init(width: 20, height: 20))
             })
         })
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .padding(.bottom, 5)
     }
     
-    private func toolBarButton(action: @escaping () -> Void, image: String) -> some View {
+    private func toolBarButton(action: @escaping () -> Void, image: String, size: CGSize = .init(width: 24, height: 24)) -> some View {
         Button(action: {
             action()
         }, label: {
             Image(systemName: image)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 24, height: 24)
+                .frame(width: size.width, height: size.height)
                 .tint(.grey900)
                 .padding(DefaultConstant.defaultBtnPadding)
                 .glassEffect(.regular.interactive(), in: .circle)

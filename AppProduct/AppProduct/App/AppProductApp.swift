@@ -30,7 +30,7 @@ struct AppProductApp: App {
                 Text("!1")
             })
             .navigationDestination(isPresented: $show, destination: {
-                SeasonCard(type: .days(10))
+                ScheduleListCard(data: .init(title: "UMC OT", subTitle: "코엑스"))
             })
         }
     }

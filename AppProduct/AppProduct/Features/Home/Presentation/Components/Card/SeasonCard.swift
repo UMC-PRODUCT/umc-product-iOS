@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// 참여 기수 및 누적 활동일 표시
 struct SeasonCard: View, Equatable {
     
     // MARK: - Type
