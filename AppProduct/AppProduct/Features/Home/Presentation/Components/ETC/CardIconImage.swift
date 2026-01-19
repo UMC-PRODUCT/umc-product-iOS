@@ -29,7 +29,7 @@ struct CardIconImage: View {
         Group {
             if isLoading {
                 ProgressView()
-                    .tint(.indigo500)
+                    .tint(.black)
             } else {
                 Image(systemName: image)
                     .font(.title2)
@@ -38,7 +38,7 @@ struct CardIconImage: View {
         }
         .frame(width: Constants.iconSize, height: Constants.iconSize)
         .padding(Constants.iconPadding)
-        .background(color.opacity(0.2))
+        .background(color.opacity(0.4))
         .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
         .glassEffect(.clear, in: RoundedRectangle(cornerRadius: Constants.cornerRadius))
     }

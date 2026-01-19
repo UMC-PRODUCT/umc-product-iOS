@@ -47,7 +47,7 @@ struct DatePill: View {
                 
                 VStack(spacing: DefaultSpacing.spacing8, content: {
                     Text(day)
-                        .appFont(.title2Emphasis, color: isSelected ? .white : .grey600)
+                        .appFont(.body, color: isSelected ? .white : .grey600)
                     
                     Circle()
                         .fill(hasSchedule ? (isSelected ? .white : .indigo500) : .clear)
@@ -55,8 +55,12 @@ struct DatePill: View {
                 })
             })
             .frame(width: Constants.mainSize.width, height: Constants.mainSize.height)
+            .background {
+                Capsule()
+                    .fill(isSelected ? .indigo500 : .grey000)
+                    .glassEffect(.regular.interactive())
+            }
         })
-        .glassEffect(.regular.interactive().tint(isSelected ? .indigo500 : .clear), in: .capsule)
         .overlay {
             if isToday && !isSelected {
                 Capsule()

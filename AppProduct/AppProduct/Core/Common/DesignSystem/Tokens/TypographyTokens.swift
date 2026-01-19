@@ -219,11 +219,13 @@ enum AppFont {
 
 enum AppFontWeight {
     case regular
+    case medium
     case bold
     
     var fontName: String {
         switch self {
         case .regular:   return "Pretendard-Regular"
+        case .medium:    return "Pretendard-Medium"
         case .bold:      return "Pretendard-Bold"
         }
     }
@@ -231,6 +233,7 @@ enum AppFontWeight {
     var swiftUIWeight: Font.Weight {
         switch self {
         case .regular:   return .regular
+        case .medium:    return .medium
         case .bold:      return .bold
         }
     }
@@ -266,7 +269,7 @@ extension Font {
     ///   - weight: 폰트 굵기 (기본: emphasis 스타일이면 bold, 아니면 regular)
     /// - Returns: 설정된 Font
     static func app(_ style: AppFont, weight: AppFontWeight? = nil) -> Font {
-        let finalWeight = weight ?? (style.isEmphasis ? .bold : .regular)
+        let finalWeight = weight ?? (style.isEmphasis ? .bold : .medium)
         return .custom(finalWeight.fontName, size: style.size)
     }
     
@@ -275,7 +278,7 @@ extension Font {
     ///   - size: 폰트 사이즈
     ///   - weight: 폰트 굵기 (기본: regular)
     /// - Returns: 설정된 Font
-    static func app(size: CGFloat, weight: AppFontWeight = .regular) -> Font {
+    static func app(size: CGFloat, weight: AppFontWeight = .medium) -> Font {
         .custom(weight.fontName, size: size)
     }
 }

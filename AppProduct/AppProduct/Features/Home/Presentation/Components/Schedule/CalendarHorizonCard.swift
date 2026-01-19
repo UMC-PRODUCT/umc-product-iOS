@@ -24,7 +24,7 @@ struct CalendarHorizonCard: View, Equatable {
 
     // MARK: - Constant
     private enum Constants {
-        static let pillHeight: CGFloat = 200
+        static let pillHeight: CGFloat = 170
     }
     
     // MARK: - Equatable
@@ -43,7 +43,6 @@ struct CalendarHorizonCard: View, Equatable {
             }
             .scrollTargetLayout()
             .frame(height: Constants.pillHeight)
-            
         }
         .scrollIndicators(.hidden)
         .scrollTargetBehavior(.viewAligned)

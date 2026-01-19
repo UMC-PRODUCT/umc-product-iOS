@@ -30,10 +30,17 @@ struct DateCell: View {
     var body: some View {
         VStack(spacing: DefaultSpacing.spacing4, content: {
             Text(day)
-                .appFont(.calloutEmphasis, color: textColor)
+                .appFont(.callout, color: textColor)
                 .frame(maxWidth: .infinity)
                 .frame(height: Constants.cellSize)
-                .background(backgroundColor)
+                .padding(Constants.todayBorderWidth)
+                .background {
+                    if isSelected {
+                        Color.indigo500.glassEffect(.regular.interactive(), in: .circle)
+                    } else {
+                        Color.clear
+                    }
+                }
                 .clipShape(Circle())
                 .overlay {
                     if isToday && !isSelected {
@@ -41,7 +48,6 @@ struct DateCell: View {
                             .strokeBorder(Color.indigo500, lineWidth: Constants.todayBorderWidth)
                     }
                 }
-                .glass()
 
             Circle()
                 .fill(hasSchedule ? pointColor : .clear)

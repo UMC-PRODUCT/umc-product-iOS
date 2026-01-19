@@ -24,14 +24,7 @@ struct AppProductApp: App {
     
     private var testView: some  View {
         NavigationStack {
-            Button(action: {
-                show.toggle()
-            }, label: {
-                Text("!1")
-            })
-            .navigationDestination(isPresented: $show, destination: {
-                ScheduleListCard(data: .init(title: "UMC OT", subTitle: "코엑스"))
-            })
+            HomeView()
         }
     }
 }

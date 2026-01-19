@@ -52,49 +52,10 @@ struct CalendarGridCard: View, Equatable {
             dateGrid
         }
         .padding(Constants.padding)
-        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-        .contentShape(Rectangle())
-        .id(month)
-        .transition(slideTransition)
-        .gesture(swipeGesture)
-    }
-    
-    private var slideTransition: AnyTransition {
-        switch direction {
-        case .left:
-            return .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading))
-        case .right:
-            return .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing))
-        case .none:
-            return .identity
-        }
-    }
-    
-    // MARK: - Gesture
-    private var swipeGesture: some Gesture {
-        DragGesture()
-            .onChanged { value in
-                dragOffset = value.translation.width
-            }
-            .onEnded { value in
-                let horizontalAmount = value.translation.width
-                
-                if horizontalAmount > Constants.swipeThreshold {
-                    direction = .right
-                    changeMonth(by: -1)
-                } else if horizontalAmount < -Constants.swipeThreshold {
-                    direction = .left
-                    changeMonth(by: 1)
-                }
-                dragOffset = 0
-            }
-    }
-    
-    private func changeMonth(by value: Int) {
-        withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
-            if let newMonth = calendar.date(byAdding: .month, value: value, to: month) {
-                month = newMonth
-            }
+        .background {
+            RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+                .fill(.grey000)
+                .glass()
         }
     }
     
@@ -102,7 +63,7 @@ struct CalendarGridCard: View, Equatable {
     /// 달력 날짜 셀 그리드
     @ViewBuilder
     private var dateGrid: some View {
-        LazyVGrid(columns: columns, spacing: DefaultSpacing.spacing16) {
+        LazyVGrid(columns: columns, spacing: DefaultSpacing.spacing8) {
             ForEach(adjustedDates, id: \.self) { date in
                 let isCurrentMonth = calendar.isDate(date, equalTo: month, toGranularity: .month)
                 

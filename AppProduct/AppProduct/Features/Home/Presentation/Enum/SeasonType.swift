@@ -11,6 +11,7 @@ enum SeasonType: Equatable {
     case days(Int)
     case gens([Int])
     
+    
     /// 카드 별 이미지
     var image: Image? {
         switch self {

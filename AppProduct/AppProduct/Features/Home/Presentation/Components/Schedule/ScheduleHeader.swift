@@ -51,7 +51,10 @@ struct ScheduleHeader: View {
             showDatePicker = true
         }, label: {
             Text("\(koreanYear)년 \(koreanMonth)월 일정")
-                .appFont(.title3Emphasis, color: .grey900)
+                .font(.body)
+                .foregroundStyle(.grey900)
+                .fontWeight(.semibold)
+                .glass()
         })
         .buttonStyle(.glass)
     }

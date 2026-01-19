@@ -23,7 +23,7 @@ enum InfoType {
         case .penalties:
             return "패널티"
         case .infoText:
-            return "패널티 기록"
+            return "기록"
         }
     }
 
@@ -50,7 +50,7 @@ enum InfoType {
         case .penalties:
             return .grey600
         case .infoText:
-            return .red
+            return .grey600
         }
     }
 }

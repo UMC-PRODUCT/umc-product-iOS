@@ -8,29 +8,42 @@
 import SwiftUI
 
 /// 달력 리스트 및 캘린더 전환 카드
-struct ScheduleCard: View {
-    @State private var selectedDate = Date()
-    @State var scheduleMode: ScheduleMode = .grid
-    @State private var currentMonth = Date()
-    
-    // !!!: - 수정 필요
-    @State private var scheduledDates: Set<Date> = {
-             let calendar = Calendar.current
-             var dates = Set<Date>()
+struct ScheduleCard: View, Equatable {
+    // MARK: - Bindings
+    @Binding var selectedDate: Date
+    @Binding var currentMonth: Date
 
-             if let date1 = calendar.date(from: DateComponents(year: 2026, month: 1, day: 19)),
-                let date2 = calendar.date(from: DateComponents(year: 2026, month: 1, day: 21)),
-                let date3 = calendar.date(from: DateComponents(year: 2026, month: 1, day: 25)) {
-                 dates.insert(date1)
-                 dates.insert(date2)
-                 dates.insert(date3)
-             }
-             return dates
-         }()
-  
-    
+    // MARK: - State
+    @State var scheduleMode: ScheduleMode = .grid
+
+    // MARK: - Properties
+    let scheduledDates: Set<Date>
+
+    // MARK: - Equatable
+    static func == (lhs: ScheduleCard, rhs: ScheduleCard) -> Bool {
+        lhs.selectedDate == rhs.selectedDate &&
+        lhs.currentMonth == rhs.currentMonth &&
+        lhs.scheduleMode == rhs.scheduleMode &&
+        lhs.scheduledDates == rhs.scheduledDates
+    }
+
+    // MARK: - Initializer
+    init(
+        selectedDate: Binding<Date> = .constant(Date()),
+        currentMonth: Binding<Date> = .constant(Date()),
+        scheduleMode: ScheduleMode = .grid,
+        scheduledDates: Set<Date> = []
+    ) {
+        self._selectedDate = selectedDate
+        self._currentMonth = currentMonth
+        self._scheduleMode = State(initialValue: scheduleMode)
+        self.scheduledDates = scheduledDates
+    }
+
     var body: some View {
-        Section(content: {
+        VStack(spacing: DefaultSpacing.spacing8) {
+            ScheduleHeader(month: $currentMonth, selectedDate: $selectedDate, scheduleMode: $scheduleMode)
+            
             if scheduleMode == .horizon {
                 CalendarHorizonCard(
                     selectedDate: $selectedDate,
@@ -46,14 +59,7 @@ struct ScheduleCard: View {
                 )
                 .equatable()
             }
-        }, header: {
-            ScheduleHeader(month: $currentMonth, selectedDate: $selectedDate, scheduleMode: $scheduleMode)
-        })
+        }
         .animation(.easeInOut(duration: DefaultConstant.animationTime), value: scheduleMode)
     }
-}
-
-#Preview {
-    ScheduleCard()
-    .safeAreaPadding(.horizontal, 16)
 }

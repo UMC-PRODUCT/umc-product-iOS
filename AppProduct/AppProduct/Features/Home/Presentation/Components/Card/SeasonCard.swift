@@ -22,13 +22,13 @@ struct SeasonCard: View, Equatable {
     
     // MARK: - Constant
     private enum Constants {
-        static let iconSize: CGFloat = 28
-        static let iconPadding: CGFloat = 8
+        static let iconSize: CGFloat = 24
+        static let iconPadding: CGFloat = 4
         static let concentricRadius: CGFloat = 40
         static let glassContainerSpacing: CGFloat = 20
         static let bottomSpacingValue: CGFloat = 8
-        static let mainPadding: EdgeInsets = .init(top: 16, leading: 24, bottom: 16, trailing: 28)
-        static let cardSize: CGSize = .init(width: 180, height: 125)
+        static let mainPadding: EdgeInsets = .init(top: 16, leading: 24, bottom: 16, trailing: 24)
+        static let cardSize: CGSize = .init(width: 130, height: 125)
     }
     
     // MARK: - Init
@@ -38,19 +38,20 @@ struct SeasonCard: View, Equatable {
     
     // MARK: - Bdoy
     var body: some View {
-        VStack(alignment: .leading, content: {
-            topTag
-            Spacer()
-            bottomContents
-        })
-        .frame(width: Constants.cardSize.width, height: Constants.cardSize.height, alignment: .leading)
-        .padding(Constants.mainPadding)
-        .background {
+        ZStack(alignment: .leading) {
             ContainerRelativeShape()
                 .fill(color == .light ? .grey000 : .grey100)
+                .frame(height: Constants.cardSize.height, alignment: .leading)
+                .containerShape(.rect(cornerRadius: Constants.concentricRadius))
+                .glassEffect(.regular, in: .rect(cornerRadius: Constants.concentricRadius))
+            
+            VStack(alignment: .leading, content: {
+                topTag
+                Spacer()
+                bottomContents
+            })
+            .padding(Constants.mainPadding)
         }
-        .containerShape(.rect(cornerRadius: Constants.concentricRadius))
-        .glassEffect(.regular, in: .rect(cornerRadius: Constants.concentricRadius))
     }
     
     // MARK: - Top
@@ -92,7 +93,7 @@ struct SeasonCard: View, Equatable {
     private func gen(value: Int) -> some View {
         Text("\(value)")
             .appFont(.caption1Emphasis, color: .indigo500)
-            .padding(DefaultConstant.defaultBtnPadding)
+            .padding(Constants.bottomSpacingValue)
             .background {
                 Circle()
                     .fill(.white)
@@ -102,24 +103,24 @@ struct SeasonCard: View, Equatable {
     
     // MARK: - Bottom
     private var bottomContents: some View {
-        VStack(alignment: .leading, spacing: Constants.bottomSpacingValue, content: {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4, content: {
             title
             value
         })
     }
     private var title: some View {
         Text(type.text)
-            .appFont(.bodyEmphasis, color: type.fontColor)
+            .appFont(.calloutEmphasis, color: type.fontColor)
     }
     
     private var value: some View {
         HStack(alignment: .lastTextBaseline, content: {
             Text("\(type.value)")
-                .appFont(.title1Emphasis, color: .grey900)
+                .appFont(.bodyEmphasis, color: .grey900)
                 .fontWeight(.heavy)
             
             Text(type.valueTag)
-                .appFont(.bodyEmphasis, color: .grey600)
+                .appFont(.callout, color: .grey600)
         })
     }
 }

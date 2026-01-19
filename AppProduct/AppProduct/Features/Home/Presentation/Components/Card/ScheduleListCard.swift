@@ -34,33 +34,30 @@ struct ScheduleListCard: View, Equatable {
     }
     
     var body: some View {
-        Button(action: {
-            print("hello")
-        }, label: {
-            HStack(spacing: DefaultSpacing.spacing24, content: {
-                CardIconImage(image: category.symbol, color: category.color, isLoading: $isLoading)
-                infoContent
-                Spacer()
-                chevron
-            })
-            .padding(Constants.padding)
-            .background {
-                RoundedRectangle(cornerRadius: Constants.cornerRadius)
-                    .fill(cardColor)
-                    .glass()
-            }
-            .task {
-                let classifier = ScheduleSymbolClassifier()
-                category = await classifier.getCategory(data.title)
-                isLoading = false
-            }
+        HStack(spacing: DefaultSpacing.spacing24, content: {
+            CardIconImage(image: category.symbol, color: category.color, isLoading: $isLoading)
+            infoContent
+            Spacer()
+            chevron
         })
+        .padding(Constants.padding)
+        .background {
+            RoundedRectangle(cornerRadius: Constants.cornerRadius)
+                .fill(cardColor)
+                .glass()
+        }
+        .task(id: data.id) {
+            isLoading = true
+            let classifier = ScheduleSymbolClassifier()
+            category = await classifier.getCategory(data.title)
+            isLoading = false
+        }
     }
     
     private var infoContent: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8, content: {
             Text(data.title)
-                .appFont(.bodyEmphasis, color: .grey900)
+                .appFont(.subheadlineEmphasis, color: .grey900)
             Text(data.subTitle)
                 .appFont(.footnote, color: .grey600)
         })

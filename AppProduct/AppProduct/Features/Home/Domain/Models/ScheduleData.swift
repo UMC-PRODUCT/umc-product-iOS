@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct ScheduleData: Equatable {
+struct ScheduleData: Equatable, Identifiable {
+    var id: UUID = .init()
     let title: String
     let subTitle: String
 }

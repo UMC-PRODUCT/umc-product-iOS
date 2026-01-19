@@ -17,7 +17,7 @@ struct PenaltyCard: View, Equatable {
     // MARK: - Constant
     enum Constants {
         static let padding: CGFloat = 20
-        static let height: CGFloat = 200
+        static let height: CGFloat = 220
     }
     
     // MARK: - Equtable
@@ -32,31 +32,33 @@ struct PenaltyCard: View, Equatable {
 
     // MARK: - Body
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12, content: {
-            GenTabBar(
-                generations: generations.map { $0.gen },
-                currentIndex: $currentIndex
-            )
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing24, content: {
+                GenTabBar(
+                    generations: generations.map { $0.gen },
+                    currentIndex: $currentIndex
+                )
 
-            TabView(selection: $currentIndex) {
-                ForEach(generations.indices, id: \.self) { index in
-                    HStack(alignment: .top, spacing: DefaultSpacing.spacing16) {
-                        CardInfo(infoType: .penalties(generations[index].penaltyPoint))
-
-                        Spacer()
-
-                        CardInfo(infoType: .infoText(generations[index].penaltyLogs))
+                TabView(selection: $currentIndex) {
+                    ForEach(generations.indices, id: \.self) { index in
+                        HStack(alignment: .top, spacing: DefaultSpacing.spacing16) {
+                            
+                            CardInfo(infoType: .penalties(generations[index].penaltyPoint))
+                            
+                            CardInfo(infoType: .infoText(generations[index].penaltyLogs))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .tag(index)
+                        .padding(.horizontal, DefaultSpacing.spacing4)
+                        .frame(maxHeight: .infinity, alignment: .top)
                     }
-                    .tag(index)
                 }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-        })
-        .frame(height: Constants.height)
-        .padding(Constants.padding)
-        .containerShape(.rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-    }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+            })
+            .frame(minHeight: Constants.height)
+            .padding(Constants.padding)
+            .containerShape(.rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+            .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        }
 }
 
 // MARK: - GenTabBar
@@ -77,13 +79,12 @@ extension PenaltyCard {
         var body: some View {
             HStack(spacing: DefaultSpacing.spacing16) {
                 Text("\(generations[currentIndex])th 활동 상태")
-                    .appFont(.subheadlineEmphasis, color: .indigo600)
+                    .appFont(.footnoteEmphasis, color: .indigo600)
                     .padding(Constants.textPadding)
                     .background(.indigo100, in: .capsule)
 
                 Spacer()
 
-                // 페이지 인디케이터
                 HStack(spacing: Constants.indicatorSpacing) {
                     ForEach(generations.indices, id: \.self) { index in
                         Circle()
@@ -133,7 +134,9 @@ extension PenaltyCard {
         /// 카드 타이틀
         private var title: some View {
             Text(infoType.text)
-                .appFont(.bodyEmphasis, color: infoType.fontColor)
+                .font(.subheadline)
+                .foregroundStyle(.grey600)
+                .fontWeight(.semibold)
         }
 
         /// 카드 컨텐츠
@@ -160,13 +163,13 @@ extension PenaltyCard {
         private func pointTitle(point: Int) -> some View {
             HStack(alignment: .lastTextBaseline, spacing: DefaultSpacing.spacing12, content: {
                 Text("\(point)")
-                    .appFont(.largeTitleEmphasis, color: .grey900)
+                    .appFont(.title1Emphasis, color: .grey900)
 
                 Group {
                     Text("/")
                     Text("3")
                 }
-                .appFont(.title1Emphasis, color: .grey400)
+                .appFont(.title2Emphasis, color: .grey400)
             })
         }
 
@@ -189,32 +192,33 @@ extension PenaltyCard {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4, content: {
                 HStack(spacing: DefaultSpacing.spacing8) {
                     Text(item.reason)
-                        .appFont(.subheadlineEmphasis, color: .grey900)
+                        .appFont(.calloutEmphasis, color: .grey900)
                     Spacer()
                     Text("\(item.penaltyPoint)점")
-                        .appFont(.subheadlineEmphasis, color: .red500)
+                        .appFont(.calloutEmphasis, color: .red)
                 }
 
                 Text(item.date)
                     .appFont(.footnote, color: .grey500)
             })
-            .padding(Constants.desCardPadding)
         }
         
         // MARK: - Method
-        private func progressBar(point: Int) -> some View {
-            GeometryReader { geo in
-                ZStack(alignment: .leading, content: {
-                    Capsule()
-                        .fill(progressBackgroundColor(point))
-
-                    Capsule()
-                        .fill(progressGradient(point))
-                        .frame(width: geo.size.width * CGFloat(point) / 3.0)
-                })
+            private func progressBar(point: Int) -> some View {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(progressBackgroundColor(point))
+                        
+                        if point > 0 {
+                            Capsule()
+                                .fill(progressGradient(point))
+                                .frame(width: geometry.size.width * (CGFloat(point) / 3.0))
+                        }
+                    }
+                }
+                .frame(height: Constants.progressHeight)
             }
-            .frame(height: Constants.progressHeight)
-        }
 
         private func progressGradient(_ point: Int) -> LinearGradient {
             switch point {
