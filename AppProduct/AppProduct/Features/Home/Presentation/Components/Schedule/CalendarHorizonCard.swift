@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct CalendarHorizonCard: View {
-    
+struct CalendarHorizonCard: View, Equatable {
+
     // MARK: - Porperty
     @Binding var selectedDate: Date
     @Binding var month: Date
@@ -25,6 +25,13 @@ struct CalendarHorizonCard: View {
     // MARK: - Constant
     private enum Constants {
         static let pillHeight: CGFloat = 200
+    }
+    
+    // MARK: - Equatable
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.selectedDate == rhs.selectedDate &&
+        lhs.month == rhs.month &&
+        lhs.scheduledDates == rhs.scheduledDates
     }
 
     var body: some View {

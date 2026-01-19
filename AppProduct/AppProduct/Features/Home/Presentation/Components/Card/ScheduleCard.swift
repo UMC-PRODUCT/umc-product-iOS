@@ -37,6 +37,7 @@ struct ScheduleCard: View {
                     month: $currentMonth,
                     scheduledDates: scheduledDates
                 )
+                .equatable()
             } else {
                 CalendarGridCard(
                     selectedDate: $selectedDate,

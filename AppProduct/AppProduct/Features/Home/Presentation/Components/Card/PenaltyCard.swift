@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// 홈 화면 패널티 카드
-struct PenaltyCard: View {
+struct PenaltyCard: View, Equatable {
 
     // MARK: - Property
     let generations: [GenerationData]
@@ -18,6 +18,11 @@ struct PenaltyCard: View {
     enum Constants {
         static let padding: CGFloat = 20
         static let height: CGFloat = 200
+    }
+    
+    // MARK: - Equtable
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.generations == rhs.generations
     }
 
     // MARK: - Init

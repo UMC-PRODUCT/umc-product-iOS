@@ -19,10 +19,9 @@ struct ScheduleListCard: View, Equatable {
     
     private enum Constants {
         static let iconPadding: CGFloat = 8
-        static let iconSize: CGFloat = 40
         static let padding: EdgeInsets = .init(top: 20, leading: 16, bottom: 20, trailing: 16)
-        static let cornerRadius: CGFloat = 24
         static let chevronImage: String = "chevron.forward"
+        static let cornerRadius: CGFloat = 24
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -39,7 +38,7 @@ struct ScheduleListCard: View, Equatable {
             print("hello")
         }, label: {
             HStack(spacing: DefaultSpacing.spacing24, content: {
-                iconView
+                CardIconImage(image: category.symbol, color: category.color, isLoading: $isLoading)
                 infoContent
                 Spacer()
                 chevron
@@ -56,27 +55,6 @@ struct ScheduleListCard: View, Equatable {
                 isLoading = false
             }
         })
-    }
-    
-    // MARK: - Icon
-    
-    @ViewBuilder
-    private var iconView: some View {
-        Group {
-            if isLoading {
-                ProgressView()
-                    .tint(.indigo500)
-            } else {
-                Image(systemName: category.symbol)
-                    .font(.title2)
-                    .foregroundStyle(category.color)
-            }
-        }
-        .frame(width: Constants.iconSize, height: Constants.iconSize)
-        .padding(Constants.iconPadding)
-        .background(category.color.opacity(0.4))
-        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
-        .glassEffect(.clear, in: RoundedRectangle(cornerRadius: Constants.cornerRadius))
     }
     
     private var infoContent: some View {
@@ -118,6 +96,4 @@ struct ScheduleListCard: View, Equatable {
     
     let classifier = ScheduleSymbolClassifier()
     symbol = await classifier.getSymbol(data.title)
-    
 }
-

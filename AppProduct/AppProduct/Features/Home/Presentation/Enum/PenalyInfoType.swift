@@ -8,10 +8,10 @@
 import SwiftUI
 
 /// 패널티 정보 아이템
-struct PenaltyInfoItem {
-    let reason: String      // 사유 이름
-    let date: String        // 날짜
-    let penaltyPoint: Int   // 패널티 점수
+struct PenaltyInfoItem: Equatable {
+    let reason: String
+    let date: String
+    let penaltyPoint: Int
 }
 
 enum InfoType {
