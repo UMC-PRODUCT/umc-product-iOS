@@ -14,7 +14,7 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
     // MARK: - Property
 
     private let repository: AttendanceRepositoryProtocol
-    private let locationManager: LocationManager
+    private let locationManager: LocationManager = .shared
 
     // MARK: - Computed Property
 
@@ -28,12 +28,8 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
 
     // MARK: - Init
 
-    init(
-        repository: AttendanceRepositoryProtocol,
-        locationManager: LocationManager
-    ) {
+    init(repository: AttendanceRepositoryProtocol) {
         self.repository = repository
-        self.locationManager = locationManager
     }
 
     // MARK: - Function
@@ -115,12 +111,26 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
     }
 
     /// 출석 가능 시간 내인지 확인
-    func isWithinAttendanceTime(session: Session) -> Bool {
+    func isWithinAttendanceTime(session: Session) throws -> Bool {
         let now = Date()
         let threshold = TimeInterval(AttendancePolicy.lateThresholdMinutes * 60)
         let startWindow = session.startTime.addingTimeInterval(-threshold)
         let endWindow = session.endTime.addingTimeInterval(threshold)
+        
+        let isAvailableAttendance = now >= startWindow && now <= endWindow
+        
+        if !isAvailableAttendance {
+            throw DomainError.attendanceTimeExpired
+        }
 
-        return now >= startWindow && now <= endWindow
+        return true
+    }
+    
+    /// 지오코딩
+    func getAddressToCurrentLocation() async throws -> String {
+        guard let coordinate = locationManager.currentCoordinate else {
+            throw LocationError.locationFailed("주소를 찾을 수 없습니다.")
+        }
+        return try await locationManager.reverseGeocode(coordinate: coordinate)
     }
 }

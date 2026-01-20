@@ -8,9 +8,10 @@
 import Foundation
 import CoreLocation
 import MapKit
+import Observation
 
+@Observable
 final class LocationManager: NSObject {
-
     // MARK: - Property
     static let shared: LocationManager = .init()
     
@@ -43,7 +44,7 @@ final class LocationManager: NSObject {
 
     // MARK: - Lifecycle
 
-    override init() {
+    private override init() {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
@@ -107,11 +108,11 @@ final class LocationManager: NSObject {
 
         do {
             let mapItems = try await request.mapItems
-            guard let address = mapItems.first?.address else {
+            guard let address = mapItems.first?.address?.shortAddress else {
                 throw LocationError.geocodingFailed("주소 정보가 없습니다.")
             }
             
-            return address.fullAddress
+            return address
         } catch let error as LocationError {
             throw error
         } catch {
