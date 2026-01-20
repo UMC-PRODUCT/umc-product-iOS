@@ -82,7 +82,7 @@ struct CommunityItem: View, Equatable {
                 .lineLimit(1)
 
             Text(model.content)
-                .appFont(.headline, color: .grey600)
+                .appFont(.body, color: .grey600)
                 .lineLimit(2)
         }
     }
