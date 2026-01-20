@@ -64,11 +64,11 @@ private struct NoticeItemPresenter: View, Equatable {
             BottomSection(model: model)
         }
         .padding(Constant.mainPadding)
-        .background(
-            model.mustRead ? .indigo100 : .white, in: RoundedRectangle(cornerRadius: Constant.mainBoxRadius)
-        )
-        .shadow(color: .grey200 ,radius: 2)
-        .shadow(color: .white, radius: 2)
+        .background {
+            RoundedRectangle(cornerRadius: Constant.mainBoxRadius)
+                .fill(model.mustRead ? .indigo100 : .white)
+                .glass()
+        }
     }
 }
 

@@ -7,80 +7,97 @@
 
 import SwiftUI
 
-// TODO: Equatable은 어쩌지.., 리퀴드글래스 구현(칩버튼, 공지카드)
-
 // MARK: - NoticeView
 struct NoticeView: View {
-    
     // MARK: - Property
     @State var viewModel: NoticeViewModel
     @State private var search: String = ""
-    
+
     // MARK: - Constants
-    fileprivate enum Constants {
+    private enum Constants {
         static let listTopPadding: CGFloat = 10
+        static let searchPlaceholder: String = "제목, 내용 검색"
     }
 
     // MARK: - Body
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                Divider()
-                    .padding(.top, Constants.listTopPadding)
-                NoticeList(viewModel: viewModel)
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading, content: {
-                    GenerationMenu(viewModel: viewModel)
-                })
-            }
-            .safeAreaInset(edge: .top, content: {
-                NoticeFilter(viewModel: viewModel)
-                    .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-                    .padding(.top, Constants.listTopPadding)
-            })
-            .searchable(text: $search, prompt: "제목, 내용 검색")
-            .searchToolbarBehavior(.minimize)
+        List(viewModel.noticeItems) { item in
+            NoticeItem(model: item)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(DefaultConstant.defaultListPadding)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                GenerationMenuView(viewModel: viewModel)
+            }
+        }
+        .safeAreaBar(edge: .top) {
+            NoticeFilterView(viewModel: viewModel)
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                .padding(.top, Constants.listTopPadding)
+        }
+        .searchable(text: $search, prompt: Constants.searchPlaceholder)
+        .searchToolbarBehavior(.minimize)
         .sheet(isPresented: $viewModel.isShowingFilterSheet) {
             FilterSheetView(viewModel: viewModel)
         }
     }
 }
 
-// MARK: - GenerationMenu
-private struct GenerationMenu: View {
-    
-    // MARK: - Property
+// MARK: - GenerationMenuView
+/// SRP: 기수 선택 메뉴만 담당
+private struct GenerationMenuView: View {
     @Bindable var viewModel: NoticeViewModel
-    
-    // MARK: - Constants
-    fileprivate enum Constants {
+
+    private enum Constants {
         static let labelPadding: CGFloat = 6
     }
-    
-    /// 현재 선택된 기수를 관리하는 computed Binding 프로퍼티
-    ///
-    /// `viewModel.filterMode`가 `.generation` 케이스일 때만 해당 기수 값을 반환하고,
-    /// 그 외의 경우(`.all` 등)에는 `nil`을 반환합니다.
-    ///
-    /// - Returns: 현재 선택된 `Generation` 또는 `nil`
-    ///
-    /// ## 동작 방식
-    /// - **get**: `filterMode`에서 `.generation` 연관값 추출, 없으면 `nil` 반환
-    /// - **set**: 새로운 기수가 선택되면 `filterMode`를 `.generation(새 기수)`로 업데이트
-    ///
-    /// ## 사용 예시
-    /// ```swift
-    /// FormPickerField(
-    ///     title: "기수 선택",
-    ///     placeholder: "기수를 선택하세요",
-    ///     selection: selectedGeneration, // Binding<Generation?>
-    ///     options: Generation.allCases,
-    ///     displayText: { "\($0.rawValue)기" }
-    /// )
-    /// ```
-    private var selectedGeneration: Binding<Generation?> {
+
+    var body: some View {
+        Menu {
+            generationPicker
+            Divider()
+            currentOnlyButton
+        } label: {
+            menuLabel
+        }
+    }
+
+    // MARK: - Subviews
+    private var generationPicker: some View {
+        Picker("기수 선택", selection: selectedGenerationBinding) {
+            ForEach(viewModel.generations) { generation in
+                Text(generation.title).tag(generation as Generation?)
+            }
+        }
+        .pickerStyle(.inline)
+    }
+
+    private var currentOnlyButton: some View {
+        Button {
+            viewModel.filterMode = .currentOnly
+        } label: {
+            HStack {
+                Text("현재 기수만 보기")
+                Spacer()
+                if case .currentOnly = viewModel.filterMode {
+                    Image(systemName: "checkmark")
+                }
+            }
+        }
+    }
+
+    private var menuLabel: some View {
+        Text(viewModel.filterMode.label)
+            .appFont(.footnote, weight: .bold)
+            .padding(Constants.labelPadding)
+    }
+
+    // MARK: - Binding
+    private var selectedGenerationBinding: Binding<Generation?> {
         Binding(
             get: {
                 if case .generation(let gen) = viewModel.filterMode {
@@ -95,138 +112,57 @@ private struct GenerationMenu: View {
             }
         )
     }
-    
-    // MARK: - Body
-    var body: some View {
-        Menu {
-            Picker("기수 선택", selection: selectedGeneration) {
-                ForEach(viewModel.generations) { generation in
-                    Text(generation.title).tag(generation as Generation?)
-                }
-            }
-            .pickerStyle(.inline)
-            
-            Divider()
-            
-            Button {
-                viewModel.filterMode = .currentOnly
-            } label: {
-                HStack {
-                    Text("현재 기수만 보기")
-                    Spacer()
-                    if case .currentOnly = viewModel.filterMode {
-                        Image(systemName: "checkmark")
-                    }
-                }
-            }
-            
-        } label: {
-                Text(viewModel.filterMode.label)
-                .appFont(.footnote, weight: .bold)
-                .padding(Constants.labelPadding)
-        }
-    }
 }
 
-// MARK: - NoticeFilter
-private struct NoticeFilter: View {
-    
-    // MARK: - Property
+// MARK: - NoticeFilterView
+/// SRP: 공지 필터 칩 목록만 담당
+/// OCP: 새로운 필터 타입은 filterItems 배열에 추가하면 됨
+private struct NoticeFilterView: View {
     @State var viewModel: NoticeViewModel
-    
-    // MARK: - Constants
-    fileprivate enum Constants {
+
+    private enum Constants {
         static let hstackSpacing: CGFloat = 8
     }
-    
-    // MARK: - Body
+
+    /// OCP: 필터 항목 데이터 - 새 필터 추가 시 여기만 수정
+    private var filterItems: [NoticeFilterType] {
+        [
+            .all,
+            .core,
+            .branch(viewModel.userBranch),
+            .school(viewModel.userSchool),
+            .part(viewModel.userPart)
+        ]
+    }
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Constants.hstackSpacing) {
-                // 1. 전체
-                ChipButton("전체", isSelected: viewModel.selectedNoticeFilter == .all) {
-                    viewModel.selectFilter(.all)
+                ForEach(filterItems) { filter in
+                    filterChip(for: filter)
                 }
-                .buttonSize(.medium)
-                .buttonStyle(.glassProminent)
-                
-                // 2. 중앙운영사무국
-                ChipButton("중앙운영사무국", isSelected: viewModel.selectedNoticeFilter == .core) {
-                    viewModel.selectFilter(.core)
-                }
-                .buttonSize(.medium)
-                .buttonStyle(.glassProminent)
-                
-                // 3. 지부
-                ChipButton(viewModel.userBranch, isSelected: {
-                    if case .branch = viewModel.selectedNoticeFilter {
-                        return true
-                    }
-                    return false
-                }()) {
-                    viewModel.selectFilter(.branch(viewModel.userBranch))
-                }
-                .buttonSize(.medium)
-                .buttonStyle(.glassProminent)
-                
-                // 4. 학교
-                ChipButton(viewModel.userSchool, isSelected: {
-                    if case .school = viewModel.selectedNoticeFilter {
-                        return true
-                    }
-                    return false
-                }()) {
-                    viewModel.selectFilter(.school(viewModel.userSchool))
-                }
-                .buttonSize(.medium)
-                .buttonStyle(.glassProminent)
-                
-                // 5. 파트
-                ChipButton(viewModel.userPart.name, isSelected: {
-                    if case .part = viewModel.selectedNoticeFilter {
-                        return true
-                    }
-                    return false
-                }()) {
-                    viewModel.selectFilter(.part(viewModel.userPart))
-                }
-                .buttonSize(.medium)
-                .buttonStyle(.glassProminent)
             }
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
         .padding(.horizontal, -DefaultConstant.defaultSafeHorizon)
     }
-}
 
-
-// MARK: - NoticeList
-private struct NoticeList: View {
-    
-    // MARK: - Property
-    @State var viewModel: NoticeViewModel
-    
-    // MARK: - Constants
-    fileprivate enum Constants {
-        static let listRowInsets: EdgeInsets = .init(top: 16, leading: 16, bottom: 0, trailing: 16)
-    }
-        
-    // MARK: - Body
-    var body: some View {
-        List(viewModel.noticeItems, rowContent: { item in
-            NoticeItem(model: item)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(Constants.listRowInsets)
-                
-        })
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .scrollIndicators(.hidden)
+    // MARK: - Private Methods
+    /// SRP: 단일 칩 버튼 생성 로직 분리
+    @ViewBuilder
+    private func filterChip(for filter: NoticeFilterType) -> some View {
+        ChipButton(
+            filter.labelText,
+            isSelected: viewModel.selectedNoticeFilter == filter
+        ) {
+            viewModel.selectFilter(filter)
+        }
+        .buttonSize(.medium)
+        .buttonStyle(.glassProminent)
     }
 }
 
-// MARK: - extension
+// MARK: - Preview Extension
 extension NoticeViewModel {
     static let mock: NoticeViewModel = {
         let vm = NoticeViewModel()
@@ -238,7 +174,6 @@ extension NoticeViewModel {
     }()
 }
 
-// MARK: - Preview
 #Preview {
     NoticeView(viewModel: .mock)
 }

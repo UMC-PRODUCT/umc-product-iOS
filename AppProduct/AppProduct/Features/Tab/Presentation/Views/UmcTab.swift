@@ -57,7 +57,7 @@ struct UmcTab: View {
         case .home:
             HomeView()
         case .notice:
-            Text("11")
+            NoticeView(viewModel: .mock)
         case .activity:
             Text("11")
         case .community:
