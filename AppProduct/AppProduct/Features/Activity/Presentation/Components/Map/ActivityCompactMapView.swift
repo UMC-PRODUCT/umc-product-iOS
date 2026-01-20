@@ -120,22 +120,11 @@ fileprivate struct LocationStatusBarView: View {
     }
 }
 
-struct PreviewData {
-    static let container = DIContainer()
-    static let errorHandler = ErrorHandler()
-    
-    static let session: Session = .init(
-        sessionId: SessionID(value: "iOS_6"),
-        icon: "", title: "Alamofire 파헤치기",
-        week: 6, startTime: Date.now, endTime: Date.now + 10,
-        location: .init(latitude: 37.582967, longitude: 127.010527))
-}
-
 #Preview(traits: .sizeThatFitsLayout) {
     ActivityCompactMapView(
-        container: PreviewData.container,
-        errorHandler: PreviewData.errorHandler,
-        session: PreviewData.session
+        container: AttendancePreviewData.container,
+        errorHandler: AttendancePreviewData.errorHandler,
+        session: AttendancePreviewData.session
     )
     .padding(.horizontal)
     .task {

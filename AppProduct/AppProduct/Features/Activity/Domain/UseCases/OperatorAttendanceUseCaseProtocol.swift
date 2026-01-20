@@ -11,8 +11,8 @@ import Foundation
 
 protocol OperatorAttendanceUseCaseProtocol {
     func fetchPendingAttendances(sessionId: SessionID) async throws -> [Attendance]
-    func approveAttendance(attendanceId: AttendenceID) async throws -> Attendance
+    func approveAttendance(attendanceId: AttendanceID) async throws -> Attendance
     func approveAllAttendances(sessionId: SessionID) async throws -> [Attendance]
-    func rejectAttendance(attendanceId: AttendenceID, reason: String) async throws -> Attendance
+    func rejectAttendance(attendanceId: AttendanceID, reason: String) async throws -> Attendance
     func fetchSessionAttendances(sessionId: SessionID) async throws -> [Attendance]
 }

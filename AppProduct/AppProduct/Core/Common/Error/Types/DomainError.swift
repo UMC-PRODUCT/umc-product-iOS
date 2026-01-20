@@ -7,7 +7,57 @@
 
 import Foundation
 
-/// 도메인(비즈니스 로직) 관련 에러
+/// 도메인(비즈니스 로직) 관련 에러.
+///
+/// UMC 앱의 비즈니스 규칙 위반 시 발생하는 에러입니다.
+/// 일반적으로 **Loadable** 방식으로 처리합니다.
+///
+/// ## 처리 원칙
+///
+/// DomainError는 대부분 **화면을 유지**하면서 사용자에게 안내해야 합니다:
+/// - 출석 범위 밖 → 위치 이동 유도
+/// - 이미 제출됨 → 단순 안내
+/// - 사유 입력 필요 → 입력 유도
+///
+/// ## Usage
+///
+/// **UseCase에서 throw:**
+///
+/// ```swift
+/// func requestGPSAttendance() async throws -> Attendance {
+///     guard locationManager.isInsideGeofence else {
+///         throw DomainError.attendanceOutOfRange
+///     }
+///     // ...
+/// }
+/// ```
+///
+/// **ViewModel에서 catch:**
+///
+/// ```swift
+/// do {
+///     let result = try await useCase.requestGPSAttendance()
+///     state = .loaded(result)
+/// } catch let error as DomainError {
+///     // Loadable로 인라인 표시
+///     state = .failed(.domain(error))
+/// }
+/// ```
+///
+/// **View에서 인라인 표시:**
+///
+/// ```swift
+/// if let error = viewModel.state.error {
+///     Text(error.userMessage)
+///         .font(.caption)
+///         .foregroundStyle(.red)
+/// }
+/// ```
+///
+/// - Important: DomainError는 ErrorHandler가 아닌 Loadable로 처리하세요.
+///   사용자가 화면에서 직접 문제를 해결할 수 있어야 합니다.
+///
+/// - SeeAlso: ``AppError``, ``Loadable``
 enum DomainError: Error, LocalizedError, Equatable {
     // MARK: - 공지사항
 

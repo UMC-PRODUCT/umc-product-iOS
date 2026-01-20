@@ -26,6 +26,6 @@ struct UserID: Hashable, Codable {
 
 /// 출석 기록 식별자
 /// - 출석 상태 변경, 출석 기록 조회 등 서버 API 호출 시 사용
-struct AttendenceID: Hashable, Codable {
+struct AttendanceID: Hashable, Codable {
     let value: String
 }

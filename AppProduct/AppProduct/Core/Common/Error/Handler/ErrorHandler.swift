@@ -55,9 +55,13 @@ import os.log
 /// }
 /// ```
 ///
-/// - Important: 모든 에러를 ErrorHandler로 보내지 마세요.
-///   `severity`가 `.critical`인 에러만 전역 처리하고,
-///   나머지는 ``Loadable`` 패턴으로 화면별 처리하세요.
+/// - Important: 에러 처리 방식은 UX 관점에서 결정하세요.
+///   - **ErrorHandler**: 작업 흐름 중단, 즉각적인 사용자 액션이 필요한 경우 (Alert)
+///   - **Loadable**: 데이터 상태와 함께 관리, 화면 내 상태 변화 표시 (인라인)
+///
+///   예시:
+///   - 세션 만료, 권한 필요, 네트워크 오류 → ErrorHandler
+///   - 리스트 로딩 실패, 폼 검증 실패, 범위 벗어남 → Loadable
 ///
 /// - Warning: 현재 특수 에러 처리는 `NotificationCenter`를 사용합니다.
 ///   추후 `AppState + Environment` 패턴으로 리팩터링 예정입니다.
