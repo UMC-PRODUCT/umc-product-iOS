@@ -77,11 +77,16 @@ struct CommunityView: View {
 
     private func ListSection(proxy: ScrollViewProxy) -> some View {
         List(vm.items, rowContent: { item in
-            CommunityItem(model: item)
-                .equatable()
-                .id(item.id)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
+            NavigationLink {
+                CommunityDetailView(item: item)
+            } label: {
+                CommunityItem(model: item)
+                    .equatable()
+                    .id(item.id)
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .navigationLinkIndicatorVisibility(.hidden)
         })
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
