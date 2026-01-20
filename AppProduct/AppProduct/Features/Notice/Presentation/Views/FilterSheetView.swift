@@ -7,11 +7,15 @@
 
 import SwiftUI
 
+// TODO: 동적 sheet뷰 크기 조절, 필터 칩버튼별로 독립적인 sheet뷰 가지게 하기
+
 struct FilterSheetView: View {
     
+    // MARK: - Property
     @Bindable var viewModel: NoticeViewModel
     @Environment(\.dismiss) var dismiss
     
+    // MARK: - Body
     var body: some View {
         NavigationStack {
             List {
@@ -47,10 +51,13 @@ struct FilterSheetView: View {
     }
 }
 
+// MARK: - PartFilter
 private struct PartFilter: View {
     
+    // MARK: - Property
     @Bindable var viewModel: NoticeViewModel
     @State private var expanded: Bool = false
+    
     
     private var selectedPart: Part? {
         if case .part(let part) = viewModel.currentSubFilter {
@@ -59,6 +66,7 @@ private struct PartFilter: View {
         return nil
     }
 
+    // MARK: - Body
     var body: some View {
         DisclosureGroup(isExpanded: $expanded, content: {
             ForEach(Part.allCases, id: \.id) { p in
