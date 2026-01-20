@@ -24,24 +24,10 @@ enum NoticeItemTag {
         }
     }
 
-    var textColor: Color {
-        switch self {
-        case .central: return .white
-        case .all, .chapter, .campus, .part: return .green
-        }
-    }
-
     var backColor: Color {
         switch self {
         case .central: return .blue
-        case .all, .chapter, .campus, .part: return .green.opacity(0.1)
-        }
-    }
-
-    var borderColor: Color {
-        switch self {
-        case .central: return .clear
-        case .all, .chapter, .campus, .part: return .green.opacity(0.3)
+        case .all, .chapter, .campus, .part: return .green
         }
     }
 }
