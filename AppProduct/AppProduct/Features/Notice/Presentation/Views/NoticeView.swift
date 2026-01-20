@@ -14,6 +14,11 @@ struct NoticeView: View {
     // MARK: - Properties
     @State var viewModel: NoticeViewModel
     @State private var search: String = ""
+    
+    // MARK: - Constants
+    fileprivate enum Constants {
+        static let listTopPadding: CGFloat = 10
+    }
 
     private enum Constants {
         static let searchPlaceholder: String = "제목, 내용 검색"
