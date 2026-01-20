@@ -14,26 +14,26 @@ enum ChipButtonSize {
     case small
     case medium
     case large
-
-    var height: CGFloat {
+    
+    var horizonPadding: CGFloat {
         switch self {
         case .small:
-            return 25
+            return 8
         case .medium:
-            return 29
+            return 16
         case .large:
-            return 32
+            return 16
         }
     }
     
     var font: Font {
         switch self {
         case .small:
-            return .app(.caption2, weight: .bold)
-        case .medium:
-            return .app(.caption1, weight: .bold)
-        case .large:
             return .app(.footnote, weight: .bold)
+        case .medium:
+            return .app(.subheadline, weight: .bold)
+        case .large:
+            return .app(.callout, weight: .bold)
         }
     }
 }

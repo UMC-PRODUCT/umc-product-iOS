@@ -22,6 +22,14 @@ struct ChipButtonSizeModifier: ViewModifier {
     }
 }
 
+struct ChipButtonStyleModifier: ViewModifier {
+    let style: ChipButtonStyle
+    
+    func body(content: Content) -> some View {
+        content.environment(\.chipButtonStyle, style)
+    }
+}
+
 // MARK: - AnyChipButton Extension
 
 extension AnyChipButton {
@@ -30,5 +38,11 @@ extension AnyChipButton {
     /// - Parameter size: small, medium, large
     func buttonSize(_ size: ChipButtonSize) -> some View {
         self.modifier(ChipButtonSizeModifier(size: size))
+    }
+    
+    /// 버튼 색상 설정
+    /// - Parameter style: filter, board
+    func buttonStyle(_ style: ChipButtonStyle) -> some View {
+        self.modifier(ChipButtonStyleModifier(style: style))
     }
 }

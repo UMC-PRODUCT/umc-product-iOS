@@ -17,6 +17,7 @@ struct ChipButton: View {
     private let action: () -> Void
     
     @Environment(\.chipButtonSize) private var size
+    @Environment(\.chipButtonStyle) private var style
     
     // MARK: - Initializer
     
@@ -36,6 +37,7 @@ struct ChipButton: View {
                 ChipButtonContent(
                     title: title,
                     size: size,
+                    style: style,
                     isSelected: isSelected
                 )
                 .equatable()
@@ -49,23 +51,25 @@ struct ChipButton: View {
 private struct ChipButtonContent: View, Equatable {
     let title: String
     let size: ChipButtonSize
+    let style: ChipButtonStyle
     let isSelected: Bool
     
     static func == (lhs: ChipButtonContent, rhs: ChipButtonContent) -> Bool {
         lhs.title == rhs.title &&
         lhs.size == rhs.size &&
+        lhs.style == rhs.style &&
         lhs.isSelected == rhs.isSelected
     }
     
     var body: some View {
         Text(title)
-            .foregroundStyle(Color.grey900)
+            .foregroundStyle(style.textColor(isSelected: isSelected))
             .font(size.font)
-            .padding(.horizontal, 8)
-            .frame(height: size.height)
+            .padding(.horizontal, size.horizonPadding)
+            .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.indigo400 : Color.indigo100)
+                    .fill(style.bgColor(isSelected: isSelected))
             )
     }
 }
@@ -83,7 +87,17 @@ extension ChipButton: AnyChipButton { }
             var body: some View {
                 VStack(spacing: 15) {
                     HStack(spacing: 8) {
-                        ChipButton("chip", isSelected: selected) {
+                        ChipButton("small", isSelected: selected) {
+                            selected.toggle()
+                        }
+                        .buttonSize(.small)
+                        
+                        ChipButton("medium", isSelected: selected) {
+                            selected.toggle()
+                        }
+                        .buttonSize(.medium)
+                        
+                        ChipButton("large", isSelected: selected) {
                             selected.toggle()
                         }
                         .buttonSize(.large)
