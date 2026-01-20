@@ -25,6 +25,7 @@ struct ToolBarCollection {
         }
     }
     
+    /// 상단 알림 히스토리 버튼
     struct BellBtn: ToolbarContent {
         let action: () -> Void
         var tintColor: Color = .grey900
@@ -37,6 +38,25 @@ struct ToolBarCollection {
                 })
                 .tint(tintColor)
             })
+        }
+    }
+    
+    /// 상단 로고 툴바
+    struct Logo: ToolbarContent {
+        let image: ImageResource
+        @Namespace var namespace
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarLeading, content: {
+                Image(image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 80, height: 40)
+                    .padding(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
+                    .disabled(true)
+            })
+            .sharedBackgroundVisibility(.hidden)
+            .matchedTransitionSource(id: "logo", in: namespace)
         }
     }
 }

@@ -11,7 +11,7 @@ import Foundation
 enum DefaultConstant {
     static let defaultSafeHorizon: CGFloat = 16
     static let defaultSafeBottom: CGFloat = 56
-    static let defaultCapsuleSpacing: CGFloat = 28
+    static let defaultCapsuleSpacing: CGFloat = 12
     static let defaultSafeBtnPadding: CGFloat = 10
     static let defaultCornerRadius: CGFloat = 40
     static let defaultContentBottomMargins: CGFloat = 40

@@ -27,7 +27,7 @@ enum MainButtonSize {
         switch self {
         case .small: return .app(.footnote, weight: .bold)
         case .medium: return .app(.body, weight: .bold)
-        case .large: return .app(.headline, weight: .bold)
+        case .large: return .app(.title3, weight: .bold)
         }
     }
 }

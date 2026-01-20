@@ -16,22 +16,8 @@ struct AppProductApp: App {
     
     var body: some Scene {
         WindowGroup {
-            testView
-            //!!!: - 사용 시 주석 풀기
+            UmcTab()
                 .environment(\.di, container)
-        }
-    }
-    
-    private var testView: some  View {
-        NavigationStack {
-            Button(action: {
-                show.toggle()
-            }, label: {
-                Text("!1")
-            })
-            .navigationDestination(isPresented: $show, destination: {
-                SeasonCard(type: .days(10))
-            })
         }
     }
 }

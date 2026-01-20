@@ -30,7 +30,6 @@ struct SignUpView: View {
                     buildField(.name)
                     buildField(.nickname)
                 }
-
                 buildField(.email)
                 buildField(.univ)
             }
@@ -92,7 +91,6 @@ struct SignUpView: View {
             signUpCompleted()
         })
         .loading($viewModel.isLoading)
-        .tint(.indigo500)
         .disabled(!viewModel.isFormValid)
         .buttonStyle(.glassProminent)
         .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)

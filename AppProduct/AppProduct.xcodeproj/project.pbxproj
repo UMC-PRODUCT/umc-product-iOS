@@ -166,11 +166,12 @@
 				};
 			};
 			buildConfigurationList = 0E6380A42F02F1020060E4D9 /* Build configuration list for PBXProject "AppProduct" */;
-			developmentRegion = en;
+			developmentRegion = ko;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				ko,
 			);
 			mainGroup = 0E6380A02F02F1020060E4D9;
 			packageReferences = (
