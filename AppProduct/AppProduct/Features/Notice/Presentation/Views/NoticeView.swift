@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// TODO: Equatable은 어쩌지..
+// TODO: Equatable은 어쩌지.., 리퀴드글래스 구현(칩버튼, 공지카드)
 
 // MARK: - NoticeView
 struct NoticeView: View {
@@ -15,13 +15,18 @@ struct NoticeView: View {
     // MARK: - Property
     @State var viewModel: NoticeViewModel
     @State private var search: String = ""
+    
+    // MARK: - Constants
+    fileprivate enum Constants {
+        static let listTopPadding: CGFloat = 10
+    }
 
     // MARK: - Body
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 Divider()
-                    .padding(.top, 10)
+                    .padding(.top, Constants.listTopPadding)
                 NoticeList(viewModel: viewModel)
             }
             .toolbar {
@@ -32,7 +37,7 @@ struct NoticeView: View {
             .safeAreaInset(edge: .top, content: {
                 NoticeFilter(viewModel: viewModel)
                     .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-                    .padding(.top, 10)
+                    .padding(.top, Constants.listTopPadding)
             })
             .searchable(text: $search, prompt: "제목, 내용 검색")
             .searchToolbarBehavior(.minimize)
@@ -49,6 +54,10 @@ private struct GenerationMenu: View {
     // MARK: - Property
     @Bindable var viewModel: NoticeViewModel
     
+    // MARK: - Constants
+    fileprivate enum Constants {
+        static let labelPadding: CGFloat = 6
+    }
     
     /// 현재 선택된 기수를 관리하는 computed Binding 프로퍼티
     ///
@@ -114,7 +123,7 @@ private struct GenerationMenu: View {
         } label: {
                 Text(viewModel.filterMode.label)
                 .appFont(.footnote, weight: .bold)
-                .padding(6)
+                .padding(Constants.labelPadding)
         }
     }
 }
@@ -125,10 +134,15 @@ private struct NoticeFilter: View {
     // MARK: - Property
     @State var viewModel: NoticeViewModel
     
+    // MARK: - Constants
+    fileprivate enum Constants {
+        static let hstackSpacing: CGFloat = 8
+    }
+    
     // MARK: - Body
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: Constants.hstackSpacing) {
                 // 1. 전체
                 ChipButton("전체", isSelected: viewModel.selectedNoticeFilter == .all) {
                     viewModel.selectFilter(.all)
@@ -191,6 +205,11 @@ private struct NoticeList: View {
     
     // MARK: - Property
     @State var viewModel: NoticeViewModel
+    
+    // MARK: - Constants
+    fileprivate enum Constants {
+        static let listRowInsets: EdgeInsets = .init(top: 16, leading: 16, bottom: 0, trailing: 16)
+    }
         
     // MARK: - Body
     var body: some View {
@@ -198,7 +217,7 @@ private struct NoticeList: View {
             NoticeItem(model: item)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-                .listRowInsets(.init(top: 16, leading: 16, bottom: 0, trailing: 16))
+                .listRowInsets(Constants.listRowInsets)
                 
         })
         .listStyle(.plain)
