@@ -15,7 +15,6 @@ struct ScheduleListCard: View, Equatable {
     let data: ScheduleData
     @State var category: ScheduleIconCategory = .general
     @State var isLoading: Bool = true
-    @Environment(\.colorScheme) var color
     
     private enum Constants {
         static let iconPadding: CGFloat = 8
@@ -43,12 +42,16 @@ struct ScheduleListCard: View, Equatable {
         .padding(Constants.padding)
         .background {
             RoundedRectangle(cornerRadius: Constants.cornerRadius)
-                .fill(cardColor)
+                .fill(.white)
                 .glass()
         }
         .task(id: data.id) {
             isLoading = true
-            category = await ScheduleSymbolClassifier.shared.getCategory(data.title)
+            
+            let repository = ScheduleClassifierRepositoryImpl()
+            let useCase = ClassifyScheduleUseCaseImpl(repository: repository)
+            category = await useCase.execute(title: data.title)
+            
             isLoading = false
         }
     }
@@ -67,14 +70,6 @@ struct ScheduleListCard: View, Equatable {
             .renderingMode(.template)
             .foregroundStyle(.grey900)
             .padding(Constants.iconPadding)
-    }
-    
-    private var cardColor: Color {
-        if color == .dark {
-            return .grey100
-        } else {
-            return .white
-        }
     }
 }
 

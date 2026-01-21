@@ -1,0 +1,1259 @@
+{
+  "activityEntities" : [
+    "trainingStarted",
+    [
+      {
+        "createdDate" : "2026-01-21T11:22:40Z",
+        "event" : "trainingStarted",
+        "id" : "10491676-2D0B-4FFC-8C7F-309EFDBB5D68",
+        "subtitle" : "10 iterations",
+        "title" : "Training Started"
+      }
+    ],
+    "trainingDataAdded",
+    [
+      {
+        "createdDate" : "2026-01-21T11:22:20Z",
+        "event" : "trainingDataAdded",
+        "id" : "E1DC2261-7180-46B5-9B4A-CA68622E92BB",
+        "subtitle" : "ScheduleTrainingData.json",
+        "title" : "Training Data Added"
+      }
+    ],
+    "experimentCreated",
+    [
+      {
+        "createdDate" : "2026-01-21T11:22:05Z",
+        "event" : "experimentCreated",
+        "id" : "311A62C4-FAAC-4DFB-9681-8F780054D457",
+        "subtitle" : "ScheduleListClassifierML",
+        "title" : "Model Source Created"
+      }
+    ],
+    "trainingFinished",
+    [
+      {
+        "createdDate" : "2026-01-21T11:22:40Z",
+        "event" : "trainingFinished",
+        "id" : "FCC3F1E9-5F1C-4510-B261-4712C4B2C2D5",
+        "subtitle" : "Model converged at 5 iterations",
+        "title" : "Training Completed"
+      }
+    ]
+  ],
+  "contentDataResult" : {
+    "createdDate" : "2026-01-21T11:15:58Z"
+  },
+  "createdDate" : "2026-01-21T11:22:05Z",
+  "evaluationContainerEntity" : {
+    "createdDate" : "2026-01-21T11:22:40Z",
+    "evaluationEntities" : [
+      {
+        "analysedDataType" : "none",
+        "createdDate" : "2026-01-21T11:22:40Z",
+        "dataResult" : {
+
+        },
+        "id" : "cf7ac71f-2b6a-4b5b-b022-f0acdb512ae8"
+      }
+    ],
+    "id" : "a287413e-e0f1-4675-8118-cea89253fb93",
+    "modifiedDate" : "2026-01-21T11:22:40Z",
+    "previewType" : "textClassifier",
+    "testingEvaluationEntity" : {
+      "analysedDataType" : "none",
+      "createdDate" : "2026-01-21T11:22:05Z",
+      "dataResult" : {
+        "createdDate" : "2026-01-21T11:22:05Z"
+      },
+      "id" : "076781ca-20a9-4854-821e-96aadb0fa965"
+    },
+    "trainingEvaluationEntity" : {
+      "analysedDataType" : "none",
+      "createdDate" : "2026-01-21T11:22:05Z",
+      "dataResult" : {
+        "classesCount" : 13,
+        "createdDate" : "2026-01-21T11:22:05Z",
+        "dataAnalysis" : {
+          "classifierAnalysis" : {
+            "labelStats" : {
+              "celebration" : 65,
+              "fee" : 65,
+              "general" : 65,
+              "hackathon" : 65,
+              "leadership" : 65,
+              "meeting" : 65,
+              "networking" : 65,
+              "orientation" : 65,
+              "presentation" : 66,
+              "project" : 69,
+              "review" : 65,
+              "study" : 70,
+              "workshop" : 65
+            }
+          },
+          "issues" : [
+            {
+              "description" : "13 classes found, including study, project, presentation",
+              "severity" : "debug"
+            },
+            {
+              "description" : "855 texts found, automatically creating validation set",
+              "severity" : "good"
+            },
+            {
+              "description" : "Smallest class is \"workshop\" with 65 texts",
+              "severity" : "debug"
+            },
+            {
+              "description" : "Largest class is \"study\" with 70 text",
+              "severity" : "debug"
+            }
+          ],
+          "objectDetectorAnalysis" : {
+            "details" : {
+
+            }
+          },
+          "summary" : {
+            "canUseValidation" : 1,
+            "classCount" : 13,
+            "sampleCount" : 855
+          }
+        },
+        "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+        "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
+        "itemsCount" : 855
+      },
+      "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+      "evaluationResult" : {
+        "textClassifier" : {
+          "accuracy" : 0.998769987699877,
+          "confusionMatrix" : [
+            {
+              "actual" : "celebration",
+              "count" : 64,
+              "expected" : "celebration"
+            },
+            {
+              "actual" : "fee",
+              "count" : 61,
+              "expected" : "fee"
+            },
+            {
+              "actual" : "general",
+              "count" : 61,
+              "expected" : "general"
+            },
+            {
+              "actual" : "hackathon",
+              "count" : 60,
+              "expected" : "hackathon"
+            },
+            {
+              "actual" : "leadership",
+              "count" : 63,
+              "expected" : "leadership"
+            },
+            {
+              "actual" : "meeting",
+              "count" : 59,
+              "expected" : "meeting"
+            },
+            {
+              "actual" : "meeting",
+              "count" : 1,
+              "expected" : "project"
+            },
+            {
+              "actual" : "networking",
+              "count" : 60,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "orientation",
+              "count" : 59,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "presentation",
+              "count" : 62,
+              "expected" : "presentation"
+            },
+            {
+              "actual" : "project",
+              "count" : 68,
+              "expected" : "project"
+            },
+            {
+              "actual" : "review",
+              "count" : 63,
+              "expected" : "review"
+            },
+            {
+              "actual" : "study",
+              "count" : 69,
+              "expected" : "study"
+            },
+            {
+              "actual" : "workshop",
+              "count" : 63,
+              "expected" : "workshop"
+            }
+          ],
+          "statsByLabel" : {
+            "celebration" : {
+              "count" : 64,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "fee" : {
+              "count" : 61,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "general" : {
+              "count" : 61,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "hackathon" : {
+              "count" : 60,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "leadership" : {
+              "count" : 63,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "meeting" : {
+              "count" : 60,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.9833333333333333
+                }
+              }
+            },
+            "networking" : {
+              "count" : 60,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "orientation" : {
+              "count" : 59,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "presentation" : {
+              "count" : 62,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "project" : {
+              "count" : 68,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.9855072463768116,
+                  "recall" : 1
+                }
+              }
+            },
+            "review" : {
+              "count" : 63,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "study" : {
+              "count" : 69,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "workshop" : {
+              "count" : 63,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            }
+          }
+        }
+      },
+      "id" : "f36fa9c5-e7e9-4e09-b036-e1a25babe5d8"
+    },
+    "validationEvaluationEntity" : {
+      "analysedDataType" : "auto",
+      "createdDate" : "2026-01-21T11:22:05Z",
+      "dataResult" : {
+        "createdDate" : "2026-01-21T11:22:05Z"
+      },
+      "evaluationResult" : {
+        "textClassifier" : {
+          "accuracy" : 0.9047619047619048,
+          "confusionMatrix" : [
+            {
+              "actual" : "celebration",
+              "count" : 1,
+              "expected" : "celebration"
+            },
+            {
+              "actual" : "fee",
+              "count" : 3,
+              "expected" : "fee"
+            },
+            {
+              "actual" : "fee",
+              "count" : 1,
+              "expected" : "workshop"
+            },
+            {
+              "actual" : "general",
+              "count" : 4,
+              "expected" : "general"
+            },
+            {
+              "actual" : "hackathon",
+              "count" : 4,
+              "expected" : "hackathon"
+            },
+            {
+              "actual" : "hackathon",
+              "count" : 1,
+              "expected" : "study"
+            },
+            {
+              "actual" : "leadership",
+              "count" : 2,
+              "expected" : "leadership"
+            },
+            {
+              "actual" : "meeting",
+              "count" : 1,
+              "expected" : "celebration"
+            },
+            {
+              "actual" : "meeting",
+              "count" : 3,
+              "expected" : "meeting"
+            },
+            {
+              "actual" : "meeting",
+              "count" : 1,
+              "expected" : "presentation"
+            },
+            {
+              "actual" : "networking",
+              "count" : 5,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "orientation",
+              "count" : 6,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "presentation",
+              "count" : 4,
+              "expected" : "presentation"
+            },
+            {
+              "actual" : "project",
+              "count" : 1,
+              "expected" : "project"
+            },
+            {
+              "actual" : "review",
+              "count" : 2,
+              "expected" : "review"
+            },
+            {
+              "actual" : "study",
+              "count" : 1,
+              "expected" : "study"
+            },
+            {
+              "actual" : "workshop",
+              "count" : 2,
+              "expected" : "workshop"
+            }
+          ],
+          "statsByLabel" : {
+            "celebration" : {
+              "count" : 1,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.5,
+                  "recall" : 1
+                }
+              }
+            },
+            "fee" : {
+              "count" : 4,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.75
+                }
+              }
+            },
+            "general" : {
+              "count" : 4,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "hackathon" : {
+              "count" : 5,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.8
+                }
+              }
+            },
+            "leadership" : {
+              "count" : 2,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "meeting" : {
+              "count" : 5,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.6
+                }
+              }
+            },
+            "networking" : {
+              "count" : 5,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "orientation" : {
+              "count" : 6,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "presentation" : {
+              "count" : 4,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.8,
+                  "recall" : 1
+                }
+              }
+            },
+            "project" : {
+              "count" : 1,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "review" : {
+              "count" : 2,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "study" : {
+              "count" : 1,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.5,
+                  "recall" : 1
+                }
+              }
+            },
+            "workshop" : {
+              "count" : 2,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.6666666666666666,
+                  "recall" : 1
+                }
+              }
+            }
+          }
+        }
+      },
+      "id" : "1aecca1b-b61d-4c46-a765-493987f69aea"
+    }
+  },
+  "evaluationEntity" : {
+    "analysedDataType" : "none",
+    "dataResult" : {
+
+    },
+    "id" : "d3de9a40-31ab-46f6-b692-e3123b1c4901"
+  },
+  "evaluationState" : "uninitialized",
+  "id" : "F338F915-0B88-44DC-8F5D-F8DAB1B35AA6",
+  "modelEntity" : {
+    "createdDate" : "2026-01-21T11:22:05Z",
+    "experimentID" : "AC87E507-F237-4A60-95C9-E99F436737F6",
+    "id" : "B1660946-970C-4900-AA6A-6A6BDD7B53E3",
+    "modelURL" : "Models/ScheduleListClassifierML.mlmodel",
+    "modifiedDate" : "2026-01-21T11:22:05Z",
+    "title" : "",
+    "version" : "1.0"
+  },
+  "modifiedDate" : "2026-01-21T11:22:40Z",
+  "preferredFilename" : "ScheduleListClassifierML",
+  "settingEntity" : {
+    "algorithmType" : "maxEnt",
+    "augmentations" : [
+
+    ],
+    "featureNames" : [
+
+    ],
+    "handActionClassifierAugmentations" : [
+
+    ],
+    "handPoseClassifierAugmentations" : [
+
+    ],
+    "harVideoAugmentations" : 0,
+    "iterationCount" : 10,
+    "seedType" : "default",
+    "styleTransferAlgorithmType" : "image",
+    "taskType" : "textClassifier",
+    "textClassifierArabicLanguage" : "automatic",
+    "textClassifierCJKLanguage" : "automatic",
+    "textClassifierCyrillicLanguage" : "automatic",
+    "textClassifierIndicLanguage" : "automatic",
+    "textClassifierLatin" : "automatic",
+    "textClassifierScript" : "latin",
+    "textClassifierThaiLanguage" : "automatic"
+  },
+  "snapshotRole" : {
+    "withoutSnapshots" : 0
+  },
+  "state" : "trained",
+  "title" : "ScheduleListClassifierML copy",
+  "trainingEntity" : {
+    "analysedDataType" : "datasource",
+    "checkpointMetrics" : {
+
+    },
+    "dataResult" : {
+      "classesCount" : 13,
+      "createdDate" : "2026-01-21T11:22:05Z",
+      "dataAnalysis" : {
+        "classifierAnalysis" : {
+          "labelStats" : {
+            "celebration" : 65,
+            "fee" : 65,
+            "general" : 65,
+            "hackathon" : 65,
+            "leadership" : 65,
+            "meeting" : 65,
+            "networking" : 65,
+            "orientation" : 65,
+            "presentation" : 66,
+            "project" : 69,
+            "review" : 65,
+            "study" : 70,
+            "workshop" : 65
+          }
+        },
+        "issues" : [
+          {
+            "description" : "13 classes found, including study, project, presentation",
+            "severity" : "debug"
+          },
+          {
+            "description" : "855 texts found, automatically creating validation set",
+            "severity" : "good"
+          },
+          {
+            "description" : "Smallest class is \"workshop\" with 65 texts",
+            "severity" : "debug"
+          },
+          {
+            "description" : "Largest class is \"study\" with 70 text",
+            "severity" : "debug"
+          }
+        ],
+        "objectDetectorAnalysis" : {
+          "details" : {
+
+          }
+        },
+        "summary" : {
+          "canUseValidation" : 1,
+          "classCount" : 13,
+          "sampleCount" : 855
+        }
+      },
+      "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+      "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
+      "itemsCount" : 855
+    },
+    "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+    "featureExtractionCheckpointMayBeAvailable" : false,
+    "finishTime" : "2026-01-21T11:22:40Z",
+    "progress" : [
+      {
+        "count" : 1,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 10,
+          "trainingAccuracy" : 0.07503075152635574,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 2,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 9,
+          "trainingAccuracy" : 0.9876998662948608,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 3,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 8,
+          "trainingAccuracy" : 0.9913899302482605,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 4,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 7,
+          "trainingAccuracy" : 0.9975399971008301,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 5,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : true,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 6,
+          "trainingAccuracy" : 0.998769998550415,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 13,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 93,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 173,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 253,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 333,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 413,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 493,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 573,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 653,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 733,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 813,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : true,
+        "tableIndex" : 0
+      }
+    ],
+    "snapshottableCheckpoints" : {
+
+    },
+    "startTime" : "2026-01-21T11:22:40Z",
+    "trainingAccuracy" : 0.998769987699877,
+    "trainingResults" : {
+      "textClassifier" : {
+        "accuracy" : 0.998769987699877,
+        "confusionMatrix" : [
+          {
+            "actual" : "celebration",
+            "count" : 64,
+            "expected" : "celebration"
+          },
+          {
+            "actual" : "fee",
+            "count" : 61,
+            "expected" : "fee"
+          },
+          {
+            "actual" : "general",
+            "count" : 61,
+            "expected" : "general"
+          },
+          {
+            "actual" : "hackathon",
+            "count" : 60,
+            "expected" : "hackathon"
+          },
+          {
+            "actual" : "leadership",
+            "count" : 63,
+            "expected" : "leadership"
+          },
+          {
+            "actual" : "meeting",
+            "count" : 59,
+            "expected" : "meeting"
+          },
+          {
+            "actual" : "meeting",
+            "count" : 1,
+            "expected" : "project"
+          },
+          {
+            "actual" : "networking",
+            "count" : 60,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "orientation",
+            "count" : 59,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "presentation",
+            "count" : 62,
+            "expected" : "presentation"
+          },
+          {
+            "actual" : "project",
+            "count" : 68,
+            "expected" : "project"
+          },
+          {
+            "actual" : "review",
+            "count" : 63,
+            "expected" : "review"
+          },
+          {
+            "actual" : "study",
+            "count" : 69,
+            "expected" : "study"
+          },
+          {
+            "actual" : "workshop",
+            "count" : 63,
+            "expected" : "workshop"
+          }
+        ],
+        "statsByLabel" : {
+          "celebration" : {
+            "count" : 64,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "fee" : {
+            "count" : 61,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "general" : {
+            "count" : 61,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "hackathon" : {
+            "count" : 60,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "leadership" : {
+            "count" : 63,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "meeting" : {
+            "count" : 60,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.9833333333333333
+              }
+            }
+          },
+          "networking" : {
+            "count" : 60,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "orientation" : {
+            "count" : 59,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "presentation" : {
+            "count" : 62,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "project" : {
+            "count" : 68,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.9855072463768116,
+                "recall" : 1
+              }
+            }
+          },
+          "review" : {
+            "count" : 63,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "study" : {
+            "count" : 69,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "workshop" : {
+            "count" : 63,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "validationAccuracy" : 0.9047619047619048,
+    "validationResults" : {
+      "textClassifier" : {
+        "accuracy" : 0.9047619047619048,
+        "confusionMatrix" : [
+          {
+            "actual" : "celebration",
+            "count" : 1,
+            "expected" : "celebration"
+          },
+          {
+            "actual" : "fee",
+            "count" : 3,
+            "expected" : "fee"
+          },
+          {
+            "actual" : "fee",
+            "count" : 1,
+            "expected" : "workshop"
+          },
+          {
+            "actual" : "general",
+            "count" : 4,
+            "expected" : "general"
+          },
+          {
+            "actual" : "hackathon",
+            "count" : 4,
+            "expected" : "hackathon"
+          },
+          {
+            "actual" : "hackathon",
+            "count" : 1,
+            "expected" : "study"
+          },
+          {
+            "actual" : "leadership",
+            "count" : 2,
+            "expected" : "leadership"
+          },
+          {
+            "actual" : "meeting",
+            "count" : 1,
+            "expected" : "celebration"
+          },
+          {
+            "actual" : "meeting",
+            "count" : 3,
+            "expected" : "meeting"
+          },
+          {
+            "actual" : "meeting",
+            "count" : 1,
+            "expected" : "presentation"
+          },
+          {
+            "actual" : "networking",
+            "count" : 5,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "orientation",
+            "count" : 6,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "presentation",
+            "count" : 4,
+            "expected" : "presentation"
+          },
+          {
+            "actual" : "project",
+            "count" : 1,
+            "expected" : "project"
+          },
+          {
+            "actual" : "review",
+            "count" : 2,
+            "expected" : "review"
+          },
+          {
+            "actual" : "study",
+            "count" : 1,
+            "expected" : "study"
+          },
+          {
+            "actual" : "workshop",
+            "count" : 2,
+            "expected" : "workshop"
+          }
+        ],
+        "statsByLabel" : {
+          "celebration" : {
+            "count" : 1,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.5,
+                "recall" : 1
+              }
+            }
+          },
+          "fee" : {
+            "count" : 4,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.75
+              }
+            }
+          },
+          "general" : {
+            "count" : 4,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "hackathon" : {
+            "count" : 5,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.8
+              }
+            }
+          },
+          "leadership" : {
+            "count" : 2,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "meeting" : {
+            "count" : 5,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.6
+              }
+            }
+          },
+          "networking" : {
+            "count" : 5,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "orientation" : {
+            "count" : 6,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "presentation" : {
+            "count" : 4,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.8,
+                "recall" : 1
+              }
+            }
+          },
+          "project" : {
+            "count" : 1,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "review" : {
+            "count" : 2,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "study" : {
+            "count" : 1,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.5,
+                "recall" : 1
+              }
+            }
+          },
+          "workshop" : {
+            "count" : 2,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.6666666666666666,
+                "recall" : 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "validationEntity" : {
+    "analysedDataType" : "auto",
+    "dataResult" : {
+      "createdDate" : "2026-01-21T11:22:05Z"
+    },
+    "splitOptions" : {
+      "strategy" : {
+        "automatic" : {
+
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

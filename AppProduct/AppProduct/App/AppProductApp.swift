@@ -18,10 +18,14 @@ struct AppProductApp: App {
     
     var body: some Scene {
         WindowGroup {
-            UmcTab()
-                .environment(errorHandler)
-                .environment(\.di, container)
-                .modelContainer(for: NoticeHistoryData.self)
+//            UmcTab()
+//                .environment(errorHandler)
+//                .environment(\.di, container)
+//                .modelContainer(for: NoticeHistoryData.self)
+            VStack {
+                ScheduleListCard(data: .init(title: "컨퍼런스", subTitle: "테스트"))
+                ScheduleListCard(data: .init(title: "데모데이", subTitle: "테스트"))
+            }
         }
     }
 }
