@@ -16,7 +16,7 @@ struct CommunityDetailView: View {
     // MARK: - Init
 
     init(item: CommunityItemModel) {
-        self._vm = .init(wrappedValue: .init())
+        self._vm = .init(wrappedValue: .init(postId: item.id))
         self.item = item
     }
 
@@ -106,7 +106,11 @@ struct CommunityDetailView: View {
 
     private var BottomSection: some View {
         ScrollView {
-            CommunityCommentItem(model: .init(profileImage: nil, userName: "김애플", content: "저 참여하고 싶습니다! 아직 자리 있나요?", createdAt: "10분 전"))
+            LazyVStack(spacing: DefaultSpacing.spacing16) {
+                ForEach(vm.comments) { comment in
+                    CommunityCommentItem(model: comment)
+                }
+            }
         }
     }
 }
