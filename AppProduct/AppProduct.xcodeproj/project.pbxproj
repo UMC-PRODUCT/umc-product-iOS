@@ -46,6 +46,11 @@
 			path = AppProductTests;
 			sourceTree = "<group>";
 		};
+		1FE63EEA2F20BDEF00D92F6A /* AppleCreateML */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AppleCreateML;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +81,7 @@
 		0E6380A02F02F1020060E4D9 = {
 			isa = PBXGroup;
 			children = (
+				1FE63EEA2F20BDEF00D92F6A /* AppleCreateML */,
 				0E6380AB2F02F1020060E4D9 /* AppProduct */,
 				1F75B9922F123E6500B97089 /* AppProductTests */,
 				0E6380AA2F02F1020060E4D9 /* Products */,
@@ -106,6 +112,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				0E6380AB2F02F1020060E4D9 /* AppProduct */,
+				1FE63EEA2F20BDEF00D92F6A /* AppleCreateML */,
 			);
 			name = AppProduct;
 			packageProductDependencies = (
@@ -358,7 +365,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = G8X4BWGTSS;
+				DEVELOPMENT_TEAM = 8B8B4462NV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
@@ -397,7 +404,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = G8X4BWGTSS;
+				DEVELOPMENT_TEAM = 8B8B4462NV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";

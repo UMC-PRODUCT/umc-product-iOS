@@ -51,7 +51,7 @@ enum NavigationDestination: Hashable {
     }
     
     enum Home: Hashable {
-        case test
+        case alarmHistory
     }
     
     case auth(Auth)

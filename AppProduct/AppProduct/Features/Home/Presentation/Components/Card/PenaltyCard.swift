@@ -9,7 +9,7 @@ import SwiftUI
 
 /// 홈 화면 패널티 카드
 struct PenaltyCard: View, Equatable {
-
+    
     // MARK: - Property
     let generations: [GenerationData]
     @State private var currentIndex: Int = 0
@@ -17,64 +17,63 @@ struct PenaltyCard: View, Equatable {
     // MARK: - Constant
     enum Constants {
         static let padding: CGFloat = 20
-        static let height: CGFloat = 220
+        static let height: (CGFloat, CGFloat) = (100, 220)
     }
     
     // MARK: - Equtable
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.generations == rhs.generations
     }
-
+    
     // MARK: - Init
     init(generations: [GenerationData]) {
         self.generations = generations
     }
-
+    
     // MARK: - Body
     var body: some View {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing24, content: {
-                GenTabBar(
-                    generations: generations.map { $0.gen },
-                    currentIndex: $currentIndex
-                )
-
-                TabView(selection: $currentIndex) {
-                    ForEach(generations.indices, id: \.self) { index in
-                        HStack(alignment: .top, spacing: DefaultSpacing.spacing16) {
-                            
-                            CardInfo(infoType: .penalties(generations[index].penaltyPoint))
-                            
-                            CardInfo(infoType: .infoText(generations[index].penaltyLogs))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .tag(index)
-                        .padding(.horizontal, DefaultSpacing.spacing4)
-                        .frame(maxHeight: .infinity, alignment: .top)
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing24, content: {
+            GenTabBar(
+                generations: generations.map { $0.gen },
+                currentIndex: $currentIndex
+            )
+            
+            TabView(selection: $currentIndex) {
+                ForEach(generations.indices, id: \.self) { index in
+                    HStack(alignment: .top, spacing: DefaultSpacing.spacing16) {
+                        
+                        CardInfo(infoType: .penalties(generations[index].penaltyPoint))
+                        
+                        CardInfo(infoType: .infoText(generations[index].penaltyLogs))
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .tag(index)
+                    .padding(.horizontal, DefaultSpacing.spacing4)
+                    .frame(maxHeight: .infinity, alignment: .top)
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-            })
-            .frame(minHeight: Constants.height)
-            .padding(Constants.padding)
-            .containerShape(.rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-            .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-        }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+        })
+        .frame(minHeight: generations.isEmpty ? Constants.height.0 : Constants.height.1)
+        .padding(Constants.padding)
+        .containerShape(.rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+    }
 }
 
 // MARK: - GenTabBar
 extension PenaltyCard {
-    /// 기수 탭바
     fileprivate struct GenTabBar: View {
         // MARK: - Property
         let generations: [Int]
         @Binding var currentIndex: Int
-
+        
         private enum Constants {
             static let textPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
             static let indicatorSpacing: CGFloat = 4
             static let indicatorDiameter: CGFloat = 8
         }
-
+        
         // MARK: - Body
         var body: some View {
             HStack(spacing: DefaultSpacing.spacing16) {
@@ -82,9 +81,9 @@ extension PenaltyCard {
                     .appFont(.footnoteEmphasis, color: .indigo600)
                     .padding(Constants.textPadding)
                     .background(.indigo100, in: .capsule)
-
+                
                 Spacer()
-
+                
                 HStack(spacing: Constants.indicatorSpacing) {
                     ForEach(generations.indices, id: \.self) { index in
                         Circle()
@@ -106,21 +105,21 @@ extension PenaltyCard {
 extension PenaltyCard {
     /// 카드 경고 포인트 및 설명
     fileprivate struct CardInfo: View {
-
+        
         // MARK:  - Property
         var infoType: InfoType
-
+        
         // MARK: - Constant
         private enum Constants {
             static let desCardPadding: CGFloat = 4
             static let progressHeight: CGFloat = 20
         }
-
+        
         // MARK: - Init
         init(infoType: InfoType) {
             self.infoType = infoType
         }
-
+        
         // MARK: - Body
         var body: some View {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing16, content: {
@@ -129,7 +128,7 @@ extension PenaltyCard {
             })
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-
+        
         // MARK: - Top
         /// 카드 타이틀
         private var title: some View {
@@ -138,7 +137,7 @@ extension PenaltyCard {
                 .foregroundStyle(.grey600)
                 .fontWeight(.semibold)
         }
-
+        
         /// 카드 컨텐츠
         @ViewBuilder
         private var content: some View {
@@ -148,7 +147,7 @@ extension PenaltyCard {
                 descripContent(items: items)
             }
         }
-
+        
         // MARK: - Point
         /// 포인트 컨텐츠
         /// - Parameter point: 포인트 점수
@@ -159,12 +158,12 @@ extension PenaltyCard {
                 progressBar(point: point)
             })
         }
-
+        
         private func pointTitle(point: Int) -> some View {
             HStack(alignment: .lastTextBaseline, spacing: DefaultSpacing.spacing12, content: {
                 Text("\(point)")
                     .appFont(.title1Emphasis, color: .grey900)
-
+                
                 Group {
                     Text("/")
                     Text("3")
@@ -172,19 +171,28 @@ extension PenaltyCard {
                 .appFont(.title2Emphasis, color: .grey400)
             })
         }
-
+        
         // MARK: - Descrip
         /// 패널티 사유 카드 리스트
         /// - Parameter items: 패널티 사유
         /// - Returns: 패널티 사유 뷰
+        @ViewBuilder
         private func descripContent(items: [PenaltyInfoItem]) -> some View {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8, content: {
-                ForEach(items.indices, id: \.self) { index in
-                    descripCard(item: items[index])
+            if items.isEmpty {
+                ContentUnavailableView(
+                    "등록된 패널티가 없습니다.",
+                    systemImage: "exclamationmark.circle",
+                    description: Text("현재 부과된 패널티 사유가 없습니다.")
+                )
+            } else {
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+                    ForEach(items.indices, id: \.self) { index in
+                        descripCard(item: items[index])
+                    }
                 }
-            })
+            }
         }
-
+        
         /// 패널티 사유 뷰 카드
         /// - Parameter item: 패널티 사유 데이터
         /// - Returns: 패널티 사유 뷰
@@ -197,29 +205,29 @@ extension PenaltyCard {
                     Text("\(item.penaltyPoint)점")
                         .appFont(.calloutEmphasis, color: .red)
                 }
-
+                
                 Text(item.date)
                     .appFont(.footnote, color: .grey500)
             })
         }
         
         // MARK: - Method
-            private func progressBar(point: Int) -> some View {
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
+        private func progressBar(point: Int) -> some View {
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(progressBackgroundColor(point))
+                    
+                    if point > 0 {
                         Capsule()
-                            .fill(progressBackgroundColor(point))
-                        
-                        if point > 0 {
-                            Capsule()
-                                .fill(progressGradient(point))
-                                .frame(width: geometry.size.width * (CGFloat(point) / 3.0))
-                        }
+                            .fill(progressGradient(point))
+                            .frame(width: geometry.size.width * (CGFloat(point) / 3.0))
                     }
                 }
-                .frame(height: Constants.progressHeight)
             }
-
+            .frame(height: Constants.progressHeight)
+        }
+        
         private func progressGradient(_ point: Int) -> LinearGradient {
             switch point {
             case 0...1:
@@ -248,7 +256,7 @@ extension PenaltyCard {
                 )
             }
         }
-
+        
         private func progressBackgroundColor(_ point: Int) -> Color {
             switch point {
             case 0...1:

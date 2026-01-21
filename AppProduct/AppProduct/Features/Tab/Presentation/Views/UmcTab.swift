@@ -13,20 +13,27 @@ struct UmcTab: View {
     @Environment(\.di) var di
     
     var body: some View {
+        let router = di.resolve(NavigationRouter.self)
+
         TabView(selection: $tabCase, content: {
             ForEach(TabCase.allCases, id: \.id) { tab in
                 Tab(value: tab, role: tab.tabRoloe, content: {
-                    NavigationStack {
+                    NavigationStack(path: Binding(
+                        get: { router.destination },
+                        set: { router.destination = $0 }
+                    ), root: {
                         tabView(tab)
-                    }
+                            .navigationDestination(for: NavigationDestination.self) { destination in
+                                NavigationRoutingView(destination: destination)
+                            }
+                    })
                 }, label: {
                     tabLabel(tab)
                 })
             }
         })
         .tabBarMinimizeBehavior(.onScrollDown)
-//        .tabBarMinimizeBehavior(.onScrollUp)
-        .tabViewBottomAccessory(content: {
+        .tabViewBottomAccessory(isEnabled: router.destination.isEmpty, content: {
             UmcBottonAccessoryView(tabCase: $tabCase)
         })
     }

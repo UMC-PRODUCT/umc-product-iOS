@@ -8,6 +8,7 @@
 import SwiftUI
 import KakaoSDKCommon
 import KakaoSDKAuth
+import SwiftData
 
 @main
 struct AppProductApp: App {
@@ -20,6 +21,7 @@ struct AppProductApp: App {
             UmcTab()
                 .environment(errorHandler)
                 .environment(\.di, container)
+                .modelContainer(for: NoticeHistoryData.self)
         }
     }
 }

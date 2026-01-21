@@ -7,56 +7,57 @@
 
 import SwiftUI
 
-// MARK: - NavigationRoutingView 사용 예시
-/// NavigationRoutingView는 NavigationDestination에 따라 적절한 화면을 렌더링하는 라우팅 뷰입니다.
-/// navigationDestination modifier와 함께 사용하여 타입 세이프한 화면 전환을 구현합니다.
+// MARK: - NavigationRoutingView
+/// `NavigationDestination` 타입의 데이터를 받아 실제 SwiftUI View로 매핑해주는 라우팅 뷰입니다.
+///
+/// 이 뷰는 중앙 집중식 라우팅 제어를 담당하며, 각 피처별 화면 생성 로직을 분리하여 관리합니다.
+/// `navigationDestination(for:destination:)` 한 곳에서만 정의하면 되므로 유지보수가 용이합니다.
 ///
 /// ## 사용 방법
-///
-/// ### NavigationStack에서 연결
 /// ```swift
-/// NavigationStack(path: $router.destination) {
+/// NavigationStack(path: $router.path) {
 ///     RootView()
 ///         .navigationDestination(for: NavigationDestination.self) { destination in
 ///             NavigationRoutingView(destination: destination)
 ///         }
 /// }
 /// ```
-///
-/// ## 새로운 화면 라우팅 추가
-///
-/// ### switch문에 case 추가
-/// ```swift
-/// var body: some View {
-///     switch destination {
-///     case .auth(let auth):
-///         switch auth {
-///         case .test:
-///             AuthTestView()
-///         case .login:
-///             LoginView()        // 새 화면 추가
-///         case .signup(let email):
-///             SignupView(email: email)
-///         }
-///     case .home(let home):
-///         switch home {
-///         case .test:
-///             HomeTestView()
-///         }
-///     }
-/// }
-/// ```
-
 struct NavigationRoutingView: View {
+    /// 하위 뷰에 의존성을 주입하기 위한 DI 컨테이너입니다.
     @Environment(\.di) var di: DIContainer
-    @State var destination: NavigationDestination
+    
+    /// 현재 라우팅해야 할 목적지 정보입니다.
+    let destination: NavigationDestination
     
     var body: some View {
         switch destination {
-        case .auth:
-            Text("A")
-        case .home:
-            Text("B")
+        case .auth(let auth):
+            authView(auth)
+        case .home(let home):
+            homeView(home)
+        }
+    }
+}
+
+// MARK: - Route Detail Views
+private extension NavigationRoutingView {
+    
+    /// 인증(Auth) 관련 피처의 화면들을 생성합니다.
+    @ViewBuilder
+    func authView(_ route: NavigationDestination.Auth) -> some View {
+        switch route {
+        case .test:
+            // TODO: 실제 Auth Test View로 교체 필요
+            Text("Auth Test View")
+        }
+    }
+    
+    /// 홈(Home) 관련 피처의 화면들을 생성합니다.
+    @ViewBuilder
+    func homeView(_ route: NavigationDestination.Home) -> some View {
+        switch route {
+        case .alarmHistory:
+            NoticeAlarmView()
         }
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// 전역적으로 사용하는 레이아웃 상수 관리.
 ///
@@ -40,7 +41,10 @@ enum DefaultConstant {
 
     /// 상단 캡슐 컴포넌트 간격 (헤더 영역 등).
     static let defaultTopCapsuleSpacing: CGFloat = 10
-
+  
+    /// 리슽 카드 기본 패딩.
+    static let defaultListPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
+    
     /// 기본 애니메이션 지속 시간 (초).
     static let animationTime: TimeInterval = 0.3
 
