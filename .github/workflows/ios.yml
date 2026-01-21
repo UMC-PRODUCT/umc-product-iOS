@@ -11,6 +11,10 @@ jobs:
     name: Build and Test using iOS 26.2 Simulator
     runs-on: macos-26
 
+    defaults:
+      run:
+        working-directory: AppProduct
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
