@@ -71,6 +71,7 @@ private struct ChipButtonContent: View, Equatable {
                 Capsule()
                     .fill(style.bgColor(isSelected: isSelected))
             )
+            .glassEffect(.regular, in: Capsule())
     }
 }
 

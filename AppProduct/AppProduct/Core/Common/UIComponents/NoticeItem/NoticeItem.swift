@@ -79,7 +79,7 @@ private struct TopSection: View, Equatable {
     var body: some View {
         HStack(spacing: Constant.topHSpacing) {
             Text(model.tag.text)
-                .appFont(.caption2, color: .grey000)
+                .appFont(.caption1, color: .grey000)
                 .padding(Constant.tagPadding)
                 .background {
                     RoundedRectangle(cornerRadius: 16)
@@ -89,7 +89,7 @@ private struct TopSection: View, Equatable {
             if model.mustRead {
                 Text("필독")
                     .foregroundStyle(.grey000)
-                    .appFont(.caption2Emphasis, weight: .regular)
+                    .appFont(.caption1Emphasis, weight: .regular)
                     .padding(Constant.tagPadding)
                     .background {
                         RoundedRectangle(cornerRadius: 16)
@@ -106,7 +106,7 @@ private struct TopSection: View, Equatable {
             }
 
             Text(model.date.toYearMonthDay())
-                .appFont(.caption1, color: .gray)
+                .appFont(.footnote, color: .gray)
         }
     }
 }
@@ -118,11 +118,11 @@ private struct ContentSection: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.contentSpacing) {
             Text(model.title)
-                .appFont(.calloutEmphasis, color: model.mustRead ? Color.indigo900 : .grey900)
+                .appFont(.bodyEmphasis, color: model.mustRead ? Color.indigo900 : .grey900)
                 .lineLimit(1)
 
             Text(model.content)
-                .appFont(.footnote, color: .gray)
+                .appFont(.subheadline, color: .gray)
                 .lineLimit(2)
         }
     }
@@ -150,7 +150,7 @@ private struct BottomSection: View, Equatable {
 
             Text("조회 \(model.viewCount)")
         }
-        .appFont(.caption1, color: .gray)
+        .appFont(.footnote, color: .gray)
     }
 }
 
