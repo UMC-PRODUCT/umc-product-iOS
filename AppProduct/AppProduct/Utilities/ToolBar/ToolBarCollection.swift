@@ -59,4 +59,127 @@ struct ToolBarCollection {
             .matchedTransitionSource(id: "logo", in: namespace)
         }
     }
+    
+    // MARK: - NoticeView
+    /// 기수 필터
+    struct GenerationFilter: ToolbarContent {
+        
+        @Bindable var viewModel: NoticeViewModel
+        
+        private enum Constants {
+            static let labelPadding: CGFloat = 6
+        }
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarLeading, content: {
+                Menu {
+                    generationPicker
+                } label: {
+                    menuLabel
+                }
+            })
+        }
+
+        private var generationPicker: some View {
+            Picker("기수 선택", selection: selectedGenerationBinding) {
+                ForEach(viewModel.generations) { generation in
+                    Text(generation.title).tag(generation as Generation?)
+                }
+            }
+            .pickerStyle(.inline)
+        }
+
+        private var menuLabel: some View {
+            Text(viewModel.selectedGeneration?.title ?? "")
+                .font(.callout)
+                .fontWeight(.semibold)
+        }
+
+        private var selectedGenerationBinding: Binding<Generation?> {
+            Binding(
+                get: { viewModel.selectedGeneration },
+                set: { newValue in
+                    if let generation = newValue {
+                        viewModel.selectedGeneration = generation
+                    }
+                }
+            )
+        }
+    }
+    
+    // MARK: - NoticeFilter
+    /// 메인 필터링 버튼(전체, 중앙운영사무국, 지부, 학교, 파트)
+    struct NoticeMainFilter: ToolbarContent {
+
+        @Bindable var viewModel: NoticeViewModel
+        @Namespace var namespace
+
+        private enum Constants {
+            static let labelPadding: CGFloat = 6
+        }
+
+        /// 필터 항목 데이터
+        private var mainFilterItems: [NoticeMainFilterType] {
+            [
+                .all,
+                .central,
+                .branch(viewModel.userBranch),
+                .school(viewModel.userSchool),
+                .part(viewModel.userPart)
+            ]
+        }
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .principal) {
+                Menu {
+                    filterPicker
+                } label: {
+                    menuLabel
+                }
+            }
+            .sharedBackgroundVisibility(.visible)
+        }
+
+        private var filterPicker: some View {
+            Picker("필터 선택", selection: selectedFilterBinding) {
+                ForEach(mainFilterItems) { filter in
+                    Label(filter.labelText, systemImage: filter.labelIcon)
+                        .tag(filter as NoticeMainFilterType?)
+                }
+            }
+            .pickerStyle(.inline)
+        }
+        
+        private var menuLabel: some View {
+            HStack {
+                Image(systemName: viewModel.selectedNoticeMainFilter.labelIcon)
+                    .font(.system(size: 10))
+                Spacer()
+                Text(viewModel.selectedNoticeMainFilter.labelText)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Spacer()
+                chevronImage
+            }
+            .padding(10)
+            .glassEffect(.regular.interactive(), in: .capsule)
+        }
+        
+        private var chevronImage: some View {
+            Image(systemName: "chevron.down")
+                .font(.system(size: 6))
+                .foregroundStyle(.grey500)
+        }
+
+        private var selectedFilterBinding: Binding<NoticeMainFilterType?> {
+            Binding(
+                get: { viewModel.selectedNoticeMainFilter },
+                set: { newValue in
+                    if let filter = newValue {
+                        viewModel.selectMainFilter(filter)
+                    }
+                }
+            )
+        }
+    }
 }
