@@ -105,7 +105,9 @@ struct CommunityDetailView: View {
     // MARK: - Bottom
 
     private var BottomSection: some View {
-        ScrollView {}
+        ScrollView {
+            CommunityCommentItem(model: .init(profileImage: nil, userName: "김애플", content: "저 참여하고 싶습니다! 아직 자리 있나요?", createdAt: "10분 전"))
+        }
     }
 }
 
