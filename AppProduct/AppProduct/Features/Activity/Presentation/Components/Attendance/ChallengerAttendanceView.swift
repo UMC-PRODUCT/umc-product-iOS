@@ -45,6 +45,7 @@ struct ChallengerAttendanceView: View, Equatable {
     
     private enum Constants {
         static let verticalSpacing: CGFloat = 16
+        static let bottomPadding: CGFloat = 16
     }
 
     // MARK: - Body
@@ -59,6 +60,7 @@ struct ChallengerAttendanceView: View, Equatable {
             attendanceButton
             lateReasonButton
         }
+        .safeAreaPadding(.bottom, Constants.bottomPadding)
     }
 
     // MARK: - View Component

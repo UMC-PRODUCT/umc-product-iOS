@@ -14,13 +14,17 @@ struct ChallengerSessionCard: View, Equatable {
     private var info: SessionInfo {
         session.info
     }
+    
+    private let onTap: () -> Void
 
     init(
         session: Session,
-        isExpanded: Bool = false
+        isExpanded: Bool = false,
+        onTap: @escaping () -> Void = {}
     ) {
         self.session = session
         self.isExpanded = isExpanded
+        self.onTap = onTap
     }
 
     static func == (lsh: Self, rhs: Self) -> Bool {
@@ -49,7 +53,11 @@ struct ChallengerSessionCard: View, Equatable {
         .padding(Constants.containerPadding)
         .frame(height: Constants.containerHeight)
         .containerShape(.rect(cornerRadius: Constants.containerCornerRadius))
-        .background(.grey000, in: .rect(cornerRadius: Constants.containerCornerRadius))
+        .background(.white, in: .rect(cornerRadius: Constants.containerCornerRadius))
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap()
+        }
     }
     
     private var icon: some View {
@@ -62,12 +70,11 @@ struct ChallengerSessionCard: View, Equatable {
     private var contentSection: some View {
         VStack(alignment: .leading, spacing: Constants.verticalSpacing) {
             Text(info.title)
-                .appFont(.bodyEmphasis, weight: .bold, color: .grey900)
+                .appFont(.bodyEmphasis, weight: .bold, color: .black)
                 .lineLimit(1)
 
             Text(info.startTime.timeRange(to: info.endTime))
-                .appFont(
-                    .callout, color: .grey800)
+                .appFont(.callout, color: .gray)
         }
     }
 
