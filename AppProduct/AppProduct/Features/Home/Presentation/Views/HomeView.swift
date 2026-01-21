@@ -10,7 +10,6 @@ import SwiftUI
 struct HomeView: View {
     
     @Environment(\.di) var di
-    @Environment(\.colorScheme) var color
     @State var viewModel = HomeViewModel()
     @State var selectedDate: Date = .init()
     @State var currentMonth: Date = .init()
@@ -21,9 +20,10 @@ struct HomeView: View {
     
     // MARK: - Constant
     private enum Constants {
+        static let recentCardCount: Int = 5
+        
         static let recentUpdateText: String = "최근 공지"
         static let scrollId: String = "scroll"
-        static let listPadding: EdgeInsets = EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
     }
     
     // MARK: - Body
@@ -42,9 +42,10 @@ struct HomeView: View {
                 }
                 .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
             }
+            .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
             .toolbar {
                 ToolBarCollection.BellBtn(action: { router.push(to: .home(.alarmHistory)) })
-                ToolBarCollection.Logo(image: logImage)
+                ToolBarCollection.Logo(image: .logoLight)
             }
         }
     }
@@ -54,22 +55,55 @@ struct HomeView: View {
     /// 상단 기수 관련 정보 카드
     @ViewBuilder
     private var seasonCard: some View {
+        switch viewModel.seasonData {
+        case .idle:
+            Color.clear.task {
+                print("hello")
+            }
+        case .loading:
+            LoadingView(.home(.seasonLoading))
+        case .loaded(let seasonData):
+            seasonLoaded(seasonData)
+        case .failed:
+            Color.clear
+        }
+    }
+    
+    private func seasonLoaded(_ seasonData: [SeasonType]) -> some View {
         HStack {
-            ForEach(Array(viewModel.seasonData.enumerated()), id: \.offset) { index, season in
+            ForEach(Array(seasonData.enumerated()), id: \.offset) { index, season in
                 SeasonCard(type: season)
                     .equatable()
             }
         }
     }
     
-    // MARK: - Penalty
+    // MARK: - PenaltygetShedules
     
     /// 기수 별 패널티 정보
     @ViewBuilder
     private var generations: some View {
-        PenaltyCard(generations: viewModel.generationData)
+        switch viewModel.generationData {
+        case .idle:
+            Color.clear.task {
+                print("hello")
+            }
+        case .loading:
+            LoadingView(.home(.penaltyLoading))
+        case .loaded(let generation):
+            generationLoaded(generation)
+        case .failed:
+            Color.clear
+        }
+    }
+    
+    @ViewBuilder
+    private func generationLoaded(_ generation: [GenerationData]) -> some View {
+        PenaltyCard(generations: generation)
             .equatable()
     }
+    
+    // MARK: - Caneldar
     
     /// 기수 행사 일정 데이터
     private var calendar: some View {
@@ -84,8 +118,6 @@ struct HomeView: View {
         })
         
     }
-    
-    // MARK: - Caneldar
     
     /// 달력 일정 스케줄 리스트
     @ViewBuilder
@@ -109,12 +141,12 @@ struct HomeView: View {
                                systemImage: "calendar.badge.exclamationmark",
                                description: Text("선택한 날짜에 등록된 일정이 없습니다.")
         )
-        .padding(.vertical, DefaultSpacing.spacing32)
+        .glassEffect(.regular, in: .containerRelative)
     }
     
     // MARK: - Recent
     private var recentUpdate: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4, content: {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12, content: {
             recentHeader
             sectionContent
         })
@@ -122,23 +154,40 @@ struct HomeView: View {
     
     private var recentHeader: some View {
         Text(Constants.recentUpdateText)
-            .appFont(.bodyEmphasis, color: .grey900)
+            .appFont(.title3Emphasis, color: .grey900)
     }
     
+    @ViewBuilder
     private var sectionContent: some View {
-        LazyVStack(spacing: DefaultSpacing.spacing8) {
-            ForEach(viewModel.recentNoticeData.prefix(5), id:\.id) { data in
-                RecentNoticeCard(data: data)
+        switch viewModel.recentNoticeData {
+        case .idle:
+            Color.clear.task {
+                print("hello")
             }
+        case .loading:
+            LoadingView(.home(.recentNoticeLoading))
+        case .loaded(let recentNoticeData):
+            recentView(recentNoticeData)
+        case .failed:
+            Color.clear
         }
     }
     
-    // MARK: - Color {
-    private var logImage: ImageResource {
-        if color == .dark {
-            return .logoDark
+    @ViewBuilder
+    private func recentView(_ recentNoticeData: [RecentNoticeData]) -> some View {
+        if recentNoticeData.isEmpty {
+            ContentUnavailableView(
+                "최근 공지가 없습니다.",
+                systemImage: "tray",
+                description: Text("새로운 공지사항이 등록되면 이곳에 표시됩니다.")
+            )
+            .glassEffect(.regular, in: .containerRelative)
         } else {
-            return .logoLight
+            LazyVStack(spacing: DefaultSpacing.spacing8) {
+                ForEach(recentNoticeData.prefix(Constants.recentCardCount), id: \.id) { data in
+                    RecentNoticeCard(data: data)
+                }
+            }
         }
     }
 }
