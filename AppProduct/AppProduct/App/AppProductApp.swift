@@ -8,6 +8,7 @@
 import SwiftUI
 import KakaoSDKCommon
 import KakaoSDKAuth
+import SwiftData
 
 @main
 struct AppProductApp: App {
@@ -18,6 +19,7 @@ struct AppProductApp: App {
         WindowGroup {
             UmcTab()
                 .environment(\.di, container)
+                .modelContainer(for: NoticeHistoryData.self)
         }
     }
 }

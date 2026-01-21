@@ -1,0 +1,713 @@
+{
+  "activityEntities" : [
+    "trainingStarted",
+    [
+      {
+        "createdDate" : "2026-01-21T07:56:54Z",
+        "event" : "trainingStarted",
+        "id" : "4AEA903F-B430-49E0-90D6-33F83D3AADAC",
+        "subtitle" : "10 iterationNoticeClassifierML",
+        "title" : "Training Started"
+      }
+    ],
+    "trainingDataAdded",
+    [
+      {
+        "createdDate" : "2026-01-21T07:56:52Z",
+        "event" : "trainingDataAdded",
+        "id" : "7C2E6F21-865B-4684-B889-DF38BA2BC0BA",
+        "subtitle" : "NoticeTrainingData.jNoticeClassifierMLon",
+        "title" : "Training Data Added"
+      }
+    ],
+    "trainingFinished",
+    [
+      {
+        "createdDate" : "2026-01-21T07:56:55Z",
+        "event" : "trainingFinished",
+        "id" : "08C4A3D8-C5C8-4E1A-B15A-36FC6FDF2C60",
+        "subtitle" : "Model converged at 2 iterationNoticeClassifierML",
+        "title" : "Training Completed"
+      }
+    ],
+    "experimentCreated",
+    [
+      {
+        "createdDate" : "2026-01-21T07:56:42Z",
+        "event" : "experimentCreated",
+        "id" : "958A6AB5-FBAF-49D6-976F-CC2F711B0F1C",
+        "subtitle" : "NoticeClassifierML",
+        "title" : "Model Source Created"
+      }
+    ]
+  ],
+  "contentDataResult" : {
+    "createdDate" : "2026-01-21T07:56:52Z"
+  },
+  "createdDate" : "2026-01-21T07:56:42Z",
+  "evaluationContainerEntity" : {
+    "createdDate" : "2026-01-21T08:00:56Z",
+    "evaluationEntities" : [
+      {
+        "analysedDataType" : "none",
+        "createdDate" : "2026-01-21T07:56:55Z",
+        "dataResult" : {
+
+        },
+        "id" : "57a2cdfb-308f-43c1-8065-d091a557ad63"
+      }
+    ],
+    "id" : "d4e4b544-a964-4d0e-9957-631fff934b64",
+    "modifiedDate" : "2026-01-21T08:00:56Z",
+    "previewType" : "textClassifier",
+    "testingEvaluationEntity" : {
+      "analysedDataType" : "none",
+      "createdDate" : "2026-01-21T07:56:42Z",
+      "dataResult" : {
+        "createdDate" : "2026-01-21T07:56:52Z"
+      },
+      "id" : "e7e3164c-2ae9-4277-a4bd-87b633c154e2"
+    },
+    "trainingEvaluationEntity" : {
+      "analysedDataType" : "none",
+      "createdDate" : "2026-01-21T07:56:42Z",
+      "dataResult" : {
+        "classesCount" : 4,
+        "createdDate" : "2026-01-21T07:56:52Z",
+        "dataAnalysis" : {
+          "classifierAnalysis" : {
+            "labelStats" : {
+              "error" : 50,
+              "info" : 50,
+              "success" : 50,
+              "warning" : 50
+            }
+          },
+          "issues" : [
+            {
+              "description" : "4 classes found, including error, info, warning",
+              "severity" : "debug"
+            },
+            {
+              "description" : "200 texts found, automatically creating validation set",
+              "severity" : "good"
+            },
+            {
+              "description" : "Smallest class is \"success\" with 50 texts",
+              "severity" : "debug"
+            },
+            {
+              "description" : "Largest class is \"error\" with 50 text",
+              "severity" : "debug"
+            }
+          ],
+          "objectDetectorAnalysis" : {
+            "details" : {
+
+            }
+          },
+          "summary" : {
+            "canUseValidation" : 1,
+            "classCount" : 4,
+            "sampleCount" : 200
+          }
+        },
+        "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
+        "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/NoticeAlarmHistory/NoticeTrainingData.json",
+        "itemsCount" : 200
+      },
+      "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
+      "evaluationResult" : {
+        "textClassifier" : {
+          "accuracy" : 1,
+          "confusionMatrix" : [
+            {
+              "actual" : "error",
+              "count" : 49,
+              "expected" : "error"
+            },
+            {
+              "actual" : "info",
+              "count" : 45,
+              "expected" : "info"
+            },
+            {
+              "actual" : "success",
+              "count" : 47,
+              "expected" : "success"
+            },
+            {
+              "actual" : "warning",
+              "count" : 49,
+              "expected" : "warning"
+            }
+          ],
+          "statsByLabel" : {
+            "error" : {
+              "count" : 49,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "info" : {
+              "count" : 45,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "success" : {
+              "count" : 47,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "warning" : {
+              "count" : 49,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            }
+          }
+        }
+      },
+      "id" : "6e1d4025-7814-4667-b5e2-c5d96df8aa43"
+    },
+    "validationEvaluationEntity" : {
+      "analysedDataType" : "auto",
+      "createdDate" : "2026-01-21T07:56:42Z",
+      "dataResult" : {
+        "createdDate" : "2026-01-21T07:56:52Z"
+      },
+      "evaluationResult" : {
+        "textClassifier" : {
+          "accuracy" : 0.9,
+          "confusionMatrix" : [
+            {
+              "actual" : "error",
+              "count" : 1,
+              "expected" : "error"
+            },
+            {
+              "actual" : "info",
+              "count" : 4,
+              "expected" : "info"
+            },
+            {
+              "actual" : "info",
+              "count" : 1,
+              "expected" : "success"
+            },
+            {
+              "actual" : "success",
+              "count" : 3,
+              "expected" : "success"
+            },
+            {
+              "actual" : "warning",
+              "count" : 1,
+              "expected" : "warning"
+            }
+          ],
+          "statsByLabel" : {
+            "error" : {
+              "count" : 1,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "info" : {
+              "count" : 5,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.8
+                }
+              }
+            },
+            "success" : {
+              "count" : 3,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.75,
+                  "recall" : 1
+                }
+              }
+            },
+            "warning" : {
+              "count" : 1,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            }
+          }
+        }
+      },
+      "id" : "401de41a-304c-459c-b733-a836a3eadd71"
+    }
+  },
+  "evaluationEntity" : {
+    "analysedDataType" : "none",
+    "dataResult" : {
+
+    },
+    "id" : "095f7f2c-fe86-4f2e-a179-687a15df43cc"
+  },
+  "evaluationState" : "uninitialized",
+  "id" : "E5263897-3103-4934-8F7F-FB59054829EE",
+  "modelEntity" : {
+    "createdDate" : "2026-01-21T07:56:42Z",
+    "experimentID" : "E5263897-3103-4934-8F7F-FB59054829EE",
+    "id" : "150AF3E5-AF15-4140-A7B5-26172DA4F4BC",
+    "modelURL" : "Models/NoticeClassifierML.mlmodel/",
+    "modifiedDate" : "2026-01-21T07:56:42Z",
+    "title" : "",
+    "version" : "1.0"
+  },
+  "modifiedDate" : "2026-01-21T08:00:56Z",
+  "preferredFilename" : "NoticeClassifierML",
+  "settingEntity" : {
+    "algorithmType" : "maxEnt",
+    "augmentations" : [
+
+    ],
+    "featureNames" : [
+
+    ],
+    "handActionClassifierAugmentations" : [
+
+    ],
+    "handPoseClassifierAugmentations" : [
+
+    ],
+    "harVideoAugmentations" : 0,
+    "iterationCount" : 10,
+    "seedType" : "default",
+    "styleTransferAlgorithmType" : "image",
+    "taskType" : "textClassifier",
+    "textClassifierArabicLanguage" : "automatic",
+    "textClassifierCJKLanguage" : "automatic",
+    "textClassifierCyrillicLanguage" : "automatic",
+    "textClassifierIndicLanguage" : "automatic",
+    "textClassifierLatin" : "automatic",
+    "textClassifierScript" : "latin",
+    "textClassifierThaiLanguage" : "automatic"
+  },
+  "snapshotRole" : {
+    "withoutSnapshots" : 0
+  },
+  "state" : "trained",
+  "title" : "NoticeClassifier 1",
+  "trainingEntity" : {
+    "analysedDataType" : "datasource",
+    "checkpointMetrics" : {
+
+    },
+    "dataResult" : {
+      "classesCount" : 4,
+      "createdDate" : "2026-01-21T07:56:52Z",
+      "dataAnalysis" : {
+        "classifierAnalysis" : {
+          "labelStats" : {
+            "error" : 50,
+            "info" : 50,
+            "success" : 50,
+            "warning" : 50
+          }
+        },
+        "issues" : [
+          {
+            "description" : "4 classes found, including error, info, warning",
+            "severity" : "debug"
+          },
+          {
+            "description" : "200 texts found, automatically creating validation set",
+            "severity" : "good"
+          },
+          {
+            "description" : "Smallest class is \"success\" with 50 texts",
+            "severity" : "debug"
+          },
+          {
+            "description" : "Largest class is \"error\" with 50 text",
+            "severity" : "debug"
+          }
+        ],
+        "objectDetectorAnalysis" : {
+          "details" : {
+
+          }
+        },
+        "summary" : {
+          "canUseValidation" : 1,
+          "classCount" : 4,
+          "sampleCount" : 200
+        }
+      },
+      "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
+      "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/NoticeAlarmHistory/NoticeTrainingData.json",
+      "itemsCount" : 200
+    },
+    "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
+    "featureExtractionCheckpointMayBeAvailable" : false,
+    "finishTime" : "2026-01-21T07:56:55Z",
+    "progress" : [
+      {
+        "count" : 1,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 10,
+          "trainingAccuracy" : 0.25789472460746765,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 2,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : true,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 9,
+          "trainingAccuracy" : 1,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 10,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 20,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 30,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 40,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 50,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 60,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 70,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 80,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 90,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 100,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 110,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 120,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 130,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 140,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 150,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 160,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 170,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 180,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 190,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : true,
+        "tableIndex" : 0
+      }
+    ],
+    "snapshottableCheckpoints" : {
+
+    },
+    "startTime" : "2026-01-21T07:56:54Z",
+    "trainingAccuracy" : 1,
+    "trainingResults" : {
+      "textClassifier" : {
+        "accuracy" : 1,
+        "confusionMatrix" : [
+          {
+            "actual" : "error",
+            "count" : 49,
+            "expected" : "error"
+          },
+          {
+            "actual" : "info",
+            "count" : 45,
+            "expected" : "info"
+          },
+          {
+            "actual" : "success",
+            "count" : 47,
+            "expected" : "success"
+          },
+          {
+            "actual" : "warning",
+            "count" : 49,
+            "expected" : "warning"
+          }
+        ],
+        "statsByLabel" : {
+          "error" : {
+            "count" : 49,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "info" : {
+            "count" : 45,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "success" : {
+            "count" : 47,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "warning" : {
+            "count" : 49,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "validationAccuracy" : 0.9,
+    "validationResults" : {
+      "textClassifier" : {
+        "accuracy" : 0.9,
+        "confusionMatrix" : [
+          {
+            "actual" : "error",
+            "count" : 1,
+            "expected" : "error"
+          },
+          {
+            "actual" : "info",
+            "count" : 4,
+            "expected" : "info"
+          },
+          {
+            "actual" : "info",
+            "count" : 1,
+            "expected" : "success"
+          },
+          {
+            "actual" : "success",
+            "count" : 3,
+            "expected" : "success"
+          },
+          {
+            "actual" : "warning",
+            "count" : 1,
+            "expected" : "warning"
+          }
+        ],
+        "statsByLabel" : {
+          "error" : {
+            "count" : 1,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "info" : {
+            "count" : 5,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.8
+              }
+            }
+          },
+          "success" : {
+            "count" : 3,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.75,
+                "recall" : 1
+              }
+            }
+          },
+          "warning" : {
+            "count" : 1,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "validationEntity" : {
+    "analysedDataType" : "auto",
+    "dataResult" : {
+      "createdDate" : "2026-01-21T07:56:52Z"
+    },
+    "splitOptions" : {
+      "strategy" : {
+        "automatic" : {
+
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

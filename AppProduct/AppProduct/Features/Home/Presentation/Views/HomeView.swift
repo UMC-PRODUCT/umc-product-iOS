@@ -9,11 +9,15 @@ import SwiftUI
 
 struct HomeView: View {
     
-    //    @Environment(\.di) var di
+    @Environment(\.di) var di
     @Environment(\.colorScheme) var color
     @State var viewModel = HomeViewModel()
     @State var selectedDate: Date = .init()
     @State var currentMonth: Date = .init()
+    
+    private var router: NavigationRouter {
+        di.resolve(NavigationRouter.self)
+    }
     
     // MARK: - Constant
     private enum Constants {
@@ -30,7 +34,7 @@ struct HomeView: View {
                     Color.clear
                         .frame(height: .zero)
                         .id(Constants.scrollId)
-
+                    
                     seasonCard
                     generations
                     calendar
@@ -39,7 +43,7 @@ struct HomeView: View {
                 .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
             }
             .toolbar {
-                ToolBarCollection.BellBtn(action: { print("hello") })
+                ToolBarCollection.BellBtn(action: { router.push(to: .home(.alarmHistory)) })
                 ToolBarCollection.Logo(image: logImage)
             }
         }
@@ -143,5 +147,5 @@ struct HomeView: View {
     NavigationStack {
         HomeView()
     }
-    //        .environment(DIContainer())
+    .environment(DIContainer())
 }

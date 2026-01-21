@@ -1,0 +1,29 @@
+{
+  "activityEntities" : [
+    "projectCreated",
+    [
+      {
+        "createdDate" : "2026-01-21T07:36:44Z",
+        "event" : "projectCreated",
+        "id" : "D4F01B26-21E2-4D57-8505-BC27EE6C684A",
+        "subtitle" : "NoticeClassifier",
+        "title" : "Project Created"
+      }
+    ]
+  ],
+  "authorName" : "euijjang97",
+  "createdDate" : "2026-01-21T07:36:44Z",
+  "description" : "UMC App Product 내부 알림 히스토리 텍스트 분류기",
+  "id" : "FBCE37AC-85B4-476A-8501-7ED3C1CA49FE",
+  "license" : "umc.app.Product",
+  "location" : "",
+  "modifiedDate" : "2026-01-21T07:36:44Z",
+  "projectName" : "NoticeClassifier",
+  "settingsEntity" : {
+    "snapshotOnExtendTraining" : true,
+    "snapshotOnResumeTraining" : false
+  },
+  "taskType" : "textClassifier",
+  "title" : "Text Classification",
+  "version" : "1.1"
+}

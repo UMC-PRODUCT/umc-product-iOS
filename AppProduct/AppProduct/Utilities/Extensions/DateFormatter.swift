@@ -20,4 +20,29 @@ extension Date {
         formatter.dateFormat = "MM.dd"
         return formatter.string(from: self)
     }
+    
+    var timeAgoText: String {
+        let now = Date()
+        let interval = now.timeIntervalSince(self)
+        
+        let minutes = Int(interval / 60)
+        let hours = Int(interval / 3600)
+        let days = Int(interval / 86400)
+        let weeks = Int(interval / 604800)
+        let month = Int(interval / 2592000)
+        
+        if minutes < 1 {
+            return "방금 전"
+        } else if minutes < 60 {
+            return "\(minutes)분 전"
+        } else if hours < 24 {
+            return "\(hours)시간 전"
+        } else if days < 7 {
+            return "\(days)일 전"
+        } else if weeks < 4 {
+            return "\(weeks)주 전"
+        } else {
+            return "\(month)개월 전"
+        }
+    }
 }

@@ -17,6 +17,7 @@ struct NavigationModifier: ViewModifier {
     enum Navititle: String {
         case signUp = "회원가입"
         case community = "커뮤니티"
+        case noticeAlarmType = "알림 보관"
     }
     
     func body(content: Content) -> some View {

@@ -1,0 +1,51 @@
+{
+  "activityEntities" : [
+    "dataSourceCreated",
+    [
+      {
+        "createdDate" : "2026-01-21T07:56:52Z",
+        "event" : "dataSourceCreated",
+        "id" : "27CFA459-5576-45CA-AF1F-134C39941AAD",
+        "subtitle" : "NoticeTrainingData.json",
+        "title" : "Data Source Created"
+      }
+    ],
+    "dataSourceTrainingStarted",
+    [
+      {
+        "createdDate" : "2026-01-21T07:56:54Z",
+        "event" : "dataSourceTrainingStarted",
+        "id" : "80DA27BA-A092-4AD8-A18C-F7731EDC6D66",
+        "subtitle" : "NoticeClassifier 1",
+        "title" : "Used By"
+      }
+    ],
+    "dataSourceMetrics",
+    [
+      {
+        "createdDate" : "2026-01-21T07:56:54Z",
+        "event" : "dataSourceMetrics",
+        "id" : "DF4B1ACA-D77A-412A-9085-40CDC9F1839B",
+        "subtitle" : "4 Classes, 200 Items",
+        "title" : "Data Summary"
+      }
+    ]
+  ],
+  "createdDate" : "2026-01-21T07:56:52Z",
+  "dataPathRelativeToProjectURL" : "../NoticeTrainingData.json/",
+  "dataResult" : {
+    "createdDate" : "2026-01-21T07:56:52Z",
+    "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
+    "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/NoticeAlarmHistory/NoticeTrainingData.json"
+  },
+  "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/NoticeAlarmHistory/NoticeTrainingData.json",
+  "experimentIDs" : [
+    "E5263897-3103-4934-8F7F-FB59054829EE"
+  ],
+  "id" : "2D66200E-AD08-47E7-9525-603C352478EB",
+  "modifiedDate" : "2026-01-21T07:56:54Z",
+  "pathType" : 0,
+  "preferredFilename" : "NoticeTrainingData.json",
+  "title" : "NoticeTrainingData.json",
+  "version" : "1.0"
+}
