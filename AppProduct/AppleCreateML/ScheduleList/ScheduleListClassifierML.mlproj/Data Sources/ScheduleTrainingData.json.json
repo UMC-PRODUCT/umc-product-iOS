@@ -1,0 +1,114 @@
+{
+  "activityEntities" : [
+    "dataSourceMetrics",
+    [
+      {
+        "createdDate" : "2026-01-21T11:16:56Z",
+        "event" : "dataSourceMetrics",
+        "id" : "085B7E5A-1F7D-44B0-A724-D57876BF8544",
+        "subtitle" : "13 Classes, 851 Items",
+        "title" : "Data Summary"
+      },
+      {
+        "createdDate" : "2026-01-21T11:22:40Z",
+        "event" : "dataSourceMetrics",
+        "id" : "0375C384-D115-4866-B6C5-544DECE9DCC8",
+        "subtitle" : "13 Classes, 855 Items",
+        "title" : "Data Summary"
+      }
+    ],
+    "dataSourceCreated",
+    [
+      {
+        "createdDate" : "2026-01-21T11:16:53Z",
+        "event" : "dataSourceCreated",
+        "id" : "D88A46B0-415E-43D1-B694-F9FB15E66FB9",
+        "subtitle" : "ScheduleTrainingData.json",
+        "title" : "Data Source Created"
+      }
+    ],
+    "dataSourceTrainingStarted",
+    [
+      {
+        "createdDate" : "2026-01-21T11:16:56Z",
+        "event" : "dataSourceTrainingStarted",
+        "id" : "67E16F04-F88C-45D5-B403-CF44AB2BDA6A",
+        "subtitle" : "ScheduleListClassifierML",
+        "title" : "Used By"
+      },
+      {
+        "createdDate" : "2026-01-21T11:22:40Z",
+        "event" : "dataSourceTrainingStarted",
+        "id" : "8BA14A73-0BBE-4349-AE38-C3DDAFD1E552",
+        "subtitle" : "ScheduleListClassifierML",
+        "title" : "Used By"
+      }
+    ]
+  ],
+  "createdDate" : "2026-01-21T11:16:53Z",
+  "dataPathRelativeToProjectURL" : "../ScheduleTrainingData.json/",
+  "dataResult" : {
+    "classesCount" : 13,
+    "createdDate" : "2026-01-21T11:16:53Z",
+    "dataAnalysis" : {
+      "classifierAnalysis" : {
+        "labelStats" : {
+          "celebration" : 65,
+          "fee" : 65,
+          "general" : 65,
+          "hackathon" : 65,
+          "leadership" : 65,
+          "meeting" : 65,
+          "networking" : 65,
+          "orientation" : 65,
+          "presentation" : 66,
+          "project" : 69,
+          "review" : 65,
+          "study" : 70,
+          "workshop" : 65
+        }
+      },
+      "issues" : [
+        {
+          "description" : "13 classes found, including study, project, presentation",
+          "severity" : "debug"
+        },
+        {
+          "description" : "855 texts found, automatically creating validation set",
+          "severity" : "good"
+        },
+        {
+          "description" : "Smallest class is \"workshop\" with 65 texts",
+          "severity" : "debug"
+        },
+        {
+          "description" : "Largest class is \"study\" with 70 text",
+          "severity" : "debug"
+        }
+      ],
+      "objectDetectorAnalysis" : {
+        "details" : {
+
+        }
+      },
+      "summary" : {
+        "canUseValidation" : 1,
+        "classCount" : 13,
+        "sampleCount" : 855
+      }
+    },
+    "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+    "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
+    "itemsCount" : 855
+  },
+  "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
+  "experimentIDs" : [
+    "F338F915-0B88-44DC-8F5D-F8DAB1B35AA6"
+  ],
+  "id" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+  "modifiedDate" : "2026-01-21T11:22:40Z",
+  "pathType" : 0,
+  "preferredFilename" : "ScheduleTrainingData.json",
+  "title" : "ScheduleTrainingData.json",
+  "version" : "1.0"
+}

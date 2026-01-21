@@ -31,10 +31,6 @@ struct HomeView: View {
         ScrollViewReader { proxy in
             ScrollView(.vertical) {
                 LazyVStack(spacing: DefaultSpacing.spacing24) {
-                    Color.clear
-                        .frame(height: .zero)
-                        .id(Constants.scrollId)
-                    
                     seasonCard
                     generations
                     calendar

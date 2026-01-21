@@ -1,0 +1,3422 @@
+[
+  {
+    "text": "LT 리더십 강연",
+    "label": "leadership"
+  },
+  {
+    "text": "단체 활동 OT",
+    "label": "leadership"
+  },
+  {
+    "text": "운영진 회의",
+    "label": "leadership"
+  },
+  {
+    "text": "파트 리더 미팅",
+    "label": "leadership"
+  },
+  {
+    "text": "임원 워크샵",
+    "label": "leadership"
+  },
+  {
+    "text": "리더십 트레이닝",
+    "label": "leadership"
+  },
+  {
+    "text": "조직 문화 세션",
+    "label": "leadership"
+  },
+  {
+    "text": "팀 빌딩 활동",
+    "label": "leadership"
+  },
+  {
+    "text": "리더 양성 프로그램",
+    "label": "leadership"
+  },
+  {
+    "text": "운영위원회",
+    "label": "leadership"
+  },
+  {
+    "text": "대표자 회의",
+    "label": "leadership"
+  },
+  {
+    "text": "파트장 세미나",
+    "label": "leadership"
+  },
+  {
+    "text": "전체 총회",
+    "label": "leadership"
+  },
+  {
+    "text": "간부 교육",
+    "label": "leadership"
+  },
+  {
+    "text": "조직 개편 회의",
+    "label": "leadership"
+  },
+  {
+    "text": "iOS 스터디",
+    "label": "study"
+  },
+  {
+    "text": "알고리즘 공부",
+    "label": "study"
+  },
+  {
+    "text": "Swift 세미나",
+    "label": "study"
+  },
+  {
+    "text": "디자인 패턴 학습",
+    "label": "study"
+  },
+  {
+    "text": "SwiftUI 강의",
+    "label": "study"
+  },
+  {
+    "text": "코딩 테스트 준비",
+    "label": "study"
+  },
+  {
+    "text": "CS 스터디",
+    "label": "study"
+  },
+  {
+    "text": "자료구조 학습",
+    "label": "study"
+  },
+  {
+    "text": "네트워크 공부",
+    "label": "study"
+  },
+  {
+    "text": "데이터베이스 세미나",
+    "label": "study"
+  },
+  {
+    "text": "Git 학습",
+    "label": "study"
+  },
+  {
+    "text": "프로그래밍 강의",
+    "label": "study"
+  },
+  {
+    "text": "기술 세미나",
+    "label": "study"
+  },
+  {
+    "text": "개발 강의",
+    "label": "study"
+  },
+  {
+    "text": "코드 리뷰 스터디",
+    "label": "study"
+  },
+  {
+    "text": "아키텍처 공부",
+    "label": "study"
+  },
+  {
+    "text": "클린 코드 학습",
+    "label": "study"
+  },
+  {
+    "text": "React 스터디",
+    "label": "study"
+  },
+  {
+    "text": "Node.js 세미나",
+    "label": "study"
+  },
+  {
+    "text": "Python 강의",
+    "label": "study"
+  },
+  {
+    "text": "회비 납부",
+    "label": "fee"
+  },
+  {
+    "text": "참가비 결제",
+    "label": "fee"
+  },
+  {
+    "text": "회비 마감",
+    "label": "fee"
+  },
+  {
+    "text": "등록비 안내",
+    "label": "fee"
+  },
+  {
+    "text": "회비 징수",
+    "label": "fee"
+  },
+  {
+    "text": "참가비 납부",
+    "label": "fee"
+  },
+  {
+    "text": "회비 정산",
+    "label": "fee"
+  },
+  {
+    "text": "MT 비용",
+    "label": "fee"
+  },
+  {
+    "text": "행사비 납부",
+    "label": "fee"
+  },
+  {
+    "text": "회원비 결제",
+    "label": "fee"
+  },
+  {
+    "text": "운영비 안내",
+    "label": "fee"
+  },
+  {
+    "text": "활동비 납부",
+    "label": "fee"
+  },
+  {
+    "text": "세미나 참가비",
+    "label": "fee"
+  },
+  {
+    "text": "회비 환불",
+    "label": "fee"
+  },
+  {
+    "text": "참가 비용",
+    "label": "fee"
+  },
+  {
+    "text": "정기 회의",
+    "label": "meeting"
+  },
+  {
+    "text": "파트 미팅",
+    "label": "meeting"
+  },
+  {
+    "text": "팀 회의",
+    "label": "meeting"
+  },
+  {
+    "text": "주간 미팅",
+    "label": "meeting"
+  },
+  {
+    "text": "전체 회의",
+    "label": "meeting"
+  },
+  {
+    "text": "프로젝트 회의",
+    "label": "meeting"
+  },
+  {
+    "text": "기획 회의",
+    "label": "meeting"
+  },
+  {
+    "text": "디자인 미팅",
+    "label": "meeting"
+  },
+  {
+    "text": "개발 회의",
+    "label": "meeting"
+  },
+  {
+    "text": "운영 회의",
+    "label": "meeting"
+  },
+  {
+    "text": "정기 모임",
+    "label": "meeting"
+  },
+  {
+    "text": "스프린트 회의",
+    "label": "meeting"
+  },
+  {
+    "text": "스탠드업 미팅",
+    "label": "meeting"
+  },
+  {
+    "text": "데일리 미팅",
+    "label": "meeting"
+  },
+  {
+    "text": "킥오프 미팅",
+    "label": "meeting"
+  },
+  {
+    "text": "네트워킹 데이",
+    "label": "networking"
+  },
+  {
+    "text": "친목 모임",
+    "label": "networking"
+  },
+  {
+    "text": "교류회",
+    "label": "networking"
+  },
+  {
+    "text": "네트워킹 파티",
+    "label": "networking"
+  },
+  {
+    "text": "커피챗",
+    "label": "networking"
+  },
+  {
+    "text": "선후배 모임",
+    "label": "networking"
+  },
+  {
+    "text": "기수 간 교류",
+    "label": "networking"
+  },
+  {
+    "text": "네트워킹 세션",
+    "label": "networking"
+  },
+  {
+    "text": "친목 행사",
+    "label": "networking"
+  },
+  {
+    "text": "멘토링 모임",
+    "label": "networking"
+  },
+  {
+    "text": "동아리 교류전",
+    "label": "networking"
+  },
+  {
+    "text": "타 학교 교류",
+    "label": "networking"
+  },
+  {
+    "text": "졸업생 초청",
+    "label": "networking"
+  },
+  {
+    "text": "업계 선배 만남",
+    "label": "networking"
+  },
+  {
+    "text": "취업 멘토링",
+    "label": "networking"
+  },
+  {
+    "text": "해커톤 대회",
+    "label": "hackathon"
+  },
+  {
+    "text": "중앙 해커톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "아이디어톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "개발 대회",
+    "label": "hackathon"
+  },
+  {
+    "text": "코딩 대회",
+    "label": "hackathon"
+  },
+  {
+    "text": "해커톤 준비",
+    "label": "hackathon"
+  },
+  {
+    "text": "해커톤 참가",
+    "label": "hackathon"
+  },
+  {
+    "text": "교내 해커톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "외부 해커톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "24시간 해커톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "해커톤 팀 빌딩",
+    "label": "hackathon"
+  },
+  {
+    "text": "메이커톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "디자인톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "데이터톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "해커톤 본선",
+    "label": "hackathon"
+  },
+  {
+    "text": "프로젝트 킥오프",
+    "label": "project"
+  },
+  {
+    "text": "팀 프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "개발 프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "사이드 프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "팀-개발자 매칭 세션",
+    "label": "project"
+  },
+  {
+    "text": "팀-디자인 매칭 세션",
+    "label": "project"
+  },
+  {
+    "text": "프로젝트 회의",
+    "label": "project"
+  },
+  {
+    "text": "프로젝트 시작",
+    "label": "project"
+  },
+  {
+    "text": "앱 개발",
+    "label": "project"
+  },
+  {
+    "text": "웹 개발",
+    "label": "project"
+  },
+  {
+    "text": "서비스 개발",
+    "label": "project"
+  },
+  {
+    "text": "포트폴리오 프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "협업 프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "최종 프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "프로젝트 마감",
+    "label": "project"
+  },
+  {
+    "text": "프로젝트 중간 점검",
+    "label": "project"
+  },
+  {
+    "text": "개발 스프린트",
+    "label": "project"
+  },
+  {
+    "text": "프로젝트 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "최종 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "중간 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "컨퍼런스 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "UMCON",
+    "label": "presentation"
+  },
+  {
+    "text": "발표 준비",
+    "label": "presentation"
+  },
+  {
+    "text": "데모 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "PT 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "성과 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "결과 발표회",
+    "label": "presentation"
+  },
+  {
+    "text": "기술 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "라이트닝 토크",
+    "label": "presentation"
+  },
+  {
+    "text": "세미나 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "프레젠테이션",
+    "label": "presentation"
+  },
+  {
+    "text": "피칭 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "IR 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "MT 워크샵",
+    "label": "workshop"
+  },
+  {
+    "text": "워크샵",
+    "label": "workshop"
+  },
+  {
+    "text": "여름 MT",
+    "label": "workshop"
+  },
+  {
+    "text": "겨울 MT",
+    "label": "workshop"
+  },
+  {
+    "text": "1박2일 워크샵",
+    "label": "workshop"
+  },
+  {
+    "text": "단합대회",
+    "label": "workshop"
+  },
+  {
+    "text": "야유회",
+    "label": "workshop"
+  },
+  {
+    "text": "체육대회",
+    "label": "workshop"
+  },
+  {
+    "text": "수련회",
+    "label": "workshop"
+  },
+  {
+    "text": "합숙",
+    "label": "workshop"
+  },
+  {
+    "text": "워크샵 여행",
+    "label": "workshop"
+  },
+  {
+    "text": "팀 빌딩 워크샵",
+    "label": "workshop"
+  },
+  {
+    "text": "단체 여행",
+    "label": "workshop"
+  },
+  {
+    "text": "MT 준비",
+    "label": "workshop"
+  },
+  {
+    "text": "전지훈련",
+    "label": "workshop"
+  },
+  {
+    "text": "회고 시간",
+    "label": "review"
+  },
+  {
+    "text": "프로젝트 회고",
+    "label": "review"
+  },
+  {
+    "text": "스프린트 회고",
+    "label": "review"
+  },
+  {
+    "text": "리뷰 세션",
+    "label": "review"
+  },
+  {
+    "text": "코드 리뷰",
+    "label": "review"
+  },
+  {
+    "text": "활동 회고",
+    "label": "review"
+  },
+  {
+    "text": "기수 회고",
+    "label": "review"
+  },
+  {
+    "text": "반성회",
+    "label": "review"
+  },
+  {
+    "text": "피드백 세션",
+    "label": "review"
+  },
+  {
+    "text": "레트로스펙티브",
+    "label": "review"
+  },
+  {
+    "text": "중간 회고",
+    "label": "review"
+  },
+  {
+    "text": "최종 회고",
+    "label": "review"
+  },
+  {
+    "text": "성찰 시간",
+    "label": "review"
+  },
+  {
+    "text": "돌아보기",
+    "label": "review"
+  },
+  {
+    "text": "개선 회의",
+    "label": "review"
+  },
+  {
+    "text": "데모데이",
+    "label": "celebration"
+  },
+  {
+    "text": "수료식",
+    "label": "celebration"
+  },
+  {
+    "text": "축하 파티",
+    "label": "celebration"
+  },
+  {
+    "text": "종강 파티",
+    "label": "celebration"
+  },
+  {
+    "text": "졸업식",
+    "label": "celebration"
+  },
+  {
+    "text": "시상식",
+    "label": "celebration"
+  },
+  {
+    "text": "마무리 파티",
+    "label": "celebration"
+  },
+  {
+    "text": "종료 행사",
+    "label": "celebration"
+  },
+  {
+    "text": "완주 축하",
+    "label": "celebration"
+  },
+  {
+    "text": "송년회",
+    "label": "celebration"
+  },
+  {
+    "text": "신년회",
+    "label": "celebration"
+  },
+  {
+    "text": "창립 기념일",
+    "label": "celebration"
+  },
+  {
+    "text": "기념 행사",
+    "label": "celebration"
+  },
+  {
+    "text": "파이널 데모데이",
+    "label": "celebration"
+  },
+  {
+    "text": "성공 축하",
+    "label": "celebration"
+  },
+  {
+    "text": "OT 오리엔테이션",
+    "label": "orientation"
+  },
+  {
+    "text": "신입생 OT",
+    "label": "orientation"
+  },
+  {
+    "text": "환영회",
+    "label": "orientation"
+  },
+  {
+    "text": "오리엔테이션",
+    "label": "orientation"
+  },
+  {
+    "text": "신입 환영",
+    "label": "orientation"
+  },
+  {
+    "text": "입문 교육",
+    "label": "orientation"
+  },
+  {
+    "text": "온보딩",
+    "label": "orientation"
+  },
+  {
+    "text": "신입 교육",
+    "label": "orientation"
+  },
+  {
+    "text": "소개 시간",
+    "label": "orientation"
+  },
+  {
+    "text": "첫 만남",
+    "label": "orientation"
+  },
+  {
+    "text": "신규 멤버 OT",
+    "label": "orientation"
+  },
+  {
+    "text": "활동 안내",
+    "label": "orientation"
+  },
+  {
+    "text": "규칙 소개",
+    "label": "orientation"
+  },
+  {
+    "text": "전체 OT",
+    "label": "orientation"
+  },
+  {
+    "text": "파트 OT",
+    "label": "orientation"
+  },
+  {
+    "text": "전체 공지",
+    "label": "general"
+  },
+  {
+    "text": "일반 안내",
+    "label": "general"
+  },
+  {
+    "text": "공지사항",
+    "label": "general"
+  },
+  {
+    "text": "기타 행사",
+    "label": "general"
+  },
+  {
+    "text": "일정 안내",
+    "label": "general"
+  },
+  {
+    "text": "알림",
+    "label": "general"
+  },
+  {
+    "text": "참고사항",
+    "label": "general"
+  },
+  {
+    "text": "공유 사항",
+    "label": "general"
+  },
+  {
+    "text": "기타",
+    "label": "general"
+  },
+  {
+    "text": "미정",
+    "label": "general"
+  },
+  {
+    "text": "추후 공지",
+    "label": "general"
+  },
+  {
+    "text": "일반 모임",
+    "label": "general"
+  },
+  {
+    "text": "자유 시간",
+    "label": "general"
+  },
+  {
+    "text": "휴식 시간",
+    "label": "general"
+  },
+  {
+    "text": "자율 활동",
+    "label": "general"
+  },
+  {
+    "text": "상반기 리더 세미나",
+    "label": "leadership"
+  },
+  {
+    "text": "글로벌 임원 트레이닝",
+    "label": "leadership"
+  },
+  {
+    "text": "운영진 단합대회",
+    "label": "leadership"
+  },
+  {
+    "text": "글로벌 임원",
+    "label": "leadership"
+  },
+  {
+    "text": "하반기 리더십 세미나",
+    "label": "leadership"
+  },
+  {
+    "text": "핵심 리더 미팅",
+    "label": "leadership"
+  },
+  {
+    "text": "전체 리더십 모임",
+    "label": "leadership"
+  },
+  {
+    "text": "핵심 리더십 세미나",
+    "label": "leadership"
+  },
+  {
+    "text": "파트장 특강",
+    "label": "leadership"
+  },
+  {
+    "text": "전체 운영진 캠프",
+    "label": "leadership"
+  },
+  {
+    "text": "리더십 미팅",
+    "label": "leadership"
+  },
+  {
+    "text": "정기 운영진",
+    "label": "leadership"
+  },
+  {
+    "text": "하반기 리더",
+    "label": "leadership"
+  },
+  {
+    "text": "차세대 간부 포럼",
+    "label": "leadership"
+  },
+  {
+    "text": "신임 리더십",
+    "label": "leadership"
+  },
+  {
+    "text": "하반기 리더 교육",
+    "label": "leadership"
+  },
+  {
+    "text": "글로벌 파트장",
+    "label": "leadership"
+  },
+  {
+    "text": "정기 회장단",
+    "label": "leadership"
+  },
+  {
+    "text": "임시 간부",
+    "label": "leadership"
+  },
+  {
+    "text": "상반기 팀장",
+    "label": "leadership"
+  },
+  {
+    "text": "핵심 리더십 단합대회",
+    "label": "leadership"
+  },
+  {
+    "text": "상반기 대표",
+    "label": "leadership"
+  },
+  {
+    "text": "운영진 워크샵",
+    "label": "leadership"
+  },
+  {
+    "text": "신임 회장단 교육",
+    "label": "leadership"
+  },
+  {
+    "text": "회장단 교육",
+    "label": "leadership"
+  },
+  {
+    "text": "회장단 특강",
+    "label": "leadership"
+  },
+  {
+    "text": "파트장 워크샵",
+    "label": "leadership"
+  },
+  {
+    "text": "대표 단합대회",
+    "label": "leadership"
+  },
+  {
+    "text": "핵심 임원 단합대회",
+    "label": "leadership"
+  },
+  {
+    "text": "임시 리더십 포럼",
+    "label": "leadership"
+  },
+  {
+    "text": "리더십 포럼",
+    "label": "leadership"
+  },
+  {
+    "text": "임원 단합대회",
+    "label": "leadership"
+  },
+  {
+    "text": "차세대 리더십",
+    "label": "leadership"
+  },
+  {
+    "text": "파트장 트레이닝",
+    "label": "leadership"
+  },
+  {
+    "text": "팀장 간담회",
+    "label": "leadership"
+  },
+  {
+    "text": "리더 워크샵",
+    "label": "leadership"
+  },
+  {
+    "text": "정기 회장단 포럼",
+    "label": "leadership"
+  },
+  {
+    "text": "파트장 수련회",
+    "label": "leadership"
+  },
+  {
+    "text": "임시 간부 간담회",
+    "label": "leadership"
+  },
+  {
+    "text": "임시 팀장 보고회",
+    "label": "leadership"
+  },
+  {
+    "text": "차세대 회장단",
+    "label": "leadership"
+  },
+  {
+    "text": "신임 대표",
+    "label": "leadership"
+  },
+  {
+    "text": "팀장 단합대회",
+    "label": "leadership"
+  },
+  {
+    "text": "신임 파트장",
+    "label": "leadership"
+  },
+  {
+    "text": "상반기 임원",
+    "label": "leadership"
+  },
+  {
+    "text": "정기 파트장",
+    "label": "leadership"
+  },
+  {
+    "text": "청년 간부",
+    "label": "leadership"
+  },
+  {
+    "text": "신임 리더 보고회",
+    "label": "leadership"
+  },
+  {
+    "text": "글로벌 팀장 회의",
+    "label": "leadership"
+  },
+  {
+    "text": "대표 미팅",
+    "label": "leadership"
+  },
+  {
+    "text": "네트워크 강의",
+    "label": "study"
+  },
+  {
+    "text": "응용 운영체제 토론",
+    "label": "study"
+  },
+  {
+    "text": "주말 알고리즘",
+    "label": "study"
+  },
+  {
+    "text": "야간 네트워크 토론",
+    "label": "study"
+  },
+  {
+    "text": "클라우드 실습",
+    "label": "study"
+  },
+  {
+    "text": "데이터베이스 랩",
+    "label": "study"
+  },
+  {
+    "text": "야간 블록체인",
+    "label": "study"
+  },
+  {
+    "text": "온라인 클라우드",
+    "label": "study"
+  },
+  {
+    "text": "네트워크 챌린지",
+    "label": "study"
+  },
+  {
+    "text": "디자인 패턴 실습",
+    "label": "study"
+  },
+  {
+    "text": "주말 Swift",
+    "label": "study"
+  },
+  {
+    "text": "Swift 학습",
+    "label": "study"
+  },
+  {
+    "text": "온라인 운영체제 멘토링",
+    "label": "study"
+  },
+  {
+    "text": "응용 Python 멘토링",
+    "label": "study"
+  },
+  {
+    "text": "새벽 Docker",
+    "label": "study"
+  },
+  {
+    "text": "React 학습",
+    "label": "study"
+  },
+  {
+    "text": "데이터베이스 멘토링",
+    "label": "study"
+  },
+  {
+    "text": "머신러닝 특강",
+    "label": "study"
+  },
+  {
+    "text": "머신러닝 스터디",
+    "label": "study"
+  },
+  {
+    "text": "야간 Spring",
+    "label": "study"
+  },
+  {
+    "text": "응용 iOS 멘토링",
+    "label": "study"
+  },
+  {
+    "text": "클라우드 랩",
+    "label": "study"
+  },
+  {
+    "text": "주말 Spring",
+    "label": "study"
+  },
+  {
+    "text": "자료구조 토론",
+    "label": "study"
+  },
+  {
+    "text": "야간 알고리즘",
+    "label": "study"
+  },
+  {
+    "text": "기초 AI 강의",
+    "label": "study"
+  },
+  {
+    "text": "심화 React",
+    "label": "study"
+  },
+  {
+    "text": "Kubernetes 부트캠프",
+    "label": "study"
+  },
+  {
+    "text": "주말 Swift 특강",
+    "label": "study"
+  },
+  {
+    "text": "집중 운영체제 실습",
+    "label": "study"
+  },
+  {
+    "text": "기초 Docker",
+    "label": "study"
+  },
+  {
+    "text": "새벽 AI",
+    "label": "study"
+  },
+  {
+    "text": "집중 블록체인 세미나",
+    "label": "study"
+  },
+  {
+    "text": "Java 랩",
+    "label": "study"
+  },
+  {
+    "text": "야간 자료구조",
+    "label": "study"
+  },
+  {
+    "text": "심화 iOS 실습",
+    "label": "study"
+  },
+  {
+    "text": "야간 네트워크 스터디",
+    "label": "study"
+  },
+  {
+    "text": "Java 부트캠프",
+    "label": "study"
+  },
+  {
+    "text": "운영체제 멘토링",
+    "label": "study"
+  },
+  {
+    "text": "기초 Swift 부트캠프",
+    "label": "study"
+  },
+  {
+    "text": "집중 React",
+    "label": "study"
+  },
+  {
+    "text": "Kubernetes 강의",
+    "label": "study"
+  },
+  {
+    "text": "집중 네트워크 공부",
+    "label": "study"
+  },
+  {
+    "text": "주말 iOS 모임",
+    "label": "study"
+  },
+  {
+    "text": "응용 Python 학습",
+    "label": "study"
+  },
+  {
+    "text": "실전 클라우드",
+    "label": "study"
+  },
+  {
+    "text": "Swift 랩",
+    "label": "study"
+  },
+  {
+    "text": "집중 자료구조",
+    "label": "study"
+  },
+  {
+    "text": "집중 Java 강의",
+    "label": "study"
+  },
+  {
+    "text": "Java 강의",
+    "label": "study"
+  },
+  {
+    "text": "교통비 확인",
+    "label": "fee"
+  },
+  {
+    "text": "분기 등록비",
+    "label": "fee"
+  },
+  {
+    "text": "정기 운영비 정산",
+    "label": "fee"
+  },
+  {
+    "text": "1월 숙박비",
+    "label": "fee"
+  },
+  {
+    "text": "연간 교통비",
+    "label": "fee"
+  },
+  {
+    "text": "2월 등록비",
+    "label": "fee"
+  },
+  {
+    "text": "미납 식비 공지",
+    "label": "fee"
+  },
+  {
+    "text": "3월 활동비",
+    "label": "fee"
+  },
+  {
+    "text": "벌금 송금",
+    "label": "fee"
+  },
+  {
+    "text": "예치금 환불",
+    "label": "fee"
+  },
+  {
+    "text": "분기 회비 송금",
+    "label": "fee"
+  },
+  {
+    "text": "연간 식비",
+    "label": "fee"
+  },
+  {
+    "text": "뒷풀이비 수납",
+    "label": "fee"
+  },
+  {
+    "text": "정기 회비 확인",
+    "label": "fee"
+  },
+  {
+    "text": "등록비 환불",
+    "label": "fee"
+  },
+  {
+    "text": "교통비 결제",
+    "label": "fee"
+  },
+  {
+    "text": "연간 등록비 마감",
+    "label": "fee"
+  },
+  {
+    "text": "연간 벌금 마감",
+    "label": "fee"
+  },
+  {
+    "text": "1학기 회비 수납",
+    "label": "fee"
+  },
+  {
+    "text": "분기 교통비",
+    "label": "fee"
+  },
+  {
+    "text": "운영비 입금",
+    "label": "fee"
+  },
+  {
+    "text": "1월 교통비",
+    "label": "fee"
+  },
+  {
+    "text": "3월 교통비 환불",
+    "label": "fee"
+  },
+  {
+    "text": "뒷풀이비 결제",
+    "label": "fee"
+  },
+  {
+    "text": "등록비 송금",
+    "label": "fee"
+  },
+  {
+    "text": "1월 식비 환불",
+    "label": "fee"
+  },
+  {
+    "text": "2월 참가비",
+    "label": "fee"
+  },
+  {
+    "text": "식비 공지",
+    "label": "fee"
+  },
+  {
+    "text": "정기 벌금 송금",
+    "label": "fee"
+  },
+  {
+    "text": "연간 예치금",
+    "label": "fee"
+  },
+  {
+    "text": "추가 활동비 청구",
+    "label": "fee"
+  },
+  {
+    "text": "분기 벌금",
+    "label": "fee"
+  },
+  {
+    "text": "활동비 환불",
+    "label": "fee"
+  },
+  {
+    "text": "추가 활동비",
+    "label": "fee"
+  },
+  {
+    "text": "교통비 이체",
+    "label": "fee"
+  },
+  {
+    "text": "식비 정산",
+    "label": "fee"
+  },
+  {
+    "text": "숙박비 청구",
+    "label": "fee"
+  },
+  {
+    "text": "2월 참가비 수납",
+    "label": "fee"
+  },
+  {
+    "text": "뒷풀이비 마감",
+    "label": "fee"
+  },
+  {
+    "text": "추가 회비",
+    "label": "fee"
+  },
+  {
+    "text": "정기 등록비",
+    "label": "fee"
+  },
+  {
+    "text": "분기 뒷풀이비",
+    "label": "fee"
+  },
+  {
+    "text": "1월 숙박비 송금",
+    "label": "fee"
+  },
+  {
+    "text": "3월 식비",
+    "label": "fee"
+  },
+  {
+    "text": "숙박비 환불",
+    "label": "fee"
+  },
+  {
+    "text": "분기 회비",
+    "label": "fee"
+  },
+  {
+    "text": "활동비 청구",
+    "label": "fee"
+  },
+  {
+    "text": "1학기 보증금",
+    "label": "fee"
+  },
+  {
+    "text": "교통비 정산",
+    "label": "fee"
+  },
+  {
+    "text": "2월 운영비",
+    "label": "fee"
+  },
+  {
+    "text": "주간 전체회의 록",
+    "label": "meeting"
+  },
+  {
+    "text": "후속 주간회의",
+    "label": "meeting"
+  },
+  {
+    "text": "개발회의 록",
+    "label": "meeting"
+  },
+  {
+    "text": "분기 개발회의",
+    "label": "meeting"
+  },
+  {
+    "text": "긴급 모임 안건",
+    "label": "meeting"
+  },
+  {
+    "text": "기획회의 안건",
+    "label": "meeting"
+  },
+  {
+    "text": "월간 미팅 안건",
+    "label": "meeting"
+  },
+  {
+    "text": "최종 주간회의",
+    "label": "meeting"
+  },
+  {
+    "text": "하반기 디자인회의 결과",
+    "label": "meeting"
+  },
+  {
+    "text": "정기 운영회의 참석",
+    "label": "meeting"
+  },
+  {
+    "text": "하반기 임시총회 진행",
+    "label": "meeting"
+  },
+  {
+    "text": "정기 모임 결과",
+    "label": "meeting"
+  },
+  {
+    "text": "주간회의 준비",
+    "label": "meeting"
+  },
+  {
+    "text": "기획회의 진행",
+    "label": "meeting"
+  },
+  {
+    "text": "긴급 월간회의 점검",
+    "label": "meeting"
+  },
+  {
+    "text": "모임 점검",
+    "label": "meeting"
+  },
+  {
+    "text": "분기 미팅 안건",
+    "label": "meeting"
+  },
+  {
+    "text": "최종 임시총회 소집",
+    "label": "meeting"
+  },
+  {
+    "text": "정기 정기총회 진행",
+    "label": "meeting"
+  },
+  {
+    "text": "기획회의 참석",
+    "label": "meeting"
+  },
+  {
+    "text": "모임 후속",
+    "label": "meeting"
+  },
+  {
+    "text": "주간 회합",
+    "label": "meeting"
+  },
+  {
+    "text": "미팅 후속",
+    "label": "meeting"
+  },
+  {
+    "text": "후속 월간회의 보고",
+    "label": "meeting"
+  },
+  {
+    "text": "월간 임시총회",
+    "label": "meeting"
+  },
+  {
+    "text": "주간 모임",
+    "label": "meeting"
+  },
+  {
+    "text": "월간 정기총회",
+    "label": "meeting"
+  },
+  {
+    "text": "상반기 모임",
+    "label": "meeting"
+  },
+  {
+    "text": "월간 회의 결과",
+    "label": "meeting"
+  },
+  {
+    "text": "상반기 주간회의 록",
+    "label": "meeting"
+  },
+  {
+    "text": "주간회의 안건",
+    "label": "meeting"
+  },
+  {
+    "text": "최종 월간회의 안건",
+    "label": "meeting"
+  },
+  {
+    "text": "전체회의 후속",
+    "label": "meeting"
+  },
+  {
+    "text": "긴급 정기총회 준비",
+    "label": "meeting"
+  },
+  {
+    "text": "상반기 회의 후속",
+    "label": "meeting"
+  },
+  {
+    "text": "회합 진행",
+    "label": "meeting"
+  },
+  {
+    "text": "분기 운영회의",
+    "label": "meeting"
+  },
+  {
+    "text": "최종 모임 록",
+    "label": "meeting"
+  },
+  {
+    "text": "정기총회 준비",
+    "label": "meeting"
+  },
+  {
+    "text": "후속 월간회의 후속",
+    "label": "meeting"
+  },
+  {
+    "text": "개발회의 안건",
+    "label": "meeting"
+  },
+  {
+    "text": "모임 안건",
+    "label": "meeting"
+  },
+  {
+    "text": "최종 개발회의",
+    "label": "meeting"
+  },
+  {
+    "text": "상반기 정기총회",
+    "label": "meeting"
+  },
+  {
+    "text": "상반기 미팅",
+    "label": "meeting"
+  },
+  {
+    "text": "월간회의 진행",
+    "label": "meeting"
+  },
+  {
+    "text": "사전 전체회의",
+    "label": "meeting"
+  },
+  {
+    "text": "사전 정기총회",
+    "label": "meeting"
+  },
+  {
+    "text": "긴급 정기총회",
+    "label": "meeting"
+  },
+  {
+    "text": "기획회의 록",
+    "label": "meeting"
+  },
+  {
+    "text": "불금 소개팅",
+    "label": "networking"
+  },
+  {
+    "text": "만남 디너",
+    "label": "networking"
+  },
+  {
+    "text": "직무별 회식 이벤트",
+    "label": "networking"
+  },
+  {
+    "text": "전체 만남",
+    "label": "networking"
+  },
+  {
+    "text": "동문 네트워킹 파티",
+    "label": "networking"
+  },
+  {
+    "text": "파티 나이트",
+    "label": "networking"
+  },
+  {
+    "text": "동문 네트워킹 타임",
+    "label": "networking"
+  },
+  {
+    "text": "선후배 모임 이벤트",
+    "label": "networking"
+  },
+  {
+    "text": "직무별 만남",
+    "label": "networking"
+  },
+  {
+    "text": "랜덤 교류 매칭",
+    "label": "networking"
+  },
+  {
+    "text": "지역별 뒷풀이 런치",
+    "label": "networking"
+  },
+  {
+    "text": "신입 네트워킹 이벤트",
+    "label": "networking"
+  },
+  {
+    "text": "주말 교류 런치",
+    "label": "networking"
+  },
+  {
+    "text": "신입 뒷풀이 타임",
+    "label": "networking"
+  },
+  {
+    "text": "소개팅 파티",
+    "label": "networking"
+  },
+  {
+    "text": "주말 친목",
+    "label": "networking"
+  },
+  {
+    "text": "모임 파티",
+    "label": "networking"
+  },
+  {
+    "text": "모임 런치",
+    "label": "networking"
+  },
+  {
+    "text": "선후배 소개팅 런치",
+    "label": "networking"
+  },
+  {
+    "text": "선후배 네트워킹 세션",
+    "label": "networking"
+  },
+  {
+    "text": "친목 파티",
+    "label": "networking"
+  },
+  {
+    "text": "교류 디너",
+    "label": "networking"
+  },
+  {
+    "text": "선후배 번개",
+    "label": "networking"
+  },
+  {
+    "text": "친목 이벤트",
+    "label": "networking"
+  },
+  {
+    "text": "불금 파티 파티",
+    "label": "networking"
+  },
+  {
+    "text": "동문 교류",
+    "label": "networking"
+  },
+  {
+    "text": "심야 소개팅 세션",
+    "label": "networking"
+  },
+  {
+    "text": "심야 커피챗 행사",
+    "label": "networking"
+  },
+  {
+    "text": "번개 행사",
+    "label": "networking"
+  },
+  {
+    "text": "동문 네트워킹",
+    "label": "networking"
+  },
+  {
+    "text": "선후배 뒷풀이",
+    "label": "networking"
+  },
+  {
+    "text": "불금 네트워킹 나이트",
+    "label": "networking"
+  },
+  {
+    "text": "동문 회식",
+    "label": "networking"
+  },
+  {
+    "text": "주말 파티",
+    "label": "networking"
+  },
+  {
+    "text": "지역별 파티 데이",
+    "label": "networking"
+  },
+  {
+    "text": "모임 나이트",
+    "label": "networking"
+  },
+  {
+    "text": "랜덤 친목",
+    "label": "networking"
+  },
+  {
+    "text": "뒷풀이 나이트",
+    "label": "networking"
+  },
+  {
+    "text": "지역별 뒷풀이",
+    "label": "networking"
+  },
+  {
+    "text": "불금 교류",
+    "label": "networking"
+  },
+  {
+    "text": "회식 데이",
+    "label": "networking"
+  },
+  {
+    "text": "뒷풀이 타임",
+    "label": "networking"
+  },
+  {
+    "text": "동문 교류 행사",
+    "label": "networking"
+  },
+  {
+    "text": "심야 커피챗",
+    "label": "networking"
+  },
+  {
+    "text": "랜덤 소개팅 행사",
+    "label": "networking"
+  },
+  {
+    "text": "직무별 회식 나이트",
+    "label": "networking"
+  },
+  {
+    "text": "주말 모임 세션",
+    "label": "networking"
+  },
+  {
+    "text": "주말 회식 타임",
+    "label": "networking"
+  },
+  {
+    "text": "전체 교류",
+    "label": "networking"
+  },
+  {
+    "text": "지역별 커피챗 나이트",
+    "label": "networking"
+  },
+  {
+    "text": "챌린지 시상",
+    "label": "hackathon"
+  },
+  {
+    "text": "공모전 데모",
+    "label": "hackathon"
+  },
+  {
+    "text": "24시간 창업대회 준비",
+    "label": "hackathon"
+  },
+  {
+    "text": "무박2일 공모전 시상",
+    "label": "hackathon"
+  },
+  {
+    "text": "전국 아이디어톤 참가",
+    "label": "hackathon"
+  },
+  {
+    "text": "메이커톤 준비",
+    "label": "hackathon"
+  },
+  {
+    "text": "전국 챌린지 개발",
+    "label": "hackathon"
+  },
+  {
+    "text": "글로벌 아이디어톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "공모전 멘토링",
+    "label": "hackathon"
+  },
+  {
+    "text": "아이디어톤 멘토링",
+    "label": "hackathon"
+  },
+  {
+    "text": "아이디어톤 시상",
+    "label": "hackathon"
+  },
+  {
+    "text": "온라인 챌린지",
+    "label": "hackathon"
+  },
+  {
+    "text": "교내 챌린지",
+    "label": "hackathon"
+  },
+  {
+    "text": "24시간 메이커톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "창업대회 팀빌딩",
+    "label": "hackathon"
+  },
+  {
+    "text": "48시간 창업대회",
+    "label": "hackathon"
+  },
+  {
+    "text": "오프라인 챌린지",
+    "label": "hackathon"
+  },
+  {
+    "text": "전국 데이터톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "해커톤 팀빌딩",
+    "label": "hackathon"
+  },
+  {
+    "text": "연합 게임잼",
+    "label": "hackathon"
+  },
+  {
+    "text": "전국 챌린지",
+    "label": "hackathon"
+  },
+  {
+    "text": "48시간 챌린지 데모",
+    "label": "hackathon"
+  },
+  {
+    "text": "교내 공모전",
+    "label": "hackathon"
+  },
+  {
+    "text": "24시간 아이디어톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "48시간 공모전",
+    "label": "hackathon"
+  },
+  {
+    "text": "게임잼 개발",
+    "label": "hackathon"
+  },
+  {
+    "text": "창업대회 시상",
+    "label": "hackathon"
+  },
+  {
+    "text": "메이커톤 심사",
+    "label": "hackathon"
+  },
+  {
+    "text": "챌린지 준비",
+    "label": "hackathon"
+  },
+  {
+    "text": "게임잼 시상",
+    "label": "hackathon"
+  },
+  {
+    "text": "챌린지 기획",
+    "label": "hackathon"
+  },
+  {
+    "text": "창업대회 준비",
+    "label": "hackathon"
+  },
+  {
+    "text": "온라인 창업대회",
+    "label": "hackathon"
+  },
+  {
+    "text": "온라인 해커톤 멘토링",
+    "label": "hackathon"
+  },
+  {
+    "text": "연합 챌린지 데모",
+    "label": "hackathon"
+  },
+  {
+    "text": "챌린지 심사",
+    "label": "hackathon"
+  },
+  {
+    "text": "무박2일 아이디어톤 데모",
+    "label": "hackathon"
+  },
+  {
+    "text": "기업 메이커톤 멘토링",
+    "label": "hackathon"
+  },
+  {
+    "text": "창업대회 기획",
+    "label": "hackathon"
+  },
+  {
+    "text": "24시간 창업대회",
+    "label": "hackathon"
+  },
+  {
+    "text": "연합 메이커톤 준비",
+    "label": "hackathon"
+  },
+  {
+    "text": "전국 해커톤 준비",
+    "label": "hackathon"
+  },
+  {
+    "text": "글로벌 창업대회",
+    "label": "hackathon"
+  },
+  {
+    "text": "전국 메이커톤 멘토링",
+    "label": "hackathon"
+  },
+  {
+    "text": "무박2일 해커톤",
+    "label": "hackathon"
+  },
+  {
+    "text": "교내 창업대회 멘토링",
+    "label": "hackathon"
+  },
+  {
+    "text": "24시간 챌린지",
+    "label": "hackathon"
+  },
+  {
+    "text": "무박2일 공모전 준비",
+    "label": "hackathon"
+  },
+  {
+    "text": "챌린지 참가",
+    "label": "hackathon"
+  },
+  {
+    "text": "글로벌 데이터톤 참가",
+    "label": "hackathon"
+  },
+  {
+    "text": "마이그레이션 웹 개발",
+    "label": "project"
+  },
+  {
+    "text": "개인 서비스 테스트",
+    "label": "project"
+  },
+  {
+    "text": "서비스 문서화",
+    "label": "project"
+  },
+  {
+    "text": "고도화 앱",
+    "label": "project"
+  },
+  {
+    "text": "마이그레이션 서비스",
+    "label": "project"
+  },
+  {
+    "text": "앱 런칭",
+    "label": "project"
+  },
+  {
+    "text": "장기 캡스톤",
+    "label": "project"
+  },
+  {
+    "text": "마이그레이션 앱",
+    "label": "project"
+  },
+  {
+    "text": "장기 캡스톤 테스트",
+    "label": "project"
+  },
+  {
+    "text": "단기 토이프로젝트 개발",
+    "label": "project"
+  },
+  {
+    "text": "리팩토링 캡스톤",
+    "label": "project"
+  },
+  {
+    "text": "개인 서비스 설계",
+    "label": "project"
+  },
+  {
+    "text": "졸업작품 중간점검",
+    "label": "project"
+  },
+  {
+    "text": "유지보수 토이프로젝트 피드백",
+    "label": "project"
+  },
+  {
+    "text": "단기 졸업작품",
+    "label": "project"
+  },
+  {
+    "text": "고도화 사이드프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "고도화 사이드프로젝트 중간점검",
+    "label": "project"
+  },
+  {
+    "text": "캡스톤 중간점검",
+    "label": "project"
+  },
+  {
+    "text": "프로젝트 문서화",
+    "label": "project"
+  },
+  {
+    "text": "웹 테스트",
+    "label": "project"
+  },
+  {
+    "text": "신규 프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "서비스 테스트",
+    "label": "project"
+  },
+  {
+    "text": "단기 프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "포트폴리오 최종제출",
+    "label": "project"
+  },
+  {
+    "text": "토이프로젝트 디자인",
+    "label": "project"
+  },
+  {
+    "text": "FS Day",
+    "label": "project"
+  },
+  {
+    "text": "Sprint Review Day",
+    "label": "project"
+  },
+  {
+    "text": "유지보수 서비스 디자인",
+    "label": "project"
+  },
+  {
+    "text": "토이프로젝트 설계",
+    "label": "project"
+  },
+  {
+    "text": "개인 사이드프로젝트 중간점검",
+    "label": "project"
+  },
+  {
+    "text": "마이그레이션 사이드프로젝트 피드백",
+    "label": "project"
+  },
+  {
+    "text": "고도화 졸업작품 마감",
+    "label": "project"
+  },
+  {
+    "text": "신규 앱",
+    "label": "project"
+  },
+  {
+    "text": "단기 포트폴리오",
+    "label": "project"
+  },
+  {
+    "text": "앱 설계",
+    "label": "project"
+  },
+  {
+    "text": "서비스 마감",
+    "label": "project"
+  },
+  {
+    "text": "캡스톤 문서화",
+    "label": "project"
+  },
+  {
+    "text": "장기 포트폴리오",
+    "label": "project"
+  },
+  {
+    "text": "포트폴리오 피드백",
+    "label": "project"
+  },
+  {
+    "text": "마이그레이션 사이드프로젝트 마감",
+    "label": "project"
+  },
+  {
+    "text": "웹 디자인",
+    "label": "project"
+  },
+  {
+    "text": "장기 캡스톤 문서화",
+    "label": "project"
+  },
+  {
+    "text": "팀 앱",
+    "label": "project"
+  },
+  {
+    "text": "사이드프로젝트 문서화",
+    "label": "project"
+  },
+  {
+    "text": "협업 캡스톤",
+    "label": "project"
+  },
+  {
+    "text": "개인 앱",
+    "label": "project"
+  },
+  {
+    "text": "개인 토이프로젝트 런칭",
+    "label": "project"
+  },
+  {
+    "text": "마이그레이션 웹 중간점검",
+    "label": "project"
+  },
+  {
+    "text": "웹 설계",
+    "label": "project"
+  },
+  {
+    "text": "마이그레이션 프로젝트",
+    "label": "project"
+  },
+  {
+    "text": "팀 캡스톤 디자인",
+    "label": "project"
+  },
+  {
+    "text": "유지보수 앱 런칭",
+    "label": "project"
+  },
+  {
+    "text": "데모 영상",
+    "label": "presentation"
+  },
+  {
+    "text": "중간 설명회 영상",
+    "label": "presentation"
+  },
+  {
+    "text": "중간 데모",
+    "label": "presentation"
+  },
+  {
+    "text": "시연 연습",
+    "label": "presentation"
+  },
+  {
+    "text": "논문 강연 질의응답",
+    "label": "presentation"
+  },
+  {
+    "text": "기술 PT 자료",
+    "label": "presentation"
+  },
+  {
+    "text": "피칭 질의응답",
+    "label": "presentation"
+  },
+  {
+    "text": "최종 PT 자료",
+    "label": "presentation"
+  },
+  {
+    "text": "결과 세미나",
+    "label": "presentation"
+  },
+  {
+    "text": "연구 설명회 피드백",
+    "label": "presentation"
+  },
+  {
+    "text": "논문 데모",
+    "label": "presentation"
+  },
+  {
+    "text": "연구 PT 평가",
+    "label": "presentation"
+  },
+  {
+    "text": "연구 데모 피드백",
+    "label": "presentation"
+  },
+  {
+    "text": "성과 발표 리허설",
+    "label": "presentation"
+  },
+  {
+    "text": "프레젠테이션 피드백",
+    "label": "presentation"
+  },
+  {
+    "text": "논문 피칭",
+    "label": "presentation"
+  },
+  {
+    "text": "중간 시연",
+    "label": "presentation"
+  },
+  {
+    "text": "논문 데모 평가",
+    "label": "presentation"
+  },
+  {
+    "text": "사업 데모 질의응답",
+    "label": "presentation"
+  },
+  {
+    "text": "중간 프레젠테이션 리허설",
+    "label": "presentation"
+  },
+  {
+    "text": "프레젠테이션 연습",
+    "label": "presentation"
+  },
+  {
+    "text": "설명회 리허설",
+    "label": "presentation"
+  },
+  {
+    "text": "논문 프레젠테이션 준비",
+    "label": "presentation"
+  },
+  {
+    "text": "프레젠테이션 평가",
+    "label": "presentation"
+  },
+  {
+    "text": "중간 보고회 평가",
+    "label": "presentation"
+  },
+  {
+    "text": "결과 PT",
+    "label": "presentation"
+  },
+  {
+    "text": "연구 프레젠테이션 질의응답",
+    "label": "presentation"
+  },
+  {
+    "text": "피칭 리허설",
+    "label": "presentation"
+  },
+  {
+    "text": "연구 PT 준비",
+    "label": "presentation"
+  },
+  {
+    "text": "사업 시연 영상",
+    "label": "presentation"
+  },
+  {
+    "text": "사업 발표 연습",
+    "label": "presentation"
+  },
+  {
+    "text": "성과 강연",
+    "label": "presentation"
+  },
+  {
+    "text": "중간 PT 평가",
+    "label": "presentation"
+  },
+  {
+    "text": "논문 데모 질의응답",
+    "label": "presentation"
+  },
+  {
+    "text": "기술 설명회",
+    "label": "presentation"
+  },
+  {
+    "text": "결과 프레젠테이션",
+    "label": "presentation"
+  },
+  {
+    "text": "투자 설명회",
+    "label": "presentation"
+  },
+  {
+    "text": "설명회 심사",
+    "label": "presentation"
+  },
+  {
+    "text": "투자 데모",
+    "label": "presentation"
+  },
+  {
+    "text": "발표 연습",
+    "label": "presentation"
+  },
+  {
+    "text": "데모 피드백",
+    "label": "presentation"
+  },
+  {
+    "text": "보고회 심사",
+    "label": "presentation"
+  },
+  {
+    "text": "제안 PT",
+    "label": "presentation"
+  },
+  {
+    "text": "사업 데모 연습",
+    "label": "presentation"
+  },
+  {
+    "text": "결과 시연 심사",
+    "label": "presentation"
+  },
+  {
+    "text": "제안 발표",
+    "label": "presentation"
+  },
+  {
+    "text": "프레젠테이션 리허설",
+    "label": "presentation"
+  },
+  {
+    "text": "사업 세미나 리허설",
+    "label": "presentation"
+  },
+  {
+    "text": "최종 시연 피드백",
+    "label": "presentation"
+  },
+  {
+    "text": "논문 설명회",
+    "label": "presentation"
+  },
+  {
+    "text": "연합 체육대회 예약",
+    "label": "workshop"
+  },
+  {
+    "text": "추계 소풍 사전답사",
+    "label": "workshop"
+  },
+  {
+    "text": "여행 사전답사",
+    "label": "workshop"
+  },
+  {
+    "text": "소풍 사진",
+    "label": "workshop"
+  },
+  {
+    "text": "수련회 공지",
+    "label": "workshop"
+  },
+  {
+    "text": "체육대회 후기",
+    "label": "workshop"
+  },
+  {
+    "text": "동계 수련회",
+    "label": "workshop"
+  },
+  {
+    "text": "부서 엠티",
+    "label": "workshop"
+  },
+  {
+    "text": "소풍 프로그램",
+    "label": "workshop"
+  },
+  {
+    "text": "신입 단합대회 사전답사",
+    "label": "workshop"
+  },
+  {
+    "text": "부서 체육대회 장보기",
+    "label": "workshop"
+  },
+  {
+    "text": "전사 등반대회 사전답사",
+    "label": "workshop"
+  },
+  {
+    "text": "엠티 예약",
+    "label": "workshop"
+  },
+  {
+    "text": "춘계 등반대회",
+    "label": "workshop"
+  },
+  {
+    "text": "팀 수련회",
+    "label": "workshop"
+  },
+  {
+    "text": "엠티 프로그램",
+    "label": "workshop"
+  },
+  {
+    "text": "팀 야유회 계획",
+    "label": "workshop"
+  },
+  {
+    "text": "부서 수련회 사전답사",
+    "label": "workshop"
+  },
+  {
+    "text": "동계 엠티 출발",
+    "label": "workshop"
+  },
+  {
+    "text": "동계 소풍 공지",
+    "label": "workshop"
+  },
+  {
+    "text": "전사 수련회",
+    "label": "workshop"
+  },
+  {
+    "text": "체육대회 예약",
+    "label": "workshop"
+  },
+  {
+    "text": "추계 소풍",
+    "label": "workshop"
+  },
+  {
+    "text": "동계 워크샵 계획",
+    "label": "workshop"
+  },
+  {
+    "text": "여행 준비",
+    "label": "workshop"
+  },
+  {
+    "text": "춘계 등반대회 후기",
+    "label": "workshop"
+  },
+  {
+    "text": "소풍 계획",
+    "label": "workshop"
+  },
+  {
+    "text": "추계 워크샵 프로그램",
+    "label": "workshop"
+  },
+  {
+    "text": "전사 체육대회 프로그램",
+    "label": "workshop"
+  },
+  {
+    "text": "졸업 야유회",
+    "label": "workshop"
+  },
+  {
+    "text": "MT 장보기",
+    "label": "workshop"
+  },
+  {
+    "text": "연합 MT 준비",
+    "label": "workshop"
+  },
+  {
+    "text": "전사 야유회 예약",
+    "label": "workshop"
+  },
+  {
+    "text": "등반대회 예약",
+    "label": "workshop"
+  },
+  {
+    "text": "신입 엠티",
+    "label": "workshop"
+  },
+  {
+    "text": "전사 소풍",
+    "label": "workshop"
+  },
+  {
+    "text": "연합 엠티 프로그램",
+    "label": "workshop"
+  },
+  {
+    "text": "신입 수련회",
+    "label": "workshop"
+  },
+  {
+    "text": "하계 여행 사전답사",
+    "label": "workshop"
+  },
+  {
+    "text": "연합 엠티",
+    "label": "workshop"
+  },
+  {
+    "text": "춘계 소풍 후기",
+    "label": "workshop"
+  },
+  {
+    "text": "소풍 예약",
+    "label": "workshop"
+  },
+  {
+    "text": "하계 MT 예약",
+    "label": "workshop"
+  },
+  {
+    "text": "졸업 단합대회 사진",
+    "label": "workshop"
+  },
+  {
+    "text": "추계 워크샵 예약",
+    "label": "workshop"
+  },
+  {
+    "text": "연합 여행 사전답사",
+    "label": "workshop"
+  },
+  {
+    "text": "단합대회 출발",
+    "label": "workshop"
+  },
+  {
+    "text": "연합 워크샵",
+    "label": "workshop"
+  },
+  {
+    "text": "추계 소풍 후기",
+    "label": "workshop"
+  },
+  {
+    "text": "단합대회 준비",
+    "label": "workshop"
+  },
+  {
+    "text": "회고 취합",
+    "label": "review"
+  },
+  {
+    "text": "분기 피드백",
+    "label": "review"
+  },
+  {
+    "text": "팀 반성 발표",
+    "label": "review"
+  },
+  {
+    "text": "월간 개선",
+    "label": "review"
+  },
+  {
+    "text": "코드 회고 회의",
+    "label": "review"
+  },
+  {
+    "text": "코드 점검 작성",
+    "label": "review"
+  },
+  {
+    "text": "리뷰 발표",
+    "label": "review"
+  },
+  {
+    "text": "분기 피드백 모임",
+    "label": "review"
+  },
+  {
+    "text": "일간 리뷰 세션",
+    "label": "review"
+  },
+  {
+    "text": "진단 모임",
+    "label": "review"
+  },
+  {
+    "text": "팀 평가",
+    "label": "review"
+  },
+  {
+    "text": "동료 개선",
+    "label": "review"
+  },
+  {
+    "text": "분기 개선",
+    "label": "review"
+  },
+  {
+    "text": "회고 토론",
+    "label": "review"
+  },
+  {
+    "text": "프로젝트 개선",
+    "label": "review"
+  },
+  {
+    "text": "개인 리뷰 제출",
+    "label": "review"
+  },
+  {
+    "text": "분석 토론",
+    "label": "review"
+  },
+  {
+    "text": "동료 진단",
+    "label": "review"
+  },
+  {
+    "text": "일간 반성",
+    "label": "review"
+  },
+  {
+    "text": "팀 반성",
+    "label": "review"
+  },
+  {
+    "text": "동료 회고 토론",
+    "label": "review"
+  },
+  {
+    "text": "동료 리뷰",
+    "label": "review"
+  },
+  {
+    "text": "일간 진단 회의",
+    "label": "review"
+  },
+  {
+    "text": "반성 작성",
+    "label": "review"
+  },
+  {
+    "text": "리뷰 회의",
+    "label": "review"
+  },
+  {
+    "text": "월간 분석",
+    "label": "review"
+  },
+  {
+    "text": "동료 피드백",
+    "label": "review"
+  },
+  {
+    "text": "분기 평가 공유",
+    "label": "review"
+  },
+  {
+    "text": "진단 토론",
+    "label": "review"
+  },
+  {
+    "text": "월간 진단 제출",
+    "label": "review"
+  },
+  {
+    "text": "팀 리뷰",
+    "label": "review"
+  },
+  {
+    "text": "피드백 취합",
+    "label": "review"
+  },
+  {
+    "text": "분기 분석",
+    "label": "review"
+  },
+  {
+    "text": "피드백 모임",
+    "label": "review"
+  },
+  {
+    "text": "월간 리뷰 세션",
+    "label": "review"
+  },
+  {
+    "text": "반성 공유",
+    "label": "review"
+  },
+  {
+    "text": "일간 평가",
+    "label": "review"
+  },
+  {
+    "text": "분석 취합",
+    "label": "review"
+  },
+  {
+    "text": "성찰 회의",
+    "label": "review"
+  },
+  {
+    "text": "개선 제출",
+    "label": "review"
+  },
+  {
+    "text": "팀 회고 모임",
+    "label": "review"
+  },
+  {
+    "text": "분기 회고",
+    "label": "review"
+  },
+  {
+    "text": "리뷰 모임",
+    "label": "review"
+  },
+  {
+    "text": "일간 평가 공유",
+    "label": "review"
+  },
+  {
+    "text": "리뷰 토론",
+    "label": "review"
+  },
+  {
+    "text": "개인 반성",
+    "label": "review"
+  },
+  {
+    "text": "월간 피드백",
+    "label": "review"
+  },
+  {
+    "text": "피드백 회의",
+    "label": "review"
+  },
+  {
+    "text": "스프린트 회고 취합",
+    "label": "review"
+  },
+  {
+    "text": "코드 분석 공유",
+    "label": "review"
+  },
+  {
+    "text": "졸업 세리머니 진행",
+    "label": "celebration"
+  },
+  {
+    "text": "기념일 마무리",
+    "label": "celebration"
+  },
+  {
+    "text": "페스티벌 진행",
+    "label": "celebration"
+  },
+  {
+    "text": "승진 회식",
+    "label": "celebration"
+  },
+  {
+    "text": "페스티벌 참석",
+    "label": "celebration"
+  },
+  {
+    "text": "합격 세리머니",
+    "label": "celebration"
+  },
+  {
+    "text": "승진 세리머니 수상",
+    "label": "celebration"
+  },
+  {
+    "text": "완주 파티 참석",
+    "label": "celebration"
+  },
+  {
+    "text": "축제 기념",
+    "label": "celebration"
+  },
+  {
+    "text": "행사 축하",
+    "label": "celebration"
+  },
+  {
+    "text": "창립 모임 기념",
+    "label": "celebration"
+  },
+  {
+    "text": "입학 파티",
+    "label": "celebration"
+  },
+  {
+    "text": "세리머니 참석",
+    "label": "celebration"
+  },
+  {
+    "text": "런칭 잔치",
+    "label": "celebration"
+  },
+  {
+    "text": "입학 세리머니",
+    "label": "celebration"
+  },
+  {
+    "text": "완주 세리머니 개최",
+    "label": "celebration"
+  },
+  {
+    "text": "이벤트 마무리",
+    "label": "celebration"
+  },
+  {
+    "text": "페스티벌 수상",
+    "label": "celebration"
+  },
+  {
+    "text": "런칭 세리머니 초대",
+    "label": "celebration"
+  },
+  {
+    "text": "모임 진행",
+    "label": "celebration"
+  },
+  {
+    "text": "우승 세리머니",
+    "label": "celebration"
+  },
+  {
+    "text": "생일 기념일",
+    "label": "celebration"
+  },
+  {
+    "text": "개업 모임 준비",
+    "label": "celebration"
+  },
+  {
+    "text": "합격 세리머니 개최",
+    "label": "celebration"
+  },
+  {
+    "text": "축제 개최",
+    "label": "celebration"
+  },
+  {
+    "text": "완주 잔치",
+    "label": "celebration"
+  },
+  {
+    "text": "회식 축하",
+    "label": "celebration"
+  },
+  {
+    "text": "생일 세리머니 진행",
+    "label": "celebration"
+  },
+  {
+    "text": "승진 잔치",
+    "label": "celebration"
+  },
+  {
+    "text": "입학 파티 개최",
+    "label": "celebration"
+  },
+  {
+    "text": "승진 잔치 수상",
+    "label": "celebration"
+  },
+  {
+    "text": "창립 세리머니",
+    "label": "celebration"
+  },
+  {
+    "text": "회식 기념",
+    "label": "celebration"
+  },
+  {
+    "text": "세리머니 초대",
+    "label": "celebration"
+  },
+  {
+    "text": "파티 수상",
+    "label": "celebration"
+  },
+  {
+    "text": "모임 축하",
+    "label": "celebration"
+  },
+  {
+    "text": "승진 페스티벌",
+    "label": "celebration"
+  },
+  {
+    "text": "졸업 페스티벌",
+    "label": "celebration"
+  },
+  {
+    "text": "승진 행사",
+    "label": "celebration"
+  },
+  {
+    "text": "승진 모임 초대",
+    "label": "celebration"
+  },
+  {
+    "text": "개업 페스티벌",
+    "label": "celebration"
+  },
+  {
+    "text": "행사 진행",
+    "label": "celebration"
+  },
+  {
+    "text": "우승 세리머니 개최",
+    "label": "celebration"
+  },
+  {
+    "text": "우승 세리머니 기획",
+    "label": "celebration"
+  },
+  {
+    "text": "생일 세리머니 기획",
+    "label": "celebration"
+  },
+  {
+    "text": "합격 이벤트",
+    "label": "celebration"
+  },
+  {
+    "text": "잔치 진행",
+    "label": "celebration"
+  },
+  {
+    "text": "승진 모임",
+    "label": "celebration"
+  },
+  {
+    "text": "창립 축제 축하",
+    "label": "celebration"
+  },
+  {
+    "text": "모임 참석",
+    "label": "celebration"
+  },
+  {
+    "text": "전체 발대식",
+    "label": "orientation"
+  },
+  {
+    "text": "안내교육 준비",
+    "label": "orientation"
+  },
+  {
+    "text": "발대식 준비",
+    "label": "orientation"
+  },
+  {
+    "text": "입학식 자료",
+    "label": "orientation"
+  },
+  {
+    "text": "신입사원 안내교육 준비",
+    "label": "orientation"
+  },
+  {
+    "text": "입학식 공지",
+    "label": "orientation"
+  },
+  {
+    "text": "기수별 안내교육",
+    "label": "orientation"
+  },
+  {
+    "text": "온보딩 진행",
+    "label": "orientation"
+  },
+  {
+    "text": "입학식 신청",
+    "label": "orientation"
+  },
+  {
+    "text": "안내교육 참석",
+    "label": "orientation"
+  },
+  {
+    "text": "새내기 발대식 접수",
+    "label": "orientation"
+  },
+  {
+    "text": "신입생 입학식 등록",
+    "label": "orientation"
+  },
+  {
+    "text": "신입생 온보딩 일정",
+    "label": "orientation"
+  },
+  {
+    "text": "발대식 일정",
+    "label": "orientation"
+  },
+  {
+    "text": "기수별 안내교육 등록",
+    "label": "orientation"
+  },
+  {
+    "text": "OT 공지",
+    "label": "orientation"
+  },
+  {
+    "text": "신입생 입학식 일정",
+    "label": "orientation"
+  },
+  {
+    "text": "새내기 입학식 접수",
+    "label": "orientation"
+  },
+  {
+    "text": "환영회 등록",
+    "label": "orientation"
+  },
+  {
+    "text": "환영회 접수",
+    "label": "orientation"
+  },
+  {
+    "text": "기수별 오리엔테이션",
+    "label": "orientation"
+  },
+  {
+    "text": "환영회 일정",
+    "label": "orientation"
+  },
+  {
+    "text": "신입사원 입학식 공지",
+    "label": "orientation"
+  },
+  {
+    "text": "신입사원 입문과정 접수",
+    "label": "orientation"
+  },
+  {
+    "text": "전체 설명회 신청",
+    "label": "orientation"
+  },
+  {
+    "text": "신규 환영회 일정",
+    "label": "orientation"
+  },
+  {
+    "text": "하반기 오리엔테이션",
+    "label": "orientation"
+  },
+  {
+    "text": "부서별 안내교육 자료",
+    "label": "orientation"
+  },
+  {
+    "text": "신입사원 발대식 준비",
+    "label": "orientation"
+  },
+  {
+    "text": "팀별 발대식 자료",
+    "label": "orientation"
+  },
+  {
+    "text": "기수별 안내교육 신청",
+    "label": "orientation"
+  },
+  {
+    "text": "신입사원 OT 접수",
+    "label": "orientation"
+  },
+  {
+    "text": "팀별 오리엔테이션 공지",
+    "label": "orientation"
+  },
+  {
+    "text": "새내기 입문과정",
+    "label": "orientation"
+  },
+  {
+    "text": "부서별 온보딩",
+    "label": "orientation"
+  },
+  {
+    "text": "온보딩 등록",
+    "label": "orientation"
+  },
+  {
+    "text": "안내교육 일정",
+    "label": "orientation"
+  },
+  {
+    "text": "신입사원 OT 공지",
+    "label": "orientation"
+  },
+  {
+    "text": "신입사원 입문과정",
+    "label": "orientation"
+  },
+  {
+    "text": "새내기 오리엔테이션 장소",
+    "label": "orientation"
+  },
+  {
+    "text": "신규 오리엔테이션",
+    "label": "orientation"
+  },
+  {
+    "text": "발대식 등록",
+    "label": "orientation"
+  },
+  {
+    "text": "팀별 오리엔테이션 장소",
+    "label": "orientation"
+  },
+  {
+    "text": "기수별 발대식",
+    "label": "orientation"
+  },
+  {
+    "text": "온보딩 자료",
+    "label": "orientation"
+  },
+  {
+    "text": "부서별 입문과정",
+    "label": "orientation"
+  },
+  {
+    "text": "오리엔테이션 장소",
+    "label": "orientation"
+  },
+  {
+    "text": "신규 오리엔테이션 접수",
+    "label": "orientation"
+  },
+  {
+    "text": "OT 진행",
+    "label": "orientation"
+  },
+  {
+    "text": "하반기 OT",
+    "label": "orientation"
+  },
+  {
+    "text": "공유 업로드",
+    "label": "general"
+  },
+  {
+    "text": "사항 수정",
+    "label": "general"
+  },
+  {
+    "text": "뉴스 수정",
+    "label": "general"
+  },
+  {
+    "text": "전체 공지 필독",
+    "label": "general"
+  },
+  {
+    "text": "채용 공유 문의",
+    "label": "general"
+  },
+  {
+    "text": "사항 확인",
+    "label": "general"
+  },
+  {
+    "text": "공지 배포",
+    "label": "general"
+  },
+  {
+    "text": "전체 게시",
+    "label": "general"
+  },
+  {
+    "text": "일반 알림",
+    "label": "general"
+  },
+  {
+    "text": "공유 확인",
+    "label": "general"
+  },
+  {
+    "text": "전체 공지 배포",
+    "label": "general"
+  },
+  {
+    "text": "전체 공지 정정",
+    "label": "general"
+  },
+  {
+    "text": "소식 문의",
+    "label": "general"
+  },
+  {
+    "text": "모집 소식",
+    "label": "general"
+  },
+  {
+    "text": "채용 소식 사항",
+    "label": "general"
+  },
+  {
+    "text": "공지 사항",
+    "label": "general"
+  },
+  {
+    "text": "기타 공유",
+    "label": "general"
+  },
+  {
+    "text": "임시 사항 추가",
+    "label": "general"
+  },
+  {
+    "text": "기타 전달 확인",
+    "label": "general"
+  },
+  {
+    "text": "사항 사항",
+    "label": "general"
+  },
+  {
+    "text": "휴무 알림 필독",
+    "label": "general"
+  },
+  {
+    "text": "기타 안내 수정",
+    "label": "general"
+  },
+  {
+    "text": "휴무 게시 삭제",
+    "label": "general"
+  },
+  {
+    "text": "기타 게시 필독",
+    "label": "general"
+  },
+  {
+    "text": "일반 공지",
+    "label": "general"
+  },
+  {
+    "text": "임시 소식",
+    "label": "general"
+  },
+  {
+    "text": "일반 뉴스 수정",
+    "label": "general"
+  },
+  {
+    "text": "긴급 안내",
+    "label": "general"
+  },
+  {
+    "text": "공지 정정",
+    "label": "general"
+  },
+  {
+    "text": "긴급 알림 사항",
+    "label": "general"
+  },
+  {
+    "text": "뉴스 정정",
+    "label": "general"
+  },
+  {
+    "text": "일반 참고",
+    "label": "general"
+  },
+  {
+    "text": "임시 게시 삭제",
+    "label": "general"
+  },
+  {
+    "text": "상시 뉴스",
+    "label": "general"
+  },
+  {
+    "text": "중요 사항 삭제",
+    "label": "general"
+  },
+  {
+    "text": "일반 게시 수정",
+    "label": "general"
+  },
+  {
+    "text": "휴무 뉴스 수정",
+    "label": "general"
+  },
+  {
+    "text": "모집 게시 추가",
+    "label": "general"
+  },
+  {
+    "text": "상시 참고",
+    "label": "general"
+  },
+  {
+    "text": "상시 공유 업로드",
+    "label": "general"
+  },
+  {
+    "text": "긴급 안내 추가",
+    "label": "general"
+  },
+  {
+    "text": "전달 배포",
+    "label": "general"
+  },
+  {
+    "text": "공유 필독",
+    "label": "general"
+  },
+  {
+    "text": "일반 게시 업로드",
+    "label": "general"
+  },
+  {
+    "text": "채용 사항",
+    "label": "general"
+  },
+  {
+    "text": "일반 공지 수정",
+    "label": "general"
+  },
+  {
+    "text": "전체 알림",
+    "label": "general"
+  },
+  {
+    "text": "안내 필독",
+    "label": "general"
+  },
+  {
+    "text": "긴급 전달",
+    "label": "general"
+  },
+  {
+    "text": "알림 배포",
+    "label": "general"
+  }
+]

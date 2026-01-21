@@ -8,7 +8,6 @@
 import SwiftUI
 import FoundationModels
 
-@Generable
 enum ScheduleIconCategory: String, CaseIterable {
     case leadership
     case study
