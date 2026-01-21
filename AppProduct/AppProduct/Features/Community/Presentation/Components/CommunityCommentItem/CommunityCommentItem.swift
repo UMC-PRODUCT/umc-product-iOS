@@ -27,7 +27,7 @@ struct CommunityCommentItem: View, Equatable {
     static func == (lhs: CommunityCommentItem, rhs: CommunityCommentItem) -> Bool {
         lhs.model == rhs.model
     }
-
+    
     // MARK: - Body
 
     var body: some View {
