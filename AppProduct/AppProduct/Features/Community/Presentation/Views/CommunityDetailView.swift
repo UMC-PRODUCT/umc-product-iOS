@@ -21,21 +21,24 @@ struct CommunityDetailView: View {
     }
 
     private enum Constant {
-        static let mainPadding: CGFloat = 16
+        static let mainPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
+        static let commentPadding: EdgeInsets = .init(top: 16, leading: 0, bottom: 0, trailing: 0)
     }
 
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: DefaultSpacing.spacing24) {
-            TopSection
-            Divider()
-            MidSection
-            Divider()
-            BottomSection
+        ScrollView {
+            VStack(spacing: DefaultSpacing.spacing24) {
+                TopSection
+                Divider()
+                MidSection
+                Divider()
+                BottomSection
+            }
+            .padding(Constant.mainPadding)
         }
-        .padding(Constant.mainPadding)
         .navigation(naviTitle: .communityDetail, displayMode: .inline)
     }
 
@@ -105,11 +108,9 @@ struct CommunityDetailView: View {
     // MARK: - Bottom
 
     private var BottomSection: some View {
-        ScrollView {
-            LazyVStack(spacing: DefaultSpacing.spacing16) {
-                ForEach(vm.comments) { comment in
-                    CommunityCommentItem(model: comment)
-                }
+        VStack(spacing: DefaultSpacing.spacing16) {
+            ForEach(vm.comments) { comment in
+                CommunityCommentItem(model: comment)
             }
         }
     }
