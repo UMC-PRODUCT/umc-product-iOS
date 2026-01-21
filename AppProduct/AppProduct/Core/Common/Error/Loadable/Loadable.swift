@@ -57,11 +57,33 @@ import Foundation
 /// }
 /// ```
 ///
-/// - Note: ``ErrorHandler``를 통한 전역 에러 처리와 달리,
-///   `Loadable`은 화면별 로컬 에러 처리에 적합합니다.
-///   `severity`가 `.critical`이 아닌 일반적인 에러는 `Loadable`로 처리하세요.
+/// ## ErrorHandler vs Loadable 선택 기준
 ///
-/// - SeeAlso: ``AppError``, ``ErrorHandler``
+/// | 기준 | ErrorHandler (Alert) | Loadable (인라인) |
+/// |------|---------------------|-------------------|
+/// | **사용자 액션** | 즉각적인 액션 필요 | 화면 내에서 해결 가능 |
+/// | **작업 흐름** | 중단해야 함 | 유지 가능 |
+/// | **에러 예시** | 세션 만료, 네트워크 오류 | 범위 밖, 이미 제출됨 |
+///
+/// ## 에러 타입별 catch 분기 패턴
+///
+/// ```swift
+/// do {
+///     let result = try await useCase.execute()
+///     state = .loaded(result)
+///
+/// } catch let error as DomainError {
+///     // 도메인 에러 → Loadable (인라인)
+///     state = .failed(.domain(error))
+///
+/// } catch {
+///     // 기타 에러 → ErrorHandler (Alert) + 상태 복구
+///     state = .loaded(initialData)  // 또는 .idle
+///     errorHandler.handle(error, context: ...)
+/// }
+/// ```
+///
+/// - SeeAlso: ``AppError``, ``ErrorHandler``, ``DomainError``
 enum Loadable<T: Equatable>: Equatable {
 
     // MARK: - Cases

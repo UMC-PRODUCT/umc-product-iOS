@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Address {
+struct Address: Equatable {
     let fullAddress: String
     let city: String
     let district: String

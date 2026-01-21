@@ -15,8 +15,8 @@ protocol AttendanceRepositoryProtocol {
 
     /// 출석 상태 업데이트 (승인/거부)
     func updateAttendanceStatus(
-        attendanceId: AttendenceID,
-        status: AttendenceStatus,
+        attendanceId: AttendanceID,
+        status: AttendanceStatus,
         verification: LocationVerification?
     ) async throws -> Attendance
 
@@ -35,7 +35,7 @@ protocol AttendanceRepositoryProtocol {
 struct CreateAttendanceRequest {
     let sessionId: SessionID
     let userId: UserID
-    let type: AttendenceType
+    let type: AttendanceType
     let coordinate: Coordinate?
     let reason: String?
 }
