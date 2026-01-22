@@ -90,7 +90,7 @@ struct ToolBarCollection {
         }
 
         private var menuLabel: some View {
-            Text(viewModel.selectedGeneration?.title ?? "")
+            Text(viewModel.selectedGeneration?.title ?? viewModel.currentGeneration?.title ?? "")
                 .font(.callout)
                 .fontWeight(.semibold)
         }
@@ -167,7 +167,7 @@ struct ToolBarCollection {
         
         private var chevronImage: some View {
             Image(systemName: "chevron.down")
-                .font(.system(size: 6))
+                .font(.system(size: 10))
                 .foregroundStyle(.grey500)
         }
 

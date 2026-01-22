@@ -12,7 +12,7 @@ import SwiftUI
 struct NoticeView: View {
 
     // MARK: - Properties
-    @State var viewModel: NoticeViewModel
+    @State var viewModel = NoticeViewModel()
     @State private var search: String = ""
     
     // MARK: - Constants
@@ -20,20 +20,27 @@ struct NoticeView: View {
         static let listTopPadding: CGFloat = 10
     }
 
+    // MARK: - Constants
     private enum Constants {
         static let searchPlaceholder: String = "제목, 내용 검색"
     }
 
     // MARK: - Body
     var body: some View {
-        List(viewModel.noticeItems) { item in
-            NoticeItem(model: item)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(DefaultConstant.defaultListPadding)
+        Group {
+            switch viewModel.noticeItems {
+            case .idle:
+                Color.clear.task {
+                    print("API 함수")
+                }
+            case .loading:
+                progressView
+            case .loaded(let noticeItem):
+                noticeCotent(noticeItem)
+            case .failed(_):
+                Color.clear
+            }
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
         .searchable(text: $search, prompt: Constants.searchPlaceholder)
         .searchToolbarBehavior(.minimize)
         .toolbar {
@@ -44,12 +51,54 @@ struct NoticeView: View {
             if showSubFilter {
                 NoticeSubFilter(viewModel: viewModel)
                     .equatable()
-                    .padding(.vertical, 8)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
     }
-
+    
+    // MARK: -
+    private var progressView: some View {
+        ProgressView(label: {
+            Text("공지를 불러오고 있어요")
+                .appFont(.callout)
+        })
+        .controlSize(.large)
+        .tint(.indigo500)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // MARK: -
+    @ViewBuilder
+    private func noticeCotent(_ data: [NoticeItemModel]) -> some View {
+        if data.isEmpty {
+            unavailableContent
+        } else {
+            availableContent(data)
+        }
+    }
+    
+    // MARK: -
+    private func availableContent(_ data: [NoticeItemModel]) -> some View {
+        List(data) { item in
+            NoticeItem(model: item)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(DefaultConstant.defaultListPadding)
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+    }
+    
+    // MARK: -
+    private var unavailableContent: some View {
+        ContentUnavailableView(
+            "아직 등록된 공지사항이 없어요",
+            systemImage: "exclamationmark.triangle.text.page",
+            description: Text("운영진이 공지사항을 등록하면 이곳에 표시됩니다")
+        )
+        .tint(.indigo200.opacity(0.5))
+    }
+    
     // MARK: - Computed Properties
     /// 서브필터 표시 여부 (중앙/지부/학교일 때만 표시)
     private var showSubFilter: Bool {
@@ -61,12 +110,11 @@ struct NoticeView: View {
 }
 
 
-
 // MARK: - NoticeSubFilter
 /// 서브필터 영역 (전체, 운영진 공지 칩 + 파트 메뉴)
 private struct NoticeSubFilter: View, Equatable {
 
-    @Bindable var viewModel: NoticeViewModel
+    @Bindable var viewModel = NoticeViewModel()
 
     static func == (lhs: NoticeSubFilter, rhs: NoticeSubFilter) -> Bool {
         lhs.viewModel.selectedNoticeSubFilter == rhs.viewModel.selectedNoticeSubFilter &&
@@ -111,7 +159,7 @@ private struct NoticeSubFilter: View, Equatable {
 /// 파트 선택 메뉴
 private struct PartFilterMenu: View, Equatable {
 
-    @Bindable var viewModel: NoticeViewModel
+    @Bindable var viewModel = NoticeViewModel()
 
     static func == (lhs: PartFilterMenu, rhs: PartFilterMenu) -> Bool {
         lhs.viewModel.selectedPart == rhs.viewModel.selectedPart
@@ -142,6 +190,11 @@ private struct PartFilterMenu: View, Equatable {
         .pickerStyle(.inline)
     }
 
+    /// 파트가 실제로 선택되었는지 (기본값 "파트"가 아닌 경우)
+    private var isPartSelected: Bool {
+        viewModel.selectedPart != .all && viewModel.selectedPart != nil
+    }
+    
     /// 메뉴 라벨
     private var menuLabel: some View {
         HStack(spacing: Constants.hstackSpacing) {
@@ -150,29 +203,51 @@ private struct PartFilterMenu: View, Equatable {
             Image(systemName: "chevron.down")
                 .font(.system(size: Constants.chevronSize))
         }
-        .foregroundStyle(.grey600)
+        .foregroundStyle(isPartSelected ? .grey000 : .grey600)
         .padding(Constants.chipPadding)
+        .clipShape(Capsule())
         .background {
             Capsule()
-                .fill(.grey200)
+                .fill(isPartSelected ? .indigo500 : .grey200)
         }
-        .glassEffect(.regular, in: Capsule())
+        .glassEffect(.clear.interactive(), in: Capsule())
     }
 }
 
 // MARK: - Preview
-extension NoticeViewModel {
-    /// Preview용 Mock 데이터
-    static let mock: NoticeViewModel = {
-        let vm = NoticeViewModel()
-        vm.configure(
-            generations: (8...12).map { Generation(value: $0) },
-            current: Generation(value: 9)
-        )
-        return vm
-    }()
+#Preview("Loading") {
+    NavigationStack {
+        NoticeView(viewModel: {
+            let vm = NoticeViewModel()
+            vm.noticeItems = .loading
+            return vm
+        }())
+    }
 }
 
-#Preview {
-    NoticeView(viewModel: .mock)
+#Preview("Loaded - 데이터 있음") {
+    NavigationStack {
+        NoticeView(viewModel: {
+            let vm = NoticeViewModel()
+            vm.noticeItems = .loaded([
+                NoticeItemModel(tag: .campus, mustRead: true, isAlert: true, date: Date(), title: "2026 UMC 신년회 안내", content: "안녕하세요! 가천대학교 UMC 챌린저 여러분! 회장 웰시입니다!", writer: "웰시/최지은", hasLink: false, hasVote: false, viewCount: 32),
+                NoticeItemModel(tag: .central, mustRead: true, isAlert: true, date: Date(), title: "UMC 9기 ✨Demo Day✨ 안내", content: "안녕하세요, UMC 9기 챌린저 여러분! 총괄 챗챗입니다~", writer: "챗챗/전채운", hasLink: false, hasVote: false, viewCount: 123),
+                NoticeItemModel(tag: .part, mustRead: false, isAlert: false, date: Date(), title: "iOS 9주차 워크북 배포 안내", content: "안녕하세요! 가천대학교 UMC iOS 챌린저 여러분! 파트장 소피입니다☺️", writer: "소피/이예지", hasLink: false, hasVote: false, viewCount: 5),
+                NoticeItemModel(tag: .part, mustRead: false, isAlert: false, date: Date(), title: "iOS 9주차 워크북 배포 안내", content: "안녕하세요! 가천대학교 UMC iOS 챌린저 여러분! 파트장 소피입니다☺️", writer: "소피/이예지", hasLink: false, hasVote: false, viewCount: 5),
+                NoticeItemModel(tag: .part, mustRead: false, isAlert: false, date: Date(), title: "iOS 9주차 워크북 배포 안내", content: "안녕하세요! 가천대학교 UMC iOS 챌린저 여러분! 파트장 소피입니다☺️", writer: "소피/이예지", hasLink: false, hasVote: false, viewCount: 5),
+                NoticeItemModel(tag: .part, mustRead: false, isAlert: false, date: Date(), title: "iOS 9주차 워크북 배포 안내", content: "안녕하세요! 가천대학교 UMC iOS 챌린저 여러분! 파트장 소피입니다☺️", writer: "소피/이예지", hasLink: false, hasVote: false, viewCount: 5)
+            ])
+            return vm
+        }())
+    }
+}
+
+#Preview("Loaded - 빈 데이터") {
+    NavigationStack {
+        NoticeView(viewModel: {
+            let vm = NoticeViewModel()
+            vm.noticeItems = .loaded([])
+            return vm
+        }())
+    }
 }

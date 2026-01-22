@@ -22,7 +22,7 @@ struct Part: Identifiable, Equatable, Hashable {
     var name: String
     var id: String { name }
 
-    static let all = Part(name: "전체")
+    static let all = Part(name: "파트")
     static let web = Part(name: "Web")
     static let ios = Part(name: "iOS")
     static let android = Part(name: "Android")

@@ -34,15 +34,14 @@ struct ChipButton: View {
     
     var body: some View {
         Button(action: action) {
-                ChipButtonContent(
-                    title: title,
-                    size: size,
-                    style: style,
-                    isSelected: isSelected
-                )
-                .equatable()
-            }
-        .buttonStyle(.plain)
+            ChipButtonContent(
+                title: title,
+                size: size,
+                style: style,
+                isSelected: isSelected
+            )
+            .equatable()
+        }
     }
 }
 
@@ -71,7 +70,7 @@ private struct ChipButtonContent: View, Equatable {
                 Capsule()
                     .fill(style.bgColor(isSelected: isSelected))
             )
-            .glassEffect(.regular, in: Capsule())
+            .glassEffect(.clear.interactive(), in: Capsule())
     }
 }
 
