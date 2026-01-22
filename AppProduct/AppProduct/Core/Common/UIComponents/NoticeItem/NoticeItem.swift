@@ -173,7 +173,7 @@ private struct BottomSection: View, Equatable {
         
         NoticeItem(
             model: .init(
-                tag: .part,
+                tag: .part(.all),
                 mustRead: false,
                 isAlert: false,
                 date: Date(),

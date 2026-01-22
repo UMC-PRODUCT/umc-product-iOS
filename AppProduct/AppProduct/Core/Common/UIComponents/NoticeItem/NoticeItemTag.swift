@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-enum NoticeItemTag {
+enum NoticeItemTag: Equatable {
     case all
     case central
     case chapter
     case campus
-    case part
+    case part(Part)
 
     var text: String {
         switch self {
@@ -20,7 +20,7 @@ enum NoticeItemTag {
         case .central: return "중앙"
         case .chapter: return "지부"
         case .campus: return "학교"
-        case .part: return "파트"
+        case .part(let part): return part.name
         }
     }
 
