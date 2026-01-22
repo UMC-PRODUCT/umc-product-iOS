@@ -1,5 +1,5 @@
 //
-//  LoadingProgressView.swift
+//  Progress.swift
 //  AppProduct
 //
 //  Created by 이예지 on 1/22/26.
@@ -7,26 +7,23 @@
 
 import SwiftUI
 
-struct LoadingProgressView: View {
+struct Progress: View {
     
     // MARK: - Property
-    let progressSize: ControlSize
     let progressColor: Color
     let message: String
     let messageColor: Color
-    let messageSize: Font
+    var size: ProgressSize
     
     // MARK: - Initializer
-    init(progressSize: ControlSize = .regular,
-         progressColor: Color = .indigo500,
+    init(progressColor: Color = .indigo500,
          message: String,
          messageColor: Color = .grey900,
-         messageSize: Font = .callout) {
-        self.progressSize = progressSize
+         size: ProgressSize = .large) {
         self.progressColor = progressColor
         self.message = message
         self.messageColor = messageColor
-        self.messageSize = messageSize
+        self.size = size
     }
     
     // MARK: - Constant
@@ -38,15 +35,22 @@ struct LoadingProgressView: View {
     var body: some View {
         VStack(spacing: Constants.vstackSpacing, content: {
             ProgressView()
-                .controlSize(progressSize)
+                .controlSize(size.controlSize)
+                .tint(progressColor)
             Text(message)
                 .foregroundStyle(messageColor)
-            //    .appFont(message)
+                .appFont(size.messageSize)
         })
     }
 }
 
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
-    LoadingProgressView(message: "로딩중")
+    VStack(spacing: 100) {
+        Progress(message: "로딩중!", size: .small)
+        
+        Progress(message: "공지를 불러오고 있어요!", size: .regular)
+        
+        Progress(message: "잠시만 기다려주세요!", size: .large)
+    }
 }
