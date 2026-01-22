@@ -7,14 +7,6 @@
 
 import SwiftUI
 
-// MARK: - Constant
-
-private enum Constant {
-    static let sectionSpacing: CGFloat = 16
-    static let itemSpacing: CGFloat = 8
-    static let horizontalPadding: CGFloat = 16
-}
-
 // MARK: - MyAttendanceStatusView
 
 /// 나의 출석 현황 섹션
@@ -30,30 +22,39 @@ struct MyAttendanceStatusView: View {
         // pending 상태 제외, 완료된 출석만 표시
         self.models = sessions.compactMap { MyAttendanceItemModel(from: $0) }
     }
+    
+    // MARK: - Constant
+
+    private enum Constant {
+        static let listSpacing: CGFloat = 0
+    }
+
 
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Constant.sectionSpacing) {
-            // 섹션 헤더
-            Text("나의 출석 현황")
-                .appFont(.title3Emphasis, color: .grey800)
+        attendanceList
+    }
+    
+    private var attendanceList: some View {
+        LazyVStack(spacing: Constant.listSpacing) {
+            ForEach(models, id: \.id) { model in
+                MyAttendanceCard(model: model)
 
-            // 출석 리스트
-            VStack(spacing: Constant.itemSpacing) {
-                ForEach(models) { model in
-                    MyAttendanceCard(model: model)
+                // 마지막 아이템이 아닐 때만 Divider
+                if model.id != models.last?.id {
+                    Divider()
                 }
             }
         }
-        .padding(.horizontal, Constant.horizontalPadding)
+        .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .glass()
     }
 }
 
 // MARK: - Preview
 
-#if DEBUG
-#Preview {
+#Preview(traits: .sizeThatFitsLayout) {
     ZStack {
         Color.grey100.ignoresSafeArea()
 
@@ -61,5 +62,5 @@ struct MyAttendanceStatusView: View {
             sessions: AttendancePreviewData.sessions
         )
     }
+    .frame(height: 600)
 }
-#endif

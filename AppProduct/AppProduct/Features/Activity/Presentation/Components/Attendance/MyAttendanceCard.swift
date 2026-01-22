@@ -26,7 +26,6 @@ struct MyAttendanceCard: View {
     var body: some View {
         MyAttendanceItemPresenter(model: model)
             .equatable()
-            .glass()
     }
 }
 
@@ -40,20 +39,18 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     }
     
     private enum Constants {
-        // Layout
         static let cardSpacing: CGFloat = 12
-        static let cardPadding: EdgeInsets = .init(top: 12, leading: 12, bottom: 12, trailing: 12)
+        static let cardHorizontalPadding: CGFloat = 16
+        static let cardHeight: CGFloat = 90
         static let cardRadius: CGFloat = 12
+        static let contentSectionSpacing: CGFloat = 4
 
-        // Week Tag
         static let weekTagPadding: EdgeInsets = .init(top: 2, leading: 8, bottom: 2, trailing: 8)
         static let weekTagRadius: CGFloat = 4
 
-        // Status Badge
         static let statusPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
-        static let statusRadius: Edge.Corner.Style = 8
+        static let statusRadius: CGFloat = 8
 
-        // Time Icon
         static let timeIconSpacing: CGFloat = 4
     }
 
@@ -64,17 +61,16 @@ private struct MyAttendanceItemPresenter: View, Equatable {
             Spacer()
             statusBadge
         }
-        .padding(Constants.cardPadding)
-        .containerShape(.rect(cornerRadius: Constants.cardRadius))
-        .background(
-            .white, in: RoundedRectangle(cornerRadius: Constants.cardRadius))
+        .padding(.horizontal, Constants.cardHorizontalPadding)
+        .frame(height: Constants.cardHeight)
+        .background(.white)
     }
 
     // MARK: - Subviews
 
     private var weekTag: some View {
         Text(model.weekText)
-            .appFont(.caption1, color: .grey600)
+            .appFont(.callout, color: .grey600)
             .padding(Constants.weekTagPadding)
             .overlay(
                 RoundedRectangle(cornerRadius: Constants.weekTagRadius)
@@ -83,11 +79,10 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     }
     
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Constants.contentSectionSpacing) {
             Text(model.title)
-                .appFont(.bodyEmphasis, color: .grey900)
+                .appFont(.bodyEmphasis, color: .black)
 
-            // 시간 범위
             timeRangeView
         }
     }
@@ -104,12 +99,11 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     private var statusBadge: some View {
         Text(model.status.text)
             .appFont(.caption1Emphasis, color: model.status.fontColor)
-            .padding(Constants.statusPadding)
+            .padding(.vertical, DefaultConstant.badgeVerticalPadding)
+            .padding(.horizontal, DefaultConstant.badgeHorizontalPadding)
             .background(
                 model.status.backgroundColor,
-                in: ConcentricRectangle(
-                    corners: .concentric(minimum: Constants.statusRadius),
-                    isUniform: true)
+                in: RoundedRectangle(cornerRadius: Constants.statusRadius)
             )
     }
 }
@@ -129,27 +123,7 @@ private struct MyAttendanceItemPresenter: View, Equatable {
                 status: .present
             )
         )
-
-        MyAttendanceCard(
-            model: .init(
-                week: 2,
-                title: "정기 세션",
-                startTime: now,
-                endTime: now.addingTimeInterval(4 * 3600),
-                status: .late
-            )
-        )
-
-        MyAttendanceCard(
-            model: .init(
-                week: 3,
-                title: "정기 세션",
-                startTime: now,
-                endTime: now.addingTimeInterval(4 * 3600),
-                status: .absent
-            )
-        )
     }
-    .padding()
+    .frame(height: 200)
     .background(Color.grey100)
 }
