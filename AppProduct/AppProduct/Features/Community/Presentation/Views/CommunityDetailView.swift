@@ -21,7 +21,6 @@ struct CommunityDetailView: View {
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
-        static let commentPadding: EdgeInsets = .init(top: 16, leading: 0, bottom: 0, trailing: 0)
     }
 
     // MARK: - Body
