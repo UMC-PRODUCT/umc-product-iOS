@@ -11,8 +11,12 @@ struct UmcTab: View {
     @State var tabCase: TabCase = .home
     @State var isShowMyPage: Bool = false
     @Environment(\.di) var di
+<<<<<<< HEAD
     @Environment(ErrorHandler.self) var errorHandler
     
+=======
+
+>>>>>>> 1199fc7 (refactor: 커뮤니티뷰 1차 피드백 반영)
     var body: some View {
         let router = di.resolve(NavigationRouter.self)
 

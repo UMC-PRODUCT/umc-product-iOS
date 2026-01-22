@@ -47,7 +47,6 @@ enum DefaultConstant {
 
     /// 리슽 카드 기본 패딩.
     static let defaultListPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 16, trailing: 16)
-
     
     /// 기본 애니메이션 지속 시간 (초).
     static let animationTime: TimeInterval = 0.3
