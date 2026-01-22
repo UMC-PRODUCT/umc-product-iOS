@@ -8,29 +8,31 @@
 import SwiftUI
 
 struct AttendanceSessionList: View, Equatable {
-    @State private var expandedSessionId: Session.ID?
-    @Bindable private var attendanceViewModel: ChallengerAttendanceViewModel
+    private var expandedSessionId: Session.ID?
+    private var attendanceViewModel: ChallengerAttendanceViewModel
     
     private let container: DIContainer
     private let errorHandler: ErrorHandler
     private let sessions: [Session]
     private let userId: UserID
-//    private let onSessionTap: (Session.ID) -> Void
+    private let onSessionTap: (Session.ID) -> Void
     
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,
         sessions: [Session],
+        expandedSessionId: Session.ID?,
         attendanceViewModel: ChallengerAttendanceViewModel,
         userId: UserID,
-//        onSessionTap: @escaping (Session.ID) -> Void
+        onSessionTap: @escaping (Session.ID) -> Void
     ) {
         self.container = container
         self.errorHandler = errorHandler
         self.sessions = sessions
+        self.expandedSessionId = expandedSessionId
         self.attendanceViewModel = attendanceViewModel
         self.userId = userId
-//        self.onSessionTap = onSessionTap
+        self.onSessionTap = onSessionTap
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -42,18 +44,25 @@ struct AttendanceSessionList: View, Equatable {
     private enum Constants {
         static let listSpacing: CGFloat = 12
         static let transitionScale: CGFloat = 0.95
+        static let scrollDelay: Double = 0.1
+        static let scrollAnimationResponse: Double = 0.35
+        static let scrollAnimationDamping: Double = 0.75
     }
-    
+
+    // MARK: - Body
+
     var body: some View {
-        List {
-            ForEach(sessions, id: \.id) { session in
-                sessionItem(for: session)
-                    .listRowInsets(EdgeInsets())
+        ScrollView {
+            LazyVStack(spacing: Constants.listSpacing) {
+                ForEach(sessions, id: \.id) { session in
+                    sessionItem(for: session)
+                }
             }
         }
-        .listStyle(.insetGrouped)
     }
-    
+
+    // MARK: - View Components
+
     @ViewBuilder
     private func sessionItem(for session: Session) -> some View {
         let isExpanded = expandedSessionId == session.id
@@ -63,10 +72,10 @@ struct AttendanceSessionList: View, Equatable {
                 session: session,
                 isExpanded: isExpanded
             ) {
-//                onSessionTap(session.id)
+                onSessionTap(session.id)
             }
             .equatable()
-            
+
             if isExpanded {
                 ChallengerAttendanceView(
                     container: container,
@@ -81,21 +90,11 @@ struct AttendanceSessionList: View, Equatable {
                     session: session
                 )
                 .equatable()
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
                 .transition(.asymmetric(
                     insertion: .scale(scale: Constants.transitionScale).combined(with: .opacity),
                     removal: .scale(scale: Constants.transitionScale).combined(with: .opacity)))
             }
         }
-        
     }
-}
-
-#Preview {
-    AttendanceSessionList(
-        container: AttendancePreviewData.container,
-        errorHandler: AttendancePreviewData.errorHandler,
-        sessions: [AttendancePreviewData.session],
-        attendanceViewModel: AttendancePreviewData.attendanceViewModel,
-        userId: AttendancePreviewData.userId,
-    )
 }
