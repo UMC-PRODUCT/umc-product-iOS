@@ -21,7 +21,6 @@ struct CommunityDetailView: View {
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
-        static let commentPadding: EdgeInsets = .init(top: 16, leading: 0, bottom: 0, trailing: 0)
     }
 
     // MARK: - Body
@@ -33,7 +32,22 @@ struct CommunityDetailView: View {
                 Divider()
                 midSection
                 Divider()
-                bottomSection
+
+                Group {
+                    switch vm.comments {
+                    case .idle:
+                        Color.clear.task {
+                            print("hello")
+                        }
+                    case .loading:
+                        // !!! - 로딩 뷰 - 소피
+                        ProgressView()
+                    case .loaded(let comments):
+                        bottomSection(comments)
+                    case .failed:
+                        Color.clear
+                    }
+                }
             }
             .padding(Constant.mainPadding)
         }
@@ -92,6 +106,7 @@ struct CommunityDetailView: View {
                 commentSection
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var commentSection: some View {
@@ -105,11 +120,17 @@ struct CommunityDetailView: View {
 
     // MARK: - Bottom
 
-    private var bottomSection: some View {
+    private func bottomSection(_ comments: [CommunityCommentModel]) -> some View {
         VStack(spacing: DefaultSpacing.spacing16) {
-            ForEach(vm.comments) { comment in
+            ForEach(comments) { comment in
                 CommunityCommentItem(model: comment)
             }
         }
+    }
+}
+
+#Preview {
+    NavigationStack {
+        CommunityDetailView(postItem: .init(userId: 1, category: .question, title: "React Hook 질문 있습니다", content: "useEffect 의존성 배열 관련해서 질문이 있습니다...", profileImage: nil, userName: "이코딩", part: "iOS", createdAt: "10분 전", likeCount: 5, commentCount: 2))
     }
 }

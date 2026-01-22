@@ -12,7 +12,7 @@ class CommunityDetailViewModel {
     // MARK: - Property
 
     let postItem: CommunityItemModel
-    var comments: [CommunityCommentModel] = []
+    var comments: Loadable<[CommunityCommentModel]> = .loading
 
     // MARK: - Init
 
