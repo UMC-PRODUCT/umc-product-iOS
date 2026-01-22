@@ -59,9 +59,9 @@ struct ScheduleListCard: View, Equatable {
     private var infoContent: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8, content: {
             Text(data.title)
-                .appFont(.subheadlineEmphasis, color: .grey900)
+                .appFont(.bodyEmphasis, color: .grey900)
             Text(data.subTitle)
-                .appFont(.footnote, color: .grey600)
+                .appFont(.callout, color: .grey600)
         })
     }
     
