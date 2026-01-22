@@ -56,6 +56,7 @@ struct ChallengerSessionCard: View, Equatable {
         .onTapGesture {
             onTap()
         }
+        .glass()
     }
     
     private var icon: some View {
@@ -80,8 +81,8 @@ struct ChallengerSessionCard: View, Equatable {
         HStack {
             Text(session.attendanceStatus.displayText)
                 .appFont(.caption1Emphasis, color: session.attendanceStatus.fontColor)
-                .frame(height: Constants.statusBadgeHeight)
-                .padding(.horizontal)
+                .padding(.horizontal, DefaultConstant.badgeHorizontalPadding)
+                .padding(.vertical, DefaultConstant.badgeVerticalPadding)
                 .background(
                     session.attendanceStatus.backgroundColor,
                     in: ConcentricRectangle(
@@ -98,7 +99,7 @@ struct ChallengerSessionCard: View, Equatable {
 
 #Preview(traits: .sizeThatFitsLayout) {
     ZStack {
-        Color.gray.frame(height: 300)
+        Color.grey100.frame(height: 300)
         
         ChallengerSessionCard(
             session: AttendancePreviewData.sessions[1]

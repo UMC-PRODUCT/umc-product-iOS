@@ -53,4 +53,10 @@ enum DefaultConstant {
 
     /// 텍스트 줄 간격.
     static let lineSpacing: CGFloat = 2.5
+
+    /// 배지 수평 패딩.
+    static let badgeHorizontalPadding: CGFloat = 16
+
+    /// 배지 수직 패딩.
+    static let badgeVerticalPadding: CGFloat = 8
 }
