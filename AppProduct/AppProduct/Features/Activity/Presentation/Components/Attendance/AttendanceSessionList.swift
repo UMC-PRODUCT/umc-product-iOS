@@ -52,11 +52,9 @@ struct AttendanceSessionList: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: Constants.listSpacing) {
-                ForEach(sessions, id: \.id) { session in
-                    sessionItem(for: session)
-                }
+        LazyVStack(spacing: Constants.listSpacing) {
+            ForEach(sessions, id: \.id) { session in
+                sessionItem(for: session)
             }
         }
     }

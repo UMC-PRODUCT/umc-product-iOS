@@ -49,31 +49,69 @@ struct AttendanceSessionView: View {
     }
     
     var body: some View {
-        AttendanceSessionList(
-            container: container,
-            errorHandler: errorHandler,
-            sessions: sessions,
-            expandedSessionId: expandedSessionId,
-            attendanceViewModel: attendanceViewModel,
-            userId: userId
-        ) { sessionId in
-            withAnimation(.spring(Spring(
-                response: Constants.animationResponse,
-                dampingRatio: Constants.animationDamping
-            ))) {
-                expandedSessionId = expandedSessionId == sessionId ? nil : sessionId
+        ScrollView {
+            VStack(spacing: DefaultSpacing.spacing48) {
+                attendanceSessionSection
+                
+                myAttendanceStatusView
             }
+            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .safeAreaPadding(.vertical, DefaultConstant.defaultSafeBottom)
         }
-        .equatable()
-        .glass()
+        .contentMargins(.trailing, 4, for: .scrollContent)
+    }
+    
+    private var attendanceSessionSection: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+            attendanceSectionHeader
+            
+            AttendanceSessionList(
+                container: container,
+                errorHandler: errorHandler,
+                sessions: sessions,
+                expandedSessionId: expandedSessionId,
+                attendanceViewModel: attendanceViewModel,
+                userId: userId
+            ) { sessionId in
+                withAnimation(.spring(Spring(
+                    response: Constants.animationResponse,
+                    dampingRatio: Constants.animationDamping
+                ))) {
+                    expandedSessionId = expandedSessionId == sessionId ? nil : sessionId
+                }
+            }
+            .equatable()
+        }
+    }
+    
+    private var attendanceSectionHeader: some View {
+        Text("출석 가능한 세션")
+            .appFont(.bodyEmphasis, color: .black)
+    }
+    
+    private var myAttendanceStatusView: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+            sectionHeader
+            
+            MyAttendanceStatusView(sessions: sessions)
+        }
+    }
+    
+    private var sectionHeader: some View {
+        Text("나의 출석 현황")
+            .appFont(.bodyEmphasis, color: .black)
     }
 }
 
 #Preview {
-    AttendanceSessionView(
-        container: AttendancePreviewData.container,
-        errorHandler: AttendancePreviewData.errorHandler,
-        sessions: AttendancePreviewData.sessions,
-        userId: AttendancePreviewData.userId
-    )
+    ZStack {
+        Color.grey100.ignoresSafeArea()
+        
+        AttendanceSessionView(
+            container: AttendancePreviewData.container,
+            errorHandler: AttendancePreviewData.errorHandler,
+            sessions: AttendancePreviewData.sessions,
+            userId: AttendancePreviewData.userId
+        )
+    }
 }
