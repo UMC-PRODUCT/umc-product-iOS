@@ -29,9 +29,9 @@ final class NoticeViewModel {
         Generation(value: 12)
     ]
     /// 현재 기수
-    var currentGeneration: Generation? = Generation(value: 9)
+    var currentGeneration: Generation?
     /// 선택된 기수
-    var selectedGeneration: Generation? = Generation(value: 9)
+    var selectedGeneration: Generation?
 
     /// 메인필터 선택값
     var selectedNoticeMainFilter: NoticeMainFilterType = .all
@@ -47,7 +47,20 @@ final class NoticeViewModel {
     var branchSubFilter: SubFilterType = .all
     var schoolSubFilter: SubFilterType = .all
 
-    var noticeItems: Loadable<[NoticeItemModel]> = .loading
+    var noticeItems: Loadable<[NoticeItemModel]> = .idle
+    
+    init() {
+#if DEBUG
+        setupMockData()
+#endif
+    }
+   
+    private func setupMockData() {
+        generations = (8...12).map { Generation(value: $0) }
+        currentGeneration = Generation(value: 9)
+        selectedGeneration = Generation(value: 9)
+        noticeItems = .loaded(NoticeItemModel.mockItems)
+    }
     
     /// 사용자 정보
     var userSchool: String = "가천대학교"
