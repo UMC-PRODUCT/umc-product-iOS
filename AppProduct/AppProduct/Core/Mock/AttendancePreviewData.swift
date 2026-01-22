@@ -10,7 +10,7 @@ import SwiftUI
 
 #if DEBUG
 struct AttendancePreviewData {
-    static let container = DIContainer()
+    static let container = DIContainer.configured()
     static let errorHandler = ErrorHandler()
     static let challengerAttendanceUseCase = ChallengerAttendanceUseCase(repository: MockAttendanceRepository())
     static let mapViewModel: BaseMapViewModel = .init(container: container, info: sessionInfo, errorHandler: errorHandler)
@@ -43,6 +43,107 @@ struct AttendancePreviewData {
         location: .init(latitude: 37.582967, longitude: 127.010527))
 
     static let session: Session = .init(info: sessionInfo, initialAttendance: attendance)
+
+    // MARK: - Multiple Sessions Mock
+
+    static let sessions: [Session] = [
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "iOS_1"),
+                icon: .Activity.profile,
+                title: "Swift 기초 문법",
+                week: 1,
+                startTime: Date.now.addingTimeInterval(-86400 * 35),
+                endTime: Date.now.addingTimeInterval(-86400 * 35 + 7200),
+                location: .init(latitude: 37.582967, longitude: 127.010527)
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "iOS_1"),
+                userId: userId,
+                type: .gps,
+                status: .present,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "iOS_2"),
+                icon: .Activity.profile,
+                title: "SwiftUI 레이아웃",
+                week: 2,
+                startTime: Date.now.addingTimeInterval(-86400 * 28),
+                endTime: Date.now.addingTimeInterval(-86400 * 28 + 7200),
+                location: .init(latitude: 37.582967, longitude: 127.010527)
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "iOS_2"),
+                userId: userId,
+                type: .gps,
+                status: .present,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "iOS_3"),
+                icon: .Activity.profile,
+                title: "MVVM 아키텍처",
+                week: 3,
+                startTime: Date.now.addingTimeInterval(-86400 * 21),
+                endTime: Date.now.addingTimeInterval(-86400 * 21 + 7200),
+                location: .init(latitude: 37.582967, longitude: 127.010527)
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "iOS_3"),
+                userId: userId,
+                type: .gps,
+                status: .late,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "iOS_4"),
+                icon: .Activity.profile,
+                title: "네트워킹 기초",
+                week: 4,
+                startTime: Date.now.addingTimeInterval(-86400 * 14),
+                endTime: Date.now.addingTimeInterval(-86400 * 14 + 7200),
+                location: .init(latitude: 37.582967, longitude: 127.010527)
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "iOS_4"),
+                userId: userId,
+                type: .gps,
+                status: .absent,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "iOS_5"),
+                icon: .Activity.profile,
+                title: "Combine 입문",
+                week: 5,
+                startTime: Date.now.addingTimeInterval(-86400 * 7),
+                endTime: Date.now.addingTimeInterval(-86400 * 7 + 7200),
+                location: .init(latitude: 37.582967, longitude: 127.010527)
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "iOS_5"),
+                userId: userId,
+                type: .gps,
+                status: .present,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        session  // 기존 6주차 세션
+    ]
 }
 
 struct AttendanceTestView: View {
