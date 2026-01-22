@@ -37,13 +37,13 @@ struct CommunityCommentItem: View {
                     .background(.grey100, in: Circle())
             }
 
-            BubbleSection
+            bubbleSection
         }
     }
 
     // MARK: - Section
 
-    private var BubbleSection: some View {
+    private var bubbleSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             HStack {
                 Text(model.userName)

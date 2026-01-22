@@ -29,11 +29,11 @@ struct CommunityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing24) {
-                TopSection
+                topSection
                 Divider()
-                MidSection
+                midSection
                 Divider()
-                BottomSection
+                bottomSection
             }
             .padding(Constant.mainPadding)
         }
@@ -42,22 +42,22 @@ struct CommunityDetailView: View {
 
     // MARK: - Top
 
-    private var TopSection: some View {
+    private var topSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            TagSection
+            tagSection
             Text(vm.postItem.title)
                 .appFont(.title1Emphasis)
-            ProfileSection
+            profileSection
         }
     }
 
-    private var TagSection: some View {
+    private var tagSection: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             CommunityTagItem(title: vm.postItem.category.text)
         }
     }
 
-    private var ProfileSection: some View {
+    private var profileSection: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             // 프로필 이미지
             if vm.postItem.profileImage != nil {
@@ -82,19 +82,19 @@ struct CommunityDetailView: View {
 
     // MARK: - Mid
 
-    private var MidSection: some View {
+    private var midSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
             Text(vm.postItem.content)
                 .appFont(.body)
 
             HStack(spacing: DefaultSpacing.spacing12) {
                 CommunityLikeButton(count: vm.postItem.likeCount)
-                CommentSection
+                commentSection
             }
         }
     }
 
-    private var CommentSection: some View {
+    private var commentSection: some View {
         HStack(spacing: DefaultSpacing.spacing4) {
             Image(systemName: "bubble")
             Text("댓글")
@@ -105,7 +105,7 @@ struct CommunityDetailView: View {
 
     // MARK: - Bottom
 
-    private var BottomSection: some View {
+    private var bottomSection: some View {
         VStack(spacing: DefaultSpacing.spacing16) {
             ForEach(vm.comments) { comment in
                 CommunityCommentItem(model: comment)

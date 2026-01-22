@@ -40,9 +40,9 @@ struct CommunityItem: View, Equatable {
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-                TopSection
-                ContentSection
-                BottomSection
+                topSection
+                contentSection
+                bottomSection
             }
             .padding(DefaultConstant.defaultListPadding)
             .background(
@@ -56,7 +56,7 @@ struct CommunityItem: View, Equatable {
     // MARK: - Top
 
     // 태그 + 상태 + 시간
-    private var TopSection: some View {
+    private var topSection: some View {
         HStack {
             Text(model.category.text)
                 .appFont(.subheadlineEmphasis, color: .grey700)
@@ -72,7 +72,7 @@ struct CommunityItem: View, Equatable {
     // MARK: - Content
 
     // 내용
-    private var ContentSection: some View {
+    private var contentSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Text(model.title)
                 .appFont(.bodyEmphasis, color: .grey900)
@@ -87,7 +87,7 @@ struct CommunityItem: View, Equatable {
     // MARK: - Bottom
 
     // 작성자 + 좋아요 + 댓글
-    private var BottomSection: some View {
+    private var bottomSection: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             // 프로필 이미지
             if model.profileImage != nil {
