@@ -88,6 +88,7 @@ struct AttendanceSessionList: View, Equatable {
                     session: session
                 )
                 .equatable()
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
                 .transition(.asymmetric(
                     insertion: .scale(scale: Constants.transitionScale).combined(with: .opacity),
                     removal: .scale(scale: Constants.transitionScale).combined(with: .opacity)))
