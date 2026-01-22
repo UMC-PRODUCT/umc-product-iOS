@@ -59,7 +59,3 @@ struct CommunityCommentItem: View {
         .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.bubbleRadius))
     }
 }
-
-#Preview {
-    CommunityCommentItem(model: .init(profileImage: nil, userName: "김애플", content: "저 참여하고 싶습니다! 아직 자리 있나요?", createdAt: "10분 전"))
-}

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CommunityCommentModel: Equatable, Identifiable {
     let id = UUID()
+    let userId: Int
     let profileImage: Image?
     let userName: String
     let content: String

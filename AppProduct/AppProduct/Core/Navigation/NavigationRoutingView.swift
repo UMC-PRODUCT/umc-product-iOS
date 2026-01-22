@@ -8,6 +8,7 @@
 import SwiftUI
 
 // MARK: - NavigationRoutingView
+
 /// `NavigationDestination` 타입의 데이터를 받아 실제 SwiftUI View로 매핑해주는 라우팅 뷰입니다.
 ///
 /// 이 뷰는 중앙 집중식 라우팅 제어를 담당하며, 각 피처별 화면 생성 로직을 분리하여 관리합니다.
@@ -25,23 +26,25 @@ import SwiftUI
 struct NavigationRoutingView: View {
     /// 하위 뷰에 의존성을 주입하기 위한 DI 컨테이너입니다.
     @Environment(\.di) var di: DIContainer
-    
+
     /// 현재 라우팅해야 할 목적지 정보입니다.
     let destination: NavigationDestination
-    
+
     var body: some View {
         switch destination {
         case .auth(let auth):
             authView(auth)
         case .home(let home):
             homeView(home)
+        case .community(let community):
+            communityView(community)
         }
     }
 }
 
 // MARK: - Route Detail Views
+
 private extension NavigationRoutingView {
-    
     /// 인증(Auth) 관련 피처의 화면들을 생성합니다.
     @ViewBuilder
     func authView(_ route: NavigationDestination.Auth) -> some View {
@@ -51,13 +54,21 @@ private extension NavigationRoutingView {
             Text("Auth Test View")
         }
     }
-    
+
     /// 홈(Home) 관련 피처의 화면들을 생성합니다.
     @ViewBuilder
     func homeView(_ route: NavigationDestination.Home) -> some View {
         switch route {
         case .alarmHistory:
             NoticeAlarmView()
+        }
+    }
+
+    @ViewBuilder
+    func communityView(_ route: NavigationDestination.Community) -> some View {
+        switch route {
+        case .detail(let postItem):
+            CommunityDetailView(postItem: postItem)
         }
     }
 }

@@ -11,13 +11,11 @@ struct CommunityDetailView: View {
     // MARK: - Properties
 
     @State var vm: CommunityDetailViewModel
-    var item: CommunityItemModel
 
     // MARK: - Init
 
-    init(item: CommunityItemModel) {
-        self._vm = .init(wrappedValue: .init(postId: item.id))
-        self.item = item
+    init(postItem: CommunityItemModel) {
+        self._vm = .init(wrappedValue: .init(postItem: postItem))
     }
 
     private enum Constant {
@@ -47,7 +45,7 @@ struct CommunityDetailView: View {
     private var TopSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             TagSection
-            Text(item.title)
+            Text(vm.postItem.title)
                 .appFont(.title1Emphasis)
             ProfileSection
         }
@@ -55,29 +53,29 @@ struct CommunityDetailView: View {
 
     private var TagSection: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            CommunityTagItem(title: item.category.text)
-            CommunityTagItem(title: item.tag.text)
+            CommunityTagItem(title: vm.postItem.category.text)
         }
     }
 
     private var ProfileSection: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             // 프로필 이미지
-            if item.profileImage != nil {
-                item.profileImage
+            if vm.postItem.profileImage != nil {
+                // !!! - url 이미지 처리
+                Image(systemName: "heart")
             } else {
-                Text(item.userName.prefix(1))
+                Text(vm.postItem.userName.prefix(1))
                     .appFont(.body, color: .grey500)
                     .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
                     .background(.grey100, in: Circle())
             }
 
-            Text("\(item.userName) • \(item.part)")
+            Text("\(vm.postItem.userName) • \(vm.postItem.part)")
                 .appFont(.body)
 
             Spacer()
 
-            Text(item.createdAt)
+            Text(vm.postItem.createdAt)
                 .appFont(.subheadline, color: .grey600)
         }
     }
@@ -86,11 +84,11 @@ struct CommunityDetailView: View {
 
     private var MidSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
-            Text(item.content)
+            Text(vm.postItem.content)
                 .appFont(.body)
 
             HStack(spacing: DefaultSpacing.spacing12) {
-                CommunityLikeButton(count: item.likeCount)
+                CommunityLikeButton(count: vm.postItem.likeCount)
                 CommentSection
             }
         }
@@ -100,7 +98,7 @@ struct CommunityDetailView: View {
         HStack(spacing: DefaultSpacing.spacing4) {
             Image(systemName: "bubble")
             Text("댓글")
-            Text(String(item.commentCount))
+            Text(String(vm.postItem.commentCount))
         }
         .appFont(.subheadline, color: .grey600)
     }
@@ -113,11 +111,5 @@ struct CommunityDetailView: View {
                 CommunityCommentItem(model: comment)
             }
         }
-    }
-}
-
-#Preview {
-    NavigationStack {
-        CommunityDetailView(item: .init(category: .impromptu, tag: .cheerUp, title: "오늘 강남역 카공하실 분?", content: "오후 2시부터 6시까지 강남역 근처 카페에서 각자 할일 하실 분 구합니다! 현재 2명 있어요.", profileImage: nil, userName: "김멋사", part: "iOS", createdAt: "방금 전", likeCount: 2, commentCount: 1))
     }
 }

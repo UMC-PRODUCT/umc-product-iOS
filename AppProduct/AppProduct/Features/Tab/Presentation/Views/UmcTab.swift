@@ -11,7 +11,7 @@ struct UmcTab: View {
     @State var tabCase: TabCase = .home
     @State var isShowMyPage: Bool = false
     @Environment(\.di) var di
-    
+
     var body: some View {
         let router = di.resolve(NavigationRouter.self)
 
@@ -37,20 +37,20 @@ struct UmcTab: View {
             UmcBottonAccessoryView(tabCase: $tabCase)
         })
     }
-    
+
     private func tabLabel(_ tab: TabCase) -> some View {
         VStack(alignment: .center, spacing: DefaultSpacing.spacing8, content: {
             tab.icon
                 .renderingMode(.template)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-            
+
             Text(tab.title)
                 .appFont(.caption1, weight: .regular)
         })
         .tint(.blue)
     }
-    
+
     @ViewBuilder
     private func tabView(_ tab: TabCase) -> some View {
         switch tab {
@@ -61,7 +61,7 @@ struct UmcTab: View {
         case .activity:
             Text("11")
         case .community:
-            Text("11")
+            CommunityView()
         case .mypage:
             Text("11")
         }
