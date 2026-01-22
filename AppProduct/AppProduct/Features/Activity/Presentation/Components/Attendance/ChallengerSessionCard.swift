@@ -34,26 +34,24 @@ struct ChallengerSessionCard: View, Equatable {
     }
     
     private enum Constants {
-        static let horizontalSpacing: CGFloat = 16
-        static let verticalSpacing: CGFloat = 8
         static let containerPadding: CGFloat = 16
         static let containerHeight: CGFloat = 90
-        static let containerCornerRadius: CGFloat = 24
         static let iconSize: CGFloat = 64
         static let statusBadgeHeight: CGFloat = 36
         static let statusBadgeMinCornerRadius: Edge.Corner.Style = 12
     }
     
     var body: some View {
-        HStack(spacing: Constants.horizontalSpacing) {
+        HStack(spacing: DefaultSpacing.spacing16) {
             icon
             contentSection
+            Spacer()
             statusSession
         }
         .padding(Constants.containerPadding)
         .frame(height: Constants.containerHeight)
-        .containerShape(.rect(cornerRadius: Constants.containerCornerRadius))
-        .background(.white, in: .rect(cornerRadius: Constants.containerCornerRadius))
+        .containerShape(.rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .background(.white, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
@@ -68,7 +66,7 @@ struct ChallengerSessionCard: View, Equatable {
     }
 
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: Constants.verticalSpacing) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Text(info.title)
                 .appFont(.bodyEmphasis, weight: .bold, color: .black)
                 .lineLimit(1)
@@ -103,7 +101,7 @@ struct ChallengerSessionCard: View, Equatable {
         Color.gray.frame(height: 300)
         
         ChallengerSessionCard(
-            session: AttendancePreviewData.session
+            session: AttendancePreviewData.sessions[1]
         )
     }
 }

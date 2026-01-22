@@ -30,18 +30,18 @@ enum AttendanceStatus: String, CaseIterable {
     
     var backgroundColor: Color {
         switch self {
-        case .pending: .gray.opacity(0.5)
-        case .present: .green.opacity(0.5)
-        case .late: .yellow.opacity(0.5)
-        case .absent: .red.opacity(0.5)
+        case .pending: .gray.opacity(0.7)
+        case .present: .green.opacity(0.7)
+        case .late: .yellow.opacity(0.7)
+        case .absent: .red.opacity(0.7)
         }
     }
     
     var fontColor: Color {
         switch self {
-        case .pending: return .grey900
+        case .pending: return .black
         case .present, .late, .absent:
-            return .grey000
+            return .white
         }
     }
 }
