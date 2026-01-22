@@ -81,7 +81,7 @@ struct ChallengerAttendanceView: View, Equatable {
             // 사유 제출 Sheet 활성화
         } label: {
             Text("위치 인증이 안 되나요? 사유 제출하기")
-                .appFont(.caption2, color: .grey500)
+                .appFont(.caption1, color: .gray)
                 .underline()
         }
         .buttonStyle(.plain)
