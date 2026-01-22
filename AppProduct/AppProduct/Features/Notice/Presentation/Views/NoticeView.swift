@@ -133,7 +133,7 @@ struct NoticeView: View {
 /// 서브필터 영역 (전체, 운영진 공지 칩 + 파트 메뉴)
 private struct NoticeSubFilter: View, Equatable {
 
-    @Bindable var viewModel: NoticeViewModel
+    @Bindable var viewModel = NoticeViewModel()
 
     static func == (lhs: NoticeSubFilter, rhs: NoticeSubFilter) -> Bool {
         lhs.viewModel.selectedSubFilter == rhs.viewModel.selectedSubFilter &&
@@ -178,7 +178,7 @@ private struct NoticeSubFilter: View, Equatable {
 /// 파트 선택 메뉴
 private struct PartFilterMenu: View, Equatable {
 
-    @Bindable var viewModel: NoticeViewModel
+    @Bindable var viewModel = NoticeViewModel()
 
     static func == (lhs: PartFilterMenu, rhs: PartFilterMenu) -> Bool {
         lhs.viewModel.selectedPart == rhs.viewModel.selectedPart
