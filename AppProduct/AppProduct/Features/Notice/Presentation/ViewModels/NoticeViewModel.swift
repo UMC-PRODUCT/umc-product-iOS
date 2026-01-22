@@ -29,9 +29,9 @@ final class NoticeViewModel {
         Generation(value: 12)
     ]
     /// 현재 기수
-    var currentGeneration: Generation?
+    var currentGeneration: Generation = Generation(value: 9)
     /// 선택된 기수
-    var selectedGeneration: Generation?
+    var selectedGeneration: Generation = Generation(value: 9)
 
     /// 메인필터 선택값
     var selectedNoticeMainFilter: NoticeMainFilterType = .all
@@ -76,6 +76,17 @@ final class NoticeViewModel {
         case .school: return schoolSubFilter
         default: return .all
         }
+    }
+
+    /// 메인필터 항목 목록
+    var mainFilterItems: [NoticeMainFilterType] {
+        [
+            .all,
+            .central,
+            .branch(userBranch),
+            .school(userSchool),
+            .part(userPart)
+        ]
     }
 
     // MARK: - Methods

@@ -60,79 +60,79 @@ struct ToolBarCollection {
         }
     }
     
-    // MARK: - NoticeView
     /// 기수 필터
     struct GenerationFilter: ToolbarContent {
-        
-        @Bindable var viewModel: NoticeViewModel
-        
-        private enum Constants {
-            static let labelPadding: CGFloat = 6
-        }
-        
+
+        let title: String
+        let generations: [Generation]
+        @Binding var selection: Generation
+
         var body: some ToolbarContent {
-            ToolbarItem(placement: .topBarLeading, content: {
+            ToolbarItem(placement: .topBarLeading) {
                 Menu {
                     generationPicker
                 } label: {
                     menuLabel
                 }
-            })
+            }
         }
 
         private var generationPicker: some View {
-            Picker("기수 선택", selection: selectedGenerationBinding) {
-                ForEach(viewModel.generations) { generation in
-                    Text(generation.title).tag(generation as Generation?)
+            Picker("기수 선택", selection: $selection) {
+                ForEach(generations) { generation in
+                    Text(generation.title).tag(generation)
                 }
             }
             .pickerStyle(.inline)
         }
 
         private var menuLabel: some View {
-            Text(viewModel.selectedGeneration?.title ?? viewModel.currentGeneration?.title ?? "")
+            Text(title)
                 .font(.callout)
                 .fontWeight(.semibold)
         }
-
-        private var selectedGenerationBinding: Binding<Generation?> {
-            Binding(
-                get: { viewModel.selectedGeneration },
-                set: { newValue in
-                    if let generation = newValue {
-                        viewModel.selectedGeneration = generation
-                    }
-                }
-            )
-        }
     }
     
-    // MARK: - NoticeFilter
-    /// 메인 필터링 버튼(전체, 중앙운영사무국, 지부, 학교, 파트)
-    struct NoticeMainFilter: ToolbarContent {
+    /// 상단 중앙 메뉴 툴바 (아이콘O)
+    struct TopBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
 
-        @Bindable var viewModel: NoticeViewModel
-        @Namespace var namespace
+        let icon: String
+        let title: String
+        let items: [Item]
+        @Binding var selection: Item
+        let itemLabel: (Item) -> String
+        let itemIcon: ((Item) -> String)?
 
-        private enum Constants {
-            static let labelPadding: CGFloat = 6
-        }
-
-        /// 필터 항목 데이터
-        private var mainFilterItems: [NoticeMainFilterType] {
-            [
-                .all,
-                .central,
-                .branch(viewModel.userBranch),
-                .school(viewModel.userSchool),
-                .part(viewModel.userPart)
-            ]
+        init(
+            icon: String,
+            title: String,
+            items: [Item],
+            selection: Binding<Item>,
+            itemLabel: @escaping (Item) -> String,
+            itemIcon: ((Item) -> String)? = nil
+        ) {
+            self.icon = icon
+            self.title = title
+            self.items = items
+            self._selection = selection
+            self.itemLabel = itemLabel
+            self.itemIcon = itemIcon
         }
 
         var body: some ToolbarContent {
             ToolbarItem(placement: .principal) {
                 Menu {
-                    filterPicker
+                    Picker("선택", selection: $selection) {
+                        ForEach(items) { item in
+                            if let itemIcon = itemIcon {
+                                Label(itemLabel(item), systemImage: itemIcon(item))
+                                    .tag(item)
+                            } else {
+                                Text(itemLabel(item)).tag(item)
+                            }
+                        }
+                    }
+                    .pickerStyle(.inline)
                 } label: {
                     menuLabel
                 }
@@ -140,46 +140,21 @@ struct ToolBarCollection {
             .sharedBackgroundVisibility(.visible)
         }
 
-        private var filterPicker: some View {
-            Picker("필터 선택", selection: selectedFilterBinding) {
-                ForEach(mainFilterItems) { filter in
-                    Label(filter.labelText, systemImage: filter.labelIcon)
-                        .tag(filter as NoticeMainFilterType?)
-                }
-            }
-            .pickerStyle(.inline)
-        }
-        
         private var menuLabel: some View {
             HStack {
-                Image(systemName: viewModel.selectedNoticeMainFilter.labelIcon)
+                Image(systemName: icon)
                     .font(.system(size: 10))
                 Spacer()
-                Text(viewModel.selectedNoticeMainFilter.labelText)
+                Text(title)
                     .font(.subheadline)
                     .fontWeight(.semibold)
                 Spacer()
-                chevronImage
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.grey500)
             }
             .padding(10)
             .glassEffect(.regular.interactive(), in: .capsule)
-        }
-        
-        private var chevronImage: some View {
-            Image(systemName: "chevron.down")
-                .font(.system(size: 10))
-                .foregroundStyle(.grey500)
-        }
-
-        private var selectedFilterBinding: Binding<NoticeMainFilterType?> {
-            Binding(
-                get: { viewModel.selectedNoticeMainFilter },
-                set: { newValue in
-                    if let filter = newValue {
-                        viewModel.selectMainFilter(filter)
-                    }
-                }
-            )
         }
     }
 }
