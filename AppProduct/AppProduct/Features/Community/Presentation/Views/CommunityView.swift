@@ -47,8 +47,12 @@ struct CommunityView: View {
         .searchable(text: $vm.searchText)
         .searchToolbarBehavior(.minimize)
         .toolbar {
-            ToolbarItem(id: "menu") { ToolbarMenu }
-            ToolbarSpacer()
+            ToolBarCollection.CommunityMenuBtn(
+                allAction: {},
+                questionAction: {},
+                fameAction: {},
+                isRecruiting: $vm.isRecruiting
+            )
         }
     }
 
@@ -60,19 +64,6 @@ struct CommunityView: View {
             )
         } description: {
             Text("가장 먼저 글을 작성해 보세요!")
-        }
-    }
-
-    // MARK: - Toolbar
-
-    private var ToolbarMenu: some View {
-        Menu("Menu", systemImage: "ellipsis") {
-            Section {
-                Button("전체") {}
-                Button("질문", systemImage: "flame.fill") {}
-                Button("명예의전당", systemImage: "trophy.fill") {}
-            }
-            Toggle("모집중", isOn: $vm.isRecruiting)
         }
     }
 
