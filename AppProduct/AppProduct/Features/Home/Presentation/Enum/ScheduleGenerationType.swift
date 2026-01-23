@@ -12,6 +12,7 @@ import SwiftUI
 enum ScheduleGenerationType: CaseIterable {
     case title
     case place
+    case allDay
     case date
     case memo
     case participation
@@ -24,6 +25,8 @@ enum ScheduleGenerationType: CaseIterable {
             return "어떤 일정인가요?"
         case .place:
             return "어디에서 열리나요?"
+        case .allDay:
+            return "하루 종일"
         case .date:
             return "언제 열리나요?"
         case .memo:
@@ -40,7 +43,7 @@ enum ScheduleGenerationType: CaseIterable {
     }
     
     var placeholderColor: Color {
-        return .grey500
+        return .gray
     }
     
 }

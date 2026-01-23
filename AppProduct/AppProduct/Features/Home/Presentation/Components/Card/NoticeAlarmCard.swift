@@ -46,7 +46,7 @@ fileprivate struct ContentInfo: View {
             topTitle
             
             Text(notice.content)
-                .appFont(.callout, color: .grey500)
+                .appFont(.subheadline, color: .grey600)
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
         })
@@ -55,7 +55,7 @@ fileprivate struct ContentInfo: View {
     private var topTitle: some View {
         HStack {
             Text(notice.title)
-                .appFont(.bodyEmphasis, color: .black)
+                .appFont(.calloutEmphasis, color: .black)
             
             Spacer()
             
