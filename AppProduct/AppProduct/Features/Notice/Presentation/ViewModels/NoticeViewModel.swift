@@ -49,6 +49,8 @@ final class NoticeViewModel {
 
     var noticeItems: Loadable<[NoticeItemModel]> = .idle
     
+    private var allNoticeItems: [NoticeItemModel] = []
+    
     init() {
 #if DEBUG
         setupMockData()
@@ -95,6 +97,20 @@ final class NoticeViewModel {
         self.generations = generations
         self.currentGeneration = current
         self.selectedGeneration = current
+    }
+    
+    /// 필터 적용 메서드
+    private func applyFilters() {
+        let filtered = allNoticeItems.filter { item in
+            item.generation == selectedGeneration.value
+        }
+        noticeItems = .loaded(filtered)
+    }
+    
+    /// 기수 선택 메서드
+    func selectGeneration(_ generation: Generation) {
+        selectedGeneration = generation
+        applyFilters()
     }
 
     /// 메인필터 선택
