@@ -8,7 +8,10 @@
 import Foundation
 
 #if DEBUG
-/// 테스트용 Mock UseCase - 다양한 시나리오 시뮬레이션
+/// 테스트용 Mock UseCase
+///
+/// 실제 네트워크 요청 없이 출석 요청을 시뮬레이션합니다.
+/// 승인/거절은 AttendanceTestWrapper의 관리자 패널에서 처리합니다.
 @Observable
 final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
 
@@ -29,9 +32,6 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
     /// 응답 지연 시간 (초)
     var responseDelay: TimeInterval = 1.0
 
-    /// 자동 승인 시뮬레이션 (초, nil이면 비활성화)
-    var autoApproveDelay: TimeInterval? = 2.0
-
     // MARK: - Protocol Properties
 
     var isInsideGeofence: Bool { mockIsInsideGeofence }
@@ -40,20 +40,17 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
     // MARK: - Protocol Methods
 
     func requestGPSAttendance(sessionId: SessionID, userId: UserID) async throws -> Attendance {
-        // 응답 지연 시뮬레이션
         try await Task.sleep(for: .seconds(responseDelay))
 
-        // 에러 시뮬레이션
         if let error = mockError {
             throw error
         }
 
-        // 성공 응답
         return Attendance(
             sessionId: sessionId,
             userId: userId,
             type: .gps,
-            status: .pending,
+            status: .beforeAttendance,
             locationVerification: .init(
                 isVerified: true,
                 coordinate: .init(latitude: 37.582967, longitude: 127.010527),
@@ -75,7 +72,7 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
             sessionId: sessionId,
             userId: userId,
             type: .reason,
-            status: .pending,
+            status: .beforeAttendance,
             locationVerification: nil,
             reason: reason
         )
@@ -88,19 +85,17 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
             sessionId: sessionId,
             userId: userId,
             type: .reason,
-            status: .pending,
+            status: .beforeAttendance,
             locationVerification: nil,
             reason: reason
         )
     }
 
     func isWithinAttendanceTime(info: SessionInfo) -> AttendanceTimeWindow {
-        // Mock 설정이 있으면 그 값 사용
         if let mockWindow = mockTimeWindow {
             return mockWindow
         }
 
-        // 실제 계산
         let now = Date()
         let onTimeThreshold = TimeInterval(AttendancePolicy.onTimeThresholdMinutes * 60)
         let lateThreshold = TimeInterval(AttendancePolicy.lateThresholdMinutes * 60)

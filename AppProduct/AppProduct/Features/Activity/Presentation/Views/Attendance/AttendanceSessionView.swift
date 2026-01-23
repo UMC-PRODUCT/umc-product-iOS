@@ -47,7 +47,14 @@ struct AttendanceSessionView: View {
         static let animationResponse: Double = 0.35
         static let animationDamping: Double = 0.8
     }
-    
+
+    // MARK: - Computed Properties
+
+    /// 출석 가능한 세션만 필터링 (beforeAttendance, pendingApproval)
+    private var availableSessions: [Session] {
+        sessions.filter(\.isAttendanceAvailable)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing48) {
@@ -58,30 +65,54 @@ struct AttendanceSessionView: View {
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
             .safeAreaPadding(.vertical, DefaultConstant.defaultSafeBottom)
         }
-        .contentMargins(.trailing, 4, for: .scrollContent)
+        .contentMargins(
+            .trailing,
+            DefaultConstant.defaultContentTrailingMargins,
+            for: .scrollContent
+        )
     }
     
+    @ViewBuilder
     private var attendanceSessionSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             attendanceSectionHeader
-            
-            AttendanceSessionList(
-                container: container,
-                errorHandler: errorHandler,
-                sessions: sessions,
-                expandedSessionId: expandedSessionId,
-                attendanceViewModel: attendanceViewModel,
-                userId: userId
-            ) { sessionId in
-                withAnimation(.spring(Spring(
-                    response: Constants.animationResponse,
-                    dampingRatio: Constants.animationDamping
-                ))) {
-                    expandedSessionId = expandedSessionId == sessionId ? nil : sessionId
+
+            if availableSessions.isEmpty {
+                emptySessionView
+            } else {
+                AttendanceSessionList(
+                    container: container,
+                    errorHandler: errorHandler,
+                    sessions: availableSessions,
+                    expandedSessionId: expandedSessionId,
+                    attendanceViewModel: attendanceViewModel,
+                    userId: userId
+                ) { sessionId in
+                    withAnimation(.spring(Spring(
+                        response: Constants.animationResponse,
+                        dampingRatio: Constants.animationDamping
+                    ))) {
+                        expandedSessionId = expandedSessionId == sessionId ? nil : sessionId
+                    }
                 }
+                .equatable()
             }
-            .equatable()
         }
+    }
+
+    private var emptySessionView: some View {
+        VStack(spacing: DefaultSpacing.spacing12) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 40))
+                .foregroundStyle(.green.opacity(0.7))
+
+            Text("모든 세션 출석을 완료했습니다")
+                .appFont(.body, color: .grey600)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DefaultSpacing.spacing32)
+        .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .glass()
     }
     
     private var attendanceSectionHeader: some View {
@@ -103,14 +134,41 @@ struct AttendanceSessionView: View {
     }
 }
 
-#Preview {
+#Preview("기본 (필터링 적용)") {
     ZStack {
         Color.grey100.ignoresSafeArea()
-        
+
         AttendanceSessionView(
             container: AttendancePreviewData.container,
             errorHandler: AttendancePreviewData.errorHandler,
             sessions: AttendancePreviewData.sessions,
+            userId: AttendancePreviewData.userId
+        )
+    }
+}
+
+#Preview("출석 가능 세션 여러 개") {
+    ZStack {
+        Color.grey100.ignoresSafeArea()
+
+        AttendanceSessionView(
+            container: AttendancePreviewData.container,
+            errorHandler: AttendancePreviewData.errorHandler,
+            sessions: AttendancePreviewData.multipleAvailableSessions,
+            userId: AttendancePreviewData.userId
+        )
+    }
+}
+
+#Preview("모든 세션 완료 (Empty State)") {
+    ZStack {
+        Color.grey100.ignoresSafeArea()
+
+        // 모든 세션이 완료된 상태
+        AttendanceSessionView(
+            container: AttendancePreviewData.container,
+            errorHandler: AttendancePreviewData.errorHandler,
+            sessions: Array(AttendancePreviewData.sessions.prefix(5)), // beforeAttendance 제외
             userId: AttendancePreviewData.userId
         )
     }

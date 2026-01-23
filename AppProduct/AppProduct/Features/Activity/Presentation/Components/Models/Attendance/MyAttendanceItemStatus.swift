@@ -10,6 +10,7 @@ import SwiftUI
 // MARK: - MyAttendanceItemStatus
 
 enum MyAttendanceItemStatus: Equatable {
+    case pendingApproval
     case present
     case late
     case absent
@@ -18,6 +19,8 @@ enum MyAttendanceItemStatus: Equatable {
 
     var text: String {
         switch self {
+        case .pendingApproval:
+            return "승인 대기"
         case .present:
             return "출석"
         case .late:
@@ -29,6 +32,8 @@ enum MyAttendanceItemStatus: Equatable {
 
     var backgroundColor: Color {
         switch self {
+        case .pendingApproval:
+            return .yellow.opacity(0.7)
         case .present:
             return .green.opacity(0.7)
         case .late:
@@ -39,7 +44,12 @@ enum MyAttendanceItemStatus: Equatable {
     }
 
     var fontColor: Color {
-        .white
+        switch self {
+        case .pendingApproval:
+            return .black
+        default:
+            return .white
+        }
     }
 }
 
@@ -47,16 +57,18 @@ enum MyAttendanceItemStatus: Equatable {
 
 extension MyAttendanceItemStatus {
     /// AttendanceStatus에서 변환
-    /// - Note: pending 상태는 nil 반환 (리스트에 표시 안함)
+    /// - Note: beforeAttendance 상태는 nil 반환 (리스트에 표시 안함)
     init?(from status: AttendanceStatus) {
         switch status {
+        case .pendingApproval:
+            self = .pendingApproval
         case .present:
             self = .present
         case .late:
             self = .late
         case .absent:
             self = .absent
-        case .pending:
+        case .beforeAttendance:
             return nil
         }
     }

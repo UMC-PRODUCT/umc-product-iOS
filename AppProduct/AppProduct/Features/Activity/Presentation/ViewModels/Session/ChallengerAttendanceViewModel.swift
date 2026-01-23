@@ -55,6 +55,7 @@ final class ChallengerAttendanceViewModel {
             let result = try await challengeAttendanceUseCase.requestGPSAttendance(
                 sessionId: info.sessionId, userId: userId)
             session.updateState(.loaded(result))
+            session.markSubmitted()
 
         } catch let error as DomainError {
             session.updateState(.failed(.domain(error)))

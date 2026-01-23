@@ -28,6 +28,7 @@ struct ActivityCompactMapView: View {
     
     private enum Constants {
         static let mapComponentHeight: CGFloat = 200
+        static let mapCornerRadius: Edge.Corner.Style = 24
     }
     
     var body: some View {
@@ -38,6 +39,9 @@ struct ActivityCompactMapView: View {
             .overlay(alignment: .bottomTrailing) {
                 LocationStatusBarView(mapViewModel: mapViewModel)
             }
+            .clipShape(ConcentricRectangle(
+                corners: .concentric(minimum: Constants.mapCornerRadius),
+                isUniform: true))
             .task {
                 await mapViewModel.startGeofenceForAttendance(info: info)
                 await mapViewModel.updateAddressForSession(info: info)

@@ -34,8 +34,8 @@ struct ChallengerSessionCard: View, Equatable {
     }
     
     private enum Constants {
-        static let containerPadding: CGFloat = 16
-        static let containerHeight: CGFloat = 90
+        static let padding: EdgeInsets = .init(
+            top: 20, leading: 16, bottom: 20, trailing: 16)
         static let iconSize: CGFloat = 64
         static let statusBadgeHeight: CGFloat = 36
         static let statusBadgeMinCornerRadius: Edge.Corner.Style = 12
@@ -45,12 +45,12 @@ struct ChallengerSessionCard: View, Equatable {
         HStack(spacing: DefaultSpacing.spacing16) {
             icon
             contentSection
-            Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
             statusSession
         }
-        .padding(Constants.containerPadding)
-        .frame(height: Constants.containerHeight)
-        .containerShape(.rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .padding(Constants.padding)
+        .containerShape(
+            .rect(cornerRadius: DefaultConstant.defaultListCornerRadius))
         .background(.white, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
         .contentShape(Rectangle())
         .onTapGesture {
@@ -79,21 +79,28 @@ struct ChallengerSessionCard: View, Equatable {
 
     private var statusSession: some View {
         HStack {
-            Text(session.attendanceStatus.displayText)
-                .appFont(.caption1Emphasis, color: session.attendanceStatus.fontColor)
-                .padding(.horizontal, DefaultConstant.badgeHorizontalPadding)
-                .padding(.vertical, DefaultConstant.badgeVerticalPadding)
-                .background(
-                    session.attendanceStatus.backgroundColor,
-                    in: ConcentricRectangle(
-                        corners: .concentric(minimum: Constants.statusBadgeMinCornerRadius),
-                        isUniform: true
-                    )
-                )
+            // 펼침 상태 + 승인 대기일 때 배지 숨김
+            if !(isExpanded && session.attendanceStatus == .pendingApproval) {
+                statusBadge
+            }
 
             Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                 .foregroundStyle(.gray)
         }
+    }
+
+    /// 출석 상태 배지
+    private var statusBadge: some View {
+        Text(session.attendanceStatus.displayText)
+            .appFont(.caption1Emphasis, color: session.attendanceStatus.fontColor)
+            .padding(DefaultConstant.badgePadding)
+            .background(
+                session.attendanceStatus.backgroundColor,
+                in: ConcentricRectangle(
+                    corners: .concentric(minimum: Constants.statusBadgeMinCornerRadius),
+                    isUniform: true
+                )
+            )
     }
 }
 

@@ -40,9 +40,8 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     
     private enum Constants {
         static let cardSpacing: CGFloat = 12
-        static let cardHorizontalPadding: CGFloat = 16
-        static let cardHeight: CGFloat = 90
         static let cardRadius: CGFloat = 12
+        static let cardPadding: EdgeInsets = .init(top: 20, leading: 16, bottom: 20, trailing: 16)
         static let contentSectionSpacing: CGFloat = 4
 
         static let weekTagPadding: EdgeInsets = .init(top: 2, leading: 8, bottom: 2, trailing: 8)
@@ -61,8 +60,7 @@ private struct MyAttendanceItemPresenter: View, Equatable {
             Spacer()
             statusBadge
         }
-        .padding(.horizontal, Constants.cardHorizontalPadding)
-        .frame(height: Constants.cardHeight)
+        .padding(Constants.cardPadding)
         .background(.white)
     }
 
@@ -99,8 +97,7 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     private var statusBadge: some View {
         Text(model.status.text)
             .appFont(.caption1Emphasis, color: model.status.fontColor)
-            .padding(.vertical, DefaultConstant.badgeVerticalPadding)
-            .padding(.horizontal, DefaultConstant.badgeHorizontalPadding)
+            .padding(DefaultConstant.badgePadding)
             .background(
                 model.status.backgroundColor,
                 in: RoundedRectangle(cornerRadius: Constants.statusRadius)

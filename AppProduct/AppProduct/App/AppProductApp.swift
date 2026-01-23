@@ -14,17 +14,11 @@ import SwiftData
 struct AppProductApp: App {
     @State private var container: DIContainer = DIContainer.configured()
     @State private var errorHandler: ErrorHandler = .init()
-    @State var show: Bool = false
-    
+
     var body: some Scene {
         WindowGroup {
 //            UmcTab()
-            AttendanceSessionView(
-                container: AttendancePreviewData.container,
-                errorHandler: AttendancePreviewData.errorHandler,
-                sessions: AttendancePreviewData.sessions,
-                userId: AttendancePreviewData.userId
-            )
+            AttendanceTestWrapper()
                 .environment(errorHandler)
                 .environment(\.di, container)
                 .modelContainer(for: NoticeHistoryData.self)

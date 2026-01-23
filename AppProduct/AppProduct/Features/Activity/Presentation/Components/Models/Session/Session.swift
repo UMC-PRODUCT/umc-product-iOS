@@ -26,7 +26,11 @@ final class Session: Identifiable, Equatable {
     }
 
     var attendanceStatus: AttendanceStatus {
-        attendanceLoadable.value?.status ?? .pending
+        // 제출 완료 + 아직 확정되지 않은 경우 → 승인 대기
+        if hasSubmitted, attendanceLoadable.value?.status == .beforeAttendance {
+            return .pendingApproval
+        }
+        return attendanceLoadable.value?.status ?? .beforeAttendance
     }
 
     var isLoading: Bool {
@@ -34,7 +38,12 @@ final class Session: Identifiable, Equatable {
     }
 
     var isSuccess: Bool {
-        hasSubmitted || attendanceStatus != .pending
+        hasSubmitted || (attendanceStatus != .beforeAttendance && attendanceStatus != .pendingApproval)
+    }
+
+    /// 출석 가능 여부 (출석 전 또는 승인 대기 상태)
+    var isAttendanceAvailable: Bool {
+        attendanceStatus == .beforeAttendance || attendanceStatus == .pendingApproval
     }
 
     init(info: SessionInfo, initialAttendance: Attendance? = nil) {
@@ -62,13 +71,13 @@ final class Session: Identifiable, Equatable {
             return "출석 처리 중..."
         }
 
-        // 이번 세션에서 제출함 + 아직 pending → 승인 대기
-        if hasSubmitted, attendanceStatus == .pending {
+        // 승인 대기 상태
+        if attendanceStatus == .pendingApproval {
             return "승인 대기 중"
         }
 
         // 최종 결정됨 (출석 / 지각 / 결석)
-        if attendanceStatus != .pending {
+        if attendanceStatus != .beforeAttendance && attendanceStatus != .pendingApproval {
             return attendanceStatus.displayText
         }
 

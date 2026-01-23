@@ -25,7 +25,7 @@ enum DefaultConstant {
     static let defaultSafeBtnPadding: CGFloat = 10
 
     /// 카드, 버튼 등의 기본 모서리 둥글기.
-    static let defaultCornerRadius: CGFloat = 30
+    static let defaultCornerRadius: CGFloat = 20
 
     /// 리스트 카드의 기본 모서리 둥글기.
     static let defaultListCornerRadius: CGFloat = 24
@@ -35,6 +35,8 @@ enum DefaultConstant {
 
     /// 콘텐츠 영역 상단 마진.
     static let defaultContentTopMargins: CGFloat = 20
+    
+    static let defaultContentTrailingMargins: CGFloat = 4
 
     /// 버튼 내부 패딩.
     static let defaultBtnPadding: CGFloat = 10
@@ -54,9 +56,6 @@ enum DefaultConstant {
     /// 텍스트 줄 간격.
     static let lineSpacing: CGFloat = 2.5
 
-    /// 배지 수평 패딩.
-    static let badgeHorizontalPadding: CGFloat = 16
-
-    /// 배지 수직 패딩.
-    static let badgeVerticalPadding: CGFloat = 8
+    /// 뱃지 패딩.
+    static let badgePadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
 }
