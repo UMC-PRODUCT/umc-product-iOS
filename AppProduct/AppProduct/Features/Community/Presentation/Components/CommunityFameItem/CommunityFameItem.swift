@@ -10,18 +10,11 @@ import SwiftUI
 // MARK: - Constant
 
 private enum Constant {
-    static let mainVSpacing: CGFloat = 24
     static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 16, trailing: 16)
-    static let mainRadius: CGFloat = 20
     // profile
     static let profileCircleSize: CGSize = .init(width: 39, height: 39)
-    static let nameHSpacing: CGFloat = 8
     static let partTagPadding: EdgeInsets = .init(top: 2, leading: 8, bottom: 2, trailing: 8)
     static let partTagRadius: CGFloat = 8
-    // button
-    static let buttonIconSize: CGFloat = 16
-    static let buttonSize: CGSize = .init(width: 64, height: 32)
-    static let buttonRadius: CGFloat = 8
     // feedback
     static let feedbackPadding: EdgeInsets = .init(top: 8, leading: 8, bottom: 8, trailing: 8)
     static let feedbackRadius: CGFloat = 10
@@ -37,6 +30,10 @@ struct CommunityFameItem: View {
     private let model: CommunityFameItemModel
     private let action: () -> Void
 
+    static func == (lhs: CommunityFameItem, rhs: CommunityFameItem) -> Bool {
+        lhs.model == rhs.model
+    }
+
     // MARK: - Init
 
     init(model: CommunityFameItemModel, action: @escaping () -> Void) {
@@ -47,84 +44,73 @@ struct CommunityFameItem: View {
     // MARK: - Body
 
     var body: some View {
-        CommunityFameItemPresenter(model: model, action: action)
-            .equatable()
-    }
-}
-
-// MARK: - Presenter
-
-private struct CommunityFameItemPresenter: View, Equatable {
-    let model: CommunityFameItemModel
-    let action: () -> Void
-
-    static func == (lhs: CommunityFameItemPresenter, rhs: CommunityFameItemPresenter) -> Bool {
-        lhs.model == rhs.model
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Constant.mainVSpacing) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
             HStack {
-                ProfileSection(model: model)
-
+                profileSection
                 Spacer()
-
-                // 보기 버튼
-                Button(action: action) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: Constant.buttonIconSize))
-                    Text("보기")
-                        .appFont(.caption1)
-                }
-                .foregroundStyle(.grey900)
-                .frame(width: Constant.buttonSize.width, height: Constant.buttonSize.height)
-                .background(.white, in: RoundedRectangle(cornerRadius: Constant.buttonRadius))
-                .overlay(RoundedRectangle(cornerRadius: Constant.buttonRadius).strokeBorder(.gray))
+                btnSection
             }
-
-            // 피드백 내용
-            Text(model.content)
-                .appFont(.caption1, color: .grey700)
-                .lineLimit(2)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(Constant.feedbackPadding)
-                .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.feedbackRadius))
+            feedbackSection
         }
         .padding(Constant.mainPadding)
-        .background(.white, in: RoundedRectangle(cornerRadius: Constant.mainRadius))
+        .containerShape(
+            .rect(cornerRadius: DefaultConstant.defaultListCornerRadius)
+        )
+        .background(.white, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .glass()
     }
-}
 
-// 프로필
-private struct ProfileSection: View, Equatable {
-    let model: CommunityFameItemModel
+    // MARK: - Section
 
-    var body: some View {
-        if model.profileImage != nil {
-            model.profileImage
-        } else {
-            Text(model.userName.prefix(1))
-                .appFont(.callout, color: .grey900)
-                .frame(width: Constant.profileCircleSize.width, height: Constant.profileCircleSize.height)
-                .background(.grey100, in: Circle())
-        }
-
-        VStack(alignment: .leading) {
-            // 이름 + 파트
-            HStack(spacing: Constant.nameHSpacing) {
-                Text(model.userName)
-                    .appFont(.subheadlineEmphasis, color: .grey900)
-                Text(model.part)
-                    .appFont(.caption2, color: .gray)
-                    .padding(Constant.partTagPadding)
-                    .background(.white, in: RoundedRectangle(cornerRadius: Constant.partTagRadius))
-                    .overlay(RoundedRectangle(cornerRadius: Constant.partTagRadius).strokeBorder(.gray))
+    private var profileSection: some View {
+        HStack {
+            if model.profileImage != nil {
+                // !!! - url 이미지 처리
+                Image(systemName: "heart")
+            } else {
+                Text(model.userName.prefix(1))
+                    .appFont(.callout, color: .grey900)
+                    .frame(width: Constant.profileCircleSize.width, height: Constant.profileCircleSize.height)
+                    .background(.grey100, in: Circle())
             }
 
-            // 워크북
-            Text(model.workbookTitle)
-                .appFont(.caption1, color: .gray)
+            VStack(alignment: .leading) {
+                // 이름 + 파트
+                HStack(spacing: DefaultSpacing.spacing8) {
+                    Text(model.userName)
+                        .appFont(.subheadlineEmphasis, color: .grey900)
+                    Text(model.part)
+                        .appFont(.footnote, color: .grey600)
+                        .padding(Constant.partTagPadding)
+                        .background(.white, in: RoundedRectangle(cornerRadius: Constant.partTagRadius))
+                        .overlay(RoundedRectangle(cornerRadius: Constant.partTagRadius).strokeBorder(.gray))
+                }
+
+                // 워크북
+                Text(model.workbookTitle)
+                    .appFont(.footnote, color: .gray)
+            }
         }
+    }
+
+    // 보기 버튼
+    private var btnSection: some View {
+        Button(action: action) {
+            Image(systemName: "square.and.arrow.up")
+            Text("보기")
+        }
+        .appFont(.footnote, color: .grey900)
+        .buttonStyle(.glass)
+    }
+
+    // 피드백 내용
+    private var feedbackSection: some View {
+        Text(model.content)
+            .appFont(.footnote, color: .grey700)
+            .lineLimit(2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Constant.feedbackPadding)
+            .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.feedbackRadius))
     }
 }
 
