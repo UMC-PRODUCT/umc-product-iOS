@@ -25,13 +25,21 @@ struct CommunityFameView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack {
-            weekSection
-
-            if vm.groupedByUniversity.isEmpty {
-                emptyList
-            } else {
-                listSection
+        Group {
+            switch vm.fameItems {
+            case .idle:
+                Color.clear.task {
+                    print("hello")
+                }
+            case .loading:
+                ProgressView()
+            case .loaded:
+                VStack {
+                    weekSection
+                    listSection
+                }
+            case .failed:
+                Color.clear
             }
         }
     }
@@ -54,24 +62,30 @@ struct CommunityFameView: View {
     }
 
     private var listSection: some View {
-        List {
-            ForEach(vm.groupedByUniversity, id: \.university) { group in
-                Section {
-                    ForEach(group.items) { item in
-                        CommunityFameItem(model: item) {
-                            // TODO: 보기 버튼 액션
+        Group {
+            if vm.groupedByUniversity.isEmpty {
+                emptyList
+            } else {
+                List {
+                    ForEach(vm.groupedByUniversity, id: \.university) { group in
+                        Section {
+                            ForEach(group.items) { item in
+                                CommunityFameItem(model: item) {
+                                    // TODO: 보기 버튼 액션
+                                }
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                            }
+                        } header: {
+                            Text(group.university)
+                                .appFont(.title3Emphasis, color: .black)
                         }
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
                     }
-                } header: {
-                    Text(group.university)
-                        .appFont(.title3Emphasis, color: .black)
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
     }
 
     private var emptyList: some View {

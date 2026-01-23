@@ -13,14 +13,16 @@ class CommunityFameViewModel {
 
     var selectedWeek: Int = 1
 
+    var fameItems: Loadable<[CommunityFameItemModel]> = .loading
+
     var totalWeeks: Int {
-        fameItems.map { $0.week }.max() ?? 1
+        guard case .loaded(let items) = fameItems else { return 1 }
+        return items.map { $0.week }.max() ?? 1
     }
 
-    var fameItems: [CommunityFameItemModel] = []
-
     var groupedByUniversity: [(university: String, items: [CommunityFameItemModel])] {
-        let filtered = fameItems.filter { $0.week == selectedWeek }
+        guard case .loaded(let items) = fameItems else { return [] }
+        let filtered = items.filter { $0.week == selectedWeek }
         let grouped = Dictionary(grouping: filtered, by: { $0.university })
         return grouped.map { (university: $0.key, items: $0.value) }
             .sorted { $0.university < $1.university }
