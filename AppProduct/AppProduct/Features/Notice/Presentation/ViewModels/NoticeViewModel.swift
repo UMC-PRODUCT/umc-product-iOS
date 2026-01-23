@@ -11,128 +11,214 @@ import SwiftUI
 /// 공지사항 화면 ViewModel
 @Observable
 final class NoticeViewModel {
-    
-    // MARK: - Nested Types
-    /// 서브필터 타입 (ViewModel 내부용)
-    enum SubFilterType: Equatable {
-        case all
-        case management
-    }
-    
+
     // MARK: - Properties
+
     /// 기수 목록
-    var generations: [Generation] = [
-        Generation(value: 8),
-        Generation(value: 9),
-        Generation(value: 10),
-        Generation(value: 11),
-        Generation(value: 12)
-    ]
-    /// 현재 기수
+    var generations: [Generation] = []
+
+    /// 현재 기수 (서버에서 받아온 현재 활성 기수)
     var currentGeneration: Generation = Generation(value: 9)
+
     /// 선택된 기수
-    var selectedGeneration: Generation = Generation(value: 9)
+    private(set) var selectedGeneration: Generation = Generation(value: 9)
 
-    /// 메인필터 선택값
-    var selectedNoticeMainFilter: NoticeMainFilterType = .all
-    /// 서브필터 선택값
-    var selectedNoticeSubFilter: NoticeSubFilterType = .all
-    /// 파트 선택값
-    var selectedPart: Part? = .all
-    /// 필터 시트 표시 여부
-    var isShowingFilterSheet: Bool = false
+    /// 기수별 필터 상태 저장소
+    private var generationStates: [Int: GenerationFilterState] = [:]
 
-    /// 메인필터별 서브필터 상태
-    var centralSubFilter: SubFilterType = .all
-    var branchSubFilter: SubFilterType = .all
-    var schoolSubFilter: SubFilterType = .all
-
-    var noticeItems: Loadable<[NoticeItemModel]> = .idle
-    
+    /// 전체 공지 데이터 (원본)
     private var allNoticeItems: [NoticeItemModel] = []
-    
-    init() {
-#if DEBUG
-        setupMockData()
-#endif
-    }
-   
-    private func setupMockData() {
-        generations = (8...12).map { Generation(value: $0) }
-        currentGeneration = Generation(value: 9)
-        selectedGeneration = Generation(value: 9)
-        noticeItems = .loaded(NoticeItemModel.mockItems)
-    }
-    
+
+    /// 필터링된 공지 데이터 (View용)
+    var noticeItems: Loadable<[NoticeItemModel]> = .idle
+
     /// 사용자 정보
     var userSchool: String = "가천대학교"
     var userBranch: String = "Nova"
     var userPart: Part = .ios
 
-    // MARK: - Computed Properties
-    /// 현재 메인필터에 해당하는 서브필터 상태
-    var currentSubFilter: SubFilterType {
-        switch selectedNoticeMainFilter {
-        case .central: return centralSubFilter
-        case .branch: return branchSubFilter
-        case .school: return schoolSubFilter
-        default: return .all
-        }
+    // MARK: - Initialization
+
+    init() {
+#if DEBUG
+        setupMockData()
+#endif
+    }
+
+    private func setupMockData() {
+        generations = (8...12).map { Generation(value: $0) }
+        currentGeneration = Generation(value: 9)
+        selectedGeneration = Generation(value: 9)
+        allNoticeItems = NoticeMockData.items
+        generationStates[9] = GenerationFilterState()
+        applyFilters()
+    }
+
+    // MARK: - Computed Properties (현재 기수 상태)
+
+    /// 현재 기수의 필터 상태
+    private var currentState: GenerationFilterState {
+        get { generationStates[selectedGeneration.value] ?? GenerationFilterState() }
+        set { generationStates[selectedGeneration.value] = newValue }
+    }
+
+    /// 현재 선택된 메인필터
+    var selectedMainFilter: NoticeMainFilterType {
+        currentState.mainFilter
+    }
+
+    /// 현재 메인필터의 서브필터 상태
+    private var currentMainFilterState: MainFilterState {
+        currentState.state(for: MainFilterKey(from: selectedMainFilter))
+    }
+
+    /// 현재 선택된 서브필터
+    var selectedSubFilter: NoticeSubFilterType {
+        currentMainFilterState.subFilter
+    }
+
+    /// 현재 선택된 파트
+    var selectedPart: Part {
+        currentMainFilterState.selectedPart
     }
 
     /// 메인필터 항목 목록
     var mainFilterItems: [NoticeMainFilterType] {
-        [
-            .all,
-            .central,
-            .branch(userBranch),
-            .school(userSchool),
-            .part(userPart)
-        ]
+        [.all, .central, .branch(userBranch), .school(userSchool), .part(userPart)]
     }
 
-    // MARK: - Methods
+    /// 서브필터 표시 여부 (중앙/지부/학교만)
+    var showSubFilter: Bool {
+        switch selectedMainFilter {
+        case .central, .branch, .school:
+            return true
+        default:
+            return false
+        }
+    }
+
+    // MARK: - Actions
+
     /// 초기 설정
     func configure(generations: [Generation], current: Generation) {
         self.generations = generations
         self.currentGeneration = current
         self.selectedGeneration = current
-    }
-    
-    /// 필터 적용 메서드
-    private func applyFilters() {
-        let filtered = allNoticeItems.filter { item in
-            item.generation == selectedGeneration.value
+        if generationStates[current.value] == nil {
+            generationStates[current.value] = GenerationFilterState()
         }
-        noticeItems = .loaded(filtered)
     }
-    
-    /// 기수 선택 메서드
+
+    /// 기수 선택
     func selectGeneration(_ generation: Generation) {
         selectedGeneration = generation
+        if generationStates[generation.value] == nil {
+            generationStates[generation.value] = GenerationFilterState()
+        }
         applyFilters()
     }
 
     /// 메인필터 선택
     func selectMainFilter(_ filter: NoticeMainFilterType) {
-        selectedNoticeMainFilter = filter
-        switch filter {
-        case .central, .branch, .school:
-            isShowingFilterSheet = true
-        case .all, .part:
-            break
-        }
+        var state = currentState
+        state.mainFilter = filter
+        currentState = state
+        applyFilters()
     }
 
     /// 서브필터 선택
-    func selectSubFilter(_ subFilter: SubFilterType) {
-        switch selectedNoticeMainFilter {
-        case .central: centralSubFilter = subFilter
-        case .branch: branchSubFilter = subFilter
-        case .school: schoolSubFilter = subFilter
-        default: break
+    func selectSubFilter(_ subFilter: NoticeSubFilterType) {
+        let key = MainFilterKey(from: selectedMainFilter)
+        var mainState = currentState.state(for: key)
+        mainState.subFilter = subFilter
+
+        var state = currentState
+        state.updateState(for: key, state: mainState)
+        currentState = state
+        applyFilters()
+    }
+
+    /// 파트 선택
+    func selectPart(_ part: Part) {
+        let key = MainFilterKey(from: selectedMainFilter)
+        var mainState = currentState.state(for: key)
+        mainState.selectedPart = part
+
+        var state = currentState
+        state.updateState(for: key, state: mainState)
+        currentState = state
+        applyFilters()
+    }
+
+    // MARK: - Private Methods
+
+    /// 필터 적용
+    private func applyFilters() {
+        let filtered = allNoticeItems.filter { item in
+            // 1. 기수 필터
+            guard item.generation == selectedGeneration.value else { return false }
+
+            // 2. 메인필터 (scope/category 매칭)
+            guard matchesMainFilter(scope: item.scope, category: item.category) else { return false }
+
+            // 3. 서브필터 (파트 필터링) - 중앙/지부/학교에서만 적용
+            guard matchesSubFilter(category: item.category) else { return false }
+
+            return true
+        }
+        noticeItems = .loaded(filtered)
+    }
+
+    /// 메인필터 매칭 검사
+    private func matchesMainFilter(scope: NoticeScope, category: NoticeCategory) -> Bool {
+        switch selectedMainFilter {
+        case .all:
+            // 전체: 모든 공지
+            return true
+        case .central:
+            // 중앙: 중앙 일반 + 중앙 파트별
+            return scope == .central
+        case .branch:
+            // 지부: 지부 일반 + 지부 파트별
+            return scope == .branch
+        case .school:
+            // 학교: 교내 일반 + 교내 파트별
+            return scope == .campus
+        case .part(let filterPart):
+            // 파트: 중앙/지부/교내 무관, 해당 파트 공지만
+            if case .part(let itemPart) = category {
+                return itemPart == filterPart
+            }
+            return false
+        }
+    }
+
+    /// 서브필터 매칭 검사 (중앙/지부/학교 메인필터에서만 적용)
+    private func matchesSubFilter(category: NoticeCategory) -> Bool {
+        // 메인필터가 전체 또는 파트일 경우 서브필터 무시
+        guard showSubFilter else { return true }
+
+        switch selectedSubFilter {
+        case .all:
+            // 전체: 해당 scope의 모든 공지 (일반 + 파트별)
+            return true
+        case .management:
+            // TODO: 운영진 공지 필터링 (모델에 isManagement 필드 필요)
+            return true
+        case .part:
+            // 파트 서브필터
+            if selectedPart == .all {
+                // "파트" 기본값: 파트별 공지만 표시 (일반 공지 제외)
+                if case .part = category {
+                    return true
+                }
+                return false
+            }
+            // 특정 파트 선택: 해당 파트 공지만 표시
+            if case .part(let itemPart) = category {
+                return itemPart == selectedPart
+            }
+            return false
         }
     }
 }
-
-    

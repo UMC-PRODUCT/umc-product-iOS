@@ -7,27 +7,31 @@
 
 import SwiftUI
 
-enum NoticeItemTag: Equatable {
-    case all
-    case central
-    case chapter
-    case campus
-    case part(Part)
+/// UI 표시용 공지 태그
+struct NoticeItemTag: Equatable {
+    let scope: NoticeScope
+    let category: NoticeCategory
 
+    /// 태그 텍스트
     var text: String {
-        switch self {
-        case .all: return "전체"
-        case .central: return "중앙"
-        case .chapter: return "지부"
-        case .campus: return "학교"
-        case .part(let part): return part.name
+        switch category {
+        case .general:
+            switch scope {
+            case .central: return "중앙"
+            case .branch: return "지부"
+            case .campus: return "학교"
+            }
+        case .part:
+            return "파트"
         }
     }
 
+    /// 태그 배경색
     var backColor: Color {
-        switch self {
+        switch scope {
         case .central: return .blue
-        case .all, .chapter, .campus, .part: return .green
+        case .branch: return .orange
+        case .campus: return .green
         }
     }
 }

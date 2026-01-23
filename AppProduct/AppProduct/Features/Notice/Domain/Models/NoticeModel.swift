@@ -34,12 +34,35 @@ struct Part: Identifiable, Equatable, Hashable {
     static let allCases: [Part] = [.all, .web, .ios, .android, .design, .plan, .nodejs, .springboot]
 }
 
+// MARK: - NoticeScope
+/// 공지 출처 (어디서 온 공지인지)
+enum NoticeScope: Equatable, Hashable {
+    // 중앙
+    case central
+    // 지부
+    case branch
+    // 교내
+    case campus
+}
+
+// MARK: - NoticeCategory
+/// 공지 카테고리 (일반/파트별)
+enum NoticeCategory: Equatable, Hashable {
+    // 일반 공지
+    case general
+    // 파트별 공지
+    case part(Part)
+}
+
 // MARK: - NoticeSubFilterType
 /// 서브필터 타입 (전체, 운영진 공지, 파트)
 enum NoticeSubFilterType: Identifiable, Equatable, Hashable {
-    case all          // 전체
-    case management   // 운영진 공지
-    case part         // 파트
+    // 전체
+    case all
+    // 운영진 공지
+    case management
+    // 파트
+    case part
 
     var id: String {
         switch self {
@@ -61,11 +84,16 @@ enum NoticeSubFilterType: Identifiable, Equatable, Hashable {
 // MARK: - NoticeMainFilterType
 /// 메인필터 타입 (전체, 중앙, 지부, 학교, 파트)
 enum NoticeMainFilterType: Identifiable, Equatable, Hashable {
-    case all              // 전체
-    case central          // 중앙운영사무국
-    case branch(String)   // 지부
-    case school(String)   // 학교
-    case part(Part)       // 파트
+    // 전체
+    case all
+    // 중앙운영사무국
+    case central
+    // 지부
+    case branch(String)
+    // 학교
+    case school(String)
+    // 파트
+    case part(Part)
 
     var id: String {
         switch self {
@@ -100,3 +128,47 @@ enum NoticeMainFilterType: Identifiable, Equatable, Hashable {
     }
 }
 
+
+// MARK: - MainFilterKey
+/// 메인필터 키 (Dictionary key용, associated value 없음)
+enum MainFilterKey: Hashable {
+    case all
+    case central
+    case branch
+    case school
+    case part
+
+    init(from filter: NoticeMainFilterType) {
+        switch filter {
+        case .all: self = .all
+        case .central: self = .central
+        case .branch: self = .branch
+        case .school: self = .school
+        case .part: self = .part
+        }
+    }
+}
+
+// MARK: - MainFilterState
+/// 메인필터별 서브필터 상태
+struct MainFilterState: Equatable {
+    var subFilter: NoticeSubFilterType = .all
+    var selectedPart: Part = .all
+}
+
+// MARK: - GenerationFilterState
+/// 기수별 필터 상태
+struct GenerationFilterState: Equatable {
+    var mainFilter: NoticeMainFilterType = .all
+    var mainFilterStates: [MainFilterKey: MainFilterState] = [:]
+
+    /// 특정 메인필터의 서브필터 상태 조회
+    func state(for key: MainFilterKey) -> MainFilterState {
+        mainFilterStates[key] ?? MainFilterState()
+    }
+
+    /// 특정 메인필터의 서브필터 상태 업데이트
+    mutating func updateState(for key: MainFilterKey, state: MainFilterState) {
+        mainFilterStates[key] = state
+    }
+}
