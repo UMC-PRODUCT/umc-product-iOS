@@ -48,16 +48,16 @@ struct RecentNoticeCard: View, Equatable {
     private var info: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8, content: {
             Text(data.category.rawValue)
-                .appFont(.footnote, color: data.category.color)
+                .appFont(.bodyEmphasis, color: data.category.color)
             
             Text(data.title)
-                .appFont(.subheadlineEmphasis, color: .grey900)
+                .appFont(.callout, color: .black)
         })
     }
     
     private var createdAt: some View {
         Text(data.createdAt.timeAgoText)
-            .appFont(.caption1, color: .grey500)
+            .appFont(.footnote, color: .grey500)
     }
     
     private var cardColor: Color {

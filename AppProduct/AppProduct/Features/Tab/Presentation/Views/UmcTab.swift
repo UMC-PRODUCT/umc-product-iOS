@@ -67,3 +67,7 @@ struct UmcTab: View {
         }
     }
 }
+
+#Preview {
+    UmcTab()
+}

@@ -46,7 +46,7 @@ fileprivate struct ContentInfo: View {
             topTitle
             
             Text(notice.content)
-                .appFont(.subheadline, color: .grey500)
+                .appFont(.callout, color: .grey500)
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
         })
@@ -60,7 +60,7 @@ fileprivate struct ContentInfo: View {
             Spacer()
             
             Text(notice.createdAt.timeAgoText)
-                .appFont(.caption1, color: .grey500)
+                .appFont(.footnote, color: .grey500)
         }
     }
 }

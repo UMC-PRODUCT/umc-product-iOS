@@ -8,6 +8,7 @@
 import Foundation
 import SwiftData
 
+/// 알림 히스토리 모델
 @Model
 class NoticeHistoryData {
     @Attribute(.unique) var id: UUID

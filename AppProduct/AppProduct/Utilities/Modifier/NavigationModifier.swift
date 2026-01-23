@@ -18,6 +18,7 @@ struct NavigationModifier: ViewModifier {
         case signUp = "회원가입"
         case community = "커뮤니티"
         case noticeAlarmType = "알림 보관"
+        case placeSearch = "어느 위치를 찾고 있나요?"
     }
     
     func body(content: Content) -> some View {

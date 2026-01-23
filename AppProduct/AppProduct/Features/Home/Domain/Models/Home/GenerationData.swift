@@ -6,6 +6,7 @@
 //
 
 import Foundation
+
 /// 기수별 데이터
 struct GenerationData: Identifiable, Equatable {
     let id = UUID()
