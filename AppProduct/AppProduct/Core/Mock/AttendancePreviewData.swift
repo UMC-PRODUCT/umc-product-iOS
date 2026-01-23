@@ -364,14 +364,14 @@ struct AttendanceStatusPreview: View {
 
 struct AttendanceTestView: View {
     @Binding var show: Bool
-    
+
     var body: some View {
         VStack(spacing: 20) {
             Button("출석 화면 열기") {
                 show.toggle()
             }
             .buttonStyle(.borderedProminent)
-            
+
             Divider()
         }
         .task {
