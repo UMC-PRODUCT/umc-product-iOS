@@ -10,13 +10,13 @@ import SwiftUI
 // MARK: - AnyChipButton Protocol
 
 /// ChipButton 전용 프로토콜
-protocol AnyChipButton: View { }
+protocol AnyChipButton: View {}
 
 // MARK: - ViewModifiers
 
 struct ChipButtonSizeModifier: ViewModifier {
     let size: ChipButtonSize
-    
+
     func body(content: Content) -> some View {
         content.environment(\.chipButtonSize, size)
     }
@@ -24,7 +24,7 @@ struct ChipButtonSizeModifier: ViewModifier {
 
 struct ChipButtonStyleModifier: ViewModifier {
     let style: ChipButtonStyle
-    
+
     func body(content: Content) -> some View {
         content.environment(\.chipButtonStyle, style)
     }
@@ -33,16 +33,15 @@ struct ChipButtonStyleModifier: ViewModifier {
 // MARK: - AnyChipButton Extension
 
 extension AnyChipButton {
-    
-    /// 버튼 사이즈 설정
+    /// ChipButton 사이즈 설정
     /// - Parameter size: small, medium, large
     func buttonSize(_ size: ChipButtonSize) -> some View {
-        self.modifier(ChipButtonSizeModifier(size: size))
+        modifier(ChipButtonSizeModifier(size: size))
     }
-    
+
     /// 버튼 색상 설정
     /// - Parameter style: filter, board
     func buttonStyle(_ style: ChipButtonStyle) -> some View {
-        self.modifier(ChipButtonStyleModifier(style: style))
+        modifier(ChipButtonStyleModifier(style: style))
     }
 }
