@@ -29,18 +29,11 @@ struct CommunityView: View {
 
     var body: some View {
         Group {
-            switch vm.items {
-            case .idle:
-                Color.clear.task {
-                    print("hello")
-                }
-            case .loading:
-                // !!! - 로딩 뷰 - 소피
-                ProgressView()
-            case .loaded(let items):
-                listSection(items)
-            case .failed:
-                Color.clear
+            switch vm.selectedMenu {
+            case .all, .question:
+                contentSection
+            case .fame:
+                CommunityFameView()
             }
         }
         .navigation(naviTitle: .community, displayMode: .inline)
@@ -48,11 +41,28 @@ struct CommunityView: View {
         .searchToolbarBehavior(.minimize)
         .toolbar {
             ToolBarCollection.CommunityMenuBtn(
-                allAction: {},
-                questionAction: {},
-                fameAction: {},
+                allAction: { vm.selectedMenu = .all },
+                questionAction: { vm.selectedMenu = .question },
+                fameAction: { vm.selectedMenu = .fame },
                 isRecruiting: $vm.isRecruiting
             )
+        }
+    }
+
+    private var contentSection: some View {
+        Group {
+            switch vm.items {
+            case .idle:
+                Color.clear.task {
+                    print("hello")
+                }
+            case .loading:
+                ProgressView()
+            case .loaded(let items):
+                listSection(items)
+            case .failed:
+                Color.clear
+            }
         }
     }
 
@@ -87,4 +97,5 @@ struct CommunityView: View {
     NavigationStack {
         CommunityView()
     }
+    .environment(\.di, .configured())
 }

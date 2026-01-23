@@ -103,7 +103,6 @@ extension ChipButton: AnyChipButton {}
                     }
                     .buttonSize(.large)
                 }
-                .buttonSize(.large)
             }
         }
     }

@@ -117,6 +117,8 @@ struct CommunityFameItem: View {
 #Preview {
     CommunityFameItem(
         model: .init(
+            week: 1,
+            university: "서울대학교",
             profileImage: nil,
             userName: "김멋사",
             part: "Web",

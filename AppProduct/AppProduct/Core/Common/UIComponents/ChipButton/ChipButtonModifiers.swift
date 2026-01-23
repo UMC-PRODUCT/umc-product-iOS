@@ -40,7 +40,7 @@ extension AnyChipButton {
     }
 
     /// 버튼 색상 설정
-    /// - Parameter style: filter, board
+    /// - Parameter style: filter, board, fame
     func buttonStyle(_ style: ChipButtonStyle) -> some View {
         modifier(ChipButtonStyleModifier(style: style))
     }

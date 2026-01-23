@@ -9,6 +9,8 @@ import SwiftUI
 
 struct CommunityFameItemModel: Equatable, Identifiable {
     let id = UUID()
+    let week: Int
+    let university: String
     let profileImage: String?
     let userName: String
     let part: String

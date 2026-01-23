@@ -29,7 +29,7 @@ enum ChipButtonStyle {
         case .board:
             return .grey000
         case .fame:
-            return isSelected ? .white : .grey700
+            return isSelected ? .white : .grey600
         }
     }
 
@@ -40,7 +40,7 @@ enum ChipButtonStyle {
         case .board:
             return isSelected ? .indigo500 : .grey300
         case .fame:
-            return isSelected ? .yellow700 : .white
+            return isSelected ? .yellow500 : .white
         }
     }
 }
