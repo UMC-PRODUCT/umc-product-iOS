@@ -114,11 +114,11 @@ final class ChallengerAttendanceViewModel {
     }
     
     func isAttendanceAvailable(for session: Session) -> Bool {
-        currentTimeWindow(for: session.info) == .onTime
-        && challengeAttendanceUseCase.isInsideGeofence
-        && challengeAttendanceUseCase.isLocationAuthorized
-        && !session.isLoading
-        && !session.hasSubmitted
+        session.canRequestAttendance(
+            timeWindow: currentTimeWindow(for: session.info),
+            isInsideGeofence: challengeAttendanceUseCase.isInsideGeofence,
+            isLocationAuthorized: challengeAttendanceUseCase.isLocationAuthorized
+        )
     }
 
     func buttonStyle(for session: Session) -> String {
@@ -133,5 +133,12 @@ final class ChallengerAttendanceViewModel {
 
     private func currentTimeWindow(for info: SessionInfo) -> AttendanceTimeWindow {
         challengeAttendanceUseCase.isWithinAttendanceTime(info: info)
+    }
+
+    // MARK: - Cleanup
+
+    /// 지오펜스 모니터링 중지
+    func geofenceCleanup() async {
+        await challengeAttendanceUseCase.stopGeofenceMonitoring()
     }
 }

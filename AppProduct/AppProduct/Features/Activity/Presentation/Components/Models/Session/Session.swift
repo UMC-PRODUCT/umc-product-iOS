@@ -46,6 +46,25 @@ final class Session: Identifiable, Equatable {
         attendanceStatus == .beforeAttendance || attendanceStatus == .pendingApproval
     }
 
+    /// 출석 요청 가능 여부 (도메인 규칙)
+    ///
+    /// - Parameters:
+    ///   - timeWindow: 현재 시간대 (정시/지각/마감 등)
+    ///   - isInsideGeofence: 지오펜스 내부 여부
+    ///   - isLocationAuthorized: 위치 권한 허용 여부
+    /// - Returns: 출석 요청 버튼 활성화 여부
+    func canRequestAttendance(
+        timeWindow: AttendanceTimeWindow,
+        isInsideGeofence: Bool,
+        isLocationAuthorized: Bool
+    ) -> Bool {
+        timeWindow == .onTime
+        && isInsideGeofence
+        && isLocationAuthorized
+        && !isLoading
+        && !hasSubmitted
+    }
+
     init(info: SessionInfo, initialAttendance: Attendance? = nil) {
         self.info = info
         self.id = info.sessionId

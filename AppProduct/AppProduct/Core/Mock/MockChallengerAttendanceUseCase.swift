@@ -116,5 +116,9 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
     func getAddressToCurrentLocation() async throws -> String {
         return "Mock 주소 - 서울시 성북구 한성대학교"
     }
+
+    func stopGeofenceMonitoring() async {
+        // Mock에서는 아무 작업도 하지 않음
+    }
 }
 #endif

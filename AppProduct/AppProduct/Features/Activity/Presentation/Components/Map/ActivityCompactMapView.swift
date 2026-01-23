@@ -48,9 +48,6 @@ struct ActivityCompactMapView: View {
                 mapViewModel.startLocationUpdate()
             }
             .onDisappear {
-                Task {
-                    await mapViewModel.stopGeofence()
-                }
                 mapViewModel.stopLocationUpdate()
             }
     }

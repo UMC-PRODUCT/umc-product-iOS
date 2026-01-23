@@ -70,6 +70,11 @@ struct AttendanceSessionView: View {
             DefaultConstant.defaultContentTrailingMargins,
             for: .scrollContent
         )
+        .onDisappear {
+            Task {
+                await attendanceViewModel.geofenceCleanup()
+            }
+        }
     }
     
     @ViewBuilder

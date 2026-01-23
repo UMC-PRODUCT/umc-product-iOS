@@ -143,4 +143,9 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
         }
         return try await locationManager.reverseGeocode(coordinate: coordinate)
     }
+
+    /// 지오펜스 모니터링 중지
+    func stopGeofenceMonitoring() async {
+        await locationManager.stopAllGeofenceMonitoring()
+    }
 }

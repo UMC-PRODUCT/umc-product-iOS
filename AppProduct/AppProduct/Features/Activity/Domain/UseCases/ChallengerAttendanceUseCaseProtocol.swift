@@ -31,4 +31,7 @@ protocol ChallengerAttendanceUseCaseProtocol {
     /// 현재 위치 좌표 통한 지오코딩
     /// - throws: LocationArror.locationFailed
     func getAddressToCurrentLocation() async throws -> String
+
+    /// 지오펜스 모니터링 중지
+    func stopGeofenceMonitoring() async
 }
