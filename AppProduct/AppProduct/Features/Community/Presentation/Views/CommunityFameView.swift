@@ -27,7 +27,12 @@ struct CommunityFameView: View {
     var body: some View {
         VStack {
             weekSection
-            listSection
+
+            if vm.groupedByUniversity.isEmpty {
+                emptyList
+            } else {
+                listSection
+            }
         }
     }
 
@@ -67,6 +72,14 @@ struct CommunityFameView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+    }
+
+    private var emptyList: some View {
+        ContentUnavailableView {
+            Label("명예의 전당 목록이 없습니다.", systemImage: "text.page.slash")
+        } description: {
+            Text("매 주차가 종료되면 베스트 워크북이 선정됩니다.")
+        }
     }
 }
 

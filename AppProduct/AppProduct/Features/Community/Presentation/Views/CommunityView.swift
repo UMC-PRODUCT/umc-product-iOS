@@ -66,6 +66,27 @@ struct CommunityView: View {
         }
     }
 
+    // MARK: - List
+
+    private func listSection(_ items: [CommunityItemModel]) -> some View {
+        Group {
+            if items.isEmpty {
+                unableContent
+            } else {
+                List(items, rowContent: { item in
+                    CommunityItem(model: item) {
+                        router.push(to: .community(.detail(postItem: item)))
+                    }
+                    .equatable()
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                })
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+            }
+        }
+    }
+
     private var unableContent: some View {
         ContentUnavailableView {
             Label(
@@ -75,21 +96,6 @@ struct CommunityView: View {
         } description: {
             Text("가장 먼저 글을 작성해 보세요!")
         }
-    }
-
-    // MARK: - List
-
-    private func listSection(_ items: [CommunityItemModel]) -> some View {
-        List(items, rowContent: { item in
-            CommunityItem(model: item) {
-                router.push(to: .community(.detail(postItem: item)))
-            }
-            .equatable()
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-        })
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
     }
 }
 
