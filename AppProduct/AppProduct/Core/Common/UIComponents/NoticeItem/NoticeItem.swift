@@ -11,11 +11,12 @@ import SwiftUI
 
 private enum Constant {
     static let mainVSpacing: CGFloat = 12
-    static let mainPadding: CGFloat = 16
-    static let mainBoxRadius: CGFloat = 20
+    static let mainBoxHeight: CGFloat = 128
+    static let mainPadding: CGFloat = 24
+    static let mainBoxRadius: CGFloat = 24
     // top
     static let topHSpacing: CGFloat = 8
-    static let tagPadding: EdgeInsets = .init(top: 2, leading: 5, bottom: 2, trailing: 5)
+    static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
     static let mustReadIconSpacing: CGFloat = 4
     static let mustReadIconSize: CGFloat = 12
     static let alertCircleSize: CGSize = .init(width: 8, height: 8)
@@ -63,8 +64,14 @@ private struct NoticeItemPresenter: View, Equatable {
             ContentSection(model: model)
             BottomSection(model: model)
         }
+        .frame(height: Constant.mainBoxHeight)
         .padding(Constant.mainPadding)
-        .background(model.mustRead ? .indigo100 : .white, in: RoundedRectangle(cornerRadius: Constant.mainBoxRadius))
+        .containerShape(.rect(cornerRadius: Constant.mainBoxRadius))
+        .background {
+            RoundedRectangle(cornerRadius: Constant.mainBoxRadius)
+                .fill(model.mustRead ? .indigo100 : .white)
+                .glass()
+        }
     }
 }
 
@@ -75,19 +82,22 @@ private struct TopSection: View, Equatable {
     var body: some View {
         HStack(spacing: Constant.topHSpacing) {
             Text(model.tag.text)
-                .appFont(.caption2, color: model.tag.textColor)
+                .appFont(.caption1, color: .grey000)
                 .padding(Constant.tagPadding)
-                .background(model.tag.backColor, in: Capsule())
-                .overlay(Capsule().strokeBorder(model.tag.borderColor))
+                .background {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(model.tag.backColor)
+                }
 
             if model.mustRead {
-                HStack(spacing: Constant.mustReadIconSpacing) {
-                    Image(systemName: "pin.fill")
-                        .font(.system(size: Constant.mustReadIconSize))
-                    Text("필독")
-                        .appFont(.caption1Emphasis)
-                }
-                .foregroundStyle(.blue)
+                Text("필독")
+                    .foregroundStyle(.grey000)
+                    .appFont(.caption1Emphasis, weight: .regular)
+                    .padding(Constant.tagPadding)
+                    .background {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(.orange500)
+                    }
             }
 
             Spacer()
@@ -99,7 +109,7 @@ private struct TopSection: View, Equatable {
             }
 
             Text(model.date.toYearMonthDay())
-                .appFont(.caption1, color: .gray)
+                .appFont(.footnote, color: .grey500)
         }
     }
 }
@@ -111,12 +121,13 @@ private struct ContentSection: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: Constant.contentSpacing) {
             Text(model.title)
-                .appFont(.calloutEmphasis, color: model.mustRead ? Color.indigo900 : .grey900)
+                .appFont(.bodyEmphasis, color: model.mustRead ? Color.indigo900 : .grey900)
                 .lineLimit(1)
 
             Text(model.content)
-                .appFont(.footnote, color: .gray)
+                .appFont(.subheadline, color: .grey600)
                 .lineLimit(2)
+                .multilineTextAlignment(.leading)
         }
     }
 }
@@ -137,29 +148,18 @@ private struct BottomSection: View, Equatable {
             }
 
             if model.hasVote {
-                Image(systemName: "chart.bar.xaxis")
+                Image(systemName: "eyes")
                     .font(.system(size: Constant.bottomIconSize))
             }
 
             Text("조회 \(model.viewCount)")
         }
-        .appFont(.caption1, color: .gray)
+        .appFont(.footnote, color: .gray)
     }
 }
 
-#Preview {
-    NoticeItem(
-        model: .init(
-            tag: .campus,
-            mustRead: true,
-            isAlert: true,
-            date: Date(),
-            title: "3월 정기 세션 뒤풀이 장소 안내",
-            content: "이번 주 토요일 세션 후 뒤풀이가 있습니다. 장소는 강남역 인근 **'맛있는 고기집'**입니다. 많은 참여 부탁드립니다!",
-            writer: "중앙대 운영진",
-            hasLink: true,
-            hasVote: true,
-            viewCount: 85
-        )
-    )
+#Preview(traits: .sizeThatFitsLayout) {
+    VStack(spacing: 16) {
+        NoticeItem(model: NoticeItemModel(generation: 9, scope: .campus, category: .general, mustRead: true, isAlert: true, date: Date(), title: "2026년도 UMC 신년회 안내", content: "안녕하세요! UMC 너드 및 챌린저 여러분 안녕하세요! 회장 웰시입니다! 신년회까지 어느덧 몇 주 남지 않았습니다 🥳 오늘은 신년회에 앞서 몇 가지 전달드릴 사항이 있어 공지드립니다.", writer: "웰시/최지은", hasLink: true, hasVote: false, viewCount: 32))
+    }
 }

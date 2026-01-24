@@ -59,4 +59,102 @@ struct ToolBarCollection {
             .matchedTransitionSource(id: "logo", in: namespace)
         }
     }
+    
+    /// 기수 필터
+    struct GenerationFilter: ToolbarContent {
+
+        let title: String
+        let generations: [Generation]
+        @Binding var selection: Generation
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarLeading) {
+                Menu {
+                    generationPicker
+                } label: {
+                    menuLabel
+                }
+            }
+        }
+
+        private var generationPicker: some View {
+            Picker("기수 선택", selection: $selection) {
+                ForEach(generations) { generation in
+                    Text(generation.title).tag(generation)
+                }
+            }
+            .pickerStyle(.inline)
+        }
+
+        private var menuLabel: some View {
+            Text(title)
+                .font(.callout)
+                .fontWeight(.semibold)
+        }
+    }
+    
+    /// 상단 중앙 메뉴 툴바 (아이콘O)
+    struct TopBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
+
+        let icon: String
+        let title: String
+        let items: [Item]
+        @Binding var selection: Item
+        let itemLabel: (Item) -> String
+        let itemIcon: ((Item) -> String)?
+
+        init(
+            icon: String,
+            title: String,
+            items: [Item],
+            selection: Binding<Item>,
+            itemLabel: @escaping (Item) -> String,
+            itemIcon: ((Item) -> String)? = nil
+        ) {
+            self.icon = icon
+            self.title = title
+            self.items = items
+            self._selection = selection
+            self.itemLabel = itemLabel
+            self.itemIcon = itemIcon
+        }
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .principal) {
+                Menu {
+                    Picker("선택", selection: $selection) {
+                        ForEach(items) { item in
+                            if let itemIcon = itemIcon {
+                                Label(itemLabel(item), systemImage: itemIcon(item))
+                                    .tag(item)
+                            } else {
+                                Text(itemLabel(item)).tag(item)
+                            }
+                        }
+                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    menuLabel
+                }
+            }
+            .sharedBackgroundVisibility(.visible)
+        }
+
+        private var menuLabel: some View {
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 10))
+                Spacer()
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Spacer()
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.grey500)
+            }
+            .padding(10)
+            .glassEffect(.regular.interactive(), in: .capsule)
+        }
+    }
 }
