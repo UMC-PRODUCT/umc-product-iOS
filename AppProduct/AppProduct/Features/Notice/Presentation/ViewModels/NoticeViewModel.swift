@@ -17,7 +17,7 @@ final class NoticeViewModel {
     /// 기수 목록
     var generations: [Generation] = []
 
-    /// 현재 기수 (서버에서 받아온 현재 활성 기수)
+    /// 현재 기수
     var currentGeneration: Generation = Generation(value: 9)
 
     /// 선택된 기수
@@ -26,10 +26,10 @@ final class NoticeViewModel {
     /// 기수별 필터 상태 저장소
     private var generationStates: [Int: GenerationFilterState] = [:]
 
-    /// 전체 공지 데이터 (원본)
+    /// 전체 공지 데이터
     private var allNoticeItems: [NoticeItemModel] = []
 
-    /// 필터링된 공지 데이터 (View용)
+    /// 필터링된 공지 데이터
     var noticeItems: Loadable<[NoticeItemModel]> = .idle
 
     /// 사용자 정보
@@ -198,25 +198,25 @@ final class NoticeViewModel {
         // 메인필터가 전체 또는 파트일 경우 서브필터 무시
         guard showSubFilter else { return true }
 
+        // 파트가 선택되어 있으면 항상 파트 필터링 적용
+        if selectedPart != .all {
+            if case .part(let itemPart) = category {
+                return itemPart == selectedPart
+            }
+            return false
+        }
+
         switch selectedSubFilter {
         case .all:
             // 전체: 해당 scope의 모든 공지 (일반 + 파트별)
             return true
         case .management:
-            // TODO: 운영진 공지 필터링 (모델에 isManagement 필드 필요)
+            // TODO: 운영진 공지 필터링
             return true
         case .part:
-            // 파트 서브필터
-            if selectedPart == .all {
-                // "파트" 기본값: 파트별 공지만 표시 (일반 공지 제외)
-                if case .part = category {
-                    return true
-                }
-                return false
-            }
-            // 특정 파트 선택: 해당 파트 공지만 표시
-            if case .part(let itemPart) = category {
-                return itemPart == selectedPart
+            // 파트 서브필터 (파트 기본값): 파트별 공지만 표시 (일반 공지 제외)
+            if case .part = category {
+                return true
             }
             return false
         }
