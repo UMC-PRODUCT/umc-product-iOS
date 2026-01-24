@@ -34,13 +34,13 @@ struct CommunityFameView: View {
             case .loading:
                 ProgressView()
             case .loaded:
-                VStack {
-                    weekSection
-                    listSection
-                }
+                listSection
             case .failed:
                 Color.clear
             }
+        }
+        .safeAreaBar(edge: .top) {
+            weekSection
         }
     }
 
