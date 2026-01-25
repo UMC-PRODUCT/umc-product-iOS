@@ -60,14 +60,14 @@ enum NoticeSubFilterType: Identifiable, Equatable, Hashable {
     // 전체
     case all
     // 운영진 공지
-    case management
+    case staff
     // 파트
     case part
 
     var id: String {
         switch self {
         case .all: return "all"
-        case .management: return "management"
+        case .staff: return "staff"
         case .part: return "part"
         }
     }
@@ -75,7 +75,7 @@ enum NoticeSubFilterType: Identifiable, Equatable, Hashable {
     var labelText: String {
         switch self {
         case .all: return "전체"
-        case .management: return "운영진 공지"
+        case .staff: return "운영진 공지"
         case .part: return "파트"
         }
     }
