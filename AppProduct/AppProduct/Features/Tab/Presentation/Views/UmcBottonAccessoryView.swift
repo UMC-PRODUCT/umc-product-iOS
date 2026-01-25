@@ -64,8 +64,47 @@ fileprivate struct NoticeAccessoryView: View {
 
 // MARK: - Activity
 fileprivate struct ActivityAccessoryView: View {
+    @Environment(\.di) private var di
+    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+
+    private var userSession: UserSessionManager {
+        di.resolve(UserSessionManager.self)
+    }
+
     var body: some View {
-        Text("11")
+        if userSession.canToggleAdminMode {
+            adminToggleButton
+        } else {
+            EmptyView()
+        }
+    }
+
+    private var adminToggleButton: some View {
+        Button {
+            withAnimation(.snappy) {
+                userSession.toggleAdminMode()
+            }
+        } label: {
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Image(systemName: userSession.isAdminModeEnabled
+                    ? "gearshape.fill" : "gearshape")
+                    .foregroundStyle(userSession.isAdminModeEnabled ? .indigo500 : .grey600)
+
+                // 축소/확장 상태 모두 텍스트 표시
+                Text(userSession.isAdminModeEnabled ? "운영진 모드" : "챌린저 모드")
+                    .appFont(placement == .expanded ? .subheadline : .subheadline)
+                    .foregroundStyle(.black)
+
+                if placement == .expanded {
+                    Spacer()
+
+                    // 현재 역할 배지
+                    Text(userSession.currentRole.displayName)
+                        .appFont(.subheadline)
+                }
+            }
+            .padding(.horizontal, placement == .expanded ? DefaultConstant.defaultSafeHorizon : 0)
+        }
     }
 }
 

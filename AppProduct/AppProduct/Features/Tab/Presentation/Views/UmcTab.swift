@@ -34,9 +34,9 @@ struct UmcTab: View {
             }
         })
         .tabBarMinimizeBehavior(.onScrollDown)
-        .tabViewBottomAccessory(isEnabled: router.destination.isEmpty, content: {
+        .tabViewBottomAccessory(isEnabled: shouldShowAccessory(router: router)) {
             UmcBottonAccessoryView(tabCase: $tabCase)
-        })
+        }
     }
 
     private func tabLabel(_ tab: TabCase) -> some View {
@@ -60,12 +60,28 @@ struct UmcTab: View {
         case .notice:
             NoticeView()
         case .activity:
-            Text("11")
+            ActivityView()
         case .community:
             CommunityView()
         case .mypage:
             Text("11")
         }
+    }
+
+    /// Bottom Accessory 표시 여부 결정
+    ///
+    /// Activity 탭에서는 Admin 권한이 있는 경우에만 Accessory를 표시합니다.
+    private func shouldShowAccessory(router: NavigationRouter) -> Bool {
+        // NavigationStack에 화면이 쌓여있으면 Accessory 숨김
+        guard router.destination.isEmpty else { return false }
+
+        // Activity 탭에서는 Admin 토글 가능한 경우에만 표시
+        if tabCase == .activity {
+            let userSession = di.resolve(UserSessionManager.self)
+            return userSession.canToggleAdminMode
+        }
+
+        return true
     }
 }
 
