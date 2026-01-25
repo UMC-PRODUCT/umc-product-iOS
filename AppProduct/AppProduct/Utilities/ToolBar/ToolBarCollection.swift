@@ -153,26 +153,26 @@ enum ToolBarCollection {
             .padding(10)
             .glassEffect(.regular.interactive(), in: .capsule)
         }
+    }
+    
+    // 커뮤니티 메뉴 버튼
+    struct CommunityMenuBtn: ToolbarContent {
+        let allAction: () -> Void
+        let questionAction: () -> Void
+        let fameAction: () -> Void
+        let isRecruiting: Binding<Bool>
         
-        // 커뮤니티 메뉴 버튼
-        struct CommunityMenuBtn: ToolbarContent {
-            let allAction: () -> Void
-            let questionAction: () -> Void
-            let fameAction: () -> Void
-            let isRecruiting: Binding<Bool>
-            
-            var body: some ToolbarContent {
-                ToolbarItem(placement: .topBarTrailing, content: {
-                    Menu("Menu", systemImage: "ellipsis") {
-                        Section {
-                            Button("전체") { allAction() }
-                            Button("질문", systemImage: "flame.fill") { questionAction() }
-                            Button("명예의전당", systemImage: "trophy.fill") { fameAction() }
-                        }
-                        Toggle("모집중", isOn: isRecruiting)
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing, content: {
+                Menu("Menu", systemImage: "ellipsis") {
+                    Section {
+                        Button("전체") { allAction() }
+                        Button("질문", systemImage: "flame.fill") { questionAction() }
+                        Button("명예의전당", systemImage: "trophy.fill") { fameAction() }
                     }
-                })
-            }
+                    Toggle("모집중", isOn: isRecruiting)
+                }
+            })
         }
     }
 }
