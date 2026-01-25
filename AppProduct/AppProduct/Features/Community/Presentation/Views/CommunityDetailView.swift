@@ -28,10 +28,7 @@ struct CommunityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing24) {
-                topSection
-                Divider()
-                midSection
-                Divider()
+                CommunityPostCard(model: vm.postItem)
 
                 Group {
                     switch vm.comments {
@@ -43,7 +40,7 @@ struct CommunityDetailView: View {
                         // !!! - 로딩 뷰 - 소피
                         ProgressView()
                     case .loaded(let comments):
-                        bottomSection(comments)
+                        commentSection(comments)
                     case .failed:
                         Color.clear
                     }
@@ -54,73 +51,9 @@ struct CommunityDetailView: View {
         .navigation(naviTitle: .communityDetail, displayMode: .inline)
     }
 
-    // MARK: - Top
+    // MARK: - Comment
 
-    private var topSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            tagSection
-            Text(vm.postItem.title)
-                .appFont(.title1Emphasis)
-            profileSection
-        }
-    }
-
-    private var tagSection: some View {
-        HStack(spacing: DefaultSpacing.spacing8) {
-            CommunityTagItem(title: vm.postItem.category.text)
-        }
-    }
-
-    private var profileSection: some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
-            // 프로필 이미지
-            if vm.postItem.profileImage != nil {
-                // !!! - url 이미지 처리
-                Image(systemName: "heart")
-            } else {
-                Text(vm.postItem.userName.prefix(1))
-                    .appFont(.body, color: .grey500)
-                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
-                    .background(.grey100, in: Circle())
-            }
-
-            Text("\(vm.postItem.userName) • \(vm.postItem.part)")
-                .appFont(.body)
-
-            Spacer()
-
-            Text(vm.postItem.createdAt)
-                .appFont(.subheadline, color: .grey600)
-        }
-    }
-
-    // MARK: - Mid
-
-    private var midSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
-            Text(vm.postItem.content)
-                .appFont(.body)
-
-            HStack(spacing: DefaultSpacing.spacing12) {
-                CommunityLikeButton(count: vm.postItem.likeCount)
-                commentSection
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var commentSection: some View {
-        HStack(spacing: DefaultSpacing.spacing4) {
-            Image(systemName: "bubble")
-            Text("댓글")
-            Text(String(vm.postItem.commentCount))
-        }
-        .appFont(.subheadline, color: .grey600)
-    }
-
-    // MARK: - Bottom
-
-    private func bottomSection(_ comments: [CommunityCommentModel]) -> some View {
+    private func commentSection(_ comments: [CommunityCommentModel]) -> some View {
         VStack(spacing: DefaultSpacing.spacing16) {
             ForEach(comments) { comment in
                 CommunityCommentItem(model: comment)
