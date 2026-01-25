@@ -16,17 +16,20 @@ struct AttendanceSessionView: View {
     private let errorHandler: ErrorHandler
     private let sessions: [Session]
     private let userId: UserID
-    
+    private let categoryFor: (String) -> ScheduleIconCategory
+
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,
         sessions: [Session],
-        userId: UserID
+        userId: UserID,
+        categoryFor: @escaping (String) -> ScheduleIconCategory
     ) {
         self.container = container
         self.errorHandler = errorHandler
         self.sessions = sessions
         self.userId = userId
+        self.categoryFor = categoryFor
         
         let challengerAttendanceUseCase = container.resolve(ChallengerAttendanceUseCaseProtocol.self)
         let sessionRepository = container.resolve(SessionRepositoryProtocol.self)
@@ -63,13 +66,16 @@ struct AttendanceSessionView: View {
                 myAttendanceStatusView
             }
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            .safeAreaPadding(.vertical, DefaultConstant.defaultSafeBottom)
+            .safeAreaPadding(.bottom, DefaultConstant.defaultSafeBottom)
         }
         .contentMargins(
             .trailing,
             DefaultConstant.defaultContentTrailingMargins,
-            for: .scrollContent
-        )
+            for: .scrollContent)
+        .contentMargins(
+            .bottom,
+            DefaultConstant.defaultContentBottomMargins,
+            for: .scrollContent)
         .onDisappear {
             Task {
                 await attendanceViewModel.geofenceCleanup()
@@ -128,8 +134,11 @@ struct AttendanceSessionView: View {
     private var myAttendanceStatusView: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             sectionHeader
-            
-            MyAttendanceStatusView(sessions: sessions)
+
+            MyAttendanceStatusView(
+                sessions: sessions,
+                categoryFor: categoryFor
+            )
         }
     }
     
@@ -147,7 +156,8 @@ struct AttendanceSessionView: View {
             container: AttendancePreviewData.container,
             errorHandler: AttendancePreviewData.errorHandler,
             sessions: AttendancePreviewData.sessions,
-            userId: AttendancePreviewData.userId
+            userId: AttendancePreviewData.userId,
+            categoryFor: { _ in .general }
         )
     }
 }
@@ -160,7 +170,8 @@ struct AttendanceSessionView: View {
             container: AttendancePreviewData.container,
             errorHandler: AttendancePreviewData.errorHandler,
             sessions: AttendancePreviewData.multipleAvailableSessions,
-            userId: AttendancePreviewData.userId
+            userId: AttendancePreviewData.userId,
+            categoryFor: { _ in .general }
         )
     }
 }
@@ -174,7 +185,8 @@ struct AttendanceSessionView: View {
             container: AttendancePreviewData.container,
             errorHandler: AttendancePreviewData.errorHandler,
             sessions: Array(AttendancePreviewData.sessions.prefix(5)), // beforeAttendance 제외
-            userId: AttendancePreviewData.userId
+            userId: AttendancePreviewData.userId,
+            categoryFor: { _ in .general }
         )
     }
 }
