@@ -140,7 +140,7 @@ private struct NoticeSubFilter: View, Equatable {
     }
 
     private var subFilterItems: [NoticeSubFilterType] {
-        [.all, .management]
+        [.all, .staff]
     }
 
     var body: some View {
