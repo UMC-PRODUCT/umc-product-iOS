@@ -10,7 +10,8 @@ import SwiftUI
 // MARK: - Constant
 
 private enum Constant {
-    static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 16, trailing: 16)
+    static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
+    static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
     // profile
     static let profileCircleSize: CGSize = .init(width: 39, height: 39)
     static let partTagPadding: EdgeInsets = .init(top: 2, leading: 8, bottom: 2, trailing: 8)
@@ -96,11 +97,14 @@ struct CommunityFameItem: View {
     // 보기 버튼
     private var btnSection: some View {
         Button(action: action) {
-            Image(systemName: "square.and.arrow.up")
-            Text("보기")
+            HStack {
+                Image(systemName: "square.and.arrow.up")
+                Text("보기")
+            }
         }
         .appFont(.footnote, color: .grey900)
-        .buttonStyle(.glass)
+        .padding(Constant.buttonPadding)
+        .glassEffect(.clear.interactive())
     }
 
     // 피드백 내용
