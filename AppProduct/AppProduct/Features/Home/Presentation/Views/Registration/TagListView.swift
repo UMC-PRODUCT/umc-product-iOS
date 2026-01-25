@@ -32,7 +32,7 @@ struct TagListView: View {
                     tagList.removeAll()
                 })
                 
-                ToolBarCollection.ConfirmBtn()
+                ToolBarCollection.ConfirmBtn(action: {})
             })
         }
     }

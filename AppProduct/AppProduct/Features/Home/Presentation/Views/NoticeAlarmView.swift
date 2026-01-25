@@ -9,23 +9,37 @@ import SwiftUI
 import SwiftData
 import Playgrounds
 
+/// 알림 내역을 보여주는 뷰입니다.
 struct NoticeAlarmView: View {
+    
+    // MARK: - Properties
+    
+    /// SwiftData 모델 컨텍스트
     @Environment(\.modelContext) private var modelContext
+    
+    /// 저장된 알림 내역 데이터 (최신순 정렬)
     @Query(sort: \NoticeHistoryData.createdAt, order: .reverse)
     var notice: [NoticeHistoryData]
     
     
+    // MARK: - Body
+    
     var body: some View {
         Form {
+            // 알림 내역 유무에 따라 다른 뷰 표시
             if notice.isEmpty {
                 unavailableView
             } else {
                 alarmHistoryView
             }
         }
+        // 네비게이션 설정 (타이틀 및 모드)
         .navigation(naviTitle: .noticeAlarmType, displayMode: .inline)
     }
     
+    // MARK: - UI Components
+    
+    /// 알림 내역이 없을 때 표시되는 뷰
     private var unavailableView: some View {
         ContentUnavailableView(
             "알림 내역이 없습니다.",
@@ -34,6 +48,7 @@ struct NoticeAlarmView: View {
         )
     }
     
+    /// 알림 내역 리스트 뷰
     private var alarmHistoryView: some View {
         ForEach(notice, id: \.hashValue) { notice in
             NoticeAlarmCard(notice: notice)
@@ -41,6 +56,10 @@ struct NoticeAlarmView: View {
         .onDelete(perform: deleteNotices)
     }
     
+    // MARK: - Methods
+    
+    /// 밀어서 삭제하기 동작 처리
+    /// - Parameter offsets: 삭제할 인덱스 셋
     private func deleteNotices(at offsets: IndexSet) {
         for index in offsets {
             let noticeToDelete = notice[index]

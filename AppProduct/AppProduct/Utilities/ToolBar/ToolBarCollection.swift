@@ -27,10 +27,12 @@ struct ToolBarCollection {
     /// 확인 버튼
     struct ConfirmBtn: ToolbarContent {
         @Environment(\.dismiss) var dismiss
+        let action: () -> Void
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .confirmationAction, content: {
                 Button(role: .confirm, action: {
+                    action()
                     dismiss()
                 })
                 .tint(.indigo500)
