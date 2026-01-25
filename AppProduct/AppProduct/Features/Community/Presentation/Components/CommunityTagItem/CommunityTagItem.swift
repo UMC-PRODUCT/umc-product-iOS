@@ -28,7 +28,7 @@ struct CommunityTagItem: View {
         Text(title)
             .appFont(.subheadline, color: .grey900)
             .padding(Constants.padding)
-            .glassEffect()
+            .glassEffect(.clear)
     }
 }
 

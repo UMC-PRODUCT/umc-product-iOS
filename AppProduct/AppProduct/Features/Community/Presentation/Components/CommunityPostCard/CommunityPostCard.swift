@@ -17,7 +17,7 @@ struct CommunityPostCard: View {
         static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
         static let contentPadding: EdgeInsets = .init(top: 8, leading: 0, bottom: 12, trailing: 0)
-        static let buttonPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
+        static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
     }
 
     // MARK: - Init
@@ -113,6 +113,6 @@ struct CommunityPostCard: View {
         }
         .padding(Constant.buttonPadding)
         .appFont(.subheadline, color: type.foregroundColor)
-        .glassEffect(.regular.tint(type.backgroundColor).interactive())
+        .glassEffect(.clear.tint(type.backgroundColor).interactive())
     }
 }
