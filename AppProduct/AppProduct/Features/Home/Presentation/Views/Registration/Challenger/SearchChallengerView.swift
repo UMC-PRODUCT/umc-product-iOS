@@ -71,7 +71,7 @@ struct SearchChallengerView: View {
                 result: result
             )
         }
-        // 화면 진입 시 기존 선택된 챌린저 ID 동기화
+        .alertPrompt(item: $viewModel.alertPrompt)
         .task {
             initializeSelectedIds()
         }
@@ -131,11 +131,12 @@ struct SearchChallengerView: View {
             guard let url = urls.first else { return }
             viewModel.importCSV(from: url)
         case .failure(let error):
-            viewModel.csvImportResult = CSVImportResult(
-                totalRows: 0,
-                matchedCount: 0,
-                unmatchedNames: [],
-                error: "파일 선택 실패: \(error.localizedDescription)"
+            viewModel.alertPrompt = AlertPrompt(
+                id: UUID(),
+                title: "CSV 가져오기 실패",
+                message: "파일 선택 실패: \(error.localizedDescription)",
+                positiveBtnTitle: "확인",
+                positiveBtnAction: nil
             )
         }
     }

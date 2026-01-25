@@ -10,6 +10,7 @@ import SwiftUI
 struct UmcBottonAccessoryView: View {
     @Binding var tabCase: TabCase
     @Environment(\.di) var di
+    @Environment(ErrorHandler.self) var errorHandler
     
     var body: some View {
         switch tabCase {
@@ -31,9 +32,13 @@ struct UmcBottonAccessoryView: View {
 fileprivate struct HomeBottonAccessoryView: View {
     @Environment(\.di) var di
     
+    private var router: NavigationRouter {
+        di.resolve(NavigationRouter.self)
+    }
+    
     var body: some View {
         Button(action: {
-            print("hello")
+            router.push(to: .home(.registrationSchedule))
         }, label: {
             HStack(spacing: DefaultSpacing.spacing8) {
                 Spacer()
