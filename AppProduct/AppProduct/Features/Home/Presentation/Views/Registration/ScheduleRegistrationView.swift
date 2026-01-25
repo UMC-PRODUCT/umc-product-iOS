@@ -20,6 +20,11 @@ struct ScheduleRegistrationView: View {
     
     /// 전역 에러 핸들러
     @Environment(ErrorHandler.self) var errorHandler
+    @Environment(\.di) var di
+    
+    private var router: NavigationRouter {
+        di.resolve(NavigationRouter.self)
+    }
     
     // MARK: - Init
     
@@ -60,6 +65,12 @@ struct ScheduleRegistrationView: View {
             }
         }
         .scrollDismissesKeyboard(.immediately) // 스크롤 시 키보드 내림
+        .navigation(naviTitle: .registration, displayMode: .inline)
+        .toolbar(content: {
+            ToolBarCollection.AddBtn(action: {
+                router.pop()
+            }, disable: viewModel.title.isEmpty)
+        })
     }
     
     // MARK: - Section Components

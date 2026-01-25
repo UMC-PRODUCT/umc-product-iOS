@@ -22,6 +22,7 @@ struct NavigationModifier: ViewModifier {
         case tag = "태그"
         case challenger = "초대할 챌린저 추가"
         case searchChallenger = "챌린저 검색"
+        case registration = "일정 추가"
     }
     
     func body(content: Content) -> some View {

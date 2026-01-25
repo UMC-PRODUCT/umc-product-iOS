@@ -43,6 +43,12 @@ struct ToolBarCollection {
     /// 추가 버튼
     struct AddBtn: ToolbarContent {
         let action: () -> Void
+        let disable: Bool
+        
+        init(action: @escaping () -> Void, disable: Bool = false) {
+            self.action = action
+            self.disable = disable
+        }
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarTrailing, content: {
@@ -51,6 +57,7 @@ struct ToolBarCollection {
                 }, label: {
                     Image(systemName: "plus")
                 })
+                .disabled(disable)
             })
         }
     }
