@@ -44,7 +44,7 @@ struct CommunityPostCard: View {
 
             buttonSection
         }
-        .padding(DefaultConstant.defaultListPadding)
+        .padding(Constant.mainPadding)
         .background(
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                 .fill(.white)
