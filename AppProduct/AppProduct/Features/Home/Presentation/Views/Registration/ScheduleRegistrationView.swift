@@ -30,7 +30,14 @@ struct ScheduleRegistrationView: View {
                 sectionView(.allDay)
                 sectionView(.date)
             }
+            Section {
+                sectionView(.tag)
+            }
+            Section {
+                sectionView(.memo)
+            }
         }
+        .scrollDismissesKeyboard(.immediately)
     }
     
     @ViewBuilder
@@ -54,11 +61,12 @@ struct ScheduleRegistrationView: View {
                 showEndTimePicker: $viewModel.showEndTimePicker
             )
         case .memo:
-            EmptyView()
+            Memo(memo: $viewModel.memo)
+                .equatable()
         case .participation:
             EmptyView()
-        case .category:
-            EmptyView()
+        case .tag:
+            Tag(tag: $viewModel.tag)
         }
     }
 }
@@ -111,13 +119,12 @@ fileprivate struct PlaceView: View, Equatable {
                     clearButton
                 }
             }
-            .contentShape(Rectangle())
         })
-        .buttonStyle(.plain)
         .sheet(isPresented: $showSearchMap, content: {
             SearchMapView(errorHandler: errorHandler, placeSelected: { place in
                 self.place = place
             })
+            .presentationDragIndicator(.visible)
         })
     }
     
@@ -260,6 +267,75 @@ fileprivate struct DateTimeSection: View {
         if condition {
             TimePickerRow(date: date)
         }
+    }
+}
+
+fileprivate struct Tag: View {
+    
+    @Binding var tag: [ScheduleIconCategory]
+    @State var showTagList: Bool = false
+  
+    private enum Constants {
+        static let tagText: String = "태그"
+        static let chevronImage: String = "chevron.right"
+    }
+    
+    var body: some View {
+        Button(action: {
+            showTagList.toggle()
+        }, label: {
+            HStack {
+                Text(Constants.tagText)
+                    .foregroundStyle(.black)
+                Spacer()
+                tagCount
+            }
+        })
+        .sheet(isPresented: $showTagList, content: {
+            TagListView(tagList: $tag)
+                .presentationDragIndicator(.visible)
+                .interactiveDismissDisabled()
+        })
+    }
+    
+    private var tagCount: some View {
+        HStack(spacing: DefaultSpacing.spacing8, content: {
+            if !tag.isEmpty {
+                Text("\(tag.count)개 선택됨")
+                    .appFont(.callout, color: .grey500)
+            }
+            
+            Image(systemName: Constants.chevronImage)
+                .foregroundStyle(.grey500)
+        })
+    }
+}
+
+// MARK: - Memo
+fileprivate struct Memo: View, Equatable {
+    @Binding var memo: String
+    
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.memo == rhs.memo
+    }
+    
+    private enum Constants {
+        static let textEditorHeight: CGFloat = 200
+        static let editorPadding: CGFloat = 4
+        static let placeholderPadding: EdgeInsets = .init(top: 8, leading: 4, bottom: 8, trailing: 4)
+    }
+    
+    var body: some View {
+        TextEditor(text: $memo)
+            .overlay(alignment: .topLeading, content: {
+                if memo.isEmpty {
+                    Text(ScheduleGenerationType.memo.placeholder ?? "")
+                        .font(ScheduleGenerationType.memo.placeholderFont)
+                        .foregroundStyle(ScheduleGenerationType.memo.placeholderColor)
+                        .padding(Constants.placeholderPadding)
+                }
+            })
+            .frame(height: Constants.textEditorHeight)
     }
 }
 

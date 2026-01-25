@@ -19,8 +19,14 @@ struct PlaceSearchInfo: Equatable {
     var coordinate: Coordinate
 }
 
-struct Participant {
+/// 챌린저 정보 카드
+struct Participant: Identifiable, Equatable {
+    var id: UUID = .init()
+    let challengeId: Int
+    let gen: Int
     let name: String
     let nickname: String
     let schoolName: String
+    let profileImage: String?
+    let part: UMCPartType
 }

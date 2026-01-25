@@ -36,7 +36,7 @@ struct SearchMapView: View {
     /// 초기화 메서드
     /// - Parameters:
     ///   - errorHandler: 에러 핸들러 주입
-    ///   - onPlaceSelected: 장소 선택 시 호출되는 클로저
+    ///   - placeSelected: 장소 선택 시 호출되는 클로저
     init(errorHandler: ErrorHandler, placeSelected: @escaping (PlaceSearchInfo) -> Void) {
         self._viewModel = .init(wrappedValue: .init(errorHandler: errorHandler))
         self.placeSelected = placeSelected
@@ -62,6 +62,7 @@ struct SearchMapView: View {
                     currnetLocation
                 })
             })
+            .searchPresentationToolbarBehavior(.avoidHidingContent)
             .task {
                 viewModel.loadRecentPlaces()
             }

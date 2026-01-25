@@ -9,18 +9,46 @@ import Foundation
 import SwiftUI
 
 struct ToolBarCollection {
+    /// 취소 버튼
+    struct CancelBtn: ToolbarContent {
+        @Environment(\.dismiss) var dismiss
+        var action: () -> Void
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .cancellationAction, content: {
+                Button(role: .cancel, action: {
+                    action()
+                    dismiss()
+                })
+            })
+        }
+    }
     
-    /// 일정 추가 버튼
+    /// 확인 버튼
+    struct ConfirmBtn: ToolbarContent {
+        @Environment(\.dismiss) var dismiss
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .confirmationAction, content: {
+                Button(role: .confirm, action: {
+                    dismiss()
+                })
+                .tint(.indigo500)
+            })
+        }
+    }
+    
+    /// 추가 버튼
     struct AddBtn: ToolbarContent {
         let action: () -> Void
-        var tintColor: Color = .grey900
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarTrailing, content: {
-                Button(action: { action() }, label: {
-                    Image(systemName: "magnifyingglass")
+                Button(action: {
+                    action()
+                }, label: {
+                    Image(systemName: "plus")
                 })
-                .tint(tintColor)
             })
         }
     }

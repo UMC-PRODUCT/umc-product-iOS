@@ -63,7 +63,7 @@ struct DateTimeRow: View, Equatable {
             Text(text)
                 .appFont(.body, color: check ? .red : .black)
                 .padding(Constant.padding)
-                .glassEffect(.clear.interactive(), in: .capsule)
+                .background(Color.grey200, in: .capsule)
         })
         .buttonStyle(.plain)
     }

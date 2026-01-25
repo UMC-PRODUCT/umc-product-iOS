@@ -25,7 +25,7 @@ enum DefaultConstant {
     static let defaultSafeBtnPadding: CGFloat = 10
 
     /// 카드, 버튼 등의 기본 모서리 둥글기.
-    static let defaultCornerRadius: CGFloat = 20
+    static let defaultCornerRadius: CGFloat = 30
 
     /// 콘텐츠 영역 하단 마진.
     static let defaultContentBottomMargins: CGFloat = 40

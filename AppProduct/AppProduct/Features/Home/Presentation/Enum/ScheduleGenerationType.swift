@@ -16,7 +16,7 @@ enum ScheduleGenerationType: CaseIterable {
     case date
     case memo
     case participation
-    case category
+    case tag
     
     /// 안내 가이드
     var placeholder: String? {
@@ -33,7 +33,7 @@ enum ScheduleGenerationType: CaseIterable {
             return "메모를 남겨보세요"
         case .participation:
             return "누가 함께하나요?"
-        case .category:
+        case .tag:
             return nil
         }
     }

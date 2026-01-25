@@ -31,8 +31,8 @@ class ScheduleRegistrationViewModel {
     /// 메모
     var memo: String = ""
     /// 참여자 명단
-    var participatn: Participant?
+    var participatn: [Participant] = .init()
     /// 태그
-    var tag: ScheduleIconCategory?
+    var tag: [ScheduleIconCategory] = .init()
     
 }
