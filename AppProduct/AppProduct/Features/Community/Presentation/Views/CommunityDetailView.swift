@@ -60,6 +60,7 @@ struct CommunityDetailView: View {
 
             ForEach(comments) { comment in
                 CommunityCommentItem(model: comment)
+                    .equatable()
             }
         }
     }

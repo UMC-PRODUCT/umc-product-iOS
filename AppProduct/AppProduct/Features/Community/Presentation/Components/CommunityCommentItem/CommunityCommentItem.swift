@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CommunityCommentItem: View {
+struct CommunityCommentItem: View, Equatable {
     // MARK: - Properties
 
     private let model: CommunityCommentModel
@@ -22,6 +22,10 @@ struct CommunityCommentItem: View {
 
     init(model: CommunityCommentModel) {
         self.model = model
+    }
+
+    static func == (lhs: CommunityCommentItem, rhs: CommunityCommentItem) -> Bool {
+        lhs.model == rhs.model
     }
 
     // MARK: - Body
