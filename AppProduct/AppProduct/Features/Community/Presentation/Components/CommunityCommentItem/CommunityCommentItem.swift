@@ -47,13 +47,13 @@ struct CommunityCommentItem: View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             HStack {
                 Text(model.userName)
-                    .appFont(.subheadlineEmphasis)
+                    .appFont(.subheadlineEmphasis, color: .black)
                 Spacer()
                 Text(model.createdAt)
-                    .appFont(.footnote, color: .grey600)
+                    .appFont(.footnote, color: .grey500)
             }
             Text(model.content)
-                .appFont(.subheadline)
+                .appFont(.subheadline, color: .grey700)
         }
         .padding(Constant.bubblePadding)
         .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.bubbleRadius))

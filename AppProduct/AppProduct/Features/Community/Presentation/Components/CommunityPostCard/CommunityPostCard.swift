@@ -16,6 +16,7 @@ struct CommunityPostCard: View {
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
+        static let contentPadding: EdgeInsets = .init(top: 8, leading: 0, bottom: 12, trailing: 0)
         static let buttonPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
     }
 
@@ -39,6 +40,7 @@ struct CommunityPostCard: View {
 
             Text(model.content)
                 .appFont(.callout, color: .grey700)
+                .padding(Constant.contentPadding)
 
             buttonSection
         }
@@ -84,7 +86,7 @@ struct CommunityPostCard: View {
     }
 
     private var buttonSection: some View {
-        HStack(spacing: DefaultSpacing.spacing4) {
+        HStack(spacing: DefaultSpacing.spacing12) {
             makeButton(type: .like, isSelected: isLiked) {
                 isLiked.toggle()
                 // TODO: 좋아요 API
@@ -111,7 +113,6 @@ struct CommunityPostCard: View {
         }
         .padding(Constant.buttonPadding)
         .appFont(.subheadline, color: type.foregroundColor)
-        .buttonStyle(.glassProminent)
-        .tint(type.backgroundColor)
+        .glassEffect(.regular.tint(type.backgroundColor).interactive())
     }
 }

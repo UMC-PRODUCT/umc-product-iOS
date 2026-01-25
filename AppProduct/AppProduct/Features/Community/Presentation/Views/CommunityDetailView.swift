@@ -27,7 +27,7 @@ struct CommunityDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DefaultSpacing.spacing24) {
+            VStack(spacing: DefaultSpacing.spacing32) {
                 CommunityPostCard(model: vm.postItem)
 
                 Group {
@@ -54,7 +54,10 @@ struct CommunityDetailView: View {
     // MARK: - Comment
 
     private func commentSection(_ comments: [CommunityCommentModel]) -> some View {
-        VStack(spacing: DefaultSpacing.spacing16) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+            Text("댓글 \(vm.postItem.commentCount)개")
+                .appFont(.subheadline, color: .grey600)
+
             ForEach(comments) { comment in
                 CommunityCommentItem(model: comment)
             }
