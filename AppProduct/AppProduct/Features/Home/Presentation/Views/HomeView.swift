@@ -16,6 +16,7 @@ struct HomeView: View {
     
     /// 의존성 주입 컨테이너
     @Environment(\.di) var di
+    @Environment(ErrorHandler.self) var errorHandler
     
     /// 홈 화면의 비즈니스 로직을 담당하는 뷰 모델
     @State var viewModel = HomeViewModel()

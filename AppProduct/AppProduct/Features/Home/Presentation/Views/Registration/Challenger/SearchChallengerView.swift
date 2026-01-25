@@ -51,7 +51,7 @@ struct SearchChallengerView: View {
         .searchPresentationToolbarBehavior(.avoidHidingContent)
         .navigation(naviTitle: .searchChallenger, displayMode: .inline)
         .toolbar(content: {
-            ToolBarCollection.LeadingBtn(image: "doc.text.fill", action: {
+            ToolBarCollection.LeadingButton(image: "doc.text.fill", action: {
                 // CSV 파일 가져오기 모달 표시
                 viewModel.showCSVImporter = true
             })

@@ -62,6 +62,21 @@ struct ToolBarCollection {
         }
     }
     
+    struct LeadingButton: ToolbarContent {
+        let image: String
+        let action: () -> Void
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarLeading, content: {
+                Button(action: {
+                    action()
+                }, label: {
+                    Image(systemName: image)
+                })
+            })
+        }
+    }
+    
     /// 상단 알림 히스토리 버튼
     struct BellBtn: ToolbarContent {
         let action: () -> Void
