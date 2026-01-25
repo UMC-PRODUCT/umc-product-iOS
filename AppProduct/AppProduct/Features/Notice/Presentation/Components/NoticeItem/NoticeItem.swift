@@ -68,7 +68,7 @@ private struct NoticeItemPresenter: View, Equatable {
         .padding(Constant.mainPadding)
         .containerShape(.rect(cornerRadius: Constant.mainBoxRadius))
         .background {
-            RoundedRectangle(cornerRadius: Constant.mainBoxRadius)
+            RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius)
                 .fill(model.mustRead ? .indigo100 : .white)
                 .glass()
         }
@@ -81,23 +81,10 @@ private struct TopSection: View, Equatable {
 
     var body: some View {
         HStack(spacing: Constant.topHSpacing) {
-            Text(model.tag.text)
-                .appFont(.caption1, color: .grey000)
-                .padding(Constant.tagPadding)
-                .background {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(model.tag.backColor)
-                }
-
+            tag(model.tag.text, color: model.tag.backColor)
+            
             if model.mustRead {
-                Text("필독")
-                    .foregroundStyle(.grey000)
-                    .appFont(.caption1Emphasis, weight: .regular)
-                    .padding(Constant.tagPadding)
-                    .background {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(.orange500)
-                    }
+                tag("필독", color: .orange)
             }
 
             Spacer()
@@ -111,6 +98,17 @@ private struct TopSection: View, Equatable {
             Text(model.date.toYearMonthDay())
                 .appFont(.footnote, color: .grey500)
         }
+    }
+    
+    private func tag(_ text: String, color: Color) -> some View {
+        Text(text)
+            .foregroundStyle(.grey000)
+            .appFont(.caption1Emphasis, weight: .regular)
+            .padding(Constant.tagPadding)
+            .background {
+                RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+                    .fill(color)
+            }
     }
 }
 

@@ -16,8 +16,8 @@ struct NoticeChip: View {
     
     // MARK: - Constants
     fileprivate enum NoticeChipConstants {
-        static let horizonPadding: CGFloat = 7
-        static let verticalPadding: CGFloat = 3
+        static let horizonPadding: CGFloat = 12
+        static let verticalPadding: CGFloat = 6
         static let radius: CGFloat = 8
     }
     
@@ -29,7 +29,7 @@ struct NoticeChip: View {
             .padding(.horizontal, NoticeChipConstants.horizonPadding)
             .padding(.vertical, NoticeChipConstants.verticalPadding)
             .background {
-                RoundedRectangle(cornerRadius: NoticeChipConstants.radius)
+                RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                     .foregroundStyle(noticeType.backgroundColor)
             }
     }

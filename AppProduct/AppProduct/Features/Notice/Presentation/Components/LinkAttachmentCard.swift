@@ -15,8 +15,8 @@ struct LinkAttachmentCard: View, Equatable {
     
     // MARK: - Constant
     fileprivate enum Constants {
-        static let xmarkSize: CGFloat = 12
-        static let topSectionHPadding: CGFloat = 8
+        static let xmarkSize: CGFloat = 18
+        static let topSectionHPadding: CGFloat = 12
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -29,12 +29,12 @@ struct LinkAttachmentCard: View, Equatable {
             topSection
             textfieldSection
         }
-        .padding(DefaultConstant.defaultBtnPadding)
+        .padding(16)
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .fill(.indigo100)
+                .fill(.grey200)
+                .glass()
         }
-        .glass()
     }
     
     /// 링크 카드 타이틀, 카드 삭제 버튼
@@ -42,14 +42,14 @@ struct LinkAttachmentCard: View, Equatable {
         HStack {
             Image(systemName: "link")
             Text("링크 첨부")
-                .appFont(.footnote, weight: .bold)
+                .appFont(.body, weight: .bold)
             Spacer()
             Button(action: {
                 onDismiss()
             }) {
                 Image(systemName: "xmark")
                     .font(.system(size: Constants.xmarkSize))
-                    .foregroundStyle(.grey500)
+                    .foregroundStyle(.black)
             }
         }
         .padding(.horizontal, Constants.topSectionHPadding)
@@ -59,7 +59,7 @@ struct LinkAttachmentCard: View, Equatable {
     private var textfieldSection: some View {
         TextField("",
                   text: $link,
-                  prompt: Text("https://example.com").foregroundStyle(.grey400))
+                  prompt: Text(verbatim: "https://example.com").foregroundStyle(.grey400))
             .textInputAutocapitalization(.never)
             .keyboardType(.URL)
             .autocorrectionDisabled()
@@ -87,4 +87,5 @@ struct LinkAttachmentCard: View, Equatable {
             noticeLinkItems.append(NoticeLinkItem())
         }
     }
+    .safeAreaPadding(.horizontal, 16)
 }
