@@ -9,18 +9,18 @@ import SwiftUI
 
 // MARK: - ChipButton
 struct ChipButton: View {
-    
     // MARK: - Properties
+
     private let title: String
     private let isSelected: Bool
     private let trailingIcon: Bool?
     private let action: () -> Void
-    
+
     @Environment(\.chipButtonSize) private var size
     @Environment(\.chipButtonStyle) private var style
-    
+
     // MARK: - Initializer
-    
+
     /// ChipButton 생성자
     /// - Parameters:
     ///   - title: 버튼 텍스트
@@ -30,9 +30,9 @@ struct ChipButton: View {
         self.trailingIcon = trailingIcon
         self.action = action
     }
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         Button(action: action) {
             ChipButtonContent(
@@ -63,7 +63,7 @@ private struct ChipButtonContent: View, Equatable {
         lhs.isSelected == rhs.isSelected &&
         lhs.trailingIcon == rhs.trailingIcon
     }
-    
+
     var body: some View {
         HStack(spacing: 4) {
             Text(title)
@@ -86,36 +86,36 @@ private struct ChipButtonContent: View, Equatable {
 
 // MARK: - ChipButton + AnyChipButton
 
-extension ChipButton: AnyChipButton { }
+extension ChipButton: AnyChipButton {}
 
 // MARK: - Preview
 
 #Preview("ChipButton") {
     struct Demo: View {
-            @State private var selected = false
+        @State private var selected = false
 
-            var body: some View {
-                VStack(spacing: 15) {
-                    HStack(spacing: 8) {
-                        ChipButton("small", isSelected: selected) {
-                            selected.toggle()
-                        }
-                        .buttonSize(.small)
-                        
-                        ChipButton("medium", isSelected: selected) {
-                            selected.toggle()
-                        }
-                        .buttonSize(.medium)
-                        
-                        ChipButton("large", isSelected: selected) {
-                            selected.toggle()
-                        }
-                        .buttonSize(.large)
+        var body: some View {
+            VStack(spacing: 15) {
+                HStack(spacing: 8) {
+                    ChipButton("small", isSelected: selected) {
+                        selected.toggle()
                     }
+                    .buttonSize(.small)
+
+                    ChipButton("medium", isSelected: selected) {
+                        selected.toggle()
+                    }
+                    .buttonSize(.medium)
+
+                    ChipButton("large", isSelected: selected) {
+                        selected.toggle()
+                    }
+                    .buttonSize(.large)
                 }
             }
         }
-        return Demo()
+    }
+    return Demo()
 }
 
 #Preview("ChipButton(chevron)") {

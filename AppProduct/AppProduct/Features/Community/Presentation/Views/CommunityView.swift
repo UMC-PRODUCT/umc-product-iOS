@@ -29,18 +29,11 @@ struct CommunityView: View {
 
     var body: some View {
         Group {
-            switch vm.items {
-            case .idle:
-                Color.clear.task {
-                    print("hello")
-                }
-            case .loading:
-                // !!! - 로딩 뷰 - 소피
-                ProgressView()
-            case .loaded(let items):
-                listSection(items)
-            case .failed:
-                Color.clear
+            switch vm.selectedMenu {
+            case .all, .question:
+                contentSection
+            case .fame:
+                CommunityFameView()
             }
         }
         .navigation(naviTitle: .community, displayMode: .inline)
@@ -48,11 +41,49 @@ struct CommunityView: View {
         .searchToolbarBehavior(.minimize)
         .toolbar {
             ToolBarCollection.CommunityMenuBtn(
-                allAction: {},
-                questionAction: {},
-                fameAction: {},
+                allAction: { vm.selectedMenu = .all },
+                questionAction: { vm.selectedMenu = .question },
+                fameAction: { vm.selectedMenu = .fame },
                 isRecruiting: $vm.isRecruiting
             )
+        }
+    }
+
+    private var contentSection: some View {
+        Group {
+            switch vm.items {
+            case .idle:
+                Color.clear.task {
+                    print("hello")
+                }
+            case .loading:
+                ProgressView()
+            case .loaded(let items):
+                listSection(items)
+            case .failed:
+                Color.clear
+            }
+        }
+    }
+
+    // MARK: - List
+
+    private func listSection(_ items: [CommunityItemModel]) -> some View {
+        Group {
+            if items.isEmpty {
+                unableContent
+            } else {
+                List(items, rowContent: { item in
+                    CommunityItem(model: item) {
+                        router.push(to: .community(.detail(postItem: item)))
+                    }
+                    .equatable()
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                })
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+            }
         }
     }
 
@@ -66,25 +97,11 @@ struct CommunityView: View {
             Text("가장 먼저 글을 작성해 보세요!")
         }
     }
-
-    // MARK: - List
-
-    private func listSection(_ items: [CommunityItemModel]) -> some View {
-        List(items, rowContent: { item in
-            CommunityItem(model: item) {
-                router.push(to: .community(.detail(postItem: item)))
-            }
-            .equatable()
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-        })
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-    }
 }
 
 #Preview {
     NavigationStack {
         CommunityView()
     }
+    .environment(\.di, .configured())
 }

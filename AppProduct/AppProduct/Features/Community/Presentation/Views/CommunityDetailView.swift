@@ -65,9 +65,3 @@ struct CommunityDetailView: View {
         }
     }
 }
-
-#Preview {
-    NavigationStack {
-        CommunityDetailView(postItem: .init(userId: 1, category: .question, title: "React Hook 질문 있습니다", content: "useEffect 의존성 배열 관련해서 질문이 있습니다...", profileImage: nil, userName: "이코딩", part: "iOS", createdAt: "10분 전", likeCount: 5, commentCount: 2))
-    }
-}
