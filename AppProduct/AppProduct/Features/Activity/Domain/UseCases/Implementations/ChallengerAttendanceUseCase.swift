@@ -111,11 +111,11 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
     }
 
     /// 현재 시간이 어느 출석 시간대에 속하는지 확인
-    func isWithinAttendanceTime(session: Session) -> AttendanceTimeWindow {
+    func isWithinAttendanceTime(info: SessionInfo) -> AttendanceTimeWindow {
         let now = Date()
         let onTimeThreshold = TimeInterval(AttendancePolicy.onTimeThresholdMinutes * 60)
         let lateThreshold = TimeInterval(AttendancePolicy.lateThresholdMinutes * 60)
-        let startTime = session.startTime
+        let startTime = info.startTime
 
         // 세션 시작 - threshold 이전이면 너무 이름
         if now < startTime.addingTimeInterval(-onTimeThreshold) {
@@ -135,12 +135,17 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
         // 그 이후는 마감
         return .expired
     }
-    
+
     /// 지오코딩
     func getAddressToCurrentLocation() async throws -> String {
         guard let coordinate = locationManager.currentCoordinate else {
             throw LocationError.locationFailed("주소를 찾을 수 없습니다.")
         }
         return try await locationManager.reverseGeocode(coordinate: coordinate)
+    }
+
+    /// 지오펜스 모니터링 중지
+    func stopGeofenceMonitoring() async {
+        await locationManager.stopAllGeofenceMonitoring()
     }
 }

@@ -28,7 +28,7 @@ final class MockAttendanceRepository: AttendanceRepositoryProtocol {
             sessionId: request.sessionId,
             userId: request.userId,
             type: request.type,
-            status: .pending,
+            status: .beforeAttendance,
             locationVerification: request.coordinate.map {
                 LocationVerification(
                     isVerified: true,
@@ -76,7 +76,7 @@ extension MockAttendanceRepository {
         sessionId: SessionID(value: "mock_session"),
         userId: UserID(value: "mock_user"),
         type: .gps,
-        status: .pending,
+        status: .beforeAttendance,
         locationVerification: .init(
             isVerified: true,
             coordinate: .init(latitude: 37.582967, longitude: 127.010527),
