@@ -12,6 +12,15 @@ import SwiftUI
 ///
 /// 앱 전체에서 일관된 간격, 패딩, 모서리 반경 등을 적용하기 위한 상수 모음입니다.
 enum DefaultConstant {
+    /// 아이콘 사이즈
+    static let iconSize: CGFloat = 36
+    
+    /// 아이콘 모서리 둥글기
+    static let cornerRadius: CGFloat = 24
+    
+    /// 아이콘 패딩
+    static let iconPadding: CGFloat = 8
+    
     /// 화면 좌우 여백.
     static let defaultSafeHorizon: CGFloat = 16
 

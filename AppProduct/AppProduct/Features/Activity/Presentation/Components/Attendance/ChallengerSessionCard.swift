@@ -62,8 +62,10 @@ struct ChallengerSessionCard: View, Equatable {
     private var icon: some View {
         Image(info.icon)
             .resizable()
-            .frame(width: Constants.iconSize, height: Constants.iconSize)
-            .scaledToFit()
+            .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
+            .padding(DefaultConstant.iconPadding)
+            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 
     private var contentSection: some View {
