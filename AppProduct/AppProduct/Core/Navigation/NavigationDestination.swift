@@ -53,6 +53,7 @@ enum NavigationDestination: Hashable {
 
     enum Home: Hashable {
         case alarmHistory
+        case registrationSchedule
     }
 
     enum Community: Hashable {

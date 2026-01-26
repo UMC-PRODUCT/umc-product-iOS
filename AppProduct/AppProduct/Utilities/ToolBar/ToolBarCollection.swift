@@ -8,18 +8,71 @@
 import Foundation
 import SwiftUI
 
-enum ToolBarCollection {
-    /// 일정 추가 버튼
+struct ToolBarCollection {
+    /// 취소 버튼
+    struct CancelBtn: ToolbarContent {
+        @Environment(\.dismiss) var dismiss
+        var action: () -> Void
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .cancellationAction, content: {
+                Button(role: .cancel, action: {
+                    action()
+                    dismiss()
+                })
+            })
+        }
+    }
+    
+    /// 확인 버튼
+    struct ConfirmBtn: ToolbarContent {
+        @Environment(\.dismiss) var dismiss
+        let action: () -> Void
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .confirmationAction, content: {
+                Button(role: .confirm, action: {
+                    action()
+                    dismiss()
+                })
+                .tint(.indigo500)
+            })
+        }
+    }
+    
+    /// 추가 버튼
     struct AddBtn: ToolbarContent {
         let action: () -> Void
-        var tintColor: Color = .grey900
+        let disable: Bool
+        
+        init(action: @escaping () -> Void, disable: Bool = false) {
+            self.action = action
+            self.disable = disable
+        }
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarTrailing, content: {
-                Button(action: { action() }, label: {
-                    Image(systemName: "magnifyingglass")
+                Button(action: {
+                    action()
+                }, label: {
+                    Image(systemName: "plus")
                 })
-                .tint(tintColor)
+                .disabled(disable)
+            })
+        }
+    }
+    
+    struct LeadingButton: ToolbarContent {
+        let image: String
+        let action: () -> Void
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarLeading, content: {
+                Button(action: {
+                    action()
+                }, label: {
+                    Image(systemName: image)
+                })
             })
         }
     }

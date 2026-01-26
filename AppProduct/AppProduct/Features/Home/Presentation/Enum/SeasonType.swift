@@ -7,12 +7,17 @@
 
 import SwiftUI
 
+/// 홈 화면 상단의 기수 및 활동일 정보를 표현하는 타입
+///
+/// 사용자의 누적 활동일과 참여 기수 정보를 표시하는 데 사용됩니다.
 enum SeasonType: Equatable {
+    /// 누적 활동일 (일수)
     case days(Int)
+    /// 참여 기수 목록 (기수 배열)
     case gens([Int])
     
     
-    /// 카드 별 이미지
+    /// 카드에 표시될 아이콘 이미지
     var image: Image? {
         switch self {
         case .days:
@@ -22,7 +27,7 @@ enum SeasonType: Equatable {
         }
     }
     
-    /// 텍스트 표현
+    /// 카드 타이틀 텍스트
     var text: String {
         switch self {
         case .days:
@@ -32,7 +37,7 @@ enum SeasonType: Equatable {
         }
     }
     
-    /// 총 활동일 및 누적 기수 총 갯수
+    /// 총 활동일 수 또는 참여 기수 개수
     var value: Int {
         switch self {
         case .days(let day):
@@ -42,7 +47,7 @@ enum SeasonType: Equatable {
         }
     }
     
-    /// 참여 기수 전체 반환
+    /// 참여 기수 목록 (참여 기수 타입일 경우 반환)
     var gens: [Int]? {
         switch self {
         case .days:
@@ -52,7 +57,7 @@ enum SeasonType: Equatable {
         }
     }
     
-    /// 타이틀 색상
+    /// 타이틀 텍스트 색상
     var fontColor: Color {
         switch self {
         case .days:
@@ -62,6 +67,7 @@ enum SeasonType: Equatable {
         }
     }
     
+    /// 값 텍스트 색상
     var valueColor: Color {
         switch self {
         case .days:
@@ -71,6 +77,7 @@ enum SeasonType: Equatable {
         }
     }
     
+    /// 값에 붙는 단위 태그 (Days, Gen)
     var valueTag: String {
         switch self {
         case .days:

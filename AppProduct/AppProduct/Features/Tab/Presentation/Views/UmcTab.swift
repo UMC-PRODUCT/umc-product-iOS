@@ -11,7 +11,8 @@ struct UmcTab: View {
     @State var tabCase: TabCase = .home
     @State var isShowMyPage: Bool = false
     @Environment(\.di) var di
-
+    @Environment(ErrorHandler.self) var errorHandler
+    
     var body: some View {
         let router = di.resolve(NavigationRouter.self)
 
@@ -66,4 +67,8 @@ struct UmcTab: View {
             Text("11")
         }
     }
+}
+
+#Preview {
+    UmcTab()
 }

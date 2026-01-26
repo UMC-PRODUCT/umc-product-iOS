@@ -11,4 +11,5 @@ import Foundation
 /// Usedefault 사용을 줄이고 @AppStorage로 관리
 enum AppStorageKey {
     static let userFCMToken: String = "UserFCMToken"
+    static let recentSearchPlaces: String = "recentSearchPlaces"
 }
