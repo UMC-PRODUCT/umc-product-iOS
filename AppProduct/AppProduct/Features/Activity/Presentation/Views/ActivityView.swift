@@ -10,7 +10,6 @@ import SwiftUI
 /// Activity Feature 메인 화면
 ///
 /// Challenger/Admin 모드에 따라 다른 섹션을 표시합니다.
-/// 상단 Menu(trailing)로 섹션을 선택하고, Bottom Accessory로 모드를 전환합니다.
 struct ActivityView: View {
     @Environment(\.di) private var di
     @State private var selectedSection: ActivitySection?
@@ -46,17 +45,17 @@ struct ActivityView: View {
             mode: userSession.currentActivityMode
         )
         .toolbar {
+            ToolBarCollection.Logo(image: .logoLight)
             ToolbarItem(placement: .topBarTrailing) {
                 sectionMenu
             }
         }
-        .navigation(naviTitle: .activityManagementType, displayMode: .inline)
         .onChange(of: userSession.currentActivityMode) { _, _ in
             // 모드 전환 시 기본 섹션으로 리셋
             selectedSection = nil
         }
         .task {
-            // ViewModel 초기화 및 데이터 로드
+            // ViewModel 초기화 및 데이터 로드(Computed Property를 위해 init 대신 task에서 초기화)
             if viewModel == nil {
                 viewModel = ActivityViewModel(
                     fetchSessionsUseCase: activityProvider.fetchSessionsUseCase,
@@ -85,10 +84,11 @@ struct ActivityView: View {
         } label: {
             HStack(spacing: DefaultSpacing.spacing4) {
                 Text(currentSection.rawValue)
-                    .appFont(.body)
+                    .appFont(.subheadline)
                 Image(systemName: "chevron.down")
                     .font(.caption)
             }
+            .padding(DefaultConstant.defaultBtnPadding)
         }
     }
 
