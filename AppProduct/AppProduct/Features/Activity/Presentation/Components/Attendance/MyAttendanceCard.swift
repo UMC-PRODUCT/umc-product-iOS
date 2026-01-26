@@ -66,14 +66,15 @@ private struct MyAttendanceItemPresenter: View, Equatable {
 
     // MARK: - Subviews
 
+    /// 카테고리 아이콘
     private var weekTag: some View {
-        Text(model.weekText)
-            .appFont(.callout, color: .grey600)
-            .padding(Constants.weekTagPadding)
-            .overlay(
-                RoundedRectangle(cornerRadius: Constants.weekTagRadius)
-                    .strokeBorder(.grey200)
-            )
+        Image(systemName: model.category.symbol)
+            .foregroundStyle(model.category.color)
+            .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
+            .padding(DefaultConstant.iconPadding)
+            .background(model.category.color.opacity(0.4))
+            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
     
     private var contentSection: some View {
@@ -102,6 +103,8 @@ private struct MyAttendanceItemPresenter: View, Equatable {
                 model.status.backgroundColor,
                 in: RoundedRectangle(cornerRadius: Constants.statusRadius)
             )
+            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 }
 
@@ -117,7 +120,8 @@ private struct MyAttendanceItemPresenter: View, Equatable {
                 title: "정기 세션",
                 startTime: now,
                 endTime: now.addingTimeInterval(4 * 3600),
-                status: .present
+                status: .present,
+                category: .general
             )
         )
     }

@@ -50,10 +50,10 @@ struct CardIconImage: View {
                     .foregroundStyle(color)
             }
         }
-        .frame(width: Constants.iconSize, height: Constants.iconSize)
-        .padding(Constants.iconPadding)
+        .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
+        .padding(DefaultConstant.iconPadding)
         .background(color.opacity(0.4))
-        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
-        .glassEffect(.clear, in: RoundedRectangle(cornerRadius: Constants.cornerRadius))
+        .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+        .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 }

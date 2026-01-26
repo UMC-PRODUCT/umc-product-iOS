@@ -39,6 +39,7 @@ struct ChallengerSessionCard: View, Equatable {
         static let iconSize: CGFloat = 64
         static let statusBadgeHeight: CGFloat = 36
         static let statusBadgeMinCornerRadius: Edge.Corner.Style = 12
+        static let statusBadgeCornerRadius: CGFloat = 12
     }
     
     var body: some View {
@@ -72,7 +73,7 @@ struct ChallengerSessionCard: View, Equatable {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Text(info.title)
                 .appFont(.bodyEmphasis, weight: .bold, color: .black)
-                .lineLimit(1)
+                .lineLimit(2)
 
             Text(info.startTime.timeRange(to: info.endTime))
                 .appFont(.callout, color: .gray)
@@ -97,12 +98,9 @@ struct ChallengerSessionCard: View, Equatable {
             .appFont(.caption1Emphasis, color: session.attendanceStatus.fontColor)
             .padding(DefaultConstant.badgePadding)
             .background(
-                session.attendanceStatus.backgroundColor,
-                in: ConcentricRectangle(
-                    corners: .concentric(minimum: Constants.statusBadgeMinCornerRadius),
-                    isUniform: true
-                )
-            )
+                session.attendanceStatus.backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 }
 
