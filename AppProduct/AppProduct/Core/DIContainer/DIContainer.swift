@@ -120,9 +120,9 @@ extension DIContainer {
     static func configured() -> DIContainer {
         let container = DIContainer()
         container.register(NavigationRouter.self) { NavigationRouter() }
-        container.register(UseCaseProvider.self) { UseCaseProvider() }
         container.register(UserSessionManager.self) { UserSessionManager() }
-        
+
+        // MARK: - Attendance Feature
         container.register(AttendanceRepositoryProtocol.self) {
             MockAttendanceRepository() // TODO: 서버 연결시 실제 구현체로 변경 예정 - [25.01.16] 이재원
         }
@@ -136,6 +136,29 @@ extension DIContainer {
 
         container.register(SessionRepositoryProtocol.self) {
             MockSessionRepository() // TODO: 서버 연결시 실제 구현체로 변경 예정 - [26.01.22] 이재원
+        }
+
+        // MARK: - Schedule Classifier (Cross-Feature)
+        container.register(ScheduleClassifierRepository.self) {
+            ScheduleClassifierRepositoryImpl()
+        }
+
+        // MARK: - Activity Feature
+        container.register(ActivityRepositoryProtocol.self) {
+            MockActivityRepository()
+        }
+        container.register(ActivityUseCaseProviding.self) {
+            ActivityUseCaseProvider(
+                repository: container.resolve(ActivityRepositoryProtocol.self),
+                classifierRepository: container.resolve(ScheduleClassifierRepository.self)
+            )
+        }
+
+        // MARK: - Global UseCase Provider
+        container.register(UsecaseProviding.self) {
+            UseCaseProvider(
+                activity: container.resolve(ActivityUseCaseProviding.self)
+            )
         }
 
         return container

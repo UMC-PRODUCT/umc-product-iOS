@@ -7,10 +7,18 @@
 
 import Foundation
 
-protocol UsecaseProvider {
-    
+/// 앱 전역에서 사용하는 UseCase Provider Protocol
+///
+/// 각 Feature별 Provider를 통해 UseCase에 접근합니다.
+protocol UsecaseProviding {
+    var activity: ActivityUseCaseProviding { get }
 }
 
-class UseCaseProvider: UsecaseProvider {
-    
+/// UseCase Provider 구현
+final class UseCaseProvider: UsecaseProviding {
+    let activity: ActivityUseCaseProviding
+
+    init(activity: ActivityUseCaseProviding) {
+        self.activity = activity
+    }
 }
