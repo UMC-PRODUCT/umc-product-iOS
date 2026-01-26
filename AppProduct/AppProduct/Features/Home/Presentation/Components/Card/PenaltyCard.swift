@@ -8,15 +8,24 @@
 import SwiftUI
 
 /// 홈 화면 패널티 카드
+///
+/// 사용자의 기수별 패널티 정보와 상세 기록을 카드 형태로 표시합니다.
 struct PenaltyCard: View, Equatable {
     
-    // MARK: - Property
+    // MARK: - Properties
+    
+    /// 기수별 패널티 데이터 리스트
     let generations: [GenerationData]
+    
+    /// 현재 표시 중인 탭(기수) 인덱스
     @State private var currentIndex: Int = 0
     
-    // MARK: - Constant
+    // MARK: - Constants
+    
     enum Constants {
+        /// 카드 전체 패딩
         static let padding: CGFloat = 20
+        /// 카드 높이 (데이터 없을 때, 있을 때)
         static let height: (CGFloat, CGFloat) = (100, 220)
     }
     
@@ -26,6 +35,9 @@ struct PenaltyCard: View, Equatable {
     }
     
     // MARK: - Init
+    
+    /// PenaltyCard 생성자
+    /// - Parameter generations: 표시할 기수별 패널티 데이터
     init(generations: [GenerationData]) {
         self.generations = generations
     }
@@ -63,14 +75,21 @@ struct PenaltyCard: View, Equatable {
 
 // MARK: - GenTabBar
 extension PenaltyCard {
+    /// 기수 선택 탭 바
     fileprivate struct GenTabBar: View {
-        // MARK: - Property
+        // MARK: - Properties
+        
+        /// 표시할 기수 목록
         let generations: [Int]
+        /// 현재 선택된 인덱스 바인딩
         @Binding var currentIndex: Int
         
         private enum Constants {
+            /// 탭 텍스트 패딩
             static let textPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
+            /// 인디케이터 간격
             static let indicatorSpacing: CGFloat = 4
+            /// 인디케이터 지름
             static let indicatorDiameter: CGFloat = 8
         }
         
@@ -106,12 +125,16 @@ extension PenaltyCard {
     /// 카드 경고 포인트 및 설명
     fileprivate struct CardInfo: View {
         
-        // MARK:  - Property
+        // MARK:  - Properties
+        
+        /// 표시할 정보 타입 (점수 또는 상세 기록)
         var infoType: InfoType
         
-        // MARK: - Constant
+        // MARK: - Constants
+        
         private enum Constants {
             static let desCardPadding: CGFloat = 4
+            /// 프로그레스 바 높이
             static let progressHeight: CGFloat = 20
         }
         
@@ -228,6 +251,7 @@ extension PenaltyCard {
             .frame(height: Constants.progressHeight)
         }
         
+        /// 프로그레스 바 그라데이션 색상 결정
         private func progressGradient(_ point: Int) -> LinearGradient {
             switch point {
             case 0...1:
@@ -257,6 +281,7 @@ extension PenaltyCard {
             }
         }
         
+        /// 프로그레스 바 배경 색상 결정
         private func progressBackgroundColor(_ point: Int) -> Color {
             switch point {
             case 0...1:

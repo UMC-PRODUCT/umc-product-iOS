@@ -8,7 +8,6 @@
 import SwiftUI
 
 // MARK: - ChipButton
-
 struct ChipButton: View {
     
     // MARK: - Properties

@@ -92,13 +92,3 @@ struct ChallengerAttendanceView: View, Equatable {
         .buttonStyle(.plain)
     }
 }
-
-#Preview {
-    ChallengerAttendanceView(
-        mapViewModel: AttendancePreviewData.mapViewModel,
-        attendanceViewModel: AttendancePreviewData.attendanceViewModel,
-        userId: AttendancePreviewData.userId
-    )
-    .environment(\.di, AttendancePreviewData.container)
-    .environment(AttendancePreviewData.errorHandler)
-}

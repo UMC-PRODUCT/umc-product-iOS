@@ -25,6 +25,7 @@ import SwiftUI
 struct NavigationRoutingView: View {
     /// 하위 뷰에 의존성을 주입하기 위한 DI 컨테이너입니다.
     @Environment(\.di) var di: DIContainer
+    @Environment(ErrorHandler.self) var errorHandler
     
     /// 현재 라우팅해야 할 목적지 정보입니다.
     let destination: NavigationDestination
@@ -58,6 +59,8 @@ private extension NavigationRoutingView {
         switch route {
         case .alarmHistory:
             NoticeAlarmView()
+        case .registrationSchedule:
+            ScheduleRegistrationView()
         }
     }
 }
