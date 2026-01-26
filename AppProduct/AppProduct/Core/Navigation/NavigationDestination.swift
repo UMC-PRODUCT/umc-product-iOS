@@ -8,6 +8,7 @@
 import Foundation
 
 // MARK: - NavigationDestination 사용 예시
+
 /// NavigationDestination은 앱 내 모든 화면 목적지를 타입 세이프하게 정의하는 enum입니다.
 /// 각 피처별로 중첩 enum을 사용하여 화면을 그룹화합니다.
 ///
@@ -49,12 +50,17 @@ enum NavigationDestination: Hashable {
     enum Auth: Hashable {
         case test
     }
-    
+
     enum Home: Hashable {
         case alarmHistory
         case registrationSchedule
     }
-    
+
+    enum Community: Hashable {
+        case detail(postItem: CommunityItemModel)
+    }
+
     case auth(Auth)
     case home(Home)
+    case community(Community)
 }

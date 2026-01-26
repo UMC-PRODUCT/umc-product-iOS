@@ -114,11 +114,10 @@ struct ToolBarCollection {
     
     /// 기수 필터
     struct GenerationFilter: ToolbarContent {
-
         let title: String
         let generations: [Generation]
         @Binding var selection: Generation
-
+        
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarLeading) {
                 Menu {
@@ -128,7 +127,7 @@ struct ToolBarCollection {
                 }
             }
         }
-
+        
         private var generationPicker: some View {
             Picker("기수 선택", selection: $selection) {
                 ForEach(generations) { generation in
@@ -137,7 +136,7 @@ struct ToolBarCollection {
             }
             .pickerStyle(.inline)
         }
-
+        
         private var menuLabel: some View {
             Text(title)
                 .font(.callout)
@@ -147,14 +146,13 @@ struct ToolBarCollection {
     
     /// 상단 중앙 메뉴 툴바 (아이콘O)
     struct TopBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
-
         let icon: String
         let title: String
         let items: [Item]
         @Binding var selection: Item
         let itemLabel: (Item) -> String
         let itemIcon: ((Item) -> String)?
-
+        
         init(
             icon: String,
             title: String,
@@ -170,7 +168,7 @@ struct ToolBarCollection {
             self.itemLabel = itemLabel
             self.itemIcon = itemIcon
         }
-
+        
         var body: some ToolbarContent {
             ToolbarItem(placement: .principal) {
                 Menu {
@@ -191,7 +189,7 @@ struct ToolBarCollection {
             }
             .sharedBackgroundVisibility(.visible)
         }
-
+        
         private var menuLabel: some View {
             HStack {
                 Image(systemName: icon)
@@ -207,6 +205,27 @@ struct ToolBarCollection {
             }
             .padding(10)
             .glassEffect(.regular.interactive(), in: .capsule)
+        }
+    }
+    
+    // 커뮤니티 메뉴 버튼
+    struct CommunityMenuBtn: ToolbarContent {
+        let allAction: () -> Void
+        let questionAction: () -> Void
+        let fameAction: () -> Void
+        let isRecruiting: Binding<Bool>
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing, content: {
+                Menu("Menu", systemImage: "ellipsis") {
+                    Section {
+                        Button("전체") { allAction() }
+                        Button("질문", systemImage: "flame.fill") { questionAction() }
+                        Button("명예의전당", systemImage: "trophy.fill") { fameAction() }
+                    }
+                    Toggle("모집중", isOn: isRecruiting)
+                }
+            })
         }
     }
 }

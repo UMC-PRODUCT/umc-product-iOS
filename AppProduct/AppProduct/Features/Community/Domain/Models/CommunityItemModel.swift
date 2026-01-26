@@ -7,16 +7,17 @@
 
 import SwiftUI
 
-struct CommunityItemModel: Equatable, Identifiable {
+struct CommunityItemModel: Equatable, Identifiable, Hashable {
     let id = UUID()
+    let userId: Int
     let category: CommunityItemCategory
-    let tag: CommunityItemTag
     let title: String
     let content: String
-    let profileImage: Image?
+    let profileImage: String?
     let userName: String
     let part: String
     let createdAt: String
     let likeCount: Int
     let commentCount: Int
+    var isLiked: Bool = false
 }
