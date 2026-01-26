@@ -21,8 +21,8 @@ struct Attendance: Identifiable, Equatable {
         return copy(status: .present, locationVerification: verification)
     }
     
-    func pending() -> Self {
-        return copy(status: .pending)
+    func beforeAttendance() -> Self {
+        return copy(status: .beforeAttendance)
     }
     
     func rejected(status: AttendanceStatus) -> Self {
