@@ -8,7 +8,6 @@
 import SwiftUI
 
 // MARK: - ChipButton
-
 struct ChipButton: View {
     
     // MARK: - Properties
@@ -24,6 +23,8 @@ struct ChipButton: View {
     /// ChipButton 생성자
     /// - Parameters:
     ///   - title: 버튼 텍스트
+    ///   - isSelected: 선택했을 때
+    ///   - action: 선택 후 액션
     init(_ title: String, isSelected: Bool, action: @escaping () -> Void) {
         self.title = title
         self.isSelected = isSelected

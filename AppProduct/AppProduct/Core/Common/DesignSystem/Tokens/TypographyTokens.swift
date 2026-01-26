@@ -269,7 +269,7 @@ extension Font {
     ///   - weight: 폰트 굵기 (기본: emphasis 스타일이면 bold, 아니면 regular)
     /// - Returns: 설정된 Font
     static func app(_ style: AppFont, weight: AppFontWeight? = nil) -> Font {
-        let finalWeight = weight ?? (style.isEmphasis ? .bold : .medium)
+        let finalWeight = weight ?? (style.isEmphasis ? .bold : .regular)
         return .custom(finalWeight.fontName, size: style.size)
     }
     
