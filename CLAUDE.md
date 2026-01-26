@@ -61,6 +61,31 @@ Features/{Feature}/
 - **Domain → Data**: UseCase는 Repository Protocol 사용, 구현체 모름
 - **Protocol 기반 주입**: DIContainer가 런타임에 구현체 결정
 
+### SOLID 원칙
+
+| 원칙 | 적용 |
+|------|------|
+| **S**ingle Responsibility | View(UI 렌더링), ViewModel(상태 관리), UseCase(비즈니스 로직), Repository(데이터 접근) 분리 |
+| **O**pen/Closed | Protocol 기반 설계로 기존 코드 수정 없이 새 구현체 추가 가능 |
+| **L**iskov Substitution | Protocol 구현체는 언제든 교체 가능 (Mock, Real, Stub) |
+| **I**nterface Segregation | 큰 Protocol보다 작고 명확한 Protocol 여러 개로 분리 |
+| **D**ependency Inversion | 상위 모듈(UseCase)이 하위 모듈(Repository) 구현체가 아닌 Protocol에 의존 |
+
+```swift
+// DIP 예시: UseCase는 Protocol에만 의존
+protocol UserRepositoryProtocol {
+    func fetchUser(id: String) async throws -> User
+}
+
+final class FetchUserUseCase {
+    private let repository: UserRepositoryProtocol  // 구현체가 아닌 Protocol
+
+    init(repository: UserRepositoryProtocol) {
+        self.repository = repository
+    }
+}
+```
+
 ### DIContainer
 
 ```swift
@@ -173,6 +198,36 @@ errorHandler.handle(error, context: ErrorContext(
 - **ErrorHandler**: 작업 흐름 중단, 즉각적 사용자 액션 필요 (세션 만료, 권한 요청, 네트워크 오류)
 - **Loadable**: 화면 내 상태 표시 (리스트 로딩 실패, 도메인 에러, 검증 실패)
 
+### AlertPrompt (확인/취소 다이얼로그)
+
+```swift
+// ViewModel
+@Observable
+final class SomeViewModel {
+    var alertPrompt: AlertPrompt?
+
+    func deleteButtonTapped() {
+        alertPrompt = AlertPrompt(
+            title: "삭제 확인",
+            message: "정말 삭제하시겠습니까?",
+            positiveBtnTitle: "삭제",
+            isPositiveBtnDestructive: true,
+            positiveBtnAction: { [weak self] in
+                self?.delete()
+            },
+            negativeBtnTitle: "취소"
+        )
+    }
+}
+
+// View
+.alertPrompt(item: $viewModel.alertPrompt)
+```
+
+**AlertPrompt 사용 기준:**
+- 파괴적 작업 전 확인 (삭제, 초기화 등)
+- 사용자 선택이 필요한 분기점
+
 ## 성능 최적화
 
 ### Liquid Glass (iOS 26)
@@ -254,6 +309,7 @@ Git Flow + **연속 브랜치 파생** 지원
 ```
 AppProduct/AppProduct/
 ├── Core/
+│   ├── Alert/              # AlertPrompt 등 확인 다이얼로그
 │   ├── Common/
 │   │   ├── DesignSystem/   # 디자인 토큰, 스타일
 │   │   ├── Error/          # Loadable, ErrorHandler, AppError 등
@@ -265,6 +321,9 @@ AppProduct/AppProduct/
 └── Features/
     ├── Activity/           # 출석, 스터디 관리
     ├── Auth/               # 로그인, 회원가입
+    ├── Community/          # 커뮤니티, 명예의전당
+    ├── Home/               # 홈 대시보드, 일정 관리
     ├── Notice/             # 공지사항
-    └── Splash/             # 스플래시 화면
+    ├── Splash/             # 스플래시 화면
+    └── Tab/                # 탭 네비게이션
 ```
