@@ -15,7 +15,7 @@ struct ChallengerFormView: View {
     // MARK: - Properties
     
     /// 표시할 챌린저 목록 바인딩
-    @Binding var challenger: [Participant]
+    @Binding var challenger: [ChallengerInfo]
     
     /// 현재 선택된 챌린저들의 ID 집합 (체크박스 모드일 때 사용)
     @Binding var selectedIds: Set<UUID>
@@ -27,7 +27,7 @@ struct ChallengerFormView: View {
     let showCheckBox: Bool
     
     /// 챌린저 항목 탭 액션 클로저
-    let tap: ((Participant) -> Void)?
+    let tap: ((ChallengerInfo) -> Void)?
     
     // MARK: - Init
     
@@ -39,11 +39,11 @@ struct ChallengerFormView: View {
     ///   - selectedIds: 선택된 ID 집합 바인딩 (기본값: 빈 집합)
     ///   - tap: 탭 액션 클로저 (기본값: nil)
     init(
-        challenger: Binding<[Participant]>,
+        challenger: Binding<[ChallengerInfo]>,
         isDeletAction: Bool = false,
         showCheckBox: Bool = false,
         selectedIds: Binding<Set<UUID>> = .constant([]),
-        tap: ((Participant) -> Void)? = nil
+        tap: ((ChallengerInfo) -> Void)? = nil
     ) {
         self._challenger = challenger
         self.isDeletAction = isDeletAction
@@ -103,15 +103,18 @@ struct ChallengerFormView: View {
     }
     
     /// 챌린저 목록을 파트별로 그룹화하고, 내부에서 기수(Gen)와 이름 순으로 정렬하는 계산 프로퍼티
-    private var groupedByPart: [UMCPartType: [Participant]] {
+    private var groupedByPart: [UMCPartType: [ChallengerInfo]] {
+        // 1. 파트별로 딕셔너리 그룹화
         let grouped = Dictionary(grouping: challenger) { $0.part }
+        
+        // 2. 각 파트 내의 리스트를 정렬
         return grouped.mapValues { participants in
             participants.sorted { lhs, rhs in
+                // 우선순위 1: 기수 (내림차순 - 최신 기수가 위로)
                 if lhs.gen != rhs.gen {
-                    // 기수가 높은 순서대로
                     return lhs.gen > rhs.gen
                 }
-                // 이름 가나다 순
+                // 우선순위 2: 이름 (오름차순 - 가나다순)
                 return lhs.name < rhs.name
             }
         }

@@ -110,22 +110,24 @@ struct ScheduleRegistrationView: View {
 
 // MARK: - Subviews
 
-/// 제목 입력 뷰
+/// 일정 제목을 입력받는 서브 뷰입니다.
 fileprivate struct TitleView: View, Equatable {
-    /// 입력된 제목 텍스트바인딩
+    /// 입력된 제목 텍스트 (바인딩)
     @Binding var text: String
     
+    /// 값 변경 감지를 위한 Equatable 프로토콜 구현
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.text == rhs.text
     }
     
     var body: some View {
         TextField("", text: $text, prompt: placeholer)
-            .submitLabel(.return)
-            .tint(.indigo500)
+            .submitLabel(.return) // 키보드 'return' 버튼
+            .tint(.indigo500)     // 커서 색상
             .appFont(.body, color: .black)
     }
     
+    /// 플레이스홀더 텍스트 뷰
     private var placeholer: Text {
         Text(ScheduleGenerationType.title.placeholder ?? "")
             .font(ScheduleGenerationType.title.placeholderFont)
@@ -136,6 +138,8 @@ fileprivate struct TitleView: View, Equatable {
 // MARK: - Place View
 
 /// 장소 선택 뷰 (지도 검색 기능 포함)
+///
+/// 선택된 장소가 없으면 플레이스홀더를, 있으면 장소 정보를 표시합니다.
 fileprivate struct PlaceView: View, Equatable {
     
     /// 선택된 장소 정보 바인딩
@@ -157,12 +161,13 @@ fileprivate struct PlaceView: View, Equatable {
         }, label: {
             HStack(spacing: DefaultSpacing.spacing8) {
                 if place.name.isEmpty {
-                    emptyPlace
+                    emptyPlace // 장소 미선택 시 뷰
                 } else {
-                    selectedPlace
+                    selectedPlace // 장소 선택 시 정보 뷰
                 }
                 Spacer()
                 
+                // 장소 선택 취소 버튼
                 if !place.name.isEmpty {
                     clearButton
                 }
@@ -176,12 +181,14 @@ fileprivate struct PlaceView: View, Equatable {
         })
     }
     
+    /// 장소가 선택되지 않았을 때의 플레이스홀더 뷰
     private var emptyPlace: some View {
         Text(placeholder)
             .font(ScheduleGenerationType.place.placeholderFont)
             .foregroundStyle(ScheduleGenerationType.place.placeholderColor)
     }
     
+    /// 선택된 장소의 이름과 주소를 표시하는 뷰
     private var selectedPlace: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             Text(place.name)
@@ -194,6 +201,7 @@ fileprivate struct PlaceView: View, Equatable {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
     
+    /// 선택된 장소 초기화 버튼
     private var clearButton: some View {
         Button(action: {
             place = PlaceSearchInfo(name: "", address: "", coordinate: .init(latitude: 0, longitude: 0))
@@ -234,6 +242,8 @@ fileprivate struct AllDayToggle: View, Equatable {
 // MARK: - DateTime Section
 
 /// 시작/종료 날짜 및 시간 선택 섹션
+///
+/// 시작 날짜/시간 행과 종료 날짜/시간 행, 그리고 각각의 Picker를 포함합니다.
 fileprivate struct DateTimeSection: View {
     
     // MARK: - Properties
@@ -242,7 +252,7 @@ fileprivate struct DateTimeSection: View {
     @Binding var startDate: Date
     @Binding var endDate: Date
     
-    // Picker 표시 상태 바인딩
+    // Picker 표시 상태 바인딩 (하나가 열리면 나머지는 닫히는 로직을 상위에서 제어)
     @Binding var showStartDatePicker: Bool
     @Binding var showStartTimePicker: Bool
     @Binding var showEndDatePicker: Bool
@@ -260,6 +270,7 @@ fileprivate struct DateTimeSection: View {
         }
     }
     
+    /// 시작 날짜/시간 표시 행
     private var startDateRow: some View {
         DateTimeRow(
             title: "시작",
@@ -287,6 +298,7 @@ fileprivate struct DateTimeSection: View {
         .equatable()
     }
     
+    /// 종료 날짜/시간 표시 행
     private var endDateRow: some View {
         DateTimeRow(
             title: "종료",
@@ -333,7 +345,7 @@ fileprivate struct DateTimeSection: View {
 
 // MARK: - Tag Section
 
-/// 태그 선택 섹션
+/// 태그 선택 섹션 (아이콘 선택 등)
 fileprivate struct TagSection: View {
     
     /// 선택된 태그 리스트 바인딩
@@ -381,11 +393,11 @@ fileprivate struct TagSection: View {
 
 // MARK: - Participant Section
 
-/// 참여자 선택 섹션
+/// 참여자(챌린저) 선택 및 관리 섹션
 fileprivate struct PariticipantSection: View {
     
     /// 선택된 참여자 리스트 바인딩
-    @Binding var challenger: [Participant]
+    @Binding var challenger: [ChallengerInfo]
     
     /// 참여자 선택 시트 표시 여부
     @State var showPariticipant: Bool = false
@@ -429,7 +441,7 @@ fileprivate struct PariticipantSection: View {
 
 // MARK: - Memo Section
 
-/// 메모 입력 섹션
+/// 메모 입력 섹션 (TextEditor)
 fileprivate struct Memo: View, Equatable {
     /// 입력된 메모 텍스트 바인딩
     @Binding var memo: String
@@ -447,6 +459,7 @@ fileprivate struct Memo: View, Equatable {
     var body: some View {
         TextEditor(text: $memo)
             .overlay(alignment: .topLeading, content: {
+                // 메모가 비어있을 때 플레이스홀더 표시
                 if memo.isEmpty {
                     Text(ScheduleGenerationType.memo.placeholder ?? "")
                         .font(ScheduleGenerationType.memo.placeholderFont)

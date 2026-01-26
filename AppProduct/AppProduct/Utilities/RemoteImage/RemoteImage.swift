@@ -8,15 +8,31 @@
 import SwiftUI
 import Kingfisher
 
+/// Kingfisher를 사용하여 원격 이미지를 로드하고 표시하는 커스텀 뷰입니다.
+///
+/// 로딩 실패 시 기본 이미지(플레이스홀더)를 표시하거나, 커스텀 에러 처리를 수행합니다.
+///
+/// - Usage:
+/// ```swift
+/// RemoteImage(
+///     urlString: "https://example.com/image.jpg",
+///     size: CGSize(width: 100, height: 100),
+///     cornerRadius: 10,
+///     contentMode: .fill
+/// )
+/// ```
 struct RemoteImage: View {
     typealias ContentMode = SwiftUI.ContentMode
-
+    
     // MARK: - Properties
     
-    /// 이미지 URL 문자열
+    /// 이미지 로드 실패 상태 (true일 경우 실패)
+    @State private var isError: Bool = false
+    
+    /// 로드할 이미지 URL 문자열
     let urlString: String
     
-    /// 이미지 뷰의 크기
+    /// 이미지 뷰의 목표 크기
     let size: CGSize
     
     /// 이미지의 모서리 둥글기 반경 (기본값: 15)
@@ -30,7 +46,7 @@ struct RemoteImage: View {
     
     /// 로드 실패 시 표시할 플레이스홀더 시스템 이미지 이름
     let placeholderImage: String
-
+    
     // MARK: - Init
     
     /// RemoteImage 뷰를 초기화합니다.
@@ -61,23 +77,24 @@ struct RemoteImage: View {
     
     var body: some View {
         Group {
-            // URL 문자열이 유효한 경우 Kingfisher를 통해 이미지 로드
-            if let url = URL(string: urlString) {
+            if let url = URL(string: urlString), !isError {
                 KFImage(url)
-                    .placeholder {
-                        // 로딩 중일 때 표시할 인디케이터
-                        ProgressView()
-                            .controlSize(.regular)
+                    .resizable()
+                    .onFailure { _ in
+                        isError = true // 실패 시 상태 변경
                     }
-                    .resizable() // 크기 조절 가능하도록 설정
-                    .retry(maxCount: 1, interval: .seconds(2))
-                    .onFailureImage(UIImage(systemName: placeholderImage)) // 최종 실패 시 표시할 이미지
-                    .fade(duration: 0.25) // 이미지 로드 완료 시 페이드 효과
+                    .setProcessor(DownsamplingImageProcessor(size: size))
+                    .fade(duration: 0.25)
+            } else {
+                // 실패 시 SwiftUI가 직접 벡터 이미지를 그리도록 함
+                Image(.defaultProfile)
+                    .resizable()
+                    .symbolRenderingMode(.multicolor) // 시스템 이미지 고화질 유지
+                    .foregroundStyle(.black)
             }
         }
-        .aspectRatio(ratio, contentMode: contentMode) // 비율 및 콘텐츠 모드 설정
-        .frame(maxWidth: size.width) // 최대 너비 설정
-        .frame(height: size.height) // 높이 설정
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius)) // 둥근 모서리 적용
+        .aspectRatio(ratio, contentMode: contentMode)
+        .frame(width: size.width, height: size.height)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
 }
