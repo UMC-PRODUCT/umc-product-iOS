@@ -98,6 +98,9 @@ private struct NoticeTextField: View {
     var body: some View {
         VStack(spacing: 16) {
             ArticleTextField(placeholder: .title, text: $title)
+            
+            Divider()
+            
             ArticleTextField(placeholder: .content, text: $content)
         }
         .padding(.top, 24)
