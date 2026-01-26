@@ -55,4 +55,9 @@ extension Date {
     func timeRange(to endTime: Date) -> String {
         "\(self.toHourMinutes()) - \(endTime.toHourMinutes())"
     }
+
+    /// "HH:mm - HH:mm" 시간 범위 형식 (예: "14:00 - 18:00")
+    func timeRange(to endTime: Date) -> String {
+        "\(self.toHourMinutes()) - \(endTime.toHourMinutes())"
+    }
 }
