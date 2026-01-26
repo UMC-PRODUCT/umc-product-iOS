@@ -8,12 +8,23 @@
 import SwiftUI
 import SwiftData
 
+/// 알림 소식 카드 뷰
+///
+/// 알림의 종류(성공, 경고, 에러 등)에 따라 아이콘과 색상을 다르게 표시하여
+/// 사용자에게 직관적인 알림 내역을 제공합니다.
 struct NoticeAlarmCard: View {
 
+    // MARK: - Properties
+    
+    /// 표시할 알림 데이터
     let notice: NoticeHistoryData
     
+    // MARK: - Constants
+    
     private enum Constants {
+        /// 아이콘 크기
         static let iconSize: CGFloat = 24
+        /// 아이콘 패딩
         static let iconPadding: CGFloat = 8
     }
     
@@ -24,6 +35,7 @@ struct NoticeAlarmCard: View {
         })
     }
     
+    /// 알림 아이콘 이미지 뷰
     private var cardIcon: some View {
         Image(systemName: notice.icon.image)
             .renderingMode(.template)
@@ -37,8 +49,10 @@ struct NoticeAlarmCard: View {
     }
 }
 
+/// 알림 내용 정보 뷰 (제목, 내용, 시간)
 fileprivate struct ContentInfo: View {
 
+    /// 표시할 알림 데이터
     let notice: NoticeHistoryData
     
     var body: some View {
@@ -46,21 +60,24 @@ fileprivate struct ContentInfo: View {
             topTitle
             
             Text(notice.content)
-                .appFont(.subheadline, color: .grey500)
+                .appFont(.subheadline, color: .grey600)
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
         })
     }
     
+    /// 상단 타이틀 영역 (제목 + 시간)
     private var topTitle: some View {
         HStack {
+            // 알림 제목
             Text(notice.title)
-                .appFont(.bodyEmphasis, color: .black)
+                .appFont(.calloutEmphasis, color: .black)
             
             Spacer()
             
+            // 알림 발생 시간 (상대 시간)
             Text(notice.createdAt.timeAgoText)
-                .appFont(.caption1, color: .grey500)
+                .appFont(.footnote, color: .grey500)
         }
     }
 }

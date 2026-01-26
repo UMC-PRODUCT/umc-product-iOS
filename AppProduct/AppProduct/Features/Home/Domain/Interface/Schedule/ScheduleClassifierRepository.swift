@@ -7,6 +7,10 @@
 
 import Foundation
 
+/// 일정 분류 리포지토리 프로토콜
+///
+/// 일정 제목을 분석하여 적절한 카테고리(`ScheduleIconCategory`)로 분류하는 기능을 정의합니다.
+/// CoreML, 키워드 매칭, 캐싱 기능을 제공합니다.
 protocol ScheduleClassifierRepository {
     /// CoreML 모델을 로드합니다
     func loadModel() throws

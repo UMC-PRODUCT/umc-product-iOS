@@ -8,7 +8,6 @@
 import Foundation
 
 extension Date {
-    // yyyy.MM.dd
     func toYearMonthDay() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy.MM.dd"
@@ -44,5 +43,12 @@ extension Date {
         } else {
             return "\(month)개월 전"
         }
+    }
+    
+    func timeFormatter() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        formatter.locale = Locale(identifier: "ko_KR")
+        return formatter.string(from: self)
     }
 }
