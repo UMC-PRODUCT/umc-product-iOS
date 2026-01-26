@@ -66,7 +66,7 @@ private extension NavigationRoutingView {
             ScheduleRegistrationView()
         }
     }
-
+    
     @ViewBuilder
     func communityView(_ route: NavigationDestination.Community) -> some View {
         switch route {

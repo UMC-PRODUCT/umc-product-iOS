@@ -208,7 +208,7 @@ struct ToolBarCollection {
         }
     }
     
-    // 커뮤니티 메뉴 버튼
+    /// 커뮤니티 메뉴 버튼
     struct CommunityMenuBtn: ToolbarContent {
         let allAction: () -> Void
         let questionAction: () -> Void
