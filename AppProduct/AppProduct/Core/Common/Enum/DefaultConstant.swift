@@ -66,7 +66,6 @@ enum DefaultConstant {
 
     /// 리스트 카드 기본 패딩.
     static let defaultListPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 16, trailing: 16)
-
     
     /// 카드 기본 패딩.
     static let defaultCardPadding: EdgeInsets = .init(top: 24, leading: 16, bottom: 24, trailing: 16)

@@ -166,10 +166,22 @@ extension ChipButton: AnyChipButton {}
                         }
                         .buttonSize(.large)
                     }
+                    .buttonSize(.small)
+
+                    ChipButton("medium", isSelected: selected) {
+                        selected.toggle()
+                    }
+                    .buttonSize(.medium)
+
+                    ChipButton("large", isSelected: selected) {
+                        selected.toggle()
+                    }
+                    .buttonSize(.large)
                 }
             }
         }
-        return Demo()
+    }
+    return Demo()
 }
 
 #Preview("ChipButton(chevron)") {
