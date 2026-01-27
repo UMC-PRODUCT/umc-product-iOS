@@ -35,7 +35,7 @@ enum DefaultConstant {
 
     /// 카드, 버튼 등의 기본 모서리 둥글기.
     static let defaultCornerRadius: CGFloat = 30
-
+    
     /// 리스트 카드의 기본 모서리 둥글기.
     static let defaultListCornerRadius: CGFloat = 24
 
@@ -49,6 +49,9 @@ enum DefaultConstant {
 
     /// 버튼 내부 패딩.
     static let defaultBtnPadding: CGFloat = 10
+    
+    /// ToolBarTitle 버튼 패딩
+    static let defaultToolBarTitlePadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
 
     /// 텍스트 필드 내부 패딩.
     static let defaultTextFieldPadding: CGFloat = 14

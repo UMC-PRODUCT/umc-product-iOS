@@ -41,7 +41,6 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     private enum Constants {
         static let cardSpacing: CGFloat = 12
         static let cardRadius: CGFloat = 12
-        static let cardPadding: EdgeInsets = .init(top: 20, leading: 16, bottom: 20, trailing: 16)
         static let contentSectionSpacing: CGFloat = 4
 
         static let weekTagPadding: EdgeInsets = .init(top: 2, leading: 8, bottom: 2, trailing: 8)
@@ -55,31 +54,28 @@ private struct MyAttendanceItemPresenter: View, Equatable {
 
     var body: some View {
         HStack(spacing: Constants.cardSpacing) {
-            weekTag
+            CardIconImage(
+                image: model.category.symbol,
+                color: model.category.color,
+                isLoading: .constant(false))
             contentSection
             Spacer()
             statusBadge
         }
-        .padding(Constants.cardPadding)
+        .padding(DefaultConstant.defaultListPadding)
         .background(.white)
     }
 
     // MARK: - Subviews
-
-    private var weekTag: some View {
-        Text(model.weekText)
-            .appFont(.callout, color: .grey600)
-            .padding(Constants.weekTagPadding)
-            .overlay(
-                RoundedRectangle(cornerRadius: Constants.weekTagRadius)
-                    .strokeBorder(.grey200)
-            )
-    }
     
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: Constants.contentSectionSpacing) {
+        VStack(
+            alignment: .leading,
+            spacing: Constants.contentSectionSpacing
+        ) {
             Text(model.title)
                 .appFont(.bodyEmphasis, color: .black)
+                .lineLimit(2)
 
             timeRangeView
         }
@@ -102,6 +98,8 @@ private struct MyAttendanceItemPresenter: View, Equatable {
                 model.status.backgroundColor,
                 in: RoundedRectangle(cornerRadius: Constants.statusRadius)
             )
+            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 }
 
@@ -117,7 +115,8 @@ private struct MyAttendanceItemPresenter: View, Equatable {
                 title: "정기 세션",
                 startTime: now,
                 endTime: now.addingTimeInterval(4 * 3600),
-                status: .present
+                status: .present,
+                category: .general
             )
         )
     }

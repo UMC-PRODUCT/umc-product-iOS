@@ -34,21 +34,23 @@ struct ChallengerSessionCard: View, Equatable {
     }
     
     private enum Constants {
-        static let padding: EdgeInsets = .init(
-            top: 20, leading: 16, bottom: 20, trailing: 16)
         static let iconSize: CGFloat = 64
         static let statusBadgeHeight: CGFloat = 36
         static let statusBadgeMinCornerRadius: Edge.Corner.Style = 12
+        static let statusBadgeCornerRadius: CGFloat = 12
     }
     
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing16) {
-            icon
+            CardIconImage(
+                image: info.category.symbol,
+                color: info.category.color,
+                isLoading: .constant(false))
             contentSection
                 .frame(maxWidth: .infinity, alignment: .leading)
             statusSession
         }
-        .padding(Constants.padding)
+        .padding(DefaultConstant.defaultListPadding)
         .containerShape(
             .rect(cornerRadius: DefaultConstant.defaultListCornerRadius))
         .background(.white, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
@@ -58,24 +60,15 @@ struct ChallengerSessionCard: View, Equatable {
         }
         .glass()
     }
-    
-    private var icon: some View {
-        Image(info.icon)
-            .resizable()
-            .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
-            .padding(DefaultConstant.iconPadding)
-            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-    }
 
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             Text(info.title)
-                .appFont(.bodyEmphasis, weight: .bold, color: .black)
-                .lineLimit(1)
+                .appFont(.calloutEmphasis, color: .black)
+                .lineLimit(2)
 
             Text(info.startTime.timeRange(to: info.endTime))
-                .appFont(.callout, color: .gray)
+                .appFont(.subheadline, color: .grey500)
         }
     }
 
@@ -97,12 +90,9 @@ struct ChallengerSessionCard: View, Equatable {
             .appFont(.caption1Emphasis, color: session.attendanceStatus.fontColor)
             .padding(DefaultConstant.badgePadding)
             .background(
-                session.attendanceStatus.backgroundColor,
-                in: ConcentricRectangle(
-                    corners: .concentric(minimum: Constants.statusBadgeMinCornerRadius),
-                    isUniform: true
-                )
-            )
+                session.attendanceStatus.backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 }
 
