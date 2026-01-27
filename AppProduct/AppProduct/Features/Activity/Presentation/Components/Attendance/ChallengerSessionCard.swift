@@ -60,26 +60,15 @@ struct ChallengerSessionCard: View, Equatable {
         }
         .glass()
     }
-    
-    private var icon: some View {
-        Image(systemName: info.category.symbol)
-        // TODO: Icon 관련 Modifier는 Custom Modifier로 추후 합치는게 좋을듯 - [25.01.27] 이재원
-            .foregroundStyle(info.category.color)
-            .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
-            .padding(DefaultConstant.iconPadding)
-            .background(info.category.color.opacity(0.4))
-            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-    }
 
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             Text(info.title)
-                .appFont(.bodyEmphasis, weight: .bold, color: .black)
+                .appFont(.calloutEmphasis, color: .black)
                 .lineLimit(2)
 
             Text(info.startTime.timeRange(to: info.endTime))
-                .appFont(.callout, color: .gray)
+                .appFont(.subheadline, color: .grey500)
         }
     }
 

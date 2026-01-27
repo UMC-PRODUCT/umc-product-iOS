@@ -69,9 +69,13 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     // MARK: - Subviews
     
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: Constants.contentSectionSpacing) {
+        VStack(
+            alignment: .leading,
+            spacing: Constants.contentSectionSpacing
+        ) {
             Text(model.title)
                 .appFont(.bodyEmphasis, color: .black)
+                .lineLimit(2)
 
             timeRangeView
         }

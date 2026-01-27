@@ -44,15 +44,11 @@ struct ActivityView: View {
             for: currentSection,
             mode: userSession.currentActivityMode
         )
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolBarCollection.Logo(image: .logoLight)
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .principal) {
                 sectionMenu
             }
-        }
-        .onChange(of: userSession.currentActivityMode) { _, _ in
-            // 모드 전환 시 기본 섹션으로 리셋
-            selectedSection = nil
         }
         .task {
             // ViewModel 초기화 및 데이터 로드(Computed Property를 위해 init 대신 task에서 초기화)
@@ -84,11 +80,13 @@ struct ActivityView: View {
         } label: {
             HStack(spacing: DefaultSpacing.spacing4) {
                 Text(currentSection.rawValue)
-                    .appFont(.subheadline)
-                Image(systemName: "chevron.down")
+                    .appFont(.subheadline, weight: .medium)
+                Image(systemName: "chevron.down.circle.fill")
+                    .foregroundStyle(.gray.opacity(0.5))
                     .font(.caption)
             }
-            .padding(DefaultConstant.defaultBtnPadding)
+            .padding(DefaultConstant.defaultToolBarTitlePadding)
+            .glassEffect(.regular)
         }
     }
 
