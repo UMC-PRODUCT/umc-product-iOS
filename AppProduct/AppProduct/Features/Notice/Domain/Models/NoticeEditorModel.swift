@@ -162,6 +162,13 @@ enum TargetSheetType: Identifiable {
     }
 }
 
+// MARK: - LinkItem
+/// 링크 첨부 카드
+struct LinkItem: Identifiable, Equatable {
+      let id = UUID()
+      var link: String = ""
+  }
+
 // MARK: - EditorMockData
 enum EditorMockData {
     static let branches: [String] = ["Nova", "Leo", "Cetus", "Aquarius", "Cassiopeia", "Scorpio", "Pegasus"]
