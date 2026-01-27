@@ -120,38 +120,24 @@ extension ChipButton: AnyChipButton {}
 
 #Preview("ChipButton(chevron)") {
     struct Demo: View {
-            @State private var selected = false
-
-            var body: some View {
-                VStack(spacing: 15) {
-                    HStack(spacing: 8) {
-                        ChipButton("small", isSelected: selected, trailingIcon: true) {
-                            selected.toggle()
-                        }
-                        .buttonSize(.small)
-                        
-                        ChipButton("medium", isSelected: selected, trailingIcon: true) {
-                            selected.toggle()
-                        }
-                        .buttonSize(.medium)
-                        
-                        ChipButton("large", isSelected: selected, trailingIcon: true) {
-                            selected.toggle()
-                        }
-                        .buttonSize(.large)
-                    }
-                    .buttonSize(.small)
-
-                    ChipButton("medium", isSelected: selected) {
-                        selected.toggle()
-                    }
-                    .buttonSize(.medium)
-
-                    ChipButton("large", isSelected: selected) {
-                        selected.toggle()
-                    }
-                    .buttonSize(.large)
+        @State private var selected = false
+        
+        var body: some View {
+            HStack(spacing: 8) {
+                ChipButton("small", isSelected: selected, trailingIcon: true) {
+                    selected.toggle()
                 }
+                .buttonSize(.small)
+                
+                ChipButton("medium", isSelected: selected, trailingIcon: true) {
+                    selected.toggle()
+                }
+                .buttonSize(.medium)
+                
+                ChipButton("large", isSelected: selected, trailingIcon: true) {
+                    selected.toggle()
+                }
+                .buttonSize(.large)
             }
         }
     }
