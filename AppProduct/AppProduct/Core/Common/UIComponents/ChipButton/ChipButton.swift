@@ -178,6 +178,17 @@ extension ChipButton: AnyChipButton {}
                     }
                     .buttonSize(.large)
                 }
+                .buttonSize(.small)
+                
+                ChipButton("medium", isSelected: selected, trailingIcon: true) {
+                    selected.toggle()
+                }
+                .buttonSize(.medium)
+                
+                ChipButton("large", isSelected: selected, trailingIcon: true) {
+                    selected.toggle()
+                }
+                .buttonSize(.large)
             }
         }
     }
