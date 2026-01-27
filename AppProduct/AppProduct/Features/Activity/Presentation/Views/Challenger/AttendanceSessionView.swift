@@ -31,18 +31,18 @@ struct AttendanceSessionView: View {
         self.userId = userId
         self.categoryFor = categoryFor
         
-        let challengerAttendanceUseCase = container.resolve(ChallengerAttendanceUseCaseProtocol.self)
-        let sessionRepository = container.resolve(SessionRepositoryProtocol.self)
-        
+        let useCaseProvider = container.resolve(UsecaseProviding.self)
+        let repositoryProvider = container.resolve(ActivityRepositoryProviding.self)
+
         self._attendanceViewModel = .init(wrappedValue: .init(
             container: container,
             errorHandler: errorHandler,
-            challengeAttendanceUseCase: challengerAttendanceUseCase
+            challengeAttendanceUseCase: useCaseProvider.activity.challengerAttendanceUseCase
         ))
         self._sessionViewModel = .init(wrappedValue: .init(
             container: container,
             errorHandler: errorHandler,
-            sessionRepository: sessionRepository
+            sessionRepository: repositoryProvider.sessionRepository
         ))
     }
     
