@@ -10,14 +10,19 @@ import Foundation
 /// Activity Feature에서 사용하는 UseCase들을 제공하는 Provider Protocol
 protocol ActivityUseCaseProviding {
     // MARK: - Session
+    /// 세션 목록 조회 UseCase
     var fetchSessionsUseCase: FetchSessionsUseCaseProtocol { get }
+    /// 현재 사용자 ID 조회 UseCase
     var fetchUserIdUseCase: FetchUserIdUseCaseProtocol { get }
 
     // MARK: - Attendance
+    /// 챌린저 출석 관련 UseCase
     var challengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol { get }
+    /// 운영진 출석 관리 UseCase
     var operatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol { get }
 
     // MARK: - Schedule Classifier
+    /// 일정 분류 UseCase
     var classifyScheduleUseCase: ClassifyScheduleUseCase { get }
 }
 

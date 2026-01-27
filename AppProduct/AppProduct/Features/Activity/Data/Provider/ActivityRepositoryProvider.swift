@@ -9,8 +9,11 @@ import Foundation
 
 /// Activity Feature에서 사용하는 Repository들을 제공하는 Provider Protocol
 protocol ActivityRepositoryProviding {
+    /// 출석 데이터 접근 Repository
     var attendanceRepository: AttendanceRepositoryProtocol { get }
+    /// 세션 목록 데이터 접근 Repository
     var sessionRepository: SessionRepositoryProtocol { get }
+    /// Activity 통합 데이터 접근 Repository
     var activityRepository: ActivityRepositoryProtocol { get }
 }
 

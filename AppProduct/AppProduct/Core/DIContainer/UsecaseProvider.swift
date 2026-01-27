@@ -15,7 +15,11 @@ protocol UsecaseProviding {
 }
 
 /// UseCase Provider 구현
+///
+/// Feature별 UseCase Provider를 통합 관리합니다.
+/// Feature 간 UseCase 접근 시 사용합니다.
 final class UseCaseProvider: UsecaseProviding {
+    /// Activity Feature UseCase Provider
     let activity: ActivityUseCaseProviding
 
     init(activity: ActivityUseCaseProviding) {

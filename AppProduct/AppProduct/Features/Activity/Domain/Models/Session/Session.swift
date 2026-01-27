@@ -7,6 +7,10 @@
 
 import Foundation
 
+/// 세션 엔티티
+///
+/// 출석 상태를 포함한 세션 정보를 관리합니다.
+/// `@Observable`로 출석 상태 변경 시 UI가 자동 업데이트됩니다.
 @MainActor
 @Observable
 final class Session: Identifiable, Equatable {
@@ -73,14 +77,19 @@ final class Session: Identifiable, Equatable {
         }
     }
 
+    /// 출석 상태 업데이트
     func updateState(_ state: Loadable<Attendance>) {
         self.attendanceLoadable = state
     }
 
+    /// 출석 제출 완료 처리
     func markSubmitted() {
         hasSubmitted = true
     }
 
+    /// 출석 버튼에 표시할 텍스트
+    ///
+    /// 위치 권한, 지오펜스 상태, 시간대에 따라 적절한 메시지를 반환합니다.
     func buttonTitle(
         isLocationAuthorized: Bool,
         isInsideGeofence: Bool,
