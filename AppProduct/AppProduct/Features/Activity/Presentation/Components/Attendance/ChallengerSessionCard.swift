@@ -34,8 +34,6 @@ struct ChallengerSessionCard: View, Equatable {
     }
     
     private enum Constants {
-        static let padding: EdgeInsets = .init(
-            top: 20, leading: 16, bottom: 20, trailing: 16)
         static let iconSize: CGFloat = 64
         static let statusBadgeHeight: CGFloat = 36
         static let statusBadgeMinCornerRadius: Edge.Corner.Style = 12
@@ -44,12 +42,15 @@ struct ChallengerSessionCard: View, Equatable {
     
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing16) {
-            icon
+            CardIconImage(
+                image: info.category.symbol,
+                color: info.category.color,
+                isLoading: .constant(false))
             contentSection
                 .frame(maxWidth: .infinity, alignment: .leading)
             statusSession
         }
-        .padding(Constants.padding)
+        .padding(DefaultConstant.defaultListPadding)
         .containerShape(
             .rect(cornerRadius: DefaultConstant.defaultListCornerRadius))
         .background(.white, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
@@ -61,10 +62,12 @@ struct ChallengerSessionCard: View, Equatable {
     }
     
     private var icon: some View {
-        Image(info.icon)
-            .resizable()
+        Image(systemName: info.category.symbol)
+        // TODO: Icon 관련 Modifier는 Custom Modifier로 추후 합치는게 좋을듯 - [25.01.27] 이재원
+            .foregroundStyle(info.category.color)
             .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
             .padding(DefaultConstant.iconPadding)
+            .background(info.category.color.opacity(0.4))
             .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
             .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }

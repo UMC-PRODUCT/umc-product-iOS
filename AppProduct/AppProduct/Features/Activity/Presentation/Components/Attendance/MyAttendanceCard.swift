@@ -41,7 +41,6 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     private enum Constants {
         static let cardSpacing: CGFloat = 12
         static let cardRadius: CGFloat = 12
-        static let cardPadding: EdgeInsets = .init(top: 20, leading: 16, bottom: 20, trailing: 16)
         static let contentSectionSpacing: CGFloat = 4
 
         static let weekTagPadding: EdgeInsets = .init(top: 2, leading: 8, bottom: 2, trailing: 8)
@@ -55,27 +54,19 @@ private struct MyAttendanceItemPresenter: View, Equatable {
 
     var body: some View {
         HStack(spacing: Constants.cardSpacing) {
-            weekTag
+            CardIconImage(
+                image: model.category.symbol,
+                color: model.category.color,
+                isLoading: .constant(false))
             contentSection
             Spacer()
             statusBadge
         }
-        .padding(Constants.cardPadding)
+        .padding(DefaultConstant.defaultListPadding)
         .background(.white)
     }
 
     // MARK: - Subviews
-
-    /// 카테고리 아이콘
-    private var weekTag: some View {
-        Image(systemName: model.category.symbol)
-            .foregroundStyle(model.category.color)
-            .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
-            .padding(DefaultConstant.iconPadding)
-            .background(model.category.color.opacity(0.4))
-            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-    }
     
     private var contentSection: some View {
         VStack(alignment: .leading, spacing: Constants.contentSectionSpacing) {
