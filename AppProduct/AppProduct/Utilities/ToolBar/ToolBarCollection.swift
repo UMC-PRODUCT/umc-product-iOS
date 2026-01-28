@@ -144,7 +144,9 @@ struct ToolBarCollection {
         }
     }
     
-    /// 상단 중앙 메뉴 툴바 (아이콘O)
+    /// 상단 중앙 메뉴 툴바
+    ///
+    /// TODO: 레거시 코드 제거 필요 - 담당자: 소피
     struct TopBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
         let icon: String
         let title: String
@@ -226,6 +228,60 @@ struct ToolBarCollection {
                     Toggle("모집중", isOn: isRecruiting)
                 }
             })
+        }
+    }
+
+    /// 상단 중앙 섹션 메뉴 툴바 (Button 기반, 애니메이션 지원)
+    struct ToolBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
+        let items: [Item]
+        @Binding var selection: Item
+        let itemLabel: (Item) -> String
+        let itemIcon: ((Item) -> String)?
+
+        init(
+            items: [Item],
+            selection: Binding<Item>,
+            itemLabel: @escaping (Item) -> String,
+            itemIcon: ((Item) -> String)? = nil
+        ) {
+            self.items = items
+            self._selection = selection
+            self.itemLabel = itemLabel
+            self.itemIcon = itemIcon
+        }
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .principal) {
+                Menu {
+                    ForEach(items) { item in
+                        Button {
+                            withAnimation(.snappy) {
+                                selection = item
+                            }
+                        } label: {
+                            if let itemIcon = itemIcon {
+                                Label(itemLabel(item), systemImage: itemIcon(item))
+                            } else {
+                                Text(itemLabel(item))
+                            }
+                        }
+                    }
+                } label: {
+                    menuLabel
+                }
+            }
+        }
+
+        private var menuLabel: some View {
+            HStack(spacing: DefaultSpacing.spacing4) {
+                Text(itemLabel(selection))
+                    .appFont(.subheadline, weight: .medium)
+                Image(systemName: "chevron.down.circle.fill")
+                    .foregroundStyle(.gray.opacity(0.5))
+                    .font(.caption)
+            }
+            .padding(DefaultConstant.defaultToolBarTitlePadding)
+            .glassEffect(.regular)
         }
     }
 }
