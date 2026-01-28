@@ -210,7 +210,7 @@ final class NoticeViewModel {
         case .all:
             // 전체: 해당 scope의 모든 공지 (일반 + 파트별)
             return true
-        case .management:
+        case .staff:
             // TODO: 운영진 공지 필터링
             return true
         case .part:
