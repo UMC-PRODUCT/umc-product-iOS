@@ -18,6 +18,10 @@ struct AttendanceReasonSheet: View {
     @State private var reason: String = ""
 
     let onSubmit: (String) async -> Void
+    
+    private enum Constants {
+        static let defaultSheetFraction: CGFloat = 0.33
+    }
 
     // MARK: - Body
 
@@ -27,15 +31,14 @@ struct AttendanceReasonSheet: View {
             reasonTextField
             descriptionText
         }
-        .padding(.top, DefaultConstant.defaultSafeTop)
-        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .safeAreaInset(edge: .bottom) {
             buttonGroup
-                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-                .padding(.bottom, DefaultConstant.defaultSafeBtnPadding)
         }
-        .presentationDetents([.fraction(0.33)])
+        .padding(.top, DefaultConstant.defaultSafeTop)
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        .presentationDetents([.fraction(Constants.defaultSheetFraction)])
         .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled()
     }
 
     // MARK: - View Components
@@ -58,8 +61,8 @@ struct AttendanceReasonSheet: View {
         Text("위치 인증이 어려운 경우 사유를 작성하여 출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)")
             .appFont(.footnote, weight: .regular, color: .grey500)
             .multilineTextAlignment(.leading)
-            .padding(.bottom, 10)
-            .padding(.horizontal, 10)
+            .padding(.bottom, DefaultConstant.defaultSafeBtnPadding)
+            .padding(.horizontal, DefaultConstant.defaultSafeBtnPadding)
     }
 
     private var buttonGroup: some View {
