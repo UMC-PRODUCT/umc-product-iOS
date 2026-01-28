@@ -23,6 +23,8 @@ enum DefaultConstant {
     
     /// 화면 좌우 여백.
     static let defaultSafeHorizon: CGFloat = 16
+    
+    static let defaultSafeTop: CGFloat = 20
 
     /// 하단 Safe Area 여백 (탭바, 플로팅 버튼 등을 고려한 높이).
     static let defaultSafeBottom: CGFloat = 56
