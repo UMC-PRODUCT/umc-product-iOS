@@ -46,9 +46,15 @@ struct ActivityView: View {
         )
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                sectionMenu
-            }
+            ToolBarCollection.ToolBarCenterMenu(
+                items: availableSections,
+                selection: Binding(
+                    get: { currentSection },
+                    set: { selectedSection = $0 }
+                ),
+                itemLabel: { $0.rawValue },
+                itemIcon: { $0.icon }
+            ) 
         }
         .task {
             // ViewModel 초기화 및 데이터 로드(Computed Property를 위해 init 대신 task에서 초기화)
@@ -64,31 +70,6 @@ struct ActivityView: View {
     }
 
     // MARK: - View Component
-
-    /// 섹션 선택 Menu
-    private var sectionMenu: some View {
-        Menu {
-            ForEach(availableSections) { section in
-                Button {
-                    withAnimation(.snappy) {
-                        selectedSection = section
-                    }
-                } label: {
-                    Label(section.rawValue, systemImage: section.icon)
-                }
-            }
-        } label: {
-            HStack(spacing: DefaultSpacing.spacing4) {
-                Text(currentSection.rawValue)
-                    .appFont(.subheadline, weight: .medium)
-                Image(systemName: "chevron.down.circle.fill")
-                    .foregroundStyle(.gray.opacity(0.5))
-                    .font(.caption)
-            }
-            .padding(DefaultConstant.defaultToolBarTitlePadding)
-            .glassEffect(.regular)
-        }
-    }
 
     /// 섹션에 해당하는 뷰 반환
     @ViewBuilder
