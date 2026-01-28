@@ -8,18 +8,22 @@
 import SwiftUI
 import PhotosUI
 
-/// 마이페이지 정보 수정 화면입니다.
+/// 마이페이지 정보 Write & Read 화면입니다.
 ///
 /// 사용자의 프로필 이미지, 닉네임, 학교, 기수/파트, 활동 로그, 소셜 링크 등을 확인하고 수정할 수 있습니다.
-struct ModifyMyPageView: View {
+struct MyPageProfileView: View {
     /// 뷰모델 상태 객체
-    @State var viewModel: ModifyMyPageViewModel
+    @State var viewModel: MyPageProfileViewModel
+    
+    init(profileData: ProfileData) {
+        self._viewModel = .init(initialValue: .init(profileData: profileData))
+    }
     
     var body: some View {
         Form {
-            contentView
+            sectionContentImpl($viewModel.profileData)
         }
-        .navigation(naviTitle: .mypageModify, displayMode: .inline) // 네비게이션 타이틀 설정
+        .navigation(naviTitle: .myProfile, displayMode: .inline) // 네비게이션 타이틀 설정
         .toolbar(content: {
             // 완료 버튼
             ToolBarCollection.ConfirmBtn(action: {
@@ -35,44 +39,12 @@ struct ModifyMyPageView: View {
         }
     }
     
-    /// 데이터 로딩 상태에 따른 컨텐츠 뷰 분기 처리
-    @ViewBuilder
-    private var contentView: some View {
-        switch viewModel.profileDataState {
-        case .idle:
-            Color.clear.task {
-                print("hello") // 초기 로딩 트리거 등
-            }
-        case .loading:
-            Progress(message: "내 정보를 가져오는 중입니다.", size: .regular)
-        case .loaded:
-            // 데이터가 로드되었고, 편집 가능한 데이터가 있는 경우 폼 표시
-            if viewModel.editableProfileData != nil {
-                sectionContent()
-            }
-        case .failed(let appError):
-            Text("에러: \(appError.localizedDescription)")
-        }
-    }
-    
-    /// 실제 수정 폼 섹션들을 구성하는 뷰
-    @ViewBuilder
-    private func sectionContent() -> some View {
-        // 프로필 데이터 바인딩 랩핑
-        let profile = Binding(
-            get: { viewModel.editableProfileData! },
-            set: { viewModel.editableProfileData = $0 }
-        )
-        
-        sectionContentImpl(profile)
-    }
-    
     /// 섹션 구현부
     /// - Parameter profile: 프로필 데이터 바인딩
     @ViewBuilder
     private func sectionContentImpl(_ profile: Binding<ProfileData>) -> some View {
         // 프로필 이미지 수정
-        ProfileImagePicker(selectedPhotoItem: $viewModel.selectedPhotoItem, selectedImage: viewModel.selectedImage, profileImage: viewModel.profileDataState.value?.challangerInfo.profileImage)
+        ProfileImagePicker(selectedPhotoItem: $viewModel.selectedPhotoItem, selectedImage: viewModel.selectedImage, profileImage: viewModel.profileData.challangerInfo.profileImage)
         // 연동된 소셜 계정 정보
         ConnectionSocial(socialConnected: profile.socialConnected.wrappedValue, header: "연동된 계정")
         // 이름 및 닉네임 (읽기 전용)
@@ -85,18 +57,6 @@ struct ModifyMyPageView: View {
         ActiveLogs(rows: profile.activityLogs.wrappedValue, header: "활동 이력")
         // 외부 프로필 링크 수정
         ProfileLinkSection(profileLink: profile.profileLink, header: "외부 프로링크")
-    }
-}
-
-// MARK: - Reusable Section Header
-
-/// 공통 Section 헤더 컴포넌트
-fileprivate struct SectionHeaderView: View {
-    let title: String
-    
-    var body: some View {
-        Text(title)
-            .appFont(.bodyEmphasis, color: .black)
     }
 }
 
@@ -127,7 +87,7 @@ fileprivate struct ProfileImagePicker: View {
     var profileImage: String? // URL string
     
     private enum Constants {
-        static let imageSize: CGFloat = 120
+        static let imageSize: CGFloat = 112
         static let btnText: String = "사진 변경"
     }
     
@@ -264,6 +224,10 @@ fileprivate struct ProfileLinkSection: View, Equatable {
     @Binding var profileLink: [ProfileLink]
     let header: String
     
+    private enum Constants {
+        static let iconSize: CGFloat = 20
+    }
+    
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.header == rhs.header
     }
@@ -272,7 +236,7 @@ fileprivate struct ProfileLinkSection: View, Equatable {
         Section(content: {
             Group {
                 ForEach(profileLink.indices, id: \.self) { index in
-                    generateTextField($profileLink[index].url, placeholder: profileLink[index].type.title)
+                    generateTextField($profileLink[index].url, placeholder: profileLink[index].type.title, image: profileLink[index].type.icon)
                 }
             }
         }, header: {
@@ -281,48 +245,17 @@ fileprivate struct ProfileLinkSection: View, Equatable {
     }
     
     /// URL 입력 필드 생성
-    private func generateTextField(_ text: Binding<String>, placeholder: String) -> some View {
-        TextField("", text: text, prompt: Text(placeholder))
-    }
-}
-
-// MARK: - Preview
-
-#Preview {
-    @Previewable @State var showNavi: Bool = false
-    
-    NavigationStack {
-        Button(action: {
-            showNavi.toggle()
-        }, label: {
-            Text("!1")
-        })
-        .navigationDestination(isPresented: $showNavi, destination: {
-            ModifyMyPageView(
-                viewModel: ModifyMyPageViewModel.preview
-            )
+    private func generateTextField(_ text: Binding<String>, placeholder: String, image: ImageResource) -> some View {
+        HStack(spacing: DefaultSpacing.spacing8, content: {
+            Image(image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: Constants.iconSize, height: Constants.iconSize)
+                .glassEffect(.clear, in: .circle)
+            
+            TextField("", text: text, prompt: Text(placeholder))
         })
     }
 }
 
-extension ModifyMyPageViewModel {
-    static var preview: ModifyMyPageViewModel {
-        let viewModel = ModifyMyPageViewModel()
-        
-        let mockProfile = ProfileData(challengeId: 1,
-                                      challangerInfo: .init(challengeId: 1, gen: 11, name: "정의찬", nickname: "제옹", schoolName: "중앙대", profileImage: nil, part: .front(type: .ios)), socialConnected: [
-                                        .apple, .kakao
-                                      ], activityLogs: [
-                                        .init(part: .design, generation: 11, role: .branchLeader),
-                                        .init(part: .front(type: .ios), generation: 11, role: .president),
-                                      ], profileLink: [
-                                        ProfileLink(type: .github, url: "https://github.com/username"),
-                                        ProfileLink(type: .linkedin, url: "https://linkedin.com/in/username"),
-                                        ProfileLink(type: .blog, url: "https://portfolio.com")
-                                      ])
-        
-        viewModel.loadProfileData(mockProfile)
-        
-        return viewModel
-    }
-}
+

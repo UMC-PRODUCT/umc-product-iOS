@@ -26,7 +26,8 @@ struct NavigationModifier: ViewModifier {
         case challenger = "초대할 챌린저 추가"
         case searchChallenger = "챌린저 검색"
         case registration = "일정 추가"
-        case mypageModify = "프로필 수정"
+        case myProfile = "프로필"
+        case myPage = "마이 페이지"
     }
 
     func body(content: Content) -> some View {

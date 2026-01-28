@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /// 앱에서 지원하는 소셜 로그인 타입을 정의하는 열거형입니다.
-enum SocialType: String, CaseIterable {
+enum SocialType: String, CaseIterable, Hashable {
     /// 카카오 로그인
     case kakao = "Kakao"
     /// 애플 로그인

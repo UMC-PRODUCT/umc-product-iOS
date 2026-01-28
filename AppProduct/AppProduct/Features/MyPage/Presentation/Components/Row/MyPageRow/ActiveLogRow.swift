@@ -11,19 +11,27 @@ import SwiftUI
 ///
 /// 기수, 파트, 역할 정보를 가로로 배치하여 표시합니다.
 struct ActiveLogRow: View, Equatable {
-    
+
+    // MARK: - Property
+
     /// 표시할 활동 로그 데이터
     let row: ActivityLog
-    
+
+    // MARK: - Initializer
+
     init(row: ActivityLog) {
         self.row = row
     }
-    
+
+    // MARK: - Constants
+
     private enum Constants {
         /// 뱃지 내부 패딩 값
         static let padding: EdgeInsets = .init(top: 5, leading: 8, bottom: 5, trailing: 8)
     }
-    
+
+    // MARK: - Body
+
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing8, content: {
             genTag // 기수 표시 태그
@@ -32,7 +40,9 @@ struct ActiveLogRow: View, Equatable {
             role   // 역할(직책) 뱃지
         })
     }
-    
+
+    // MARK: - UI Components
+
     /// 기수를 표시하는 태그 뷰
     private var genTag: some View {
         Text("\(row.generation)기")
@@ -59,12 +69,5 @@ struct ActiveLogRow: View, Equatable {
             .appFont(.footnote, weight: .medium, color: row.role.textColor)
             .padding(Constants.padding)
             .glassEffect(.clear.tint(row.role.backgroundColor), in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-    }
-}
-
-#Preview {
-    Form {
-        ActiveLogRow(row: .init(part: .design, generation: 12, role: .branchLeader))
-        ActiveLogRow(row: .init(part: .design, generation: 12, role: .branchLeader))
     }
 }

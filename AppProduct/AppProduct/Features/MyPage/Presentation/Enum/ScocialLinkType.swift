@@ -13,7 +13,7 @@ enum SocialLinkType: String, CaseIterable {
     /// 깃허브 링크
     case github = "Github"
     /// 링크드인 링크
-    case linkedin = "Linkedin"
+    case linkedin = "Linked in"
     /// 개인 블로그 링크
     case blog = "Blog"
     
@@ -23,9 +23,9 @@ enum SocialLinkType: String, CaseIterable {
         case .github:
             return .github
         case .linkedin:
-            return .linkd
+            return .linkedIn
         case .blog:
-            return .blog
+            return .global
         }
     }
     
@@ -35,7 +35,7 @@ enum SocialLinkType: String, CaseIterable {
         case .github:
             return "Github URL"
         case .linkedin:
-            return "Linedin URL" // TODO: LinkedIn 오타 확인 필요 (Linedin -> LinkedIn)
+            return "LinkedIn URL"
         case .blog:
             return "Blog URL"
         }

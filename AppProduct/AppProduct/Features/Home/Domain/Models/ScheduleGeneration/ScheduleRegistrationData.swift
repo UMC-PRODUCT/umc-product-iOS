@@ -32,7 +32,7 @@ struct PlaceSearchInfo: Equatable {
 ///
 /// 일정에 참여하는 멤버의 정보를 나타냅니다.
 /// 검색 및 선택 기능에서 사용됩니다.
-struct ChallengerInfo: Identifiable, Equatable {
+struct ChallengerInfo: Identifiable, Equatable, Hashable {
     /// 고유 식별자
     var id: UUID = .init()
     

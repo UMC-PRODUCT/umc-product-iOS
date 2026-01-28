@@ -2,44 +2,107 @@
 //  ManagementTeam.swift
 //  AppProduct
 //
-//  Created by euijjang97 on 1/26/26.
+//  Created by jaewon Lee on 1/25/26.
 //
 
 import Foundation
 import SwiftUI
 
-/// UMC 운영진 직책 및 역할을 정의하는 열거형입니다.
+/// 멤버 역할/권한 구분
 ///
-/// 각 직책별로 표시될 텍스트(RawValue)와 고유한 색상(textColor, backgroundColor)을 제공합니다.
-enum ManagementTeam: String, Equatable {
-    /// 회장
-    case president = "👑 회장"
-    /// 부회장
-    case vicePresident = "⭐️ 부회장"
-    /// 지부장
-    case branchLeader = "🏢 지부장"
-    /// 중앙운영사무국
-    case centralOffice = "🏛️ 중앙운영사무국"
-    /// 파트장
-    case partLeader = "🚩 파트장"
-    /// 일반 챌린저
+/// 계층 구조 (높은 → 낮은)
+/// 1. general (총괄단) - 최고 관리자
+/// 2. centralOperator (중앙운영진)
+/// 3. campusPresident (교내회장단)
+/// 4. campusPartLeader (교내파트장)
+/// 5. challenger (챌린저)
+///
+/// - Note: 추후 역할 추가 시 case와 level만 조정하면 됩니다.
+enum ManagementTeam: String, CaseIterable, Comparable {
+
+    // MARK: - Cases
+
+    case general = "총괄단"
+    case centralOperator = "중앙운영진"
+    case campusPresident = "교내회장단"
+    case campusPartLeader = "교내파트장"
     case challenger = "챌린저"
 
-    /// 각 직책에 해당하는 고유 텍스트 색상을 반환합니다.
-    var textColor: Color {
+    // MARK: - Level (확장성)
+
+    /// 권한 레벨 (높을수록 상위 권한)
+    var level: Int {
         switch self {
-        case .president: return .red        // 회장: 빨간색
-        case .vicePresident: return .orange // 부회장: 주황색
-        case .branchLeader: return .purple  // 지부장: 보라색
-        case .centralOffice: return .blue   // 중운위: 파란색
-        case .partLeader: return .cyan      // 파트장: 청록색
-        case .challenger: return .clear     // 챌린저: 투명 (또는 기본색)
+        case .general: return 100
+        case .centralOperator: return 80
+        case .campusPresident: return 60
+        case .campusPartLeader: return 40
+        case .challenger: return 0
         }
     }
 
-    /// 각 직책 배경색을 반환합니다.
-    /// 텍스트 색상에 투명도(0.3)를 적용하여 은은한 배경색을 생성합니다.
+    /// Admin 모드 접근 가능 여부
+    var canAccessAdminMode: Bool {
+        level >= Self.campusPartLeader.level
+    }
+
+    // MARK: - Comparable
+
+    /// 두 역할의 권한 레벨을 비교합니다.
+    ///
+    /// - Parameters:
+    ///   - lhs: 비교할 첫 번째 역할
+    ///   - rhs: 비교할 두 번째 역할
+    /// - Returns: lhs의 권한이 rhs보다 낮으면 true
+    static func < (lhs: ManagementTeam, rhs: ManagementTeam) -> Bool {
+        lhs.level < rhs.level
+    }
+
+    // MARK: - UI Styling
+
+    /// 배지 아이콘
+    var icon: String {
+        switch self {
+        case .general: return "👑"
+        case .centralOperator: return "⭐️"
+        case .campusPresident: return "🏫"
+        case .campusPartLeader: return "🚩"
+        case .challenger: return ""
+        }
+    }
+
+    /// 아이콘 포함 표시명
+    var displayName: String {
+        icon.isEmpty ? rawValue : "\(icon) \(rawValue)"
+    }
+
+    var textColor: Color {
+        switch self {
+        case .general: return .red100
+        case .centralOperator: return .indigo100
+        case .campusPresident: return .orange500
+        case .campusPartLeader: return .green500
+        case .challenger: return .clear
+        }
+    }
+
     var backgroundColor: Color {
-        textColor.opacity(0.3)
+        switch self {
+        case .general: return .red300
+        case .centralOperator: return .indigo400
+        case .campusPresident: return .orange100
+        case .campusPartLeader: return .green100
+        case .challenger: return .clear
+        }
+    }
+
+    var borderColor: Color {
+        switch self {
+        case .general: return .red500
+        case .centralOperator: return .indigo700
+        case .campusPresident: return .orange300
+        case .campusPartLeader: return .green300
+        case .challenger: return .clear
+        }
     }
 }
