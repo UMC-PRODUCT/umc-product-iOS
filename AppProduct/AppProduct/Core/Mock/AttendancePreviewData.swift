@@ -205,66 +205,66 @@ struct AttendancePreviewData {
             ),
             initialAttendance: nil  // 출석 전
         ),
-        .init(
-            info: .init(
-                sessionId: SessionID(value: "iOS_8"),
-                icon: .Activity.profile,
-                title: "Core Data 심화",
-                week: 8,
-                startTime: Date.now.addingTimeInterval(86400 * 8),
-                endTime: Date.now.addingTimeInterval(86400 * 8 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
-            ),
-            initialAttendance: nil  // 출석 전
-        ),
-        .init(
-            info: .init(
-                sessionId: SessionID(value: "iOS_9"),
-                icon: .Activity.profile,
-                title: "Unit Testing",
-                week: 9,
-                startTime: Date.now.addingTimeInterval(86400 * 15),
-                endTime: Date.now.addingTimeInterval(86400 * 15 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
-            ),
-            initialAttendance: nil  // 출석 전
-        ),
-        .init(
-            info: .init(
-                sessionId: SessionID(value: "iOS_10"),
-                icon: .Activity.profile,
-                title: "CI/CD 파이프라인",
-                week: 10,
-                startTime: Date.now.addingTimeInterval(86400 * 22),
-                endTime: Date.now.addingTimeInterval(86400 * 22 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
-            ),
-            initialAttendance: nil  // 출석 전
-        ),
-        .init(
-            info: .init(
-                sessionId: SessionID(value: "iOS_11"),
-                icon: .Activity.profile,
-                title: "앱 배포 프로세스",
-                week: 11,
-                startTime: Date.now.addingTimeInterval(86400 * 29),
-                endTime: Date.now.addingTimeInterval(86400 * 29 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
-            ),
-            initialAttendance: nil  // 출석 전
-        ),
-        .init(
-            info: .init(
-                sessionId: SessionID(value: "iOS_12"),
-                icon: .Activity.profile,
-                title: "데모데이 준비",
-                week: 12,
-                startTime: Date.now.addingTimeInterval(86400 * 36),
-                endTime: Date.now.addingTimeInterval(86400 * 36 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
-            ),
-            initialAttendance: nil  // 출석 전
-        )
+//        .init(
+//            info: .init(
+//                sessionId: SessionID(value: "iOS_8"),
+//                icon: .Activity.profile,
+//                title: "Core Data 심화",
+//                week: 8,
+//                startTime: Date.now.addingTimeInterval(86400 * 8),
+//                endTime: Date.now.addingTimeInterval(86400 * 8 + 7200),
+//                location: .init(latitude: 37.582967, longitude: 127.010527)
+//            ),
+//            initialAttendance: nil  // 출석 전
+//        ),
+//        .init(
+//            info: .init(
+//                sessionId: SessionID(value: "iOS_9"),
+//                icon: .Activity.profile,
+//                title: "Unit Testing",
+//                week: 9,
+//                startTime: Date.now.addingTimeInterval(86400 * 15),
+//                endTime: Date.now.addingTimeInterval(86400 * 15 + 7200),
+//                location: .init(latitude: 37.582967, longitude: 127.010527)
+//            ),
+//            initialAttendance: nil  // 출석 전
+//        ),
+//        .init(
+//            info: .init(
+//                sessionId: SessionID(value: "iOS_10"),
+//                icon: .Activity.profile,
+//                title: "CI/CD 파이프라인",
+//                week: 10,
+//                startTime: Date.now.addingTimeInterval(86400 * 22),
+//                endTime: Date.now.addingTimeInterval(86400 * 22 + 7200),
+//                location: .init(latitude: 37.582967, longitude: 127.010527)
+//            ),
+//            initialAttendance: nil  // 출석 전
+//        ),
+//        .init(
+//            info: .init(
+//                sessionId: SessionID(value: "iOS_11"),
+//                icon: .Activity.profile,
+//                title: "앱 배포 프로세스",
+//                week: 11,
+//                startTime: Date.now.addingTimeInterval(86400 * 29),
+//                endTime: Date.now.addingTimeInterval(86400 * 29 + 7200),
+//                location: .init(latitude: 37.582967, longitude: 127.010527)
+//            ),
+//            initialAttendance: nil  // 출석 전
+//        ),
+//        .init(
+//            info: .init(
+//                sessionId: SessionID(value: "iOS_12"),
+//                icon: .Activity.profile,
+//                title: "데모데이 준비",
+//                week: 12,
+//                startTime: Date.now.addingTimeInterval(86400 * 36),
+//                endTime: Date.now.addingTimeInterval(86400 * 36 + 7200),
+//                location: .init(latitude: 37.582967, longitude: 127.010527)
+//            ),
+//            initialAttendance: nil  // 출석 전
+//        )
     ]
 
     /// 모든 상태를 포함하는 세션 목록 (테스트용)

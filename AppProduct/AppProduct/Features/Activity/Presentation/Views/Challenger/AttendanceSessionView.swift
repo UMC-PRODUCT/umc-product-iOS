@@ -7,11 +7,25 @@
 
 import SwiftUI
 
+/// Session별 MapViewModel 캐시
+private final class MapViewModelCache {
+    private var cache: [Session.ID: BaseMapViewModel] = [:]
+
+    func get(for sessionId: Session.ID) -> BaseMapViewModel? {
+        cache[sessionId]
+    }
+
+    func set(_ viewModel: BaseMapViewModel, for sessionId: Session.ID) {
+        cache[sessionId] = viewModel
+    }
+}
+
 struct AttendanceSessionView: View {
     @State private var expandedSessionId: Session.ID?
     @State private var attendanceViewModel: ChallengerAttendanceViewModel
     @State private var sessionViewModel: ChallengerSessionViewModel
-    
+    @State private var mapViewModelCache = MapViewModelCache()
+
     private let container: DIContainer
     private let errorHandler: ErrorHandler
     private let sessions: [Session]
@@ -58,6 +72,21 @@ struct AttendanceSessionView: View {
         sessions.filter(\.isAttendanceAvailable)
     }
 
+    /// Session별 MapViewModel 캐시에서 가져오거나 새로 생성
+    /// - Note: Reference type cache 사용으로 body 평가 중 mutation 안전
+    private func mapViewModel(for session: Session) -> BaseMapViewModel {
+        if let cached = mapViewModelCache.get(for: session.id) {
+            return cached
+        }
+        let newViewModel = BaseMapViewModel(
+            container: container,
+            info: session.info,
+            errorHandler: errorHandler
+        )
+        mapViewModelCache.set(newViewModel, for: session.id)
+        return newViewModel
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing48) {
@@ -97,7 +126,8 @@ struct AttendanceSessionView: View {
                     sessions: availableSessions,
                     expandedSessionId: expandedSessionId,
                     attendanceViewModel: attendanceViewModel,
-                    userId: userId
+                    userId: userId,
+                    mapViewModelProvider: { session in mapViewModel(for: session) }
                 ) { sessionId in
                     withAnimation(.spring(Spring(
                         response: Constants.animationResponse,
