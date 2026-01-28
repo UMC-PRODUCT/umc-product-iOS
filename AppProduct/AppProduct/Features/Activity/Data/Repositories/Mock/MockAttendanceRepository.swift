@@ -24,11 +24,16 @@ final class MockAttendanceRepository: AttendanceRepositoryProtocol {
     // MARK: - Protocol Methods
 
     func createAttendance(request: CreateAttendanceRequest) async throws -> Attendance {
+        // 사유 기반 출석은 승인 대기 상태로 반환
+        let status: AttendanceStatus = request.type == .reason
+            ? .pendingApproval
+            : .beforeAttendance
+
         return Attendance(
             sessionId: request.sessionId,
             userId: request.userId,
             type: request.type,
-            status: .beforeAttendance,
+            status: status,
             locationVerification: request.coordinate.map {
                 LocationVerification(
                     isVerified: true,

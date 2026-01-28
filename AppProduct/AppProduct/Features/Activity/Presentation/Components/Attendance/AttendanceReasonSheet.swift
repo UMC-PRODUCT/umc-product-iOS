@@ -10,7 +10,6 @@ import SwiftUI
 /// 출석 사유 작성 시트
 ///
 /// GPS 출석이 어려운 경우 사유를 작성하여 출석을 요청할 수 있는 시트입니다.
-/// Liquid Glass 스타일이 적용된 버튼을 사용합니다.
 struct AttendanceReasonSheet: View {
 
     // MARK: - Property
@@ -24,31 +23,25 @@ struct AttendanceReasonSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+            TitleLabel(title: "지각 사유 입력", isRequired: true)
             reasonTextField
             descriptionText
-            Spacer().frame(height: 12)
-            buttonGroup
         }
-        .safeAreaPadding(.top, DefaultConstant.defaultSafeTop)
+        .padding(.top, DefaultConstant.defaultSafeTop)
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        .presentationDetents([.fraction(0.35)])
+        .safeAreaInset(edge: .bottom) {
+            buttonGroup
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                .padding(.bottom, DefaultConstant.defaultSafeBtnPadding)
+        }
+        .presentationDetents([.fraction(0.33)])
         .presentationDragIndicator(.visible)
     }
 
     // MARK: - View Components
 
-    private var descriptionText: some View {
-        Text("위치 인증이 어려운 경우 사유를 작성하여 출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)")
-            .appFont(.footnote, weight: .regular, color: .grey500)
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
-    }
-
     private var reasonTextField: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-            Text("출석 사유 입력")
-                .appFont(.calloutEmphasis, color: .grey600)
-
             TextField(
                 "",
                 text: $reason,
@@ -56,30 +49,34 @@ struct AttendanceReasonSheet: View {
             )
             .foregroundStyle(.grey900)
             .padding(DefaultConstant.defaultTextFieldPadding)
-            .background(.white, in: .rect(
-                cornerRadius: DefaultConstant.defaultCornerRadius))
-            .contentShape(Rectangle())
+            .background(.white, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
             .submitLabel(.done)
         }
     }
 
+    private var descriptionText: some View {
+        Text("위치 인증이 어려운 경우 사유를 작성하여 출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)")
+            .appFont(.footnote, weight: .regular, color: .grey500)
+            .multilineTextAlignment(.leading)
+            .padding(.bottom, 10)
+            .padding(.horizontal, 10)
+    }
+
     private var buttonGroup: some View {
-        GlassEffectContainer {
-            HStack(spacing: DefaultSpacing.spacing12) {
-                MainButton("취소") {
+        HStack(spacing: DefaultSpacing.spacing12) {
+            MainButton("취소") {
+                dismiss()
+            }
+            .buttonStyle(.destructive)
+
+            MainButton("제출하기") {
+                Task {
+                    await onSubmit(reason)
                     dismiss()
                 }
-                .buttonStyle(.destructive)
-
-                MainButton("제출하기") {
-                    Task {
-                        await onSubmit(reason)
-                        dismiss()
-                    }
-                }
-                .buttonStyle(.primary)
-                .disabled(reason.trimmingCharacters(in: .whitespaces).isEmpty)
             }
+            .buttonStyle(.primary)
+            .disabled(reason.trimmingCharacters(in: .whitespaces).isEmpty)
         }
     }
 }

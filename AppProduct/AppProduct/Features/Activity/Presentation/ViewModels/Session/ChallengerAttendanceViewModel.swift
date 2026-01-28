@@ -122,8 +122,36 @@ final class ChallengerAttendanceViewModel {
     ///   - reason: 출석 사유
     @MainActor
     func submitAttendanceReason(userId: UserID, session: Session, reason: String) async {
-        // TODO: UseCase 연동 시 구현
-        print("사유 제출: \(reason) for session: \(session.id)")
+        let info = session.info
+        session.updateState(.loading)
+
+        do {
+            let result = try await challengeAttendanceUseCase.submitLateReason(
+                sessionId: info.sessionId,
+                userId: userId,
+                reason: reason
+            )
+            session.updateState(.loaded(result))
+            session.markSubmitted()
+
+        } catch let error as DomainError {
+            session.updateState(.failed(.domain(error)))
+        } catch {
+            if let prev = session.attendance {
+                session.updateState(.loaded(prev))
+            }
+            errorHandler.handle(error, context: .init(
+                feature: "Activity",
+                action: "submitAttendanceReason",
+                retryAction: { [weak self] in
+                    await self?.submitAttendanceReason(
+                        userId: userId,
+                        session: session,
+                        reason: reason
+                    )
+                }
+            ))
+        }
     }
 
     func isAttendanceAvailable(for session: Session) -> Bool {
