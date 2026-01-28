@@ -12,118 +12,93 @@ struct CommunityPartySetting: View {
 
     @State private var selectedDate = Date()
     @State private var maxParticipants = 3
-    @State private var placeText: String = ""
+    @State private var showPlaceSheet = false
     @State private var linkText: String = ""
     
-    @FocusState private var focusedField: Field?
+    @FocusState private var focusedField: Bool
+    
+    @Environment(ErrorHandler.self) var errorHandler
     
     // MARK: - Constants
     
-    private enum Field: Hashable {
-        case place
-        case link
-    }
-    
     private enum Constant {
-        static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
-        static let calendarPadding: EdgeInsets = .init(top: 0, leading: 12, bottom: 0, trailing: 12)
-        static let textFieldPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
     }
 
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            headerView
-            
-            VStack(spacing: DefaultSpacing.spacing16) {
+        Form {
+            Section("날짜 및 시간") {
                 dateField
-                Divider()
+                timeField
+            }
+            Section("최대 인원") {
                 maxParticipantsField
-                Divider()
+            }
+            Section("장소") {
                 placeField
-                Divider()
+            }
+            Section("오픈채팅 링크") {
                 linkField
             }
         }
-        .padding(Constant.mainPadding)
-        .background(
-            RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .fill(.white)
-        )
-        .glass()
-    }
-
-    // MARK: - Views
-    
-    private var headerView: some View {
-        Text("⚡️ 번개 설정")
-            .appFont(.bodyEmphasis, color: .black)
+        .sheet(isPresented: $showPlaceSheet, content: {
+            SearchMapView(errorHandler: errorHandler) { place in
+                print(place)
+            }
+            .presentationDragIndicator(.visible)
+        })
     }
 
     // MARK: - Fields
 
     private var dateField: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            Text("날짜 및 시간")
-                .appFont(.subheadline, color: .grey700)
-            
-            DatePicker("",
-                       selection: $selectedDate,
-                       displayedComponents: [.date, .hourAndMinute])
-                .datePickerStyle(.graphical)
-                .padding(Constant.calendarPadding)
-                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                )
-        }
+        DatePicker("날짜",
+                   selection: $selectedDate,
+                   displayedComponents: [.date])
+            .datePickerStyle(.compact)
+    }
+    
+    private var timeField: some View {
+        DatePicker("시간",
+                   selection: $selectedDate,
+                   displayedComponents: [.hourAndMinute])
     }
 
     private var maxParticipantsField: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            Text("최대 인원")
-                .appFont(.subheadline, color: .grey700)
-            
-            Stepper(value: $maxParticipants, in: 2...20) {
-                Text("\(maxParticipants)명")
-                    .font(.body)
-                    .foregroundStyle(.primary)
-            }
+        Stepper(value: $maxParticipants, in: 2...20) {
+            Text("\(maxParticipants)명")
+                .appFont(.body, color: .black)
+                .foregroundStyle(.primary)
         }
     }
 
     private var placeField: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            Text("장소")
-                .appFont(.subheadline, color: .grey700)
-            
-            TextField("예: 강남역 3번출구", text: $placeText, axis: .vertical)
-                .focused($focusedField, equals: .place)
-                .lineLimit(1)
-                .padding(Constant.textFieldPadding)
-                .background(Color(.secondarySystemBackground), in: Capsule())
-        }
+        Button(action: {
+            showPlaceSheet.toggle()
+        }, label: {
+            HStack {
+                Text("장소 선택")
+                    .appFont(.body, color: .black)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.grey500)
+            }
+        })
     }
 
     private var linkField: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            Text("오픈채팅 링크")
-                .appFont(.subheadline, color: .grey700)
-            
-            TextField("https://open.kakao.com/...", text: $linkText)
-                .focused($focusedField, equals: .link)
-                .keyboardType(.URL)
-                .autocapitalization(.none)
-                .autocorrectionDisabled()
-                .padding(Constant.textFieldPadding)
-                .background(Color(.secondarySystemBackground), in: Capsule())
-        }
+        TextField("https://open.kakao.com/...", text: $linkText)
+            .focused($focusedField)
+            .keyboardType(.URL)
+            .autocapitalization(.none)
+            .autocorrectionDisabled()
     }
 }
 
 #Preview {
-    ScrollView {
+    NavigationView {
         CommunityPartySetting()
-            .padding()
     }
-    .background(Color(.secondarySystemBackground))
+    .environment(ErrorHandler())
 }
