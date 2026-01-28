@@ -11,7 +11,8 @@ struct AttendanceSessionView: View {
     @State private var expandedSessionId: Session.ID?
     @State private var attendanceViewModel: ChallengerAttendanceViewModel
     @State private var sessionViewModel: ChallengerSessionViewModel
-    
+    @State private var mapViewModelCache: [Session.ID: BaseMapViewModel] = [:]
+
     private let container: DIContainer
     private let errorHandler: ErrorHandler
     private let sessions: [Session]
@@ -58,6 +59,20 @@ struct AttendanceSessionView: View {
         sessions.filter(\.isAttendanceAvailable)
     }
 
+    /// Session별 MapViewModel 캐시에서 가져오거나 새로 생성
+    private func mapViewModel(for session: Session) -> BaseMapViewModel {
+        if let cached = mapViewModelCache[session.id] {
+            return cached
+        }
+        let newViewModel = BaseMapViewModel(
+            container: container,
+            info: session.info,
+            errorHandler: errorHandler
+        )
+        mapViewModelCache[session.id] = newViewModel
+        return newViewModel
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing48) {
@@ -97,7 +112,8 @@ struct AttendanceSessionView: View {
                     sessions: availableSessions,
                     expandedSessionId: expandedSessionId,
                     attendanceViewModel: attendanceViewModel,
-                    userId: userId
+                    userId: userId,
+                    mapViewModelProvider: { session in mapViewModel(for: session) }
                 ) { sessionId in
                     withAnimation(.spring(Spring(
                         response: Constants.animationResponse,
