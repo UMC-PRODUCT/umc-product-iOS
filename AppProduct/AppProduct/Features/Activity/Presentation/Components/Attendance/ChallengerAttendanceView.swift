@@ -116,6 +116,7 @@ struct ChallengerAttendanceView: View, Equatable {
                 .underline()
         }
         .buttonStyle(.plain)
+        .disabled(!attendanceViewModel.isAttendanceAvailable(for: session))
         .sheet(isPresented: $showReasonSheet) {
             AttendanceReasonSheet { reason in
                 await attendanceViewModel.submitAttendanceReason(

@@ -20,7 +20,7 @@ struct AttendanceReasonSheet: View {
     let onSubmit: (String) async -> Void
     
     private enum Constants {
-        static let defaultSheetFraction: CGFloat = 0.33
+        static let defaultSheetFraction: CGFloat = 300
     }
 
     // MARK: - Body
@@ -34,9 +34,8 @@ struct AttendanceReasonSheet: View {
         .safeAreaInset(edge: .bottom) {
             buttonGroup
         }
-        .padding(.top, DefaultConstant.defaultSafeTop)
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        .presentationDetents([.fraction(Constants.defaultSheetFraction)])
+        .presentationDetents([.height(Constants.defaultSheetFraction)])
         .presentationDragIndicator(.visible)
         .interactiveDismissDisabled()
     }
@@ -58,8 +57,9 @@ struct AttendanceReasonSheet: View {
     }
 
     private var descriptionText: some View {
-        Text("위치 인증이 어려운 경우 사유를 작성하여 출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)")
+        Text("위치 인증이 어려운 경우 사유를 작성하여 출석을 요청할 수 있습니다. (예: GPS 오류, 지각, 개인 사정 등)")
             .appFont(.footnote, weight: .regular, color: .grey500)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .multilineTextAlignment(.leading)
             .padding(.bottom, DefaultConstant.defaultSafeBtnPadding)
             .padding(.horizontal, DefaultConstant.defaultSafeBtnPadding)
