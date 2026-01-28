@@ -10,10 +10,9 @@ import SwiftUI
 // MARK: - Constant
 
 private enum Constant {
-    static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
     static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
     // profile
-    static let profileCircleSize: CGSize = .init(width: 39, height: 39)
+    static let profileCircleSize: CGSize = .init(width: 40, height: 40)
     static let partTagPadding: EdgeInsets = .init(top: 2, leading: 8, bottom: 2, trailing: 8)
     static let partTagRadius: CGFloat = 8
     // feedback
@@ -53,7 +52,7 @@ struct CommunityFameItem: View {
             }
             feedbackSection
         }
-        .padding(Constant.mainPadding)
+        .padding(DefaultConstant.defaultCardPadding)
         .containerShape(
             .rect(cornerRadius: DefaultConstant.defaultListCornerRadius)
         )
@@ -64,7 +63,7 @@ struct CommunityFameItem: View {
     // MARK: - Section
 
     private var profileSection: some View {
-        HStack {
+        HStack(spacing: DefaultSpacing.spacing12) {
             if model.profileImage != nil {
                 // !!! - url 이미지 처리
                 Image(systemName: "heart")
@@ -79,7 +78,7 @@ struct CommunityFameItem: View {
                 // 이름 + 파트
                 HStack(spacing: DefaultSpacing.spacing8) {
                     Text(model.userName)
-                        .appFont(.subheadlineEmphasis, color: .grey900)
+                        .appFont(.calloutEmphasis, color: .grey900)
                     Text(model.part)
                         .appFont(.footnote, color: .grey600)
                         .padding(Constant.partTagPadding)
@@ -89,7 +88,7 @@ struct CommunityFameItem: View {
 
                 // 워크북
                 Text(model.workbookTitle)
-                    .appFont(.footnote, color: .gray)
+                    .appFont(.subheadline, color: .gray)
             }
         }
     }
@@ -102,15 +101,15 @@ struct CommunityFameItem: View {
                 Text("보기")
             }
         }
-        .appFont(.footnote, color: .grey900)
+        .appFont(.subheadline, color: .grey900)
         .padding(Constant.buttonPadding)
         .glassEffect(.clear.interactive())
     }
 
     // 피드백 내용
     private var feedbackSection: some View {
-        Text(model.content)
-            .appFont(.footnote, color: .grey700)
+        Text(model.content.forceCharWrapping)
+            .appFont(.subheadline, color: .grey700)
             .lineLimit(2)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Constant.feedbackPadding)

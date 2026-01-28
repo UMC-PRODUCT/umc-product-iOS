@@ -44,7 +44,7 @@ struct CommunityItem: View, Equatable {
                 contentSection
                 bottomSection
             }
-            .padding(DefaultConstant.defaultListPadding)
+            .padding(DefaultConstant.defaultCardPadding)
             .background(
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius)
                     .fill(.white)
@@ -59,7 +59,7 @@ struct CommunityItem: View, Equatable {
     private var topSection: some View {
         HStack {
             Text(model.category.text)
-                .appFont(.subheadlineEmphasis, color: .grey700)
+                .appFont(.footnoteEmphasis, color: .grey700)
                 .padding(Constant.tagPadding)
                 .glassEffect(.clear)
 
@@ -75,11 +75,11 @@ struct CommunityItem: View, Equatable {
     private var contentSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Text(model.title)
-                .appFont(.bodyEmphasis, color: .grey900)
+                .appFont(.calloutEmphasis, color: .grey900)
                 .lineLimit(1)
 
             Text(model.content)
-                .appFont(.callout, color: .grey600)
+                .appFont(.subheadline, color: .grey600)
                 .lineLimit(2)
         }
     }
@@ -116,6 +116,10 @@ struct CommunityItem: View, Equatable {
                 Text(String(model.commentCount))
             }
         }
-        .appFont(.subheadline, color: .grey500)
+        .appFont(.footnote, color: .grey500)
     }
+}
+
+#Preview {
+    
 }

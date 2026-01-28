@@ -15,7 +15,7 @@ class CommunityViewModel {
     var isRecruiting: Bool = false
     var selectedMenu: MenuType = .all
 
-    var items: Loadable<[CommunityItemModel]> = .loading
+    var items: Loadable<[CommunityItemModel]> = .loaded(mockItems)
 }
 
 // MARK: - MenuType
@@ -27,3 +27,8 @@ extension CommunityViewModel {
         case fame
     }
 }
+
+private let mockItems: [CommunityItemModel] = [
+    .init(userId: 1, category: .hobby, title: "질문 있습니다", content: "질문 있어요!", profileImage: nil, userName: "김서버", part: "Server", createdAt: "방금 전", likeCount: 5, commentCount: 3),
+    .init(userId: 1, category: .question, title: "질문 있습니다", content: "질문 있어요!", profileImage: nil, userName: "김서버", part: "Server", createdAt: "방금 전", likeCount: 5, commentCount: 3),
+]
