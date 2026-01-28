@@ -16,6 +16,43 @@ extension View {
     ///
     /// - Parameter item: 알림창을 제어할 `AlertPrompt` 데이터 바인딩
     /// - Returns: 알림이 적용된 View
+    ///
+    /// - Usage:
+    /// ```swift
+    /// // ViewModel
+    /// class ViewModel: ObservableObject {
+    ///     @Published var alertPrompt: AlertPrompt?
+    ///
+    ///     func deleteButtonTapped() {
+    ///         alertPrompt = AlertPrompt(
+    ///             title: "삭제 확인",
+    ///             message: "정말 삭제하시겠습니까?",
+    ///             positiveBtnTitle: "삭제",
+    ///             isPositiveBtnDestructive: true,
+    ///             positiveBtnAction: { [weak self] in
+    ///                 self?.delete()
+    ///             },
+    ///             negativeBtnTitle: "취소"
+    ///         )
+    ///     }
+    ///
+    ///     private func delete() {
+    ///         // 삭제 로직
+    ///     }
+    /// }
+    ///
+    /// // View
+    /// struct ContentView: View {
+    ///     @StateObject var viewModel = ViewModel()
+    ///
+    ///     var body: some View {
+    ///         Button("Delete") {
+    ///             viewModel.deleteButtonTapped()
+    ///         }
+    ///         .alertPrompt(item: $viewModel.alertPrompt)
+    ///     }
+    /// }
+    /// ```
     func alertPrompt(item: Binding<AlertPrompt?>) -> some View {
         self.alert(
             item.wrappedValue?.title ?? "",

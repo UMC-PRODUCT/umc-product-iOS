@@ -24,16 +24,17 @@ struct BaseMapComponent: View, Equatable {
     init(viewModel: BaseMapViewModel) {
         self.viewModel = viewModel
     }
-    
+
     fileprivate enum Constants {
         static let iconSize: CGFloat = 24
     }
-    
+
     static func == (lsh: Self, rhs: Self) -> Bool {
         return lsh.viewModel === rhs.viewModel
     }
 
     // MARK: - Body
+
     var body: some View {
         Map(position: $viewModel.cameraPosition) {
             geofenceOverlay
@@ -45,13 +46,14 @@ struct BaseMapComponent: View, Equatable {
             MapCompass()
         }
     }
-    
+
     // MARK: - View Component
+
     /// 세션 위치를 나타내는 핀 마커
     @MapContentBuilder
     private var sessionMaker: some MapContent {
         Annotation(
-            viewModel.currentSession.title,
+            viewModel.sessionInfo.title,
             coordinate: viewModel.sessionLocation,
             anchor: .bottom
         ) {
@@ -61,7 +63,7 @@ struct BaseMapComponent: View, Equatable {
                 .frame(width: Constants.iconSize, height: Constants.iconSize)
         }
     }
-    
+
     /// 지오펜스 영역 오버레이 (출석 가능 범위)
     @MapContentBuilder
     private var geofenceOverlay: some MapContent {
@@ -87,11 +89,7 @@ struct BaseMapComponent: View, Equatable {
 
 #Preview {
     BaseMapComponent(viewModel: .init(
-        container: .init(),
-        session: .init(
-            sessionId: SessionID(value: "iOS_6"),
-            icon: "", title: "Alamofire 파헤치기",
-            week: 6, startTime: Date.now, endTime: Date.now + 10,
-            location: .init(latitude: 37.582967, longitude: 127.010527)),
-        errorHandler: .init()))
+        container: AttendancePreviewData.container,
+        info: AttendancePreviewData.sessionInfo,
+        errorHandler: AttendancePreviewData.errorHandler))
 }

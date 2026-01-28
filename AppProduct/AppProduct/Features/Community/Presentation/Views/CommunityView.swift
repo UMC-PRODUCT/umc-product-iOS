@@ -10,10 +10,12 @@ import SwiftUI
 struct CommunityView: View {
     // MARK: - Properties
 
+    @Environment(\.di) var di
     @State var vm: CommunityViewModel
-    @State private var searchText: String = ""
-    @State private var isRecruiting: Bool = false
-    @State private var isScrolled: Bool = false
+
+    private var router: NavigationRouter {
+        di.resolve(NavigationRouter.self)
+    }
 
     private enum Constant {}
 
@@ -26,76 +28,73 @@ struct CommunityView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ListSection(proxy: proxy)
-                .navigation(naviTitle: .community, displayMode: .large)
-                .searchable(text: $searchText)
-                .searchToolbarBehavior(.minimize)
-                .onScrollGeometryChange(for: Bool.self) { geo in
-                    geo.contentOffset.y > 50
-                } action: { _, newValue in
-                    withAnimation {
-                        isScrolled = newValue
-                    }
-                }
-                .toolbar {
-                    ToolbarItem(id: "menu") { ToolbarMenu }
-                    ToolbarSpacer()
-                    if isScrolled {
-                        ToolbarItem(id: "scroll") { ToolbarScrollToTop(proxy: proxy) }
-                    }
-                }
+        Group {
+            switch vm.selectedMenu {
+            case .all, .question:
+                contentSection
+            case .fame:
+                CommunityFameView()
+            }
+        }
+        .navigation(naviTitle: .community, displayMode: .inline)
+        .searchable(text: $vm.searchText)
+        .searchToolbarBehavior(.minimize)
+        .toolbar {
+            ToolBarCollection.CommunityMenuBtn(
+                allAction: { vm.selectedMenu = .all },
+                questionAction: { vm.selectedMenu = .question },
+                fameAction: { vm.selectedMenu = .fame },
+                isRecruiting: $vm.isRecruiting
+            )
         }
     }
 
-    // MARK: - Toolbar
-
-    private var ToolbarMenu: some View {
-        Menu("Menu", systemImage: "ellipsis") {
-            Section {
-                // TODO: action 추가 - [김미주] 26.01.15
-                Button("전체") {}
-                Button("Hard", systemImage: "flame.fill") {}
-                Button("Soft", systemImage: "sun.max.fill") {}
-                Button("명예의전당", systemImage: "trophy.fill") {}
-            }
-            Toggle("모집중", isOn: $isRecruiting)
-        }
-    }
-
-    private func ToolbarScrollToTop(proxy: ScrollViewProxy) -> some View {
-        Button("Top", systemImage: "chevron.up", action: {
-            withAnimation {
-                if let firstId = vm.items.first?.id {
-                    proxy.scrollTo(firstId, anchor: .top)
+    private var contentSection: some View {
+        Group {
+            switch vm.items {
+            case .idle:
+                Color.clear.task {
+                    print("hello")
                 }
+            case .loading:
+                ProgressView()
+            case .loaded(let items):
+                listSection(items)
+            case .failed:
+                Color.clear
             }
-        })
+        }
     }
 
     // MARK: - List
 
-    private func ListSection(proxy: ScrollViewProxy) -> some View {
-        List(vm.items, rowContent: { item in
-            CommunityItem(model: item)
-                .equatable()
-                .id(item.id)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-        })
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .overlay {
-            if vm.items.isEmpty {
-                ContentUnavailableView {
-                    Label(
-                        "아직 작성된 글이 없습니다.",
-                        systemImage: "text.page.slash"
-                    )
-                } description: {
-                    Text("가장 먼저 글을 작성해 보세요!")
-                }
+    private func listSection(_ items: [CommunityItemModel]) -> some View {
+        Group {
+            if items.isEmpty {
+                unableContent
+            } else {
+                List(items, rowContent: { item in
+                    CommunityItem(model: item) {
+                        router.push(to: .community(.detail(postItem: item)))
+                    }
+                    .equatable()
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                })
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
+        }
+    }
+
+    private var unableContent: some View {
+        ContentUnavailableView {
+            Label(
+                "아직 작성된 글이 없습니다.",
+                systemImage: "text.page.slash"
+            )
+        } description: {
+            Text("가장 먼저 글을 작성해 보세요!")
         }
     }
 }
@@ -104,4 +103,5 @@ struct CommunityView: View {
     NavigationStack {
         CommunityView()
     }
+    .environment(\.di, .configured())
 }

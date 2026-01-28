@@ -14,20 +14,21 @@ import SwiftUI
 /// - 하단 상태바: 위치 인증 상태, 주소 표시
 struct ActivityCompactMapView: View {
     @State private var mapViewModel: BaseMapViewModel
-    private var session: Session
-    
+    private var info: SessionInfo
+
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,
-        session: Session
+        info: SessionInfo
     ) {
         self._mapViewModel = .init(
-            wrappedValue: .init(container: container, session: session, errorHandler: errorHandler))
-        self.session = session
+            wrappedValue: .init(container: container, info: info, errorHandler: errorHandler))
+        self.info = info
     }
     
     private enum Constants {
         static let mapComponentHeight: CGFloat = 200
+        static let mapCornerRadius: Edge.Corner.Style = 24
     }
     
     var body: some View {
@@ -38,15 +39,15 @@ struct ActivityCompactMapView: View {
             .overlay(alignment: .bottomTrailing) {
                 LocationStatusBarView(mapViewModel: mapViewModel)
             }
+            .clipShape(ConcentricRectangle(
+                corners: .concentric(minimum: Constants.mapCornerRadius),
+                isUniform: true))
             .task {
-                await mapViewModel.startGeofenceForAttendance(sessionId: session.sessionId)
-                await mapViewModel.updateAddressForSession()
+                await mapViewModel.startGeofenceForAttendance(info: info)
+                await mapViewModel.updateAddressForSession(info: info)
                 mapViewModel.startLocationUpdate()
             }
             .onDisappear {
-                Task {
-                    await mapViewModel.stopGeofence()
-                }
                 mapViewModel.stopLocationUpdate()
             }
     }
@@ -124,7 +125,7 @@ fileprivate struct LocationStatusBarView: View {
     ActivityCompactMapView(
         container: AttendancePreviewData.container,
         errorHandler: AttendancePreviewData.errorHandler,
-        session: AttendancePreviewData.session
+        info: AttendancePreviewData.sessionInfo
     )
     .padding(.horizontal)
     .task {
