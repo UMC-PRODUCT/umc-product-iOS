@@ -11,84 +11,146 @@ import SwiftUI
 ///
 /// 지도와 출석 버튼을 표시하며, 지오펜싱 상태에 따라 버튼 활성화를 제어합니다.
 struct ChallengerAttendanceView: View, Equatable {
-    @Environment(\.di) private var container
-    @Environment(ErrorHandler.self) private var errorHandler
-    
-    @Bindable private var mapViewModel: BaseMapViewModel
+    @State private var mapViewModel: BaseMapViewModel
     @Bindable private var attendanceViewModel: ChallengerAttendanceViewModel
-    
-    @State private var showErrorAlert = false
-    
-    private var userId: UserID
-    
+    @Namespace private var attendanceNamespace
+
+    private let userId: UserID
+    private let container: DIContainer
+    private let errorHandler: ErrorHandler
+    private let session: Session
+
     init(
+        container: DIContainer,
+        errorHandler: ErrorHandler,
         mapViewModel: BaseMapViewModel,
         attendanceViewModel: ChallengerAttendanceViewModel,
-        userId: UserID
+        userId: UserID,
+        session: Session
     ) {
-        self.mapViewModel = mapViewModel
+        self.container = container
+        self.errorHandler = errorHandler
+        self.session = session
+        self._mapViewModel = .init(
+            wrappedValue: .init(
+                container: container,
+                info: session.info,
+                errorHandler: errorHandler))
         self.attendanceViewModel = attendanceViewModel
         self.userId = userId
     }
-    
+
     static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.userId == rhs.userId
-        && lhs.attendanceViewModel.attendanceState == rhs.attendanceViewModel.attendanceState
-        && lhs.attendanceViewModel.currentSession.id == rhs.attendanceViewModel.currentSession.id
     }
-    
+
     private enum Constants {
-        static let verticalSpacing: CGFloat = 16
+        static let bottomPadding: CGFloat = 16
+        static let attendanceActionId = "attendance-action"
     }
 
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: Constants.verticalSpacing) {
+        VStack(spacing: DefaultSpacing.spacing16) {
             ActivityCompactMapView(
                 container: container,
                 errorHandler: errorHandler,
-                session: attendanceViewModel.currentSession
+                info: session.info
             )
-            attendanceButton
+            attendanceActionView
             lateReasonButton
         }
-        .onChange(of: attendanceViewModel.attendanceState) { _, newValue in
-            if case .failed = newValue {
-                showErrorAlert = true
-            }
-        }
-        .alert("출석 실패", isPresented: $showErrorAlert) {
-            Button("확인", role: .cancel){}
-        } message: {
-            if case .failed(let error) = attendanceViewModel.attendanceState {
-                Text(error.errorDescription ?? "출석 처리 중 오류가 발생했습니다.")
-            }
-        }
-
+        .animation(.smooth, value: session.attendanceStatus)
     }
 
     // MARK: - View Component
 
-    private var attendanceButton: some View {
-        MainButton(attendanceViewModel.buttonTitle) {
-            Task {
-                await attendanceViewModel.attendanceBtnTapped(userId: userId)
+    /// 출석 상태에 따른 액션 뷰 (버튼 또는 승인 대기 카드)
+    @ViewBuilder
+    private var attendanceActionView: some View {
+        GlassEffectContainer {
+            switch session.attendanceStatus {
+            case .pendingApproval:
+                // 승인 대기 카드 (버튼에서 모핑 전환)
+                PendingApprovalView()
+                    .glassEffect(
+                        .regular,
+                        in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+                    .glassEffectID(
+                        Constants.attendanceActionId, in: attendanceNamespace)
+
+            case .beforeAttendance:
+                // 출석 버튼
+                attendanceButton
+                    .glassEffectID(
+                        Constants.attendanceActionId, in: attendanceNamespace)
+
+            case .present, .late, .absent:
+                // 확정 상태 - 버튼 비활성화
+                attendanceButton
             }
         }
-        .loading(.constant(attendanceViewModel.attendanceState.isLoading))
-        .buttonStyle(.glassProminent)
-        .disabled(!attendanceViewModel.isAttendanceAvailable)
     }
-    
+
+    private var attendanceButton: some View {
+        MainButton(attendanceViewModel.buttonStyle(for: session)) {
+            triggerHaptic()
+            Task {
+                await attendanceViewModel.attendanceBtnTapped(
+                    userId: userId, session: session)
+                triggerSuccessHaptic()
+            }
+        }
+        .buttonStyle(.glassProminent)
+        .disabled(!attendanceViewModel.isAttendanceAvailable(for: session))
+    }
+
     private var lateReasonButton: some View {
         Button {
             // 사유 제출 Sheet 활성화
         } label: {
             Text("위치 인증이 안 되나요? 사유 제출하기")
-                .appFont(.caption2, color: .grey500)
+                .appFont(.caption1, color: .gray)
                 .underline()
         }
         .buttonStyle(.plain)
     }
+
+    // MARK: - Haptic Feedback
+
+    private func triggerHaptic() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+
+    private func triggerSuccessHaptic() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+    }
+}
+
+// MARK: - Previews
+
+#Preview("출석 전 상태") {
+    ChallengerAttendanceView(
+        container: AttendancePreviewData.container,
+        errorHandler: AttendancePreviewData.errorHandler,
+        mapViewModel: AttendancePreviewData.mapViewModel,
+        attendanceViewModel: AttendancePreviewData.attendanceViewModel,
+        userId: AttendancePreviewData.userId,
+        session: AttendancePreviewData.beforeAttendanceSession
+    )
+}
+
+#Preview("승인 대기 상태") {
+    ChallengerAttendanceView(
+        container: AttendancePreviewData.container,
+        errorHandler: AttendancePreviewData.errorHandler,
+        mapViewModel: AttendancePreviewData.mapViewModel,
+        attendanceViewModel: AttendancePreviewData.attendanceViewModel,
+        userId: AttendancePreviewData.userId,
+        session: AttendancePreviewData.pendingApprovalSession
+    )
 }

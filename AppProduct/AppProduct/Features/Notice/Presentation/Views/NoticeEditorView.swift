@@ -25,7 +25,7 @@ struct NoticeEditorView: View {
     // MARK: - Body
     var body: some View {
         ScrollView(.vertical) {
-            // TODO: 공지 작성 폼
+            NoticeTextField()
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .navigationBarTitleDisplayMode(.inline)
@@ -82,12 +82,28 @@ struct NoticeEditorView: View {
     }
     
     // MARK: - Computed Property
-
     private var categoryBinding: Binding<EditorMainCategory> {
         Binding(
             get: { viewModel.selectedCategory },
             set: { viewModel.selectCategory($0) }
         )
+    }
+}
+
+private struct NoticeTextField: View {
+    
+    @State private var title: String = ""
+    @State private var content: String = ""
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            ArticleTextField(placeholder: .title, text: $title)
+            
+            Divider()
+            
+            ArticleTextField(placeholder: .content, text: $content)
+        }
+        .padding(.top, 24)
     }
 }
 
