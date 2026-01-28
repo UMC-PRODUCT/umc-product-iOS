@@ -45,8 +45,6 @@ enum MyAttendanceItemStatus: Equatable {
 
     var fontColor: Color {
         switch self {
-        case .pendingApproval:
-            return .black
         default:
             return .white
         }

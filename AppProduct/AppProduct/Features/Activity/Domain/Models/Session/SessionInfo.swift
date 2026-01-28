@@ -15,6 +15,7 @@ import SwiftUI
 struct SessionInfo: Identifiable, Equatable {
     let id: UUID = .init()
     let sessionId: SessionID
+    let category: ScheduleIconCategory = .general
     let icon: ImageResource
     let title: String
     let week: Int

@@ -17,10 +17,15 @@ struct MyAttendanceStatusView: View {
 
     // MARK: - Init
 
-    /// - Parameter sessions: 전체 세션 목록 (pending 상태는 내부에서 필터링)
-    init(sessions: [Session]) {
+    /// - Parameters:
+    ///   - sessions: 전체 세션 목록 (pending 상태는 내부에서 필터링)
+    ///   - categoryFor: 제목으로 카테고리 조회 (ViewModel에서 제공)
+    init(sessions: [Session], categoryFor: (String) -> ScheduleIconCategory) {
         // pending 상태 제외, 완료된 출석만 표시
-        self.models = sessions.compactMap { MyAttendanceItemModel(from: $0) }
+        self.models = sessions.compactMap { session in
+            let category = categoryFor(session.info.title)
+            return MyAttendanceItemModel(from: session, category: category)
+        }
     }
     
     // MARK: - Constant
@@ -59,7 +64,8 @@ struct MyAttendanceStatusView: View {
         Color.grey100.ignoresSafeArea()
 
         MyAttendanceStatusView(
-            sessions: AttendancePreviewData.sessions
+            sessions: AttendancePreviewData.sessions,
+            categoryFor: { _ in .general }  // Preview용 기본값
         )
     }
     .frame(height: 600)

@@ -74,17 +74,17 @@ struct LinkAttachmentCard: View, Equatable {
 
 // MARK: - Preview
 #Preview {
-    @Previewable @State var linkItems: [LinkItem] = []
+    @Previewable @State var noticeLinkItems: [NoticeLinkItem] = []
     
     VStack(spacing: 12) {
-        ForEach($linkItems) { $item in
+        ForEach($noticeLinkItems) { $item in
             LinkAttachmentCard(link: $item.link) {
-                linkItems.removeAll { $0.id == item.id }
+                noticeLinkItems.removeAll { $0.id == item.id }
             }
         }
         
         Button("링크 카드 추가") {
-            linkItems.append(LinkItem())
+            noticeLinkItems.append(NoticeLinkItem())
         }
     }
 }

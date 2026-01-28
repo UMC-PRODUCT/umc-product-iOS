@@ -27,7 +27,8 @@ struct AttendanceTestWrapper: View {
                 container: container,
                 errorHandler: errorHandler,
                 sessions: sessions,
-                userId: userId
+                userId: userId,
+                categoryFor: { _ in .general }  // Test용 기본값
             )
 
             adminPanelButton
