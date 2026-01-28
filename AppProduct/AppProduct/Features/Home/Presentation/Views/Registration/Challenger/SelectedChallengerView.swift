@@ -17,7 +17,7 @@ struct SelectedChallengerView: View {
     /// 외부에서 주입받는 선택된 챌린저 목록 (Binding)
     ///
     /// 이 배열은 상위 뷰와 공유되며, 챌린저 추가 및 삭제 시 실시간으로 업데이트됩니다.
-    @Binding var challenger: [Participant]
+    @Binding var challenger: [ChallengerInfo]
     
     /// 챌린저 검색 화면으로의 네비게이션 활성화 여부
     @State var searchNavi: Bool = false
@@ -52,8 +52,10 @@ struct SelectedChallengerView: View {
     @ViewBuilder
     private var content: some View {
         if challenger.isEmpty {
+            // 선택된 인원이 없으면 빈 상태 뷰 표시
             unSelectedContent
         } else {
+            // 선택된 인원이 있으면 리스트 폼 표시 (삭제 가능 모드)
             ChallengerFormView(challenger: $challenger, isDeletAction: true)
         }
     }
@@ -66,9 +68,4 @@ struct SelectedChallengerView: View {
             description: Text("새로운 챌린저를 초대하여 함께 도전해보세요.")
         )
     }
-}
-
-#Preview {
-    @Previewable @State var challenger: [Participant] = .init()
-    SelectedChallengerView(challenger: $challenger)
 }

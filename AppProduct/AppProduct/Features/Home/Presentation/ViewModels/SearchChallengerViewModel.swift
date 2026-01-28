@@ -8,12 +8,24 @@
 import Foundation
 import UniformTypeIdentifiers
 
+/// 챌린저 검색 화면의 비즈니스 로직을 담당하는 뷰 모델입니다.
+///
+/// 챌린저 목록 로드, 검색 필터링, CSV 파일을 통한 일괄 선택 기능을 제공합니다.
 @Observable
 class SearchChallengerViewModel {
-    var allChallengers: [Participant] = []
+    /// 전체 챌린저 목록 데이터
+    var allChallengers: [ChallengerInfo] = []
+    
+    /// 현재 선택된 챌린저들의 ID 목록 (중복 방지를 위한 Set 사용)
     var selectedChallengerIds: Set<UUID> = []
+    
+    /// 검색창 입력 텍스트
     var searchText: String = ""
+    
+    /// CSV 파일 가져오기 문서 피커 표시 여부
     var showCSVImporter: Bool = false
+    
+    /// 알림창 상태 관리 객체 (에러 메시지, 결과 통보 등)
     var alertPrompt: AlertPrompt?
 }
 
@@ -78,7 +90,7 @@ extension SearchChallengerViewModel {
     }
     
     /// 이름과 닉네임으로 챌린저 찾기
-    private func findChallenger(name: String, nickname: String) -> Participant? {
+    private func findChallenger(name: String, nickname: String) -> ChallengerInfo? {
         allChallengers.first { participant in
             participant.name == name ||
             participant.nickname == nickname ||

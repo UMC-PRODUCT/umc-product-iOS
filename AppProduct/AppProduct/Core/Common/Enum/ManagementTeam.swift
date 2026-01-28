@@ -19,6 +19,9 @@ import SwiftUI
 ///
 /// - Note: 추후 역할 추가 시 case와 level만 조정하면 됩니다.
 enum ManagementTeam: String, CaseIterable, Comparable {
+
+    // MARK: - Cases
+
     case general = "총괄단"
     case centralOperator = "중앙운영진"
     case campusPresident = "교내회장단"
@@ -45,6 +48,12 @@ enum ManagementTeam: String, CaseIterable, Comparable {
 
     // MARK: - Comparable
 
+    /// 두 역할의 권한 레벨을 비교합니다.
+    ///
+    /// - Parameters:
+    ///   - lhs: 비교할 첫 번째 역할
+    ///   - rhs: 비교할 두 번째 역할
+    /// - Returns: lhs의 권한이 rhs보다 낮으면 true
     static func < (lhs: ManagementTeam, rhs: ManagementTeam) -> Bool {
         lhs.level < rhs.level
     }
