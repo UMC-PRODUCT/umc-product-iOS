@@ -44,7 +44,7 @@ struct CommunityItem: View, Equatable {
                 contentSection
                 bottomSection
             }
-            .padding(DefaultConstant.defaultListPadding)
+            .padding(DefaultConstant.defaultCardPadding)
             .background(
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius)
                     .fill(.white)
@@ -118,4 +118,8 @@ struct CommunityItem: View, Equatable {
         }
         .appFont(.subheadline, color: .grey500)
     }
+}
+
+#Preview {
+    
 }

@@ -10,7 +10,6 @@ import SwiftUI
 // MARK: - Constant
 
 private enum Constant {
-    static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
     static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
     // profile
     static let profileCircleSize: CGSize = .init(width: 39, height: 39)
@@ -53,7 +52,7 @@ struct CommunityFameItem: View {
             }
             feedbackSection
         }
-        .padding(Constant.mainPadding)
+        .padding(DefaultConstant.defaultCardPadding)
         .containerShape(
             .rect(cornerRadius: DefaultConstant.defaultListCornerRadius)
         )
