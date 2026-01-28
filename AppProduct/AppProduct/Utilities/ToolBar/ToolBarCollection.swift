@@ -211,21 +211,52 @@ struct ToolBarCollection {
     }
     
     /// 커뮤니티 메뉴 버튼
-    struct CommunityMenuBtn: ToolbarContent {
-        let allAction: () -> Void
-        let questionAction: () -> Void
-        let fameAction: () -> Void
-        let isRecruiting: Binding<Bool>
+    struct CommunityCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
+        let items: [Item]
+        @Binding var selection: Item
+        let itemLabel: (Item) -> String
+        let itemIcon: ((Item) -> String)?
+        
+        init(
+            items: [Item],
+            selection: Binding<Item>,
+            itemLabel: @escaping (Item) -> String,
+            itemIcon: ((Item) -> String)? = nil
+        ) {
+            self.items = items
+            self._selection = selection
+            self.itemLabel = itemLabel
+            self.itemIcon = itemIcon
+        }
         
         var body: some ToolbarContent {
-            ToolbarItem(placement: .topBarTrailing, content: {
-                Menu("Menu", systemImage: "ellipsis") {
+            ToolbarItem(placement: .principal, content: {
+                Menu {
                     Section {
-                        Button("전체") { allAction() }
-                        Button("질문", systemImage: "flame.fill") { questionAction() }
-                        Button("명예의전당", systemImage: "trophy.fill") { fameAction() }
+                        ForEach(items) { item in
+                            Button(action: {
+                                withAnimation(.snappy) {
+                                    selection = item
+                                }
+                            }) {
+                                if let itemIcon = itemIcon {
+                                    Label(itemLabel(item), systemImage: itemIcon(item))
+                                } else {
+                                    Text(itemLabel(item))
+                                }
+                            }
+                        }
                     }
-                    Toggle("모집중", isOn: isRecruiting)
+                } label: {
+                    HStack {
+                        Text(itemLabel(selection))
+                            .appFont(.subheadline, weight: .medium)
+                        Image(systemName: "chevron.down.circle.fill")
+                            .foregroundStyle(.gray.opacity(0.5))
+                            .font(.caption)
+                    }
+                    .padding(DefaultConstant.defaultToolBarTitlePadding)
+                    .glassEffect(.regular)
                 }
             })
         }

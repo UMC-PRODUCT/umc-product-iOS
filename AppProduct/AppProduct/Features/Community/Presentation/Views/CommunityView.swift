@@ -30,7 +30,7 @@ struct CommunityView: View {
     var body: some View {
         Group {
             switch vm.selectedMenu {
-            case .all, .question:
+            case .all, .question, .party:
                 contentSection
             case .fame:
                 CommunityFameView()
@@ -40,11 +40,11 @@ struct CommunityView: View {
         .searchable(text: $vm.searchText)
         .searchToolbarBehavior(.minimize)
         .toolbar {
-            ToolBarCollection.CommunityMenuBtn(
-                allAction: { vm.selectedMenu = .all },
-                questionAction: { vm.selectedMenu = .question },
-                fameAction: { vm.selectedMenu = .fame },
-                isRecruiting: $vm.isRecruiting
+            ToolBarCollection.CommunityCenterMenu(
+                items: CommunityMenu.allCases,
+                selection: $vm.selectedMenu,
+                itemLabel: { $0.rawValue },
+                itemIcon: { $0.icon ?? "" }
             )
         }
     }
