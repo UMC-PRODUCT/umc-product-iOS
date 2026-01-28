@@ -41,9 +41,6 @@ enum DefaultConstant {
     /// 리스트 카드의 기본 모서리 둥글기.
     static let defaultListCornerRadius: CGFloat = 40
 
-    /// 리스트 카드의 기본 모서리 둥글기.
-    static let defaultListCornerRadius: CGFloat = 24
-
     /// 콘텐츠 영역 하단 마진.
     static let defaultContentBottomMargins: CGFloat = 40
 
