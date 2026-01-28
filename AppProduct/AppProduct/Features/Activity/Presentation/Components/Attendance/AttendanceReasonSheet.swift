@@ -18,7 +18,7 @@ struct AttendanceReasonSheet: View {
     @State private var reason: String = ""
 
     let onSubmit: (String) async -> Void
-    
+
     private enum Constants {
         static let defaultSheetFraction: CGFloat = 200
     }
@@ -38,8 +38,10 @@ struct AttendanceReasonSheet: View {
                 }
             }
             .toolbar {
-                ToolBarCollection.CancelBtn(action: {})
-                
+                ToolBarCollection.CancelBtn(action: {
+                    dismiss()
+                })
+
                 ToolBarCollection.ConfirmBtn(action: {
                     Task {
                         await onSubmit(reason)
@@ -58,14 +60,12 @@ struct AttendanceReasonSheet: View {
     // MARK: - View Components
 
     private var reasonTextField: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-            TextField(
-                "",
-                text: $reason,
-                prompt: Text("길이 막혀요..").foregroundStyle(.grey500)
-            )
-            .submitLabel(.done)
-        }
+        TextField(
+            "",
+            text: $reason,
+            prompt: Text("길이 막혀요..").foregroundStyle(.grey500)
+        )
+        .submitLabel(.done)
     }
 
     private var descriptionText: some View {
@@ -75,25 +75,6 @@ struct AttendanceReasonSheet: View {
             .multilineTextAlignment(.leading)
             .truncationMode(.tail)
     }
-
-    private var buttonGroup: some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
-            MainButton("취소") {
-                dismiss()
-            }
-            .buttonStyle(.destructive)
-
-            MainButton("제출하기") {
-                Task {
-                    await onSubmit(reason)
-                    dismiss()
-                }
-            }
-            .buttonStyle(.primary)
-            .disabled(reason.trimmingCharacters(in: .whitespaces).isEmpty)
-        }
-        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-    }
 }
 
 // MARK: - Preview
@@ -101,10 +82,8 @@ struct AttendanceReasonSheet: View {
 #Preview {
     Text("Preview Trigger")
         .sheet(isPresented: .constant(true)) {
-            NavigationStack {
-                AttendanceReasonSheet { reason in
-                    print("Submitted reason: \(reason)")
-                }
+            AttendanceReasonSheet { reason in
+                print("Submitted reason: \(reason)")
             }
         }
 }

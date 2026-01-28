@@ -39,6 +39,8 @@ struct NavigationRoutingView: View {
             homeView(home)
         case .community(let community):
             communityView(community)
+        case .myPage(let mypage):
+            myPage(mypage)
         }
     }
 }
@@ -72,6 +74,14 @@ private extension NavigationRoutingView {
         switch route {
         case .detail(let postItem):
             CommunityDetailView(postItem: postItem)
+        }
+    }
+    
+    @ViewBuilder
+    func myPage(_ route: NavigationDestination.MyPage) -> some View {
+        switch route {
+        case .myInfo(let profileData):
+            MyPageProfileView(profileData: profileData)
         }
     }
 }

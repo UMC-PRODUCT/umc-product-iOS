@@ -16,6 +16,7 @@ struct HomeView: View {
     
     /// 의존성 주입 컨테이너
     @Environment(\.di) var di
+    /// 에러 핸들러 객체
     @Environment(ErrorHandler.self) var errorHandler
     
     /// 홈 화면의 비즈니스 로직을 담당하는 뷰 모델
@@ -27,22 +28,22 @@ struct HomeView: View {
     /// 캘린더의 현재 표시 중인 월 (기본값: 현재 월)
     @State var currentMonth: Date = .init()
     
-    /// 네비게이션 라우터
+    /// 네비게이션 라우터 (화면 이동 담당)
     private var router: NavigationRouter {
         di.resolve(NavigationRouter.self)
     }
     
     // MARK: - Constants
     
-    /// UI 구성에 사용되는 상수 모음
+    /// UI 구성에 사용되는 상수 모음입니다.
     private enum Constants {
-        /// 최근 공지 표시 개수
+        /// 최근 공지 표시 개수 (최대 5개)
         static let recentCardCount: Int = 5
         
-        /// 최근 공지 섹션 타이틀
+        /// 최근 공지 섹션 타이틀 텍스트
         static let recentUpdateText: String = "최근 공지"
         
-        /// 스크롤 위치 식별자
+        /// 스크롤 위치 식별자 ID
         static let scrollId: String = "scroll"
     }
     
@@ -220,4 +221,5 @@ struct HomeView: View {
         HomeView()
     }
     .environment(DIContainer())
+    .environment(ErrorHandler())
 }

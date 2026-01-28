@@ -8,11 +8,14 @@
 import Foundation
 import SwiftUI
 
-/// 네비게이션 타이틀 수정자
+/// 네비게이션 바의 타이틀과 표시 모드를 설정하는 커스텀 ViewModifier입니다.
+///
+/// `Navititle` 열거형을 통해 앱 내에서 사용되는 타이틀을 중앙 관리합니다.
 struct NavigationModifier: ViewModifier {
     let naviTitle: Navititle
     let displayMode: NavigationBarItem.TitleDisplayMode
 
+    /// 앱 전체에서 사용되는 네비게이션 타이틀 목록 정의
     enum Navititle: String {
         case signUp = "회원가입"
         case community = "커뮤니티"
@@ -23,6 +26,8 @@ struct NavigationModifier: ViewModifier {
         case challenger = "초대할 챌린저 추가"
         case searchChallenger = "챌린저 검색"
         case registration = "일정 추가"
+        case myProfile = "프로필"
+        case myPage = "마이 페이지"
     }
 
     func body(content: Content) -> some View {
@@ -33,6 +38,12 @@ struct NavigationModifier: ViewModifier {
 }
 
 extension View {
+    /// 네비게이션 타이틀과 디스플레이 모드를 간편하게 설정하는 메서드입니다.
+    ///
+    /// - Parameters:
+    ///   - naviTitle: 미리 정의된 `Navititle` 열거형 값
+    ///   - displayMode: 타이틀 표시 모드 (.inline, .large 등)
+    /// - Returns: NavigationModifier가 적용된 View
     func navigation(naviTitle: NavigationModifier.Navititle, displayMode: NavigationBarItem.TitleDisplayMode) -> some View {
         modifier(NavigationModifier(naviTitle: naviTitle, displayMode: displayMode))
     }

@@ -17,7 +17,7 @@ struct SearchChallengerView: View {
     // MARK: - Properties
     
     /// 상위 뷰와 공유되는 선택된 챌린저 리스트 바인딩
-    @Binding var selectedChallengers: [Participant]
+    @Binding var selectedChallengers: [ChallengerInfo]
     
     /// 검색 화면의 상태 및 로직을 관리하는 뷰 모델
     @State var viewModel: SearchChallengerViewModel
@@ -26,7 +26,7 @@ struct SearchChallengerView: View {
     
     /// 초기화 메서드
     /// - Parameter selectedChallengers: 초기 선택된 챌린저 목록 바인딩
-    init(selectedChallengers: Binding<[Participant]>) {
+    init(selectedChallengers: Binding<[ChallengerInfo]>) {
         self._selectedChallengers = selectedChallengers
         self._viewModel = .init(initialValue: .init())
     }
@@ -80,17 +80,20 @@ struct SearchChallengerView: View {
     // MARK: - Computed Properties
     
     /// 검색어에 따라 필터링된 챌린저 목록
-    private var filteredChallengers: [Participant] {
+    ///
+    /// 검색어(searchText)가 비어있으면 전체 목록을 반환합니다.
+    private var filteredChallengers: [ChallengerInfo] {
         if viewModel.searchText.isEmpty {
             return viewModel.allChallengers
         }
         
+        // 검색어가 포함된 챌린저만 필터링 (대소문자 무시)
         return viewModel.allChallengers.filter { participant in
-            participant.name.localizedCaseInsensitiveContains(viewModel.searchText) ||
-            participant.nickname.localizedCaseInsensitiveContains(viewModel.searchText) ||
-            participant.schoolName.localizedCaseInsensitiveContains(viewModel.searchText) ||
-            participant.part.name.localizedCaseInsensitiveContains(viewModel.searchText) ||
-            "\(participant.gen)".contains(viewModel.searchText)
+            participant.name.localizedCaseInsensitiveContains(viewModel.searchText) ||       // 이름 검색
+            participant.nickname.localizedCaseInsensitiveContains(viewModel.searchText) ||   // 닉네임 검색
+            participant.schoolName.localizedCaseInsensitiveContains(viewModel.searchText) || // 학교명 검색
+            participant.part.name.localizedCaseInsensitiveContains(viewModel.searchText) ||  // 파트명 검색
+            "\(participant.gen)".contains(viewModel.searchText)                              // 기수 검색
         }
     }
     
@@ -106,7 +109,7 @@ struct SearchChallengerView: View {
     // MARK: - Actions
     
     /// 챌린저 선택/해제 토글
-    private func toggleSelection(participant: Participant) {
+    private func toggleSelection(participant: ChallengerInfo) {
         if viewModel.selectedChallengerIds.contains(participant.id) {
             viewModel.selectedChallengerIds.remove(participant.id)
         } else {
@@ -140,8 +143,4 @@ struct SearchChallengerView: View {
             )
         }
     }
-}
-
-#Preview {
-    SearchChallengerView(selectedChallengers: .constant([]))
 }

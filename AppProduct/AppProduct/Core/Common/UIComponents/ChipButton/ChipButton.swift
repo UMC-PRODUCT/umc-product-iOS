@@ -13,6 +13,7 @@ struct ChipButton: View {
 
     private let title: String
     private let isSelected: Bool
+    private let trailingIcon: Bool?
     private let action: () -> Void
 
     @Environment(\.chipButtonSize) private var size
@@ -23,11 +24,10 @@ struct ChipButton: View {
     /// ChipButton 생성자
     /// - Parameters:
     ///   - title: 버튼 텍스트
-    ///   - isSelected: 선택했을 때
-    ///   - action: 선택 후 액션
-    init(_ title: String, isSelected: Bool, action: @escaping () -> Void) {
+    init(_ title: String, isSelected: Bool, trailingIcon: Bool? = nil, action: @escaping () -> Void) {
         self.title = title
         self.isSelected = isSelected
+        self.trailingIcon = trailingIcon
         self.action = action
     }
 
@@ -39,7 +39,8 @@ struct ChipButton: View {
                 title: title,
                 size: size,
                 style: style,
-                isSelected: isSelected
+                isSelected: isSelected,
+                trailingIcon: trailingIcon
             )
             .equatable()
         }
@@ -53,25 +54,33 @@ private struct ChipButtonContent: View, Equatable {
     let size: ChipButtonSize
     let style: ChipButtonStyle
     let isSelected: Bool
-
+    let trailingIcon: Bool?
+    
     static func == (lhs: ChipButtonContent, rhs: ChipButtonContent) -> Bool {
         lhs.title == rhs.title &&
-            lhs.size == rhs.size &&
-            lhs.style == rhs.style &&
-            lhs.isSelected == rhs.isSelected
+        lhs.size == rhs.size &&
+        lhs.style == rhs.style &&
+        lhs.isSelected == rhs.isSelected &&
+        lhs.trailingIcon == rhs.trailingIcon
     }
 
     var body: some View {
-        Text(title)
-            .foregroundStyle(style.textColor(isSelected: isSelected))
-            .font(size.font)
-            .padding(.horizontal, size.horizonPadding)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(style.bgColor(isSelected: isSelected))
-            )
-            .glassEffect(.clear.interactive(), in: Capsule())
+        HStack(spacing: 4) {
+            Text(title)
+            if trailingIcon != nil && trailingIcon == true {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10))
+            }
+        }
+        .foregroundStyle(style.textColor(isSelected: isSelected))
+        .font(size.font)
+        .padding(.horizontal, size.horizonPadding)
+        .padding(.vertical, 8)
+        .background(
+            Capsule()
+                .fill(style.bgColor(isSelected: isSelected))
+        )
+        .glassEffect(.clear.interactive(), in: Capsule())
     }
 }
 
@@ -107,4 +116,58 @@ extension ChipButton: AnyChipButton {}
         }
     }
     return Demo()
+}
+
+#Preview("ChipButton(chevron)") {
+    struct Demo: View {
+        @State private var selected = false
+        
+        var body: some View {
+            HStack(spacing: 8) {
+                ChipButton("small", isSelected: selected, trailingIcon: true) {
+                    selected.toggle()
+                }
+                .buttonSize(.small)
+                
+                ChipButton("medium", isSelected: selected, trailingIcon: true) {
+                    selected.toggle()
+                }
+                .buttonSize(.medium)
+                
+                ChipButton("large", isSelected: selected, trailingIcon: true) {
+                    selected.toggle()
+                }
+                .buttonSize(.large)
+            }
+        }
+    }
+    return Demo()
+}
+
+#Preview("ChipButton(chevron)") {
+    struct Demo: View {
+            @State private var selected = false
+
+            var body: some View {
+                VStack(spacing: 15) {
+                    HStack(spacing: 8) {
+                        ChipButton("small", isSelected: selected, trailingIcon: true) {
+                            selected.toggle()
+                        }
+                        .buttonSize(.small)
+                        
+                        ChipButton("medium", isSelected: selected, trailingIcon: true) {
+                            selected.toggle()
+                        }
+                        .buttonSize(.medium)
+                        
+                        ChipButton("large", isSelected: selected, trailingIcon: true) {
+                            selected.toggle()
+                        }
+                        .buttonSize(.large)
+                    }
+                }
+            }
+        }
+        return Demo()
 }
