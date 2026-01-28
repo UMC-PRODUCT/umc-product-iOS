@@ -112,7 +112,20 @@ final class ChallengerAttendanceViewModel {
             ))
         }
     }
-    
+
+    /// 출석 사유 제출
+    ///
+    /// GPS 출석이 어려운 경우 사유를 제출합니다.
+    /// - Parameters:
+    ///   - userId: 사용자 ID
+    ///   - session: 출석 대상 세션
+    ///   - reason: 출석 사유
+    @MainActor
+    func submitAttendanceReason(userId: UserID, session: Session, reason: String) async {
+        // TODO: UseCase 연동 시 구현
+        print("사유 제출: \(reason) for session: \(session.id)")
+    }
+
     func isAttendanceAvailable(for session: Session) -> Bool {
         session.canRequestAttendance(
             timeWindow: currentTimeWindow(for: session.info),
