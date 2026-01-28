@@ -44,6 +44,12 @@ struct CommunityFameView: View {
                 weeks: vm.availableWeeks,
                 selection: $vm.selectedWeek
             )
+            ToolBarCollection.CommunityFilter(
+                selectedUniversity: $vm.selectedUniversity,
+                selectedPart: $vm.selectedPart,
+                universities: vm.availableUniversities,
+                parts: vm.availableParts
+            )
         }
     }
 

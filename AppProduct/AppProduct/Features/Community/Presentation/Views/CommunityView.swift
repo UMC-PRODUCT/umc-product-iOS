@@ -32,12 +32,12 @@ struct CommunityView: View {
             switch vm.selectedMenu {
             case .all, .question, .party:
                 contentSection
+                    .searchable(text: $vm.searchText)
             case .fame:
                 CommunityFameView()
             }
         }
         .navigation(naviTitle: .community, displayMode: .inline)
-        .searchable(text: $vm.searchText)
         .searchToolbarBehavior(.minimize)
         .toolbar {
             ToolBarCollection.CommunityCenterMenu(
