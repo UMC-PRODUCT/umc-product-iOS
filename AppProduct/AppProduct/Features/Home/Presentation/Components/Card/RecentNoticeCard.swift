@@ -15,9 +15,6 @@ struct RecentNoticeCard: View, Equatable {
 
     // MARK: - Properties
     
-    /// 현재 화면의 컬러 스킴 (라이트/다크 모드)
-    @Environment(\.colorScheme) var color
-    
     /// 표시할 최근 공지 데이터
     let data: RecentNoticeData
     
@@ -53,7 +50,7 @@ struct RecentNoticeCard: View, Equatable {
         .padding(Constants.padding)
         .background {
             RoundedRectangle(cornerRadius: Constants.cornerRadius)
-                .fill(cardColor)
+                .fill(.white)
                 .glass()
         }
     }
@@ -75,15 +72,6 @@ struct RecentNoticeCard: View, Equatable {
     private var createdAt: some View {
         Text(data.createdAt.timeAgoText)
             .appFont(.footnote, color: .grey500)
-    }
-    
-    /// 카드 배경 색상 (다크모드/라이트모드 대응)
-    private var cardColor: Color {
-        if color == .dark {
-            return .grey100
-        } else {
-            return .white
-        }
     }
 }
 

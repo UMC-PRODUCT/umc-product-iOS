@@ -39,6 +39,6 @@ struct LoadingView: View {
                 .frame(maxWidth: .infinity)
         })
         .padding(20)
-        .glassEffect(.regular, in: .containerRelative)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
 }

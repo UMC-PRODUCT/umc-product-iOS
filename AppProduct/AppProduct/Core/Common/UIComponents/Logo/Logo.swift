@@ -9,7 +9,6 @@ import SwiftUI
 
 struct Logo: View {
     // MARK: - Property
-    @Environment(\.colorScheme) var mode
     
     let logoSize: CGFloat
     
@@ -25,7 +24,7 @@ struct Logo: View {
     // MARK: - Body
     var body: some View {
         VStack(spacing: Constants.logoVspacing, content: {
-            Image(logoImage)
+            Image(.logoLight)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: self.logoSize)
@@ -33,14 +32,6 @@ struct Logo: View {
             Text(Constants.logoSubtitle)
                 .appFont(.title1, color: .grey900)
         })
-    }
-    
-    private var logoImage: ImageResource {
-        if mode == .dark {
-            return .logoDark
-        } else {
-            return .logoLight
-        }
     }
 }
 

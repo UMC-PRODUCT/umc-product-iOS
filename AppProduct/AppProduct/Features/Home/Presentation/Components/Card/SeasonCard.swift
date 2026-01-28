@@ -20,9 +20,6 @@ struct SeasonCard: View, Equatable {
     /// 애니메이션 네임스페이스
     @Namespace var namespace
     
-    /// 현재 화면의 컬러 스킴 (라이트/다크 모드)
-    @Environment(\.colorScheme) var color
-    
     // MARK: - Equatable
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.type == rhs.type
@@ -61,7 +58,7 @@ struct SeasonCard: View, Equatable {
         ZStack(alignment: .leading) {
             // 배경 컨테이너 (Glass 효과 적용)
             ContainerRelativeShape()
-                .fill(color == .light ? .grey000 : .grey100)
+                .fill(.white)
                 .frame(height: Constants.cardSize.height, alignment: .leading)
                 .containerShape(.rect(cornerRadius: Constants.concentricRadius))
                 .glassEffect(.regular, in: .rect(cornerRadius: Constants.concentricRadius))
@@ -72,6 +69,7 @@ struct SeasonCard: View, Equatable {
                 Spacer()
                 bottomContents
             })
+
             .padding(Constants.mainPadding)
         }
     }
@@ -118,17 +116,9 @@ struct SeasonCard: View, Equatable {
             .padding(Constants.bottomSpacingValue)
             .background {
                 Circle()
-                    .fill(bgColor)
+                    .fill(.white)
                     .glass()
             }
-    }
-    
-    private var bgColor: Color {
-        if color == .dark {
-            return .grey600
-        } else {
-            return .white
-        }
     }
     
     // MARK: - Bottom
@@ -158,6 +148,5 @@ struct SeasonCard: View, Equatable {
 #Preview(traits: .sizeThatFitsLayout) {
     VStack {
         SeasonCard(type: .gens([10,11,12]))
-        SeasonCard(type: .days(300))
     }
 }
