@@ -20,24 +20,39 @@ struct AttendanceReasonSheet: View {
     let onSubmit: (String) async -> Void
     
     private enum Constants {
-        static let defaultSheetFraction: CGFloat = 300
+        static let defaultSheetFraction: CGFloat = 200
     }
 
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            TitleLabel(title: "지각 사유 입력", isRequired: true)
-            reasonTextField
-            descriptionText
+        NavigationStack {
+            Form {
+                Section {
+                    reasonTextField
+                } header: {
+                    Text("지각 사유 입력")
+                        .appFont(.bodyEmphasis, color: .black)
+                } footer: {
+                    descriptionText
+                }
+            }
+            .toolbar {
+                ToolBarCollection.CancelBtn(action: {})
+                
+                ToolBarCollection.ConfirmBtn(action: {
+                    Task {
+                        await onSubmit(reason)
+                        dismiss()
+                    }
+                })
+            }
+            .scrollContentBackground(.hidden)
+            .scrollDisabled(true)
+            .presentationDetents([.height(Constants.defaultSheetFraction)])
+            .presentationDragIndicator(.visible)
+            .interactiveDismissDisabled()
         }
-        .safeAreaInset(edge: .bottom) {
-            buttonGroup
-        }
-        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        .presentationDetents([.height(Constants.defaultSheetFraction)])
-        .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled()
     }
 
     // MARK: - View Components
@@ -49,20 +64,16 @@ struct AttendanceReasonSheet: View {
                 text: $reason,
                 prompt: Text("길이 막혀요..").foregroundStyle(.grey500)
             )
-            .foregroundStyle(.grey900)
-            .padding(DefaultConstant.defaultTextFieldPadding)
-            .background(.white, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
             .submitLabel(.done)
         }
     }
 
     private var descriptionText: some View {
         Text("위치 인증이 어려운 경우 사유를 작성하여 출석을 요청할 수 있습니다. (예: GPS 오류, 지각, 개인 사정 등)")
-            .appFont(.footnote, weight: .regular, color: .grey500)
+            .appFont(.footnote, weight: .regular, color: .gray)
             .frame(maxWidth: .infinity, alignment: .leading)
             .multilineTextAlignment(.leading)
-            .padding(.bottom, DefaultConstant.defaultSafeBtnPadding)
-            .padding(.horizontal, DefaultConstant.defaultSafeBtnPadding)
+            .truncationMode(.tail)
     }
 
     private var buttonGroup: some View {
@@ -81,6 +92,7 @@ struct AttendanceReasonSheet: View {
             .buttonStyle(.primary)
             .disabled(reason.trimmingCharacters(in: .whitespaces).isEmpty)
         }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
 }
 
@@ -89,8 +101,10 @@ struct AttendanceReasonSheet: View {
 #Preview {
     Text("Preview Trigger")
         .sheet(isPresented: .constant(true)) {
-            AttendanceReasonSheet { reason in
-                print("Submitted reason: \(reason)")
+            NavigationStack {
+                AttendanceReasonSheet { reason in
+                    print("Submitted reason: \(reason)")
+                }
             }
         }
 }
