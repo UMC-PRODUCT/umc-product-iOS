@@ -232,18 +232,16 @@ struct ToolBarCollection {
         var body: some ToolbarContent {
             ToolbarItem(placement: .principal, content: {
                 Menu {
-                    Section {
-                        ForEach(items) { item in
-                            Button(action: {
-                                withAnimation(.snappy) {
-                                    selection = item
-                                }
-                            }) {
-                                if let itemIcon = itemIcon {
-                                    Label(itemLabel(item), systemImage: itemIcon(item))
-                                } else {
-                                    Text(itemLabel(item))
-                                }
+                    ForEach(items) { item in
+                        Button(action: {
+                            withAnimation(.snappy) {
+                                selection = item
+                            }
+                        }) {
+                            if let itemIcon = itemIcon {
+                                Label(itemLabel(item), systemImage: itemIcon(item))
+                            } else {
+                                Text(itemLabel(item))
                             }
                         }
                     }
@@ -259,6 +257,33 @@ struct ToolBarCollection {
                     .glassEffect(.regular)
                 }
             })
+        }
+    }
+    
+    /// 커뮤니티 주차별 필터
+    struct CommunityWeekFilter: ToolbarContent {
+        let weeks: [Int]
+        @Binding var selection: Int
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarLeading) {
+                Menu {
+                    weekPicker
+                } label: {
+                    Text("\(selection)주차")
+                        .appFont(.subheadline, weight: .medium)
+                }
+            }
+        }
+        
+        private var weekPicker: some View {
+            Picker("주차 선택", selection: $selection) {
+                ForEach(weeks, id: \.self) { week in
+                    Text("\(week)주차")
+                        .tag(week)
+                }
+            }
+            .pickerStyle(.inline)
         }
     }
 

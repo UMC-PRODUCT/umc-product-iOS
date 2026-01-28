@@ -15,9 +15,10 @@ class CommunityFameViewModel {
 
     var fameItems: Loadable<[CommunityFameItemModel]> = .loaded(mockFameItems)
 
-    var totalWeeks: Int {
-        guard case .loaded(let items) = fameItems else { return 1 }
-        return items.map { $0.week }.max() ?? 1
+    var availableWeeks: [Int] {
+        guard case .loaded(let items) = fameItems else { return [1] }
+        let weeks = Set(items.map { $0.week })
+        return weeks.sorted()
     }
 
     var groupedByUniversity: [(university: String, items: [CommunityFameItemModel])] {

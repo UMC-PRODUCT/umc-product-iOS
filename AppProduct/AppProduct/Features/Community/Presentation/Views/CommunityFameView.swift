@@ -39,8 +39,11 @@ struct CommunityFameView: View {
                 Color.clear
             }
         }
-        .safeAreaBar(edge: .top) {
-            weekSection
+        .toolbar {
+            ToolBarCollection.CommunityWeekFilter(
+                weeks: vm.availableWeeks,
+                selection: $vm.selectedWeek
+            )
         }
     }
 
@@ -49,7 +52,7 @@ struct CommunityFameView: View {
     private var weekSection: some View {
         ScrollView(.horizontal) {
             HStack(spacing: DefaultSpacing.spacing8) {
-                ForEach(1 ... vm.totalWeeks, id: \.self) { week in
+                ForEach(vm.availableWeeks, id: \.self) { week in
                     ChipButton("\(week)주차", isSelected: vm.selectedWeek == week) {
                         vm.selectWeek(week)
                     }
