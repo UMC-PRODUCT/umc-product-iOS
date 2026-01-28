@@ -8,7 +8,7 @@
 import SwiftUI
                                                                                                                                                     
 struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
+    var spacing: CGFloat = DefaultSpacing.spacing8
     
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let result = arrangeSubviews(proposal: proposal, subviews: subviews)
@@ -29,19 +29,19 @@ struct FlowLayout: Layout {
     private func arrangeSubviews(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
         let maxWidth = proposal.width ?? .infinity
         var positions: [CGPoint] = []
-        var currentX: CGFloat = 0
-        var currentY: CGFloat = 0
-        var lineHeight: CGFloat = 0
-        var totalHeight: CGFloat = 0
-        var totalWidth: CGFloat = 0
+        var currentX: CGFloat = .zero
+        var currentY: CGFloat = .zero
+        var lineHeight: CGFloat = .zero
+        var totalHeight: CGFloat = .zero
+        var totalWidth: CGFloat = .zero
         
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
             
-            if currentX + size.width > maxWidth && currentX > 0 {
-                currentX = 0
+            if currentX + size.width > maxWidth && currentX > .zero {
+                currentX = .zero
                 currentY += lineHeight + spacing
-                lineHeight = 0
+                lineHeight = .zero
             }
             
             positions.append(CGPoint(x: currentX, y: currentY))

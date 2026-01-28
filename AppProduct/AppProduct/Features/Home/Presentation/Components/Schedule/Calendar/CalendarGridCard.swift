@@ -21,9 +21,6 @@ struct CalendarGridCard: View, Equatable {
     /// 현재 표시되고 있는 월(Month) 바인딩
     @Binding var month: Date
     
-    /// 현재 화면의 컬러 스킴 (라이트/다크 모드)
-    @Environment(\.colorScheme) var color
-    
     /// 일정이 존재하는 날짜들의 집합
     let scheduledDates: Set<Date>
     
@@ -81,17 +78,8 @@ struct CalendarGridCard: View, Equatable {
         .padding(Constants.padding)
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .fill(bgColor)
+                .fill(.white)
                 .glass()
-        }
-    }
-    
-    /// 배경 색상 (다크모드/라이트모드 대응)
-    private var bgColor: Color {
-        if color == .dark {
-            return .grey100
-        } else {
-            return .white
         }
     }
     

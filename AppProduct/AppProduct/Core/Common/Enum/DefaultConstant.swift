@@ -39,7 +39,7 @@ enum DefaultConstant {
     static let defaultCornerRadius: CGFloat = 30
     
     /// 리스트 카드의 기본 모서리 둥글기.
-    static let defaultListCornerRadius: CGFloat = 24
+    static let defaultListCornerRadius: CGFloat = 40
 
     /// 콘텐츠 영역 하단 마진.
     static let defaultContentBottomMargins: CGFloat = 40
@@ -62,7 +62,7 @@ enum DefaultConstant {
     static let defaultTopCapsuleSpacing: CGFloat = 10
 
     /// 리슽 카드 기본 패딩.
-    static let defaultListPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 16, trailing: 16)
+    static let defaultListPadding: EdgeInsets = .init(top: 24, leading: 16, bottom: 24, trailing: 16)
     
     /// 기본 애니메이션 지속 시간 (초).
     static let animationTime: TimeInterval = 0.3
