@@ -26,10 +26,12 @@ struct PrimaryButtonStyle: ButtonStyle {
             .appFont(.body, color: .grey000)
             .frame(maxWidth: .infinity)
             .frame(height: ButtonConstants.height)
-            .background(isEnabled
-                        ? (configuration.isPressed ? Color.indigo600 : Color.indigo500) : Color.grey400,
-                        in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
+            .background(
+                isEnabled
+                    ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
+                    : Color.grey400
+            )
+            .clipShape(RoundedRectangle(cornerRadius: ButtonConstants.cornerRadius))
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
@@ -82,10 +84,12 @@ struct DestructiveButtonStyle: ButtonStyle {
             .foregroundStyle(Color.grey000)
             .frame(maxWidth: .infinity)
             .frame(height: ButtonConstants.height)
-            .background(isEnabled
-                        ? (configuration.isPressed ? Color.red.opacity(0.7) : Color.red.opacity(0.9)) : Color.grey400,
-                        in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
+            .background(
+                isEnabled
+                    ? (configuration.isPressed ? Color.red700 : Color.red500)
+                    : Color.grey400
+            )
+            .clipShape(RoundedRectangle(cornerRadius: ButtonConstants.cornerRadius))
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }

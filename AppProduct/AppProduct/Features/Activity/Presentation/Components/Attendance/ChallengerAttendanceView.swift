@@ -14,7 +14,6 @@ struct ChallengerAttendanceView: View, Equatable {
     @State private var mapViewModel: BaseMapViewModel
     @Bindable private var attendanceViewModel: ChallengerAttendanceViewModel
     @Namespace private var attendanceNamespace
-    @State private var showReasonSheet: Bool = false
 
     private let userId: UserID
     private let container: DIContainer
@@ -109,23 +108,13 @@ struct ChallengerAttendanceView: View, Equatable {
 
     private var lateReasonButton: some View {
         Button {
-            showReasonSheet = true
+            // 사유 제출 Sheet 활성화
         } label: {
             Text("위치 인증이 안 되나요? 사유 제출하기")
                 .appFont(.caption1, color: .gray)
                 .underline()
         }
         .buttonStyle(.plain)
-        .disabled(!attendanceViewModel.isAttendanceAvailable(for: session))
-        .sheet(isPresented: $showReasonSheet) {
-            AttendanceReasonSheet { reason in
-                await attendanceViewModel.submitAttendanceReason(
-                    userId: userId,
-                    session: session,
-                    reason: reason
-                )
-            }
-        }
     }
 
     // MARK: - Haptic Feedback
