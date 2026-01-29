@@ -13,8 +13,9 @@ struct ChipButton: View {
 
     private let title: String
     private let isSelected: Bool
+    private let leadingIcon: String?
     private let trailingIcon: Bool?
-    private let action: () -> Void
+    private let action: (() -> Void)?
 
     @Environment(\.chipButtonSize) private var size
     @Environment(\.chipButtonStyle) private var style
@@ -24,9 +25,19 @@ struct ChipButton: View {
     /// ChipButton 생성자
     /// - Parameters:
     ///   - title: 버튼 텍스트
-    init(_ title: String, isSelected: Bool, trailingIcon: Bool? = nil, action: @escaping () -> Void) {
+    ///   - isSelected: 선택 상태
+    ///   - trailingIcon: 트레일링 아이콘 표시 여부
+    ///   - action: 탭 액션 (nil이면 읽기 전용 태그로 동작)
+    init(
+        _ title: String,
+        isSelected: Bool,
+        leadingIcon: String? = nil,
+        trailingIcon: Bool? = nil,
+        action: (() -> Void)? = nil
+    ) {
         self.title = title
         self.isSelected = isSelected
+        self.leadingIcon = leadingIcon
         self.trailingIcon = trailingIcon
         self.action = action
     }
@@ -34,13 +45,28 @@ struct ChipButton: View {
     // MARK: - Body
 
     var body: some View {
-        Button(action: action) {
+        if let action = action {
+            Button(action: action) {
+                ChipButtonContent(
+                    title: title,
+                    size: size,
+                    style: style,
+                    isSelected: isSelected,
+                    leadingIcon: leadingIcon,
+                    trailingIcon: trailingIcon,
+                    isInteractive: true
+                )
+                .equatable()
+            }
+        } else {
             ChipButtonContent(
                 title: title,
                 size: size,
                 style: style,
                 isSelected: isSelected,
-                trailingIcon: trailingIcon
+                leadingIcon: leadingIcon,
+                trailingIcon: trailingIcon,
+                isInteractive: false
             )
             .equatable()
         }
@@ -54,7 +80,9 @@ private struct ChipButtonContent: View, Equatable {
     let size: ChipButtonSize
     let style: ChipButtonStyle
     let isSelected: Bool
+    let leadingIcon: String?
     let trailingIcon: Bool?
+    let isInteractive: Bool
     
     // MARK: - Constant
     fileprivate enum Constants {
@@ -67,13 +95,15 @@ private struct ChipButtonContent: View, Equatable {
         lhs.size == rhs.size &&
         lhs.style == rhs.style &&
         lhs.isSelected == rhs.isSelected &&
-        lhs.trailingIcon == rhs.trailingIcon
+        lhs.leadingIcon == rhs.leadingIcon &&
+        lhs.trailingIcon == rhs.trailingIcon &&
+        lhs.isInteractive == rhs.isInteractive
     }
 
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing4) {
             Text(title)
-            if trailingIcon != nil && trailingIcon == true {
+            if trailingIcon == true {
                 Image(systemName: "chevron.down")
                     .font(.system(size: Constants.chevronSize))
             }
@@ -86,7 +116,10 @@ private struct ChipButtonContent: View, Equatable {
             Capsule()
                 .fill(style.bgColor(isSelected: isSelected))
         )
-        .glassEffect(.clear.interactive(), in: Capsule())
+        .glassEffect(
+            isInteractive ? .clear.interactive() : .identity,
+            in: Capsule()
+        )
     }
 }
 
