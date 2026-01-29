@@ -197,7 +197,7 @@ fileprivate struct LinkSubmissionView: View, Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.linkText == rhs.linkText
     }
-    
+
     // MARK: - Constants
 
     private enum Constants {
@@ -207,15 +207,28 @@ fileprivate struct LinkSubmissionView: View, Equatable {
         static let buttonPadding: CGFloat = 10
     }
 
+    // MARK: - Computed Property
+
+    private var hasError: Bool {
+        !linkText.isEmpty && !linkText.isValidHTTPURL
+    }
+
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
-            linkInput
-            submitButton
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            HStack(spacing: DefaultSpacing.spacing12) {
+                linkInput
+                submitButton
+            }
+
+            if hasError {
+                Text("올바른 URL 형식이 아닙니다")
+                    .appFont(.footnote, color: .red)
+            }
         }
     }
-    
+
     private var linkInput: some View {
         TextField("https://...", text: Binding(
             get: { linkText },
@@ -225,10 +238,12 @@ fileprivate struct LinkSubmissionView: View, Equatable {
         .padding(DefaultConstant.defaultTextFieldPadding)
         .background(
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .strokeBorder(Color.grey300, lineWidth: Constants.borderWidth)
+                .strokeBorder(
+                    hasError ? Color.red : Color.grey300,
+                    lineWidth: Constants.borderWidth)
         )
     }
-    
+
     private var submitButton: some View {
         Button {
             onSubmit()
@@ -239,6 +254,7 @@ fileprivate struct LinkSubmissionView: View, Equatable {
         }
         .buttonStyle(.glassProminent)
         .tint(.indigo500)
+        .disabled(!linkText.isValidHTTPURL)
     }
 }
 

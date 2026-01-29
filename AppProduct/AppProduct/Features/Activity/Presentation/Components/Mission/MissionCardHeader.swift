@@ -119,7 +119,7 @@ fileprivate struct InfoBadge: View, Equatable {
 
     var body: some View {
         Text(text)
-            .appFont(.caption1, weight: .bold, color: foregroundColor)
+            .appFont(.subheadline, weight: .bold, color: foregroundColor)
             .padding(DefaultConstant.badgePadding)
             .background(backgroundColor)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
