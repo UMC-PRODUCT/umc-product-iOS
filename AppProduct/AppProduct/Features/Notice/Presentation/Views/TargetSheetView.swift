@@ -16,6 +16,14 @@ struct TargetSheetView: View {
         static let chipSpacing: CGFloat = 8
     }
     
+    private var navigationTitle: NavigationModifier.Navititle {
+        switch sheetType {
+        case .branch: return .branchSelection
+        case .school: return .schoolSelection
+        case .part: return .partSelection
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -25,8 +33,7 @@ struct TargetSheetView: View {
                 .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
                 .padding(.top, 16)
             }
-            .navigationTitle(sheetType.title)
-            .navigationBarTitleDisplayMode(.inline)
+            .navigation(naviTitle: navigationTitle, displayMode: .inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm, action: {

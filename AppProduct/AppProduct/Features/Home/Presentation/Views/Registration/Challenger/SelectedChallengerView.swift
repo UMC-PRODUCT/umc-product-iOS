@@ -27,9 +27,8 @@ struct SelectedChallengerView: View {
     var body: some View {
         NavigationStack {
             content
-                .navigationTitle("초대할 챌린저")
+                .navigation(naviTitle: .participant, displayMode: .inline)
                 .navigationSubtitle("총 \(challenger.count)명")
-                .navigationBarTitleDisplayMode(.inline)
                 .toolbar(content: {
                     // 취소 버튼 (현재 기능 없음)
                     ToolBarCollection.CancelBtn(action: {})
