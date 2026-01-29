@@ -7,19 +7,78 @@
 
 import SwiftUI
 
-// MARK: - MissionCard
+// MARK: - MissionCard (Container)
 
 /// 미션 카드 메인 컴포넌트 (헤더 + 확장 콘텐츠)
 struct MissionCard: View {
 
     // MARK: - Property
 
-    let model: MissionCardModel
-    var onSubmit: (MissionSubmissionType, String?) -> Void
+    private let model: MissionCardModel
+    private var onSubmit: (MissionSubmissionType, String?) -> Void
 
     @State private var isExpanded: Bool = false
     @State private var submissionType: MissionSubmissionType = .link
     @State private var linkText: String = ""
+
+    // MARK: - Initializer
+
+    init(
+        model: MissionCardModel,
+        onSubmit: @escaping (MissionSubmissionType, String?) -> Void
+    ) {
+        self.model = model
+        self.onSubmit = onSubmit
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        MissionCardPresenter(
+            model: model,
+            isExpanded: isExpanded,
+            submissionType: submissionType,
+            linkText: linkText,
+            onToggleExpanded: {
+                withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
+                    isExpanded.toggle()
+                }
+            },
+            onSubmissionTypeChanged: { newType in
+                submissionType = newType
+            },
+            onLinkTextChanged: { newText in
+                linkText = newText
+            },
+            onSubmit: onSubmit
+        )
+        .equatable()
+    }
+}
+
+// MARK: - MissionCardPresenter
+
+fileprivate struct MissionCardPresenter: View, Equatable {
+
+    // MARK: - Property
+
+    let model: MissionCardModel
+    let isExpanded: Bool
+    let submissionType: MissionSubmissionType
+    let linkText: String
+    let onToggleExpanded: () -> Void
+    let onSubmissionTypeChanged: (MissionSubmissionType) -> Void
+    let onLinkTextChanged: (String) -> Void
+    let onSubmit: (MissionSubmissionType, String?) -> Void
+
+    // MARK: - Equatable
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.model == rhs.model &&
+        lhs.isExpanded == rhs.isExpanded &&
+        lhs.submissionType == rhs.submissionType &&
+        lhs.linkText == rhs.linkText
+    }
 
     // MARK: - Body
 
@@ -27,20 +86,19 @@ struct MissionCard: View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             MissionCardHeader(
                 model: model,
-                isExpanded: isExpanded
-            ) {
-                withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
-                    isExpanded.toggle()
-                }
-            }
+                isExpanded: isExpanded,
+                onToggle: onToggleExpanded
+            )
 
             if isExpanded {
                 Divider()
 
                 MissionCardContent(
                     missionTitle: model.missionTitle,
-                    submissionType: $submissionType,
-                    linkText: $linkText,
+                    submissionType: submissionType,
+                    linkText: linkText,
+                    onSubmissionTypeChanged: onSubmissionTypeChanged,
+                    onLinkTextChanged: onLinkTextChanged,
                     onSubmit: onSubmit
                 )
                 .transition(.asymmetric(
@@ -49,17 +107,18 @@ struct MissionCard: View {
             }
         }
         .padding(DefaultConstant.defaultListPadding)
-        .background(Color.grey000)
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
         .containerShape(.rect(cornerRadius: DefaultConstant.cornerRadius))
-        .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        .animation(.easeInOut(duration: DefaultConstant.animationTime), value: isExpanded)
+        .animation(
+            .easeInOut(duration: DefaultConstant.animationTime),
+            value: isExpanded)
+        .glass()
     }
 }
 
 // MARK: - Preview
 
-#if DEBUG
 #Preview("MissionCard - All Status") {
     ScrollView {
         VStack(spacing: 20) {
@@ -94,4 +153,3 @@ struct MissionCard: View {
     }
     .padding()
 }
-#endif

@@ -10,21 +10,29 @@ import SwiftUI
 // MARK: - MissionCardContent
 
 /// 미션 카드 확장 콘텐츠 (미션 설명, 제출 타입 선택, 링크 입력/제출 버튼)
-struct MissionCardContent: View {
+struct MissionCardContent: View, Equatable {
 
     // MARK: - Property
 
     let missionTitle: String
-    @Binding var submissionType: MissionSubmissionType
-    @Binding var linkText: String
+    let submissionType: MissionSubmissionType
+    let linkText: String
+    let onSubmissionTypeChanged: (MissionSubmissionType) -> Void
+    let onLinkTextChanged: (String) -> Void
     let onSubmit: (MissionSubmissionType, String?) -> Void
+
+    static func == (lhs: MissionCardContent, rhs: MissionCardContent) -> Bool {
+        lhs.missionTitle == rhs.missionTitle &&
+        lhs.submissionType == rhs.submissionType &&
+        lhs.linkText == rhs.linkText
+    }
 
     // MARK: - Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             Text(missionTitle)
-                .appFont(.calloutEmphasis, color: .black)
+                .appFont(.subheadline, color: .gray)
 
             HStack(spacing: DefaultSpacing.spacing8) {
                 ForEach(MissionSubmissionType.allCases, id: \.hashValue) { type in
@@ -33,7 +41,10 @@ struct MissionCardContent: View {
                         isSelected: submissionType == type,
                         leadingIcon: type.icon
                     ) {
-                        submissionType = type
+                        withAnimation(
+                            .easeInOut(duration: DefaultConstant.animationTime)) {
+                            onSubmissionTypeChanged(type)
+                        }
                     }
                     .buttonSize(.small)
                 }
@@ -41,7 +52,8 @@ struct MissionCardContent: View {
 
             if submissionType == .link {
                 LinkSubmissionView(
-                    linkText: $linkText,
+                    linkText: linkText,
+                    onLinkTextChanged: onLinkTextChanged,
                     onSubmit: { onSubmit(.link, linkText) }
                 )
             } else {
@@ -60,10 +72,11 @@ fileprivate struct LinkSubmissionView: View, Equatable {
 
     // MARK: - Property
 
-    @Binding var linkText: String
+    let linkText: String
+    let onLinkTextChanged: (String) -> Void
     let onSubmit: () -> Void
 
-    static func == (lhs: LinkSubmissionView, rhs: LinkSubmissionView) -> Bool {
+    static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.linkText == rhs.linkText
     }
 
@@ -71,14 +84,17 @@ fileprivate struct LinkSubmissionView: View, Equatable {
 
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
-            TextField("https://...", text: $linkText)
-                .appFont(.footnote, weight: .regular, color: .grey500)
-                .padding(.horizontal, DefaultConstant.defaultTextFieldPadding)
-                .frame(height: 50)
-                .background(
-                    RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                        .strokeBorder(Color.grey300, lineWidth: 1)
-                )
+            TextField("https://...", text: Binding(
+                get: { linkText },
+                set: { onLinkTextChanged($0) }
+            ))
+            .appFont(.footnote, weight: .regular, color: .grey500)
+            .padding(.horizontal, DefaultConstant.defaultTextFieldPadding)
+            .frame(height: 50)
+            .background(
+                RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+                    .strokeBorder(Color.grey300, lineWidth: 1)
+            )
 
             MainButton("제출") {
                 onSubmit()
@@ -99,7 +115,7 @@ private struct CompleteOnlySubmissionView: View, Equatable {
 
     let onSubmit: () -> Void
 
-    static func == (lhs: CompleteOnlySubmissionView, rhs: CompleteOnlySubmissionView) -> Bool {
+    static func == (lhs: Self, rhs: Self) -> Bool {
         true
     }
 
@@ -109,7 +125,6 @@ private struct CompleteOnlySubmissionView: View, Equatable {
         MainButton("제출") {
             onSubmit()
         }
-        .buttonSize(.small)
         .buttonStyle(.primary)
     }
 }
@@ -128,11 +143,14 @@ private struct CompleteOnlySubmissionView: View, Equatable {
 
                 MissionCardContent(
                     missionTitle: MissionPreviewData.singleMission.missionTitle,
-                    submissionType: $submissionType,
-                    linkText: $linkText
-                ) { type, link in
-                    print("제출: \(type) - \(link ?? "없음")")
-                }
+                    submissionType: submissionType,
+                    linkText: linkText,
+                    onSubmissionTypeChanged: { submissionType = $0 },
+                    onLinkTextChanged: { linkText = $0 },
+                    onSubmit: { type, link in
+                        print("제출: \(type) - \(link ?? "없음")")
+                    }
+                )
                 .padding()
                 .background(Color.grey000)
                 .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))

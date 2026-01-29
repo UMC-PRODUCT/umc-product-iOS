@@ -10,19 +10,34 @@ import SwiftUI
 // MARK: - MissionCardHeader
 
 /// 미션 카드 헤더 (주차 태그, 플랫폼 태그, 제목, 상태 뱃지, 펼치기 버튼)
-struct MissionCardHeader: View {
+struct MissionCardHeader: View, Equatable {
 
     // MARK: - Property
 
-    let model: MissionCardModel
-    let isExpanded: Bool
-    let onTap: () -> Void
+    private let model: MissionCardModel
+    private let isExpanded: Bool
+    private let onToggle: () -> Void
+
+    // MARK: - Initializer
+
+    init(model: MissionCardModel, isExpanded: Bool, onToggle: @escaping () -> Void) {
+        self.model = model
+        self.isExpanded = isExpanded
+        self.onToggle = onToggle
+    }
+
+    // MARK: - Equatable
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.model.id == rhs.model.id
+        && lhs.isExpanded == rhs.isExpanded
+    }
 
     // MARK: - Body
 
     var body: some View {
         HStack(alignment: .top, spacing: DefaultSpacing.spacing8) {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
                 HStack(spacing: DefaultSpacing.spacing4) {
                     ChipButton("Week \(model.week)", isSelected: false)
                         .buttonSize(.small)
@@ -45,10 +60,10 @@ struct MissionCardHeader: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            onTap()
+            onToggle()
         }
     }
-    
+
     private var statusSection: some View {
         HStack {
             StatusBadgePresenter(status: model.status)
@@ -84,13 +99,14 @@ private struct StatusBadgePresenter: View, Equatable {
             .appFont(.caption1, weight: .bold, color: status.foregroundColor)
             .padding(DefaultConstant.badgePadding)
             .background(status.backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
             .overlay {
                 if status.hasBorder {
-                    ConcentricRectangle()
+                    RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
                         .stroke(Color.indigo500, lineWidth: StatusBadgeConstants.borderWidth)
                 }
             }
-            .glassEffect(.clear, in: .rect(corners: .concentric, isUniform: true))
+            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 }
 
