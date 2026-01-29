@@ -28,11 +28,6 @@ struct MissionCardContent: View, Equatable {
         lhs.submissionType == rhs.submissionType &&
         lhs.linkText == rhs.linkText
     }
-    
-    private enum Constants {
-        static let statusPadding: EdgeInsets = .init(
-            top: 14, leading: 12, bottom: 14, trailing: 12)
-    }
 
     // MARK: - Body
 
@@ -57,78 +52,132 @@ struct MissionCardContent: View, Equatable {
     // MARK: - Private Views
 
     private var submissionView: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                ForEach(MissionSubmissionType.allCases, id: \.hashValue) { type in
-                    ChipButton(
-                        type.rawValue,
-                        isSelected: submissionType == type,
-                        leadingIcon: type.icon
-                    ) {
-                        withAnimation(
-                            .easeInOut(duration: DefaultConstant.animationTime)) {
-                            onSubmissionTypeChanged(type)
-                        }
-                    }
-                    .buttonSize(.small)
-                }
-            }
-
-            if submissionType == .link {
-                LinkSubmissionView(
-                    linkText: linkText,
-                    onLinkTextChanged: onLinkTextChanged,
-                    onSubmit: { onSubmit(.link, linkText) }
-                )
-            } else {
-                CompleteOnlySubmissionView(
-                    onSubmit: { onSubmit(.completeOnly, nil) }
-                )
-            }
-        }
+        MissionSubmissionView(
+            submissionType: submissionType,
+            linkText: linkText,
+            onSubmissionTypeChanged: onSubmissionTypeChanged,
+            onLinkTextChanged: onLinkTextChanged,
+            onSubmit: onSubmit
+        )
     }
 
     private var pendingApprovalView: some View {
-        HStack {
-            Image(systemName: "hourglass")
-                .foregroundStyle(Color.orange)
-            Text("학습 완료 확인 대기 중입니다.")
-                .appFont(.callout, color: .orange)
-        }
-        .padding(Constants.statusPadding)
-        .frame(maxWidth: .infinity)
-        .background(
-            Color.orange.opacity(0.15),
-            in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+        MissionStatusResultView(
+            icon: "hourglass",
+            message: "학습 완료 확인 대기 중입니다.",
+            color: .orange
         )
     }
 
     private var passView: some View {
-        HStack {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color.green)
-            Text("해당 주차 스터디를 통과하였습니다.")
-                .appFont(.callout, color: .green)
-        }
-        .padding(Constants.statusPadding)
-        .frame(maxWidth: .infinity)
-        .background(
-            Color.green.opacity(0.15),
-            in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+        MissionStatusResultView(
+            icon: "checkmark.circle.fill",
+            message: "해당 주차 스터디를 통과하였습니다.",
+            color: .green
         )
     }
 
     private var failView: some View {
-        HStack {
-            Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(Color.red)
-            Text("해당 주차 스터디를 통과하지 못했습니다.")
-                .appFont(.callout, color: .red)
+        MissionStatusResultView(
+            icon: "xmark.circle.fill",
+            message: "해당 주차 스터디를 통과하지 못했습니다.",
+            color: .red
+        )
+    }
+}
+
+// MARK: - MissionSubmissionView
+
+/// 미션 제출 UI (타입 선택 + 제출 버튼)
+private struct MissionSubmissionView: View, Equatable {
+
+    // MARK: - Property
+
+    let submissionType: MissionSubmissionType
+    let linkText: String
+    let onSubmissionTypeChanged: (MissionSubmissionType) -> Void
+    let onLinkTextChanged: (String) -> Void
+    let onSubmit: (MissionSubmissionType, String?) -> Void
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.submissionType == rhs.submissionType &&
+        lhs.linkText == rhs.linkText
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+            typeSelectionSection
+            submissionSection
         }
-        .padding(Constants.statusPadding)
+    }
+
+    // MARK: - View Components
+
+    private var typeSelectionSection: some View {
+        HStack(spacing: DefaultSpacing.spacing8) {
+            ForEach(MissionSubmissionType.allCases, id: \.self) { type in
+                ChipButton(
+                    type.rawValue,
+                    isSelected: submissionType == type,
+                    leadingIcon: type.icon
+                ) {
+                    withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
+                        onSubmissionTypeChanged(type)
+                    }
+                }
+                .buttonSize(.small)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var submissionSection: some View {
+        if submissionType == .link {
+            LinkSubmissionView(
+                linkText: linkText,
+                onLinkTextChanged: onLinkTextChanged,
+                onSubmit: { onSubmit(.link, linkText) }
+            )
+        } else {
+            CompleteOnlySubmissionView(
+                onSubmit: { onSubmit(.completeOnly, nil) }
+            )
+        }
+    }
+}
+
+// MARK: - MissionStatusResultView
+
+/// 미션 상태 결과 뷰 (아이콘 + 메시지 + 배경)
+fileprivate struct MissionStatusResultView: View, Equatable {
+
+    // MARK: - Property
+
+    let icon: String
+    let message: String
+    let color: Color
+
+    private enum Constants {
+        static let padding: EdgeInsets = .init(
+            top: 14, leading: 12, bottom: 14, trailing: 12)
+        static let backgroundOpacity: Double = 0.15
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundStyle(color)
+            Text(message)
+                .appFont(.callout, color: color)
+        }
+        .padding(Constants.padding)
         .frame(maxWidth: .infinity)
         .background(
-            Color.red.opacity(0.15),
+            color.opacity(Constants.backgroundOpacity),
             in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
         )
     }

@@ -17,7 +17,7 @@ enum MissionSubmissionType: String, CaseIterable {
     var icon: String {
         switch self {
         case .link: return "link"
-        case .completeOnly: return "checkmark.square"
+        case .completeOnly: return "checkmark.circle"
         }
     }
 }

@@ -11,8 +11,8 @@ import SwiftUI
 
 private enum Constants {
     static let chevronIconSize: CGFloat = 14
-    static let badgePadding: CGFloat = 8
     static let borderWidth: CGFloat = 1
+    static let tagBadgeCornerRadius: CGFloat = 12
 }
 
 // MARK: - MissionCardHeader
@@ -66,11 +66,17 @@ struct MissionCardHeader: View, Equatable {
 
     private var tagSection: some View {
         HStack(spacing: DefaultSpacing.spacing4) {
-            ChipButton("Week \(model.week)", isSelected: false)
-                .buttonSize(.small)
+            InfoBadge(
+                text: "Week \(model.week)",
+                foregroundColor: .grey600,
+                backgroundColor: .grey100
+            )
 
-            ChipButton(model.platform, isSelected: false)
-                .buttonSize(.small)
+            InfoBadge(
+                text: model.platform,
+                foregroundColor: .grey600,
+                backgroundColor: .grey100
+            )
         }
     }
 
@@ -90,14 +96,46 @@ struct MissionCardHeader: View, Equatable {
 
             Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                 .font(.system(size: Constants.chevronIconSize))
-                .foregroundStyle(Color.grey600)
+                .foregroundStyle(.gray)
         }
+    }
+}
+
+// MARK: - InfoBadge
+
+/// 정보 표시용 뱃지 (태그, 상태 등)
+fileprivate struct InfoBadge: View, Equatable {
+
+    // MARK: - Property
+
+    let text: String
+    let foregroundColor: Color
+    let backgroundColor: Color
+    var hasBorder: Bool = false
+    var borderColor: Color = .indigo500
+    var cornerRadius: CGFloat = Constants.tagBadgeCornerRadius
+
+    // MARK: - Body
+
+    var body: some View {
+        Text(text)
+            .appFont(.caption1, weight: .bold, color: foregroundColor)
+            .padding(DefaultConstant.badgePadding)
+            .background(backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay {
+                if hasBorder {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .strokeBorder(borderColor, lineWidth: Constants.borderWidth)
+                }
+            }
+            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: cornerRadius))
     }
 }
 
 // MARK: - StatusBadgePresenter
 
-/// 상태 뱃지 표시
+/// 상태 뱃지 표시 (InfoBadge 활용)
 private struct StatusBadgePresenter: View, Equatable {
 
     // MARK: - Property
@@ -107,18 +145,14 @@ private struct StatusBadgePresenter: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        Text(status.displayText)
-            .appFont(.caption1, weight: .bold, color: status.foregroundColor)
-            .padding(DefaultConstant.badgePadding)
-            .background(status.backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-            .overlay {
-                if status.hasBorder {
-                    RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
-                        .strokeBorder(Color.indigo500, lineWidth: Constants.borderWidth)
-                }
-            }
-            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+        InfoBadge(
+            text: status.displayText,
+            foregroundColor: status.foregroundColor,
+            backgroundColor: status.backgroundColor,
+            hasBorder: status.hasBorder,
+            borderColor: .indigo500,
+            cornerRadius: DefaultConstant.cornerRadius
+        )
     }
 }
 
