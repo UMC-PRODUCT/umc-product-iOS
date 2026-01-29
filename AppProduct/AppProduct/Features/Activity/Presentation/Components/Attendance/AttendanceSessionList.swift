@@ -43,10 +43,7 @@ struct AttendanceSessionList: View, Equatable {
     
     private enum Constants {
         static let listSpacing: CGFloat = 12
-        static let transitionScale: CGFloat = 0.95
         static let scrollDelay: Double = 0.1
-        static let scrollAnimationResponse: Double = 0.35
-        static let scrollAnimationDamping: Double = 0.75
     }
 
     // MARK: - Body
@@ -89,8 +86,8 @@ struct AttendanceSessionList: View, Equatable {
                 )
                 .equatable()
                 .transition(.asymmetric(
-                    insertion: .scale(scale: Constants.transitionScale).combined(with: .opacity),
-                    removal: .scale(scale: Constants.transitionScale).combined(with: .opacity)))
+                    insertion: .scale(scale: DefaultConstant.transitionScale).combined(with: .opacity),
+                    removal: .scale(scale: DefaultConstant.transitionScale).combined(with: .opacity)))
             }
         }
     }
