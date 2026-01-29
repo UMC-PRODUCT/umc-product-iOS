@@ -43,7 +43,9 @@ struct MissionCard: View {
                     linkText: $linkText,
                     onSubmit: onSubmit
                 )
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                .transition(.asymmetric(
+                    insertion: .scale(scale: DefaultConstant.transitionScale).combined(with: .opacity),
+                    removal: .scale(scale: DefaultConstant.transitionScale).combined(with: .opacity)))
             }
         }
         .padding(DefaultConstant.defaultListPadding)
@@ -57,66 +59,39 @@ struct MissionCard: View {
 
 // MARK: - Preview
 
-#Preview("MissionCard - All States") {
+#if DEBUG
+#Preview("MissionCard - All Status") {
     ScrollView {
         VStack(spacing: 20) {
-            MissionCard(
-                model: MissionCardModel(
-                    week: 1,
-                    platform: "iOS",
-                    title: "SwiftUI 기초 학습",
-                    missionTitle: "SwiftUI를 이용해 로그인 화면을 구현하세요",
-                    status: .notStarted
-                )
-            ) { type, link in
-                print("제출: \(type) - \(link ?? "없음")")
-            }
-
-            MissionCard(
-                model: MissionCardModel(
-                    week: 2,
-                    platform: "Android",
-                    title: "Kotlin 기초 학습",
-                    missionTitle: "Kotlin을 사용해 회원가입 화면을 만드세요",
-                    status: .inProgress
-                )
-            ) { type, link in
-                print("제출: \(type) - \(link ?? "없음")")
-            }
-
-            MissionCard(
-                model: MissionCardModel(
-                    week: 3,
-                    platform: "Web",
-                    title: "React 기초 학습",
-                    missionTitle: "React로 메인 대시보드를 구현하세요",
-                    status: .pass
-                )
-            ) { type, link in
-                print("제출: \(type) - \(link ?? "없음")")
+            ForEach(MissionPreviewData.allStatusMissions) { mission in
+                MissionCard(model: mission) { type, link in
+                    print("제출: \(type) - \(link ?? "없음")")
+                }
             }
         }
         .padding()
     }
+    .background(Color.grey100)
 }
 
-#Preview("MissionCard - Expanded") {
-    struct Demo: View {
-        @State private var model = MissionCardModel(
-            week: 1,
-            platform: "iOS",
-            title: "SwiftUI 기초 학습",
-            missionTitle: "SwiftUI를 이용해 로그인 화면을 구현하세요",
-            status: .inProgress
-        )
-
-        var body: some View {
-            MissionCard(model: model) { type, link in
-                print("제출: \(type) - \(link ?? "없음")")
+#Preview("MissionCard - iOS Missions") {
+    ScrollView {
+        VStack(spacing: 16) {
+            ForEach(MissionPreviewData.iosMissions) { mission in
+                MissionCard(model: mission) { type, link in
+                    print("제출: \(type) - \(link ?? "없음")")
+                }
             }
-            .padding()
         }
+        .padding()
     }
-
-    return Demo()
+    .background(Color.grey100)
 }
+
+#Preview("MissionCard - Single") {
+    MissionCard(model: MissionPreviewData.singleMission) { type, link in
+        print("제출: \(type) - \(link ?? "없음")")
+    }
+    .padding()
+}
+#endif

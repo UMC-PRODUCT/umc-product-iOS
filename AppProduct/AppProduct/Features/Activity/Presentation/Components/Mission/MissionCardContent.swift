@@ -116,6 +116,7 @@ private struct CompleteOnlySubmissionView: View, Equatable {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview("MissionCardContent", traits: .sizeThatFitsLayout) {
     struct Demo: View {
         @State private var submissionType: MissionSubmissionType = .link
@@ -123,23 +124,22 @@ private struct CompleteOnlySubmissionView: View, Equatable {
 
         var body: some View {
             ZStack {
-                Color.gray.frame(height: 300)
-                
-                VStack(spacing: 20) {
-                    MissionCardContent(
-                        missionTitle: "SwiftUI를 이용해 로그인 화면을 구현하세요",
-                        submissionType: $submissionType,
-                        linkText: $linkText
-                    ) { type, link in
-                        print("제출: \(type) - \(link ?? "없음")")
-                    }
-                    .padding()
-                    .background(Color.grey000)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                Color.grey100.ignoresSafeArea()
+
+                MissionCardContent(
+                    missionTitle: MissionPreviewData.singleMission.missionTitle,
+                    submissionType: $submissionType,
+                    linkText: $linkText
+                ) { type, link in
+                    print("제출: \(type) - \(link ?? "없음")")
                 }
+                .padding()
+                .background(Color.grey000)
+                .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
             }
         }
     }
 
     return Demo()
 }
+#endif

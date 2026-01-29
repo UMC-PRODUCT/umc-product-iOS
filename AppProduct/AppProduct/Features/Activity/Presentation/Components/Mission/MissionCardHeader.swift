@@ -16,7 +16,7 @@ struct MissionCardHeader: View {
 
     let model: MissionCardModel
     let isExpanded: Bool
-    let onToggle: () -> Void
+    let onTap: () -> Void
 
     // MARK: - Body
 
@@ -32,22 +32,31 @@ struct MissionCardHeader: View {
                 }
 
                 Text(model.title)
-                    .font(.app(.title3, weight: .bold))
-                    .foregroundStyle(
-                        model.status == .inProgress ? Color.indigo500 : Color.grey900
-                    )
+                    .appFont(
+                        .calloutEmphasis,
+                        color: model.status == .inProgress
+                        ? Color.indigo500 : .grey900)
                     .multilineTextAlignment(.leading)
             }
 
             Spacer()
 
+            statusSection
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap()
+        }
+    }
+    
+    private var statusSection: some View {
+        HStack {
             StatusBadgePresenter(status: model.status)
+                .equatable()
 
-            Button(action: onToggle) {
-                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Color.grey600)
-            }
+            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                .font(.system(size: 14))
+                .foregroundStyle(Color.grey600)
         }
     }
 }
@@ -75,53 +84,42 @@ private struct StatusBadgePresenter: View, Equatable {
             .appFont(.caption1, weight: .bold, color: status.foregroundColor)
             .padding(DefaultConstant.badgePadding)
             .background(status.backgroundColor)
-            .clipShape(.rect(corners: .concentric))
-            .glassEffect(.clear, in: .rect(corners: .concentric))
             .overlay {
                 if status.hasBorder {
                     ConcentricRectangle()
                         .stroke(Color.indigo500, lineWidth: StatusBadgeConstants.borderWidth)
                 }
             }
+            .glassEffect(.clear, in: .rect(corners: .concentric, isUniform: true))
     }
 }
 
 // MARK: - Preview
 
-#Preview("MissionCardHeader") {
+#if DEBUG
+#Preview("MissionCardHeader - All Status") {
     VStack(spacing: 16) {
-        MissionCardHeader(
-            model: MissionCardModel(
-                week: 1,
-                platform: "iOS",
-                title: "SwiftUI 기초 학습",
-                missionTitle: "로그인 화면 구현하기",
-                status: .notStarted
-            ),
-            isExpanded: false
-        ) { }
-
-        MissionCardHeader(
-            model: MissionCardModel(
-                week: 2,
-                platform: "Android",
-                title: "Kotlin 기초 학습",
-                missionTitle: "회원가입 화면 구현하기",
-                status: .inProgress
-            ),
-            isExpanded: true
-        ) { }
-
-        MissionCardHeader(
-            model: MissionCardModel(
-                week: 3,
-                platform: "Web",
-                title: "React 기초 학습",
-                missionTitle: "메인 화면 구현하기",
-                status: .pass
-            ),
-            isExpanded: false
-        ) { }
+        ForEach(Array(MissionPreviewData.allStatusMissions.enumerated()), id: \.element.id) { index, mission in
+            MissionCardHeader(
+                model: mission,
+                isExpanded: index == 1
+            ) { }
+        }
     }
     .padding()
 }
+
+#Preview("MissionCardHeader - iOS Missions") {
+    ScrollView {
+        VStack(spacing: 12) {
+            ForEach(MissionPreviewData.iosMissions) { mission in
+                MissionCardHeader(
+                    model: mission,
+                    isExpanded: false
+                ) { }
+            }
+        }
+        .padding()
+    }
+}
+#endif
