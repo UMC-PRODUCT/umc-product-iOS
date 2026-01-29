@@ -32,7 +32,7 @@ struct InfoSection: View {
 
     var body: some View {
         Section(content: {
-            MyPageSectionRow(systemIcon: "info.circle", title: "버전", rightText: appVersion)
+            MyPageSectionRow(systemIcon: "info.circle", title: "버전", rightText: appVersion, iconBackgroundColor: .cyan)
         }, header: {
             SectionHeaderView(title: sectionType.rawValue)
         })

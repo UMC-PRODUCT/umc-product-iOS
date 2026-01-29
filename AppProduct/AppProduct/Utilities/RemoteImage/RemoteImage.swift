@@ -95,6 +95,6 @@ struct RemoteImage: View {
         }
         .aspectRatio(ratio, contentMode: contentMode)
         .frame(width: size.width, height: size.height)
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .clipShape(.circle)
     }
 }

@@ -33,7 +33,7 @@ enum SettingType: String, CaseIterable {
         case .alarmSetting:
             return .pink
         case .locationSetting:
-            return .blue
+            return .mint
         }
     }
 }

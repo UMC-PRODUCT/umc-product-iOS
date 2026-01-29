@@ -63,5 +63,5 @@ struct CoreStudyTextPresenter: View {
 
 // MARK: - Preview
 #Preview (traits: .sizeThatFitsLayout){
-    CoreStudyManagementList(studyManagementItem: StudyManagementItem(profile: .profile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: StudySubmitState.examine))
+    CoreStudyManagementList(studyManagementItem: StudyManagementItem(profile: .defaultProfile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: StudySubmitState.examine))
 }

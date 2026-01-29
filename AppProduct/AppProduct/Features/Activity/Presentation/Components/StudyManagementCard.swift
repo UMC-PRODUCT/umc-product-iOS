@@ -183,6 +183,6 @@ private struct StudyChevronPresenter: View, Equatable {
 
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
-    StudyManagementCard(studyManagementItem: StudyManagementItem(profile: .profile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: .examine))
+    StudyManagementCard(studyManagementItem: StudyManagementItem(profile: .defaultProfile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: .examine))
         
 }

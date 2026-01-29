@@ -17,6 +17,7 @@
 	<array>
 		<string>kakaokompassauth</string>
 		<string>kakaoplus</string>
+		<string>instagram</string>
 	</array>
 	<key>UIAppFonts</key>
 	<array>

@@ -221,13 +221,13 @@ private struct MemberBadgePresenter: View, Equatable {
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
     VStack {
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: true, managementTeam: .challenger))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: true, managementTeam: .challenger))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: false, managementTeam: .challenger))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: false, managementTeam: .challenger))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "9기", position: "Challenger", part: "Spring Boot", penalty: 1.0, badge: true, managementTeam: .challenger))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "9기", position: "Challenger", part: "Spring Boot", penalty: 1.0, badge: true, managementTeam: .challenger))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .profile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 1.0, badge: false, managementTeam: .campusPartLeader))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 1.0, badge: false, managementTeam: .campusPartLeader))
         
     }
 }
