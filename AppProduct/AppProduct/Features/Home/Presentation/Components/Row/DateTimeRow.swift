@@ -47,7 +47,7 @@ struct DateTimeRow: View, Equatable {
             button(text: date.toYearMonthDay(), check: isDatePickerActive, action: dateTap)
                 
             if !isAllDay {
-                button(text: date.timeFormatter(), check: isTimePickerActive, action: timeTap)
+                button(text: date.toHourMinutes(), check: isTimePickerActive, action: timeTap)
             }
         }
     }

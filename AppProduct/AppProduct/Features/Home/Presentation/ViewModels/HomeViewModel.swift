@@ -17,7 +17,12 @@ class HomeViewModel {
     // MARK: - Properties
     
     /// 기수 정보 데이터 (로딩 상태 포함)
-    var seasonData: Loadable<[SeasonType]> = .loading
+    var seasonData: Loadable<[SeasonType]> = .loaded([
+        .days(191),
+        .gens([
+            11, 12
+        ])
+    ])
 
     /// 기수별 패널티 정보 데이터 (로딩 상태 포함)
     var generationData: Loadable<[GenerationData]> = .loading

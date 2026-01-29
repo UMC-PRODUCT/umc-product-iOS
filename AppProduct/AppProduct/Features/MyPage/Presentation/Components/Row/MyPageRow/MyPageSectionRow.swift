@@ -10,14 +10,18 @@ import SwiftUI
 /// MyPage에서 사용되는 재사용 가능한 Row 컴포넌트
 ///
 /// 왼쪽 아이콘, 중앙 타이틀, 오른쪽 컨텐츠(이미지 또는 텍스트)로 구성된 표준 Row 레이아웃을 제공합니다.
+/// SF Symbol 사용 시 자동으로 원형 배경이 적용됩니다.
 ///
 /// - Example:
 /// ```swift
 /// // 이미지 리소스 + 오른쪽 이미지
 /// MyPageSectionRow(icon: .github, title: "GitHub", rightImage: "arrow.up.right")
 ///
-/// // SF Symbol + 오른쪽 텍스트
+/// // SF Symbol + 오른쪽 텍스트 (기본 배경색)
 /// MyPageSectionRow(systemIcon: "info.circle", title: "버전", rightText: "1.0.0")
+///
+/// // SF Symbol + 커스텀 배경색
+/// MyPageSectionRow(systemIcon: "bell.fill", title: "알림", rightText: "On", iconBackgroundColor: .blue.opacity(0.2))
 /// ```
 struct MyPageSectionRow: View {
     // MARK: - Property
@@ -28,6 +32,8 @@ struct MyPageSectionRow: View {
     let title: String
     /// 오른쪽에 표시할 컨텐츠 타입 (이미지, 텍스트, 없음)
     let rightContent: RowRightContentType
+    /// SF Symbol의 circle 배경색 (system icon인 경우에만 사용)
+    let iconBackgroundColor: Color?
 
     // MARK: - Function
 
@@ -40,6 +46,7 @@ struct MyPageSectionRow: View {
         self.icon = .resource(icon)
         self.title = title
         self.rightContent = .image(rightImage)
+        self.iconBackgroundColor = nil
     }
 
     /// SF Symbol 아이콘과 오른쪽 이미지를 사용하는 Row 생성자
@@ -47,10 +54,12 @@ struct MyPageSectionRow: View {
     ///   - systemIcon: 왼쪽에 표시할 SF Symbol 이름
     ///   - title: 중앙에 표시할 타이틀
     ///   - rightImage: 오른쪽에 표시할 SF Symbol 이름
-    init(systemIcon: String, title: String, rightImage: String) {
+    ///   - iconBackgroundColor: SF Symbol의 circle 배경색 (기본값: .clear)
+    init(systemIcon: String, title: String, rightImage: String, iconBackgroundColor: Color = .clear) {
         self.icon = .system(systemIcon)
         self.title = title
         self.rightContent = .image(rightImage)
+        self.iconBackgroundColor = iconBackgroundColor
     }
 
     /// ImageResource 아이콘과 오른쪽 텍스트를 사용하는 Row 생성자
@@ -62,6 +71,7 @@ struct MyPageSectionRow: View {
         self.icon = .resource(icon)
         self.title = title
         self.rightContent = .text(rightText)
+        self.iconBackgroundColor = nil
     }
 
     /// SF Symbol 아이콘과 오른쪽 텍스트를 사용하는 Row 생성자
@@ -69,41 +79,54 @@ struct MyPageSectionRow: View {
     ///   - systemIcon: 왼쪽에 표시할 SF Symbol 이름
     ///   - title: 중앙에 표시할 타이틀
     ///   - rightText: 오른쪽에 표시할 텍스트
-    init(systemIcon: String, title: String, rightText: String) {
+    ///   - iconBackgroundColor: SF Symbol의 circle 배경색 (기본값: .clear)
+    init(systemIcon: String, title: String, rightText: String, iconBackgroundColor: Color = .clear) {
         self.icon = .system(systemIcon)
         self.title = title
         self.rightContent = .text(rightText)
+        self.iconBackgroundColor = iconBackgroundColor
     }
 
     private enum Constants {
-        static let linkIcon: CGFloat = 20
+        static let linkIcon: CGFloat = 24
+        static let cornerRadius: CGFloat = 10
     }
 
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: DefaultSpacing.spacing8, content: {
-            iconImage
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: Constants.linkIcon, height: Constants.linkIcon)
-
+        HStack(spacing: DefaultSpacing.spacing8) {
+            iconView
             Text(title)
                 .appFont(.subheadline, weight: .medium, color: .black)
 
             Spacer()
-
             rightContentView
-        })
+        }
     }
 
-    /// 아이콘 타입에 따라 Image를 반환하는 computed property
-    private var iconImage: Image {
+    /// 아이콘 타입에 따라 적절한 스타일이 적용된 아이콘 뷰를 반환
+    @ViewBuilder
+    private var iconView: some View {
         switch icon {
         case .resource(let imageResource):
-            return Image(imageResource)
+            Image(imageResource)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: Constants.linkIcon, height: Constants.linkIcon)
         case .system(let systemName):
-            return Image(systemName: systemName)
+            ZStack {
+                RoundedRectangle(cornerRadius: Constants.cornerRadius)
+                    .fill(iconBackgroundColor ?? .grey200)
+                    .frame(width: 30, height: 30)
+                    .glassEffect(.clear, in: RoundedRectangle(cornerRadius: Constants.cornerRadius))
+                
+                Image(systemName: systemName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 16, height: 16)
+                    .foregroundStyle(.white)
+            }
         }
     }
 

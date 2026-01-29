@@ -39,7 +39,7 @@ enum MyActiveLogsType: String, CaseIterable {
         case .myWriteComment:
             return .green
         case .myScrapPost:
-            return .yellow
+            return .orange
         }
     }
 }

@@ -50,13 +50,6 @@ extension Date {
             return "\(month)개월 전"
         }
     }
-    
-    func timeFormatter() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        formatter.locale = Locale(identifier: "ko_KR")
-        return formatter.string(from: self)
-    }
 
     /// "HH:mm - HH:mm" 시간 범위 형식 (예: "14:00 - 18:00")
     func timeRange(to endTime: Date) -> String {

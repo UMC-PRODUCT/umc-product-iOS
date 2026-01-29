@@ -33,7 +33,7 @@ enum LawsType: String, CaseIterable {
         case .policy:
             return .purple
         case .terms:
-            return .green
+            return .indigo
         }
     }
 }

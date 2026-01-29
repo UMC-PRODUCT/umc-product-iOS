@@ -13,10 +13,6 @@ import SwiftUI
 struct DatePill: View {
 
     // MARK: - Properties
-    
-    /// 현재 화면의 컬러 스킴 (라이트/다크 모드)
-    @Environment(\.colorScheme) var color
-
     /// 표시할 날짜
     let date: Date
     /// 선택 여부
@@ -63,7 +59,7 @@ struct DatePill: View {
             VStack(spacing: DefaultSpacing.spacing16, content: {
                 // 요일 표시
                 Text(weekDay)
-                    .appFont(.caption1Emphasis, color: fontSelectedColor)
+                    .appFont(.caption1Emphasis, color: isSelected ? .grey000 : .grey600)
                 
                 VStack(spacing: DefaultSpacing.spacing8, content: {
                     // 날짜(일) 표시
@@ -90,15 +86,6 @@ struct DatePill: View {
                 Capsule()
                     .stroke(Color.indigo500, lineWidth: Constants.todayBorderWidth)
             }
-        }
-    }
-    
-    /// 선택 상태에 따른 폰트 색상 반환
-    private var fontSelectedColor: Color {
-        if color == .dark {
-            return .white
-        } else {
-            return isSelected ? .grey000 : .grey600
         }
     }
 }
