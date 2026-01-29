@@ -95,6 +95,7 @@ fileprivate struct MissionCardPresenter: View, Equatable {
 
                 MissionCardContent(
                     missionTitle: model.missionTitle,
+                    status: model.status,
                     submissionType: submissionType,
                     linkText: linkText,
                     onSubmissionTypeChanged: onSubmissionTypeChanged,

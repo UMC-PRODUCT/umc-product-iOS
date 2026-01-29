@@ -7,37 +7,6 @@
 
 import SwiftUI
 
-// MARK: - MissionStatus
-
-/// 미션 상태
-enum MissionStatus: String, CaseIterable {
-    case notStarted = "Not Started"
-    case inProgress = "In Progress"
-    case pass = "Pass"
-
-    var displayText: String { rawValue }
-
-    var backgroundColor: Color {
-        switch self {
-        case .notStarted: return .grey100
-        case .inProgress: return .clear
-        case .pass: return .green100
-        }
-    }
-
-    var foregroundColor: Color {
-        switch self {
-        case .notStarted: return .grey600
-        case .inProgress: return .indigo500
-        case .pass: return .green700
-        }
-    }
-
-    var hasBorder: Bool {
-        self == .inProgress
-    }
-}
-
 // MARK: - MissionCardModel
 
 /// 미션 카드 데이터 모델
