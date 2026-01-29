@@ -106,10 +106,12 @@ fileprivate struct MissionCardPresenter: View, Equatable {
                     removal: .scale(scale: DefaultConstant.transitionScale).combined(with: .opacity)))
             }
         }
-        .padding(DefaultConstant.defaultListPadding)
+        .padding(DefaultConstant.defaultCardPadding)
         .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-        .containerShape(.rect(cornerRadius: DefaultConstant.cornerRadius))
+        .clipShape(
+            RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius))
+        .containerShape(
+            .rect(cornerRadius: DefaultConstant.defaultListCornerRadius))
         .animation(
             .easeInOut(duration: DefaultConstant.animationTime),
             value: isExpanded)

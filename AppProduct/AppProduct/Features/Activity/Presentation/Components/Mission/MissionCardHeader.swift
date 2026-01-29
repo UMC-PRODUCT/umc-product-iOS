@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let chevronIconSize: CGFloat = 14
+    static let badgePadding: CGFloat = 8
+    static let borderWidth: CGFloat = 1
+}
+
 // MARK: - MissionCardHeader
 
 /// 미션 카드 헤더 (주차 태그, 플랫폼 태그, 제목, 상태 뱃지, 펼치기 버튼)
@@ -37,25 +45,8 @@ struct MissionCardHeader: View, Equatable {
 
     var body: some View {
         HStack(alignment: .top, spacing: DefaultSpacing.spacing8) {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-                HStack(spacing: DefaultSpacing.spacing4) {
-                    ChipButton("Week \(model.week)", isSelected: false)
-                        .buttonSize(.small)
-
-                    ChipButton(model.platform, isSelected: false)
-                        .buttonSize(.small)
-                }
-
-                Text(model.title)
-                    .appFont(
-                        .calloutEmphasis,
-                        color: model.status == .inProgress
-                        ? Color.indigo500 : .grey900)
-                    .multilineTextAlignment(.leading)
-            }
-
+            contentSection
             Spacer()
-
             statusSection
         }
         .contentShape(Rectangle())
@@ -64,23 +55,44 @@ struct MissionCardHeader: View, Equatable {
         }
     }
 
+    // MARK: - View Components
+
+    private var contentSection: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+            tagSection
+            titleText
+        }
+    }
+
+    private var tagSection: some View {
+        HStack(spacing: DefaultSpacing.spacing4) {
+            ChipButton("Week \(model.week)", isSelected: false)
+                .buttonSize(.small)
+
+            ChipButton(model.platform, isSelected: false)
+                .buttonSize(.small)
+        }
+    }
+
+    private var titleText: some View {
+        Text(model.title)
+            .appFont(
+                .calloutEmphasis,
+                color: model.status == .inProgress
+                ? Color.indigo500 : .grey900)
+            .multilineTextAlignment(.leading)
+    }
+
     private var statusSection: some View {
         HStack {
             StatusBadgePresenter(status: model.status)
                 .equatable()
 
             Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                .font(.system(size: 14))
+                .font(.system(size: Constants.chevronIconSize))
                 .foregroundStyle(Color.grey600)
         }
     }
-}
-
-// MARK: - Constants
-
-private enum StatusBadgeConstants {
-    static let badgePadding: CGFloat = 8
-    static let borderWidth: CGFloat = 1
 }
 
 // MARK: - StatusBadgePresenter
@@ -103,7 +115,7 @@ private struct StatusBadgePresenter: View, Equatable {
             .overlay {
                 if status.hasBorder {
                     RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
-                        .stroke(Color.indigo500, lineWidth: StatusBadgeConstants.borderWidth)
+                        .strokeBorder(Color.indigo500, lineWidth: Constants.borderWidth)
                 }
             }
             .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))

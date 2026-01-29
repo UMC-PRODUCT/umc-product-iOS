@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let textFieldHeight: CGFloat = 50
+    static let submitButtonWidth: CGFloat = 80
+    static let borderWidth: CGFloat = 1
+}
+
 // MARK: - MissionCardContent
 
 /// 미션 카드 확장 콘텐츠 (미션 설명, 제출 타입 선택, 링크 입력/제출 버튼)
@@ -90,17 +98,17 @@ fileprivate struct LinkSubmissionView: View, Equatable {
             ))
             .appFont(.footnote, weight: .regular, color: .grey500)
             .padding(.horizontal, DefaultConstant.defaultTextFieldPadding)
-            .frame(height: 50)
+            .frame(height: Constants.textFieldHeight)
             .background(
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                    .strokeBorder(Color.grey300, lineWidth: 1)
+                    .strokeBorder(Color.grey300, lineWidth: Constants.borderWidth)
             )
 
             MainButton("제출") {
                 onSubmit()
             }
             .buttonSize(.small)
-            .frame(maxWidth: 80)
+            .frame(maxWidth: Constants.submitButtonWidth)
             .buttonStyle(.glassProminent)
         }
     }
