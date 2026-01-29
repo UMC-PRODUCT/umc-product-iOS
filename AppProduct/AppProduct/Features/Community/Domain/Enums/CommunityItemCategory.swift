@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum CommunityItemCategory: Hashable {
+enum CommunityItemCategory: Hashable, CaseIterable {
     case question
     case hobby
     case impromptu

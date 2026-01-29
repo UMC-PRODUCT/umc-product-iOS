@@ -9,15 +9,8 @@ import SwiftUI
 
 struct CommunityPartySetting: View {
     // MARK: - Properties
-
-    @State private var selectedDate = Date()
-    @State private var maxParticipants = 3
-    @State private var showPlaceSheet = false
-    @State private var linkText: String = ""
-    
+    @State var vm: CommunityPostViewModel
     @FocusState private var focusedField: Bool
-    
-    @Environment(ErrorHandler.self) var errorHandler
     
     // MARK: - Constants
     
@@ -27,7 +20,7 @@ struct CommunityPartySetting: View {
     // MARK: - Body
 
     var body: some View {
-        Form {
+        Group {
             Section("날짜 및 시간") {
                 dateField
                 timeField
@@ -42,32 +35,26 @@ struct CommunityPartySetting: View {
                 linkField
             }
         }
-        .sheet(isPresented: $showPlaceSheet, content: {
-            SearchMapView(errorHandler: errorHandler) { place in
-                print(place)
-            }
-            .presentationDragIndicator(.visible)
-        })
     }
 
     // MARK: - Fields
 
     private var dateField: some View {
         DatePicker("날짜",
-                   selection: $selectedDate,
+                   selection: $vm.selectedDate,
                    displayedComponents: [.date])
             .datePickerStyle(.compact)
     }
     
     private var timeField: some View {
         DatePicker("시간",
-                   selection: $selectedDate,
+                   selection: $vm.selectedDate,
                    displayedComponents: [.hourAndMinute])
     }
 
     private var maxParticipantsField: some View {
-        Stepper(value: $maxParticipants, in: 2...20) {
-            Text("\(maxParticipants)명")
+        Stepper(value: $vm.maxParticipants, in: 2...20) {
+            Text("\(vm.maxParticipants)명")
                 .appFont(.body, color: .black)
                 .foregroundStyle(.primary)
         }
@@ -75,7 +62,7 @@ struct CommunityPartySetting: View {
 
     private var placeField: some View {
         Button(action: {
-            showPlaceSheet.toggle()
+            vm.showPlaceSheet.toggle()
         }, label: {
             HStack {
                 Text("장소 선택")
@@ -88,17 +75,10 @@ struct CommunityPartySetting: View {
     }
 
     private var linkField: some View {
-        TextField("https://open.kakao.com/...", text: $linkText)
+        TextField("https://open.kakao.com/...", text: $vm.linkText)
             .focused($focusedField)
             .keyboardType(.URL)
             .autocapitalization(.none)
             .autocorrectionDisabled()
     }
-}
-
-#Preview {
-    NavigationView {
-        CommunityPartySetting()
-    }
-    .environment(ErrorHandler())
 }
