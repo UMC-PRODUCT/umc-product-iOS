@@ -20,7 +20,7 @@ struct MemberManagementItem: Identifiable, Equatable {
     let id: UUID = .init()
     
     /// 프로필 이미지 리소스
-    let profile: ImageResource
+    let profile: String?
     
     /// 멤버 이름
     let name: String

@@ -53,7 +53,7 @@ struct StudyImagePresenter: View, Equatable {
     
     // MARK: - Body
     var body: some View {
-        Image(studyManagementItem.profile)
+        Image(studyManagementItem.profile ?? "")
             .resizable()
             .frame(width: Constants.imageSize.width, height: Constants.imageSize.height)
             .clipShape(Circle())
@@ -183,6 +183,6 @@ private struct StudyChevronPresenter: View, Equatable {
 
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
-    StudyManagementCard(studyManagementItem: StudyManagementItem(profile: .defaultProfile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: .examine))
+    StudyManagementCard(studyManagementItem: StudyManagementItem(profile: nil, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: .examine))
         
 }
