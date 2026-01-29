@@ -288,38 +288,48 @@ struct ToolBarCollection {
     }
     
     /// 커뮤니티 학교/파트 필터
-    struct CommunityFilter: ToolbarContent {
+    struct CommunityUnivFilter: ToolbarContent {
         @Binding var selectedUniversity: String
-        @Binding var selectedPart: String
         let universities: [String]
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ForEach(universities, id: \.self) { university in
+                        Toggle(university, isOn: Binding(
+                            get: { selectedUniversity == university },
+                            set: { isOn in
+                                selectedUniversity = isOn ? university : "전체"
+                            })
+                        )
+                    }
+                } label: {
+                    Image(systemName: "graduationcap.fill")
+                        .appFont(.subheadline)
+                }
+                .menuActionDismissBehavior(.disabled)
+            }
+        }
+    }
+    
+    struct CommunityPartFilter: ToolbarContent {
+        @Binding var selectedPart: String
         let parts: [String]
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Section("학교") {
-                        ForEach(universities, id: \.self) { university in
-                            Toggle(university, isOn: Binding(
-                                get: { selectedUniversity == university },
-                                set: { isOn in
-                                    selectedUniversity = isOn ? university : "전체"
-                                })
-                            )
-                        }
-                    }
-                    Section("파트") {
-                        ForEach(parts, id: \.self) { part in
-                            Toggle(part, isOn: Binding(
-                                get: { selectedPart == part },
-                                set: { isOn in
-                                    selectedPart = isOn ? part : "전체"
-                                })
-                            )
-                        }
+                    ForEach(parts, id: \.self) { part in
+                        Toggle(part, isOn: Binding(
+                            get: { selectedPart == part },
+                            set: { isOn in
+                                selectedPart = isOn ? part : "전체"
+                            })
+                        )
                     }
                 } label: {
-                    Text("학교/파트")
-                        .appFont(.subheadline, weight: .medium)
+                    Image(systemName: "building.columns.fill")
+                        .appFont(.subheadline)
                 }
                 .menuActionDismissBehavior(.disabled)
             }

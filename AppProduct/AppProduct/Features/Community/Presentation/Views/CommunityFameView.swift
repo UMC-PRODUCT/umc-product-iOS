@@ -44,10 +44,13 @@ struct CommunityFameView: View {
                 weeks: vm.availableWeeks,
                 selection: $vm.selectedWeek
             )
-            ToolBarCollection.CommunityFilter(
+            
+            ToolBarCollection.CommunityUnivFilter(
                 selectedUniversity: $vm.selectedUniversity,
+                universities: vm.availableUniversities
+            )
+            ToolBarCollection.CommunityPartFilter(
                 selectedPart: $vm.selectedPart,
-                universities: vm.availableUniversities,
                 parts: vm.availableParts
             )
         }
