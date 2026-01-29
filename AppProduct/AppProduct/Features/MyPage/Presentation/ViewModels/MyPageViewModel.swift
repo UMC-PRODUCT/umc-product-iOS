@@ -31,7 +31,9 @@ class MyPageViewModel {
             part: .design
         ),
         socialConnected: [.apple, .kakao],
-        activityLogs: [],
+        activityLogs: [
+            .init(part: .design, generation: 11, role: .campusPartLeader)
+        ],
         profileLink: []
     ))
 
