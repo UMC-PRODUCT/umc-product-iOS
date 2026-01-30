@@ -14,6 +14,8 @@ mkdir -p "${CI_WORKSPACE}/AppProduct/AppProduct/Core/Secret"
 
 # App Store Connect에 등록한 환경 변수로 xcconfig 생성
 cat > "$CONFIG_PATH" << EOF
+KAKAO_KEY=${KAKAO_KEY}
+BASE_URL=${BASE_URL}
 EOF
 
 echo "Secrets.xcconfig created successfully"
