@@ -6,11 +6,12 @@
 //
 
 import Foundation
-import UIKit
+import SwiftUI
 import PhotosUI
+import UIKit
 
 @Observable
-final class NoticeEditorViewModel {
+final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     
     // MARK: - Property
     
@@ -44,14 +45,23 @@ final class NoticeEditorViewModel {
     /// 투표 폼 데이터
     var voteFormData: VoteFormData = VoteFormData()
     
+    /// 투표 확정 여부
+    var isVoteConfirmed: Bool = false
+    
+    /// AlertPrompt
+    var alertPrompt: AlertPrompt?
+    
     /// PhotosPicker 선택 아이템
-//    var selectedPhotoItem: PhotosPickerItem?
+    var selectedPhotoItems: [PhotosPickerItem] = []
     
     /// 선택된 이미지
-//    var selectedImage: UIImage?
+    var selectedImages: [UIImage] = []
     
     /// 첨부된 이미지 목록
-//    var noticeImages: [NoticeImageItem] = []
+    var noticeImages: [NoticeImageItem] = []
+    
+    /// 첨부된 링크 목록
+    var noticeLinks: [NoticeLinkItem] = []
     
     // MARK: - Initializer
     
@@ -71,6 +81,7 @@ final class NoticeEditorViewModel {
         self.branches = branches
         self.schools = schools
     }
+    
     
     // MARK: - Function
     
@@ -153,15 +164,48 @@ final class NoticeEditorViewModel {
         }
     }
     
+    
     // MARK: - Vote Function
     
     func showVotingFormSheet() {
-        voteFormData = VoteFormData()
-        showVoting = true
+        if isVoteConfirmed {
+            alertPrompt = AlertPrompt(
+                id: .init(),
+                title: "투표가 이미 생성되었습니다",
+                message: "투표 카드를 눌러 수정하거나 삭제할 수 있습니다.",
+                positiveBtnTitle: "확인"
+            )
+        } else {
+            voteFormData = VoteFormData()
+            showVoting = true
+        }
     }
     
     func dismissVotingFormSheet() {
         showVoting = false
+    }
+    
+    func confirmVote() {
+        isVoteConfirmed = true
+    }
+    
+    func editVote() {
+        showVoting = true
+    }
+    
+    func deleteVote() {
+        alertPrompt = AlertPrompt(
+            id: .init(),
+            title: "투표 삭제",
+            message: "투표를 삭제하시겠습니까?",
+            positiveBtnTitle: "삭제",
+            positiveBtnAction: { [weak self] in
+                self?.voteFormData = VoteFormData()
+                self?.isVoteConfirmed = false
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
     }
     
     func addVoteOption() {
@@ -174,17 +218,28 @@ final class NoticeEditorViewModel {
         voteFormData.options.removeAll { $0.id == option.id }
     }
     
+    
     // MARK: - Image Function
-//    @MainActor
-//    func didLoadImage(image: UIImage) async {
-//        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
-//        noticeImages.append(NoticeImageItem(imageData: imageData))
-//        selectedPhotoItem = nil
-//    }
-//    
-//    func removeImage(_ item: NoticeImageItem) {
-//        noticeImages.removeAll { $0.id == item.id }
-//    }
+    
+    @MainActor
+    func didLoadImages(images: [UIImage]) async {
+        for image in images {
+            guard let imageData = image.jpegData(compressionQuality: 0.8) else { continue }
+            noticeImages.append(NoticeImageItem(imageData: imageData))
+        }
+        selectedPhotoItems.removeAll()
+    }
+    
+    func removeImage(_ item: NoticeImageItem) {
+        noticeImages.removeAll { $0.id == item.id }
+    }
+    
+    // MARK: - Link Function
+    
+    func removeLink(_ link: NoticeLinkItem) {
+        noticeLinks.removeAll { $0.id == link.id }
+    }
+    
     
     // MARK: - Private
     

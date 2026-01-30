@@ -12,6 +12,8 @@ struct NoticeEditorView: View {
 
     // MARK: - Property
     @State private var viewModel: NoticeEditorViewModel
+    @State private var title: String = ""
+    @State private var content: String = ""
 
     // MARK: - Initializer
     init(userPart: Part? = nil) {
@@ -28,14 +30,20 @@ struct NoticeEditorView: View {
     // MARK: - Body
     var body: some View {
         ScrollView(.vertical) {
-            VStack {
-                NoticeTextField()
-//                if !viewModel.noticeImages.isEmpty {
-//                    
-//                }
+            VStack(spacing: DefaultSpacing.spacing12) {
+                textfieldSection
+                if !viewModel.noticeImages.isEmpty {
+                    imageSection
+                }
+                if !viewModel.noticeLinks.isEmpty {
+                    linkSection
+                }
+                if viewModel.isVoteConfirmed {
+                    voteSection
+                }
             }
         }
-        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolBarCollection.TopBarCenterMenu (
@@ -59,32 +67,47 @@ struct NoticeEditorView: View {
         }
         .safeAreaBar(edge: .bottom, alignment: .leading) {
             HStack {
-//                PhotosPicker(
-//                    selection: $viewModel.selectedPhotoItem,
-//                    matching: .images
-//                ) {
-//                    Image(systemName: "photo.fill")
-//                        .font(.system(size: Constants.toolBtnIconSize))
-//                        .foregroundStyle(.black)
-//                        .frame(width: Constants.toolBtnFrame.width, height: Constants.toolBtnFrame.height)
-//                        .padding(DefaultConstant.defaultBtnPadding)
-//                        .glassEffect()
-//                }
+                PhotosPicker(
+                    selection: $viewModel.selectedPhotoItems,
+                    maxSelectionCount: 10,
+                    matching: .images
+                ) {
+                    Image(systemName: "photo.fill")
+                        .font(.system(size: Constants.toolBtnIconSize))
+                        .foregroundStyle(.black)
+                        .frame(width: Constants.toolBtnFrame.width, height: Constants.toolBtnFrame.height)
+                        .padding(DefaultConstant.defaultBtnPadding)
+                        .glassEffect()
+                }
+                
                 ToolBtn(icon: "link", action: {
-                    
+                    viewModel.noticeLinks.append(NoticeLinkItem())
                 })
                 ToolBtn(icon: "chart.bar.fill", action: {
-                    
+                    viewModel.showVotingFormSheet()
                 })
             }
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
             .padding(.bottom, DefaultConstant.defaultContentBottomMargins)
         }
-//        .onChange(of: viewModel.selectedPhotoItem) { _, _ in
-//            Task {
-//                await viewModel.loadSelectedImage()
-//            }
-//        }
+        .onChange(of: viewModel.selectedPhotoItems) { _, newItems in
+            guard !newItems.isEmpty else { return }
+            Task {
+                await viewModel.loadSelectedImages()
+            }
+        }
+        .fullScreenCover(isPresented: $viewModel.showVoting) {
+            VotingFormSheetView(
+                formData: $viewModel.voteFormData,
+                onCancel: {
+                    viewModel.dismissVotingFormSheet()
+                },
+                onConfirm: {
+                    viewModel.confirmVote()
+                }
+            )
+        }
+        .alertPrompt(item: $viewModel.alertPrompt)
     }
 
     private var subCategorySection: some View {
@@ -130,22 +153,64 @@ struct NoticeEditorView: View {
         }
     }
     
+    // MARK: - textfieldSection
+    private var textfieldSection: some View {
+        VStack(spacing: DefaultSpacing.spacing16) {
+            ArticleTextField(placeholder: .title, text: $title)
+            
+            Divider()
+            
+            ArticleTextField(placeholder: .content, text: $content)
+                .padding(.bottom, DefaultSpacing.spacing48)
+        }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        .padding(.top, DefaultSpacing.spacing24)
+    }
+    
     // MARK: - imageSection
-//    private var imageSection: some View {
-//        ScrollView(.horizontal) {
-//            HStack {
-//                ForEach(viewModel.noticeImages, id: \.id) { item in
-//                    AttachedImageCard(
-//                        id: item.id,
-//                        imageData: item.imageData,
-//                        onDismiss: {
-//                            viewModel.removeImage(item)
-//                        }
-//                    )
-//                }
-//            }
-//        }
-//    }
+    private var imageSection: some View {
+        ScrollView(.horizontal) {
+            HStack {
+                ForEach(viewModel.noticeImages, id: \.id) { item in
+                    AttachedImageCard(
+                        id: item.id,
+                        imageData: item.imageData,
+                        onDismiss: {
+                            viewModel.removeImage(item)
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        }
+        .scrollIndicators(.hidden)
+    }
+    
+    // MARK: - linkSection
+    private var linkSection: some View {
+        VStack(spacing: DefaultSpacing.spacing12) {
+            ForEach($viewModel.noticeLinks, id: \.id) { $item in
+                LinkAttachmentCard(
+                    link: $item.link,
+                    onDismiss: {
+                        viewModel.removeLink(item)
+                    }
+                )
+            }
+        }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+    }
+    
+    // MARK: - voteSection
+    private var voteSection: some View {
+        Button {
+            viewModel.editVote()
+        } label: {
+            VotingEditorCard(formData: $viewModel.voteFormData)
+        }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        .buttonStyle(.plain)
+    }
     
     // MARK: - Computed Property
     private var categoryBinding: Binding<EditorMainCategory> {
@@ -153,23 +218,6 @@ struct NoticeEditorView: View {
             get: { viewModel.selectedCategory },
             set: { viewModel.selectCategory($0) }
         )
-    }
-}
-
-private struct NoticeTextField: View {
-    
-    @State private var title: String = ""
-    @State private var content: String = ""
-    
-    var body: some View {
-        VStack(spacing: DefaultSpacing.spacing16) {
-            ArticleTextField(placeholder: .title, text: $title)
-            
-            Divider()
-            
-            ArticleTextField(placeholder: .content, text: $content)
-        }
-        .padding(.top, DefaultSpacing.spacing24)
     }
 }
 
