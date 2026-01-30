@@ -5,7 +5,7 @@
 //  Created by 김미주 on 1/14/26.
 //
 
-import Foundation
+import SwiftUI
 
 enum CommunityItemCategory: Hashable, CaseIterable {
     case question
@@ -21,6 +21,17 @@ enum CommunityItemCategory: Hashable, CaseIterable {
             return "⚽️ 취미"
         case .impromptu:
             return "⚡️ 번개"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .question:
+            return .red100
+        case .hobby:
+            return .indigo200
+        case .impromptu:
+            return .yellow100
         }
     }
 }
