@@ -51,8 +51,7 @@ struct ChallengerAttendanceView: View, Equatable {
     var body: some View {
         VStack(spacing: DefaultSpacing.spacing16) {
             ActivityCompactMapView(
-                container: container,
-                errorHandler: errorHandler,
+                mapViewModel: mapViewModel,
                 info: session.info
             )
             attendanceActionView

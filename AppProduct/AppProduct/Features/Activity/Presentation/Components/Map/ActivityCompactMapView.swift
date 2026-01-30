@@ -13,16 +13,14 @@ import SwiftUI
 /// - 지도 인터랙션 비활성화 (disabled)
 /// - 하단 상태바: 위치 인증 상태, 주소 표시
 struct ActivityCompactMapView: View {
-    @State private var mapViewModel: BaseMapViewModel
+    @Bindable private var mapViewModel: BaseMapViewModel
     private var info: SessionInfo
 
     init(
-        container: DIContainer,
-        errorHandler: ErrorHandler,
+        mapViewModel: BaseMapViewModel,
         info: SessionInfo
     ) {
-        self._mapViewModel = .init(
-            wrappedValue: .init(container: container, info: info, errorHandler: errorHandler))
+        self.mapViewModel = mapViewModel
         self.info = info
     }
     
@@ -126,8 +124,11 @@ fileprivate struct LocationStatusBarView: View {
 
 #Preview(traits: .sizeThatFitsLayout) {
     ActivityCompactMapView(
-        container: AttendancePreviewData.container,
-        errorHandler: AttendancePreviewData.errorHandler,
+        mapViewModel: BaseMapViewModel(
+            container: AttendancePreviewData.container,
+            info: AttendancePreviewData.sessionInfo,
+            errorHandler: AttendancePreviewData.errorHandler
+        ),
         info: AttendancePreviewData.sessionInfo
     )
     .padding(.horizontal)
