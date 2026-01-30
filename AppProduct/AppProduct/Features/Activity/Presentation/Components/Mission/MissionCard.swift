@@ -15,6 +15,7 @@ struct MissionCard: View {
     // MARK: - Property
 
     private let model: MissionCardModel
+    private var focusedMissionID: FocusState<UUID?>.Binding
     private var onSubmit: (MissionSubmissionType, String?) -> Void
 
     @State private var isExpanded: Bool = false
@@ -25,9 +26,11 @@ struct MissionCard: View {
 
     init(
         model: MissionCardModel,
+        focusedMissionID: FocusState<UUID?>.Binding,
         onSubmit: @escaping (MissionSubmissionType, String?) -> Void
     ) {
         self.model = model
+        self.focusedMissionID = focusedMissionID
         self.onSubmit = onSubmit
     }
 
@@ -39,6 +42,7 @@ struct MissionCard: View {
             isExpanded: isExpanded,
             submissionType: submissionType,
             linkText: linkText,
+            focusedMissionID: focusedMissionID,
             onToggleExpanded: {
                 withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
                     isExpanded.toggle()
@@ -66,6 +70,7 @@ fileprivate struct MissionCardPresenter: View, Equatable {
     let isExpanded: Bool
     let submissionType: MissionSubmissionType
     let linkText: String
+    var focusedMissionID: FocusState<UUID?>.Binding
     let onToggleExpanded: () -> Void
     let onSubmissionTypeChanged: (MissionSubmissionType) -> Void
     let onLinkTextChanged: (String) -> Void
@@ -94,10 +99,10 @@ fileprivate struct MissionCardPresenter: View, Equatable {
                 Divider()
 
                 MissionCardContent(
-                    missionTitle: model.missionTitle,
-                    status: model.status,
+                    model: model,
                     submissionType: submissionType,
                     linkText: linkText,
+                    focusedMissionID: focusedMissionID,
                     onSubmissionTypeChanged: onSubmissionTypeChanged,
                     onLinkTextChanged: onLinkTextChanged,
                     onSubmit: onSubmit
@@ -123,36 +128,66 @@ fileprivate struct MissionCardPresenter: View, Equatable {
 // MARK: - Preview
 
 #Preview("MissionCard - All Status") {
-    ScrollView {
-        VStack(spacing: 20) {
-            ForEach(MissionPreviewData.allStatusMissions) { mission in
-                MissionCard(model: mission) { type, link in
-                    print("제출: \(type) - \(link ?? "없음")")
+    struct PreviewWrapper: View {
+        @FocusState private var focusedMissionID: UUID?
+
+        var body: some View {
+            ScrollView {
+                VStack(spacing: 20) {
+                    ForEach(MissionPreviewData.allStatusMissions) { mission in
+                        MissionCard(
+                            model: mission,
+                            focusedMissionID: $focusedMissionID
+                        ) { type, link in
+                            print("제출: \(type) - \(link ?? "없음")")
+                        }
+                    }
                 }
+                .padding()
             }
+            .background(Color.grey100)
         }
-        .padding()
     }
-    .background(Color.grey100)
+    return PreviewWrapper()
 }
 
 #Preview("MissionCard - iOS Missions") {
-    ScrollView {
-        VStack(spacing: 16) {
-            ForEach(MissionPreviewData.iosMissions) { mission in
-                MissionCard(model: mission) { type, link in
-                    print("제출: \(type) - \(link ?? "없음")")
+    struct PreviewWrapper: View {
+        @FocusState private var focusedMissionID: UUID?
+
+        var body: some View {
+            ScrollView {
+                VStack(spacing: 16) {
+                    ForEach(MissionPreviewData.iosMissions) { mission in
+                        MissionCard(
+                            model: mission,
+                            focusedMissionID: $focusedMissionID
+                        ) { type, link in
+                            print("제출: \(type) - \(link ?? "없음")")
+                        }
+                    }
                 }
+                .padding()
             }
+            .background(Color.grey100)
         }
-        .padding()
     }
-    .background(Color.grey100)
+    return PreviewWrapper()
 }
 
 #Preview("MissionCard - Single") {
-    MissionCard(model: MissionPreviewData.singleMission) { type, link in
-        print("제출: \(type) - \(link ?? "없음")")
+    struct PreviewWrapper: View {
+        @FocusState private var focusedMissionID: UUID?
+
+        var body: some View {
+            MissionCard(
+                model: MissionPreviewData.singleMission,
+                focusedMissionID: $focusedMissionID
+            ) { type, link in
+                print("제출: \(type) - \(link ?? "없음")")
+            }
+            .padding()
+        }
     }
-    .padding()
+    return PreviewWrapper()
 }

@@ -104,6 +104,46 @@ struct KeyboardToolbarModifier<Field: Hashable & CaseIterable>: ViewModifier {
     }
 }
 
+// MARK: - Keyboard Dismiss Toolbar Modifier
+
+/// 키보드 완료 툴바 수정자 - 완료 버튼만 제공
+struct KeyboardDismissToolbarModifier: ViewModifier {
+
+    // MARK: - Properties
+    @FocusState.Binding var focusedID: UUID?
+
+    // MARK: - Body
+    func body(content: Content) -> some View {
+        content
+            .safeAreaInset(edge: .bottom) {
+                if focusedID != nil {
+                    dismissToolbar
+                }
+            }
+    }
+
+    private var dismissToolbar: some View {
+        HStack {
+            Spacer()
+            Button {
+                focusedID = nil
+            } label: {
+                Image(systemName: "checkmark")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 24, height: 24)
+                    .tint(.grey900)
+                    .padding(DefaultConstant.defaultBtnPadding)
+                    .glassEffect(.regular.interactive(), in: .circle)
+            }
+        }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        .padding(.bottom, 5)
+    }
+}
+
+// MARK: - View Extensions
+
 extension View {
     /// 키보드 툴바를 추가합니다.
     ///
@@ -129,6 +169,33 @@ extension View {
     ) -> some View {
         self.modifier(
             KeyboardToolbarModifier(focusedField: focusedField)
+        )
+    }
+
+    /// 키보드 완료 툴바를 추가합니다.
+    ///
+    /// 완료 버튼만 제공하여 키보드를 내릴 수 있습니다.
+    /// UUID 기반 FocusState에 사용하며, CaseIterable 제약이 없습니다.
+    ///
+    /// - Parameter focusedID: UUID 기반 FocusState 바인딩
+    ///
+    /// Example:
+    /// ```swift
+    /// @FocusState private var focusedMissionID: UUID?
+    ///
+    /// ScrollView {
+    ///     ForEach(missions) { mission in
+    ///         TextField(...)
+    ///             .focused($focusedMissionID, equals: mission.id)
+    ///     }
+    /// }
+    /// .keyboardDismissToolbar(focusedID: $focusedMissionID)
+    /// ```
+    func keyboardDismissToolbar(
+        focusedID: FocusState<UUID?>.Binding
+    ) -> some View {
+        self.modifier(
+            KeyboardDismissToolbarModifier(focusedID: focusedID)
         )
     }
 }

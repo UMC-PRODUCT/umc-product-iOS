@@ -203,38 +203,4 @@ extension MissionPreviewData {
         .background(Color.grey100)
     }
 }
-
-// MARK: - Preview
-
-#Preview("Mission Status Badges") {
-    MissionPreviewData.missionStatusPreview()
-}
-
-#Preview("All Status Missions") {
-    ScrollView {
-        VStack(spacing: 16) {
-            ForEach(MissionPreviewData.allStatusMissions) { mission in
-                MissionCard(model: mission) { type, link in
-                    print("제출: \(type) - \(link ?? "없음")")
-                }
-            }
-        }
-        .padding()
-    }
-    .background(Color.grey100)
-}
-
-#Preview("iOS Missions") {
-    ScrollView {
-        VStack(spacing: 16) {
-            ForEach(MissionPreviewData.iosMissions) { mission in
-                MissionCard(model: mission) { type, link in
-                    print("제출: \(type) - \(link ?? "없음")")
-                }
-            }
-        }
-        .padding()
-    }
-    .background(Color.grey100)
-}
 #endif

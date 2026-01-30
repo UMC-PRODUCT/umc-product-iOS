@@ -14,17 +14,16 @@ struct MissionCardContent: View, Equatable {
 
     // MARK: - Property
 
-    let missionTitle: String
-    let status: MissionStatus
+    let model: MissionCardModel
     let submissionType: MissionSubmissionType
     let linkText: String
+    var focusedMissionID: FocusState<UUID?>.Binding
     let onSubmissionTypeChanged: (MissionSubmissionType) -> Void
     let onLinkTextChanged: (String) -> Void
     let onSubmit: (MissionSubmissionType, String?) -> Void
 
     static func == (lhs: MissionCardContent, rhs: MissionCardContent) -> Bool {
-        lhs.missionTitle == rhs.missionTitle &&
-        lhs.status == rhs.status &&
+        lhs.model == rhs.model &&
         lhs.submissionType == rhs.submissionType &&
         lhs.linkText == rhs.linkText
     }
@@ -33,10 +32,10 @@ struct MissionCardContent: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            Text(missionTitle)
+            Text(model.missionTitle)
                 .appFont(.subheadline, color: .gray)
 
-            switch status {
+            switch model.status {
             case .notStarted, .inProgress:
                 submissionView
             case .pendingApproval:
@@ -53,8 +52,10 @@ struct MissionCardContent: View, Equatable {
 
     private var submissionView: some View {
         MissionSubmissionView(
+            missionID: model.id,
             submissionType: submissionType,
             linkText: linkText,
+            focusedMissionID: focusedMissionID,
             onSubmissionTypeChanged: onSubmissionTypeChanged,
             onLinkTextChanged: onLinkTextChanged,
             onSubmit: onSubmit
@@ -93,8 +94,10 @@ private struct MissionSubmissionView: View, Equatable {
 
     // MARK: - Property
 
+    let missionID: UUID
     let submissionType: MissionSubmissionType
     let linkText: String
+    var focusedMissionID: FocusState<UUID?>.Binding
     let onSubmissionTypeChanged: (MissionSubmissionType) -> Void
     let onLinkTextChanged: (String) -> Void
     let onSubmit: (MissionSubmissionType, String?) -> Void
@@ -102,6 +105,7 @@ private struct MissionSubmissionView: View, Equatable {
     // MARK: - Equatable
 
     static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.missionID == rhs.missionID &&
         lhs.submissionType == rhs.submissionType &&
         lhs.linkText == rhs.linkText
     }
@@ -186,6 +190,7 @@ private struct MissionSubmissionView: View, Equatable {
             get: { linkText },
             set: { onLinkTextChanged($0) }
         ))
+        .focused(focusedMissionID, equals: missionID)
         .appFont(.footnote, weight: .regular, color: .grey500)
         .padding(DefaultConstant.defaultTextFieldPadding)
         .background(
@@ -257,7 +262,7 @@ fileprivate struct SubmitButton: View, Equatable {
             Text("제출")
                 .appFont(.subheadline, weight: .bold, color: .white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .padding(DefaultConstant.defaultBtnPadding)
         }
         .buttonStyle(.glassProminent)
         .tint(.indigo500)
@@ -272,16 +277,17 @@ fileprivate struct SubmitButton: View, Equatable {
     struct Demo: View {
         @State private var submissionType: MissionSubmissionType = .link
         @State private var linkText: String = ""
+        @FocusState private var focusedMissionID: UUID?
 
         var body: some View {
             ZStack {
                 Color.grey100.ignoresSafeArea()
 
                 MissionCardContent(
-                    missionTitle: MissionPreviewData.singleMission.missionTitle,
-                    status: .inProgress,
+                    model: MissionPreviewData.singleMission,
                     submissionType: submissionType,
                     linkText: linkText,
+                    focusedMissionID: $focusedMissionID,
                     onSubmissionTypeChanged: { submissionType = $0 },
                     onLinkTextChanged: { linkText = $0 },
                     onSubmit: { type, link in
@@ -299,29 +305,36 @@ fileprivate struct SubmitButton: View, Equatable {
 }
 
 #Preview("MissionCardContent - All Status") {
-    ScrollView {
-        VStack(spacing: 20) {
-            ForEach(MissionStatus.allCases, id: \.self) { status in
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(status.displayText)
-                        .appFont(.title3, color: .gray)
-                    MissionCardContent(
-                        missionTitle: "SwiftUI 기초 학습",
-                        status: status,
-                        submissionType: .link,
-                        linkText: "",
-                        onSubmissionTypeChanged: { _ in },
-                        onLinkTextChanged: { _ in },
-                        onSubmit: { _, _ in }
-                    )
-                    .padding()
-                    .background(Color.grey000)
-                    .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+    struct Demo: View {
+        @FocusState private var focusedMissionID: UUID?
+
+        var body: some View {
+            ScrollView {
+                VStack(spacing: 20) {
+                    ForEach(MissionPreviewData.allStatusMissions) { model in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(model.status.displayText)
+                                .appFont(.title3, color: .gray)
+                            MissionCardContent(
+                                model: model,
+                                submissionType: .link,
+                                linkText: "",
+                                focusedMissionID: $focusedMissionID,
+                                onSubmissionTypeChanged: { _ in },
+                                onLinkTextChanged: { _ in },
+                                onSubmit: { _, _ in }
+                            )
+                            .padding()
+                            .background(Color.grey000)
+                            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+                        }
+                    }
                 }
+                .padding()
             }
+            .background(Color.grey100)
         }
-        .padding()
     }
-    .background(Color.grey100)
+    return Demo()
 }
 #endif
