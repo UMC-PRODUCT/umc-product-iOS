@@ -21,17 +21,24 @@ struct CommunityPartySetting: View {
 
     var body: some View {
         Group {
-            Section("날짜 및 시간") {
+            // 1. 날짜 및 시간
+            Section {
                 dateField
                 timeField
             }
-            Section("최대 인원") {
+            
+            // 2. 최대 인원
+            Section {
                 maxParticipantsField
             }
-            Section("장소") {
+            
+            // 3. 장소
+            Section {
                 placeField
             }
-            Section("오픈채팅 링크") {
+            
+            // 4. 오픈채팅 링크
+            Section {
                 linkField
             }
         }
@@ -75,7 +82,8 @@ struct CommunityPartySetting: View {
     }
 
     private var linkField: some View {
-        TextField("https://open.kakao.com/...", text: $vm.linkText)
+        TextField("오픈채팅 링크를 입력하세요.", text: $vm.linkText)
+            .appFont(.body)
             .focused($focusedField)
             .keyboardType(.URL)
             .autocapitalization(.none)

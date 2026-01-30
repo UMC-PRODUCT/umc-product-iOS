@@ -16,16 +16,21 @@ struct CommunityPostView: View {
     // MARK: - Body
     var body: some View {
         Form {
-            CategorySection
+            // 1. 카테고리
+            Section {
+                CategorySection
+            }
             
-            Section("제목 및 내용") {
+            // 2. 번개폼
+            if vm.selectedCategory == .impromptu {
+                CommunityPartySetting(vm: vm)
+            }
+            
+            // 3. 제목 및 내용
+            Section {
                 ArticleTextField(placeholder: .title, text: $vm.titleText)
                 ArticleTextField(placeholder: .content, text: $vm.contentText)
                     .frame(minHeight: 100, alignment: .top)
-            }
-            
-            if vm.selectedCategory == .impromptu {
-                CommunityPartySetting(vm: vm)
             }
         }
         .navigation(naviTitle: .communityPost, displayMode: .inline)
