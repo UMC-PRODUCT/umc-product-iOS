@@ -32,11 +32,7 @@ struct ChallengerAttendanceView: View, Equatable {
         self.container = container
         self.errorHandler = errorHandler
         self.session = session
-        self._mapViewModel = .init(
-            wrappedValue: .init(
-                container: container,
-                info: session.info,
-                errorHandler: errorHandler))
+        self._mapViewModel = .init(wrappedValue: mapViewModel)
         self.attendanceViewModel = attendanceViewModel
         self.userId = userId
     }
