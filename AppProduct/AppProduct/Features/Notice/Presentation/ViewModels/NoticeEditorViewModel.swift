@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import UIKit
+import PhotosUI
 
 @Observable
 final class NoticeEditorViewModel {
@@ -35,13 +37,22 @@ final class NoticeEditorViewModel {
     
     /// 학교 목록
     let schools: [String]
-
+    
     /// 투표 폼 시트뷰 표시 여부
     var showVoting: Bool = false
-
+    
     /// 투표 폼 데이터
     var voteFormData: VoteFormData = VoteFormData()
-
+    
+    /// PhotosPicker 선택 아이템
+//    var selectedPhotoItem: PhotosPickerItem?
+    
+    /// 선택된 이미지
+//    var selectedImage: UIImage?
+    
+    /// 첨부된 이미지 목록
+//    var noticeImages: [NoticeImageItem] = []
+    
     // MARK: - Initializer
     
     init(
@@ -141,28 +152,40 @@ final class NoticeEditorViewModel {
         default: break
         }
     }
-
+    
     // MARK: - Vote Function
-
+    
     func showVotingFormSheet() {
         voteFormData = VoteFormData()
         showVoting = true
     }
-
+    
     func dismissVotingFormSheet() {
         showVoting = false
     }
-
+    
     func addVoteOption() {
         guard voteFormData.canAddOption else { return }
         voteFormData.options.append(VoteOptionItem())
     }
-
+    
     func removeVoteOption(_ option: VoteOptionItem) {
         guard voteFormData.canRemoveOption else { return }
         voteFormData.options.removeAll { $0.id == option.id }
     }
-
+    
+    // MARK: - Image Function
+//    @MainActor
+//    func didLoadImage(image: UIImage) async {
+//        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
+//        noticeImages.append(NoticeImageItem(imageData: imageData))
+//        selectedPhotoItem = nil
+//    }
+//    
+//    func removeImage(_ item: NoticeImageItem) {
+//        noticeImages.removeAll { $0.id == item.id }
+//    }
+    
     // MARK: - Private
     
     private func clearFilterForSubCategory(_ subCategory: EditorSubCategory) {
