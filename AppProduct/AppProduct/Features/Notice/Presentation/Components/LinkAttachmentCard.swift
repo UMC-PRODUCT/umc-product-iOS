@@ -88,5 +88,5 @@ struct LinkAttachmentCard: View, Equatable {
             noticeLinkItems.append(NoticeLinkItem())
         }
     }
-    .safeAreaPadding(.horizontal, 16)
+    .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
 }
