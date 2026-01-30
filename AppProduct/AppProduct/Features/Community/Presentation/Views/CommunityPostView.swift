@@ -41,7 +41,7 @@ struct CommunityPostView: View {
                 
                 // 2-3. 장소
                 Section {
-                    placeSection
+                    PlaceSelectView(place: $vm.selectedPlace)
                 }
                 
                 // 2-4. 오픈채팅 링크
@@ -59,12 +59,6 @@ struct CommunityPostView: View {
         }
         .scrollDismissesKeyboard(.immediately)
         .navigation(naviTitle: .communityPost, displayMode: .inline)
-        .sheet(isPresented: $vm.showPlaceSheet, content: {
-            SearchMapView(errorHandler: errorHandler) { place in
-                vm.selectedPlace = place
-            }
-            .presentationDragIndicator(.visible)
-        })
         .toolbar {
             ToolBarCollection.CommunityPostDoneBtn(
                 isEnabled: vm.isValid,
@@ -107,23 +101,9 @@ struct CommunityPostView: View {
         }
     }
 
-    private var placeSection: some View {
-        Button(action: {
-            vm.showPlaceSheet.toggle()
-        }, label: {
-            HStack {
-                Text("장소 선택")
-                    .appFont(.body, color: .black)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(.grey500)
-            }
-        })
-    }
-
     private var linkSection: some View {
         TextField("오픈채팅 링크를 입력하세요.", text: $vm.linkText)
-            .appFont(.body)
+            .font(.app(.callout))
             .keyboardType(.URL)
             .autocapitalization(.none)
             .autocorrectionDisabled()

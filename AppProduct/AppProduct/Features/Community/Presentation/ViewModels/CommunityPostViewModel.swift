@@ -18,7 +18,6 @@ class CommunityPostViewModel {
     var selectedDate: Date = Date()
     var maxParticipants: Int = 3
     var selectedPlace: PlaceSearchInfo = .init(name: "", address: "", coordinate: .init(latitude: 0.0, longitude: 0.0))
-    var showPlaceSheet: Bool = false
     var linkText: String = ""
     
     // MARK: - Computed Properties
