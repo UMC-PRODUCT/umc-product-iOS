@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - Constants
 
-private enum Constants {
+fileprivate enum Constants {
     static let chevronIconSize: CGFloat = 14
     static let borderWidth: CGFloat = 1
     static let tagBadgeCornerRadius: CGFloat = 12
@@ -17,7 +17,9 @@ private enum Constants {
 
 // MARK: - MissionCardHeader
 
-/// 미션 카드 헤더 (주차 태그, 플랫폼 태그, 제목, 상태 뱃지, 펼치기 버튼)
+/// 미션 카드 헤더 뷰
+///
+/// 주차/플랫폼 태그, 제목, 상태 뱃지, 펼치기/접기 버튼을 표시합니다.
 struct MissionCardHeader: View, Equatable {
 
     // MARK: - Property
@@ -28,7 +30,11 @@ struct MissionCardHeader: View, Equatable {
 
     // MARK: - Initializer
 
-    init(model: MissionCardModel, isExpanded: Bool, onToggle: @escaping () -> Void) {
+    init(
+        model: MissionCardModel,
+        isExpanded: Bool,
+        onToggle: @escaping () -> Void
+    ) {
         self.model = model
         self.isExpanded = isExpanded
         self.onToggle = onToggle

@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+/// 출석 세션 목록을 표시하는 리스트 컴포넌트
+///
+/// 세션별 출석 카드와 확장 시 출석 상세 뷰를 함께 표시합니다.
 struct AttendanceSessionList: View, Equatable {
     private var expandedSessionId: Session.ID?
     private var attendanceViewModel: ChallengerAttendanceViewModel
