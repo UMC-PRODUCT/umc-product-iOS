@@ -126,22 +126,22 @@ struct MissionPreviewData {
         .init(
             week: 1,
             platform: "iOS",
-            title: "완료된 미션",
-            missionTitle: "이미 제출이 완료된 미션입니다",
+            title: "Swift 기초 문법",
+            missionTitle: "Swift 기본 문법을 학습하고 정리한 글 링크를 제출하세요",
             status: .pass
         ),
         .init(
             week: 2,
             platform: "iOS",
-            title: "진행 중인 미션",
-            missionTitle: "현재 진행 중인 미션입니다",
+            title: "SwiftUI 레이아웃",
+            missionTitle: "VStack, HStack, ZStack을 활용한 레이아웃 예제를 제출하세요",
             status: .inProgress
         ),
         .init(
             week: 3,
             platform: "iOS",
-            title: "시작 전 미션",
-            missionTitle: "아직 시작하지 않은 미션입니다",
+            title: "MVVM 아키텍처",
+            missionTitle: "MVVM 패턴을 적용한 간단한 앱을 구현하세요",
             status: .notStarted
         )
     ]

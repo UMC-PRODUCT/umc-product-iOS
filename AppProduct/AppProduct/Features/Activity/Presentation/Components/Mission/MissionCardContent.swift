@@ -88,7 +88,7 @@ struct MissionCardContent: View, Equatable {
 
 // MARK: - MissionSubmissionView
 
-/// 미션 제출 UI (타입 선택 + 제출 버튼)
+/// 미션 제출 UI (타입 선택 + 링크 입력 + 제출 버튼)
 private struct MissionSubmissionView: View, Equatable {
 
     // MARK: - Property
@@ -99,9 +99,28 @@ private struct MissionSubmissionView: View, Equatable {
     let onLinkTextChanged: (String) -> Void
     let onSubmit: (MissionSubmissionType, String?) -> Void
 
+    // MARK: - Equatable
+
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.submissionType == rhs.submissionType &&
         lhs.linkText == rhs.linkText
+    }
+
+    // MARK: - Constants
+
+    private enum Constants {
+        static let submitButtonWidth: CGFloat = 80
+        static let borderWidth: CGFloat = 1
+    }
+
+    // MARK: - Computed Property
+
+    private var hasError: Bool {
+        !linkText.isEmpty && !linkText.isValidHTTPURL
+    }
+
+    private var isSubmitDisabled: Bool {
+        submissionType == .link && !linkText.isValidHTTPURL
     }
 
     // MARK: - Body
@@ -132,19 +151,49 @@ private struct MissionSubmissionView: View, Equatable {
         }
     }
 
-    @ViewBuilder
     private var submissionSection: some View {
-        if submissionType == .link {
-            LinkSubmissionView(
-                linkText: linkText,
-                onLinkTextChanged: onLinkTextChanged,
-                onSubmit: { onSubmit(.link, linkText) }
-            )
-        } else {
-            CompleteOnlySubmissionView(
-                onSubmit: { onSubmit(.completeOnly, nil) }
-            )
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            HStack(spacing: DefaultSpacing.spacing12) {
+                if submissionType == .link {
+                    linkInput
+                }
+
+                SubmitButton(
+                    isDisabled: isSubmitDisabled,
+                    onSubmit: {
+                        if submissionType == .link {
+                            onSubmit(.link, linkText)
+                        } else {
+                            onSubmit(.completeOnly, nil)
+                        }
+                    }
+                )
+                .frame(
+                    maxWidth: submissionType == .link
+                        ? Constants.submitButtonWidth : .infinity
+                )
+            }
+
+            if submissionType == .link && hasError {
+                Text("올바른 URL 형식이 아닙니다")
+                    .appFont(.footnote, color: .red)
+            }
         }
+    }
+
+    private var linkInput: some View {
+        TextField("https://...", text: Binding(
+            get: { linkText },
+            set: { onLinkTextChanged($0) }
+        ))
+        .appFont(.footnote, weight: .regular, color: .grey500)
+        .padding(DefaultConstant.defaultTextFieldPadding)
+        .background(
+            RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+                .strokeBorder(
+                    hasError ? Color.red : Color.grey300,
+                    lineWidth: Constants.borderWidth)
+        )
     }
 }
 
@@ -183,101 +232,36 @@ fileprivate struct MissionStatusResultView: View, Equatable {
     }
 }
 
-// MARK: - LinkSubmissionView
+// MARK: - SubmitButton
 
-/// 링크 제출 뷰 (텍스트 필드 + 제출 버튼)
-fileprivate struct LinkSubmissionView: View, Equatable {
+/// 미션 제출 버튼 (공통 스타일)
+fileprivate struct SubmitButton: View, Equatable {
 
     // MARK: - Property
 
-    let linkText: String
-    let onLinkTextChanged: (String) -> Void
+    let isDisabled: Bool
     let onSubmit: () -> Void
 
+    // MARK: - Equatable
+
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.linkText == rhs.linkText
-    }
-
-    // MARK: - Constants
-
-    private enum Constants {
-        static let textFieldHeight: CGFloat = 50
-        static let submitButtonWidth: CGFloat = 80
-        static let borderWidth: CGFloat = 1
-        static let buttonPadding: CGFloat = 10
-    }
-
-    // MARK: - Computed Property
-
-    private var hasError: Bool {
-        !linkText.isEmpty && !linkText.isValidHTTPURL
+        lhs.isDisabled == rhs.isDisabled
     }
 
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-            HStack(spacing: DefaultSpacing.spacing12) {
-                linkInput
-                submitButton
-            }
-
-            if hasError {
-                Text("올바른 URL 형식이 아닙니다")
-                    .appFont(.footnote, color: .red)
-            }
-        }
-    }
-
-    private var linkInput: some View {
-        TextField("https://...", text: Binding(
-            get: { linkText },
-            set: { onLinkTextChanged($0) }
-        ))
-        .appFont(.footnote, weight: .regular, color: .grey500)
-        .padding(DefaultConstant.defaultTextFieldPadding)
-        .background(
-            RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .strokeBorder(
-                    hasError ? Color.red : Color.grey300,
-                    lineWidth: Constants.borderWidth)
-        )
-    }
-
-    private var submitButton: some View {
         Button {
             onSubmit()
         } label: {
             Text("제출")
                 .appFont(.subheadline, weight: .bold, color: .white)
-                .padding(Constants.buttonPadding)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
         }
         .buttonStyle(.glassProminent)
         .tint(.indigo500)
-        .disabled(!linkText.isValidHTTPURL)
-    }
-}
-
-// MARK: - CompleteOnlySubmissionView
-
-/// 완료만 제출 뷰 (제출 버튼만)
-private struct CompleteOnlySubmissionView: View, Equatable {
-
-    // MARK: - Property
-
-    let onSubmit: () -> Void
-
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        true
-    }
-
-    // MARK: - Body
-
-    var body: some View {
-        MainButton("제출") {
-            onSubmit()
-        }
-        .buttonStyle(.primary)
+        .disabled(isDisabled)
     }
 }
 

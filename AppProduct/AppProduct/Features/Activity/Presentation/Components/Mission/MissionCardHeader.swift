@@ -50,7 +50,7 @@ struct MissionCardHeader: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        HStack(alignment: .top, spacing: DefaultSpacing.spacing8) {
+        HStack(alignment: .top) {
             contentSection
             Spacer()
             statusSection
@@ -91,7 +91,7 @@ struct MissionCardHeader: View, Equatable {
             .appFont(
                 .calloutEmphasis,
                 color: model.status == .inProgress
-                ? Color.indigo500 : .grey900)
+                ? Color.indigo500 : Color.black)
             .multilineTextAlignment(.leading)
     }
 
