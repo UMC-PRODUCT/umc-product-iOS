@@ -20,4 +20,16 @@ class CommunityPostViewModel {
     var selectedPlace: PlaceSearchInfo = .init(name: "", address: "", coordinate: .init(latitude: 0.0, longitude: 0.0))
     var showPlaceSheet: Bool = false
     var linkText: String = ""
+    
+    // MARK: - Computed Properties
+    var isValid: Bool {
+        let hasBasicInfo = !titleText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !contentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if selectedCategory == .impromptu {
+            let hasPlace = !selectedPlace.name.isEmpty
+            let hasLink = !linkText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            
+            return hasBasicInfo && hasPlace && hasLink
+        }
+        return hasBasicInfo
+    }
 }

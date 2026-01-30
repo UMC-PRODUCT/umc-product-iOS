@@ -65,6 +65,14 @@ struct CommunityPostView: View {
             }
             .presentationDragIndicator(.visible)
         })
+        .toolbar {
+            ToolBarCollection.CommunityPostDoneBtn(
+                isEnabled: vm.isValid,
+                action: {
+                    // TODO: 글 작성 API 연결
+                }
+            )
+        }
     }
     
     // MARK: - Subviews

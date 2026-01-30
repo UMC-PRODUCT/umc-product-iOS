@@ -335,6 +335,32 @@ struct ToolBarCollection {
             }
         }
     }
+    
+    /// 커뮤니티 글 작성 완료 버튼
+    struct CommunityPostDoneBtn: ToolbarContent {
+        @Environment(\.dismiss) var dismiss
+        let isEnabled: Bool
+        let action: () -> Void
+        
+        init(isEnabled: Bool, action: @escaping () -> Void) {
+            self.isEnabled = isEnabled
+            self.action = action
+        }
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(action: {
+                    action()
+                    dismiss()
+                }) {
+                    Image(systemName: "checkmark")
+                        .appFont(.body, color: isEnabled ? .indigo700 : .grey400)
+                }
+                .disabled(!isEnabled)
+            }
+        }
+    }
+    
 
     /// 상단 중앙 섹션 메뉴 툴바 (Button 기반, 애니메이션 지원)
     struct ToolBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
