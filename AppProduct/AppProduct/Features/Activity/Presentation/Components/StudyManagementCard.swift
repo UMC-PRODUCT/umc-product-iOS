@@ -104,12 +104,12 @@ private struct StudyTopTextPresenter: View, Equatable {
                 .foregroundStyle(.grey800)
             
             Text(studyManagementItem.part)
-                .font(.app(.caption2, weight: .regular))
+                .font(.app(.caption1, weight: .regular))
                 .padding(.horizontal, Constants.horizonPadding)
                 .padding(.vertical, Constants.verticalPadding)
                 .overlay(
                     RoundedRectangle(cornerRadius: Constants.radius)
-                        .strokeBorder(.grey000)
+                        .strokeBorder(.grey200)
                         .foregroundStyle(.clear)
                 )
         }

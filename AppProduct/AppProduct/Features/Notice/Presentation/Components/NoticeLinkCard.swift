@@ -89,11 +89,11 @@ struct LinkTextPresenter: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Constants.vstackSpacing) {
             Text("관련 링크 바로가기")
-                .font(.app(.subheadline, weight: .bold))
+                .font(.app(.calloutEmphasis))
                 .foregroundStyle(Color.black)
             
             Text(url)
-                .font(.app(.caption1, weight: .regular))
+                .font(.app(.footnote, weight: .regular))
                 .foregroundStyle(Color.grey700)
         }
     }
