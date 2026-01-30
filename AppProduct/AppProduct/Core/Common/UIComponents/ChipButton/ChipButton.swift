@@ -24,6 +24,9 @@ struct ChipButton: View {
     /// ChipButton 생성자
     /// - Parameters:
     ///   - title: 버튼 텍스트
+    ///  - isSelected: <#parameter description#>
+    ///  - action: <#parameter description#>
+    ///  - trailingIcon: <#parameter description#>
     init(_ title: String, isSelected: Bool, trailingIcon: Bool? = nil, action: @escaping () -> Void) {
         self.title = title
         self.isSelected = isSelected
