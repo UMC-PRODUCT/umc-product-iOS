@@ -14,7 +14,7 @@ struct CommunityPostView: View {
     @State var vm = CommunityPostViewModel()
     
     private enum Constants {
-        static let contentMinHeight: CGFloat = 100
+        static let contentMinHeight: CGFloat = 200
         static let participantsRange: ClosedRange<Int> = 2...20
     }
     
@@ -90,12 +90,14 @@ struct CommunityPostView: View {
                    selection: $vm.selectedDate,
                    displayedComponents: [.date])
             .datePickerStyle(.compact)
+            .tint(.indigo500)
     }
     
     private var timeSection: some View {
         DatePicker("시간",
                    selection: $vm.selectedDate,
                    displayedComponents: [.hourAndMinute])
+            .tint(.indigo500)
     }
 
     private var maxParticipantsSection: some View {
