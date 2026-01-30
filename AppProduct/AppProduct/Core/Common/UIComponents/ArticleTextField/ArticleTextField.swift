@@ -19,11 +19,6 @@ struct ArticleTextField: View {
         self._text = text
     }
     
-    // MARK: - Constant
-    fileprivate enum Constants {
-        static let m: CGFloat = 16
-    }
-    
     // MARK: - Body
     var body: some View {
         TextField(

@@ -15,6 +15,7 @@ struct LinkAttachmentCard: View, Equatable {
     
     // MARK: - Constant
     fileprivate enum Constants {
+        static let mainPadding: CGFloat = 16
         static let xmarkSize: CGFloat = 18
         static let topSectionHPadding: CGFloat = 12
     }
@@ -29,7 +30,7 @@ struct LinkAttachmentCard: View, Equatable {
             topSection
             textfieldSection
         }
-        .padding(16)
+        .padding(Constants.mainPadding)
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                 .fill(.grey200)

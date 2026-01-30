@@ -66,7 +66,7 @@ private struct NoticeItemPresenter: View, Equatable {
         }
         .frame(height: Constant.mainBoxHeight)
         .padding(Constant.mainPadding)
-        .containerShape(.rect(cornerRadius: Constant.mainBoxRadius))
+        .containerShape(.rect(cornerRadius: DefaultConstant.defaultListCornerRadius))
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius)
                 .fill(model.mustRead ? .indigo100 : .white)

@@ -13,6 +13,7 @@ struct VotingEditorCard: View {
     
     fileprivate enum Constants {
         static let textSpacing: CGFloat = 35
+        static let bgOpacity: Double = 0.6
     }
   
     var body: some View {
@@ -25,7 +26,7 @@ struct VotingEditorCard: View {
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                 .fill(.indigo100)
-                .opacity(0.6)
+                .opacity(Constants.bgOpacity)
                 .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
         }
     }

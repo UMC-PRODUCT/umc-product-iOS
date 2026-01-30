@@ -13,9 +13,15 @@ struct CoreStudyManagementList: View {
     // MARK: - Property
     let studyManagementItem: StudyManagementItem
     
+    // MARK: - Constant
+    fileprivate enum Constants {
+        static let horizontalPadding: CGFloat = 11
+        static let verticalPadding: CGFloat = 8
+    }
+    
     // MARK: - Body
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DefaultSpacing.spacing12) {
             StudyImagePresenter(studyManagementItem: studyManagementItem)
             CoreStudyTextPresenter(
                 name: studyManagementItem.name,
@@ -25,9 +31,9 @@ struct CoreStudyManagementList: View {
             Spacer()
             Text(studyManagementItem.state.rawValue)
                 .font(.app(.callout, weight: .bold))
-                .padding(.horizontal, 11)
+                .padding(.horizontal, Constants.horizontalPadding)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Constants.verticalPadding)
     }
 }
 
@@ -38,6 +44,10 @@ struct CoreStudyTextPresenter: View {
     let name: String
     let part: String
     let title: String
+    
+    private enum Constants {
+        static let partPadding: EdgeInsets = .init(top: 2, leading: 4, bottom: 2, trailing: 4)
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -46,16 +56,15 @@ struct CoreStudyTextPresenter: View {
                     .font(.app(.callout, weight: .bold))
                 Text(part)
                     .font(.app(.caption2, weight: .regular))
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
+                    .padding(Constants.partPadding)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
                             .strokeBorder(Color.grey300)
                             .foregroundStyle(.clear)
                     )
             }
             Text(title)
-                .font(.app(.caption1, weight: .regular))
+                .font(.app(.footnote, weight: .regular))
                 .foregroundStyle(Color.indigo500)
         }
     }
