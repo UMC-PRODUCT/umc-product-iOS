@@ -236,6 +236,8 @@
 /* Begin XCBuildConfiguration section */
 		0E6380B22F02F1050060E4D9 /* Debug configuration for PBXProject "AppProduct" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 0E6380AB2F02F1020060E4D9 /* AppProduct */;
+			baseConfigurationReferenceRelativePath = Core/Secret/Secrets.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -300,6 +302,8 @@
 		};
 		0E6380B32F02F1050060E4D9 /* Release configuration for PBXProject "AppProduct" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 0E6380AB2F02F1020060E4D9 /* AppProduct */;
+			baseConfigurationReferenceRelativePath = Core/Secret/Secrets.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
