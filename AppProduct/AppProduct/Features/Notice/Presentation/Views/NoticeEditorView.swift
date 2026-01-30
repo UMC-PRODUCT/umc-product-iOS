@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct NoticeEditorView: View {
 
@@ -20,12 +21,19 @@ struct NoticeEditorView: View {
     // MARK: - Constant
     fileprivate enum Constants {
         static let chipSpacing: CGFloat = 8
+        static let toolBtnIconSize: CGFloat = 20
+        static let toolBtnFrame: CGSize = .init(width: 30, height: 30)
     }
 
     // MARK: - Body
     var body: some View {
         ScrollView(.vertical) {
-            NoticeTextField()
+            VStack {
+                NoticeTextField()
+//                if !viewModel.noticeImages.isEmpty {
+//                    
+//                }
+            }
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .navigationBarTitleDisplayMode(.inline)
@@ -49,6 +57,34 @@ struct NoticeEditorView: View {
                 .presentationDetents([.fraction(0.3)])
                 .presentationDragIndicator(.visible)
         }
+        .safeAreaBar(edge: .bottom, alignment: .leading) {
+            HStack {
+//                PhotosPicker(
+//                    selection: $viewModel.selectedPhotoItem,
+//                    matching: .images
+//                ) {
+//                    Image(systemName: "photo.fill")
+//                        .font(.system(size: Constants.toolBtnIconSize))
+//                        .foregroundStyle(.black)
+//                        .frame(width: Constants.toolBtnFrame.width, height: Constants.toolBtnFrame.height)
+//                        .padding(DefaultConstant.defaultBtnPadding)
+//                        .glassEffect()
+//                }
+                ToolBtn(icon: "link", action: {
+                    
+                })
+                ToolBtn(icon: "chart.bar.fill", action: {
+                    
+                })
+            }
+            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .padding(.bottom, DefaultConstant.defaultContentBottomMargins)
+        }
+//        .onChange(of: viewModel.selectedPhotoItem) { _, _ in
+//            Task {
+//                await viewModel.loadSelectedImage()
+//            }
+//        }
     }
 
     private var subCategorySection: some View {
@@ -80,6 +116,36 @@ struct NoticeEditorView: View {
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
+    
+    // MARK: - safeAreaBar ToolBtn
+    /// 링크, 투표 추가
+    private func ToolBtn(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: Constants.toolBtnIconSize))
+                .foregroundStyle(.black)
+                .frame(width: Constants.toolBtnFrame.width, height: Constants.toolBtnFrame.height)
+                .padding(DefaultConstant.defaultBtnPadding)
+                .glassEffect()
+        }
+    }
+    
+    // MARK: - imageSection
+//    private var imageSection: some View {
+//        ScrollView(.horizontal) {
+//            HStack {
+//                ForEach(viewModel.noticeImages, id: \.id) { item in
+//                    AttachedImageCard(
+//                        id: item.id,
+//                        imageData: item.imageData,
+//                        onDismiss: {
+//                            viewModel.removeImage(item)
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
     
     // MARK: - Computed Property
     private var categoryBinding: Binding<EditorMainCategory> {
