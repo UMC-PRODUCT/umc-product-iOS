@@ -15,9 +15,12 @@ struct LinkAttachmentCard: View, Equatable {
     
     // MARK: - Constant
     fileprivate enum Constants {
-        static let mainPadding: CGFloat = 16
-        static let xmarkSize: CGFloat = 18
+        static let mainPadding: CGFloat = 12
+        static let bgOpacity: Double = 0.6
+        static let xmarkSize: CGFloat = 16
+        static let xmarkPadding: CGFloat = 2
         static let topSectionHPadding: CGFloat = 12
+        static let textfieldPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -33,23 +36,24 @@ struct LinkAttachmentCard: View, Equatable {
         .padding(Constants.mainPadding)
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .fill(.grey200)
-                .glass()
+                .fill(.indigo100)
+                .opacity(Constants.bgOpacity)
+                .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
         }
     }
     
     /// 링크 카드 타이틀, 카드 삭제 버튼
     private var topSection: some View {
         HStack {
-            Image(systemName: "link")
-            Text("링크 첨부")
-                .appFont(.body, weight: .bold)
+            Label("링크 첨부", systemImage: "link")
+                .appFont(.calloutEmphasis)
             Spacer()
             Button(action: {
                 onDismiss()
             }) {
                 Image(systemName: "xmark")
                     .font(.system(size: Constants.xmarkSize))
+                    .padding(Constants.xmarkPadding)
                     .foregroundStyle(.black)
             }
         }
@@ -64,8 +68,8 @@ struct LinkAttachmentCard: View, Equatable {
             .textInputAutocapitalization(.never)
             .keyboardType(.URL)
             .autocorrectionDisabled()
-            .appFont(.callout)
-            .padding(DefaultConstant.defaultTextFieldPadding)
+            .appFont(.subheadline)
+            .padding(Constants.textfieldPadding)
             .background {
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                     .fill(.grey000)

@@ -34,10 +34,10 @@ struct VotingEditorCard: View {
     private var textSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Label("투표", systemImage: "chart.bar.fill")
-                .appFont(.bodyEmphasis)
+                .appFont(.calloutEmphasis)
             Text("\(anonymousLabel), \(allowMultipleLabel), \(formData.options.count)개 항목")
                 .padding(.leading, Constants.textSpacing)
-                .appFont(.callout, color: .grey500)
+                .appFont(.footnote, color: .grey500)
         }
     }
     
