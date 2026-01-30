@@ -55,11 +55,11 @@ struct VotingFormSheetView: View, Equatable {
     }
     
     // MARK: - Options
-    // 최대 5개, 2개부터 trash 없이, 애니메이션 .move,
     private var optionsSection: some View {
         VStack(spacing: DefaultSpacing.spacing8) {
             ForEach($formData.options) { $option in
                 optionRow(option: $option)
+                    .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
             }
         }
     }
