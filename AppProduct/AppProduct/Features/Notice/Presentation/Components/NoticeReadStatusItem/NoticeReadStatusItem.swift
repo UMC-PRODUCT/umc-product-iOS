@@ -12,7 +12,6 @@ import SwiftUI
 private enum Constant {
     static let mainHSpacing: CGFloat = 12
     static let mainPadding: CGFloat = 12
-    static let mainRadius: CGFloat = 20
     // profile
     static let profileSize: CGSize = .init(width: 40, height: 40)
     // user
@@ -84,7 +83,7 @@ private struct NoticeReadStatusItemPresenter: View, Equatable {
             }
         }
         .padding(Constant.mainPadding)
-        .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.mainRadius))
+        .background(.grey100, in: RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius))
     }
 }
 
@@ -100,7 +99,7 @@ private struct UserInfoSection: View, Equatable {
                 Text(model.part)
                     .appFont(.caption2, color: .gray)
                     .padding(Constant.partTagPadding)
-                    .background(.white, in: RoundedRectangle(cornerRadius: Constant.partTagRadius))
+                    .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
                     .overlay(RoundedRectangle(cornerRadius: Constant.partTagRadius).strokeBorder(.grey200))
             }
 

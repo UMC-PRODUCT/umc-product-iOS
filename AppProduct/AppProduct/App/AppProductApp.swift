@@ -21,7 +21,8 @@ struct AppProductApp: App {
 
     var body: some Scene {
         WindowGroup {
-            UmcTab()
+//            UmcTab()
+            AttendanceTestWrapper()
                 .environment(errorHandler)
                 .environment(\.di, container)
                 .modelContainer(for: NoticeHistoryData.self)

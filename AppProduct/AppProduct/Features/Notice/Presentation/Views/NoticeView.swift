@@ -19,6 +19,7 @@ struct NoticeView: View {
     private enum Constants {
         static let listTopPadding: CGFloat = 10
         static let searchPlaceholder: String = "제목, 내용 검색"
+        static let tintOpacity: Double = 0.5
     }
     // MARK: - Body
     var body: some View {
@@ -102,7 +103,7 @@ struct NoticeView: View {
             systemImage: "exclamationmark.triangle.text.page",
             description: Text("운영진이 공지사항을 등록하면 이곳에 표시됩니다")
         )
-        .tint(.indigo200.opacity(0.5))
+        .tint(.indigo200.opacity(Constants.tintOpacity))
     }
     
     // MARK: - Computed Properties

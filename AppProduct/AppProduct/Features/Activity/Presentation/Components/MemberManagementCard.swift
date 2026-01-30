@@ -58,7 +58,7 @@ struct MemberImagePresenter: View, Equatable {
     
     // MARK: - Body
     var body: some View {
-        Image(memberManagementItem.profile)
+        Image(memberManagementItem.profile ?? "")
             .resizable()
             .frame(width: Constants.imageSize.width, height: Constants.imageSize.height)
             .clipShape(Circle())
@@ -111,14 +111,14 @@ private struct MemberTopTextPresenter: View, Equatable {
     var body: some View {
         HStack {
             Text(memberManagementItem.name)
-                .font(.app(.footnote, weight: .bold))
+                .font(.app(.calloutEmphasis, weight: .bold))
             
             Rectangle()
                 .frame(width: Constants.rectangleSize.width, height: Constants.rectangleSize.height)
                 .foregroundStyle(Color.grey300)
             
             Text(memberManagementItem.generation)
-                .font(.app(.caption1, weight: .regular))
+                .font(.app(.subheadline, weight: .regular))
                 .foregroundStyle(Color.grey900)
         }
     }
@@ -136,11 +136,11 @@ private struct MemberBottomTextPresenter: View, Equatable {
     var body: some View {
         HStack {
             Text(memberManagementItem.position)
-                .font(.app(.caption1, weight: .regular))
+                .font(.app(.subheadline, weight: .regular))
                 .foregroundStyle(Color.grey500)
             
             Text(memberManagementItem.part)
-                .font(.app(.caption1, weight: .regular))
+                .font(.app(.subheadline, weight: .regular))
                 .foregroundStyle(Color.grey500)
         }
     }
@@ -172,7 +172,7 @@ private struct MemberPenaltyPresenter: View, Equatable {
                 Text("경고")
                 Text(String(format: "%.1f", memberManagementItem.penalty))
             }
-            .font(.app(.caption1, weight: .bold))
+            .font(.app(.footnoteEmphasis, weight: .bold))
             .foregroundStyle(Color.red700)
             .padding(.horizontal, Constants.horizonSpacing)
             .padding(.vertical, Constants.verticalSpacing)
@@ -198,7 +198,7 @@ private struct MemberBadgePresenter: View, Equatable {
     
     // MARK: - Constants
     fileprivate enum Constants {
-        static let imageSize: CGSize = .init(width: 8, height: 8)
+        static let imageSize: CGFloat = 10
         static let innerPadding: CGFloat = 3
         static let strokeWidth: CGFloat = 2
     }
@@ -206,8 +206,7 @@ private struct MemberBadgePresenter: View, Equatable {
     // MARK: - Body
     var body: some View {
         Image(systemName: "gift")
-            .resizable()
-            .frame(width: Constants.imageSize.width, height: Constants.imageSize.height)
+            .font(.system(size: Constants.imageSize))
             .padding(Constants.innerPadding)
             .background {
                 Circle()
@@ -221,13 +220,13 @@ private struct MemberBadgePresenter: View, Equatable {
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
     VStack {
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: true, managementTeam: .challenger))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: true, managementTeam: .challenger))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: false, managementTeam: .challenger))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "8기", position: "Challenger", part: "iOS", penalty: 0, badge: false, managementTeam: .challenger))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "9기", position: "Challenger", part: "Spring Boot", penalty: 1.0, badge: true, managementTeam: .challenger))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Challenger", part: "Spring Boot", penalty: 1.0, badge: true, managementTeam: .challenger))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 1.0, badge: false, managementTeam: .campusPartLeader))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 1.0, badge: false, managementTeam: .campusPartLeader))
         
     }
 }

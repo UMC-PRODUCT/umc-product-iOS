@@ -52,7 +52,7 @@ struct CoreMemberTextPresenter: View {
     let part: String
     
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DefaultSpacing.spacing8) {
             Text(name)
                 .font(.app(.callout, weight: .bold))
             
@@ -74,14 +74,19 @@ struct ManagementTeamBadgePresenter: View {
     /// 운영진 직책 타입
     let managementTeam: ManagementTeam
     
+    private enum Constants {
+        static let verticalPadding: CGFloat = 6
+        static let horizontalPadding: CGFloat = 8
+    }
+    
     var body: some View {
         Text(managementTeam.rawValue)
-            .font(.app(.caption2, weight: .regular))
+            .font(.app(.footnote, weight: .regular))
             .foregroundStyle(managementTeam.textColor)
-            .padding(.vertical, 6)
-            .padding(.horizontal, 8)
+            .padding(.vertical, Constants.verticalPadding)
+            .padding(.horizontal, Constants.horizontalPadding)
             .background {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
                     .fill(managementTeam.backgroundColor)
             }
     }
@@ -90,12 +95,12 @@ struct ManagementTeamBadgePresenter: View {
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
     VStack(spacing: 4) {
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 0, badge: false, managementTeam: .campusPartLeader))
+        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 0, badge: false, managementTeam: .campusPartLeader))
         
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 0, badge: false, managementTeam: .campusPartLeader))
+        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 0, badge: false, managementTeam: .campusPartLeader))
         
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 0, badge: false, managementTeam: .campusPartLeader))
+        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 0, badge: false, managementTeam: .campusPartLeader))
         
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: .defaultProfile, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 0, badge: false, managementTeam: .campusPartLeader))
+        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: "iOS", penalty: 0, badge: false, managementTeam: .campusPartLeader))
     }
 }
