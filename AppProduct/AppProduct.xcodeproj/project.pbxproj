@@ -18,6 +18,7 @@
 		0EEC14D52F0B92FA00345AD8 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 0EEC14D42F0B92FA00345AD8 /* Kingfisher */; };
 		1F3173D62F127A5000601344 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3173D52F127A5000601344 /* FirebaseCore */; };
 		1F3173D82F127A5000601344 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3173D72F127A5000601344 /* FirebaseMessaging */; };
+		1FEF7EC82F2C9D3200AB3DBB /* Documentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF7EC72F2C9D3200AB3DBB /* Documentation.docc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,6 +34,7 @@
 /* Begin PBXFileReference section */
 		0E6380A92F02F1020060E4D9 /* AppProduct.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppProduct.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F75B9912F123E6500B97089 /* AppProductTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppProductTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FEF7EC72F2C9D3200AB3DBB /* Documentation.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = Documentation.docc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -81,6 +83,7 @@
 		0E6380A02F02F1020060E4D9 = {
 			isa = PBXGroup;
 			children = (
+				1FEF7EC72F2C9D3200AB3DBB /* Documentation.docc */,
 				1FE63EEA2F20BDEF00D92F6A /* AppleCreateML */,
 				0E6380AB2F02F1020060E4D9 /* AppProduct */,
 				1F75B9922F123E6500B97089 /* AppProductTests */,
@@ -216,6 +219,7 @@
 		0E6380A52F02F1020060E4D9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				1FEF7EC82F2C9D3200AB3DBB /* Documentation.docc in Sources */,
 			);
 		};
 		1F75B98D2F123E6500B97089 /* Sources */ = {
@@ -369,7 +373,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8B8B4462NV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
@@ -408,7 +412,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8B8B4462NV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
