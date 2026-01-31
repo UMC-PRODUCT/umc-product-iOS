@@ -32,23 +32,37 @@ struct MissionCardContent: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            Text(model.missionTitle)
-                .appFont(.subheadline, color: .gray)
-
             switch model.status {
             case .notStarted, .inProgress:
+                typeSelectionSection
                 submissionView
-            case .pendingApproval:
-                pendingApprovalView
-            case .pass:
-                passView
-            case .fail:
-                failView
+            case .pendingApproval, .pass, .fail:
+                missionTitleText
+                statusResultView
             }
         }
     }
 
     // MARK: - Private Views
+
+    private var missionTitleText: some View {
+        Text(model.missionTitle)
+            .appFont(.subheadline, color: .gray)
+    }
+
+    @ViewBuilder
+    private var statusResultView: some View {
+        switch model.status {
+        case .pendingApproval:
+            pendingApprovalView
+        case .pass:
+            passView
+        case .fail:
+            failView
+        default:
+            EmptyView()
+        }
+    }
 
     private var submissionView: some View {
         MissionSubmissionView(
@@ -84,6 +98,30 @@ struct MissionCardContent: View, Equatable {
             message: "해당 주차 스터디를 통과하지 못했습니다.",
             color: .red
         )
+    }
+    
+    private var typeSelectionSection: some View {
+        Picker(
+            selection: Binding(
+                get: { submissionType },
+                set: { newType in
+                    withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
+                        onSubmissionTypeChanged(newType)
+                        if newType == .completeOnly {
+                            onLinkTextChanged("")
+                        }
+                    }
+                }
+            )
+        ) {
+            ForEach(MissionSubmissionType.allCases, id: \.self) { type in
+                Label(type.rawValue, systemImage: type.icon)
+                    .tag(type)
+            }
+        } label: {
+            EmptyView()
+        }
+        .pickerStyle(.segmented)
     }
 }
 
@@ -130,59 +168,35 @@ private struct MissionSubmissionView: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            typeSelectionSection
-            submissionSection
-        }
+        submissionSection
     }
 
     // MARK: - View Components
 
-    private var typeSelectionSection: some View {
-        HStack(spacing: DefaultSpacing.spacing8) {
-            ForEach(MissionSubmissionType.allCases, id: \.self) { type in
-                ChipButton(
-                    type.rawValue,
-                    isSelected: submissionType == type,
-                    leadingIcon: type.icon
-                ) {
-                    withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
-                        onSubmissionTypeChanged(type)
-                    }
-                }
-                .buttonSize(.small)
-            }
-        }
-    }
-
     private var submissionSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-            HStack(spacing: DefaultSpacing.spacing12) {
-                if submissionType == .link {
-                    linkInput
-                }
-
-                SubmitButton(
-                    isDisabled: isSubmitDisabled,
-                    onSubmit: {
-                        if submissionType == .link {
-                            onSubmit(.link, linkText)
-                        } else {
-                            onSubmit(.completeOnly, nil)
-                        }
-                    }
-                )
-                .frame(
-                    maxWidth: submissionType == .link
-                        ? Constants.submitButtonWidth : .infinity
-                )
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+            if submissionType == .link {
+                linkInput
             }
-
+            
             if submissionType == .link && hasError {
                 Text("올바른 URL 형식이 아닙니다")
                     .appFont(.footnote, color: .red)
+                    .transition(.opacity)
             }
+
+            SubmitButton(
+                isDisabled: isSubmitDisabled,
+                onSubmit: {
+                    if submissionType == .link {
+                        onSubmit(.link, linkText)
+                    } else {
+                        onSubmit(.completeOnly, nil)
+                    }
+                }
+            )
         }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: submissionType)
     }
 
     private var linkInput: some View {
@@ -198,6 +212,12 @@ private struct MissionSubmissionView: View, Equatable {
                 .strokeBorder(
                     hasError ? Color.red : Color.grey300,
                     lineWidth: Constants.borderWidth)
+        )
+        .transition(
+            .asymmetric(
+                insertion: .scale(scale: 0.95).combined(with: .opacity),
+                removal: .scale(scale: 0.95).combined(with: .opacity)
+            )
         )
     }
 }
@@ -256,16 +276,10 @@ fileprivate struct SubmitButton: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        Button {
+        MainButton("제출") {
             onSubmit()
-        } label: {
-            Text("제출")
-                .appFont(.subheadline, weight: .bold, color: .white)
-                .frame(maxWidth: .infinity)
-                .padding(DefaultConstant.defaultBtnPadding)
         }
         .buttonStyle(.glassProminent)
-        .tint(.indigo500)
         .disabled(isDisabled)
     }
 }
@@ -281,7 +295,7 @@ fileprivate struct SubmitButton: View, Equatable {
 
         var body: some View {
             ZStack {
-                Color.grey100.ignoresSafeArea()
+                Color.grey100.ignoresSafeArea().frame(height: 400)
 
                 MissionCardContent(
                     model: MissionPreviewData.singleMission,
@@ -294,9 +308,7 @@ fileprivate struct SubmitButton: View, Equatable {
                         print("제출: \(type) - \(link ?? "없음")")
                     }
                 )
-                .padding()
-                .background(Color.grey000)
-                .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+                .glass()
             }
         }
     }
