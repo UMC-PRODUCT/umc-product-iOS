@@ -64,6 +64,7 @@ struct LinkSection: View {
             }, label: {
                 row(linkRow)
             })
+            .buttonStyle(.borderless)
         }
     }
 

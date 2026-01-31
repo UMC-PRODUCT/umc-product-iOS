@@ -35,7 +35,13 @@ final class NoticeEditorViewModel {
     
     /// 학교 목록
     let schools: [String]
-    
+
+    /// 투표 폼 시트뷰 표시 여부
+    var showVoting: Bool = false
+
+    /// 투표 폼 데이터
+    var voteFormData: VoteFormData = VoteFormData()
+
     // MARK: - Initializer
     
     init(
@@ -135,7 +141,28 @@ final class NoticeEditorViewModel {
         default: break
         }
     }
-    
+
+    // MARK: - Vote Function
+
+    func showVotingFormSheet() {
+        voteFormData = VoteFormData()
+        showVoting = true
+    }
+
+    func dismissVotingFormSheet() {
+        showVoting = false
+    }
+
+    func addVoteOption() {
+        guard voteFormData.canAddOption else { return }
+        voteFormData.options.append(VoteOptionItem())
+    }
+
+    func removeVoteOption(_ option: VoteOptionItem) {
+        guard voteFormData.canRemoveOption else { return }
+        voteFormData.options.removeAll { $0.id == option.id }
+    }
+
     // MARK: - Private
     
     private func clearFilterForSubCategory(_ subCategory: EditorSubCategory) {

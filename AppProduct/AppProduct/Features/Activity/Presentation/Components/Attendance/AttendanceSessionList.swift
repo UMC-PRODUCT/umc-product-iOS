@@ -10,13 +10,14 @@ import SwiftUI
 struct AttendanceSessionList: View, Equatable {
     private var expandedSessionId: Session.ID?
     private var attendanceViewModel: ChallengerAttendanceViewModel
-    
+
     private let container: DIContainer
     private let errorHandler: ErrorHandler
     private let sessions: [Session]
     private let userId: UserID
+    private let mapViewModelProvider: (Session) -> BaseMapViewModel
     private let onSessionTap: (Session.ID) -> Void
-    
+
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,
@@ -24,6 +25,7 @@ struct AttendanceSessionList: View, Equatable {
         expandedSessionId: Session.ID?,
         attendanceViewModel: ChallengerAttendanceViewModel,
         userId: UserID,
+        mapViewModelProvider: @escaping (Session) -> BaseMapViewModel,
         onSessionTap: @escaping (Session.ID) -> Void
     ) {
         self.container = container
@@ -32,6 +34,7 @@ struct AttendanceSessionList: View, Equatable {
         self.expandedSessionId = expandedSessionId
         self.attendanceViewModel = attendanceViewModel
         self.userId = userId
+        self.mapViewModelProvider = mapViewModelProvider
         self.onSessionTap = onSessionTap
     }
     
@@ -78,11 +81,7 @@ struct AttendanceSessionList: View, Equatable {
                 ChallengerAttendanceView(
                     container: container,
                     errorHandler: errorHandler,
-                    mapViewModel: .init(
-                        container: container,
-                        info: session.info,
-                        errorHandler: errorHandler
-                    ),
+                    mapViewModel: mapViewModelProvider(session),
                     attendanceViewModel: attendanceViewModel,
                     userId: userId,
                     session: session

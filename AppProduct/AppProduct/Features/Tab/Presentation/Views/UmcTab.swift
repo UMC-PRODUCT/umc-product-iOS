@@ -64,7 +64,7 @@ struct UmcTab: View {
         case .community:
             CommunityView()
         case .mypage:
-            Text("11")
+            MyPageView()
         }
     }
 

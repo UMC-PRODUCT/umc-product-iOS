@@ -56,6 +56,12 @@ private struct ChipButtonContent: View, Equatable {
     let isSelected: Bool
     let trailingIcon: Bool?
     
+    // MARK: - Constant
+    fileprivate enum Constants {
+        static let chevronSize: CGFloat = 10
+        static let btnVerticalPadding: CGFloat = 8
+    }
+    
     static func == (lhs: ChipButtonContent, rhs: ChipButtonContent) -> Bool {
         lhs.title == rhs.title &&
         lhs.size == rhs.size &&
@@ -65,17 +71,17 @@ private struct ChipButtonContent: View, Equatable {
     }
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: DefaultSpacing.spacing4) {
             Text(title)
             if trailingIcon != nil && trailingIcon == true {
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 10))
+                    .font(.system(size: Constants.chevronSize))
             }
         }
         .foregroundStyle(style.textColor(isSelected: isSelected))
         .font(size.font)
         .padding(.horizontal, size.horizonPadding)
-        .padding(.vertical, 8)
+        .padding(.vertical, Constants.btnVerticalPadding)
         .background(
             Capsule()
                 .fill(style.bgColor(isSelected: isSelected))
@@ -87,87 +93,3 @@ private struct ChipButtonContent: View, Equatable {
 // MARK: - ChipButton + AnyChipButton
 
 extension ChipButton: AnyChipButton {}
-
-// MARK: - Preview
-
-#Preview("ChipButton") {
-    struct Demo: View {
-        @State private var selected = false
-
-        var body: some View {
-            VStack(spacing: 15) {
-                HStack(spacing: 8) {
-                    ChipButton("small", isSelected: selected) {
-                        selected.toggle()
-                    }
-                    .buttonSize(.small)
-
-                    ChipButton("medium", isSelected: selected) {
-                        selected.toggle()
-                    }
-                    .buttonSize(.medium)
-
-                    ChipButton("large", isSelected: selected) {
-                        selected.toggle()
-                    }
-                    .buttonSize(.large)
-                }
-            }
-        }
-    }
-    return Demo()
-}
-
-#Preview("ChipButton(chevron)") {
-    struct Demo: View {
-        @State private var selected = false
-        
-        var body: some View {
-            HStack(spacing: 8) {
-                ChipButton("small", isSelected: selected, trailingIcon: true) {
-                    selected.toggle()
-                }
-                .buttonSize(.small)
-                
-                ChipButton("medium", isSelected: selected, trailingIcon: true) {
-                    selected.toggle()
-                }
-                .buttonSize(.medium)
-                
-                ChipButton("large", isSelected: selected, trailingIcon: true) {
-                    selected.toggle()
-                }
-                .buttonSize(.large)
-            }
-        }
-    }
-    return Demo()
-}
-
-#Preview("ChipButton(chevron)") {
-    struct Demo: View {
-            @State private var selected = false
-
-            var body: some View {
-                VStack(spacing: 15) {
-                    HStack(spacing: 8) {
-                        ChipButton("small", isSelected: selected, trailingIcon: true) {
-                            selected.toggle()
-                        }
-                        .buttonSize(.small)
-                        
-                        ChipButton("medium", isSelected: selected, trailingIcon: true) {
-                            selected.toggle()
-                        }
-                        .buttonSize(.medium)
-                        
-                        ChipButton("large", isSelected: selected, trailingIcon: true) {
-                            selected.toggle()
-                        }
-                        .buttonSize(.large)
-                    }
-                }
-            }
-        }
-        return Demo()
-}

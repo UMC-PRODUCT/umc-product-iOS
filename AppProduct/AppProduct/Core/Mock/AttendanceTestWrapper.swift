@@ -133,8 +133,7 @@ struct AttendanceTestWrapper: View {
                     .foregroundStyle(.red)
                 }
             }
-            .navigationTitle("관리자 패널")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigation(naviTitle: .adminPannel, displayMode: .inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("완료") {

@@ -29,6 +29,12 @@ struct NavigationModifier: ViewModifier {
         case myProfile = "프로필"
         case myPage = "마이 페이지"
         case communityPost = "새로운 게시글"
+        case vote = "투표 만들기"
+        case participant = "초대할 챌린저"
+        case adminPannel = "관리자 패널"
+        case branchSelection = "지부 선택"
+        case schoolSelection = "학교 선택"
+        case partSelection = "파트 선택"
     }
 
     func body(content: Content) -> some View {

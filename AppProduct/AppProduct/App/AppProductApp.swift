@@ -14,10 +14,15 @@ import SwiftData
 struct AppProductApp: App {
     @State private var container: DIContainer = DIContainer.configured()
     @State private var errorHandler: ErrorHandler = .init()
+    
+    init() {
+        KakaoSDK.initSDK(appKey: Config.kakaoAppKey)
+    }
 
     var body: some Scene {
         WindowGroup {
-            UmcTab()
+//            UmcTab()
+            AttendanceTestWrapper()
                 .environment(errorHandler)
                 .environment(\.di, container)
                 .modelContainer(for: NoticeHistoryData.self)

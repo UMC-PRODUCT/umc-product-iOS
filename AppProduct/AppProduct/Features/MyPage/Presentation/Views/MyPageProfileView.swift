@@ -23,7 +23,7 @@ struct MyPageProfileView: View {
         Form {
             sectionContentImpl($viewModel.profileData)
         }
-        .navigation(naviTitle: .myProfile, displayMode: .inline) // 네비게이션 타이틀 설정
+        .navigation(naviTitle: .myProfile, displayMode: .inline)
         .toolbar(content: {
             // 완료 버튼
             ToolBarCollection.ConfirmBtn(action: {
@@ -31,7 +31,6 @@ struct MyPageProfileView: View {
                 // TODO: 수정 완료 액션 구현
             })
         })
-        // 이미지 선택 시 비동기 로드 트리거
         .onChange(of: viewModel.selectedPhotoItem) { _, _ in
             Task {
                 await viewModel.loadSelectedImage()
@@ -71,7 +70,7 @@ fileprivate struct ReadOnlyTextField: View, Equatable {
     var body: some View {
         Section {
             TextField("", text: .constant(""), prompt: Text(placeholder))
-                .disabled(true) // 입력 방지
+                .disabled(true)
         } header: {
             SectionHeaderView(title: header)
         }
@@ -96,14 +95,12 @@ fileprivate struct ProfileImagePicker: View {
         PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
             VStack(spacing: DefaultSpacing.spacing8, content: {
                 if let selectedImage = selectedImage {
-                    // 갤러리에서 새로 선택한 이미지 표시
                     Image(uiImage: selectedImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: Constants.imageSize, height: Constants.imageSize)
                         .clipShape(Circle())
                 } else {
-                    // 기존 프로필 이미지 (URL) 로드
                     RemoteImage(
                         urlString: profileImage ?? "",
                         size: .init(width: Constants.imageSize, height: Constants.imageSize),
@@ -116,7 +113,7 @@ fileprivate struct ProfileImagePicker: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
-        .listRowInsets(EdgeInsets()) // 리스트 셀 패딩 제거
+        .listRowInsets(EdgeInsets())
         .background(Color(.systemGroupedBackground))
     }
 }
@@ -220,23 +217,60 @@ fileprivate struct ActiveLogs: View, Equatable {
 /// 외부 프로필 링크 편집 섹션
 /// TextField를 통해 URL을 직접 입력/수정할 수 있습니다.
 fileprivate struct ProfileLinkSection: View, Equatable {
-    
+
     @Binding var profileLink: [ProfileLink]
     let header: String
-    
+
     private enum Constants {
-        static let iconSize: CGFloat = 20
+        static let iconSize: CGFloat = 24
+        static let minimumLinks: Int = 3
     }
-    
+
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.header == rhs.header
     }
-    
+
+    /// 최소 3개의 링크를 보장하는 computed property
+    private var normalizedProfileLinks: [ProfileLink] {
+        var links = profileLink
+
+        // SocialLinkType의 모든 케이스를 순회하며 부족한 만큼 추가
+        let allTypes = SocialLinkType.allCases
+
+        // 현재 존재하는 타입들
+        let existingTypes = Set(links.map { $0.type })
+
+        // 없는 타입들을 빈 값으로 추가
+        for type in allTypes {
+            if !existingTypes.contains(type) && links.count < Constants.minimumLinks {
+                links.append(ProfileLink(type: type, url: ""))
+            }
+        }
+
+        return links
+    }
+
     var body: some View {
         Section(content: {
             Group {
-                ForEach(profileLink.indices, id: \.self) { index in
-                    generateTextField($profileLink[index].url, placeholder: profileLink[index].type.title, image: profileLink[index].type.icon)
+                ForEach(normalizedProfileLinks.indices, id: \.self) { index in
+                    let link = normalizedProfileLinks[index]
+                    generateTextField(
+                        binding: Binding(
+                            get: { link.url },
+                            set: { newValue in
+                                // 원본 배열에서 해당 타입의 링크를 찾아서 업데이트
+                                if let originalIndex = profileLink.firstIndex(where: { $0.type == link.type }) {
+                                    profileLink[originalIndex].url = newValue
+                                } else {
+                                    // 원본에 없으면 새로 추가
+                                    profileLink.append(ProfileLink(type: link.type, url: newValue))
+                                }
+                            }
+                        ),
+                        placeholder: link.type.placeholder,
+                        image: link.type.icon
+                    )
                 }
             }
         }, header: {
@@ -245,15 +279,14 @@ fileprivate struct ProfileLinkSection: View, Equatable {
     }
     
     /// URL 입력 필드 생성
-    private func generateTextField(_ text: Binding<String>, placeholder: String, image: ImageResource) -> some View {
+    private func generateTextField(binding: Binding<String>, placeholder: String, image: ImageResource) -> some View {
         HStack(spacing: DefaultSpacing.spacing8, content: {
             Image(image)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: Constants.iconSize, height: Constants.iconSize)
-                .glassEffect(.clear, in: .circle)
-            
-            TextField("", text: text, prompt: Text(placeholder))
+
+            TextField("", text: binding, prompt: Text(placeholder))
         })
     }
 }

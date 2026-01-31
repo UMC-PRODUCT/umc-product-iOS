@@ -18,7 +18,6 @@ struct NoticeLinkCard: View {
     fileprivate enum Constants {
         static let chevronSize: CGSize = .init(width: 4, height: 8)
         static let innerPadding: CGFloat = 12
-        static let radius: CGFloat = 14
     }
     
     // MARK: - Body
@@ -40,11 +39,11 @@ struct NoticeLinkCard: View {
             }
             .padding(Constants.innerPadding)
             .background {
-                RoundedRectangle(cornerRadius: Constants.radius)
+                RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                     .foregroundStyle(Color.indigo100)
             }
         }
-        .glassEffect(in: .rect(cornerRadius: Constants.radius))
+        .glassEffect(in: .containerRelative)
     }
 }
 
@@ -57,7 +56,6 @@ struct LinkIconPresenter: View {
     fileprivate enum Constants {
         static let linkIconSize: CGSize = .init(width: 20, height: 20)
         static let iconPadding: CGFloat = 10
-        static let iconCornerRadius: CGFloat = 10
     }
     
     // MARK: - Body
@@ -68,7 +66,7 @@ struct LinkIconPresenter: View {
             .foregroundStyle(Color.grey100)
             .padding(Constants.iconPadding)
             .background {
-                RoundedRectangle(cornerRadius: Constants.iconCornerRadius)
+                RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                     .foregroundStyle(Color.indigo400)
             }
     }
@@ -91,11 +89,11 @@ struct LinkTextPresenter: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Constants.vstackSpacing) {
             Text("관련 링크 바로가기")
-                .font(.app(.subheadline, weight: .bold))
+                .font(.app(.calloutEmphasis))
                 .foregroundStyle(Color.black)
             
             Text(url)
-                .font(.app(.caption1, weight: .regular))
+                .font(.app(.footnote, weight: .regular))
                 .foregroundStyle(Color.grey700)
         }
     }

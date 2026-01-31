@@ -52,12 +52,12 @@ struct NoticeEditorView: View {
     }
 
     private var subCategorySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             HStack(alignment: .bottom) {
                 Text("게시판 분류")
-                    .appFont(.subheadline, weight: .bold)
+                    .appFont(.calloutEmphasis)
                 Text("중복 선택 가능")
-                    .appFont(.caption1, color: .grey400)
+                    .appFont(.footnote, color: .grey400)
             }
             
             HStack(spacing: Constants.chipSpacing) {
@@ -96,14 +96,14 @@ private struct NoticeTextField: View {
     @State private var content: String = ""
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DefaultSpacing.spacing16) {
             ArticleTextField(placeholder: .title, text: $title)
             
             Divider()
             
             ArticleTextField(placeholder: .content, text: $content)
         }
-        .padding(.top, 24)
+        .padding(.top, DefaultSpacing.spacing24)
     }
 }
 

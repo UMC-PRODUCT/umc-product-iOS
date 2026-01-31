@@ -53,7 +53,7 @@ struct StudyImagePresenter: View, Equatable {
     
     // MARK: - Body
     var body: some View {
-        Image(studyManagementItem.profile)
+        Image(studyManagementItem.profile ?? "")
             .resizable()
             .frame(width: Constants.imageSize.width, height: Constants.imageSize.height)
             .clipShape(Circle())
@@ -104,12 +104,12 @@ private struct StudyTopTextPresenter: View, Equatable {
                 .foregroundStyle(.grey800)
             
             Text(studyManagementItem.part)
-                .font(.app(.caption2, weight: .regular))
+                .font(.app(.caption1, weight: .regular))
                 .padding(.horizontal, Constants.horizonPadding)
                 .padding(.vertical, Constants.verticalPadding)
                 .overlay(
                     RoundedRectangle(cornerRadius: Constants.radius)
-                        .strokeBorder(.grey000)
+                        .strokeBorder(.grey200)
                         .foregroundStyle(.clear)
                 )
         }
@@ -183,6 +183,6 @@ private struct StudyChevronPresenter: View, Equatable {
 
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
-    StudyManagementCard(studyManagementItem: StudyManagementItem(profile: .profile, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: .examine))
+    StudyManagementCard(studyManagementItem: StudyManagementItem(profile: nil, name: "이예지", school: "가천대학교", part: "iOS", title: "SwiftUI로 화면 구성하기", state: .examine))
         
 }

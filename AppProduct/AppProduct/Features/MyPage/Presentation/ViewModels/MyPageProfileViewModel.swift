@@ -13,8 +13,7 @@ import PhotosUI
 ///
 /// 프로필 데이터를 관리하고, 이미지 선택 및 업로드 동작을 처리합니다.
 @Observable
-class MyPageProfileViewModel: PhotoPickerManageable {
-    
+class MyPageProfileViewModel: SinglePhotoPickerManageable {
     /// 프로파일 정보
     var profileData: ProfileData
 

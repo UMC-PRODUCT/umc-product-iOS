@@ -14,6 +14,8 @@ struct HelpSection: View {
     @Environment(\.di) var di
     /// 섹션의 타입 (헤더 타이틀로 사용됨)
     let sectionType: MyPageSectionType
+    let kakaoPlusManager: KakaoPlusManager = .init()
+    
 
     /// DI Container에서 주입받은 NavigationRouter
     private var router: NavigationRouter {
@@ -35,19 +37,31 @@ struct HelpSection: View {
 
     var body: some View {
         Section(content: {
-            row
+            sectionRow
         }, header: {
-            SectionHeaderView(title: "지원센터")
+            SectionHeaderView(title: sectionType.rawValue)
         })
     }
 
     /// 지원센터로 이동하는 Row 버튼
-    private var row: some View {
+    private var sectionRow: some View {
+        ForEach(HelpType.allCases, id: \.hashValue) { help in
+            sectionContent(help)
+        }
+    }
+    
+    private func sectionContent(_ help: HelpType) -> some View {
         Button(action: {
-            // TODO: 지원센터 화면으로 네비게이션
-            print("hello")
+            sectionAction(help)
         }, label: {
-            MyPageSectionRow(systemIcon: "bubble.left.and.bubble.right", title: sectionType.rawValue, rightImage: Constants.chevron)
+            MyPageSectionRow(systemIcon: help.icon, title: help.rawValue, rightImage: "arrow.up.right", iconBackgroundColor: help.color)
         })
+    }
+    
+    private func sectionAction(_ help: HelpType) {
+        switch help {
+        case .inquery:
+            kakaoPlusManager.openKakaoChannel()
+        }
     }
 }

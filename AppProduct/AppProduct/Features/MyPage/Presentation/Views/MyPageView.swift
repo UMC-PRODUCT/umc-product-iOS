@@ -49,7 +49,8 @@ struct MyPageView: View {
         case .loaded(let profileData):
             Form {
                 ProfileCardSection(profileData: profileData)
-                // TODO: 추가 섹션들 구현
+                sections(profileData)
+                FollowsSection()
             }
         case .failed:
             // TODO: 에러 상태 UI 구현
@@ -59,9 +60,9 @@ struct MyPageView: View {
 
     /// MyPageSectionType 전체에 대해 Section을 생성하는 ForEach (현재 미사용)
     /// - Note: 향후 모든 섹션을 동적으로 렌더링할 때 사용 예정
-    private var sections: some View {
+    private func sections(_ profileData: ProfileData) -> some View {
         ForEach(MyPageSectionType.allCases, id: \.rawValue) { section in
-            // TODO: sectionContent 연결
+            sectionContent(section, profileData: profileData)
         }
     }
 
@@ -76,15 +77,15 @@ struct MyPageView: View {
         case .profielLink:
             LinkSection(sectionType: section, profileLink: profileData.profileLink, alertPromprt: $viewModel.alertPrompt)
         case .myActiveLogs:
-            Text("11") // TODO: 활동 내역 섹션 구현
+            MyActiveLogSection(sectionType: section)
         case .settings:
-            Text("11") // TODO: 설정 섹션 구현
+            SettingSection(sectionType: section)
         case .socialConnect:
-            Text("11") // TODO: 소셜 연동 섹션 구현
+            EmptyView()
         case .helpSupport:
             HelpSection(sectionType: section)
         case .laws:
-            Text("11") // TODO: 법률 섹션 구현
+            LawSection(sectionType: section)
         case .info:
             InfoSection(sectionType: section)
         }

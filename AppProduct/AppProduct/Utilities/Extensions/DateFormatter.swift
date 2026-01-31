@@ -13,13 +13,13 @@ extension Date {
         formatted(.dateTime.year().month(.twoDigits).day(.twoDigits))
             .replacingOccurrences(of: "/", with: ".")
     }
-
+    
     /// "MM.dd" 형식으로 변환 (예: "01.17")
     func toMonthDay() -> String {
         formatted(.dateTime.month(.twoDigits).day(.twoDigits))
             .replacingOccurrences(of: "/", with: ".")
     }
-
+    
     /// "HH:mm" 24시간제 형식으로 변환 (예: "14:30")
     func toHourMinutes() -> String {
         formatted(.dateTime.hour(
@@ -51,13 +51,6 @@ extension Date {
         }
     }
     
-    func timeFormatter() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        formatter.locale = Locale(identifier: "ko_KR")
-        return formatter.string(from: self)
-    }
-
     /// "HH:mm - HH:mm" 시간 범위 형식 (예: "14:00 - 18:00")
     func timeRange(to endTime: Date) -> String {
         "\(self.toHourMinutes()) - \(endTime.toHourMinutes())"

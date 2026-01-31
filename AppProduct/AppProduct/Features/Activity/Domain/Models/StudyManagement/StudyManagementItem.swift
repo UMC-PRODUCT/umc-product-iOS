@@ -13,7 +13,7 @@ import SwiftUI
 /// - CoreStudyManagementList
 struct StudyManagementItem: Identifiable, Equatable {
     let id: UUID = .init()
-    let profile: ImageResource
+    let profile: String?
     let name: String
     let school: String
     let part: String
