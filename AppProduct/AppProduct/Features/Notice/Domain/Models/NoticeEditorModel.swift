@@ -173,7 +173,13 @@ struct NoticeLinkItem: Identifiable, Equatable {
 /// 이미지 첨부 카드
 struct NoticeImageItem: Identifiable {
     let id = UUID()
-    var imageData: Data
+    var imageData: Data?
+    var isLoading: Bool = false
+    
+    static func == (lhs: NoticeImageItem, rhs: NoticeImageItem) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.isLoading == rhs.isLoading
+    }
 }
 
 // MARK: - VoteOptionItem

@@ -12,7 +12,8 @@ struct AttachedImageCard: View, Equatable {
 
     // MARK: - Property
     let id: UUID
-    let imageData: Data
+    let imageData: Data?
+    let isLoading: Bool
     var onDismiss: () -> Void
 
     // MARK: - Constant
@@ -22,20 +23,29 @@ struct AttachedImageCard: View, Equatable {
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id &&
+        lhs.isLoading == rhs.isLoading
     }
 
     // MARK: - Body
     var body: some View {
         ZStack(alignment: .topTrailing) {
             imageCard
-            xButton
+            if !isLoading {
+                xButton
+            }
         }
     }
 
     private var imageCard: some View {
         Group {
-            if let uiImage = UIImage(data: imageData) {
+            if isLoading {
+                RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+                    .fill(.grey200)
+                    .overlay {
+                        Progress(size: .small)
+                    }
+            } else if let imageData = imageData, let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
@@ -59,15 +69,19 @@ struct AttachedImageCard: View, Equatable {
 }
 
 // MARK: - Preview
-#Preview {
+#Preview("기본 이미지 카드") {
     @Previewable @State var noticeImageItems: [NoticeImageItem] = []
     @Previewable @State var selectedItems: [PhotosPickerItem] = []
-
+    
     VStack {
         ScrollView(.horizontal) {
             HStack(spacing: 12) {
                 ForEach(noticeImageItems) { item in
-                    AttachedImageCard(id: item.id, imageData: item.imageData) {
+                    AttachedImageCard(
+                        id: item.id,
+                        imageData: item.imageData,
+                        isLoading: item.isLoading
+                    ) {
                         noticeImageItems.removeAll { $0.id == item.id }
                     }
                 }
@@ -79,10 +93,39 @@ struct AttachedImageCard: View, Equatable {
         Task {
             for item in newValues {
                 if let data = try? await item.loadTransferable(type: Data.self) {
-                    noticeImageItems.append(NoticeImageItem(imageData: data))
+                    noticeImageItems.append(NoticeImageItem(imageData: data, isLoading: false))
                 }
             }
             selectedItems.removeAll()
         }
     }
+}
+
+#Preview("로딩 중인 카드") {
+    HStack(spacing: 12) {
+        // 로딩 중인 카드
+        AttachedImageCard(
+            id: UUID(),
+            imageData: nil,
+            isLoading: true,
+            onDismiss: {}
+        )
+        
+        // 로딩 중인 카드 2개
+        AttachedImageCard(
+            id: UUID(),
+            imageData: nil,
+            isLoading: true,
+            onDismiss: {}
+        )
+        
+        // 로드된 카드 (예시용 더미 데이터)
+        AttachedImageCard(
+            id: UUID(),
+            imageData: UIImage(systemName: "photo")?.pngData(),
+            isLoading: false,
+            onDismiss: {}
+        )
+    }
+    .padding()
 }
