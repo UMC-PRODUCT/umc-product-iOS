@@ -391,12 +391,14 @@ final class UserProfileViewModel {
             let user = try await getUserProfileUseCase.execute()
             userState = .loaded(user)
         } catch let error as DomainError {
-            // 도메인 에러 → 인라인 표시
+            // 도메인 에러 → 인라인 표시 (Loadable)
             userState = .failed(.domain(error))
-        } catch {
-            // 네트워크 에러 → Alert 표시
-            // ErrorHandler를 사용하여 전역 Alert 처리
+        } catch let error as NetworkError {
+            // 네트워크 에러 → AppError.network로 래핑
             userState = .failed(.network(error))
+        } catch {
+            // 기타 에러 → unknown
+            userState = .failed(.unknown(message: error.localizedDescription))
         }
     }
 
@@ -408,9 +410,10 @@ final class UserProfileViewModel {
                 bio: bio
             )
             userState = .loaded(updatedUser)
-        } catch {
-            // 에러 처리
+        } catch let error as NetworkError {
             userState = .failed(.network(error))
+        } catch {
+            userState = .failed(.unknown(message: error.localizedDescription))
         }
     }
 }
@@ -555,11 +558,14 @@ final class SomeViewModel {
             let data = try await useCase.execute()
             dataState = .loaded(data)
         } catch let error as DomainError {
-            // 도메인 에러 → 화면 내 표시
+            // 도메인 에러 → 화면 내 표시 (인라인)
             dataState = .failed(.domain(error))
-        } catch {
-            // 네트워크 에러 → 화면 내 표시
+        } catch let error as NetworkError {
+            // 네트워크 에러 → 화면 내 표시 (인라인)
             dataState = .failed(.network(error))
+        } catch {
+            // 기타 에러
+            dataState = .failed(.unknown(message: error.localizedDescription))
         }
     }
 }
@@ -601,30 +607,69 @@ final class SomeViewModel {
 
 ### 네트워크 에러 종류
 
+NetworkClient(Actor 기반)에서 발생하는 에러 타입입니다.
+
 ```swift
-// NetworkError
-switch error {
-case NetworkError.unauthorized:
-    // 로그인 필요
-    navigateToLogin()
+// NetworkError - Actor 기반 네트워크 클라이언트 에러
+enum NetworkError: Error, Sendable, Equatable {
+    case unauthorized                         // 인증 토큰 없음 (401)
+    case tokenRefreshFailed(reason: String?)  // 토큰 갱신 실패 (Equatable 준수)
+    case noRefreshToken                       // 리프레시 토큰 없음
+    case requestFailed(statusCode: Int, data: Data?)  // API 요청 실패
+    case invalidResponse                      // 잘못된 응답
+    case maxRetryExceeded                     // 재시도 횟수 초과
+}
 
-case NetworkError.tokenRefreshFailed:
-    // 토큰 갱신 실패 → 재로그인
-    navigateToLogin()
+// 에러 처리 예시
+do {
+    let data = try await networkClient.request(urlRequest)
+} catch let error as NetworkError {
+    switch error {
+    case .unauthorized:
+        // 로그인 필요
+        navigateToLogin()
 
-case NetworkError.requestFailed(let statusCode, _):
-    // 서버 에러
-    if statusCode == 404 {
-        print("리소스 없음")
+    case .tokenRefreshFailed(let reason):
+        // 토큰 갱신 실패 → 재로그인
+        print("갱신 실패 원인: \(reason ?? "알 수 없음")")
+        navigateToLogin()
+
+    case .noRefreshToken:
+        // 리프레시 토큰 없음
+        navigateToLogin()
+
+    case .requestFailed(let statusCode, _):
+        // 서버 에러
+        if statusCode == 404 {
+            print("리소스 없음")
+        } else if statusCode >= 500 {
+            print("서버 에러")
+        }
+
+    case .invalidResponse:
+        // 네트워크 연결 문제
+        print("네트워크 연결 확인")
+
+    case .maxRetryExceeded:
+        // 재시도 횟수 초과
+        print("재로그인 필요")
     }
+}
+```
 
-case NetworkError.maxRetryExceeded:
-    // 재시도 횟수 초과
-    print("재로그인 필요")
+#### NetworkError vs APIError
 
-default:
-    // 기타 에러
-    print("네트워크 에러: \(error)")
+| 에러 타입 | 발생 위치 | 용도 |
+|----------|---------|------|
+| **NetworkError** | NetworkClient (Actor 기반) | JWT 인증, 토큰 갱신, 네트워크 계층 |
+| **APIError** | MoyaProvider (Moya 기반) | HTTP 응답 에러, 디코딩 에러 |
+
+두 에러는 모두 `AppError`로 통합됩니다:
+```swift
+enum AppError {
+    case network(NetworkError)  // Actor 기반
+    case api(APIError)          // Moya 기반
+    // ...
 }
 ```
 
