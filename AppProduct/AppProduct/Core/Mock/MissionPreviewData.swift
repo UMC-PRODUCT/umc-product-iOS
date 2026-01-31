@@ -50,14 +50,14 @@ struct MissionPreviewData {
             platform: "iOS",
             title: "네트워킹 기초",
             missionTitle: "URLSession을 활용한 API 호출 예제를 제출하세요",
-            status: .notStarted
+            status: .locked
         ),
         .init(
             week: 5,
             platform: "iOS",
             title: "Combine 입문",
             missionTitle: "Combine을 활용한 데이터 바인딩 예제를 제출하세요",
-            status: .notStarted
+            status: .locked
         )
     ]
 

@@ -62,6 +62,7 @@ struct MissionCardHeader: View, Equatable {
         }
         .contentShape(Rectangle())
         .onTapGesture {
+            if case .locked = model.status { return }
             onToggle()
         }
     }
