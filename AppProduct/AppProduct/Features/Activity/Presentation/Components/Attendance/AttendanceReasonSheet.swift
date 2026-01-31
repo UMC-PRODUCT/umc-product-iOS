@@ -31,8 +31,7 @@ struct AttendanceReasonSheet: View {
                 Section {
                     reasonTextField
                 } header: {
-                    Text("지각 사유 입력")
-                        .appFont(.bodyEmphasis, color: .black)
+                    SectionHeaderView(title: "지각 사유 입력")
                 } footer: {
                     descriptionText
                 }
