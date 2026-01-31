@@ -46,7 +46,6 @@ struct CurriculumView: View {
                 // Header
                 CurriculumProgressCard(model: curriculumModel)
                     .equatable()
-                
                 // Mission List
                 missionListSection
             }
