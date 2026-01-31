@@ -30,7 +30,7 @@ class MyPageViewModel {
             profileImage: nil,
             part: .design
         ),
-        socialConnected: [.apple, .kakao],
+        socialConnected: [],
         activityLogs: [
             .init(part: .design, generation: 11, role: .campusPartLeader)
         ],

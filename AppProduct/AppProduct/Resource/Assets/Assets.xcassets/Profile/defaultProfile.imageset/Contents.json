@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "profile.png",
+      "filename" : "defaultProfile.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
