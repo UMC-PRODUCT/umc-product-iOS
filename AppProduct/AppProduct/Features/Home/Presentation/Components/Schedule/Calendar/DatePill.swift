@@ -59,12 +59,12 @@ struct DatePill: View {
             VStack(spacing: DefaultSpacing.spacing16, content: {
                 // 요일 표시
                 Text(weekDay)
-                    .appFont(.caption1Emphasis, color: isSelected ? .grey000 : .grey600)
+                    .appFont(.calloutEmphasis, color: isSelected ? .grey000 : .grey600)
                 
                 VStack(spacing: DefaultSpacing.spacing8, content: {
                     // 날짜(일) 표시
                     Text(day)
-                        .appFont(.body, color: isSelected ? .white : .grey600)
+                        .appFont(.body, weight: .medium, color: isSelected ? .white : .grey600)
                     
                     // 일정 유무 표시 점
                     Circle()

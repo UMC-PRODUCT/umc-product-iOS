@@ -41,7 +41,7 @@ struct RecentNoticeCard: View, Equatable {
     }
     
     var body: some View {
-        HStack(alignment: .top, spacing: DefaultSpacing.spacing24, content: {
+        HStack(alignment: .top, spacing: DefaultSpacing.spacing16, content: {
             CardIconImage(image: data.category.icon, color: data.category.color, isLoading: .constant(false))
             info
             Spacer()
@@ -49,7 +49,7 @@ struct RecentNoticeCard: View, Equatable {
         })
         .padding(Constants.padding)
         .background {
-            RoundedRectangle(cornerRadius: Constants.cornerRadius)
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
                 .fill(.white)
                 .glass()
         }

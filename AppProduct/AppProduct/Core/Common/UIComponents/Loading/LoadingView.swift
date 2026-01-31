@@ -82,7 +82,7 @@ struct LoadingView: View {
                 .frame(maxWidth: .infinity)
         })
         .padding(20)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .glassEffect(.regular, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
     }
 }
 
