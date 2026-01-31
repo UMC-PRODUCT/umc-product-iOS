@@ -50,14 +50,14 @@ struct MissionPreviewData {
             platform: "iOS",
             title: "네트워킹 기초",
             missionTitle: "URLSession을 활용한 API 호출 예제를 제출하세요",
-            status: .notStarted
+            status: .locked
         ),
         .init(
             week: 5,
             platform: "iOS",
             title: "Combine 입문",
             missionTitle: "Combine을 활용한 데이터 바인딩 예제를 제출하세요",
-            status: .notStarted
+            status: .locked
         )
     ]
 
@@ -135,14 +135,69 @@ struct MissionPreviewData {
             platform: "iOS",
             title: "SwiftUI 레이아웃",
             missionTitle: "VStack, HStack, ZStack을 활용한 레이아웃 예제를 제출하세요",
-            status: .inProgress
+            status: .fail
         ),
         .init(
             week: 3,
             platform: "iOS",
             title: "MVVM 아키텍처",
             missionTitle: "MVVM 패턴을 적용한 간단한 앱을 구현하세요",
-            status: .notStarted
+            status: .inProgress
+        ),
+        .init(
+            week: 4,
+            platform: "iOS",
+            title: "네트워킹 기초",
+            missionTitle: "URLSession을 활용한 API 호출 예제를 제출하세요",
+            status: .locked
+        ),
+        .init(
+            week: 5,
+            platform: "iOS",
+            title: "Combine 입문",
+            missionTitle: "Combine을 활용한 데이터 바인딩 예제를 제출하세요",
+            status: .locked
+        )
+    ]
+
+    // MARK: - CurriculumView용 데이터
+
+    /// 웹 파트 커리큘럼 상세 (이미지 25번 기준)
+    static let webCurriculumMissions: [MissionCardModel] = [
+        .init(
+            week: 1,
+            platform: "Web",
+            title: "HTML/CSS 기초",
+            missionTitle: "HTML과 CSS를 활용한 정적 페이지를 제출하세요",
+            status: .pass
+        ),
+        .init(
+            week: 2,
+            platform: "Web",
+            title: "HTML/CSS 기초",
+            missionTitle: "반응형 레이아웃 예제를 제출하세요",
+            status: .fail
+        ),
+        .init(
+            week: 3,
+            platform: "Web",
+            title: "HTML/CSS 기초",
+            missionTitle: "컴포넌트 생명주기와 Hooks의 이해",
+            status: .inProgress
+        ),
+        .init(
+            week: 4,
+            platform: "Web",
+            title: "HTML/CSS 기초",
+            missionTitle: "상태 관리 라이브러리 활용",
+            status: .locked
+        ),
+        .init(
+            week: 5,
+            platform: "Web",
+            title: "HTML/CSS 기초",
+            missionTitle: "API 연동 및 비동기 처리",
+            status: .locked
         )
     ]
 
