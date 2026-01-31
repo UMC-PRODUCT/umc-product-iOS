@@ -52,21 +52,11 @@ struct FormTextField: View {
     /// 엔터 키를 눌렀을 때 실행될 액션입니다.
     var onSubmit: (() -> Void)?
     
-    // MARK: -  Constant
-    
-    /// 컴포넌트 내부에서 사용되는 상수값 모음입니다.
-    private enum Constants {
-        /// 제목과 텍스트 필드 사이의 간격
-        static let spacing: CGFloat = 6
-        /// (현재 사용되지 않지만) 코너 반경 값
-        static let cornerRadius: CGFloat = 8
-    }
-    
     // MARK: - Body
     
     var body: some View {
         // 제목과 텍스트 필드를 수직으로 정렬
-        VStack(alignment: .leading, spacing: Constants.spacing, content: {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8, content: {
             // 필수 여부에 따른 제목 표시
             TitleLabel(title: title, isRequired: isRequired)
             // 실제 텍스트 입력 필드
@@ -95,6 +85,7 @@ struct FormTextField: View {
     private var placeholderView: Text {
         Text(placeholder)
             .font(.callout)
+            .foregroundStyle(.gray)
     }
 }
 

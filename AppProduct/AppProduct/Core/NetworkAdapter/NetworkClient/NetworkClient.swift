@@ -386,7 +386,7 @@ extension NetworkClient {
             }
 
             #if DEBUG
-            print("🔄 401 감지 → 토큰 갱신 시작")
+            print("401 감지 → 토큰 갱신 시작")
             #endif
 
             // 토큰 갱신 (여러 요청이 동시에 401을 받아도 1회만 갱신)
@@ -468,15 +468,15 @@ extension NetworkClient {
                 )
 
                 #if DEBUG
-                print("✅ 토큰 갱신 성공")
+                print("토큰 갱신 성공")
                 #endif
 
                 return tokenPair
             } catch {
                 #if DEBUG
-                print("❌ 토큰 갱신 실패: \(error)")
+                print("토큰 갱신 실패: \(error)")
                 #endif
-                throw NetworkError.tokenRefreshFailed(underlying: error)
+                throw NetworkError.tokenRefreshFailed(reason: error.localizedDescription)
             }
         }
 

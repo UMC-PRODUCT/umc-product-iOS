@@ -61,20 +61,28 @@ import SwiftUI
 /// - Note: Liquid Glass 효과가 자동 적용됩니다.
 ///   인터랙티브 버튼은 `.interactive()`, 읽기 전용은 `.identity` 사용.
 struct ChipButton: View {
+
     // MARK: - Properties
 
+    /// 버튼에 표시될 텍스트
     private let title: String
+
+    /// 선택 상태 여부 (선택 시 스타일 변경)
     private let isSelected: Bool
     private let leadingIcon: String?
     private let trailingIcon: Bool?
     private let action: (() -> Void)?
 
+    /// Environment로 주입되는 버튼 크기 스타일
     @Environment(\.chipButtonSize) private var size
+
+    /// Environment로 주입되는 버튼 컬러 스타일
     @Environment(\.chipButtonStyle) private var style
 
     // MARK: - Initializer
 
     /// ChipButton 생성자
+    ///
     /// - Parameters:
     ///   - title: 버튼 텍스트
     ///   - isSelected: 선택 상태
@@ -127,21 +135,44 @@ struct ChipButton: View {
 
 // MARK: - ChipButtonContent (Presenter)
 
+/// ChipButton의 Presenter 컴포넌트
+///
+/// Container-Presenter 패턴을 적용하여 렌더링 성능을 최적화합니다.
+/// Equatable 구현으로 불필요한 재렌더링을 방지합니다.
 private struct ChipButtonContent: View, Equatable {
+
+    // MARK: - Property
+
+    /// 버튼 텍스트
     let title: String
+
+    /// 버튼 크기 스타일
     let size: ChipButtonSize
+
+    /// 버튼 컬러 스타일
     let style: ChipButtonStyle
+
+    /// 선택 상태 여부
     let isSelected: Bool
     let leadingIcon: String?
     let trailingIcon: Bool?
     let isInteractive: Bool
     
     // MARK: - Constant
+
     fileprivate enum Constants {
+        /// chevron 아이콘 크기
         static let chevronSize: CGFloat = 10
+
+        /// 버튼 상하 패딩
         static let btnVerticalPadding: CGFloat = 8
     }
-    
+
+    // MARK: - Equatable
+
+    /// Equatable 비교 구현
+    ///
+    /// trailingIcon은 클로저가 아니므로 비교에 포함됩니다.
     static func == (lhs: ChipButtonContent, rhs: ChipButtonContent) -> Bool {
         lhs.title == rhs.title &&
         lhs.size == rhs.size &&
@@ -151,6 +182,8 @@ private struct ChipButtonContent: View, Equatable {
         lhs.trailingIcon == rhs.trailingIcon &&
         lhs.isInteractive == rhs.isInteractive
     }
+
+    // MARK: - Body
 
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing4) {

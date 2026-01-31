@@ -29,7 +29,7 @@ struct NoticeAlarmCard: View {
     }
     
     var body: some View {
-        HStack(alignment: .top, spacing: DefaultSpacing.spacing12, content: {
+        HStack(alignment: .top, spacing: DefaultSpacing.spacing16, content: {
             cardIcon
             ContentInfo(notice: notice)
         })

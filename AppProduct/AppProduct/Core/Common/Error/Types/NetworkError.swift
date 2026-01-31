@@ -30,7 +30,7 @@ import Foundation
 ///     // 서버 에러 처리
 /// }
 /// ```
-public enum NetworkError: Error, Sendable, Equatable {
+enum NetworkError: Error, Sendable, Equatable {
     // MARK: - Cases
 
     /// 인증이 필요한 요청에 토큰이 없음 (401 Unauthorized)
@@ -96,7 +96,7 @@ public enum NetworkError: Error, Sendable, Equatable {
     /// Equatable 비교 구현
     ///
     /// - Note: requestFailed의 Data는 비교에서 제외 (Equatable 아님)
-    public static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
+    static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
         switch (lhs, rhs) {
         case (.unauthorized, .unauthorized):
             return true
@@ -122,7 +122,7 @@ extension NetworkError: LocalizedError {
     /// 사용자에게 표시할 에러 메시지를 반환합니다.
     ///
     /// - Returns: 에러 유형에 맞는 한글 에러 메시지
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .unauthorized:
             return "인증이 필요합니다."
@@ -142,7 +142,7 @@ extension NetworkError: LocalizedError {
     /// 사용자에게 표시할 친화적 메시지
     ///
     /// ErrorHandler와의 일관성을 위해 제공됩니다.
-    public var userMessage: String {
+    var userMessage: String {
         switch self {
         case .unauthorized:
             return "로그인이 필요합니다."
@@ -165,7 +165,7 @@ extension NetworkError: LocalizedError {
     /// 에러 심각도
     ///
     /// 로깅 및 알림 우선순위 결정에 사용됩니다.
-    public var severity: ErrorSeverity {
+    var severity: ErrorSeverity {
         switch self {
         case .unauthorized, .tokenRefreshFailed, .noRefreshToken, .maxRetryExceeded:
             return .critical  // 즉시 로그아웃/재로그인 필요
@@ -184,7 +184,7 @@ extension NetworkError: LocalizedError {
     /// 재시도 가능 여부
     ///
     /// ErrorHandler의 재시도 버튼 표시 여부 결정에 사용됩니다.
-    public var isRetryable: Bool {
+    var isRetryable: Bool {
         switch self {
         case .unauthorized, .tokenRefreshFailed, .noRefreshToken, .maxRetryExceeded:
             return false  // 로그인 필요
