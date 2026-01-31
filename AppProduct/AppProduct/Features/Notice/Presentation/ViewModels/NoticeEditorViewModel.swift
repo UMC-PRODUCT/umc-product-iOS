@@ -227,10 +227,26 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     
     @MainActor
     func didLoadImages(images: [UIImage]) async {
-        for image in images {
-            guard let imageData = image.jpegData(compressionQuality: 0.8) else { continue }
-            noticeImages.append(NoticeImageItem(imageData: imageData))
+        // 각 이미지에 대한 로딩 placeholder 생성
+        var loadingItemIds: [UUID] = []
+        
+        for _ in images {
+            let item = NoticeImageItem(imageData: nil, isLoading: true)
+            loadingItemIds.append(item.id)
+            noticeImages.append(item)
         }
+        
+        for (index, image) in images.enumerated() {
+            guard let imageData = image.jpegData(compressionQuality: 0.8) else { continue }
+            
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5초
+            
+            let loadingId = loadingItemIds[index]
+            if let loadingIndex = noticeImages.firstIndex(where: { $0.id == loadingId }) {
+                noticeImages[loadingIndex] = NoticeImageItem(imageData: imageData, isLoading: false)
+            }
+        }
+        
         selectedPhotoItems.removeAll()
     }
     

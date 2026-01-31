@@ -183,6 +183,7 @@ struct NoticeEditorView: View {
                     AttachedImageCard(
                         id: item.id,
                         imageData: item.imageData,
+                        isLoading: item.isLoading,
                         onDismiss: {
                             viewModel.removeImage(item)
                         }

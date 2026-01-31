@@ -11,13 +11,13 @@ struct Progress: View {
     
     // MARK: - Property
     let progressColor: Color
-    let message: String
+    let message: String?
     let messageColor: Color
     var size: ProgressSize
     
     // MARK: - Initializer
     init(progressColor: Color = .indigo500,
-         message: String,
+         message: String? = nil,
          messageColor: Color = .grey900,
          size: ProgressSize = .large) {
         self.progressColor = progressColor
@@ -37,9 +37,11 @@ struct Progress: View {
             ProgressView()
                 .controlSize(size.controlSize)
                 .tint(progressColor)
-            Text(message)
-                .foregroundStyle(messageColor)
-                .appFont(size.messageSize)
+            if let message = message {
+                Text(message)
+                    .foregroundStyle(messageColor)
+                    .appFont(size.messageSize)
+            }
         })
     }
 }
