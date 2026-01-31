@@ -12,13 +12,16 @@ import SwiftUI
 /// 참여 중인 스터디와 활동 목록을 표시합니다.
 struct ChallengerStudyView: View {
     var body: some View {
-        ScrollView {
-            ContentUnavailableView {
-                Label("스터디/활동", systemImage: "book.pages")
-            } description: {
-                Text("참여 중인 스터디와 활동 목록이 여기에 표시됩니다")
-            }
-            .safeAreaPadding(.vertical, DefaultConstant.defaultSafeBottom)
+        CurriculumView(
+            curriculumModel: CurriculumProgressModel(
+                partName: "iOS PART CURRICULUM",
+                curriculumTitle: "Swift 기초 문법",
+                completedCount: 2,
+                totalCount: 8
+            ),
+            missions: MissionPreviewData.iosMissions
+        ) { mission, type, link in
+            print("제출: \(mission.title) - \(type) - \(link ?? "없음")")
         }
     }
 }
