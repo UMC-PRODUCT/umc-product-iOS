@@ -49,7 +49,8 @@ struct VotingFormSheetView: View, Equatable {
                 ToolBarCollection.ConfirmBtn(action: {
                     onConfirm()
                     dismiss()
-                })
+                }, disable: !formData.canConfirm
+                )
             }
         }
     }

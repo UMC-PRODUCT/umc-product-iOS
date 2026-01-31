@@ -28,6 +28,12 @@ struct ToolBarCollection {
     struct ConfirmBtn: ToolbarContent {
         @Environment(\.dismiss) var dismiss
         let action: () -> Void
+        let disable: Bool
+        
+        init(action: @escaping () -> Void, disable: Bool = false) {
+            self.action = action
+            self.disable = disable
+        }
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .confirmationAction, content: {
@@ -36,6 +42,7 @@ struct ToolBarCollection {
                     dismiss()
                 })
                 .tint(.indigo500)
+                .disabled(disable)
             })
         }
     }
