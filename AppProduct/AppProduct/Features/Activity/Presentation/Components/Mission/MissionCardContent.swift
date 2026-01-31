@@ -39,6 +39,8 @@ struct MissionCardContent: View, Equatable {
             case .pendingApproval, .pass, .fail:
                 missionTitleText
                 statusResultView
+            case .locked:
+                EmptyView()
             }
         }
     }

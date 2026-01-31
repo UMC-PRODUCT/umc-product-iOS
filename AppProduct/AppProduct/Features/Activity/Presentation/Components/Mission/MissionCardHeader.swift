@@ -76,7 +76,7 @@ struct MissionCardHeader: View, Equatable {
     }
 
     private var titleText: some View {
-        Text("\(model.week)주차 과제: \(model.title)")
+        Text(model.title)
             .appFont(.calloutEmphasis)
             .multilineTextAlignment(.leading)
     }
