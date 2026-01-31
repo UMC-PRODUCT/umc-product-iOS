@@ -58,6 +58,7 @@ enum NavigationDestination: Hashable {
 
     enum Community: Hashable {
         case detail(postItem: CommunityItemModel)
+        case post
     }
     
     enum MyPage: Hashable {

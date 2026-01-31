@@ -28,6 +28,7 @@ struct NavigationModifier: ViewModifier {
         case registration = "일정 추가"
         case myProfile = "프로필"
         case myPage = "마이 페이지"
+        case communityPost = "새로운 게시글"
     }
 
     func body(content: Content) -> some View {

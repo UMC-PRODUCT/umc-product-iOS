@@ -74,6 +74,8 @@ private extension NavigationRoutingView {
         switch route {
         case .detail(let postItem):
             CommunityDetailView(postItem: postItem)
+        case .post:
+            CommunityPostView()
         }
     }
     
