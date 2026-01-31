@@ -677,7 +677,86 @@ enum AppError {
 
 ## 테스트 작성
 
+> **Note**: Swift Testing 프레임워크를 사용합니다 (Xcode 15+, Swift 5.9+)
+>
+> XCTest 방식도 계속 지원되지만, Swift Testing이 더 현대적이고 타입 안전합니다.
+
 ### Repository 테스트
+
+#### Swift Testing (권장)
+
+```swift
+import Testing
+@testable import AppProduct
+
+@Suite("User Repository Tests")
+struct UserRepositoryTests {
+    let mockAdapter: MockMoyaNetworkAdapter
+    let sut: UserRepository
+
+    init() {
+        mockAdapter = MockMoyaNetworkAdapter()
+        sut = UserRepository(adapter: mockAdapter)
+    }
+
+    @Test("사용자 프로필 조회 성공")
+    func getMeSuccess() async throws {
+        // Given
+        let expectedUser = User(
+            id: UserID(value: 1),
+            name: "Test User",
+            email: "test@example.com",
+            bio: "Test Bio",
+            profileImageUrl: nil,
+            createdAt: Date()
+        )
+        mockAdapter.mockResponse = createMockResponse(user: expectedUser)
+
+        // When
+        let user = try await sut.getMe()
+
+        // Then
+        #expect(user.name == expectedUser.name)
+        #expect(user.email == expectedUser.email)
+        #expect(user.bio == expectedUser.bio)
+    }
+
+    @Test("네트워크 에러 시 예외 발생")
+    func getMeNetworkError() async throws {
+        // Given
+        mockAdapter.shouldFail = true
+
+        // When & Then
+        await #expect {
+            try await sut.getMe()
+        } throws: { error in
+            error is NetworkError
+        }
+    }
+
+    @Test("서버 에러 응답 처리", arguments: [400, 404, 500, 503])
+    func getMeServerError(statusCode: Int) async throws {
+        // Given
+        mockAdapter.mockStatusCode = statusCode
+
+        // When & Then
+        await #expect {
+            try await sut.getMe()
+        } throws: { error in
+            guard let repoError = error as? RepositoryError,
+                  case .serverError = repoError else {
+                return false
+            }
+            return true
+        }
+    }
+}
+```
+
+#### XCTest (레거시)
+
+<details>
+<summary>XCTest 방식 보기</summary>
 
 ```swift
 import XCTest
@@ -715,7 +794,69 @@ final class UserRepositoryTests: XCTestCase {
 }
 ```
 
+</details>
+
+---
+
 ### UseCase 테스트
+
+#### Swift Testing (권장)
+
+```swift
+import Testing
+@testable import AppProduct
+
+@Suite("Get User Profile UseCase Tests")
+struct GetUserProfileUseCaseTests {
+    let mockRepository: MockUserRepository
+    let sut: GetUserProfileUseCase
+
+    init() {
+        mockRepository = MockUserRepository()
+        sut = GetUserProfileUseCase(repository: mockRepository)
+    }
+
+    @Test("프로필 조회 성공")
+    func executeSuccess() async throws {
+        // Given
+        let expectedUser = User(
+            id: UserID(value: 1),
+            name: "Test User",
+            email: "test@example.com",
+            bio: "iOS Developer",
+            profileImageUrl: URL(string: "https://example.com/avatar.jpg"),
+            createdAt: Date()
+        )
+        mockRepository.mockUser = expectedUser
+
+        // When
+        let user = try await sut.execute()
+
+        // Then
+        #expect(user.name == expectedUser.name)
+        #expect(user.email == expectedUser.email)
+        #expect(user.bio == "iOS Developer")
+    }
+
+    @Test("Repository 에러 전파")
+    func executeRepositoryError() async throws {
+        // Given
+        mockRepository.shouldFail = true
+
+        // When & Then
+        await #expect {
+            try await sut.execute()
+        } throws: { error in
+            error is RepositoryError
+        }
+    }
+}
+```
+
+#### XCTest (레거시)
+
+<details>
+<summary>XCTest 방식 보기</summary>
 
 ```swift
 final class GetUserProfileUseCaseTests: XCTestCase {
@@ -742,7 +883,119 @@ final class GetUserProfileUseCaseTests: XCTestCase {
 }
 ```
 
+</details>
+
+---
+
 ### ViewModel 테스트
+
+#### Swift Testing (권장)
+
+```swift
+import Testing
+@testable import AppProduct
+
+@Suite("User Profile ViewModel Tests")
+@MainActor
+struct UserProfileViewModelTests {
+    let mockGetUseCase: MockGetUserProfileUseCase
+    let mockUpdateUseCase: MockUpdateUserProfileUseCase
+    let sut: UserProfileViewModel
+
+    init() {
+        mockGetUseCase = MockGetUserProfileUseCase()
+        mockUpdateUseCase = MockUpdateUserProfileUseCase()
+        sut = UserProfileViewModel(
+            getUserProfileUseCase: mockGetUseCase,
+            updateUserProfileUseCase: mockUpdateUseCase
+        )
+    }
+
+    @Test("프로필 로딩 성공 시 loaded 상태")
+    func loadProfileSuccess() async {
+        // Given
+        let expectedUser = User(
+            id: UserID(value: 1),
+            name: "Test User",
+            email: "test@example.com",
+            bio: "iOS Developer",
+            profileImageUrl: nil,
+            createdAt: Date()
+        )
+        mockGetUseCase.mockUser = expectedUser
+
+        // When
+        await sut.loadProfile()
+
+        // Then
+        guard case .loaded(let user) = sut.userState else {
+            Issue.record("Expected loaded state, got \(sut.userState)")
+            return
+        }
+
+        #expect(user.name == expectedUser.name)
+        #expect(user.email == expectedUser.email)
+    }
+
+    @Test("프로필 로딩 실패 시 failed 상태")
+    func loadProfileFailure() async {
+        // Given
+        mockGetUseCase.shouldFail = true
+
+        // When
+        await sut.loadProfile()
+
+        // Then
+        #expect {
+            if case .failed = sut.userState {
+                return true
+            }
+            return false
+        }
+    }
+
+    @Test("초기 상태는 idle")
+    func initialState() {
+        #expect {
+            if case .idle = sut.userState {
+                return true
+            }
+            return false
+        }
+    }
+
+    @Test("프로필 업데이트 성공")
+    func updateProfileSuccess() async {
+        // Given
+        let updatedUser = User(
+            id: UserID(value: 1),
+            name: "Updated Name",
+            email: "test@example.com",
+            bio: "Updated Bio",
+            profileImageUrl: nil,
+            createdAt: Date()
+        )
+        mockUpdateUseCase.mockUser = updatedUser
+
+        // When
+        await sut.updateProfile(name: "Updated Name", bio: "Updated Bio")
+
+        // Then
+        guard case .loaded(let user) = sut.userState else {
+            Issue.record("Expected loaded state after update")
+            return
+        }
+
+        #expect(user.name == "Updated Name")
+        #expect(user.bio == "Updated Bio")
+    }
+}
+```
+
+#### XCTest (레거시)
+
+<details>
+<summary>XCTest 방식 보기</summary>
 
 ```swift
 @MainActor
@@ -777,6 +1030,145 @@ final class UserProfileViewModelTests: XCTestCase {
 }
 ```
 
+</details>
+
+---
+
+### Swift Testing 주요 특징
+
+#### 1. **간결한 Assertion**
+
+```swift
+// XCTest
+XCTAssertEqual(user.name, "Test")
+XCTAssertNotNil(user.email)
+XCTAssertTrue(user.age >= 18)
+
+// Swift Testing
+#expect(user.name == "Test")
+#expect(user.email != nil)
+#expect(user.age >= 18)
+```
+
+#### 2. **파라미터화된 테스트**
+
+```swift
+@Test("다양한 HTTP 상태 코드 테스트", arguments: [400, 401, 403, 404, 500])
+func handleStatusCode(code: Int) async {
+    // 각 상태 코드별로 자동 실행
+}
+
+@Test(arguments: zip(["Alice", "Bob"], [25, 30]))
+func userAge(name: String, age: Int) {
+    #expect(age > 0)
+}
+```
+
+#### 3. **에러 검증**
+
+```swift
+// 특정 에러 타입 확인
+await #expect {
+    try await sut.failingMethod()
+} throws: { error in
+    error is NetworkError
+}
+
+// 에러 케이스 상세 검증
+await #expect {
+    try await sut.brew(forMinutes: 3)
+} throws: { error in
+    guard let error = error as? BrewingError,
+          case let .needsMoreTime(time) = error else {
+        return false
+    }
+    return time == 4
+}
+```
+
+#### 4. **태그와 그룹화**
+
+```swift
+extension Tag {
+    @Tag static var integration: Self
+    @Tag static var performance: Self
+}
+
+@Test(.tags(.integration))
+func integrationTest() { }
+
+@Test(.tags(.performance), .timeLimit(.minutes(5)))
+func performanceTest() { }
+```
+
+#### 5. **병렬 실행 제어**
+
+```swift
+// 기본: 병렬 실행
+@Test func parallelTest() { }
+
+// 순차 실행 필요 시
+@Test(.serialized)
+func serializedTest() { }
+```
+
+#### 6. **Suite로 그룹화**
+
+```swift
+@Suite("User Feature Tests")
+struct UserFeatureTests {
+    @Suite("Repository Layer")
+    struct RepositoryTests {
+        @Test func getUser() { }
+        @Test func updateUser() { }
+    }
+    
+    @Suite("UseCase Layer")
+    struct UseCaseTests {
+        @Test func execute() { }
+    }
+}
+```
+
+### Mock 객체 예시
+
+```swift
+// MockMoyaNetworkAdapter
+final class MockMoyaNetworkAdapter: MoyaNetworkAdapter {
+    var mockResponse: Data?
+    var mockStatusCode: Int = 200
+    var shouldFail: Bool = false
+    
+    override func request<T: TargetType>(_ target: T) async throws -> Response {
+        if shouldFail {
+            throw NetworkError.requestFailed(statusCode: mockStatusCode, data: nil)
+        }
+        
+        return Response(
+            statusCode: mockStatusCode,
+            data: mockResponse ?? Data()
+        )
+    }
+}
+
+// MockUserRepository
+final class MockUserRepository: UserRepositoryProtocol {
+    var mockUser: User?
+    var shouldFail: Bool = false
+    
+    func getMe() async throws -> User {
+        if shouldFail {
+            throw RepositoryError.serverError(message: "Mock error")
+        }
+        
+        guard let user = mockUser else {
+            throw RepositoryError.serverError(message: "No mock data")
+        }
+        
+        return user
+    }
+}
+```
 ---
 
 ## 체크리스트
