@@ -228,6 +228,42 @@ final class SomeViewModel {
 - 파괴적 작업 전 확인 (삭제, 초기화 등)
 - 사용자 선택이 필요한 분기점
 
+## 디자인 시스템
+
+토큰 정의: `DefaultConstant.swift`, `DefaultSpacing.swift`
+
+### Shape 패턴 (권장)
+
+```swift
+// ConcentricRectangle 사용 (디바이스별 일관성)
+.clipShape(
+    ConcentricRectangle(
+        corners: .concentric(minimum: DefaultConstant.concentricRadius),
+        isUniform: true
+    )
+)
+.containerShape(.rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
+```
+
+### Glass Effect 선택
+
+| Variant | 용도 |
+|---------|------|
+| `.regular` | 일반 카드, 폼 |
+| `.regular.interactive()` | 탭 가능 요소 |
+| `.clear` | 미디어/색상 배경 위 |
+| `.glassProminent` (ButtonStyle) | Primary 버튼 |
+| `.glass` (ButtonStyle) | Secondary 버튼 |
+
+### Typography 계층
+
+| 용도 | AppFont | Color |
+|------|---------|-------|
+| 제목 | `.calloutEmphasis` | 기본 |
+| 부제목 | `.subheadline` | `.grey600` |
+| 부가정보 | `.footnote` | `.grey500` |
+
+
 ## 성능 최적화
 
 ### Liquid Glass (iOS 26)
