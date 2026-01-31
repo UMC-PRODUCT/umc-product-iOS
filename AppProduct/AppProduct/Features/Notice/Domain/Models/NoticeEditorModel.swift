@@ -192,16 +192,33 @@ struct VoteFormData: Equatable {
     ]
     var isAnonymous: Bool = true
     var allowMultipleSelection: Bool = false
-
+    
     static let minOptionCount = 2
     static let maxOptionCount = 5
-
+    
     var canAddOption: Bool {
         options.count < Self.maxOptionCount
     }
-
+    
     var canRemoveOption: Bool {
         options.count > Self.minOptionCount
+    }
+    
+    /// 투표 만들기 완료조건: 위에서부터 연속으로 채워진 항목 개수
+    var validOptionsCount: Int {
+        var count = 0
+        for option in options {
+            if option.text.trimmingCharacters(in: .whitespaces).isEmpty {
+                break
+            }
+            count += 1
+        }
+        return count
+    }
+    
+    /// 투표 확정 가능 여부 (2개 이상 항목이 채워져야 함)
+    var canConfirm: Bool {
+        validOptionsCount >= 2
     }
 }
 
