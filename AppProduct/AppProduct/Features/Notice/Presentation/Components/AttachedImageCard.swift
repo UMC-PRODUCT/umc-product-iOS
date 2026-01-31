@@ -51,7 +51,8 @@ struct AttachedImageCard: View, Equatable {
             onDismiss()
         }) {
             Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(.grey500)
+                .foregroundStyle(.grey700)
+                .glassEffect()
                 .padding(Constants.xmarkPadding)
         }
     }

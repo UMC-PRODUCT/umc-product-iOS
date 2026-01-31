@@ -63,6 +63,10 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     /// 첨부된 링크 목록
     var noticeLinks: [NoticeLinkItem] = []
     
+    /// 알림 발송 여부
+    var allowAlert: Bool = true
+    
+    
     // MARK: - Initializer
     
     init(
