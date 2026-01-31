@@ -14,6 +14,16 @@ enum SocialType: String, CaseIterable, Hashable {
     case kakao = "Kakao"
     /// 애플 로그인
     case apple = "Apple"
+
+    /// 소셜 타입에 해당하는 ImageResource를 반환합니다.
+    var imageResource: ImageResource {
+        switch self {
+        case .kakao:
+            return .kakaoIcon
+        case .apple:
+            return .appleIcon
+        }
+    }
     
     /// 소셜 타입에 해당하는 로고 이미지를 반환합니다.
     var image: Image {
