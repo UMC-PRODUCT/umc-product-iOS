@@ -30,8 +30,10 @@ struct NoticeEditorView: View {
     // MARK: - Body
     var body: some View {
         ScrollView(.vertical) {
-            VStack(spacing: DefaultSpacing.spacing12) {
+            VStack(spacing: DefaultSpacing.spacing16) {
                 textfieldSection
+                    
+                
                 if !viewModel.noticeImages.isEmpty {
                     imageSection
                 }
@@ -43,12 +45,9 @@ struct NoticeEditorView: View {
                 }
             }
         }
-        
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolBarCollection.TopBarCenterMenu (
-                icon: viewModel.selectedCategory.labelIcon,
-                title: viewModel.selectedCategory.labelText,
+            ToolBarCollection.ToolBarCenterMenu(
                 items: viewModel.availableCategories,
                 selection: categoryBinding,
                 itemLabel: { $0.labelText },
@@ -67,28 +66,37 @@ struct NoticeEditorView: View {
         }
         .safeAreaBar(edge: .bottom, alignment: .leading) {
             HStack {
-                PhotosPicker(
-                    selection: $viewModel.selectedPhotoItems,
-                    maxSelectionCount: 10,
-                    matching: .images
-                ) {
-                    Image(systemName: "photo.fill")
-                        .font(.system(size: Constants.toolBtnIconSize))
-                        .foregroundStyle(.black)
-                        .frame(width: Constants.toolBtnFrame.width, height: Constants.toolBtnFrame.height)
-                        .padding(DefaultConstant.defaultBtnPadding)
-                        .glassEffect()
+                GlassEffectContainer {
+                    HStack {
+                        PhotosPicker(
+                            selection: $viewModel.selectedPhotoItems,
+                            maxSelectionCount: 10,
+                            matching: .images
+                        ) {
+                            Image(systemName: "photo.fill")
+                                .font(.system(size: Constants.toolBtnIconSize))
+                                .foregroundStyle(.black)
+                                .frame(width: Constants.toolBtnFrame.width, height: Constants.toolBtnFrame.height)
+                                .padding(DefaultConstant.defaultBtnPadding)
+                        }
+                        
+                        ToolBtn(icon: "link", action: {
+                            viewModel.noticeLinks.append(NoticeLinkItem())
+                        })
+                        
+                        ToolBtn(icon: "chart.bar.fill", action: {
+                            viewModel.showVotingFormSheet()
+                        })
+                    }
                 }
+                .glassEffect()
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                .padding(.bottom, DefaultSpacing.spacing16)
                 
-                ToolBtn(icon: "link", action: {
-                    viewModel.noticeLinks.append(NoticeLinkItem())
-                })
-                ToolBtn(icon: "chart.bar.fill", action: {
-                    viewModel.showVotingFormSheet()
-                })
+                Spacer()
+                alertToggle
+                completeBtn
             }
-            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            .padding(.bottom, DefaultConstant.defaultContentBottomMargins)
         }
         .onChange(of: viewModel.selectedPhotoItems) { _, newItems in
             guard !newItems.isEmpty else { return }
@@ -149,7 +157,6 @@ struct NoticeEditorView: View {
                 .foregroundStyle(.black)
                 .frame(width: Constants.toolBtnFrame.width, height: Constants.toolBtnFrame.height)
                 .padding(DefaultConstant.defaultBtnPadding)
-                .glassEffect()
         }
     }
     
@@ -161,10 +168,11 @@ struct NoticeEditorView: View {
             Divider()
             
             ArticleTextField(placeholder: .content, text: $content)
-                .padding(.bottom, DefaultSpacing.spacing48)
+                .frame(minHeight: 200, alignment: .top)
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .padding(.top, DefaultSpacing.spacing24)
+        .padding(.bottom, DefaultSpacing.spacing32)
     }
     
     // MARK: - imageSection
@@ -210,6 +218,28 @@ struct NoticeEditorView: View {
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .buttonStyle(.plain)
+    }
+    
+    // MARK: - alertToggle
+    private var alertToggle: some View {
+        Toggle("알림 발송", isOn: $viewModel.allowAlert)
+            .tint(.indigo500)
+    }
+    
+    // MARK: - completeBtn
+    private var completeBtn: some View {
+        Button(action: {
+            
+        }, label: {
+            Text("작성완료")
+                .appFont(.bodyEmphasis)
+                .foregroundStyle(.white)
+                .padding(DefaultConstant.defaultBtnPadding)
+                .background {
+                    RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+                        .fill(.indigo500)
+                }
+        })
     }
     
     // MARK: - Computed Property
