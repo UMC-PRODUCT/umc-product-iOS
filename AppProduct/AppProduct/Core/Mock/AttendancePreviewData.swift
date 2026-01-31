@@ -286,7 +286,7 @@ struct AttendancePreviewData {
                     week: 7,
                     startTime: Date.now,
                     endTime: Date.now + 7200,
-                    location: coordinate
+                    location: .init(latitude: 37.582967, longitude: 127.110527)
                 ),
                 initialAttendance: nil
             ),
