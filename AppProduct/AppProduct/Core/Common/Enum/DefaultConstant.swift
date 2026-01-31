@@ -69,6 +69,8 @@ enum DefaultConstant {
     
     /// 기본 애니메이션 지속 시간 (초).
     static let animationTime: TimeInterval = 0.3
+    
+    static let transitionScale: CGFloat = 0.95
 
     /// 텍스트 줄 간격.
     static let lineSpacing: CGFloat = 2.5

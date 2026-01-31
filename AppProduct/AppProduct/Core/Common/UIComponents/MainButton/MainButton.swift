@@ -62,7 +62,6 @@ struct MainButton: View {
             .equatable()
         }
         .tint(.indigo500)
-        .padding(.bottom, DefaultConstant.defaultBtnPadding)
         .disabled(isLoading)
     }
 }
