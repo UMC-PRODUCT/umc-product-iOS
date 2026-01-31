@@ -18,6 +18,14 @@ struct CurriculumView: View {
     let missions: [MissionCardModel]
     @FocusState private var focusedMissionID: UUID?
     var onMissionSubmit: (MissionCardModel, MissionSubmissionType, String?) -> Void
+    
+    // MARK: - Constants
+
+    private enum Constants {
+        static let iconSize: CGFloat = 28
+        static let connectorWidth: CGFloat = 2
+        static let bottomPadding: CGFloat = 12
+    }
 
     // MARK: - Body
 
@@ -27,7 +35,7 @@ struct CurriculumView: View {
                 // Header
                 CurriculumProgressCard(model: curriculumModel)
                     .equatable()
-
+                
                 // Mission List
                 missionListSection
             }
@@ -45,21 +53,37 @@ struct CurriculumView: View {
     // MARK: - View Components
 
     private var missionListSection: some View {
-        ForEach(missions, id: \.id) { mission in
-            HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
-                // Left: Status Icon with Connector
-                MissionStatusIcon(
-                    status: mission.status,
-                    weekNumber: mission.week
-                )
-                .equatable()
+        VStack(spacing: 0) {
+            ForEach(Array(missions.enumerated()), id: \.element.id) { index, mission in
+                let isLast = index == missions.count - 1
 
-                // Right: MissionCard
-                MissionCard(
-                    model: mission,
-                    focusedMissionID: $focusedMissionID
-                ) { submissionType, link in
-                    onMissionSubmit(mission, submissionType, link)
+                HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
+                    // Left: Status Icon
+                    MissionStatusIcon(
+                        status: mission.status,
+                        weekNumber: mission.week
+                    )
+                    .equatable()
+
+                    // Right: MissionCard
+                    MissionCard(
+                        model: mission,
+                        focusedMissionID: $focusedMissionID
+                    ) { submissionType, link in
+                        onMissionSubmit(mission, submissionType, link)
+                    }
+                    .padding(.bottom, isLast ? 0 : Constants.bottomPadding)
+                }
+                .overlay(alignment: .topLeading) {
+                    // 연결선: overlay로 HStack 높이에 맞게 자동 확장
+                    if !isLast {
+                        Rectangle()
+                            .fill(Color.grey200)
+                            .frame(width: Constants.connectorWidth)
+                            .frame(maxHeight: .infinity)
+                            .padding(.top, Constants.iconSize)
+                            .padding(.leading, (Constants.iconSize - Constants.connectorWidth) / 2)
+                    }
                 }
             }
         }

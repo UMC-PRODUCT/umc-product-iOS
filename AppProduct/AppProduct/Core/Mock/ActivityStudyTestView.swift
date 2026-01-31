@@ -16,21 +16,17 @@ struct ActivityStudyTestView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: DefaultSpacing.spacing24) {
-                // MARK: - Curriculum Progress Section
-                curriculumSection
-
-                // MARK: - Mission Section
-                missionSection
-
-                // MARK: - Curriculum View Section
-                curriculumViewSection
-            }
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        CurriculumView(
+            curriculumModel: CurriculumProgressModel(
+                partName: "iOS PART CURRICULUM",
+                curriculumTitle: "Swift 기초 문법",
+                completedCount: 2,
+                totalCount: 8
+            ),
+            missions: MissionPreviewData.iosMissions
+        ) { mission, type, link in
+            print("제출: \(mission.title) - \(type) - \(link ?? "없음")")
         }
-        .background(Color.grey100)
-        .keyboardDismissToolbar(focusedID: $focusedMissionID)
     }
 
     // MARK: - View Components
@@ -91,32 +87,20 @@ struct ActivityStudyTestView: View {
                 .equatable()
                 .padding(.bottom, DefaultSpacing.spacing24)
 
-                // Mission List with Connector
+                // Mission List with Connector (overlay 방식)
                 VStack(spacing: 0) {
                     ForEach(Array(missions.enumerated()), id: \.element.id) { index, mission in
                         let isLast = index == missions.count - 1
 
                         HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
-                            // Left: Icon + Connector
-                            ZStack(alignment: .top) {
-                                // 연결선 (아이콘 아래부터)
-                                if !isLast {
-                                    Rectangle()
-                                        .fill(Color.grey300)
-                                        .frame(width: Constants.connectorWidth)
-                                        .padding(.top, Constants.iconSize)
-                                }
+                            // Left: Icon
+                            MissionStatusIcon(
+                                status: mission.status,
+                                weekNumber: mission.week
+                            )
+                            .equatable()
 
-                                // 아이콘
-                                MissionStatusIcon(
-                                    status: mission.status,
-                                    weekNumber: mission.week
-                                )
-                                .equatable()
-                            }
-                            .frame(width: Constants.iconSize)
-                            .frame(maxHeight: .infinity, alignment: .top)
-
+                            // Right: MissionCard
                             MissionCard(
                                 model: mission,
                                 focusedMissionID: $focusedMissionID
@@ -124,6 +108,17 @@ struct ActivityStudyTestView: View {
                                 print("제출: \(type) - \(link ?? "없음")")
                             }
                             .padding(.bottom, isLast ? 0 : DefaultSpacing.spacing12)
+                        }
+                        .overlay(alignment: .topLeading) {
+                            // 연결선: overlay로 HStack 높이에 맞게 자동 확장
+                            if !isLast {
+                                Rectangle()
+                                    .fill(Color.grey300)
+                                    .frame(width: Constants.connectorWidth)
+                                    .frame(maxHeight: .infinity)
+                                    .padding(.top, Constants.iconSize)
+                                    .padding(.leading, (Constants.iconSize - Constants.connectorWidth) / 2)
+                            }
                         }
                     }
                 }
