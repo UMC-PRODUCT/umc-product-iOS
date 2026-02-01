@@ -36,7 +36,6 @@ struct CurriculumProgressCard: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             headerSection
-            statsSection
             titleSection
             progressSection
             footerSection
@@ -50,7 +49,7 @@ struct CurriculumProgressCard: View, Equatable {
 
     // MARK: - View Components
 
-    /// 헤더: 아이콘 + 파트명 + 달성률 라벨
+    /// 헤더: 아이콘 + 파트명 + 달성률 퍼센트
     private var headerSection: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             CardIconImage(
@@ -61,22 +60,11 @@ struct CurriculumProgressCard: View, Equatable {
 
             Text(model.partName)
                 .appFont(.calloutEmphasis, color: .indigo500)
-
+            
             Spacer()
 
-            Text("달성률")
-                .appFont(.footnote, color: .gray)
-        }
-    }
-
-    /// 통계: 퍼센트 숫자
-    private var statsSection: some View {
-        HStack(alignment: .lastTextBaseline, spacing: DefaultSpacing.spacing4) {
-            Text("\(model.progressPercentage)")
-                .appFont(.title1Emphasis)
-
-            Text("%")
-                .appFont(.title2Emphasis, color: .grey400)
+            Text("\(model.progressPercentage)%")
+                .appFont(.title3Emphasis, color: .indigo500)
         }
     }
 
