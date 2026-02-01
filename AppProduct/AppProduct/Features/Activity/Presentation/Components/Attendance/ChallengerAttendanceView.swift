@@ -15,6 +15,7 @@ struct ChallengerAttendanceView: View, Equatable {
     @Bindable private var attendanceViewModel: ChallengerAttendanceViewModel
     @Namespace private var attendanceNamespace
     @State private var showReasonSheet: Bool = false
+    @State private var isMapReady: Bool = false
 
     private let userId: UserID
     private let container: DIContainer
@@ -43,25 +44,47 @@ struct ChallengerAttendanceView: View, Equatable {
 
     private enum Constants {
         static let bottomPadding: CGFloat = 16
+        static let mapProgressRadius: Edge.Corner.Style = 24
         static let attendanceActionId = "attendance-action"
+        static let mapLoadDelay: Duration = .milliseconds(100)
+        static let mapPlaceholderHeight: CGFloat = 200
     }
 
     // MARK: - Body
 
     var body: some View {
         VStack(spacing: DefaultSpacing.spacing16) {
-            ActivityCompactMapView(
-                container: container,
-                errorHandler: errorHandler,
-                info: session.info
-            )
+            if isMapReady {
+                ActivityCompactMapView(
+                    mapViewModel: mapViewModel,
+                    info: session.info
+                )
+            } else {
+                mapPlaceholder
+            }
             attendanceActionView
             lateReasonButton
         }
         .animation(.smooth, value: session.attendanceStatus)
+        .animation(.easeInOut(duration: 0.2), value: isMapReady)
+        .task {
+            try? await Task.sleep(for: Constants.mapLoadDelay)
+            isMapReady = true
+        }
     }
 
     // MARK: - View Component
+
+    /// Map 로딩 플레이스홀더
+    private var mapPlaceholder: some View {
+        ConcentricRectangle(corners: Constants.mapProgressRadius, isUniform: true)
+            .fill(Color.grey100)
+            .frame(height: Constants.mapPlaceholderHeight)
+            .overlay {
+                ProgressView()
+                    .tint(.grey400)
+            }
+    }
 
     /// 출석 상태에 따른 액션 뷰 (버튼 또는 승인 대기 카드)
     @ViewBuilder

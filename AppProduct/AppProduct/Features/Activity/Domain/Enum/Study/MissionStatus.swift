@@ -1,0 +1,44 @@
+//
+//  MissionStatus.swift
+//  AppProduct
+//
+//  Created by jaewon Lee on 1/29/26.
+//
+
+import Foundation
+import SwiftUI
+
+/// 미션 상태
+enum MissionStatus: String, CaseIterable {
+    case notStarted = "Not Started"
+    case inProgress = "In Progress"
+    case pendingApproval = "대기중"
+    case pass = "Pass"
+    case fail = "Fail"
+
+    var displayText: String { rawValue }
+
+    var backgroundColor: Color {
+        switch self {
+        case .notStarted: return .grey100
+        case .inProgress: return .clear
+        case .pendingApproval: return Color.yellow.opacity(0.2)
+        case .pass: return .green100
+        case .fail: return Color.red.opacity(0.15)
+        }
+    }
+
+    var foregroundColor: Color {
+        switch self {
+        case .notStarted: return .grey600
+        case .inProgress: return .indigo500
+        case .pendingApproval: return .orange
+        case .pass: return .green700
+        case .fail: return .red
+        }
+    }
+
+    var hasBorder: Bool {
+        self == .inProgress
+    }
+}

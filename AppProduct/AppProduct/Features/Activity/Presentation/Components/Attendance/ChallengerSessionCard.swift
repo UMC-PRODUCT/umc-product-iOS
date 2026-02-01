@@ -34,10 +34,7 @@ struct ChallengerSessionCard: View, Equatable {
     }
     
     private enum Constants {
-        static let iconSize: CGFloat = 64
-        static let statusBadgeHeight: CGFloat = 36
-        static let statusBadgeMinCornerRadius: Edge.Corner.Style = 12
-        static let statusBadgeCornerRadius: CGFloat = 12
+        static let titleLineLimit: Int = 2
     }
     
     var body: some View {
@@ -65,7 +62,7 @@ struct ChallengerSessionCard: View, Equatable {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             Text(info.title)
                 .appFont(.calloutEmphasis, color: .black)
-                .lineLimit(2)
+                .lineLimit(Constants.titleLineLimit)
 
             Text(info.startTime.timeRange(to: info.endTime))
                 .appFont(.subheadline, color: .grey500)
