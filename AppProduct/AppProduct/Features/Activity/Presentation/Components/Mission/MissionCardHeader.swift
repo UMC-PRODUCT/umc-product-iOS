@@ -43,7 +43,7 @@ struct MissionCardHeader: View, Equatable {
     // MARK: - Equatable
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.model.id == rhs.model.id
+        lhs.model == rhs.model
         && lhs.isExpanded == rhs.isExpanded
     }
 

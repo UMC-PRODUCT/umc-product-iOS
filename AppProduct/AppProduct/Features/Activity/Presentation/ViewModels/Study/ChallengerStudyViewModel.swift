@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // MARK: - CurriculumData
 
@@ -91,7 +92,9 @@ final class ChallengerStudyViewModel {
             if case .loaded(var data) = curriculumState {
                 if let index = data.missions.firstIndex(where: { $0.id == mission.id }) {
                     data.missions[index] = updatedMission
-                    curriculumState = .loaded(data)
+                    withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
+                        curriculumState = .loaded(data)
+                    }
                 }
             }
         } catch let error as DomainError {
