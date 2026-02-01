@@ -50,6 +50,8 @@ struct MissionCardContent: View, Equatable {
     private var missionTitleText: some View {
         Text(model.missionTitle)
             .appFont(.subheadline, color: .gray)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     @ViewBuilder

@@ -51,6 +51,7 @@ struct CurriculumView: View {
             }
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
+        .defaultScrollAnchor(.top)
         .contentMargins(
             .bottom,
             DefaultConstant.defaultContentBottomMargins,

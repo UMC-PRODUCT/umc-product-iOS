@@ -80,6 +80,8 @@ struct MissionCardHeader: View, Equatable {
         Text(model.title)
             .appFont(.calloutEmphasis)
             .multilineTextAlignment(.leading)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private var statusText: some View {
