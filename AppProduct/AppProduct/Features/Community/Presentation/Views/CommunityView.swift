@@ -40,11 +40,11 @@ struct CommunityView: View {
         .navigation(naviTitle: .community, displayMode: .inline)
         .searchToolbarBehavior(.minimize)
         .toolbar {
-            ToolBarCollection.CommunityCenterMenu(
+            ToolBarCollection.ToolBarCenterMenu(
                 items: CommunityMenu.allCases,
                 selection: $vm.selectedMenu,
                 itemLabel: { $0.rawValue },
-                itemIcon: { $0.icon ?? "" }
+                itemIcon: { $0.icon }
             )
         }
     }

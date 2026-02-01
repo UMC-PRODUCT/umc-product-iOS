@@ -15,9 +15,9 @@ enum CommunityMenu: String, Identifiable, CaseIterable {
     
     var id: String { self.rawValue }
     
-    var icon: String? {
+    var icon: String {
         switch self {
-        case .all: return nil
+        case .all: return ""
         case .question: return "flame.fill"
         case .party: return "bolt.fill"
         case .fame: return "trophy.fill"

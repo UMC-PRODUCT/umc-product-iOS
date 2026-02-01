@@ -210,56 +210,6 @@ struct ToolBarCollection {
         }
     }
     
-    /// 커뮤니티 메뉴 버튼
-    struct CommunityCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
-        let items: [Item]
-        @Binding var selection: Item
-        let itemLabel: (Item) -> String
-        let itemIcon: ((Item) -> String)?
-        
-        init(
-            items: [Item],
-            selection: Binding<Item>,
-            itemLabel: @escaping (Item) -> String,
-            itemIcon: ((Item) -> String)? = nil
-        ) {
-            self.items = items
-            self._selection = selection
-            self.itemLabel = itemLabel
-            self.itemIcon = itemIcon
-        }
-        
-        var body: some ToolbarContent {
-            ToolbarItem(placement: .principal, content: {
-                Menu {
-                    ForEach(items) { item in
-                        Button(action: {
-                            withAnimation(.snappy) {
-                                selection = item
-                            }
-                        }) {
-                            if let itemIcon = itemIcon {
-                                Label(itemLabel(item), systemImage: itemIcon(item))
-                            } else {
-                                Text(itemLabel(item))
-                            }
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Text(itemLabel(selection))
-                            .appFont(.subheadline, weight: .medium)
-                        Image(systemName: "chevron.down.circle.fill")
-                            .foregroundStyle(.gray.opacity(0.5))
-                            .font(.caption)
-                    }
-                    .padding(DefaultConstant.defaultToolBarTitlePadding)
-                    .glassEffect(.regular)
-                }
-            })
-        }
-    }
-    
     /// 커뮤니티 주차별 필터
     struct CommunityWeekFilter: ToolbarContent {
         let weeks: [Int]
