@@ -39,6 +39,8 @@ struct MissionCardContent: View, Equatable {
             case .pendingApproval, .pass, .fail:
                 missionTitleText
                 statusResultView
+            case .locked:
+                EmptyView()
             }
         }
     }
@@ -79,7 +81,7 @@ struct MissionCardContent: View, Equatable {
     private var pendingApprovalView: some View {
         MissionStatusResultView(
             icon: "hourglass",
-            message: "학습 완료 확인 대기 중입니다.",
+            message: "확인 대기 중입니다.",
             color: .orange
         )
     }
@@ -87,7 +89,7 @@ struct MissionCardContent: View, Equatable {
     private var passView: some View {
         MissionStatusResultView(
             icon: "checkmark.circle.fill",
-            message: "해당 주차 스터디를 통과하였습니다.",
+            message: "미션을 통과하였습니다.",
             color: .green
         )
     }
@@ -95,7 +97,7 @@ struct MissionCardContent: View, Equatable {
     private var failView: some View {
         MissionStatusResultView(
             icon: "xmark.circle.fill",
-            message: "해당 주차 스터디를 통과하지 못했습니다.",
+            message: "미션을 통과하지 못했습니다.",
             color: .red
         )
     }
@@ -249,7 +251,7 @@ fileprivate struct MissionStatusResultView: View, Equatable {
                 .appFont(.callout, color: color)
         }
         .padding(Constants.padding)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             color.opacity(Constants.backgroundOpacity),
             in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
