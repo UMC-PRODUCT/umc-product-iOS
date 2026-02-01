@@ -61,7 +61,7 @@ struct CommunityItem: View, Equatable {
             Text(model.category.text)
                 .appFont(.footnoteEmphasis, color: .grey700)
                 .padding(Constant.tagPadding)
-                .glassEffect(.clear)
+                .glassEffect(.clear.tint(model.category.color))
 
             Spacer()
             Text(model.createdAt)
@@ -118,8 +118,4 @@ struct CommunityItem: View, Equatable {
         }
         .appFont(.footnote, color: .grey500)
     }
-}
-
-#Preview {
-    
 }

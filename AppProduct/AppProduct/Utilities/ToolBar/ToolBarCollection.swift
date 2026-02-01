@@ -210,26 +210,107 @@ struct ToolBarCollection {
         }
     }
     
-    /// 커뮤니티 메뉴 버튼
-    struct CommunityMenuBtn: ToolbarContent {
-        let allAction: () -> Void
-        let questionAction: () -> Void
-        let fameAction: () -> Void
-        let isRecruiting: Binding<Bool>
+    /// 커뮤니티 주차별 필터
+    struct CommunityWeekFilter: ToolbarContent {
+        let weeks: [Int]
+        @Binding var selection: Int
         
         var body: some ToolbarContent {
-            ToolbarItem(placement: .topBarTrailing, content: {
-                Menu("Menu", systemImage: "ellipsis") {
-                    Section {
-                        Button("전체") { allAction() }
-                        Button("질문", systemImage: "flame.fill") { questionAction() }
-                        Button("명예의전당", systemImage: "trophy.fill") { fameAction() }
-                    }
-                    Toggle("모집중", isOn: isRecruiting)
+            ToolbarItem(placement: .topBarLeading) {
+                Menu {
+                    weekPicker
+                } label: {
+                    Text("\(selection)주차")
+                        .appFont(.subheadline, weight: .medium)
                 }
-            })
+            }
+        }
+        
+        private var weekPicker: some View {
+            Picker("주차 선택", selection: $selection) {
+                ForEach(weeks, id: \.self) { week in
+                    Text("\(week)주차")
+                        .tag(week)
+                }
+            }
+            .pickerStyle(.inline)
         }
     }
+    
+    /// 커뮤니티 학교/파트 필터
+    struct CommunityUnivFilter: ToolbarContent {
+        @Binding var selectedUniversity: String
+        let universities: [String]
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ForEach(universities, id: \.self) { university in
+                        Toggle(university, isOn: Binding(
+                            get: { selectedUniversity == university },
+                            set: { isOn in
+                                selectedUniversity = isOn ? university : "전체"
+                            })
+                        )
+                    }
+                } label: {
+                    Image(systemName: "graduationcap.fill")
+                        .appFont(.subheadline)
+                }
+                .menuActionDismissBehavior(.disabled)
+            }
+        }
+    }
+    
+    struct CommunityPartFilter: ToolbarContent {
+        @Binding var selectedPart: String
+        let parts: [String]
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ForEach(parts, id: \.self) { part in
+                        Toggle(part, isOn: Binding(
+                            get: { selectedPart == part },
+                            set: { isOn in
+                                selectedPart = isOn ? part : "전체"
+                            })
+                        )
+                    }
+                } label: {
+                    Image(systemName: "building.columns.fill")
+                        .appFont(.subheadline)
+                }
+                .menuActionDismissBehavior(.disabled)
+            }
+        }
+    }
+    
+    /// 커뮤니티 글 작성 완료 버튼
+    struct CommunityPostDoneBtn: ToolbarContent {
+        @Environment(\.dismiss) var dismiss
+        let isEnabled: Bool
+        let action: () -> Void
+        
+        init(isEnabled: Bool, action: @escaping () -> Void) {
+            self.isEnabled = isEnabled
+            self.action = action
+        }
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(action: {
+                    action()
+                    dismiss()
+                }) {
+                    Image(systemName: "checkmark")
+                        .appFont(.body, color: isEnabled ? .indigo700 : .grey400)
+                }
+                .disabled(!isEnabled)
+            }
+        }
+    }
+    
 
     /// 상단 중앙 섹션 메뉴 툴바 (Button 기반, 애니메이션 지원)
     struct ToolBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
