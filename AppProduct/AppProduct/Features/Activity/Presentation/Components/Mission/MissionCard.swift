@@ -96,8 +96,6 @@ fileprivate struct MissionCardPresenter: View, Equatable {
             )
 
             if isExpanded {
-                Divider()
-
                 MissionCardContent(
                     model: model,
                     submissionType: submissionType,
@@ -112,7 +110,7 @@ fileprivate struct MissionCardPresenter: View, Equatable {
                     removal: .scale(scale: DefaultConstant.transitionScale).combined(with: .opacity)))
             }
         }
-        .padding(DefaultConstant.defaultCardPadding)
+        .padding(DefaultConstant.defaultListPadding)
         .background(Color.white)
         .clipShape(
             RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius))

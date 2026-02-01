@@ -11,15 +11,15 @@ import SwiftUI
 
 fileprivate enum Constants {
     static let chevronIconSize: CGFloat = 14
-    static let borderWidth: CGFloat = 1
-    static let tagBadgeCornerRadius: CGFloat = 12
+    static let weekBadgeSize: CGFloat = 48
+    static let weekBadgeCornerRadius: CGFloat = 12
 }
 
 // MARK: - MissionCardHeader
 
 /// 미션 카드 헤더 뷰
 ///
-/// 주차/플랫폼 태그, 제목, 상태 뱃지, 펼치기/접기 버튼을 표시합니다.
+/// 주차 숫자 배지, 제목, 상태 텍스트, 펼치기/접기 버튼을 표시합니다.
 struct MissionCardHeader: View, Equatable {
 
     // MARK: - Property
@@ -50,10 +50,15 @@ struct MissionCardHeader: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        HStack(alignment: .top) {
+        HStack(spacing: DefaultSpacing.spacing16) {
+            WeekNumberBadge(week: model.week, status: model.status)
+                .equatable()
+
             contentSection
+
             Spacer()
-            statusSection
+
+            chevronIcon
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -64,101 +69,50 @@ struct MissionCardHeader: View, Equatable {
     // MARK: - View Components
 
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-            tagSection
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             titleText
-        }
-    }
-
-    private var tagSection: some View {
-        HStack(spacing: DefaultSpacing.spacing4) {
-            InfoBadge(
-                text: "Week \(model.week)",
-                foregroundColor: .grey600,
-                backgroundColor: .grey100
-            )
-
-            InfoBadge(
-                text: model.platform,
-                foregroundColor: .grey600,
-                backgroundColor: .grey100
-            )
+            statusText
         }
     }
 
     private var titleText: some View {
-        Text(model.title)
-            .appFont(
-                .calloutEmphasis,
-                color: model.status == .inProgress
-                ? Color.indigo500 : Color.black)
+        Text("\(model.week)주차 과제: \(model.title)")
+            .appFont(.calloutEmphasis)
             .multilineTextAlignment(.leading)
     }
 
-    private var statusSection: some View {
-        HStack {
-            StatusBadgePresenter(status: model.status)
-                .equatable()
+    private var statusText: some View {
+        Text(model.status.displayText)
+            .appFont(.footnote, color: model.status.foregroundColor)
+    }
 
-            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                .font(.system(size: Constants.chevronIconSize))
-                .foregroundStyle(.gray)
-        }
+    private var chevronIcon: some View {
+        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+            .font(.system(size: Constants.chevronIconSize))
+            .foregroundStyle(.grey400)
     }
 }
 
-// MARK: - InfoBadge
+// MARK: - WeekNumberBadge
 
-/// 정보 표시용 뱃지 (태그, 상태 등)
-fileprivate struct InfoBadge: View, Equatable {
-
-    // MARK: - Property
-
-    let text: String
-    let foregroundColor: Color
-    let backgroundColor: Color
-    var hasBorder: Bool = false
-    var borderColor: Color = .indigo500
-    var cornerRadius: CGFloat = Constants.tagBadgeCornerRadius
-
-    // MARK: - Body
-
-    var body: some View {
-        Text(text)
-            .appFont(.subheadline, weight: .bold, color: foregroundColor)
-            .padding(DefaultConstant.badgePadding)
-            .background(backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
-            .overlay {
-                if hasBorder {
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .strokeBorder(borderColor, lineWidth: Constants.borderWidth)
-                }
-            }
-            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: cornerRadius))
-    }
-}
-
-// MARK: - StatusBadgePresenter
-
-/// 상태 뱃지 표시 (InfoBadge 활용)
-private struct StatusBadgePresenter: View, Equatable {
+/// 주차 숫자 배지 (둥근 사각형 배경)
+fileprivate struct WeekNumberBadge: View, Equatable {
 
     // MARK: - Property
 
+    let week: Int
     let status: MissionStatus
 
     // MARK: - Body
 
     var body: some View {
-        InfoBadge(
-            text: status.displayText,
-            foregroundColor: status.foregroundColor,
-            backgroundColor: status.backgroundColor,
-            hasBorder: status.hasBorder,
-            borderColor: .indigo500,
-            cornerRadius: DefaultConstant.cornerRadius
-        )
+        Text("\(week)")
+            .appFont(.title3Emphasis, color: status.foregroundColor)
+            .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
+            .padding(DefaultConstant.iconPadding)
+            .background(status.backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+            .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 }
 
@@ -166,15 +120,23 @@ private struct StatusBadgePresenter: View, Equatable {
 
 #if DEBUG
 #Preview("MissionCardHeader - All Status") {
-    VStack(spacing: 16) {
-        ForEach(Array(MissionPreviewData.allStatusMissions.enumerated()), id: \.element.id) { index, mission in
-            MissionCardHeader(
-                model: mission,
-                isExpanded: index == 1
-            ) { }
+    ScrollView {
+        VStack(spacing: 16) {
+            ForEach(
+                Array(MissionPreviewData.allStatusMissions.enumerated()),
+                id: \.element.id
+            ) { index, mission in
+                MissionCardHeader(
+                    model: mission,
+                    isExpanded: index == 1
+                ) { }
+                .padding(DefaultConstant.defaultListPadding)
+                .background(.white, in: .rect(cornerRadius: 24))
+            }
         }
+        .padding()
     }
-    .padding()
+    .background(Color.grey100)
 }
 
 #Preview("MissionCardHeader - iOS Missions") {
@@ -185,9 +147,12 @@ private struct StatusBadgePresenter: View, Equatable {
                     model: mission,
                     isExpanded: false
                 ) { }
+                .padding(DefaultConstant.defaultListPadding)
+                .background(.white, in: .rect(cornerRadius: 24))
             }
         }
         .padding()
     }
+    .background(Color.grey100)
 }
 #endif
