@@ -6,9 +6,12 @@
 //
 
 import Foundation
+import SwiftUI
+import PhotosUI
+import UIKit
 
 @Observable
-final class NoticeEditorViewModel {
+final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     
     // MARK: - Property
     
@@ -35,13 +38,46 @@ final class NoticeEditorViewModel {
     
     /// 학교 목록
     let schools: [String]
+    
+    /// 공지사항 제목
+    var title: String = ""
 
+    /// 공지사항 본문
+    var content: String = ""
+    
     /// 투표 폼 시트뷰 표시 여부
     var showVoting: Bool = false
-
+    
     /// 투표 폼 데이터
     var voteFormData: VoteFormData = VoteFormData()
-
+    
+    /// 투표 확정 여부
+    var isVoteConfirmed: Bool = false
+    
+    /// AlertPrompt
+    var alertPrompt: AlertPrompt?
+    
+    /// PhotosPicker 선택 아이템
+    var selectedPhotoItems: [PhotosPickerItem] = []
+    
+    /// 선택된 이미지
+    var selectedImages: [UIImage] = []
+    
+    /// 첨부된 이미지 목록
+    var noticeImages: [NoticeImageItem] = []
+    
+    /// 첨부된 링크 목록
+    var noticeLinks: [NoticeLinkItem] = []
+    
+    /// 알림 발송 여부
+    var allowAlert: Bool = true
+    
+    /// 작성 완료 가능 여부
+    var canSubmit: Bool {
+        !title.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !content.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+    
     // MARK: - Initializer
     
     init(
@@ -60,6 +96,7 @@ final class NoticeEditorViewModel {
         self.branches = branches
         self.schools = schools
     }
+    
     
     // MARK: - Function
     
@@ -141,28 +178,100 @@ final class NoticeEditorViewModel {
         default: break
         }
     }
-
+    
+    
     // MARK: - Vote Function
-
+    
     func showVotingFormSheet() {
-        voteFormData = VoteFormData()
-        showVoting = true
+        if isVoteConfirmed {
+            alertPrompt = AlertPrompt(
+                id: .init(),
+                title: "투표가 이미 생성되었습니다",
+                message: "투표 카드를 눌러 수정하거나 삭제할 수 있습니다.",
+                positiveBtnTitle: "확인"
+            )
+        } else {
+            voteFormData = VoteFormData()
+            showVoting = true
+        }
     }
-
+    
     func dismissVotingFormSheet() {
         showVoting = false
     }
-
+    
+    func confirmVote() {
+        isVoteConfirmed = true
+    }
+    
+    func editVote() {
+        showVoting = true
+    }
+    
+    func deleteVote() {
+        alertPrompt = AlertPrompt(
+            id: .init(),
+            title: "투표 삭제",
+            message: "투표를 삭제하시겠습니까?",
+            positiveBtnTitle: "삭제",
+            positiveBtnAction: { [weak self] in
+                self?.voteFormData = VoteFormData()
+                self?.isVoteConfirmed = false
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
+    }
+    
     func addVoteOption() {
         guard voteFormData.canAddOption else { return }
         voteFormData.options.append(VoteOptionItem())
     }
-
+    
     func removeVoteOption(_ option: VoteOptionItem) {
         guard voteFormData.canRemoveOption else { return }
         voteFormData.options.removeAll { $0.id == option.id }
     }
-
+    
+    
+    // MARK: - Image Function
+    
+    @MainActor
+    func didLoadImages(images: [UIImage]) async {
+        // 각 이미지에 대한 로딩 placeholder 생성
+        var loadingItemIds: [UUID] = []
+        
+        for _ in images {
+            let item = NoticeImageItem(imageData: nil, isLoading: true)
+            loadingItemIds.append(item.id)
+            noticeImages.append(item)
+        }
+        
+        for (index, image) in images.enumerated() {
+            guard let imageData = image.jpegData(compressionQuality: 0.8) else { continue }
+            
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5초
+            
+            let loadingId = loadingItemIds[index]
+            if let loadingIndex = noticeImages.firstIndex(where: { $0.id == loadingId }) {
+                noticeImages[loadingIndex] = NoticeImageItem(imageData: imageData, isLoading: false)
+            }
+        }
+        
+        selectedPhotoItems.removeAll()
+    }
+    
+    func removeImage(_ item: NoticeImageItem) {
+        noticeImages.removeAll { $0.id == item.id }
+    }
+    
+    // MARK: - Link Function
+    
+    func removeLink(_ link: NoticeLinkItem) {
+        noticeLinks.removeAll { $0.id == link.id }
+    }
+    
+    
     // MARK: - Private
     
     private func clearFilterForSubCategory(_ subCategory: EditorSubCategory) {

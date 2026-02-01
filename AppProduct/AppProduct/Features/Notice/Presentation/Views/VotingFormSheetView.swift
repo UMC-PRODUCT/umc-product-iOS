@@ -40,17 +40,18 @@ struct VotingFormSheetView: View, Equatable {
             }
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
             .padding(.top, DefaultConstant.defaultContentTopMargins)
-        }
-        .navigation(naviTitle: .vote, displayMode: .inline)
-        .toolbar {
-            ToolBarCollection.CancelBtn(action: {
-                onCancel()
-                dismiss()
-            })
-            ToolBarCollection.ConfirmBtn(action: {
-                onConfirm()
-                dismiss()
-            })
+            .navigation(naviTitle: .vote, displayMode: .inline)
+            .toolbar {
+                ToolBarCollection.CancelBtn(action: {
+                    onCancel()
+                    dismiss()
+                })
+                ToolBarCollection.ConfirmBtn(action: {
+                    onConfirm()
+                    dismiss()
+                }, disable: !formData.canConfirm
+                )
+            }
         }
     }
     

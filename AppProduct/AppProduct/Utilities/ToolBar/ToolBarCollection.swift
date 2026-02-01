@@ -28,6 +28,12 @@ struct ToolBarCollection {
     struct ConfirmBtn: ToolbarContent {
         @Environment(\.dismiss) var dismiss
         let action: () -> Void
+        let disable: Bool
+        
+        init(action: @escaping () -> Void, disable: Bool = false) {
+            self.action = action
+            self.disable = disable
+        }
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .confirmationAction, content: {
@@ -36,6 +42,7 @@ struct ToolBarCollection {
                     dismiss()
                 })
                 .tint(.indigo500)
+                .disabled(disable)
             })
         }
     }
@@ -141,72 +148,6 @@ struct ToolBarCollection {
             Text(title)
                 .font(.callout)
                 .fontWeight(.semibold)
-        }
-    }
-    
-    /// 상단 중앙 메뉴 툴바
-    ///
-    /// TODO: 레거시 코드 제거 필요 - 담당자: 소피
-    struct TopBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
-        let icon: String
-        let title: String
-        let items: [Item]
-        @Binding var selection: Item
-        let itemLabel: (Item) -> String
-        let itemIcon: ((Item) -> String)?
-        
-        init(
-            icon: String,
-            title: String,
-            items: [Item],
-            selection: Binding<Item>,
-            itemLabel: @escaping (Item) -> String,
-            itemIcon: ((Item) -> String)? = nil
-        ) {
-            self.icon = icon
-            self.title = title
-            self.items = items
-            self._selection = selection
-            self.itemLabel = itemLabel
-            self.itemIcon = itemIcon
-        }
-        
-        var body: some ToolbarContent {
-            ToolbarItem(placement: .principal) {
-                Menu {
-                    Picker("선택", selection: $selection) {
-                        ForEach(items) { item in
-                            if let itemIcon = itemIcon {
-                                Label(itemLabel(item), systemImage: itemIcon(item))
-                                    .tag(item)
-                            } else {
-                                Text(itemLabel(item)).tag(item)
-                            }
-                        }
-                    }
-                    .pickerStyle(.inline)
-                } label: {
-                    menuLabel
-                }
-            }
-            .sharedBackgroundVisibility(.visible)
-        }
-        
-        private var menuLabel: some View {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 10))
-                Spacer()
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                Spacer()
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.grey500)
-            }
-            .padding(10)
-            .glassEffect(.regular.interactive(), in: .capsule)
         }
     }
     

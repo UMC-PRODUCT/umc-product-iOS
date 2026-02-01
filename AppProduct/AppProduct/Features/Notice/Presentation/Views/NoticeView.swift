@@ -45,9 +45,7 @@ struct NoticeView: View {
                 generations: viewModel.generations,
                 selection: generationBinding
             )
-            ToolBarCollection.TopBarCenterMenu(
-                icon: viewModel.selectedMainFilter.labelIcon,
-                title: viewModel.selectedMainFilter.labelText,
+            ToolBarCollection.ToolBarCenterMenu(
                 items: viewModel.mainFilterItems,
                 selection: mainFilterBinding,
                 itemLabel: { $0.labelText },
