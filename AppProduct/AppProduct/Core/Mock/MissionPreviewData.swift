@@ -10,6 +10,9 @@ import SwiftUI
 
 #if DEBUG
 struct MissionPreviewData {
+    
+    static let errorHandler = ErrorHandler()
+    static let container = DIContainer.configured()
 
     // MARK: - Single Mission
 
