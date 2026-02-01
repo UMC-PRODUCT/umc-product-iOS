@@ -82,8 +82,7 @@ struct PlaceSelectView: View {
             place = PlaceSearchInfo(name: "", address: "", coordinate: .init(latitude: 0, longitude: 0))
         }) {
             Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(.grey400)
-                .font(.system(size: 20))
+                .appFont(.title3, color: .grey400)
         }
         .buttonStyle(.plain)
     }

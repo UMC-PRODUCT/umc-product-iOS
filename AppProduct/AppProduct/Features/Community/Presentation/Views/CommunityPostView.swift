@@ -103,7 +103,7 @@ struct CommunityPostView: View {
 
     private var linkSection: some View {
         TextField("오픈채팅 링크를 입력하세요.", text: $vm.linkText)
-            .font(.app(.callout))
+            .appFont(.callout)
             .keyboardType(.URL)
             .autocapitalization(.none)
             .autocorrectionDisabled()
