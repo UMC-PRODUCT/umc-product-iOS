@@ -151,16 +151,10 @@ struct ToolBarCollection {
         }
     }
     
-    /// 상단 중앙 메뉴 툴바
-    ///
-    /// TODO: 레거시 코드 제거 필요 - 담당자: 소피
-    struct TopBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
-        let icon: String
-        let title: String
-        let items: [Item]
-        @Binding var selection: Item
-        let itemLabel: (Item) -> String
-        let itemIcon: ((Item) -> String)?
+    /// 커뮤니티 주차별 필터
+    struct CommunityWeekFilter: ToolbarContent {
+        let weeks: [Int]
+        @Binding var selection: Int
         
         init(
             icon: String,
