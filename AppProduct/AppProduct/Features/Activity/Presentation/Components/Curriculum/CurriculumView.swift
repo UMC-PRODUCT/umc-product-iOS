@@ -10,13 +10,24 @@ import SwiftUI
 // MARK: - CurriculumView
 
 /// 커리큘럼 상세 뷰 (진행률 카드 + 미션 리스트)
+///
+/// 상단에 진행률 카드, 하단에 타임라인 형태의 미션 리스트를 표시합니다.
+/// 미션 간 연결선은 카드 높이에 맞게 동적으로 확장됩니다.
 struct CurriculumView: View {
 
     // MARK: - Property
-
-    let curriculumModel: CurriculumProgressModel
-    let missions: [MissionCardModel]
     @FocusState private var focusedMissionID: UUID?
+
+    /// 커리큘럼 진행률 정보 (파트명, 완료 수, 전체 수)
+    let curriculumModel: CurriculumProgressModel
+    /// 미션 카드 목록 (주차별 미션 정보)
+    let missions: [MissionCardModel]
+    
+    /// 미션 제출 시 호출되는 콜백
+    /// - Parameters:
+    ///   - mission: 제출 대상 미션
+    ///   - type: 제출 타입 (링크 또는 완료만)
+    ///   - link: 링크 URL (링크 타입일 경우)
     var onMissionSubmit: (MissionCardModel, MissionSubmissionType, String?) -> Void
     
     // MARK: - Constants
@@ -52,6 +63,7 @@ struct CurriculumView: View {
 
     // MARK: - View Components
 
+    /// 미션 리스트 섹션 (타임라인 형태)
     private var missionListSection: some View {
         VStack(spacing: 0) {
             ForEach(Array(missions.enumerated()), id: \.element.id) { index, mission in
