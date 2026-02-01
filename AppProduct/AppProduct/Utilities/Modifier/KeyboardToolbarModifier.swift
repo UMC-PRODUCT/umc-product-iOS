@@ -25,7 +25,7 @@ struct KeyboardToolbarModifier<Field: Hashable & CaseIterable>: ViewModifier {
     }
     
     private var bottomToolbar: some View {
-        GlassEffectContainer(spacing: 30, content: {
+        GlassEffectContainer(spacing: 10, content: {
             HStack(spacing: .zero, content: {
                 toolBarButton(action: {
                     moveToPreviousField()
@@ -48,7 +48,7 @@ struct KeyboardToolbarModifier<Field: Hashable & CaseIterable>: ViewModifier {
         .padding(.bottom, 5)
     }
     
-    private func toolBarButton(action: @escaping () -> Void, image: String, size: CGSize = .init(width: 24, height: 24)) -> some View {
+    private func toolBarButton(action: @escaping () -> Void, image: String, size: CGSize = .init(width: 18, height: 18)) -> some View {
         Button(action: {
             action()
         }, label: {

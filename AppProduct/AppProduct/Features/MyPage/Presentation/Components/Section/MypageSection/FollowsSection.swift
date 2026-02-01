@@ -25,7 +25,7 @@ struct FollowsSection: View {
             btnContent
         })
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, 20)
+        .padding(20)
         .listRowInsets(EdgeInsets())
         .background(Color(.systemGroupedBackground))
     }
@@ -43,7 +43,7 @@ struct FollowsSection: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 48, height: 48)
                         .clipShape(.circle)
-                        .glassEffect(.regular.interactive(), in: .circle)
+                        .glassEffect(.clear.interactive(), in: .circle)
                 })
             }
         })

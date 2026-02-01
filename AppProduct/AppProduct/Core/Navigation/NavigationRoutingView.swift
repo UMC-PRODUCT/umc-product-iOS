@@ -70,6 +70,7 @@ private extension NavigationRoutingView {
     }
     
     @ViewBuilder
+    /// 커뮤니티(commu) 관련 피처의 화면들을 생성합니다.
     func communityView(_ route: NavigationDestination.Community) -> some View {
         switch route {
         case .detail(let postItem):
@@ -78,6 +79,7 @@ private extension NavigationRoutingView {
     }
     
     @ViewBuilder
+    /// 마이페이지(myPage) 마이페이지 화면들을 생성합니다.
     func myPage(_ route: NavigationDestination.MyPage) -> some View {
         switch route {
         case .myInfo(let profileData):

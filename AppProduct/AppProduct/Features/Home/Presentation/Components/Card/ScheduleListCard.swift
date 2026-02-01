@@ -57,7 +57,7 @@ struct ScheduleListCard: View, Equatable {
         })
         .padding(Constants.padding)
         .background {
-            RoundedRectangle(cornerRadius: Constants.cornerRadius)
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
                 .fill(.white)
                 .glass()
         }

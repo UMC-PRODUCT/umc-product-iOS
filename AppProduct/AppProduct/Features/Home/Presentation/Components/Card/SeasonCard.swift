@@ -32,8 +32,6 @@ struct SeasonCard: View, Equatable {
         static let iconSize: CGFloat = 24
         /// 아이콘 패딩
         static let iconPadding: CGFloat = 4
-        /// 배경 컨테이너 라운드 값
-        static let concentricRadius: CGFloat = 40
         /// 미사용 (이전 디자인 잔재 가능성)
         static let glassContainerSpacing: CGFloat = 20
         /// 하단 간격 값
@@ -57,11 +55,10 @@ struct SeasonCard: View, Equatable {
     var body: some View {
         ZStack(alignment: .leading) {
             // 배경 컨테이너 (Glass 효과 적용)
-            ContainerRelativeShape()
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
                 .fill(.white)
                 .frame(height: Constants.cardSize.height, alignment: .leading)
-                .containerShape(.rect(cornerRadius: Constants.concentricRadius))
-                .glassEffect(.regular, in: .rect(cornerRadius: Constants.concentricRadius))
+                .glassEffect(.regular, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
             
             // 전경 컨텐츠
             VStack(alignment: .leading, content: {
@@ -140,7 +137,7 @@ struct SeasonCard: View, Equatable {
                 .fontWeight(.heavy)
             
             Text(type.valueTag)
-                .appFont(.callout, color: .grey600)
+                .appFont(.callout, weight: .medium, color: .grey600)
         })
     }
 }

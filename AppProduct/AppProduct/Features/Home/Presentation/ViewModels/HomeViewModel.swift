@@ -25,15 +25,44 @@ class HomeViewModel {
     ])
 
     /// 기수별 패널티 정보 데이터 (로딩 상태 포함)
-    var generationData: Loadable<[GenerationData]> = .loading
+    var generationData: Loadable<[GenerationData]> = .loaded([
+        GenerationData(
+            gen: 11,
+            penaltyPoint: 3,
+            penaltyLogs: [
+                .init(reason: "지각", date: "03.26", penaltyPoint: 1),
+                .init(reason: "과제 미제출", date: "03.27", penaltyPoint: 1),
+                .init(reason: "과제 미제출", date: "03.27", penaltyPoint: 2)
+            ]
+        ),
+        GenerationData(
+            gen: 12,
+            penaltyPoint: 1,
+            penaltyLogs: [
+                .init(reason: "지각", date: "03.14", penaltyPoint: 1),
+            ]
+        )
+    ])
 
     /// 날짜별 일정 데이터 딕셔너리
     /// - Key: 날짜 (Date)
     /// - Value: 해당 날짜의 일정 리스트 ([ScheduleData])
-    var scheduleByDates: [Date: [ScheduleData]] = .init()
+    var scheduleByDates: [Date: [ScheduleData]] = {
+          let calendar = Calendar.current
+          let today = calendar.startOfDay(for: .now)
+                                                                                                                                                                                                                                                                                                                                                                                   
+          return [
+              today: [
+                  .init(title: "데모데이", subTitle: "테스트")
+              ]
+          ]
+      }()
 
     /// 최근 공지사항 데이터 (로딩 상태 포함)
-    var recentNoticeData: Loadable<[RecentNoticeData]> = .loading
+    var recentNoticeData: Loadable<[RecentNoticeData]> = .loaded([
+        .init(category: .oranization, title: "Web 파트 1회차 스터디 공지", createdAt: .now),
+        .init(category: .oranization, title: "Web 파트 1회차 스터디 공지", createdAt: .now)
+    ])
 
     /// 일정이 등록된 날짜들의 집합
     ///

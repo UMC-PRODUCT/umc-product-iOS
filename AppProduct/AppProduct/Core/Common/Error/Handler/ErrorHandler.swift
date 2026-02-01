@@ -143,41 +143,55 @@ final class ErrorHandler {
     /// - Parameter error: 변환할 에러.
     /// - Returns: 통합된 ``AppError``.
     ///
-    /// - Note: 지원 타입: `AppError`, `APIError`, `AuthError`, `ValidationError`,
-    ///   `DomainError`, `MoyaError`, `URLError`, `DecodingError`
+    /// - Note: 지원 타입: `AppError`, `NetworkError`, `APIError`, `AuthError`,
+    ///   `ValidationError`, `DomainError`, `MoyaError`, `URLError`, `DecodingError`
     private func convert(_ error: Error) -> AppError {
+        // 1. AppError는 그대로 반환
         if let appError = error as? AppError {
             return appError
         }
 
+        // 2. NetworkError → AppError.network (Actor 기반 네트워크 클라이언트)
+        if let networkError = error as? NetworkError {
+            return .network(networkError)
+        }
+
+        // 3. APIError → AppError.api (Moya 기반)
         if let apiError = error as? APIError {
             return .api(apiError)
         }
 
+        // 4. ValidationError
         if let validationError = error as? ValidationError {
             return .validation(validationError)
         }
 
+        // 5. AuthError
         if let authError = error as? AuthError {
             return .auth(authError)
         }
 
+        // 6. DomainError
         if let domainError = error as? DomainError {
             return .domain(domainError)
         }
 
+        // 7. MoyaError → APIError 변환
         if let moyaError = error as? MoyaError {
             return moyaError.toAppError()
         }
 
+        // 8. URLError → APIError 변환
         if let urlError = error as? URLError {
             return .api(convertURLError(urlError))
         }
 
+        // 9. DecodingError → APIError 변환
         if let decodingError = error as? DecodingError {
             return .api(.decodingFailed(detail: describeDecodingError(decodingError)))
         }
 
+        // 10. 알 수 없는 에러
         return .unknown(message: error.localizedDescription)
     }
 
@@ -261,10 +275,20 @@ final class ErrorHandler {
     /// - Warning: 현재 `NotificationCenter`를 사용합니다. 추후 리팩터링 필요.
     private func handleSpecialCases(_ error: AppError, context: ErrorContext) -> Bool {
         switch error {
+        // 인증 만료 → 자동 로그아웃
         case .api(.unauthorized), .auth(.sessionExpired):
             NotificationCenter.default.post(name: .authSessionExpired, object: nil)
             return true
 
+        // NetworkError 인증 관련 에러 → 자동 로그아웃
+        case .network(.unauthorized),
+             .network(.tokenRefreshFailed),
+             .network(.noRefreshToken),
+             .network(.maxRetryExceeded):
+            NotificationCenter.default.post(name: .authSessionExpired, object: nil)
+            return true
+
+        // 승인 대기 상태 → 대기 화면으로 이동
         case .auth(.pendingApproval):
             NotificationCenter.default.post(name: .navigateToPendingApproval, object: nil)
             return true
