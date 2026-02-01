@@ -21,9 +21,17 @@ struct AttendancePreviewData {
         challengeAttendanceUseCase: mockUseCase  // 시뮬레이터 테스트용 Mock 사용
     )
 
-    static let sessionId: SessionID = SessionID(value: "iOS_6")
+    static let sessionId: SessionID = SessionID(value: "iOS_8")
     static let userId: UserID = UserID(value: "River_")
-    static let coordinate: Coordinate = .init(latitude: 37.582967, longitude: 127.010527)
+
+    /// 한성대학교 좌표
+    static let hansungCoordinate: Coordinate = .init(latitude: 37.582967, longitude: 127.010527)
+    /// 공덕 창업허브 좌표
+    static let gongdeokCoordinate: Coordinate = .init(latitude: 37.5445, longitude: 126.9519)
+
+    // Legacy compatibility
+    static let coordinate: Coordinate = hansungCoordinate
+
     static let attendance: Attendance = .init(
         sessionId: sessionId,
         userId: userId,
@@ -31,17 +39,20 @@ struct AttendancePreviewData {
         status: .beforeAttendance,
         locationVerification: .init(
             isVerified: true,
-            coordinate: coordinate,
+            coordinate: hansungCoordinate,
             address: .init(
                 fullAddress: "한성대학교", city: "서울시", district: "성북구"),
             verifiedAt: .now),
         reason: nil)
 
     static let sessionInfo: SessionInfo = .init(
-        sessionId: SessionID(value: "iOS_6"),
-        icon: .Activity.profile, title: "Alamofire 파헤치기",
-        week: 6, startTime: Date.now, endTime: Date.now + 100,
-        location: .init(latitude: 37.582967, longitude: 127.010527))
+        sessionId: SessionID(value: "iOS_8"),
+        icon: .Activity.profile,
+        title: "좋은 컴포넌트 설계란 무엇일까",
+        week: 8,
+        startTime: Date.now,
+        endTime: Date.now + 7200,
+        location: hansungCoordinate)
 
     static let session: Session = .init(info: sessionInfo, initialAttendance: attendance)
 
@@ -52,11 +63,11 @@ struct AttendancePreviewData {
         let info = SessionInfo(
             sessionId: SessionID(value: "iOS_before"),
             icon: .Activity.profile,
-            title: "출석 전 테스트",
-            week: 7,
+            title: "좋은 컴포넌트 설계란 무엇일까",
+            week: 8,
             startTime: Date.now,
             endTime: Date.now + 7200,
-            location: coordinate
+            location: hansungCoordinate
         )
         return Session(info: info, initialAttendance: nil)
     }
@@ -66,11 +77,11 @@ struct AttendancePreviewData {
         let info = SessionInfo(
             sessionId: SessionID(value: "iOS_pending_approval"),
             icon: .Activity.profile,
-            title: "승인 대기 테스트",
-            week: 8,
+            title: "UIKit을 SwiftUI에 녹이는 방법 – UIViewControllerRepresentable",
+            week: 9,
             startTime: Date.now.addingTimeInterval(-3600),
             endTime: Date.now + 3600,
-            location: coordinate
+            location: hansungCoordinate
         )
         let session = Session(
             info: info,
@@ -81,7 +92,7 @@ struct AttendancePreviewData {
                 status: .beforeAttendance,
                 locationVerification: .init(
                     isVerified: true,
-                    coordinate: coordinate,
+                    coordinate: hansungCoordinate,
                     address: .init(fullAddress: "한성대학교", city: "서울시", district: "성북구"),
                     verifiedAt: .now
                 ),
@@ -95,19 +106,81 @@ struct AttendancePreviewData {
 
     // MARK: - Multiple Sessions Mock
 
+    /// 나의 출석 현황 (1~7주차 + 연합 OT + 연합 네트워킹 데이)
     static let sessions: [Session] = [
+        // 연합 OT (출석)
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "union_ot"),
+                icon: .Activity.profile,
+                title: "연합 OT",
+                week: 0,
+                startTime: Date.now.addingTimeInterval(-86400 * 56),
+                endTime: Date.now.addingTimeInterval(-86400 * 56 + 7200),
+                location: gongdeokCoordinate
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "union_ot"),
+                userId: userId,
+                type: .gps,
+                status: .present,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        // 1주차: SwiftUI 화면 구성 및 상태 관리 (출석)
         .init(
             info: .init(
                 sessionId: SessionID(value: "iOS_1"),
                 icon: .Activity.profile,
-                title: "Swift 기초 문법",
+                title: "SwiftUI 화면 구성 및 상태 관리",
                 week: 1,
+                startTime: Date.now.addingTimeInterval(-86400 * 49),
+                endTime: Date.now.addingTimeInterval(-86400 * 49 + 7200),
+                location: hansungCoordinate
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "iOS_1"),
+                userId: userId,
+                type: .gps,
+                status: .present,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        // 2주차: SwiftUI 데이터 바인딩 및 MVVM 패턴 (출석)
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "iOS_2"),
+                icon: .Activity.profile,
+                title: "SwiftUI 데이터 바인딩 및 MVVM 패턴",
+                week: 2,
+                startTime: Date.now.addingTimeInterval(-86400 * 42),
+                endTime: Date.now.addingTimeInterval(-86400 * 42 + 7200),
+                location: hansungCoordinate
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "iOS_2"),
+                userId: userId,
+                type: .gps,
+                status: .present,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        // 3주차: SwiftUI 리스트와 스크롤뷰, 그리고 네비게이션까지! (출석)
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "iOS_3"),
+                icon: .Activity.profile,
+                title: "SwiftUI 리스트와 스크롤뷰, 그리고 네비게이션까지!",
+                week: 3,
                 startTime: Date.now.addingTimeInterval(-86400 * 35),
                 endTime: Date.now.addingTimeInterval(-86400 * 35 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
+                location: hansungCoordinate
             ),
             initialAttendance: .init(
-                sessionId: SessionID(value: "iOS_1"),
+                sessionId: SessionID(value: "iOS_3"),
                 userId: userId,
                 type: .gps,
                 status: .present,
@@ -115,53 +188,16 @@ struct AttendancePreviewData {
                 reason: nil
             )
         ),
-        .init(
-            info: .init(
-                sessionId: SessionID(value: "iOS_2"),
-                icon: .Activity.profile,
-                title: "SwiftUI 레이아웃",
-                week: 2,
-                startTime: Date.now.addingTimeInterval(-86400 * 28),
-                endTime: Date.now.addingTimeInterval(-86400 * 28 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
-            ),
-            initialAttendance: .init(
-                sessionId: SessionID(value: "iOS_2"),
-                userId: userId,
-                type: .gps,
-                status: .present,
-                locationVerification: nil,
-                reason: nil
-            )
-        ),
-        .init(
-            info: .init(
-                sessionId: SessionID(value: "iOS_3"),
-                icon: .Activity.profile,
-                title: "MVVM 아키텍처",
-                week: 3,
-                startTime: Date.now.addingTimeInterval(-86400 * 21),
-                endTime: Date.now.addingTimeInterval(-86400 * 21 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
-            ),
-            initialAttendance: .init(
-                sessionId: SessionID(value: "iOS_3"),
-                userId: userId,
-                type: .gps,
-                status: .late,
-                locationVerification: nil,
-                reason: nil
-            )
-        ),
+        // 4주차: 순간 반응하는 앱 만들기 – Swift 비동기와 Combine (결석)
         .init(
             info: .init(
                 sessionId: SessionID(value: "iOS_4"),
                 icon: .Activity.profile,
-                title: "네트워킹 기초",
+                title: "순간 반응하는 앱 만들기 – Swift 비동기와 Combine",
                 week: 4,
-                startTime: Date.now.addingTimeInterval(-86400 * 14),
-                endTime: Date.now.addingTimeInterval(-86400 * 14 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
+                startTime: Date.now.addingTimeInterval(-86400 * 28),
+                endTime: Date.now.addingTimeInterval(-86400 * 28 + 7200),
+                location: hansungCoordinate
             ),
             initialAttendance: .init(
                 sessionId: SessionID(value: "iOS_4"),
@@ -172,15 +208,36 @@ struct AttendancePreviewData {
                 reason: nil
             )
         ),
+        // 연합 네트워킹 데이 (지각)
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "union_networking"),
+                icon: .Activity.profile,
+                title: "연합 네트워킹 데이",
+                week: 0,
+                startTime: Date.now.addingTimeInterval(-86400 * 25),
+                endTime: Date.now.addingTimeInterval(-86400 * 25 + 7200),
+                location: gongdeokCoordinate
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "union_networking"),
+                userId: userId,
+                type: .gps,
+                status: .late,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        // 5주차: API 없이도 앱이 동작하게 – 모델 설계와 JSON 파싱 (출석)
         .init(
             info: .init(
                 sessionId: SessionID(value: "iOS_5"),
                 icon: .Activity.profile,
-                title: "Combine 입문",
+                title: "API 없이도 앱이 동작하게 – 모델 설계와 JSON 파싱",
                 week: 5,
-                startTime: Date.now.addingTimeInterval(-86400 * 7),
-                endTime: Date.now.addingTimeInterval(-86400 * 7 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
+                startTime: Date.now.addingTimeInterval(-86400 * 21),
+                endTime: Date.now.addingTimeInterval(-86400 * 21 + 7200),
+                location: hansungCoordinate
             ),
             initialAttendance: .init(
                 sessionId: SessionID(value: "iOS_5"),
@@ -191,80 +248,73 @@ struct AttendancePreviewData {
                 reason: nil
             )
         ),
-        session,  // 기존 6주차 세션
-        // 추가 세션 (7주차 ~ 12주차)
+        // 6주차: 진짜 서버랑 대화하기 – Alamofire API 연동 1 (출석)
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "iOS_6"),
+                icon: .Activity.profile,
+                title: "진짜 서버랑 대화하기 – Alamofire API 연동 1",
+                week: 6,
+                startTime: Date.now.addingTimeInterval(-86400 * 14),
+                endTime: Date.now.addingTimeInterval(-86400 * 14 + 7200),
+                location: hansungCoordinate
+            ),
+            initialAttendance: .init(
+                sessionId: SessionID(value: "iOS_6"),
+                userId: userId,
+                type: .gps,
+                status: .present,
+                locationVerification: nil,
+                reason: nil
+            )
+        ),
+        // 7주차: Moya로 깔끔하게 통신하기 - API 연동 실전 2 (출석)
         .init(
             info: .init(
                 sessionId: SessionID(value: "iOS_7"),
                 icon: .Activity.profile,
-                title: "Swift Concurrency",
+                title: "Moya로 깔끔하게 통신하기 - API 연동 실전 2",
                 week: 7,
-                startTime: Date.now.addingTimeInterval(86400),
-                endTime: Date.now.addingTimeInterval(86400 + 7200),
-                location: .init(latitude: 37.582967, longitude: 127.010527)
+                startTime: Date.now.addingTimeInterval(-86400 * 7),
+                endTime: Date.now.addingTimeInterval(-86400 * 7 + 7200),
+                location: hansungCoordinate
             ),
-            initialAttendance: nil  // 출석 전
+            initialAttendance: .init(
+                sessionId: SessionID(value: "iOS_7"),
+                userId: userId,
+                type: .gps,
+                status: .present,
+                locationVerification: nil,
+                reason: nil
+            )
         ),
-//        .init(
-//            info: .init(
-//                sessionId: SessionID(value: "iOS_8"),
-//                icon: .Activity.profile,
-//                title: "Core Data 심화",
-//                week: 8,
-//                startTime: Date.now.addingTimeInterval(86400 * 8),
-//                endTime: Date.now.addingTimeInterval(86400 * 8 + 7200),
-//                location: .init(latitude: 37.582967, longitude: 127.010527)
-//            ),
-//            initialAttendance: nil  // 출석 전
-//        ),
-//        .init(
-//            info: .init(
-//                sessionId: SessionID(value: "iOS_9"),
-//                icon: .Activity.profile,
-//                title: "Unit Testing",
-//                week: 9,
-//                startTime: Date.now.addingTimeInterval(86400 * 15),
-//                endTime: Date.now.addingTimeInterval(86400 * 15 + 7200),
-//                location: .init(latitude: 37.582967, longitude: 127.010527)
-//            ),
-//            initialAttendance: nil  // 출석 전
-//        ),
-//        .init(
-//            info: .init(
-//                sessionId: SessionID(value: "iOS_10"),
-//                icon: .Activity.profile,
-//                title: "CI/CD 파이프라인",
-//                week: 10,
-//                startTime: Date.now.addingTimeInterval(86400 * 22),
-//                endTime: Date.now.addingTimeInterval(86400 * 22 + 7200),
-//                location: .init(latitude: 37.582967, longitude: 127.010527)
-//            ),
-//            initialAttendance: nil  // 출석 전
-//        ),
-//        .init(
-//            info: .init(
-//                sessionId: SessionID(value: "iOS_11"),
-//                icon: .Activity.profile,
-//                title: "앱 배포 프로세스",
-//                week: 11,
-//                startTime: Date.now.addingTimeInterval(86400 * 29),
-//                endTime: Date.now.addingTimeInterval(86400 * 29 + 7200),
-//                location: .init(latitude: 37.582967, longitude: 127.010527)
-//            ),
-//            initialAttendance: nil  // 출석 전
-//        ),
-//        .init(
-//            info: .init(
-//                sessionId: SessionID(value: "iOS_12"),
-//                icon: .Activity.profile,
-//                title: "데모데이 준비",
-//                week: 12,
-//                startTime: Date.now.addingTimeInterval(86400 * 36),
-//                endTime: Date.now.addingTimeInterval(86400 * 36 + 7200),
-//                location: .init(latitude: 37.582967, longitude: 127.010527)
-//            ),
-//            initialAttendance: nil  // 출석 전
-//        )
+        // MARK: 출석 가능한 세션
+        // PM DAY (공덕 창업허브) - 출석 전 (onTime: 시작시간 ±10분 내)
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "pm_day"),
+                icon: .Activity.profile,
+                title: "PM DAY",
+                week: 0,
+                startTime: Date.now.addingTimeInterval(-300),  // 5분 전 시작 → onTime 상태
+                endTime: Date.now.addingTimeInterval(7200),
+                location: gongdeokCoordinate
+            ),
+            initialAttendance: nil
+        ),
+        // 스터디 8주차 (한성대학교) - 출석 전 (tooEarly: 시작시간 10분 전 이후 대기)
+        .init(
+            info: .init(
+                sessionId: SessionID(value: "iOS_8"),
+                icon: .Activity.profile,
+                title: "좋은 컴포넌트 설계란 무엇일까",
+                week: 8,
+                startTime: Date.now.addingTimeInterval(1800),  // 30분 후 시작
+                endTime: Date.now.addingTimeInterval(9000),
+                location: hansungCoordinate
+            ),
+            initialAttendance: nil
+        )
     ]
 
     /// 모든 상태를 포함하는 세션 목록 (테스트용)
@@ -274,32 +324,32 @@ struct AttendancePreviewData {
         return list
     }
 
-    /// 출석 가능한 세션이 여러 개인 테스트용 목록
+    /// 출석 가능한 세션 (PM DAY + 스터디 8주차)
     static var multipleAvailableSessions: [Session] {
         [
-            // 출석 전 세션 1
+            // PM DAY (공덕 창업허브)
             .init(
                 info: .init(
-                    sessionId: SessionID(value: "iOS_available_1"),
+                    sessionId: SessionID(value: "pm_day"),
                     icon: .Activity.profile,
-                    title: "Swift Concurrency",
-                    week: 7,
+                    title: "PM DAY",
+                    week: 0,
                     startTime: Date.now,
                     endTime: Date.now + 7200,
-                    location: .init(latitude: 37.582967, longitude: 127.110527)
+                    location: gongdeokCoordinate
                 ),
                 initialAttendance: nil
             ),
-            // 출석 전 세션 2
+            // 스터디 8주차 (한성대학교)
             .init(
                 info: .init(
-                    sessionId: SessionID(value: "iOS_available_2"),
+                    sessionId: SessionID(value: "iOS_8"),
                     icon: .Activity.profile,
-                    title: "Core Data 기초",
+                    title: "좋은 컴포넌트 설계란 무엇일까",
                     week: 8,
-                    startTime: Date.now + 86400,
-                    endTime: Date.now + 86400 + 7200,
-                    location: coordinate
+                    startTime: Date.now + 3600,
+                    endTime: Date.now + 3600 + 7200,
+                    location: hansungCoordinate
                 ),
                 initialAttendance: nil
             ),
@@ -308,16 +358,16 @@ struct AttendancePreviewData {
             // 완료된 세션 (나의 출석 현황에 표시)
             .init(
                 info: .init(
-                    sessionId: SessionID(value: "iOS_completed"),
+                    sessionId: SessionID(value: "iOS_7"),
                     icon: .Activity.profile,
-                    title: "지난 세션",
-                    week: 6,
+                    title: "Moya로 깔끔하게 통신하기 - API 연동 실전 2",
+                    week: 7,
                     startTime: Date.now.addingTimeInterval(-86400 * 7),
                     endTime: Date.now.addingTimeInterval(-86400 * 7 + 7200),
-                    location: coordinate
+                    location: hansungCoordinate
                 ),
                 initialAttendance: .init(
-                    sessionId: SessionID(value: "iOS_completed"),
+                    sessionId: SessionID(value: "iOS_7"),
                     userId: userId,
                     type: .gps,
                     status: .present,
@@ -333,45 +383,45 @@ struct AttendancePreviewData {
     /// 시뮬레이터 테스트용 세션 목록 (상태 변경 가능)
     static var testSessions: [Session] {
         [
-            // 출석 전 세션
+            // PM DAY (공덕 창업허브)
             .init(
                 info: .init(
-                    sessionId: SessionID(value: "test_1"),
+                    sessionId: SessionID(value: "test_pm_day"),
                     icon: .Activity.profile,
-                    title: "Swift Concurrency",
-                    week: 7,
+                    title: "PM DAY",
+                    week: 0,
                     startTime: Date.now,
                     endTime: Date.now + 7200,
-                    location: coordinate
+                    location: gongdeokCoordinate
                 ),
                 initialAttendance: nil
             ),
-            // 출석 전 세션 2
+            // 스터디 8주차 (한성대학교)
             .init(
                 info: .init(
-                    sessionId: SessionID(value: "test_2"),
+                    sessionId: SessionID(value: "test_iOS_8"),
                     icon: .Activity.profile,
-                    title: "Core Data 기초",
+                    title: "좋은 컴포넌트 설계란 무엇일까",
                     week: 8,
-                    startTime: Date.now + 86400,
-                    endTime: Date.now + 86400 + 7200,
-                    location: coordinate
+                    startTime: Date.now + 3600,
+                    endTime: Date.now + 3600 + 7200,
+                    location: hansungCoordinate
                 ),
                 initialAttendance: nil
             ),
             // 완료된 세션들
             .init(
                 info: .init(
-                    sessionId: SessionID(value: "test_3"),
+                    sessionId: SessionID(value: "test_iOS_6"),
                     icon: .Activity.profile,
-                    title: "SwiftUI 레이아웃",
-                    week: 1,
+                    title: "진짜 서버랑 대화하기 – Alamofire API 연동 1",
+                    week: 6,
                     startTime: Date.now.addingTimeInterval(-86400 * 14),
                     endTime: Date.now.addingTimeInterval(-86400 * 14 + 7200),
-                    location: coordinate
+                    location: hansungCoordinate
                 ),
                 initialAttendance: .init(
-                    sessionId: SessionID(value: "test_3"),
+                    sessionId: SessionID(value: "test_iOS_6"),
                     userId: userId,
                     type: .gps,
                     status: .present,
@@ -381,16 +431,16 @@ struct AttendancePreviewData {
             ),
             .init(
                 info: .init(
-                    sessionId: SessionID(value: "test_4"),
+                    sessionId: SessionID(value: "test_iOS_7"),
                     icon: .Activity.profile,
-                    title: "MVVM 아키텍처",
-                    week: 2,
+                    title: "Moya로 깔끔하게 통신하기 - API 연동 실전 2",
+                    week: 7,
                     startTime: Date.now.addingTimeInterval(-86400 * 7),
                     endTime: Date.now.addingTimeInterval(-86400 * 7 + 7200),
-                    location: coordinate
+                    location: hansungCoordinate
                 ),
                 initialAttendance: .init(
-                    sessionId: SessionID(value: "test_4"),
+                    sessionId: SessionID(value: "test_iOS_7"),
                     userId: userId,
                     type: .gps,
                     status: .late,

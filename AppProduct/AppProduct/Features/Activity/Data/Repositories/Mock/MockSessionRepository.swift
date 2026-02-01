@@ -32,60 +32,33 @@ final class MockSessionRepository: SessionRepositoryProtocol {
 // MARK: - Default Mock Data
 
 extension MockSessionRepository {
+
+    /// 한성대학교 좌표
+    private static let hansungCoordinate = Coordinate(latitude: 37.582967, longitude: 127.010527)
+    /// 공덕 창업허브 좌표
+    private static let gongdeokCoordinate = Coordinate(latitude: 37.5445, longitude: 126.9519)
+
+    /// 출석 가능한 세션 (PM DAY + 스터디 8주차)
     static let defaultMockSessions: [SessionInfo] = [
+        // PM DAY (공덕 창업허브) - 출석 가능
         SessionInfo(
-            sessionId: SessionID(value: "iOS_1"),
+            sessionId: SessionID(value: "pm_day"),
             icon: .Activity.profile,
-            title: "Swift 기초 문법",
-            week: 1,
-            startTime: Calendar.current.date(byAdding: .hour, value: -2, to: .now)!,
-            endTime: .now,
-            location: Coordinate(latitude: 37.582967, longitude: 127.010527)
+            title: "PM DAY",
+            week: 0,
+            startTime: Calendar.current.date(byAdding: .hour, value: -1, to: .now)!,
+            endTime: Calendar.current.date(byAdding: .hour, value: 2, to: .now)!,
+            location: gongdeokCoordinate
         ),
+        // 스터디 8주차 (한성대학교) - 출석 가능
         SessionInfo(
-            sessionId: SessionID(value: "iOS_2"),
+            sessionId: SessionID(value: "iOS_8"),
             icon: .Activity.profile,
-            title: "SwiftUI 입문",
-            week: 2,
-            startTime: Calendar.current.date(byAdding: .day, value: 7, to: .now)!,
-            endTime: Calendar.current.date(byAdding: .hour, value: 2, to: Calendar.current.date(byAdding: .day, value: 7, to: .now)!)!,
-            location: Coordinate(latitude: 37.582967, longitude: 127.010527)
-        ),
-        SessionInfo(
-            sessionId: SessionID(value: "iOS_3"),
-            icon: .Activity.profile,
-            title: "Combine 기초",
-            week: 3,
-            startTime: Calendar.current.date(byAdding: .day, value: 14, to: .now)!,
-            endTime: Calendar.current.date(byAdding: .hour, value: 2, to: Calendar.current.date(byAdding: .day, value: 14, to: .now)!)!,
-            location: Coordinate(latitude: 37.582967, longitude: 127.010527)
-        ),
-        SessionInfo(
-            sessionId: SessionID(value: "iOS_4"),
-            icon: .Activity.profile,
-            title: "네트워킹과 Alamofire",
-            week: 4,
-            startTime: Calendar.current.date(byAdding: .day, value: 21, to: .now)!,
-            endTime: Calendar.current.date(byAdding: .hour, value: 2, to: Calendar.current.date(byAdding: .day, value: 21, to: .now)!)!,
-            location: Coordinate(latitude: 37.582967, longitude: 127.010527)
-        ),
-        SessionInfo(
-            sessionId: SessionID(value: "iOS_5"),
-            icon: .Activity.profile,
-            title: "MVVM 아키텍처",
-            week: 5,
-            startTime: Calendar.current.date(byAdding: .day, value: 28, to: .now)!,
-            endTime: Calendar.current.date(byAdding: .hour, value: 2, to: Calendar.current.date(byAdding: .day, value: 28, to: .now)!)!,
-            location: Coordinate(latitude: 37.582967, longitude: 127.010527)
-        ),
-        SessionInfo(
-            sessionId: SessionID(value: "iOS_6"),
-            icon: .Activity.profile,
-            title: "프로젝트 마무리",
-            week: 6,
-            startTime: Calendar.current.date(byAdding: .day, value: 35, to: .now)!,
-            endTime: Calendar.current.date(byAdding: .hour, value: 2, to: Calendar.current.date(byAdding: .day, value: 35, to: .now)!)!,
-            location: Coordinate(latitude: 37.582967, longitude: 127.010527)
+            title: "좋은 컴포넌트 설계란 무엇일까",
+            week: 8,
+            startTime: Calendar.current.date(byAdding: .day, value: 1, to: .now)!,
+            endTime: Calendar.current.date(byAdding: .day, value: 1, to: .now)!,
+            location: hansungCoordinate
         )
     ]
 }
