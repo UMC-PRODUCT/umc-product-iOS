@@ -77,7 +77,7 @@ struct CalendarGridCard: View, Equatable {
         }
         .padding(Constants.padding)
         .background {
-            RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+            ConcentricRectangle(corners: DefaultConstant.concentricRadius, isUniform: true)
                 .fill(.white)
                 .glass()
         }
@@ -178,10 +178,10 @@ extension CalendarGridCard {
         private let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
         
         var body: some View {
-            LazyVGrid(columns: columns, spacing: 0) {
+            LazyVGrid(columns: columns, spacing: .zero) {
                 ForEach(weekdays, id: \.self) { weekday in
                     Text(weekday)
-                        .appFont(.footnote, color: .grey400)
+                        .appFont(.subheadline, weight: .medium, color: .grey400)
                 }
             }
             

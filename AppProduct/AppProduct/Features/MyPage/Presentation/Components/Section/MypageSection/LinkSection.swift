@@ -73,7 +73,7 @@ struct LinkSection: View {
     private func alertInsert(_ text: String) {
         alertPromprt = .init(
             id: .init(),
-            title: "\(text)를 열 수 없어요",
+            title: "\(text) 열 수 없어요",
             message: "아직 등록된 링크가 없습니다. 프로필에서 링크를 추가해 주세요."
         )
     }

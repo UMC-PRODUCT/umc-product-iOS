@@ -11,11 +11,11 @@ import SwiftUI
 /// 외부 프로필 링크의 종류를 정의하는 열거형입니다.
 enum SocialLinkType: String, CaseIterable {
     /// 깃허브 링크
-    case github = "Github"
+    case github = "Github를"
     /// 링크드인 링크
-    case linkedin = "Linked in"
+    case linkedin = "LinkedIn을"
     /// 개인 블로그 링크
-    case blog = "Blog"
+    case blog = "Blog를"
     
     /// 각 링크 타입에 맞는 아이콘 아이콘(ImageResource)을 반환합니다.
     var icon: ImageResource {
@@ -33,11 +33,11 @@ enum SocialLinkType: String, CaseIterable {
     var title: String {
         switch self {
         case .github:
-            return "Github URL"
+            return "Github"
         case .linkedin:
-            return "LinkedIn URL"
+            return "LinkedIn"
         case .blog:
-            return "Blog URL"
+            return "Blog"
         }
     }
     

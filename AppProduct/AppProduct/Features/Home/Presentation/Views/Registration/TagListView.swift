@@ -15,7 +15,7 @@ struct TagListView: View {
     
     var body: some View {
         NavigationStack {
-            List {
+            Form {
                 ForEach(ScheduleIconCategory.allCases, id: \.self) { category in
                     TagRow(
                         category: category,
@@ -72,9 +72,7 @@ fileprivate struct TagRow: View, Equatable {
     
     var body: some View {
         Button(action: {
-            withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
-                tap()
-            }
+            tap()
         }, label: {
             HStack(spacing: DefaultSpacing.spacing12, content: {
                 Image(systemName: category.symbol)

@@ -41,7 +41,7 @@ struct MyPageView: View {
         case .idle:
             // 데이터 fetch가 필요한 경우 여기서 호출
             Color.clear.task {
-                // TODO: ViewModel의 fetch 메서드 호출
+
                 print("hello")
             }
         case .loading:
@@ -53,7 +53,6 @@ struct MyPageView: View {
                 FollowsSection()
             }
         case .failed:
-            // TODO: 에러 상태 UI 구현
             Color.clear
         }
     }
@@ -80,14 +79,16 @@ struct MyPageView: View {
             MyActiveLogSection(sectionType: section)
         case .settings:
             SettingSection(sectionType: section)
-        case .socialConnect:
-            EmptyView()
         case .helpSupport:
             HelpSection(sectionType: section)
         case .laws:
             LawSection(sectionType: section)
         case .info:
             InfoSection(sectionType: section)
+        case .socialConnect:
+            SocialSection(sectionType: section, socialType: profileData.socialConnected)
+        case .auth:
+            AuthSection(sectionType: section, alertPrompt: $viewModel.alertPrompt)
         }
     }
 }
