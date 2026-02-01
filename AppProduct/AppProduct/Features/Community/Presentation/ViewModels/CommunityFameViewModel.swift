@@ -12,21 +12,53 @@ class CommunityFameViewModel {
     // MARK: - Property
 
     var selectedWeek: Int = 1
+    var selectedUniversity: String = "전체"
+    var selectedPart: String = "전체"
 
     var fameItems: Loadable<[CommunityFameItemModel]> = .loaded(mockFameItems)
 
-    var totalWeeks: Int {
-        guard case .loaded(let items) = fameItems else { return 1 }
-        return items.map { $0.week }.max() ?? 1
+    var availableWeeks: [Int] {
+        guard case .loaded(let items) = fameItems else { return [1] }
+        let weeks = Set(items.map { $0.week })
+        return weeks.sorted()
+    }
+    
+    var availableUniversities: [String] {
+        guard case .loaded(let items) = fameItems else { return [] }
+        let universities = Set(items.map(\.university))
+        return universities.sorted()
+    }
+    
+    var availableParts: [String] {
+        guard case .loaded(let items) = fameItems else { return [] }
+        let parts = Set(items.map(\.part))
+        return parts.sorted()
     }
 
     var groupedByUniversity: [(university: String, items: [CommunityFameItemModel])] {
-        guard case .loaded(let items) = fameItems else { return [] }
-        let filtered = items.filter { $0.week == selectedWeek }
-        let grouped = Dictionary(grouping: filtered, by: { $0.university })
-        return grouped.map { (university: $0.key, items: $0.value) }
-            .sorted { $0.university < $1.university }
-    }
+            guard case .loaded(let items) = fameItems else { return [] }
+            
+            // 주차/학교/파트 필터 적용
+            let filtered = items.filter { item in
+                let matchWeek = item.week == selectedWeek
+                
+                // 학교 필터
+                let matchUniversity = (selectedUniversity == "전체" || selectedUniversity.isEmpty)
+                                      ? true : item.university == selectedUniversity
+                
+                // 파트 필터
+                let matchPart = (selectedPart == "전체" || selectedPart.isEmpty)
+                                ? true : item.part == selectedPart
+                
+                return matchWeek && matchUniversity && matchPart
+            }
+            
+            // 필터링 결과 그룹화
+            let grouped = Dictionary(grouping: filtered, by: { $0.university })
+            
+            return grouped.map { (university: $0.key, items: $0.value) }
+                .sorted { $0.university < $1.university }
+        }
 
     // MARK: - Function
 
