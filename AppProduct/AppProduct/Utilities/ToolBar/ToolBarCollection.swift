@@ -156,66 +156,6 @@ struct ToolBarCollection {
         let weeks: [Int]
         @Binding var selection: Int
         
-        init(
-            icon: String,
-            title: String,
-            items: [Item],
-            selection: Binding<Item>,
-            itemLabel: @escaping (Item) -> String,
-            itemIcon: ((Item) -> String)? = nil
-        ) {
-            self.icon = icon
-            self.title = title
-            self.items = items
-            self._selection = selection
-            self.itemLabel = itemLabel
-            self.itemIcon = itemIcon
-        }
-        
-        var body: some ToolbarContent {
-            ToolbarItem(placement: .principal) {
-                Menu {
-                    Picker("선택", selection: $selection) {
-                        ForEach(items) { item in
-                            if let itemIcon = itemIcon {
-                                Label(itemLabel(item), systemImage: itemIcon(item))
-                                    .tag(item)
-                            } else {
-                                Text(itemLabel(item)).tag(item)
-                            }
-                        }
-                    }
-                    .pickerStyle(.inline)
-                } label: {
-                    menuLabel
-                }
-            }
-            .sharedBackgroundVisibility(.visible)
-        }
-        
-        private var menuLabel: some View {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 10))
-                Spacer()
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                Spacer()
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.grey500)
-            }
-            .padding(10)
-            .glassEffect(.regular.interactive(), in: .capsule)
-        }
-    }
-    
-    /// 커뮤니티 주차별 필터
-    struct CommunityWeekFilter: ToolbarContent {
-        let weeks: [Int]
-        @Binding var selection: Int
-        
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarLeading) {
                 Menu {
