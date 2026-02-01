@@ -12,8 +12,6 @@ struct NoticeEditorView: View {
 
     // MARK: - Property
     @State private var viewModel: NoticeEditorViewModel
-    @State private var title: String = ""
-    @State private var content: String = ""
 
     // MARK: - Initializer
     init(userPart: Part? = nil) {
@@ -25,6 +23,9 @@ struct NoticeEditorView: View {
         static let chipSpacing: CGFloat = 8
         static let toolBtnIconSize: CGFloat = 20
         static let toolBtnFrame: CGSize = .init(width: 30, height: 30)
+        static let alarmSize: CGFloat = 16
+        static let alarmPadding: EdgeInsets = .init(top: 9, leading: .zero, bottom: 9, trailing: .zero)
+        static let alarmWidth: CGFloat = 110
     }
 
     // MARK: - Body
@@ -53,6 +54,9 @@ struct NoticeEditorView: View {
                 itemLabel: { $0.labelText },
                 itemIcon: { $0.labelIcon }
             )
+            ToolBarCollection.ConfirmBtn(action: {
+                // TODO: 공지사항 업로드
+            }, disable: !viewModel.canSubmit)
         }
         .safeAreaBar(edge: .top) {
             if viewModel.selectedCategory.hasSubCategories {
@@ -90,13 +94,12 @@ struct NoticeEditorView: View {
                     }
                 }
                 .glassEffect()
-                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-                .padding(.bottom, DefaultSpacing.spacing16)
-                
                 Spacer()
-                alertToggle
-                completeBtn
+                alarmToggle
+                    .glassEffect()
             }
+            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .padding(.bottom, DefaultSpacing.spacing16)
         }
         .onChange(of: viewModel.selectedPhotoItems) { _, newItems in
             guard !newItems.isEmpty else { return }
@@ -120,7 +123,7 @@ struct NoticeEditorView: View {
 
     private var subCategorySection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-            HStack(alignment: .bottom) {
+            HStack(alignment: .center) {
                 Text("게시판 분류")
                     .appFont(.calloutEmphasis)
                 Text("중복 선택 가능")
@@ -163,11 +166,11 @@ struct NoticeEditorView: View {
     // MARK: - textfieldSection
     private var textfieldSection: some View {
         VStack(spacing: DefaultSpacing.spacing16) {
-            ArticleTextField(placeholder: .title, text: $title)
+            ArticleTextField(placeholder: .title, text: $viewModel.title)
             
             Divider()
             
-            ArticleTextField(placeholder: .content, text: $content)
+            ArticleTextField(placeholder: .content, text: $viewModel.content)
                 .frame(minHeight: 200, alignment: .top)
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
@@ -221,26 +224,22 @@ struct NoticeEditorView: View {
         .buttonStyle(.plain)
     }
     
-    // MARK: - alertToggle
-    private var alertToggle: some View {
-        Toggle("알림 발송", isOn: $viewModel.allowAlert)
-            .tint(.indigo500)
-    }
-    
-    // MARK: - completeBtn
-    private var completeBtn: some View {
-        Button(action: {
-            
-        }, label: {
-            Text("작성완료")
-                .appFont(.bodyEmphasis)
-                .foregroundStyle(.white)
-                .padding(DefaultConstant.defaultBtnPadding)
-                .background {
-                    RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                        .fill(.indigo500)
-                }
+    // MARK: - alarmToggle
+    private var alarmToggle: some View {
+        Toggle(isOn: $viewModel.allowAlert, label: {
+            if viewModel.allowAlert {
+                Label("알림 발송", systemImage: "bell.fill")
+                    .frame(width: Constants.alarmWidth)
+                    .padding(Constants.alarmPadding)
+            } else {
+                Label("알림 미발송", systemImage: "bell.slash.fill")
+                    .frame(width: Constants.alarmWidth)
+                    .padding(Constants.alarmPadding)
+            }
         })
+        .appFont(.body, weight: .medium)
+        .toggleStyle(.button)
+        .tint(.indigo500)
     }
     
     // MARK: - Computed Property

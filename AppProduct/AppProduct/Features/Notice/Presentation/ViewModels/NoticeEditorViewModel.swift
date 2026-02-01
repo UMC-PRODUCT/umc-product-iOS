@@ -39,6 +39,12 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     /// 학교 목록
     let schools: [String]
     
+    /// 공지사항 제목
+    var title: String = ""
+
+    /// 공지사항 본문
+    var content: String = ""
+    
     /// 투표 폼 시트뷰 표시 여부
     var showVoting: Bool = false
     
@@ -66,6 +72,11 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     /// 알림 발송 여부
     var allowAlert: Bool = true
     
+    /// 작성 완료 가능 여부
+    var canSubmit: Bool {
+        !title.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !content.trimmingCharacters(in: .whitespaces).isEmpty
+    }
     
     // MARK: - Initializer
     
