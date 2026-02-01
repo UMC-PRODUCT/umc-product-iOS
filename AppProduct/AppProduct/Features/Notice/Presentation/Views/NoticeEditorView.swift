@@ -227,15 +227,12 @@ struct NoticeEditorView: View {
     // MARK: - alarmToggle
     private var alarmToggle: some View {
         Toggle(isOn: $viewModel.allowAlert, label: {
-            if viewModel.allowAlert {
-                Label("알림 발송", systemImage: "bell.fill")
-                    .frame(width: Constants.alarmWidth)
-                    .padding(Constants.alarmPadding)
-            } else {
-                Label("알림 미발송", systemImage: "bell.slash.fill")
-                    .frame(width: Constants.alarmWidth)
-                    .padding(Constants.alarmPadding)
-            }
+            Label(
+                viewModel.allowAlert ? "알림 발송" : "알림 미발송",
+                systemImage: viewModel.allowAlert ? "bell.fill" : "bell.slash.fill"
+            )
+            .frame(width: Constants.alarmWidth)
+            .padding(Constants.alarmPadding)
         })
         .appFont(.body, weight: .medium)
         .toggleStyle(.button)
