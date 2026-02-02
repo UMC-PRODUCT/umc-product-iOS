@@ -306,4 +306,44 @@ struct ToolBarCollection {
             .glassEffect(.regular)
         }
     }
+    
+    /// 상단 오른쪽 섹션 메뉴 툴바 (•••)
+    struct ToolbarTrailingMenu: ToolbarContent {
+        let actions: [ActionItem]
+        
+        struct ActionItem: Identifiable {
+            let id = UUID()
+            let title: String
+            let icon: String
+            let role: ButtonRole?
+            let action: () -> Void
+            
+            init(title: String,
+                 icon: String,
+                 role: ButtonRole? = nil,
+                 action: @escaping () -> Void
+            ) {
+                self.title = title
+                self.icon = icon
+                self.role = role
+                self.action = action
+            }
+        }
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ForEach(actions) { item in
+                        Button(role: item.role) {
+                            item.action()
+                        } label: {
+                            Label(item.title, systemImage: item.icon)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                }
+            }
+        }
+    }
 }
