@@ -42,6 +42,8 @@ struct NoticeDetail: Equatable, Identifiable {
     
     // 추가 콘텐츠
     let images: [String]
+    let links: [String]
+
     
     /// NoticeChip에 표시할 공지 타입
     var noticeType: NoticeType {
