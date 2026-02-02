@@ -54,7 +54,7 @@ struct CoreMemberTextPresenter: View {
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             Text(name)
-                .font(.app(.callout, weight: .bold))
+                .appFont(.calloutEmphasis)
             
             Text(part)
                 .font(.app(.subheadline, weight: .regular))

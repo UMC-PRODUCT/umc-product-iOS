@@ -70,7 +70,7 @@ struct MissionCardHeader: View, Equatable {
     // MARK: - View Components
 
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             titleText
             statusText
         }

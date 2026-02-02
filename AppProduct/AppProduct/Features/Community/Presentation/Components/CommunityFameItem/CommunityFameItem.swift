@@ -53,17 +53,17 @@ struct CommunityFameItem: View {
             feedbackSection
         }
         .padding(DefaultConstant.defaultCardPadding)
-        .containerShape(
-            .rect(cornerRadius: DefaultConstant.defaultListCornerRadius)
-        )
-        .background(.white, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-        .glass()
+        .background {
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
+                .fill(.white)
+                .glass()
+        }
     }
 
     // MARK: - Section
 
     private var profileSection: some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
+        HStack(spacing: DefaultSpacing.spacing16) {
             if model.profileImage != nil {
                 // !!! - url 이미지 처리
                 Image(systemName: "heart")
@@ -74,7 +74,7 @@ struct CommunityFameItem: View {
                     .background(.grey100, in: Circle())
             }
 
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
                 // 이름 + 파트
                 HStack(spacing: DefaultSpacing.spacing8) {
                     Text(model.userName)

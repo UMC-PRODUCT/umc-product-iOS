@@ -71,7 +71,6 @@ struct PlaceSelectView: View {
             
             Text(place.address)
                 .appFont(.subheadline, color: .grey600)
-                .lineLimit(2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

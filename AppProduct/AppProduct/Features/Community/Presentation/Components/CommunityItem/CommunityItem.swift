@@ -45,11 +45,12 @@ struct CommunityItem: View, Equatable {
                 bottomSection
             }
             .padding(DefaultConstant.defaultCardPadding)
-            .background(
-                RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius)
+            .background {
+                ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
                     .fill(.white)
-            )
-            .glass()
+                    .glass()
+                
+            }
         }
     }
 
@@ -118,4 +119,8 @@ struct CommunityItem: View, Equatable {
         }
         .appFont(.footnote, color: .grey500)
     }
+}
+
+#Preview {
+    CommunityItem(model: .init(userId: 0, category: .hobby, title: "안녕하세요", content: "안녕하세요요용", profileImage: nil, userName: "제옹", part: "iOS", createdAt: "12123", likeCount: 1, commentCount: 1), action: {})
 }

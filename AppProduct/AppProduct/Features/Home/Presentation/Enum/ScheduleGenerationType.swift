@@ -54,7 +54,7 @@ enum ScheduleGenerationType: CaseIterable {
     
     /// 플레이스홀더 텍스트 색상
     var placeholderColor: Color {
-        return .gray
+        return Color(.placeholderText)
     }
     
 }
