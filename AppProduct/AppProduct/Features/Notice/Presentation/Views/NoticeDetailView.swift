@@ -79,11 +79,11 @@ struct NoticeDetailView: View {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
                 topSection
                 Divider()
+                    .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
                 bottomSection
                 Spacer()
             }
         }
-        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
     
     // MARK: - TopSection
@@ -93,6 +93,7 @@ struct NoticeDetailView: View {
             mainInfo
             subInfo
         }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
     
     private var mainInfo: some View {
@@ -130,17 +131,36 @@ struct NoticeDetailView: View {
     // 본문, 투표/링크/사진 카드
     private var bottomSection: some View {
         VStack {
+            // 본문
             Text(model.content)
                 .appFont(.body)
                 .multilineTextAlignment(.leading)
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            
+            // 이미지 카드
+            if !model.images.isEmpty {
+                NoticeImageCard(imageURLs: model.images)
+            }
         }
     }
 }
 
 // MARK: - Preview
-#Preview("공지 상세") {
+#Preview("공지 상세(권한O)") {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithPermission)
     }
     .environment(ErrorHandler())
+}
+
+#Preview("공지 상세(권한X)") {
+    NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNotice)
+    }
+}
+
+#Preview("이미지 포함 공지") {
+    NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithImages)
+    }
 }
