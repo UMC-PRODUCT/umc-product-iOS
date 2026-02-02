@@ -40,6 +40,9 @@ struct NoticeDetail: Equatable, Identifiable {
     // 권한
     let hasPermission: Bool
     
+    // 추가 콘텐츠
+    let images: [String]
+    
     /// NoticeChip에 표시할 공지 타입
     var noticeType: NoticeType {
         // 파트 공지인 경우
@@ -97,4 +100,12 @@ struct TargetAudience: Equatable {
         
         return components.joined(separator: " / ")
     }
+}
+
+
+// MARK: - ImageViewerItem
+/// fullScreenCover에서 Identifiable 사용을 위한 래퍼
+struct ImageViewerItem: Identifiable {
+    let id = UUID()
+    let index: Int
 }
