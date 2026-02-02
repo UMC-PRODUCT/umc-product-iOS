@@ -29,11 +29,11 @@ enum ChipButtonSize {
     var font: Font {
         switch self {
         case .small:
-            return .app(.footnote, weight: .bold)
+            return .app(.footnoteEmphasis, weight: .semibold)
         case .medium:
-            return .app(.subheadline, weight: .bold)
+            return .app(.subheadlineEmphasis, weight: .semibold)
         case .large:
-            return .app(.callout, weight: .bold)
+            return .app(.calloutEmphasis, weight: .semibold)
         }
     }
 }
