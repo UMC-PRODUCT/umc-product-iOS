@@ -30,10 +30,8 @@ struct PendingApprovalView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(Constant.containerPadding)
-        .background {
-            RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius)
-                .fill(.yellow.opacity(Constant.backgroundOpacity))
-        }
+        .clipShape(.rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
+        .background(Color.yellow.opacity(Constant.backgroundOpacity), in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
     }
 
     // MARK: - View Components

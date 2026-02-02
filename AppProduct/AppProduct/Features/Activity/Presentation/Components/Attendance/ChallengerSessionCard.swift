@@ -48,9 +48,8 @@ struct ChallengerSessionCard: View, Equatable {
             statusSession
         }
         .padding(DefaultConstant.defaultListPadding)
-        .containerShape(
-            .rect(cornerRadius: DefaultConstant.defaultListCornerRadius))
-        .background(.white, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .clipShape(.rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
+        .background(.white, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
@@ -59,7 +58,7 @@ struct ChallengerSessionCard: View, Equatable {
     }
 
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Text(info.title)
                 .appFont(.calloutEmphasis, color: .black)
                 .lineLimit(Constants.titleLineLimit)

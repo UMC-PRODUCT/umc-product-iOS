@@ -41,10 +41,11 @@ struct CurriculumProgressCard: View, Equatable {
             footerSection
         }
         .padding(DefaultConstant.defaultCardPadding)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius))
-        .containerShape(.rect(cornerRadius: DefaultConstant.defaultCornerRadius))
-        .glass()
+        .background {
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
+                .fill(Color.white)
+                .glass()
+        }
     }
 
     // MARK: - View Components

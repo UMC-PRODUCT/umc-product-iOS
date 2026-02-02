@@ -30,7 +30,7 @@ struct CoreStudyManagementList: View {
             )
             Spacer()
             Text(studyManagementItem.state.rawValue)
-                .font(.app(.callout, weight: .bold))
+                .appFont(.calloutEmphasis)
                 .padding(.horizontal, Constants.horizontalPadding)
         }
         .padding(.vertical, Constants.verticalPadding)
@@ -53,7 +53,7 @@ struct CoreStudyTextPresenter: View {
         VStack(alignment: .leading) {
             HStack {
                 Text(name)
-                    .font(.app(.callout, weight: .bold))
+                    .appFont(.calloutEmphasis)
                 Text(part)
                     .font(.app(.caption2, weight: .regular))
                     .padding(Constants.partPadding)
