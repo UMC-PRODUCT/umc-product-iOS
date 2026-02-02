@@ -141,6 +141,14 @@ struct NoticeDetailView: View {
             if !model.images.isEmpty {
                 NoticeImageCard(imageURLs: model.images)
             }
+            
+            // 링크 카드
+            if !model.links.isEmpty {
+                ForEach(Array(model.links.enumerated()), id: \.offset) { _, link in
+                    NoticeLinkCard(url: link)
+                        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                }
+            }
         }
     }
 }
@@ -162,5 +170,11 @@ struct NoticeDetailView: View {
 #Preview("이미지 포함 공지") {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithImages)
+    }
+}
+
+#Preview("링크 포함 공지") {
+    NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithLinks)
     }
 }
