@@ -79,6 +79,7 @@ struct NoticeDetailView: View {
         .alertPrompt(item: $viewModel.alertPrompt)
         .task {
             viewModel.updateErrorHandler(errorHandler)
+            await viewModel.fetchReadStatus()
         }
     }
     
