@@ -58,7 +58,7 @@ struct CommunityPostCard: View {
         HStack {
             CommunityTagItem(title: model.category.text)
             Spacer()
-            Text(model.createdAt)
+            Text(model.createdAt.timeAgoText)
                 .appFont(.footnote, color: .grey500)
         }
     }
