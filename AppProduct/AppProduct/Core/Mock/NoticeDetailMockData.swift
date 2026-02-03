@@ -192,8 +192,53 @@ enum NoticeDetailMockData {
         vote: nil
     )
     
-    // 투표 완료된 샘플
+    // 투표 완료되지않은 샘플
     static let sampleNoticeWithVote = NoticeDetail(
+        id: "6",
+        generation: 12,
+        scope: .central,
+        category: .general,
+        isMustRead: true,
+        title: "[투표] 다음 스터디 주제 선정",
+        content: """
+        다음 스터디 주제를 선정합니다.
+                                                                                                                                             
+        관심있는 주제에 투표해주세요!
+        """,
+        authorID: "author456",
+        authorName: "쳇쳇/전채운-UMC 9th 총괄",
+        authorImageURL: nil,
+        createdAt: Date(timeIntervalSinceNow: -43200),
+        updatedAt: nil,
+        targetAudience: TargetAudience(
+            generation: 12,
+            scope: .central,
+            parts: [],
+            branches: [],
+            schools: []
+        ),
+        hasPermission: false,
+        images: [],
+        links: [],
+        vote: NoticeVote(
+            id: "poll2",
+            question: "참여하고 싶은 스터디를 모두 선택해주세요",
+            options: [
+                VoteOption(id: "1", title: "알고리즘", voteCount: 12),
+                VoteOption(id: "2", title: "CS 스터디", voteCount: 25),
+                VoteOption(id: "3", title: "디자인 패턴", voteCount: 8),
+                VoteOption(id: "4", title: "영어 회화", voteCount: 15)
+            ],
+            startDate: Date(timeIntervalSinceNow: -86400),
+            endDate: Date(timeIntervalSinceNow: 86400 * 5),
+            allowMultipleChoices: true,
+            isAnonymous: false,
+            userVotedOptionIds: []
+        )
+    )
+    
+    // 투표 완료된 샘플
+    static let sampleNoticeWithVoteDone = NoticeDetail(
         id: "6",
         generation: 12,
         scope: .central,
@@ -243,6 +288,7 @@ enum NoticeDetailMockData {
         sampleNoticeWithImages,
         sampleNoticeWithLinks,
         sampleNoticeWithAll,
-        sampleNoticeWithVote
+        sampleNoticeWithVote,
+        sampleNoticeWithVoteDone
     ]
 }
