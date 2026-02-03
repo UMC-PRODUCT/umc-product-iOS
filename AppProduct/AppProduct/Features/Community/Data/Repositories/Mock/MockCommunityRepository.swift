@@ -15,14 +15,17 @@ final class MockCommunityRepository: CommunityRepositoryProtocol {
     
     private let mockFameItems: [CommunityFameItemModel]
     private let mockCommunityItems: [CommunityItemModel]
+    private let mockComments: [Int: [CommunityCommentModel]]
     
     // MARK: - Init
     init(
         mockFameItems: [CommunityFameItemModel]? = nil,
-        mockCommunityItems: [CommunityItemModel]? = nil
+        mockCommunityItems: [CommunityItemModel]? = nil,
+        mockComments: [Int: [CommunityCommentModel]]? = nil
     ) {
         self.mockFameItems = mockFameItems ?? Self.defaultMockFameItems
         self.mockCommunityItems = mockCommunityItems ?? Self.defaultMockCommunityItems
+        self.mockComments = mockComments ?? Self.defaultMockComments
     }
     
     // MARK: - CommunityRepositoryProtocol
@@ -51,6 +54,11 @@ final class MockCommunityRepository: CommunityRepositoryProtocol {
             likeCount: 0,
             commentCount: 0
         )
+    }
+    
+    func fetchComments(postId: Int) async throws -> [CommunityCommentModel] {
+        try await Task.sleep(nanoseconds: 500_000_000)
+        return mockComments[postId] ?? []
     }
 }
 
@@ -165,6 +173,21 @@ extension MockCommunityRepository {
             likeCount: 23,
             commentCount: 15
         ),
+    ]
+    
+    static let defaultMockComments: [Int: [CommunityCommentModel]] = [
+        1: [
+            .init(userId: 10, profileImage: nil, userName: "박개발", content: "if let과 guard let의 차이는 스코프입니다!", createdAt: "5분 전"),
+            .init(userId: 11, profileImage: nil, userName: "최코딩", content: "감사합니다! 이해했어요", createdAt: "3분 전"),
+        ],
+        2: [
+            .init(userId: 12, profileImage: nil, userName: "김헬스", content: "저도 참여하고 싶어요!", createdAt: "방금 전"),
+        ],
+        3: [
+            .init(userId: 13, profileImage: nil, userName: "이번개", content: "7시 정각에 도착하겠습니다", createdAt: "30분 전"),
+            .init(userId: 14, profileImage: nil, userName: "박모임", content: "저도 갈게요!", createdAt: "20분 전"),
+            .init(userId: 15, profileImage: nil, userName: "최친목", content: "혹시 늦어도 괜찮나요?", createdAt: "10분 전"),
+        ],
     ]
 }
 

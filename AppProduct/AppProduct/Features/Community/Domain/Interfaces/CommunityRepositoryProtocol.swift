@@ -19,6 +19,9 @@ protocol CommunityRepositoryProtocol {
     
     /// 커뮤니티 게시글 작성
     func createPost(request: CreatePostRequest) async throws -> CommunityItemModel
+    
+    /// 커뮤니티 댓글 조회
+    func fetchComments(postId: Int) async throws -> [CommunityCommentModel]
 }
 
 // MARK: - Request

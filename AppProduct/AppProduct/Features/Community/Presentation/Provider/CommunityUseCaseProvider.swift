@@ -11,6 +11,7 @@ protocol CommunityUseCaseProviding {
     var fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol { get }
     var fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol { get }
     var createPostUseCase: CreatePostUseCaseProtocol { get }
+    var fetchCommentUseCase: FetchCommentsUseCaseProtocol { get }
 }
 
 final class CommunityUseCaseProvider: CommunityUseCaseProviding {
@@ -19,6 +20,7 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
     let fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol
     let fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol
     let createPostUseCase: CreatePostUseCaseProtocol
+    let fetchCommentUseCase: any FetchCommentsUseCaseProtocol
     
     // MARK: - Init
     
@@ -28,5 +30,6 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
         self.fetchFameItemsUseCase = FetchFameItemsUseCase(repository: repositoryProvider.communityRepository)
         self.fetchCommunityItemsUseCase = FetchCommunityItemsUseCase(repository: repositoryProvider.communityRepository)
         self.createPostUseCase = CreatePostUseCase(repository: repositoryProvider.communityRepository)
+        self.fetchCommentUseCase = FetchCommentsUseCase(repository: repositoryProvider.communityRepository)
     }
 }
