@@ -20,7 +20,9 @@ struct NoticeDetailView: View {
         self.model = model
         let tempErrorHandler = ErrorHandler()
         _viewModel = State(initialValue: NoticeDetailViewModel(
-            errorHandler: tempErrorHandler
+            noticeID: model.id,
+            errorHandler: tempErrorHandler,
+            initialNotice: model
         ))
     }
     
@@ -80,7 +82,7 @@ struct NoticeDetailView: View {
                 topSection
                 Divider()
                     .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-                bottomSection
+                bottomSection(data)
                 Spacer()
             }
         }
@@ -129,16 +131,16 @@ struct NoticeDetailView: View {
     
     // MARK: - BottomSection
     // 본문, 투표/링크/사진 카드
-    private var bottomSection: some View {
+    private func bottomSection(_ data: NoticeDetail) -> some View {
         VStack(spacing: DefaultSpacing.spacing24) {
             // 본문
-            Text(model.content)
+            Text(data.content)
                 .appFont(.body)
                 .multilineTextAlignment(.leading)
                 .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
             
             // 투표 카드
-            if let vote = model.vote {
+            if let vote = data.vote {
                 NoticeVoteCard(vote: vote) { optionIds in
                     Task {
                         await viewModel.handleVote(voteId: vote.id, optionIds: optionIds)
@@ -148,12 +150,12 @@ struct NoticeDetailView: View {
             }
             
             // 이미지 카드
-            if !model.images.isEmpty {
+            if !data.images.isEmpty {
                 NoticeImageCard(imageURLs: model.images)
             }
             
             // 링크 카드
-            if !model.links.isEmpty {
+            if !data.links.isEmpty {
                 ForEach(Array(model.links.enumerated()), id: \.offset) { _, link in
                     NoticeLinkCard(url: link)
                         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)

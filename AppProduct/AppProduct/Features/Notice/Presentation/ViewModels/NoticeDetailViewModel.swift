@@ -11,7 +11,7 @@ import SwiftUI
 final class NoticeDetailViewModel {
     
     /// 공지 상세 상태
-    var noticeState: Loadable<NoticeDetail> = .loaded(NoticeDetailMockData.sampleNoticeWithPermission)
+    var noticeState: Loadable<NoticeDetail>
     
     /// 액션 메뉴 표시 여부
     var showingActionMenu: Bool = false
@@ -29,10 +29,17 @@ final class NoticeDetailViewModel {
     
     init(
         noticeID: String = "1",
-        errorHandler: ErrorHandler
+        errorHandler: ErrorHandler,
+        initialNotice: NoticeDetail? = nil
     ) {
         self.noticeID = noticeID
         self.errorHandler = errorHandler
+
+        if let initialNotice = initialNotice {
+            self.noticeState = .loaded(initialNotice)
+        } else {
+            self.noticeState = .loaded(NoticeDetailMockData.sampleNoticeWithPermission)
+        }
     }
     
     // MARK: - Actions
@@ -96,17 +103,69 @@ final class NoticeDetailViewModel {
     /// 투표 처리
     @MainActor
     func handleVote(voteId: String, optionIds: [String]) async {
-        // TODO: UseCase로 투표 처리
-        print("[NoticeDetail] 투표 처리 시작 - Vote ID: \(voteId), Options: \(optionIds)")
+        print("[NoticeDetail] 투표 처리 시작 - Poll ID: \(voteId), Options: \(optionIds)")
+        
+        // 현재 공지 데이터 가져오기
+        guard case .loaded(let currentNotice) = noticeState,
+              let currentVote = currentNotice.vote else {
+            print("[NoticeDetail] 투표 데이터 없음")
+            return
+        }
         
         do {
             // 투표 API 호출 시뮬레이션
             try await Task.sleep(nanoseconds: 500_000_000)
             
-            // 투표 성공
-            print("[NoticeDetail] 투표 완료")
+            // 투표 완료 - 상태 업데이트
+            // 1. 투표한 옵션의 voteCount 증가
+            let updatedOptions = currentVote.options.map { option in
+                if optionIds.contains(option.id) {
+                    return VoteOption(
+                        id: option.id,
+                        title: option.title,
+                        voteCount: option.voteCount + 1
+                    )
+                }
+                return option
+            }
             
-            // TODO: 공지 상세 다시 로드해서 투표 결과 반영
+            // 2. 새로운 Vote 생성 (userVotedOptionIds 업데이트)
+            let updatedVote = NoticeVote(
+                id: currentVote.id,
+                question: currentVote.question,
+                options: updatedOptions,
+                startDate: currentVote.startDate,
+                endDate: currentVote.endDate,
+                allowMultipleChoices: currentVote.allowMultipleChoices,
+                isAnonymous: currentVote.isAnonymous,
+                userVotedOptionIds: optionIds
+            )
+            
+            // 3. 새로운 Notice 생성
+            let updatedNotice = NoticeDetail(
+                id: currentNotice.id,
+                generation: currentNotice.generation,
+                scope: currentNotice.scope,
+                category: currentNotice.category,
+                isMustRead: currentNotice.isMustRead,
+                title: currentNotice.title,
+                content: currentNotice.content,
+                authorID: currentNotice.authorID,
+                authorName: currentNotice.authorName,
+                authorImageURL: currentNotice.authorImageURL,
+                createdAt: currentNotice.createdAt,
+                updatedAt: currentNotice.updatedAt,
+                targetAudience: currentNotice.targetAudience,
+                hasPermission: currentNotice.hasPermission,
+                images: currentNotice.images,
+                links: currentNotice.links,
+                vote: updatedVote
+            )
+            
+            // 4. 상태 업데이트
+            noticeState = .loaded(updatedNotice)
+            
+            print("[NoticeDetail] 투표 완료")
         } catch {
             print("[NoticeDetail] 투표 실패: \(error)")
         }
