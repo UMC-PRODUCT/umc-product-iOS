@@ -9,71 +9,80 @@ import SwiftUI
 
 struct CommunityFameView: View {
     // MARK: - Properties
-
-    @State var vm: CommunityFameViewModel
+    
+    @Environment(\.di) private var di
+    @State var viewModel: CommunityFameViewModel?
+    
+    private var communityProvider: CommunityUseCaseProviding {
+        di.resolve(UsecaseProviding.self).community
+    }
 
     private enum Constants {
         static let weekPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
-    }
-
-    // MARK: - Init
-
-    init() {
-        self._vm = .init(wrappedValue: .init())
     }
 
     // MARK: - Body
 
     var body: some View {
         Group {
-            switch vm.fameItems {
-            case .idle:
-                Color.clear.task {
-                    print("hello")
+            if let vm = viewModel {
+                switch vm.fameItems {
+                case .idle, .loading:
+                    ProgressView("명예의전당 로딩 중...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                case .loaded:
+                    listSection(vm: vm)
+                case .failed(let error):
+                    ContentUnavailableView {
+                        Label("로딩 실패", systemImage: "exclamationmark.triangle")
+                    } description: {
+                        Text(error.localizedDescription)
+                    } actions: {
+                        Button("다시 시도") {
+                            Task { await vm.fetchFameItems() }
+                        }
+                    }
                 }
-            case .loading:
+            } else {
                 ProgressView()
-            case .loaded:
-                listSection
-            case .failed:
-                Color.clear
             }
+        }
+        .task {
+            if viewModel == nil {
+                viewModel = CommunityFameViewModel(
+                    fetchFameItemsUseCase: communityProvider.fetchFameItemsUseCase
+                )
+            }
+            await viewModel?.fetchFameItems()
         }
         .toolbar {
-            ToolBarCollection.CommunityWeekFilter(
-                weeks: vm.availableWeeks,
-                selection: $vm.selectedWeek
-            )
-            
-            ToolBarCollection.CommunityUnivFilter(
-                selectedUniversity: $vm.selectedUniversity,
-                universities: vm.availableUniversities
-            )
-            ToolBarCollection.CommunityPartFilter(
-                selectedPart: $vm.selectedPart,
-                parts: vm.availableParts
-            )
-        }
-    }
-
-    // MARK: - Section
-
-    private var weekSection: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                ForEach(vm.availableWeeks, id: \.self) { week in
-                    ChipButton("\(week)주차", isSelected: vm.selectedWeek == week) {
-                        vm.selectWeek(week)
-                    }
-                    .buttonStyle(.fame)
-                }
+            if let vm = viewModel {
+                ToolBarCollection.CommunityWeekFilter(
+                    weeks: vm.availableWeeks,
+                    selection: Binding(
+                        get: { vm.selectedWeek }, set: { vm.selectedWeek = $0 }
+                    )
+                )
+                
+                ToolBarCollection.CommunityUnivFilter(
+                    selectedUniversity: Binding(
+                        get: { vm.selectedUniversity }, set: { vm.selectedUniversity = $0 }
+                    ),
+                    universities: vm.availableUniversities
+                )
+                ToolBarCollection.CommunityPartFilter(
+                    selectedPart: Binding(
+                        get: { vm.selectedPart }, set: { vm.selectedPart = $0 }
+                    ),
+                    parts: vm.availableParts
+                )
             }
-            .padding(Constants.weekPadding)
         }
-        .scrollIndicators(.hidden)
     }
 
-    private var listSection: some View {
+    // MARK: - SubViews
+
+    private func listSection(vm: CommunityFameViewModel) -> some View {
         Group {
             if vm.groupedByUniversity.isEmpty {
                 emptyList
@@ -107,8 +116,4 @@ struct CommunityFameView: View {
             Text("매 주차가 종료되면 베스트 워크북이 선정됩니다.")
         }
     }
-}
-
-#Preview {
-    CommunityFameView()
 }
