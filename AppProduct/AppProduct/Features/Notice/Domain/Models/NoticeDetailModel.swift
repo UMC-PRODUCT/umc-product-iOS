@@ -174,3 +174,69 @@ enum VoteStatus {
     case active  // 진행 중
     case ended   // 종료
 }
+
+
+// MARK: - ReadStatusTab
+
+/// 공지 열람 현황 탭 (확인/미확인)
+enum ReadStatusTab: String, CaseIterable {
+    case confirmed = "확인"
+    case unconfirmed = "미확인"
+}
+
+// MARK: - NoticeReadStatus
+
+/// 공지 열람 현황 전체 데이터
+struct NoticeReadStatus: Equatable {
+    let noticeId: String
+    let confirmedUsers: [ReadStatusUser]
+    let unconfirmedUsers: [ReadStatusUser]
+    
+    /// 확인한 사람 수
+    var confirmedCount: Int {
+        confirmedUsers.count
+    }
+    
+    /// 미확인한 사람 수
+    var unconfirmedCount: Int {
+        unconfirmedUsers.count
+    }
+    
+    /// 전체 대상자 수
+    var totalCount: Int {
+        confirmedCount + unconfirmedCount
+    }
+    
+    /// 하단 메시지 (예: "이미 3명이 공지를 확인했습니다.")
+    var bottomMessage: String {
+        "이미 \(confirmedCount)명이 공지를 확인했습니다."
+    }
+}
+
+
+// MARK: - ReadStatusUser
+
+/// 공지 열람 현황 - 사용자 정보
+struct ReadStatusUser: Equatable, Identifiable {
+    let id: String
+    let name: String
+    let nickName: String
+    let part: String
+    let branch: String
+    let campus: String
+    let profileImageURL: String?
+    let isRead: Bool
+    
+    /// NoticeReadStatusItemModel로 변환
+    func toItemModel() -> NoticeReadStatusItemModel {
+        NoticeReadStatusItemModel(
+            profileImage: nil,
+            userName: name,
+            nickName: nickName,
+            part: part,
+            location: branch,
+            campus: campus,
+            isRead: isRead
+        )
+    }
+}

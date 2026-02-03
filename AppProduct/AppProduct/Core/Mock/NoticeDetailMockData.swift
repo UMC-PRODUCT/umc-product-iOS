@@ -291,4 +291,17 @@ enum NoticeDetailMockData {
         sampleNoticeWithVote,
         sampleNoticeWithVoteDone
     ]
+    
+    static let sampleReadStatusUsers: [ReadStatusUser] = [
+        ReadStatusUser(id: "user1", name: "정의찬", nickName: "제옹", part: "PM", branch: "Leo", campus: "중앙대", profileImageURL: nil, isRead: true),
+        ReadStatusUser(id: "user2", name: "이재원", nickName: "리버", part: "iOS", branch: "Cassiopeia", campus: "한성대", profileImageURL: nil, isRead: true),
+        ReadStatusUser(id: "user3", name: "김미주", nickName: "마티", part: "iOS", branch: "Cetus", campus: "덕성여대", profileImageURL: nil, isRead: false),
+        ReadStatusUser(id: "user4", name: "이예지", nickName: "소피", part: "iOS", branch: "Nova", campus: "가천대", profileImageURL: nil, isRead: false),
+    ]
+    
+    static let sampleReadStatus = NoticeReadStatus(
+        noticeId: "1",
+        confirmedUsers: sampleReadStatusUsers.filter { $0.isRead },
+        unconfirmedUsers: sampleReadStatusUsers.filter { !$0.isRead }
+    )
 }
