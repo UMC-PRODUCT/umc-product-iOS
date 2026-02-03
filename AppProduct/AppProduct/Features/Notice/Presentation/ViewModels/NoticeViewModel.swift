@@ -211,7 +211,7 @@ final class NoticeViewModel {
             // 전체: 해당 scope의 모든 공지 (일반 + 파트별)
             return true
         case .staff:
-            // TODO: 운영진 공지 필터링
+            // TODO: 운영진 공지 필터링 - [이예지] 26.02.03
             return true
         case .part:
             // 파트 서브필터 (파트 기본값): 파트별 공지만 표시 (일반 공지 제외)

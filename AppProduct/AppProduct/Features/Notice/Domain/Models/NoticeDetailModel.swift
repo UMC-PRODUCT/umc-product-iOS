@@ -57,13 +57,6 @@ struct NoticeDetail: Equatable, Identifiable {
             return .campus
         }
     }
-    
-    /// 표시용 날짜 (YYYY.MM.DD)
-    var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy.MM.dd"
-        return formatter.string(from: createdAt)
-    }
 }
 
 
