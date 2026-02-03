@@ -49,7 +49,7 @@ final class MockCommunityRepository: CommunityRepositoryProtocol {
             content: request.content,
             profileImage: nil,
             userName: "사용자",
-            part: "iOS",
+            part: .front(type: .ios),
             createdAt: "방금 전",
             likeCount: 0,
             commentCount: 0
@@ -73,7 +73,7 @@ extension MockCommunityRepository {
             university: "중앙대학교",
             profileImage: nil,
             userName: "김멋사",
-            part: "Web",
+            part: .front(type: .web),
             workbookTitle: "Web 1주차",
             content: "컴포넌트 분리가 매우 잘 되어있고, 상태 관리가 깔끔합니다."
         ),
@@ -82,7 +82,7 @@ extension MockCommunityRepository {
             university: "명지대학교",
             profileImage: nil,
             userName: "이서버",
-            part: "Server",
+            part: .server(type: .spring),
             workbookTitle: "Server 1주차",
             content: "RESTful 원칙을 잘 준수하였으며 예외 처리가 훌륭합니다."
         ),
@@ -92,7 +92,7 @@ extension MockCommunityRepository {
             university: "중앙대학교",
             profileImage: nil,
             userName: "이서버",
-            part: "Server",
+            part: .server(type: .node),
             workbookTitle: "Server 2주차",
             content: "의존성 주입 패턴을 잘 활용했습니다."
         ),
@@ -101,7 +101,7 @@ extension MockCommunityRepository {
            university: "덕성여자대학교",
            profileImage: nil,
            userName: "최코딩",
-           part: "Web",
+           part: .front(type: .web),
            workbookTitle: "Web 2주차",
            content: "타입 정의가 명확하고 코드가 깔끔합니다."
        ),
@@ -111,7 +111,7 @@ extension MockCommunityRepository {
            university: "중앙대학교",
            profileImage: nil,
            userName: "김애플",
-           part: "iOS",
+           part: .front(type: .ios),
            workbookTitle: "iOS 3주차",
            content: "MVVM 패턴을 잘 적용했습니다."
        ),
@@ -120,7 +120,7 @@ extension MockCommunityRepository {
            university: "명지대학교",
            profileImage: nil,
            userName: "박서버",
-           part: "Android",
+           part: .front(type: .android),
            workbookTitle: "Android 3주차",
            content: "Compose 활용이 인상적입니다."
        ),
@@ -130,7 +130,7 @@ extension MockCommunityRepository {
            university: "중앙대학교",
            profileImage: nil,
            userName: "김멋사",
-           part: "Web",
+           part: .front(type: .web),
            workbookTitle: "Web 4주차",
            content: "상태 관리 라이브러리 활용이 뛰어납니다."
        ),
@@ -144,7 +144,7 @@ extension MockCommunityRepository {
             content: "Optional Binding에 대해 설명해주실 수 있나요?",
             profileImage: nil,
             userName: "김서버",
-            part: "Server",
+            part: .server(type: .spring),
             createdAt: "방금 전",
             likeCount: 5,
             commentCount: 3
@@ -156,7 +156,7 @@ extension MockCommunityRepository {
             content: "헬스장 같이 다니실 분 구합니다!",
             profileImage: nil,
             userName: "박웹",
-            part: "Web",
+            part: .front(type: .web),
             createdAt: "10분 전",
             likeCount: 12,
             commentCount: 8
@@ -168,7 +168,7 @@ extension MockCommunityRepository {
             content: "7시에 홍대입구역에서 만나요!",
             profileImage: nil,
             userName: "이안드",
-            part: "Android",
+            part: .front(type: .web),
             createdAt: "1시간 전",
             likeCount: 23,
             commentCount: 15
