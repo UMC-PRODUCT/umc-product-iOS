@@ -15,8 +15,8 @@ struct CommunityItemModel: Equatable, Identifiable, Hashable {
     let content: String
     let profileImage: String?
     let userName: String
-    let part: String
-    let createdAt: String
+    let part: UMCPartType
+    let createdAt: Date
     let likeCount: Int
     let commentCount: Int
     var isLiked: Bool = false

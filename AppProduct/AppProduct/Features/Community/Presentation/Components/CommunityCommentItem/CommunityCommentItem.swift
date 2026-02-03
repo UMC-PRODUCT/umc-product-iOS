@@ -53,7 +53,7 @@ struct CommunityCommentItem: View, Equatable {
                 Text(model.userName)
                     .appFont(.subheadlineEmphasis, color: .black)
                 Spacer()
-                Text(model.createdAt)
+                Text(model.createdAt.timeAgoText)
                     .appFont(.footnote, color: .grey500)
             }
             Text(model.content)

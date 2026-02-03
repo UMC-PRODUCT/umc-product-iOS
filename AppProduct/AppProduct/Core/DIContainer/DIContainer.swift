@@ -121,12 +121,12 @@ extension DIContainer {
         let container = DIContainer()
         container.register(NavigationRouter.self) { NavigationRouter() }
         container.register(UserSessionManager.self) { UserSessionManager() }
-
+        
         // MARK: - Cross-Feature Repository
         container.register(ScheduleClassifierRepository.self) {
             ScheduleClassifierRepositoryImpl()
         }
-
+        
         // MARK: - Activity Feature
         container.register(ActivityRepositoryProviding.self) {
             ActivityRepositoryProvider.mock()
@@ -137,11 +137,23 @@ extension DIContainer {
                 classifierRepository: container.resolve(ScheduleClassifierRepository.self)
             )
         }
+        
+        // MARK: - Community Feature
+        container.register(CommunityRepositoryProviding.self) {
+            CommunityRepositoryProvider.mock()
+        }
+        
+        container.register(CommunityUseCaseProviding.self) {
+            CommunityUseCaseProvider(
+                repositoryProvider: container.resolve(CommunityRepositoryProviding.self)
+            )
+        }
 
         // MARK: - Global UseCase Provider (Feature 간 접근용)
         container.register(UsecaseProviding.self) {
             UseCaseProvider(
-                activity: container.resolve(ActivityUseCaseProviding.self)
+                activity: container.resolve(ActivityUseCaseProviding.self),
+                community: container.resolve(CommunityUseCaseProviding.self)
             )
         }
 

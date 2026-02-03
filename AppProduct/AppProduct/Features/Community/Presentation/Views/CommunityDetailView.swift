@@ -10,17 +10,22 @@ import SwiftUI
 struct CommunityDetailView: View {
     // MARK: - Properties
 
-    @State var vm: CommunityDetailViewModel
-
-    // MARK: - Init
-
-    init(postItem: CommunityItemModel) {
-        self._vm = .init(wrappedValue: .init(postItem: postItem))
+    @Environment(\.di) private var di
+    @State var viewModel: CommunityDetailViewModel?
+    let postItem: CommunityItemModel
+    
+    private var communityProvider: CommunityUseCaseProviding {
+        di.resolve(UsecaseProviding.self).community
     }
-
+    
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
+    }
+    
+    // MARK: - Init
+    init(postItem: CommunityItemModel) {
+        self.postItem = postItem
     }
 
     // MARK: - Body
@@ -28,34 +33,50 @@ struct CommunityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing32) {
-                CommunityPostCard(model: vm.postItem)
+                if let vm = viewModel {
+                    CommunityPostCard(model: vm.postItem)
 
-                Group {
-                    switch vm.comments {
-                    case .idle:
-                        Color.clear.task {
-                            print("hello")
+                    Group {
+                        switch vm.comments {
+                        case .idle, .loading:
+                            ProgressView("댓글 로딩 중...")
+                        case .loaded(let comments):
+                            commentSection(comments)
+                        case .failed(let error):
+                            ContentUnavailableView {
+                                Label("로딩 실패", systemImage: "exclamationmark.triangle")
+                            } description: {
+                                Text(error.localizedDescription)
+                            } actions: {
+                                Button("다시 시도") {
+                                    Task { await vm.fetchComments() }
+                                }
+                            }
                         }
-                    case .loading:
-                        // !!! - 로딩 뷰 - 소피
-                        ProgressView()
-                    case .loaded(let comments):
-                        commentSection(comments)
-                    case .failed:
-                        Color.clear
                     }
+                } else {
+                    ProgressView()
                 }
             }
             .padding(Constant.mainPadding)
         }
         .navigation(naviTitle: .communityDetail, displayMode: .inline)
+        .task {
+            if viewModel == nil {
+                viewModel = CommunityDetailViewModel(
+                    fetchCommentsUseCase: communityProvider.fetchCommentUseCase,
+                    postItem: postItem
+                )
+            }
+            await viewModel?.fetchComments()
+        }
     }
 
     // MARK: - Comment
 
     private func commentSection(_ comments: [CommunityCommentModel]) -> some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            Text("댓글 \(vm.postItem.commentCount)개")
+            Text("댓글 \(comments.count)개")
                 .appFont(.subheadline, color: .grey600)
 
             ForEach(comments) { comment in

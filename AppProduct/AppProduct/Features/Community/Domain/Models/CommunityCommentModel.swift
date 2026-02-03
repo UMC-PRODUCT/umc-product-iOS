@@ -13,5 +13,5 @@ struct CommunityCommentModel: Equatable, Identifiable {
     let profileImage: Image?
     let userName: String
     let content: String
-    let createdAt: String
+    let createdAt: Date
 }
