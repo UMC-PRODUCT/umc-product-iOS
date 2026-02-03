@@ -23,8 +23,8 @@ struct CurriculumPreviewData {
 
     static let iosCurriculum = CurriculumProgressModel(
         partName: "iOS PART CURRICULUM",
-        curriculumTitle: "Swift 기초 문법",
-        completedCount: 5,
+        curriculumTitle: "좋은 컴포넌트 설계란 무엇일까",
+        completedCount: 6,
         totalCount: 10
     )
 

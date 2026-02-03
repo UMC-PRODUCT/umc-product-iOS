@@ -34,7 +34,7 @@ struct ChallengerSessionCard: View, Equatable {
     }
     
     private enum Constants {
-        static let titleLineLimit: Int = 2
+        static let titleLineLimit: Int = 3
     }
     
     var body: some View {
