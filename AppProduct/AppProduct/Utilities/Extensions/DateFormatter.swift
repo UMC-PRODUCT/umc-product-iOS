@@ -55,4 +55,9 @@ extension Date {
     func timeRange(to endTime: Date) -> String {
         "\(self.toHourMinutes()) - \(endTime.toHourMinutes())"
     }
+    
+    /// "MM.dd - MM.dd" 날짜 범위 형식 (예: "01.17 - 01.20")
+    func dateRange(to endDate: Date) -> String {
+        "\(self.toMonthDay()) - \(endDate.toMonthDay())"
+    }
 }
