@@ -14,6 +14,7 @@ protocol UsecaseProviding {
     var activity: ActivityUseCaseProviding { get }
     var auth: AuthUseCaseProviding { get }
     var home: HomeUseCaseProviding { get }
+    var community: CommunityUseCaseProviding { get }
 }
 
 /// UseCase Provider 구현
@@ -27,14 +28,18 @@ final class UseCaseProvider: UsecaseProviding {
     let auth: AuthUseCaseProviding
     /// Home Feature UseCase Provider
     let home: HomeUseCaseProviding
+    /// Community Feature UseCase Provider
+    let community: CommunityUseCaseProviding
 
     init(
         activity: ActivityUseCaseProviding,
         auth: AuthUseCaseProviding,
-        home: HomeUseCaseProviding
+        home: HomeUseCaseProviding,
+        community: CommunityUseCaseProviding
     ) {
         self.activity = activity
         self.auth = auth
         self.home = home
+        self.community = community
     }
 }

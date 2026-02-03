@@ -287,7 +287,6 @@ extension DIContainer {
             )
         }
         
-
         // MARK: - MyPage Feature
         container.register(MyPageRepositoryProtocol.self) {
             #if DEBUG && targetEnvironment(simulator)
@@ -303,6 +302,17 @@ extension DIContainer {
         container.register(MyPageUseCaseProviding.self) {
             MyPageUseCaseProvider(
                 repository: container.resolve(MyPageRepositoryProtocol.self)
+            )
+        }
+        
+        // MARK: - Community Feature
+        container.register(CommunityRepositoryProviding.self) {
+            CommunityRepositoryProvider.mock()
+        }
+
+        container.register(CommunityUseCaseProviding.self) {
+            CommunityUseCaseProvider(
+                repositoryProvider: container.resolve(CommunityRepositoryProviding.self)
             )
         }
 
