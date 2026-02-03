@@ -67,12 +67,8 @@ struct NoticeDetailView: View {
             }
         }
         .alertPrompt(item: $viewModel.alertPrompt)
-        .onAppear {
-            viewModel = NoticeDetailViewModel(
-                noticeID: model.id,
-                errorHandler: errorHandler,
-                initialNotice: model
-            )
+        .task {
+            viewModel.updateErrorHandler(errorHandler)
         }
     }
     
