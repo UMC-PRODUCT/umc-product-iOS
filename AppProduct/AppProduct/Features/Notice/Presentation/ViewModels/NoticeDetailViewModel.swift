@@ -25,6 +25,44 @@ final class NoticeDetailViewModel {
     /// Error Handler
     private var errorHandler: ErrorHandler
     
+    // MARK: - Read Status Properties
+    /// 공지 열람 현황 Sheet 표시 여부
+    var showReadStatusSheet: Bool = false
+    
+    /// 공지 열람 현황 데이터 상태
+    var readStatusState: Loadable<NoticeReadStatus> = .idle
+    
+    /// 선택된 탭 (확인/미확인)
+    var selectedReadTab: ReadStatusTab = .confirmed
+    
+    // MARK: - Read Status Computed Properties
+    /// 현재 선택된 탭에 따른 필터링된 사용자 목록
+    var filteredReadStatusUsers: [ReadStatusUser] {
+        guard let readStatus = readStatusState.value else { return [] }
+        return selectedReadTab == .confirmed ? readStatus.confirmedUsers : readStatus.unconfirmedUsers
+    }
+    
+    /// 하단 메시지 표시 여부 (확인 탭에서만)
+    var shouldShowBottomMessage: Bool {
+        selectedReadTab == .confirmed && readStatusState.value != nil
+    }
+    
+    /// 하단 메시지 텍스트
+    var bottomMessage: String {
+        readStatusState.value?.bottomMessage ?? ""
+    }
+    
+    /// 확인한 인원 수 (버튼용)
+    var confirmedCount: Int {
+        readStatusState.value?.confirmedCount ?? 0
+    }
+
+    /// 전체 인원 수 (버튼용)
+    var totalCount: Int {
+        readStatusState.value?.totalCount ?? 0
+    }
+    
+    
     // MARK: - Initialization
     
     init(
@@ -34,7 +72,7 @@ final class NoticeDetailViewModel {
     ) {
         self.noticeID = noticeID
         self.errorHandler = errorHandler
-
+        
         if let initialNotice = initialNotice {
             self.noticeState = .loaded(initialNotice)
         } else {
@@ -185,5 +223,35 @@ final class NoticeDetailViewModel {
                     }
                 ))
         }
+    }
+    
+    
+    // MARK: - Read Status Actions
+    
+    /// 공지 열람 현황 Sheet 표시
+    @MainActor
+    func openReadStatusSheet() {
+        showReadStatusSheet = true
+        if readStatusState.isIdle {
+            Task { await fetchReadStatus() }
+        }
+    }
+    
+    /// 공지 열람 현황 데이터 로드
+    @MainActor
+    func fetchReadStatus() async {
+        readStatusState = .loading
+        do {
+            try await Task.sleep(nanoseconds: 500_000_000)
+            readStatusState = .loaded(NoticeDetailMockData.sampleReadStatus)
+        } catch {
+            readStatusState = .failed(.unknown(message: "열람 현황을 불러오는데 실패했습니다."))
+            print("[NoticeDetail] 열람 현황 로드 실패: \(error)")
+        }
+    }
+    
+    /// 탭 전환
+    func switchReadTab(to tab: ReadStatusTab) {
+        selectedReadTab = tab
     }
 }

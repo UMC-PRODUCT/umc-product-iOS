@@ -97,7 +97,7 @@ private struct UserInfoSection: View, Equatable {
         VStack(alignment: .leading, spacing: Constant.userInfoVSpacing) {
             // 이름 + 파트
             HStack(spacing: Constant.userInfoHSpacing) {
-                Text(model.userName)
+                Text("\(model.userName)/\(model.nickName)")
                     .appFont(.subheadlineEmphasis, color: .grey900)
                 Text(model.part)
                     .appFont(.caption2, color: .gray)
@@ -118,6 +118,7 @@ private struct UserInfoSection: View, Equatable {
         model: .init(
             profileImage: nil,
             userName: "이애플",
+            nickName: "사과",
             part: "iOS",
             location: "부산/경남",
             campus: "부산대",
