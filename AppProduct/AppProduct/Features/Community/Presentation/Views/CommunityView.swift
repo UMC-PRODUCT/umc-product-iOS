@@ -38,11 +38,8 @@ struct CommunityView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack(path: Binding(
-            get: { pathStore.communityPath },
-            set: { pathStore.communityPath = $0 }
-        )) {
-            Group {
+        Group {
+            if let vm = viewModel {
                 switch vm.selectedMenu {
                 case .all, .question, .party:
                     contentSection
@@ -66,23 +63,24 @@ struct CommunityView: View {
                 case .fame:
                     break
                 }
+            } else {
+                ProgressView()
             }
             .navigation(naviTitle: .community, displayMode: .inline)
             .toolbar {
                 ToolBarCollection.ToolBarCenterMenu(
                     items: CommunityMenu.allCases,
-                    selection: $vm.selectedMenu,
+                    selection: Binding(
+                        get: { vm.selectedMenu }, set: { vm.selectedMenu = $0 }
+                    ),
                     itemLabel: { $0.rawValue },
                     itemIcon: { $0.icon }
                 )
             }
-            .navigationDestination(for: NavigationDestination.self) { destination in
-                NavigationRoutingView(destination: destination)
-            }
         }
     }
 
-    private var contentSection: some View {
+    private func contentSection(vm: CommunityViewModel) -> some View {
         Group {
             switch vm.items {
             case .idle,.loading:
