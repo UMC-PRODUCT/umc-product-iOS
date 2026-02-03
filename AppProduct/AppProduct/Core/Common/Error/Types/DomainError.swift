@@ -89,6 +89,12 @@ enum DomainError: Error, LocalizedError, Equatable {
     /// 이미 제출됨
     case workbookAlreadySubmitted
 
+    /// 미션을 찾을 수 없음
+    case missionNotFound
+
+    /// 미션 링크 입력 필요
+    case missionLinkRequired
+
     // MARK: - 커뮤니티
 
     /// 게시글을 찾을 수 없음
@@ -127,6 +133,10 @@ enum DomainError: Error, LocalizedError, Equatable {
             return "제출 기한이 지났습니다."
         case .workbookAlreadySubmitted:
             return "이미 제출한 워크북입니다."
+        case .missionNotFound:
+            return "미션을 찾을 수 없습니다."
+        case .missionLinkRequired:
+            return "링크를 입력해주세요."
         case .postNotFound:
             return "게시글을 찾을 수 없습니다."
         case .cannotDeletePost:

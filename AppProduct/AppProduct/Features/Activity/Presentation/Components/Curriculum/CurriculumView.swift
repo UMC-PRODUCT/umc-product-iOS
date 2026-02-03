@@ -46,12 +46,12 @@ struct CurriculumView: View {
                 // Header
                 CurriculumProgressCard(model: curriculumModel)
                     .equatable()
-                
                 // Mission List
                 missionListSection
             }
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
+        .defaultScrollAnchor(.top)
         .contentMargins(
             .bottom,
             DefaultConstant.defaultContentBottomMargins,
