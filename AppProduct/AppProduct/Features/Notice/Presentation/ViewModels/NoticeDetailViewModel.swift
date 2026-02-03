@@ -23,7 +23,7 @@ final class NoticeDetailViewModel {
     private let noticeID: String
     
     /// Error Handler
-    private let errorHandler: ErrorHandler
+    private var errorHandler: ErrorHandler
     
     // MARK: - Initialization
     
@@ -40,6 +40,11 @@ final class NoticeDetailViewModel {
         } else {
             self.noticeState = .loaded(NoticeDetailMockData.sampleNoticeWithPermission)
         }
+    }
+    
+    /// ErrorHandler 업데이트
+    func updateErrorHandler(_ handler: ErrorHandler) {
+        self.errorHandler = handler
     }
     
     // MARK: - Actions
