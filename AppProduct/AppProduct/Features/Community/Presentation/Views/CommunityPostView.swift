@@ -10,109 +10,136 @@ import SwiftUI
 struct CommunityPostView: View {
     // MARK: - Properties
     
+    @Environment(\.di) private var di
     @Environment(ErrorHandler.self) var errorHandler
-    @State var vm = CommunityPostViewModel()
+    @State var viewModel: CommunityPostViewModel?
     
     private enum Constants {
         static let contentMinHeight: CGFloat = 200
         static let participantsRange: ClosedRange<Int> = 2...20
     }
     
+    private var communityProvider: CommunityUseCaseProviding {
+        di.resolve(UsecaseProviding.self).community
+    }
+    
     // MARK: - Body
     var body: some View {
         Form {
-            // 1. 카테고리
-            Section {
-                categorySection
+            if let vm = viewModel {
+                // 1. 카테고리
+                Section {
+                    categorySection(vm: vm)
+                }
+                
+                // 2. 번개폼
+                if vm.selectedCategory == .impromptu {
+                    // 2-1. 날짜 및 시간
+                    Section {
+                        dateSection(vm: vm)
+                        timeSection(vm: vm)
+                    }
+                    
+                    // 2-2. 최대 인원
+                    Section {
+                        maxParticipantsSection(vm: vm)
+                    }
+                    
+                    // 2-3. 장소
+                    Section {
+                        PlaceSelectView(place: Binding(
+                            get: { vm.selectedPlace }, set: { vm.selectedPlace = $0 }
+                        ))
+                    }
+                    
+                    // 2-4. 오픈채팅 링크
+                    Section {
+                        linkSection(vm: vm)
+                    }
+                }
+                
+                // 3. 제목 및 내용
+                Section {
+                    ArticleTextField(placeholder: .title, text: Binding(
+                        get: { vm.titleText }, set: { vm.titleText = $0 }
+                    ))
+                    ArticleTextField(placeholder: .content, text: Binding(
+                        get: { vm.contentText }, set: { vm.contentText = $0 }
+                    ))
+                        .frame(minHeight: Constants.contentMinHeight, alignment: .top)
+                }
+            } else {
+                ProgressView()
             }
-            
-            // 2. 번개폼
-            if vm.selectedCategory == .impromptu {
-                // 2-1. 날짜 및 시간
-                Section {
-                    dateSection
-                    timeSection
-                }
-                
-                // 2-2. 최대 인원
-                Section {
-                    maxParticipantsSection
-                }
-                
-                // 2-3. 장소
-                Section {
-                    PlaceSelectView(place: $vm.selectedPlace)
-                }
-                
-                // 2-4. 오픈채팅 링크
-                Section {
-                    linkSection
-                }
-            }
-            
-            // 3. 제목 및 내용
-            Section {
-                ArticleTextField(placeholder: .title, text: $vm.titleText)
-                ArticleTextField(placeholder: .content, text: $vm.contentText)
-                    .frame(minHeight: Constants.contentMinHeight, alignment: .top)
+        }
+        .task {
+            if viewModel == nil {
+                viewModel = CommunityPostViewModel(
+                    createPostUseCase: communityProvider.createPostUseCase
+                )
             }
         }
         .scrollDismissesKeyboard(.immediately)
         .navigation(naviTitle: .communityPost, displayMode: .inline)
         .toolbar {
-            ToolBarCollection.CommunityPostDoneBtn(
-                isEnabled: vm.isValid,
-                action: {
-                    // TODO: 글 작성 API 연결
-                }
-            )
+            if let vm = viewModel {
+                ToolBarCollection.CommunityPostDoneBtn(
+                    isEnabled: vm.isValid,
+                    action: {
+                        // TODO: 글 작성 API 연결
+                    }
+                )
+            }
         }
     }
     
     // MARK: - Subviews
     
-    private var categorySection: some View {
-        Picker("카테고리", selection: $vm.selectedCategory) {
+    private func categorySection(vm: CommunityPostViewModel) -> some View {
+        Picker("카테고리", selection: Binding(
+            get: { vm.selectedCategory }, set: { vm.selectedCategory = $0 }
+        )) {
             ForEach(CommunityItemCategory.allCases, id: \.self) { category in
                 Text(category.text)
             }
         }
     }
     
-    private var dateSection: some View {
+    private func dateSection(vm: CommunityPostViewModel) -> some View {
         DatePicker("날짜",
-                   selection: $vm.selectedDate,
+                   selection: Binding(
+                    get: { vm.selectedDate }, set: { vm.selectedDate = $0 }
+                   ),
                    displayedComponents: [.date])
             .datePickerStyle(.compact)
             .tint(.indigo500)
     }
     
-    private var timeSection: some View {
+    private func timeSection(vm: CommunityPostViewModel) -> some View {
         DatePicker("시간",
-                   selection: $vm.selectedDate,
+                   selection: Binding(
+                    get: { vm.selectedDate }, set: { vm.selectedDate = $0 }
+                   ),
                    displayedComponents: [.hourAndMinute])
             .tint(.indigo500)
     }
 
-    private var maxParticipantsSection: some View {
-        Stepper(value: $vm.maxParticipants, in: Constants.participantsRange) {
+    private func maxParticipantsSection(vm: CommunityPostViewModel) -> some View {
+        Stepper(value: Binding(
+            get: { vm.maxParticipants }, set: { vm.maxParticipants = $0 }
+        ), in: Constants.participantsRange) {
             Text("\(vm.maxParticipants)명")
                 .appFont(.body, color: .black)
         }
     }
 
-    private var linkSection: some View {
-        TextField("오픈채팅 링크를 입력하세요.", text: $vm.linkText)
+    private func linkSection(vm: CommunityPostViewModel) -> some View {
+        TextField("오픈채팅 링크를 입력하세요.", text: Binding(
+            get: { vm.linkText }, set: { vm.linkText = $0 }
+        ))
             .appFont(.callout)
             .keyboardType(.URL)
             .autocapitalization(.none)
             .autocorrectionDisabled()
     }
-}
-
-#Preview {
-    NavigationStack {
-        CommunityPostView()
-    }
-    .environment(ErrorHandler())
 }
