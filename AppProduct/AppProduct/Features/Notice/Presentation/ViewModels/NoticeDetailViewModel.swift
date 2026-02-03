@@ -22,10 +22,17 @@ final class NoticeDetailViewModel {
     /// 공지 ID
     private let noticeID: String
     
+    /// Error Handler
+    private let errorHandler: ErrorHandler
+    
     // MARK: - Initialization
     
-    init(noticeID: String = "1") {
+    init(
+        noticeID: String = "1",
+        errorHandler: ErrorHandler
+    ) {
         self.noticeID = noticeID
+        self.errorHandler = errorHandler
     }
     
     // MARK: - Actions
@@ -37,7 +44,7 @@ final class NoticeDetailViewModel {
     
     /// 공지 수정
     func editNotice() {
-        // TODO: NoticeEditorView로 이동
+        // TODO: NoticeEditorView로 이동 - [이예지] 26.02.03
         print("[NoticeDetail] 공지 수정: \(noticeID)")
     }
     
@@ -60,7 +67,7 @@ final class NoticeDetailViewModel {
     /// 공지 삭제
     @MainActor
     private func deleteNotice() async {
-        // TODO: UseCase로 삭제 처리
+        // TODO: UseCase로 삭제 처리 - [이예지] 26.02.03
         print("[NoticeDetail] 공지 삭제 시작: \(noticeID)")
         
         do {
@@ -70,10 +77,19 @@ final class NoticeDetailViewModel {
             // 삭제 성공
             print("[NoticeDetail] 공지 삭제 완료")
             
-            // TODO: 이전 화면으로 돌아가기
+            // TODO: 이전 화면으로 돌아가기 - [이예지] 26.02.03
         } catch {
             // 삭제 실패 시 에러 처리
-            print("[NoticeDetail] 공지 삭제 실패: \(error)")
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Notice",
+                action: "deleteNotice",
+                retryAction: { [weak self] in
+                    guard let self = self else { return }
+                    Task {
+                        await self.deleteNotice()
+                    }
+                }
+            ))
         }
     }
 }

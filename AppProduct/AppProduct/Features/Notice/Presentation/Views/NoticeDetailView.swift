@@ -10,13 +10,18 @@ import SwiftUI
 struct NoticeDetailView: View {
     
     // MARK: - Property
-    @State var viewModel = NoticeDetailViewModel()
+    @State var viewModel: NoticeDetailViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(ErrorHandler.self) private var errorHandler
     private let model: NoticeDetail
     
     // MARK: - Initializer
     init(model: NoticeDetail) {
         self.model = model
+        let tempErrorHandler = ErrorHandler()
+        _viewModel = State(initialValue: NoticeDetailViewModel(
+            errorHandler: tempErrorHandler
+        ))
     }
     
     // MARK: - Constant
@@ -60,6 +65,12 @@ struct NoticeDetailView: View {
             }
         }
         .alertPrompt(item: $viewModel.alertPrompt)
+        .onAppear {
+            viewModel = NoticeDetailViewModel(
+                noticeID: model.id,
+                errorHandler: errorHandler
+            )
+        }
     }
     
     /// Loaded - 데이터가 있을 때
@@ -107,7 +118,7 @@ struct NoticeDetailView: View {
                     Text(model.authorName)
                 }
                 Spacer()
-                Text(model.formattedDate)
+                Text(model.createdAt.toYearMonthDay())
             }
             .appFont(.subheadline, color: .grey700)
             Label("수신대상: \(model.targetAudience.displayText)", systemImage: "paperplane")
@@ -131,4 +142,5 @@ struct NoticeDetailView: View {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithPermission)
     }
+    .environment(ErrorHandler())
 }
