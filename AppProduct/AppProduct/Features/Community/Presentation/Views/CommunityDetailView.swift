@@ -20,7 +20,7 @@ struct CommunityDetailView: View {
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
-
+    
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
@@ -48,6 +48,11 @@ struct CommunityDetailView: View {
             container: container, errorHandler: errorHandler, postItem: postItem
         )
         self._vm = .init(wrappedValue: viewModel)
+    }
+    
+    // MARK: - Init
+    init(postItem: CommunityItemModel) {
+        self.postItem = postItem
     }
 
     // MARK: - Body
@@ -80,6 +85,8 @@ struct CommunityDetailView: View {
                     case .failed:
                         failedContent()
                     }
+                } else {
+                    ProgressView()
                 }
             }
             .padding(Constant.mainPadding)

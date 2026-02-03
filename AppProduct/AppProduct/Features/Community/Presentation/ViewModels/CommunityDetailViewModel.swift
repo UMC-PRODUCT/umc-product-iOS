@@ -9,6 +9,10 @@ import Foundation
 
 @Observable
 class CommunityDetailViewModel {
+    // MARK: - Dependency
+    
+    private let fetchCommentsUseCase: FetchCommentsUseCaseProtocol
+    
     // MARK: - Property
     
     private let useCaseProvider: CommunityUseCaseProviding
