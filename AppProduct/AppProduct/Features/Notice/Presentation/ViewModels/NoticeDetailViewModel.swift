@@ -266,13 +266,7 @@ final class NoticeDetailViewModel {
     @MainActor
     func fetchReadStatus() async {
         readStatusState = .loading
-        do {
-            try await Task.sleep(nanoseconds: 500_000_000)
-            readStatusState = .loaded(NoticeDetailMockData.sampleReadStatus)
-        } catch {
-            readStatusState = .failed(.unknown(message: "열람 현황을 불러오는데 실패했습니다."))
-            print("[NoticeDetail] 열람 현황 로드 실패: \(error)")
-        }
+        readStatusState = .loaded(NoticeDetailMockData.sampleReadStatus)
     }
     
     /// 탭 전환
