@@ -92,4 +92,23 @@ final class NoticeDetailViewModel {
             ))
         }
     }
+    
+    /// 투표 처리
+    @MainActor
+    func handleVote(voteId: String, optionIds: [String]) async {
+        // TODO: UseCase로 투표 처리
+        print("[NoticeDetail] 투표 처리 시작 - Vote ID: \(voteId), Options: \(optionIds)")
+        
+        do {
+            // 투표 API 호출 시뮬레이션
+            try await Task.sleep(nanoseconds: 500_000_000)
+            
+            // 투표 성공
+            print("[NoticeDetail] 투표 완료")
+            
+            // TODO: 공지 상세 다시 로드해서 투표 결과 반영
+        } catch {
+            print("[NoticeDetail] 투표 실패: \(error)")
+        }
+    }
 }

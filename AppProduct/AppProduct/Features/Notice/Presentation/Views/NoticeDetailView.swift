@@ -130,12 +130,22 @@ struct NoticeDetailView: View {
     // MARK: - BottomSection
     // 본문, 투표/링크/사진 카드
     private var bottomSection: some View {
-        VStack {
+        VStack(spacing: DefaultSpacing.spacing24) {
             // 본문
             Text(model.content)
                 .appFont(.body)
                 .multilineTextAlignment(.leading)
                 .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            
+            // 투표 카드
+            if let vote = model.vote {
+                NoticeVoteCard(vote: vote) { optionIds in
+                    Task {
+                        await viewModel.handleVote(voteId: vote.id, optionIds: optionIds)
+                    }
+                }
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            }
             
             // 이미지 카드
             if !model.images.isEmpty {
@@ -176,5 +186,11 @@ struct NoticeDetailView: View {
 #Preview("링크 포함 공지") {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithLinks)
+    }
+}
+
+#Preview("투표 완료 공지") {
+    NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVote)
     }
 }
