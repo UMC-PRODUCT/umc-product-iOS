@@ -37,7 +37,7 @@ class CommunityFameViewModel {
     
     var availableParts: [String] {
         guard case .loaded(let items) = fameItems else { return [] }
-        let parts = Set(items.map(\.part))
+        let parts = Set(items.map(\.part.name))
         return parts.sorted()
     }
 
@@ -54,7 +54,7 @@ class CommunityFameViewModel {
                 
                 // 파트 필터
                 let matchPart = (selectedPart == "전체" || selectedPart.isEmpty)
-                                ? true : item.part == selectedPart
+                ? true : item.part.name == selectedPart
                 
                 return matchWeek && matchUniversity && matchPart
             }

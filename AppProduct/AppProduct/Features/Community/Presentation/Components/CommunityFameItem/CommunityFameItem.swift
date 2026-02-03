@@ -79,7 +79,7 @@ struct CommunityFameItem: View {
                 HStack(spacing: DefaultSpacing.spacing8) {
                     Text(model.userName)
                         .appFont(.calloutEmphasis, color: .grey900)
-                    Text(model.part)
+                    Text(model.part.name)
                         .appFont(.footnote, color: .grey600)
                         .padding(Constant.partTagPadding)
                         .background(.white, in: RoundedRectangle(cornerRadius: Constant.partTagRadius))
@@ -124,7 +124,7 @@ struct CommunityFameItem: View {
             university: "서울대학교",
             profileImage: nil,
             userName: "김멋사",
-            part: "Web",
+            part: .front(type: .web),
             workbookTitle: "React Todo List 만들기",
             content: "컴포넌트 분리가 매우 잘 되어있고, 상태 관리가 깔끔합니다."
         ),

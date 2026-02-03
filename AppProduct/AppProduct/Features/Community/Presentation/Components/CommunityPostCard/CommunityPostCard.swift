@@ -79,7 +79,7 @@ struct CommunityPostCard: View {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                 Text(model.userName)
                     .appFont(.subheadlineEmphasis, color: .black)
-                Text(model.part)
+                Text(model.part.name)
                     .appFont(.footnote, color: .grey500)
             }
         }
