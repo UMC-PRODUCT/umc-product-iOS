@@ -9,6 +9,10 @@ import Foundation
 
 @Observable
 class CommunityViewModel {
+    // MARK: - Dependency
+    
+    private let fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol
+    
     // MARK: - Property
     
     private let container: DIContainer
