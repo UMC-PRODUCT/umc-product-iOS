@@ -347,6 +347,17 @@ extension DIContainer {
                 )
             )
         }
+        
+        // MARK: - Community Feature
+        container.register(CommunityRepositoryProviding.self) {
+            CommunityRepositoryProvider.mock()
+        }
+        
+        container.register(CommunityUseCaseProviding.self) {
+            CommunityUseCaseProvider(
+                repositoryProvider: container.resolve(CommunityRepositoryProviding.self)
+            )
+        }
 
         return container
     }
