@@ -228,63 +228,6 @@ struct VoteFormData: Equatable {
     }
 }
 
-// MARK: - VoteOptionItem
-/// 투표 옵션 항목
-struct VoteOptionItem: Identifiable, Equatable {
-    let id = UUID()
-    var text: String = ""
-}
-
-// MARK: - VoteFormData
-/// 투표 폼 데이터
-struct VoteFormData: Equatable {
-    var options: [VoteOptionItem] = [
-        VoteOptionItem(),
-        VoteOptionItem()
-    ]
-    var isAnonymous: Bool = true
-    var allowMultipleSelection: Bool = false
-
-    static let minOptionCount = 2
-    static let maxOptionCount = 10
-
-    var canAddOption: Bool {
-        options.count < Self.maxOptionCount
-    }
-
-    var canRemoveOption: Bool {
-        options.count > Self.minOptionCount
-    }
-}
-
-// MARK: - VoteOptionItem
-/// 투표 옵션 항목
-struct VoteOptionItem: Identifiable, Equatable {
-    let id = UUID()
-    var text: String = ""
-}
-
-// MARK: - VoteFormData
-/// 투표 폼 데이터
-struct VoteFormData: Equatable {
-    var options: [VoteOptionItem] = [
-        VoteOptionItem(),
-        VoteOptionItem()
-    ]
-    var isAnonymous: Bool = true
-    var allowMultipleSelection: Bool = false
-
-    static let minOptionCount = 2
-    static let maxOptionCount = 10
-
-    var canAddOption: Bool {
-        options.count < Self.maxOptionCount
-    }
-
-    var canRemoveOption: Bool {
-        options.count > Self.minOptionCount
-    }
-}
 
 // MARK: - EditorMockData
 enum EditorMockData {
