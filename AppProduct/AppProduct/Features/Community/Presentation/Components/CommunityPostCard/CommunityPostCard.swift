@@ -18,6 +18,7 @@ struct CommunityPostCard: View {
         static let profileSize: CGSize = .init(width: 40, height: 40)
         static let contentPadding: EdgeInsets = .init(top: 8, leading: 0, bottom: 12, trailing: 0)
         static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
+        static let tagPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
     }
 
     // MARK: - Init
@@ -56,7 +57,10 @@ struct CommunityPostCard: View {
 
     private var topSection: some View {
         HStack {
-            CommunityTagItem(title: model.category.text)
+            Text(model.category.text)
+                .appFont(.subheadline, color: .grey900)
+                .padding(Constant.tagPadding)
+                .glassEffect(.clear.tint(model.category.color))
             Spacer()
             Text(model.createdAt.timeAgoText)
                 .appFont(.footnote, color: .grey500)
