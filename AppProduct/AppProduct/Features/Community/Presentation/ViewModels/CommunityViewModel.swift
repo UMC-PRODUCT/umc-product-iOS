@@ -9,17 +9,65 @@ import Foundation
 
 @Observable
 class CommunityViewModel {
+    // MARK: - Dependency
+    
+    private let fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol
+    
     // MARK: - Property
 
     var searchText: String = ""
-    var isRecruiting: Bool = false
     var selectedMenu: CommunityMenu = .all
 
-    var items: Loadable<[CommunityItemModel]> = .loaded(mockItems)
+    private(set) var items: Loadable<[CommunityItemModel]> = .idle
+    
+    // MARK: - Computed Properties
+    
+    var filteredItems: [CommunityItemModel] {
+        guard case .loaded(let allItems) = items else { return [] }
+        
+        var filtered = allItems
+        
+        // 메뉴
+        if selectedMenu != .all {
+            switch selectedMenu {
+            case .all: break
+            case .question:
+                filtered = filtered.filter { $0.category == .question }
+            case .party:
+                filtered = filtered.filter { $0.category == .impromptu }
+            case .fame: break
+            }
+        }
+        
+        // 검색
+        if !searchText.isEmpty {
+            filtered = filtered.filter { item in
+                item.title.localizedCaseInsensitiveContains(searchText) ||
+                item.content.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+        
+        return filtered
+    }
+    
+    // MARK: - Init
+    
+    init(fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol) {
+        self.fetchCommunityItemsUseCase = fetchCommunityItemsUseCase
+    }
+    
+    // MARK: - Function
+    
+    @MainActor
+    func fetchCommunityItems() async {
+        items = .loading
+        do {
+            let allItems = try await fetchCommunityItemsUseCase.execute()
+            items = .loaded(allItems)
+        } catch let error as DomainError {
+            items = .failed(.domain(error))
+        } catch {
+            items = .failed(.unknown(message: error.localizedDescription))
+        }
+    }
 }
-
-// MARK: - Mock
-private let mockItems: [CommunityItemModel] = [
-    .init(userId: 1, category: .hobby, title: "질문 있습니다", content: "질문 있어요!", profileImage: nil, userName: "김서버", part: "Server", createdAt: "방금 전", likeCount: 5, commentCount: 3),
-    .init(userId: 1, category: .question, title: "질문 있습니다", content: "질문 있어요!", profileImage: nil, userName: "김서버", part: "Server", createdAt: "방금 전", likeCount: 5, commentCount: 3),
-]
