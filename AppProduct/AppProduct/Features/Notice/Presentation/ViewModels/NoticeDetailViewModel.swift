@@ -167,7 +167,18 @@ final class NoticeDetailViewModel {
             
             print("[NoticeDetail] 투표 완료")
         } catch {
-            print("[NoticeDetail] 투표 실패: \(error)")
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "handleVote",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.handleVote(voteId: voteId, optionIds: optionIds)
+                        }
+                    }
+                ))
         }
     }
 }

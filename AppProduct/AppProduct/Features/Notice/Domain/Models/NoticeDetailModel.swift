@@ -129,34 +129,30 @@ struct NoticeVote: Equatable, Identifiable {
     let isAnonymous: Bool
     // 사용자가 투표한 옵션 ID들
     let userVotedOptionIds: [String]
-
+    
     /// 전체 투표 수
     var totalVotes: Int {
         options.reduce(0) { $0 + $1.voteCount }
     }
-
+    
     /// 투표 종료 여부
     var isEnded: Bool {
         Date() > endDate
     }
-
+    
     /// 투표 상태
     var status: VoteStatus {
         isEnded ? .ended : .active
     }
-
+    
     /// 사용자 투표 여부
     var hasUserVoted: Bool {
         !userVotedOptionIds.isEmpty
     }
-
-    /// 날짜 포맷
+    
+    /// 날짜 포맷 (MM.dd - MM.dd)
     var formattedPeriod: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM.dd"
-        let start = formatter.string(from: startDate)
-        let end = formatter.string(from: endDate)
-        return "\(start) - \(end)"
+        startDate.dateRange(to: endDate)
     }
 }
 

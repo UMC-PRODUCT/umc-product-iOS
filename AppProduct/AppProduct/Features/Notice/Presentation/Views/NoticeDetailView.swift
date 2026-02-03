@@ -70,7 +70,8 @@ struct NoticeDetailView: View {
         .onAppear {
             viewModel = NoticeDetailViewModel(
                 noticeID: model.id,
-                errorHandler: errorHandler
+                errorHandler: errorHandler,
+                initialNotice: model
             )
         }
     }
@@ -177,28 +178,33 @@ struct NoticeDetailView: View {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNotice)
     }
+    .environment(ErrorHandler())
 }
 
 #Preview("이미지 포함 공지") {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithImages)
     }
+    .environment(ErrorHandler())
 }
 
 #Preview("링크 포함 공지") {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithLinks)
     }
+    .environment(ErrorHandler())
 }
 
 #Preview("투표 완료 공지") {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVoteDone)
     }
+    .environment(ErrorHandler())
 }
 
 #Preview("투표 미완료 공지") {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVote)
     }
+    .environment(ErrorHandler())
 }
