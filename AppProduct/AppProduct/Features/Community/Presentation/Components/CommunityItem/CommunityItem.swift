@@ -65,7 +65,7 @@ struct CommunityItem: View, Equatable {
                 .glassEffect(.clear.tint(model.category.color))
 
             Spacer()
-            Text(model.createdAt)
+            Text(model.createdAt.timeAgoText)
                 .appFont(.footnote, color: .grey500)
         }
     }
@@ -122,5 +122,5 @@ struct CommunityItem: View, Equatable {
 }
 
 #Preview {
-    CommunityItem(model: .init(userId: 0, category: .hobby, title: "안녕하세요", content: "안녕하세요요용", profileImage: nil, userName: "제옹", part: .front(type: .ios), createdAt: "12123", likeCount: 1, commentCount: 1), action: {})
+    CommunityItem(model: .init(userId: 0, category: .hobby, title: "안녕하세요", content: "안녕하세요요용", profileImage: nil, userName: "제옹", part: .front(type: .ios), createdAt: Date(), likeCount: 1, commentCount: 1), action: {})
 }
