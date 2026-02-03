@@ -24,6 +24,7 @@ protocol UsecaseProviding {
 final class UseCaseProvider: UsecaseProviding {
     /// Activity Feature UseCase Provider
     let activity: ActivityUseCaseProviding
+    
     /// Auth Feature UseCase Provider
     let auth: AuthUseCaseProviding
     /// Home Feature UseCase Provider
