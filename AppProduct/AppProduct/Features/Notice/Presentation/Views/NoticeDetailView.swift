@@ -191,6 +191,12 @@ struct NoticeDetailView: View {
 
 #Preview("투표 완료 공지") {
     NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVoteDone)
+    }
+}
+
+#Preview("투표 미완료 공지") {
+    NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVote)
     }
 }
