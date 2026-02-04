@@ -146,7 +146,6 @@ struct NoticeVoteCard: View {
                 .buttonStyle(.glassProminent)
                 .tint(.indigo500)
                 .disabled(selectedOptionIds.isEmpty)
-                .glassEffect()
             }
             
             Text("총 \(vote.totalVotes)명 참여")
