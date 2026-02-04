@@ -66,6 +66,16 @@ struct NoticeDetailView: View {
                 ])
             }
         }
+        .safeAreaBar(edge: .bottom) {
+            NoticeReadStatusButton(confirmedCount: viewModel.confirmedCount, totalCount: viewModel.totalCount, action: {
+                viewModel.openReadStatusSheet()
+            })
+            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        }
+        .sheet(isPresented: $viewModel.showReadStatusSheet) {
+            NoticeReadStatusSheet(viewModel: viewModel)
+                .presentationDetents([.medium])
+        }
         .alertPrompt(item: $viewModel.alertPrompt)
         .task {
             viewModel.updateErrorHandler(errorHandler)
@@ -191,7 +201,7 @@ struct NoticeDetailView: View {
     .environment(ErrorHandler())
 }
 
-#Preview("투표 완료 공지") {
+#Preview("종료돤 투표 공지") {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVoteDone)
     }
