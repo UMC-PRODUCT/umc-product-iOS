@@ -274,8 +274,8 @@ enum NoticeDetailMockData {
                 VoteOption(id: "3", title: "디자인 패턴", voteCount: 8),
                 VoteOption(id: "4", title: "영어 회화", voteCount: 15)
             ],
-            startDate: Date(timeIntervalSinceNow: -86400),
-            endDate: Date(timeIntervalSinceNow: 86400 * 5),
+            startDate: Date(timeIntervalSinceNow: -86400 * 10),
+            endDate: Date(timeIntervalSinceNow: -86400),
             allowMultipleChoices: true,
             isAnonymous: false,
             userVotedOptionIds: ["1", "2"]
@@ -297,6 +297,16 @@ enum NoticeDetailMockData {
         ReadStatusUser(id: "user2", name: "이재원", nickName: "리버", part: "iOS", branch: "Cassiopeia", campus: "한성대", profileImageURL: nil, isRead: true),
         ReadStatusUser(id: "user3", name: "김미주", nickName: "마티", part: "iOS", branch: "Cetus", campus: "덕성여대", profileImageURL: nil, isRead: false),
         ReadStatusUser(id: "user4", name: "이예지", nickName: "소피", part: "iOS", branch: "Nova", campus: "가천대", profileImageURL: nil, isRead: false),
+        ReadStatusUser(id: "user5", name: "박경운", nickName: "하늘", part: "Spring Boot", branch: "Leo", campus: "중앙대", profileImageURL: nil, isRead: true),
+        ReadStatusUser(id: "user6", name: "강하나", nickName: "와나", part: "Spring Boot", branch: "Cassiopeia", campus: "한양대 ERICA", profileImageURL: nil, isRead: true),
+        ReadStatusUser(id: "user7", name: "박지현", nickName: "박박지현", part: "Spring Boot", branch: "Scorpio", campus: "동국대", profileImageURL: nil, isRead: false),
+        ReadStatusUser(id: "user8", name: "박세은", nickName: "세니", part: "Spring Boot", branch: "Leo", campus: "동덕여대", profileImageURL: nil, isRead: false),
+        ReadStatusUser(id: "user9", name: "이예은", nickName: "스읍", part: "Spring Boot", branch: "Leo", campus: "중앙대", profileImageURL: nil, isRead: true),
+        ReadStatusUser(id: "user10", name: "이희원", nickName: "삼이", part: "Design", branch: "Cetus", campus: "성신여대", profileImageURL: nil, isRead: false),
+        ReadStatusUser(id: "user11", name: "박유수", nickName: "어헛차", part: "Android", branch: "Nova", campus: "숭실대", profileImageURL: nil, isRead: true),
+        ReadStatusUser(id: "user12", name: "조경석", nickName: "조나단", part: "Android", branch: "Scorpio", campus: "명지대", profileImageURL: nil, isRead: true),
+        ReadStatusUser(id: "user13", name: "양지애", nickName: "나루", part: "Android", branch: "Scorpio", campus: "서울여대", profileImageURL: nil, isRead: true),
+        ReadStatusUser(id: "user14", name: "김도연", nickName: "도리", part: "Android", branch: "Scorpio", campus: "서울여대", profileImageURL: nil, isRead: false)
     ]
     
     static let sampleReadStatus = NoticeReadStatus(
