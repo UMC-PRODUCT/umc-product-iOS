@@ -65,7 +65,7 @@ enum UserAPI {
     case deleteAccount
 }
 
-extension UserAPI: TargetType {
+extension UserAPI: BaseTargetType {
     var baseURL: URL {
         URL(string: "https://api.umc.com")!
     }
