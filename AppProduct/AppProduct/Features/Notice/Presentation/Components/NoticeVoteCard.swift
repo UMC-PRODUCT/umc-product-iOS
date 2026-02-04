@@ -17,8 +17,11 @@ struct NoticeVoteCard: View {
     // MARK: - Constants
     fileprivate enum Constants {
         static let innerPadding: CGFloat = 32
+        static let dividerHeight: CGFloat = 10
         static let progressHeight: CGFloat = 8
         static let capsulePadding: CGFloat = 8
+        static let capsuleOpacity: Double = 0.3
+        static let voteBtnVPadding: CGFloat = 12
     }
 
     // MARK: - Body
@@ -35,10 +38,9 @@ struct NoticeVoteCard: View {
         }
         .padding(Constants.innerPadding)
         .background {
-            RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .foregroundStyle(Color.indigo100)
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
+                .fill(Color(.systemGroupedBackground))
         }
-        .glassEffect(in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
 
     // MARK: - HeaderSection
@@ -64,7 +66,7 @@ struct NoticeVoteCard: View {
                     .appFont(.footnote, color: .grey600)
                 
                 Divider()
-                    .frame(height: 10)
+                    .frame(height: Constants.dividerHeight)
                 
                 Text(vote.isAnonymous ? "익명" : "실명")
                     .appFont(.footnote, color: .grey600)
@@ -83,15 +85,16 @@ struct NoticeVoteCard: View {
             switch vote.status {
             case .active:
                 Text("진행중")
-                    .appFont(.footnoteEmphasis, color: .indigo700)
+                    .appFont(.footnoteEmphasis, color: .green)
                     .padding(Constants.capsulePadding)
-                    .background(Color.indigo200)
+                    .background(Color.green.opacity(Constants.capsuleOpacity))
                     .clipShape(Capsule())
+                    .glassEffect(.clear)
             case .ended:
-                Text("종료")
-                    .appFont(.footnote  , color: .grey500)
+                Text("마감")
+                    .appFont(.footnoteEmphasis, color: .red)
                     .padding(Constants.capsulePadding)
-                    .background(Color.grey200)
+                    .background(Color.red.opacity(Constants.capsuleOpacity))
                     .clipShape(Capsule())
             }
         }
@@ -99,7 +102,7 @@ struct NoticeVoteCard: View {
 
     // MARK: - OptionsSection
     private var optionsSection: some View {
-        VStack(spacing: DefaultSpacing.spacing8) {
+        VStack(spacing: DefaultSpacing.spacing12) {
             ForEach(vote.options) { option in
                 if vote.hasUserVoted || vote.isEnded {
                     // 투표 결과 표시
@@ -110,13 +113,16 @@ struct NoticeVoteCard: View {
                     )
                 } else {
                     // 투표 선택 표시
-                    VoteOptionRow(
-                        option: option,
-                        isSelected: selectedOptionIds.contains(option.id),
-                        allowMultiple: vote.allowMultipleChoices
-                    )
-                    .onTapGesture {
-                        toggleOption(option.id)
+                    Button(action: {
+                        withAnimation(.default) {
+                            toggleOption(option.id)
+                        }
+                    }) {
+                        VoteOptionRow(
+                            option: option,
+                            isSelected: selectedOptionIds.contains(option.id),
+                            allowMultiple: vote.allowMultipleChoices
+                        )
                     }
                 }
             }
@@ -134,11 +140,12 @@ struct NoticeVoteCard: View {
                     Text("투표하기")
                         .appFont(.subheadlineEmphasis, color: .white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, Constants.voteBtnVPadding)
                         .background(selectedOptionIds.isEmpty ? Color.grey400 : Color.indigo500)
-                        .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
+                        .clipShape(ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
                 }
                 .disabled(selectedOptionIds.isEmpty)
+                .glassEffect()
             }
             
             Text("총 \(vote.totalVotes)명 참여")
@@ -169,22 +176,29 @@ struct VoteOptionRow: View {
     let option: VoteOption
     let isSelected: Bool
     let allowMultiple: Bool
+    
+    // MARK: - Constant
+    fileprivate enum Constants {
+        static let mainPadding: CGFloat = 12
+        static let bgOpacity: Double = 0.5
+    }
 
     // MARK: - Body
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             // 선택 아이콘
             Image(systemName: isSelected ? "circle.circle.fill" : "circle")
-                .foregroundStyle(isSelected ? Color.indigo300 : Color.grey400)
-                .font(.title3)
+                .foregroundStyle(isSelected ? Color.indigo500 : Color.grey400)
+                .appFont(.title3)
+                .glassEffect(.clear)
 
             Text(option.title)
                 .appFont(.body, color: .black)
 
             Spacer()
         }
-        .padding(12)
-        .background(isSelected ? Color.indigo200 : Color.white.opacity(0.5))
+        .padding(Constants.mainPadding)
+        .background(isSelected ? Color.indigo200.opacity(Constants.bgOpacity) : Color(.systemBackground).opacity(Constants.bgOpacity))
         .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
 }
@@ -202,19 +216,20 @@ struct VoteResultRow: View {
     // MARK: - Constants
     fileprivate enum Constants {
         static let progressHeight: CGFloat = 8
-        static let innerPadding: CGFloat = 20
+        static let innerPadding: CGFloat = 18
+        static let bgOpacity: Double = 0.5
     }
     
     // MARK: - Body
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             topSection
-            progressSection
+            gaugeSection
             Text("\(option.voteCount)명")
                 .appFont(.footnote, color: .grey600)
         }
         .padding(Constants.innerPadding)
-        .background(isUserSelected ? Color.indigo200 : Color.white.opacity(0.3))
+        .background(isUserSelected ? Color.indigo200.opacity(Constants.bgOpacity) : Color(.systemBackground).opacity(Constants.bgOpacity))
         .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
     
@@ -229,7 +244,7 @@ struct VoteResultRow: View {
             if isUserSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(Color.indigo500)
-                    .font(.callout)
+                    .appFont(.callout)
             }
             
             Text(String(format: "%.1f%%", option.percentage(totalVotes: totalVotes)))
@@ -237,20 +252,15 @@ struct VoteResultRow: View {
         }
     }
     
-    // 프로그레스 바
-    private var progressSection: some View {
-        ZStack(alignment: .leading) {
-            RoundedRectangle(cornerRadius: Constants.progressHeight / 2)
-                .fill(Color.grey200)
-                .frame(height: Constants.progressHeight)
-            
-            RoundedRectangle(cornerRadius: Constants.progressHeight / 2)
-                .fill(isUserSelected ? Color.indigo500 : Color.grey400)
-                .frame(height: Constants.progressHeight)
-                .containerRelativeFrame(.horizontal) { length, _ in
-                    length * CGFloat(option.percentage(totalVotes: totalVotes)) / 100
-                }
+    // 게이지 바
+    private var gaugeSection: some View {
+        Gauge(value: option.percentage(totalVotes: totalVotes), in: 0...100) {
+            EmptyView()
+        } currentValueLabel: {
+            EmptyView()
         }
+        .gaugeStyle(.linearCapacity)
+        .tint(isUserSelected ? Color.indigo500 : Color.grey400)
         .frame(height: Constants.progressHeight)
     }
 }

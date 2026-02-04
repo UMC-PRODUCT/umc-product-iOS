@@ -39,8 +39,8 @@ struct NoticeLinkCard: View {
             }
             .padding(Constants.innerPadding)
             .background {
-                RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                    .foregroundStyle(Color.indigo100)
+                ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
+                    .foregroundStyle(Color(.systemGroupedBackground))
             }
         }
         .glassEffect(in: .containerRelative)
@@ -67,7 +67,7 @@ struct LinkIconPresenter: View {
             .padding(Constants.iconPadding)
             .background {
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                    .foregroundStyle(Color.indigo400)
+                    .foregroundStyle(Color(.systemGray2))
             }
     }
 }
