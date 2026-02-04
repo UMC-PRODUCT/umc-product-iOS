@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Moya
 import os.log
 
 /// 앱 전역에서 발생하는 에러를 중앙 집중식으로 처리하는 핸들러.
@@ -143,7 +142,7 @@ final class ErrorHandler {
     /// - Parameter error: 변환할 에러.
     /// - Returns: 통합된 ``AppError``.
     ///
-    /// - Note: 지원 타입: `AppError`, `NetworkError`, `APIError`, `AuthError`,
+    /// - Note: 지원 타입: `AppError`, `NetworkError`, `RepositoryError`, `AuthError`,
     ///   `ValidationError`, `DomainError`, `MoyaError`, `URLError`, `DecodingError`
     private func convert(_ error: Error) -> AppError {
         // 1. AppError는 그대로 반환
@@ -156,56 +155,43 @@ final class ErrorHandler {
             return .network(networkError)
         }
 
-        // 3. APIError → AppError.api (Moya 기반)
-        if let apiError = error as? APIError {
-            return .api(apiError)
-        }
-
-        // 4. ValidationError
+        // 3. ValidationError
         if let validationError = error as? ValidationError {
             return .validation(validationError)
         }
 
-        // 5. AuthError
+        // 4. AuthError
         if let authError = error as? AuthError {
             return .auth(authError)
         }
 
-        // 6. DomainError
+        // 5. DomainError
         if let domainError = error as? DomainError {
             return .domain(domainError)
         }
 
-        // 7. MoyaError → APIError 변환
-        if let moyaError = error as? MoyaError {
-            return moyaError.toAppError()
-        }
-
-        // 8. URLError → APIError 변환
+        // 6. URLError → NetworkError 변환
         if let urlError = error as? URLError {
-            return .api(convertURLError(urlError))
+            return .network(convertURLError(urlError))
         }
 
-        // 9. DecodingError → APIError 변환
+        // 7. DecodingError → RepositoryError 변환
         if let decodingError = error as? DecodingError {
-            return .api(.decodingFailed(detail: describeDecodingError(decodingError)))
+            return .repository(.decodingError(detail: describeDecodingError(decodingError)))
         }
 
-        // 10. 알 수 없는 에러
+        // 8. 알 수 없는 에러
         return .unknown(message: error.localizedDescription)
     }
 
-    private func convertURLError(_ error: URLError) -> APIError {
+    private func convertURLError(_ error: URLError) -> NetworkError {
         switch error.code {
         case .notConnectedToInternet, .networkConnectionLost:
             return .noNetwork
         case .timedOut:
             return .timeout
         default:
-            return .requestFailed(
-                statusCode: error.errorCode,
-                message: error.localizedDescription
-            )
+            return .requestFailed(statusCode: error.errorCode, data: nil)
         }
     }
 
@@ -276,7 +262,7 @@ final class ErrorHandler {
     private func handleSpecialCases(_ error: AppError, context: ErrorContext) -> Bool {
         switch error {
         // 인증 만료 → 자동 로그아웃
-        case .api(.unauthorized), .auth(.sessionExpired):
+        case .auth(.sessionExpired):
             NotificationCenter.default.post(name: .authSessionExpired, object: nil)
             return true
 

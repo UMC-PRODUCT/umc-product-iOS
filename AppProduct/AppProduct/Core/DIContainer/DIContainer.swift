@@ -123,6 +123,20 @@ extension DIContainer {
         container.register(NavigationRouter.self) { NavigationRouter() }
         container.register(UserSessionManager.self) { UserSessionManager() }
 
+        // MARK: - Network Infrastructure
+        container.register(NetworkClient.self) {
+            AuthSystemFactory.makeNetworkClient(
+                baseURL: URL(string: Config.baseURL)!
+            )
+        }
+
+        container.register(MoyaNetworkAdapter.self) {
+            MoyaNetworkAdapter(
+                networkClient: container.resolve(NetworkClient.self),
+                baseURL: URL(string: Config.baseURL)!
+            )
+        }
+
         // MARK: - Cross-Feature Repository
         container.register(ScheduleClassifierRepository.self) {
             ScheduleClassifierRepositoryImpl()

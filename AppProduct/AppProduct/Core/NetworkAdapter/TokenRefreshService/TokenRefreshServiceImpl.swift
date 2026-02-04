@@ -124,8 +124,8 @@ struct TokenRefreshServiceImpl: TokenRefreshService {
             throw TokenRefreshError.serverError(statusCode: httpResponse.statusCode)
         }
 
-        // 6. 응답 디코딩 (CommonDTO 사용)
-        let tokenResponse = try decoder.decode(CommonDTO<TokenResult>.self, from: data)
+        // 6. 응답 디코딩 (APIResponse 사용)
+        let tokenResponse = try decoder.decode(APIResponse<TokenResult>.self, from: data)
 
         // 7. 성공 여부 확인
         guard tokenResponse.isSuccess, let result = tokenResponse.result else {
@@ -144,8 +144,8 @@ struct TokenRefreshServiceImpl: TokenRefreshService {
 
 /// 토큰 갱신 API 응답의 result 필드를 파싱하는 내부 모델입니다.
 ///
-/// - Note: CommonDTO<TokenResult> 형식으로 래핑됩니다.
-private struct TokenResult: Codable {
+/// - Note: APIResponse<TokenResult> 형식으로 래핑됩니다.
+private struct TokenResult: Codable, Sendable {
     /// 새로 발급받은 액세스 토큰
     let accessToken: String
 
