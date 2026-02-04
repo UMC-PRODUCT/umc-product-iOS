@@ -18,16 +18,21 @@ struct HomeView: View {
     @Environment(\.di) var di
     /// 에러 핸들러 객체
     @Environment(ErrorHandler.self) var errorHandler
-    
+
     /// 홈 화면의 비즈니스 로직을 담당하는 뷰 모델
     @State var viewModel = HomeViewModel()
-    
+
     /// 캘린더에서 선택된 날짜 (기본값: 현재 날짜)
     @State var selectedDate: Date = .init()
-    
+
     /// 캘린더의 현재 표시 중인 월 (기본값: 현재 월)
     @State var currentMonth: Date = .init()
-    
+
+    /// Path Store
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
+    }
+
     /// 네비게이션 라우터 (화면 이동 담당)
     private var router: NavigationRouter {
         di.resolve(NavigationRouter.self)
@@ -49,20 +54,28 @@ struct HomeView: View {
     
     // MARK: - Body
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.vertical) {
-                LazyVStack(spacing: DefaultSpacing.spacing24) {
-                    seasonCard
-                    generations
-                    calendar
-                    recentUpdate
+        NavigationStack(path: Binding(
+            get: { pathStore.homePath },
+            set: { pathStore.homePath = $0 }
+        )) {
+            ScrollViewReader { proxy in
+                ScrollView(.vertical) {
+                    LazyVStack(spacing: DefaultSpacing.spacing24) {
+                        seasonCard
+                        generations
+                        calendar
+                        recentUpdate
+                    }
+                    .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
                 }
-                .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
+                .toolbar {
+                    ToolBarCollection.BellBtn(action: { pathStore.homePath.append(.home(.alarmHistory)) })
+                    ToolBarCollection.Logo(image: .logoLight)
+                }
             }
-            .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
-            .toolbar {
-                ToolBarCollection.BellBtn(action: { router.push(to: .home(.alarmHistory)) })
-                ToolBarCollection.Logo(image: .logoLight)
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                NavigationRoutingView(destination: destination)
             }
         }
     }

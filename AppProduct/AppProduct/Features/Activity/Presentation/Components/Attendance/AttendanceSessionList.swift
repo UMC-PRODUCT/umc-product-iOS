@@ -68,7 +68,7 @@ struct AttendanceSessionList: View, Equatable {
     private func sessionItem(for session: Session) -> some View {
         let isExpanded = expandedSessionId == session.id
         
-        VStack(spacing: 12) {
+        VStack(spacing: DefaultSpacing.spacing12) {
             ChallengerSessionCard(
                 session: session,
                 isExpanded: isExpanded
