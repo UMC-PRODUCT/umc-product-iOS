@@ -52,8 +52,10 @@ struct CardIconImage: View {
         }
         .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
         .padding(DefaultConstant.iconPadding)
-        .background(color.opacity(0.4))
-        .clipShape(ContainerRelativeShape())
-        .glassEffect(.clear, in: .containerRelative)
+        .background {
+            RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
+                .fill(color.opacity(0.4))
+        }
+        .glassEffect(.clear, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 }

@@ -12,11 +12,15 @@ import SwiftUI
 /// Challenger/Admin 모드에 따라 다른 섹션을 표시합니다.
 struct ActivityView: View {
     @Environment(\.di) private var di
+    @Environment(ErrorHandler.self) var errorHandler
     @State private var selectedSection: ActivitySection?
-    @State private var errorHandler = ErrorHandler()
     @State private var viewModel: ActivityViewModel?
 
     // MARK: - Computed Property
+
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
+    }
 
     private var userSession: UserSessionManager {
         di.resolve(UserSessionManager.self)
@@ -40,32 +44,40 @@ struct ActivityView: View {
     // MARK: - Body
 
     var body: some View {
-        sectionContent(
-            for: currentSection,
-            mode: userSession.currentActivityMode
-        )
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolBarCollection.ToolBarCenterMenu(
-                items: availableSections,
-                selection: Binding(
-                    get: { currentSection },
-                    set: { selectedSection = $0 }
-                ),
-                itemLabel: { $0.rawValue },
-                itemIcon: { $0.icon }
-            ) 
-        }
-        .task {
-            // ViewModel 초기화 및 데이터 로드(Computed Property를 위해 init 대신 task에서 초기화)
-            if viewModel == nil {
-                viewModel = ActivityViewModel(
-                    fetchSessionsUseCase: activityProvider.fetchSessionsUseCase,
-                    fetchUserIdUseCase: activityProvider.fetchUserIdUseCase,
-                    classifyScheduleUseCase: activityProvider.classifyScheduleUseCase
+        NavigationStack(path: Binding(
+            get: { pathStore.activityPath },
+            set: { pathStore.activityPath = $0 }
+        )) {
+            sectionContent(
+                for: currentSection,
+                mode: userSession.currentActivityMode
+            )
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolBarCollection.ToolBarCenterMenu(
+                    items: availableSections,
+                    selection: Binding(
+                        get: { currentSection },
+                        set: { selectedSection = $0 }
+                    ),
+                    itemLabel: { $0.rawValue },
+                    itemIcon: { $0.icon }
                 )
             }
-            await viewModel?.loadInitialData()
+            .task {
+                // ViewModel 초기화 및 데이터 로드(Computed Property를 위해 init 대신 task에서 초기화)
+                if viewModel == nil {
+                    viewModel = ActivityViewModel(
+                        fetchSessionsUseCase: activityProvider.fetchSessionsUseCase,
+                        fetchUserIdUseCase: activityProvider.fetchUserIdUseCase,
+                        classifyScheduleUseCase: activityProvider.classifyScheduleUseCase
+                    )
+                }
+                await viewModel?.loadInitialData()
+            }
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                NavigationRoutingView(destination: destination)
+            }
         }
     }
 
@@ -135,4 +147,5 @@ struct ActivityView: View {
         ActivityView()
     }
     .environment(\.di, DIContainer.configured())
+    .environment(ErrorHandler())
 }

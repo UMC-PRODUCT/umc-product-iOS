@@ -61,23 +61,35 @@ struct ScheduleCard: View, Equatable {
     var body: some View {
         VStack(spacing: DefaultSpacing.spacing8) {
             ScheduleHeader(month: $currentMonth, selectedDate: $selectedDate, scheduleMode: $scheduleMode)
-            
-            if scheduleMode == .horizon {
-                CalendarHorizonCard(
-                    selectedDate: $selectedDate,
-                    month: $currentMonth,
-                    scheduledDates: scheduledDates
-                )
-                .equatable()
-            } else {
-                CalendarGridCard(
-                    selectedDate: $selectedDate,
-                    month: $currentMonth,
-                    scheduledDates: scheduledDates
-                )
-                .equatable()
+
+            ZStack {
+                if scheduleMode == .horizon {
+                    CalendarHorizonCard(
+                        selectedDate: $selectedDate,
+                        month: $currentMonth,
+                        scheduledDates: scheduledDates
+                    )
+                    .equatable()
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+                    .id("horizon")
+                } else {
+                    CalendarGridCard(
+                        selectedDate: $selectedDate,
+                        month: $currentMonth,
+                        scheduledDates: scheduledDates
+                    )
+                    .equatable()
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .leading).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
+                    .id("grid")
+                }
             }
+            .animation(.smooth(duration: DefaultConstant.animationTime), value: scheduleMode)
         }
-        .animation(.easeInOut(duration: DefaultConstant.animationTime), value: scheduleMode)
     }
 }

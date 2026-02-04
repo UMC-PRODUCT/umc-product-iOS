@@ -52,7 +52,7 @@ struct MyAttendanceStatusView: View {
                 }
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .clipShape(ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform:  true))
         .glass()
     }
 }

@@ -13,28 +13,22 @@ struct UmcTab: View {
     @Environment(\.di) var di
     @Environment(ErrorHandler.self) var errorHandler
     
-    var body: some View {
-        let router = di.resolve(NavigationRouter.self)
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
+    }
 
+    var body: some View {
         TabView(selection: $tabCase, content: {
             ForEach(TabCase.allCases, id: \.id) { tab in
                 Tab(value: tab, role: tab.tabRoloe, content: {
-                    NavigationStack(path: Binding(
-                        get: { router.destination },
-                        set: { router.destination = $0 }
-                    ), root: {
-                        tabView(tab)
-                            .navigationDestination(for: NavigationDestination.self) { destination in
-                                NavigationRoutingView(destination: destination)
-                            }
-                    })
+                    tabView(tab)
                 }, label: {
                     tabLabel(tab)
                 })
             }
         })
         .tabBarMinimizeBehavior(.onScrollDown)
-        .tabViewBottomAccessory(isEnabled: shouldShowAccessory(router: router)) {
+        .tabViewBottomAccessory(isEnabled: shouldShowAccessory()) {
             UmcBottonAccessoryView(tabCase: $tabCase)
         }
     }
@@ -71,9 +65,19 @@ struct UmcTab: View {
     /// Bottom Accessory 표시 여부 결정
     ///
     /// Activity 탭에서는 Admin 권한이 있는 경우에만 Accessory를 표시합니다.
-    private func shouldShowAccessory(router: NavigationRouter) -> Bool {
-        // NavigationStack에 화면이 쌓여있으면 Accessory 숨김
-        guard router.destination.isEmpty else { return false }
+    private func shouldShowAccessory() -> Bool {
+        // 현재 탭의 NavigationStack에 화면이 쌓여있으면 Accessory 숨김
+        let currentPath: [NavigationDestination] = {
+            switch tabCase {
+            case .home: return pathStore.homePath
+            case .notice: return pathStore.noticePath
+            case .activity: return pathStore.activityPath
+            case .community: return pathStore.communityPath
+            case .mypage: return pathStore.mypagePath
+            }
+        }()
+
+        guard currentPath.isEmpty else { return false }
 
         // Activity 탭에서는 Admin 토글 가능한 경우에만 표시
         if tabCase == .activity {

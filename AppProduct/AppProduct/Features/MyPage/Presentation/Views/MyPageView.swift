@@ -19,6 +19,11 @@ struct MyPageView: View {
     /// MyPage의 상태 및 로직을 관리하는 ViewModel
     @State var viewModel: MyPageViewModel
     @Environment(\.di) var di
+    @Environment(ErrorHandler.self) var errorHandler
+
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
+    }
 
     // MARK: - Function
 
@@ -29,9 +34,17 @@ struct MyPageView: View {
     // MARK: - Body
 
     var body: some View {
-        content
-            .navigation(naviTitle: .myPage, displayMode: .large)
-            .alertPrompt(item: $viewModel.alertPrompt)
+        NavigationStack(path: Binding(
+            get: { pathStore.mypagePath },
+            set: { pathStore.mypagePath = $0 }
+        )) {
+            content
+                .navigation(naviTitle: .myPage, displayMode: .large)
+                .alertPrompt(item: $viewModel.alertPrompt)
+                .navigationDestination(for: NavigationDestination.self) { destination in
+                    NavigationRoutingView(destination: destination)
+                }
+        }
     }
 
     /// profileData의 Loadable 상태에 따라 적절한 화면을 표시하는 computed property

@@ -48,13 +48,15 @@ struct ChallengerSessionCard: View, Equatable {
             statusSession
         }
         .padding(DefaultConstant.defaultListPadding)
-        .clipShape(.rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
-        .background(.white, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
+        .background {
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
+                .fill(.white)
+                .glass()
+        }
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
         }
-        .glass()
     }
 
     private var contentSection: some View {

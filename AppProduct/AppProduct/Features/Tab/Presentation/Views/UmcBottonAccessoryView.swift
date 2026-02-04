@@ -31,20 +31,20 @@ struct UmcBottonAccessoryView: View {
 // MARK: - Home
 fileprivate struct HomeBottonAccessoryView: View {
     @Environment(\.di) var di
-    
-    private var router: NavigationRouter {
-        di.resolve(NavigationRouter.self)
+
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
     }
-    
+
     var body: some View {
         Button(action: {
-            router.push(to: .home(.registrationSchedule))
+            pathStore.homePath.append(.home(.registrationSchedule))
         }, label: {
             HStack(spacing: DefaultSpacing.spacing8) {
                 Spacer()
                 Image(systemName: "plus.circle.fill")
                     .foregroundStyle(.indigo500)
-                
+
                 Text("일정 생성")
                     .fontWeight(.semibold)
                 Spacer()
@@ -111,20 +111,20 @@ fileprivate struct ActivityAccessoryView: View {
 // MARK: - Community
 fileprivate struct CommunityAccessoryView: View {
     @Environment(\.di) private var di
-    
-    private var router: NavigationRouter {
-        di.resolve(NavigationRouter.self)
+
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
     }
-    
+
     var body: some View {
         Button(action: {
-            router.push(to: .community(.post))
+            pathStore.communityPath.append(.community(.post))
         }) {
             HStack(spacing: DefaultSpacing.spacing8) {
                 Spacer()
                 Image(systemName: "plus.circle.fill")
                     .foregroundStyle(.indigo500)
-                
+
                 Text("게시글 작성")
                     .fontWeight(.semibold)
                 Spacer()
