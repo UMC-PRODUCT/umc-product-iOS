@@ -60,6 +60,7 @@ actor TestTokenStore: TokenStore {
 }
 
 // MARK: - NetworkClient Tests
+@MainActor
 final class NetworkClientTests: XCTestCase {
 
     private let baseURL = URL(string: "http://localhost:8080")!
@@ -122,7 +123,7 @@ final class NetworkClientTests: XCTestCase {
         // Then
         XCTAssertEqual(response.statusCode, 200)
 
-        let dto = try JSONDecoder().decode(CommonDTO<String>.self, from: data)
+        let dto = try JSONDecoder().decode(APIResponse<String>.self, from: data)
         let isSuccess = dto.isSuccess
         let result = dto.result
 
@@ -141,7 +142,7 @@ final class NetworkClientTests: XCTestCase {
         // Then
         XCTAssertEqual(response.statusCode, 200)
 
-        let dto = try JSONDecoder().decode(CommonDTO<String>.self, from: data)
+        let dto = try JSONDecoder().decode(APIResponse<String>.self, from: data)
         let isSuccess = dto.isSuccess
 
         XCTAssertTrue(isSuccess)
@@ -160,7 +161,7 @@ final class NetworkClientTests: XCTestCase {
         // Then
         XCTAssertEqual(response.statusCode, 200)
 
-        let dto = try JSONDecoder().decode(CommonDTO<String>.self, from: data)
+        let dto = try JSONDecoder().decode(APIResponse<String>.self, from: data)
         let isSuccess = dto.isSuccess
         let result = dto.result
 
@@ -179,7 +180,7 @@ final class NetworkClientTests: XCTestCase {
         // Then
         XCTAssertEqual(response.statusCode, 200)
 
-        let dto = try JSONDecoder().decode(CommonDTO<UserResult>.self, from: data)
+        let dto = try JSONDecoder().decode(APIResponse<UserResult>.self, from: data)
         let isSuccess = dto.isSuccess
         let result = dto.result
 
@@ -200,7 +201,7 @@ final class NetworkClientTests: XCTestCase {
         // Then
         XCTAssertEqual(response.statusCode, 200)
 
-        let dto = try JSONDecoder().decode(CommonDTO<[UserResult]>.self, from: data)
+        let dto = try JSONDecoder().decode(APIResponse<[UserResult]>.self, from: data)
         let isSuccess = dto.isSuccess
         let result = dto.result
 
@@ -219,7 +220,7 @@ final class NetworkClientTests: XCTestCase {
         // Then
         XCTAssertEqual(response.statusCode, 200)
 
-        let dto = try JSONDecoder().decode(CommonDTO<[PostResult]>.self, from: data)
+        let dto = try JSONDecoder().decode(APIResponse<[PostResult]>.self, from: data)
         let isSuccess = dto.isSuccess
         let result = dto.result
 
@@ -249,7 +250,7 @@ final class NetworkClientTests: XCTestCase {
         XCTAssertNotEqual(oldAccessToken, newAccessToken, "토큰이 갱신되어야 합니다")
         XCTAssertTrue(newAccessToken?.hasPrefix("new_access_token_") ?? false)
 
-        let dto = try JSONDecoder().decode(CommonDTO<String>.self, from: data)
+        let dto = try JSONDecoder().decode(APIResponse<String>.self, from: data)
         XCTAssertTrue(dto.isSuccess)
 
         let saveCount = await tokenStore.getSaveCallCount()
@@ -364,7 +365,7 @@ final class NetworkClientTests: XCTestCase {
         let url = baseURL.appending(path: "user")
         let request = URLRequest(url: url)
 
-        let response: CommonDTO<UserResult> = try await sut.request(request)
+        let response: APIResponse<UserResult> = try await sut.request(request)
 
         XCTAssertTrue(response.isSuccess)
         XCTAssertEqual(response.result?.id, 1)

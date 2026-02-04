@@ -197,16 +197,14 @@ struct UserRepository: UserRepositoryProtocol {
         // 1. API 호출
         let response = try await adapter.request(UserAPI.getMe)
 
-        // 2. CommonDTO 파싱
-        let commonDTO = try JSONDecoder().decode(
-            CommonDTO<UserDTO>.self,
+        // 2. APIResponse 파싱
+        let apiResponse = try JSONDecoder().decode(
+            APIResponse<UserDTO>.self,
             from: response.data
         )
 
-        // 3. 성공 여부 확인
-        guard commonDTO.isSuccess, let userDTO = commonDTO.result else {
-            throw RepositoryError.serverError(message: commonDTO.message)
-        }
+        // 3. 성공 여부 확인 + result 추출 (unwrap)
+        let userDTO = try apiResponse.unwrap()
 
         // 4. DTO → Domain Entity 변환
         return userDTO.toDomain()
@@ -217,14 +215,11 @@ struct UserRepository: UserRepositoryProtocol {
             UserAPI.updateProfile(name: name, bio: bio)
         )
 
-        let commonDTO = try JSONDecoder().decode(
-            CommonDTO<UserDTO>.self,
+        let apiResponse = try JSONDecoder().decode(
+            APIResponse<UserDTO>.self,
             from: response.data
         )
-
-        guard commonDTO.isSuccess, let userDTO = commonDTO.result else {
-            throw RepositoryError.serverError(message: commonDTO.message)
-        }
+        let userDTO = try apiResponse.unwrap()
 
         return userDTO.toDomain()
     }
@@ -232,29 +227,33 @@ struct UserRepository: UserRepositoryProtocol {
     func deleteAccount() async throws {
         let response = try await adapter.request(UserAPI.deleteAccount)
 
-        let commonDTO = try JSONDecoder().decode(
-            CommonDTO<EmptyResult>.self,
+        // 결과 없는 API는 EmptyResult 사용
+        let apiResponse = try JSONDecoder().decode(
+            APIResponse<EmptyResult>.self,
             from: response.data
         )
-
-        guard commonDTO.isSuccess else {
-            throw RepositoryError.serverError(message: commonDTO.message)
-        }
+        _ = try apiResponse.unwrap()
     }
 }
 
 // MARK: - RepositoryError
 
-enum RepositoryError: Error, LocalizedError {
-    case serverError(message: String?)
-    case decodingError
+/// Repository 계층에서 발생하는 에러
+/// - serverError: 서버에서 isSuccess: false 응답 시
+/// - decodingError: JSON 디코딩 실패 시
+enum RepositoryError: Error, LocalizedError, Sendable, Equatable {
+    /// 서버에서 실패 응답 반환 (isSuccess: false)
+    case serverError(code: String?, message: String?)
+
+    /// 응답 데이터 디코딩 실패
+    case decodingError(detail: String?)
 
     var errorDescription: String? {
         switch self {
-        case .serverError(let message):
-            return message ?? "서버 에러"
-        case .decodingError:
-            return "데이터 파싱 실패"
+        case .serverError(_, let message):
+            return message ?? "서버 오류가 발생했습니다"
+        case .decodingError(let detail):
+            return "데이터 파싱 실패: \(detail ?? "알 수 없는 오류")"
         }
     }
 }
@@ -613,11 +612,13 @@ NetworkClient(Actor 기반)에서 발생하는 에러 타입입니다.
 // NetworkError - Actor 기반 네트워크 클라이언트 에러
 enum NetworkError: Error, Sendable, Equatable {
     case unauthorized                         // 인증 토큰 없음 (401)
-    case tokenRefreshFailed(reason: String?)  // 토큰 갱신 실패 (Equatable 준수)
+    case tokenRefreshFailed(reason: String?)  // 토큰 갱신 실패
     case noRefreshToken                       // 리프레시 토큰 없음
     case requestFailed(statusCode: Int, data: Data?)  // API 요청 실패
     case invalidResponse                      // 잘못된 응답
     case maxRetryExceeded                     // 재시도 횟수 초과
+    case noNetwork                            // 네트워크 연결 없음
+    case timeout                              // 요청 시간 초과
 }
 
 // 에러 처리 예시
@@ -653,25 +654,44 @@ do {
     case .maxRetryExceeded:
         // 재시도 횟수 초과
         print("재로그인 필요")
+
+    case .noNetwork:
+        // 네트워크 연결 없음 (URLError.notConnectedToInternet)
+        print("인터넷 연결을 확인해주세요")
+
+    case .timeout:
+        // 요청 시간 초과 (URLError.timedOut)
+        print("서버 응답이 늦어지고 있어요")
     }
 }
 ```
 
-#### NetworkError vs APIError
+#### 에러 타입 계층 구조
 
-| 에러 타입 | 발생 위치 | 용도 |
+프로젝트는 계층별로 명확히 분리된 에러 타입을 사용합니다:
+
+| 에러 타입 | 발생 계층 | 용도 |
 |----------|---------|------|
-| **NetworkError** | NetworkClient (Actor 기반) | JWT 인증, 토큰 갱신, 네트워크 계층 |
-| **APIError** | MoyaProvider (Moya 기반) | HTTP 응답 에러, 디코딩 에러 |
+| **NetworkError** | NetworkClient (Actor 기반) | HTTP 통신, JWT 인증, 토큰 갱신, 네트워크 연결 |
+| **RepositoryError** | Repository | 서버 비즈니스 에러 (isSuccess: false), 디코딩 실패 |
+| **DomainError** | UseCase/Domain | 비즈니스 규칙 위반 |
 
-두 에러는 모두 `AppError`로 통합됩니다:
+모든 에러는 `AppError`로 통합됩니다:
 ```swift
-enum AppError {
-    case network(NetworkError)  // Actor 기반
-    case api(APIError)          // Moya 기반
-    // ...
+enum AppError: Error, LocalizedError, Equatable {
+    case network(NetworkError)      // 네트워크 계층 에러
+    case repository(RepositoryError) // Repository 계층 에러
+    case validation(ValidationError) // 입력 유효성 검증
+    case auth(AuthError)            // 인증 관련
+    case domain(DomainError)        // 도메인 비즈니스 로직
+    case unknown(message: String)   // 알 수 없는 에러
 }
 ```
+
+> **Note**: 이전에 사용하던 `APIError`는 `NetworkError`와 `RepositoryError`로 통합되었습니다.
+> - HTTP 통신 에러 → `NetworkError`
+> - 서버 응답 에러 (isSuccess: false) → `RepositoryError.serverError`
+> - 디코딩 에러 → `RepositoryError.decodingError`
 
 ---
 
@@ -1155,16 +1175,16 @@ final class MockMoyaNetworkAdapter: MoyaNetworkAdapter {
 final class MockUserRepository: UserRepositoryProtocol {
     var mockUser: User?
     var shouldFail: Bool = false
-    
+
     func getMe() async throws -> User {
         if shouldFail {
-            throw RepositoryError.serverError(message: "Mock error")
+            throw RepositoryError.serverError(code: "MOCK001", message: "Mock error")
         }
-        
+
         guard let user = mockUser else {
-            throw RepositoryError.serverError(message: "No mock data")
+            throw RepositoryError.serverError(code: nil, message: "No mock data")
         }
-        
+
         return user
     }
 }
@@ -1194,6 +1214,9 @@ final class MockUserRepository: UserRepositoryProtocol {
 - [CLAUDE.md](./CLAUDE.md) - 프로젝트 아키텍처 및 코딩 스타일
 - [NetworkClient.swift](./AppProduct/AppProduct/Core/NetworkAdapter/NetworkClient/NetworkClient.swift) - JWT 인증 및 토큰 갱신
 - [MoyaNetworkAdapter.swift](./AppProduct/AppProduct/Core/NetworkAdapter/TokenRefreshService/MoyaNetworkAdapter.swift) - Moya 어댑터
+- [APIResponse.swift](./AppProduct/AppProduct/Core/NetworkAdapter/Base/APIResponse.swift) - 서버 공통 응답 DTO
+- [RepositoryError.swift](./AppProduct/AppProduct/Core/Common/Error/Types/RepositoryError.swift) - Repository 계층 에러
+- [NetworkError.swift](./AppProduct/AppProduct/Core/Common/Error/Types/NetworkError.swift) - 네트워크 계층 에러
 - [Loadable.swift](./AppProduct/AppProduct/Core/Common/Error/Loadable.swift) - 비동기 상태 관리
 
 ---
@@ -1228,16 +1251,116 @@ final class MockUserRepository: UserRepositoryProtocol {
 - **Loadable**: 화면 내 에러 표시 (리스트 로딩 실패, 도메인 에러 등)
 - **ErrorHandler**: 작업 중단 필요 (세션 만료, 권한 오류, 네트워크 끊김 등)
 
-### Q5. CommonDTO는 무엇인가요?
+### Q5. APIResponse는 무엇인가요?
 
-**A**: 서버의 공통 응답 포맷입니다:
+**A**: 서버의 공통 응답 포맷입니다 (Spring 백엔드 `ApiResponse<T>` 매핑):
 ```json
 {
-  "isSuccess": true,
+  "success": true,
   "code": "200",
   "message": "성공",
   "result": { /* 실제 데이터 */ }
 }
 ```
 
-모든 API 응답이 이 형식을 따르므로, `CommonDTO<T>`를 사용하여 파싱합니다.
+모든 API 응답이 이 형식을 따르므로, `APIResponse<T>`를 사용하여 파싱합니다:
+```swift
+let apiResponse = try JSONDecoder().decode(
+    APIResponse<UserDTO>.self,
+    from: response.data
+)
+
+// unwrap()으로 성공 여부 확인 + result 추출
+let userDTO = try apiResponse.unwrap()
+```
+
+`unwrap()` 메서드는 `isSuccess`가 false이거나 `result`가 nil일 경우 `RepositoryError.serverError`를 throw합니다.
+
+> **Note**: 이전에 사용하던 `CommonDTO`는 `APIResponse`로 이름이 변경되었습니다.
+
+### Q6. NetworkError, RepositoryError, DomainError의 차이점은?
+
+**A**: 각 에러 타입은 발생하는 계층과 원인이 다릅니다:
+
+| 에러 타입 | 발생 계층 | 원인 | 예시 |
+|----------|---------|------|------|
+| **NetworkError** | NetworkClient | HTTP 통신 자체 문제 | 인터넷 끊김, 타임아웃, 401 인증 실패, 토큰 갱신 실패 |
+| **RepositoryError** | Repository | 서버 응답은 왔으나 비즈니스 실패 | `isSuccess: false`, JSON 디코딩 실패 |
+| **DomainError** | UseCase/Domain | 클라이언트 비즈니스 규칙 위반 | 잔액 부족, 권한 없음, 이미 처리됨 |
+
+**판단 기준:**
+```
+요청이 서버에 도달했나?
+├─ NO → NetworkError (noNetwork, timeout, invalidResponse)
+└─ YES → 서버가 HTTP 200을 반환했나?
+         ├─ NO → NetworkError (requestFailed, unauthorized)
+         └─ YES → isSuccess가 true인가?
+                  ├─ NO → RepositoryError (serverError)
+                  └─ YES → 비즈니스 규칙 통과?
+                           ├─ NO → DomainError
+                           └─ YES → 성공!
+```
+
+**코드 예시:**
+```swift
+// Repository에서 RepositoryError 발생
+func withdraw(amount: Int) async throws -> Balance {
+    let response = try await adapter.request(BankAPI.withdraw(amount))
+    let apiResponse = try JSONDecoder().decode(
+        APIResponse<BalanceDTO>.self,
+        from: response.data
+    )
+    // isSuccess: false → RepositoryError.serverError
+    let dto = try apiResponse.unwrap()
+    return dto.toDomain()
+}
+
+// UseCase에서 DomainError 발생
+func execute(amount: Int) async throws -> Balance {
+    let currentBalance = try await repository.getBalance()
+
+    // 클라이언트 비즈니스 규칙 검증
+    guard currentBalance.amount >= amount else {
+        throw DomainError.insufficientBalance  // DomainError
+    }
+
+    return try await repository.withdraw(amount)
+}
+```
+
+**ViewModel에서 처리:**
+```swift
+@MainActor
+func withdraw(amount: Int) async {
+    do {
+        let balance = try await useCase.execute(amount: amount)
+        state = .loaded(balance)
+    } catch let error as DomainError {
+        // 도메인 에러 → 인라인 표시 (사용자가 조치 가능)
+        state = .failed(.domain(error))
+    } catch let error as NetworkError {
+        // 네트워크 에러 → 연결 문제 안내
+        state = .failed(.network(error))
+    } catch let error as RepositoryError {
+        // 서버 비즈니스 에러 → 서버 메시지 표시
+        state = .failed(.repository(error))
+    } catch {
+        state = .failed(.unknown(message: error.localizedDescription))
+    }
+}
+```
+
+---
+
+## 수정 이력
+
+| 날짜 | 버전 | 변경 내용 | 작성자 |
+|------|------|----------|--------|
+| 2026-02-04 | 1.1.0 | 에러 타입 시스템 리팩토링 반영 | jaewon Lee |
+| | | - `CommonDTO` → `APIResponse` 변경 |  |
+| | | - `APIError` 제거, `NetworkError`/`RepositoryError`로 통합 |  |
+| | | - `RepositoryError` 정의 업데이트 (`code` 파라미터 추가) |  |
+| | | - `NetworkError`에 `noNetwork`, `timeout` 케이스 추가 |  |
+| | | - `unwrap()` 메서드 사용법 문서화 |  |
+| | | - FAQ Q6 추가: NetworkError/RepositoryError/DomainError 차이점 |  |
+| 2026-01-09 | 1.0.0 | 최초 작성 | euijjang97 |

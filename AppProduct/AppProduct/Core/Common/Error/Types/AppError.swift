@@ -52,8 +52,8 @@ import Foundation
 ///
 /// - SeeAlso: ``ErrorHandler``, ``Loadable``, ``DomainError``
 enum AppError: Error, LocalizedError, Equatable {
-    /// API 통신 에러 (Moya 기반)
-    case api(APIError)
+    /// Repository 계층 에러 (서버 비즈니스 에러)
+    case repository(RepositoryError)
 
     /// 네트워크 계층 에러 (Actor 기반 NetworkClient)
     case network(NetworkError)
@@ -74,7 +74,7 @@ enum AppError: Error, LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .api(let error):
+        case .repository(let error):
             return error.errorDescription
         case .network(let error):
             return error.errorDescription
@@ -94,7 +94,7 @@ enum AppError: Error, LocalizedError, Equatable {
     /// 사용자에게 표시할 친화적 메시지
     var userMessage: String {
         switch self {
-        case .api(let error):
+        case .repository(let error):
             return error.userMessage
         case .network(let error):
             return error.userMessage
@@ -114,8 +114,8 @@ enum AppError: Error, LocalizedError, Equatable {
     /// 에러 심각도 (표시 방식 결정에 사용)
     var severity: ErrorSeverity {
         switch self {
-        case .api(let error):
-            return error.severity
+        case .repository:
+            return .warning
         case .network(let error):
             return error.severity
         case .validation:
@@ -134,7 +134,7 @@ enum AppError: Error, LocalizedError, Equatable {
     /// 재시도 가능 여부
     var isRetryable: Bool {
         switch self {
-        case .api(let error):
+        case .repository(let error):
             return error.isRetryable
         case .network(let error):
             return error.isRetryable
