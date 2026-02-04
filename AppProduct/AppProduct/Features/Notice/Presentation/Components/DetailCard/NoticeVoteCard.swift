@@ -16,7 +16,7 @@ struct NoticeVoteCard: View {
 
     // MARK: - Constants
     fileprivate enum Constants {
-        static let innerPadding: CGFloat = 32
+        static let innerPadding: CGFloat = 25
         static let dividerHeight: CGFloat = 10
         static let progressHeight: CGFloat = 8
         static let capsulePadding: CGFloat = 8
@@ -45,7 +45,7 @@ struct NoticeVoteCard: View {
 
     // MARK: - HeaderSection
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             HStack {
                 Label("투표", systemImage: "chart.bar.fill")
                     .appFont(.calloutEmphasis)
@@ -193,7 +193,7 @@ struct VoteOptionRow: View {
                 .glassEffect(.clear)
 
             Text(option.title)
-                .appFont(.body, color: .black)
+                .appFont(.callout, color: .black)
 
             Spacer()
         }
