@@ -30,7 +30,7 @@ struct NoticeImageCard: View {
                             .placeholder {
                                 Progress(size: .small)
                                     .frame(width: Constants.imageSize, height: Constants.imageSize)
-                                    .background(.indigo100)
+                                    .background(Color(.systemGroupedBackground))
                             }
                             .retry(maxCount: 3, interval: .seconds(3))
                             .fade(duration: 0.3)
@@ -128,5 +128,4 @@ struct ImageViewerScreen: View {
         "https://httpbin.org/delay/10",
         "https://httpbin.org/delay/10"
     ])
-    .padding()
 }
