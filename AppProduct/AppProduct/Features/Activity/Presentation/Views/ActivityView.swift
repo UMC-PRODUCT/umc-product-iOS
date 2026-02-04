@@ -81,14 +81,13 @@ struct ActivityView: View {
         case (.challenger, .attendanceCheck):
             attendanceContent
         case (.challenger, .studyActivity):
-            ChallengerStudyView()
+            ChallengerStudyView(
+                container: di, errorHandler: errorHandler)
         case (.challenger, .members):
             MemberListView()
         case (.admin, .attendanceManage):
             OperatorAttendanceSectionView(
-                container: di,
-                errorHandler: errorHandler
-            )
+                container: di, errorHandler: errorHandler)
         case (.admin, .studyManage):
             StudyManagementView()
         case (.admin, .memberManage):

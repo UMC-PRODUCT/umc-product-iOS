@@ -100,7 +100,7 @@ private struct StudyTopTextPresenter: View, Equatable {
     var body: some View {
         HStack {
             Text(studyManagementItem.name)
-                .font(.app(.callout, weight: .bold))
+                .appFont(.calloutEmphasis)
                 .foregroundStyle(.grey800)
             
             Text(studyManagementItem.part)

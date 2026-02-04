@@ -28,6 +28,7 @@ struct FollowsSection: View {
         .padding(20)
         .listRowInsets(EdgeInsets())
         .background(Color(.systemGroupedBackground))
+        .buttonStyle(.plain)
     }
 
     // MARK: - Function

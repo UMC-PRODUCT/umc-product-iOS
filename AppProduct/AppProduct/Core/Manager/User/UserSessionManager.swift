@@ -23,7 +23,7 @@ final class UserSessionManager {
 
     /// 현재 사용자의 역할 (서버에서 받아온 실제 권한)
     // TODO: 바텀 엑세서리 확인 위해 기본 권환 바꿨으므로 추후 배포 시에는 challenger로 수정 필요 - [25.1.23] 이재원
-    private(set) var currentRole: ManagementTeam = .general
+    private(set) var currentRole: ManagementTeam = .centralOperator
 
     /// Admin 모드 활성화 여부
     private(set) var isAdminModeEnabled: Bool = false

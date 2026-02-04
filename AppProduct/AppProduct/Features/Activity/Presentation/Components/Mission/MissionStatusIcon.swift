@@ -75,7 +75,7 @@ struct MissionStatusIcon: View, Equatable {
                 .fill(status.missionListIconColor)
 
             Text("\(weekNumber)")
-                .appFont(.caption1, weight: .bold, color: .white)
+                .appFont(.caption1Emphasis, color: .white)
         }
     }
 

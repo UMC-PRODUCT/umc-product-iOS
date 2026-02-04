@@ -83,7 +83,10 @@ private struct NoticeReadStatusItemPresenter: View, Equatable {
             }
         }
         .padding(Constant.mainPadding)
-        .background(.grey100, in: RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius))
+        .background {
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
+                .fill(.grey100)
+        }
     }
 }
 

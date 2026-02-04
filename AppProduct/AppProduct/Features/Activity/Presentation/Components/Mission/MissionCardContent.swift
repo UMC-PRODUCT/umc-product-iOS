@@ -50,6 +50,8 @@ struct MissionCardContent: View, Equatable {
     private var missionTitleText: some View {
         Text(model.missionTitle)
             .appFont(.subheadline, color: .gray)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     @ViewBuilder
@@ -130,7 +132,7 @@ struct MissionCardContent: View, Equatable {
 // MARK: - MissionSubmissionView
 
 /// 미션 제출 UI (타입 선택 + 링크 입력 + 제출 버튼)
-private struct MissionSubmissionView: View, Equatable {
+fileprivate struct MissionSubmissionView: View, Equatable {
 
     // MARK: - Property
 

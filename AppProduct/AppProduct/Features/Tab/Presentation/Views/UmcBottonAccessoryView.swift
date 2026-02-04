@@ -100,7 +100,7 @@ fileprivate struct ActivityAccessoryView: View {
 
                     // 현재 역할 배지
                     Text(userSession.currentRole.displayName)
-                        .appFont(.subheadline)
+                        .appFont(.subheadline, color: .indigo500)
                 }
             }
             .padding(.horizontal, placement == .expanded ? DefaultConstant.defaultSafeHorizon : 0)

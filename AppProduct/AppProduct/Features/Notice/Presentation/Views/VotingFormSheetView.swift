@@ -71,7 +71,6 @@ struct VotingFormSheetView: View, Equatable {
                 "",
                 text: option.text,
                 prompt: Text("항목 \(optionIndex(for: option.wrappedValue) + 1)")
-                    .foregroundStyle(.grey400)
             )
             .appFont(.callout)
             .padding(DefaultConstant.defaultTextFieldPadding)

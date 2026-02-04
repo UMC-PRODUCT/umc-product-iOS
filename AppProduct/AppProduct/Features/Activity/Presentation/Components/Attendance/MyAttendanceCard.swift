@@ -75,7 +75,7 @@ private struct MyAttendanceItemPresenter: View, Equatable {
         ) {
             Text(model.title)
                 .appFont(.bodyEmphasis, color: .black)
-                .lineLimit(2)
+                .lineLimit(3)
 
             timeRangeView
         }

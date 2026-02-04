@@ -220,13 +220,13 @@ enum AppFont {
 enum AppFontWeight {
     case regular
     case medium
-    case bold
+    case semibold
     
     var fontName: String {
         switch self {
         case .regular:   return "Pretendard-Regular"
         case .medium:    return "Pretendard-Medium"
-        case .bold:      return "Pretendard-Bold"
+        case .semibold:      return "Pretendard-SemiBold"
         }
     }
     
@@ -234,7 +234,7 @@ enum AppFontWeight {
         switch self {
         case .regular:   return .regular
         case .medium:    return .medium
-        case .bold:      return .bold
+        case .semibold:      return .semibold
         }
     }
 }
@@ -269,7 +269,7 @@ extension Font {
     ///   - weight: 폰트 굵기 (기본: emphasis 스타일이면 bold, 아니면 regular)
     /// - Returns: 설정된 Font
     static func app(_ style: AppFont, weight: AppFontWeight? = nil) -> Font {
-        let finalWeight = weight ?? (style.isEmphasis ? .bold : .regular)
+        let finalWeight = weight ?? (style.isEmphasis ? .semibold : .regular)
         return .custom(finalWeight.fontName, size: style.size)
     }
     

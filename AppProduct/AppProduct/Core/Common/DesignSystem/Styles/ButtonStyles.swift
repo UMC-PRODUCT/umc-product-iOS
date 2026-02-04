@@ -45,7 +45,7 @@ struct SecondaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.app(.body, weight: .bold))
+            .appFont(.bodyEmphasis)
             .foregroundStyle(
                 isEnabled
                     ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
@@ -78,7 +78,7 @@ struct DestructiveButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.app(.body, weight: .bold))
+            .appFont(.bodyEmphasis)
             .foregroundStyle(Color.grey000)
             .frame(maxWidth: .infinity)
             .frame(height: ButtonConstants.height)

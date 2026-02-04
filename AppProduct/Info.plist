@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BASE_URL</key>
+	<string>$(BASE_URL)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -13,8 +15,6 @@
 			</array>
 		</dict>
 	</array>
-	<key>BASE_URL</key>
-	<string>$(BASE_URL)</string>
 	<key>KAKAO_KEY</key>
 	<string>$(KAKAO_KEY)</string>
 	<key>LSApplicationQueriesSchemes</key>
@@ -26,7 +26,7 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>Pretendard-Regular.otf</string>
-		<string>Pretendard-Bold.otf</string>
+		<string>Pretendard-SemiBold.otf</string>
 		<string>Pretendard-Medium.otf</string>
 	</array>
 </dict>

@@ -40,6 +40,12 @@ struct NoticeDetail: Equatable, Identifiable {
     // 권한
     let hasPermission: Bool
     
+    // 추가 콘텐츠
+    let images: [String]
+    let links: [String]
+    let vote: NoticeVote?
+
+    
     /// NoticeChip에 표시할 공지 타입
     var noticeType: NoticeType {
         // 파트 공지인 경우
@@ -97,4 +103,74 @@ struct TargetAudience: Equatable {
         
         return components.joined(separator: " / ")
     }
+}
+
+
+// MARK: - ImageViewerItem
+/// fullScreenCover에서 Identifiable 사용을 위한 래퍼
+struct ImageViewerItem: Identifiable {
+    let id = UUID()
+    let index: Int
+}
+
+
+// MARK: - NoticeVote
+
+/// 공지사항 투표
+struct NoticeVote: Equatable, Identifiable {
+    let id: String
+    let question: String
+    let options: [VoteOption]
+    let startDate: Date
+    let endDate: Date
+    // 단일/복수 선택
+    let allowMultipleChoices: Bool
+    // 익명/실명
+    let isAnonymous: Bool
+    // 사용자가 투표한 옵션 ID들
+    let userVotedOptionIds: [String]
+    
+    /// 전체 투표 수
+    var totalVotes: Int {
+        options.reduce(0) { $0 + $1.voteCount }
+    }
+    
+    /// 투표 종료 여부
+    var isEnded: Bool {
+        Date() > endDate
+    }
+    
+    /// 투표 상태
+    var status: VoteStatus {
+        isEnded ? .ended : .active
+    }
+    
+    /// 사용자 투표 여부
+    var hasUserVoted: Bool {
+        !userVotedOptionIds.isEmpty
+    }
+    
+    /// 날짜 포맷 (MM.dd - MM.dd)
+    var formattedPeriod: String {
+        startDate.dateRange(to: endDate)
+    }
+}
+
+/// 투표 옵션
+struct VoteOption: Equatable, Identifiable {
+    let id: String
+    let title: String
+    let voteCount: Int
+
+    /// 투표율 계산
+    func percentage(totalVotes: Int) -> Double {
+        guard totalVotes > 0 else { return 0 }
+        return Double(voteCount) / Double(totalVotes) * 100
+    }
+}
+
+/// 투표 상태
+enum VoteStatus {
+    case active  // 진행 중
+    case ended   // 종료
 }

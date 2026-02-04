@@ -15,6 +15,8 @@ protocol ActivityRepositoryProviding {
     var sessionRepository: SessionRepositoryProtocol { get }
     /// Activity 통합 데이터 접근 Repository
     var activityRepository: ActivityRepositoryProtocol { get }
+    /// Study 데이터 접근 Repository
+    var studyRepository: StudyRepositoryProtocol { get }
 }
 
 /// Activity Repository Provider 구현
@@ -28,17 +30,20 @@ final class ActivityRepositoryProvider: ActivityRepositoryProviding {
     let attendanceRepository: AttendanceRepositoryProtocol
     let sessionRepository: SessionRepositoryProtocol
     let activityRepository: ActivityRepositoryProtocol
+    let studyRepository: StudyRepositoryProtocol
 
     // MARK: - Init
 
     init(
         attendanceRepository: AttendanceRepositoryProtocol,
         sessionRepository: SessionRepositoryProtocol,
-        activityRepository: ActivityRepositoryProtocol
+        activityRepository: ActivityRepositoryProtocol,
+        studyRepository: StudyRepositoryProtocol
     ) {
         self.attendanceRepository = attendanceRepository
         self.sessionRepository = sessionRepository
         self.activityRepository = activityRepository
+        self.studyRepository = studyRepository
     }
 }
 
@@ -50,7 +55,8 @@ extension ActivityRepositoryProvider {
         ActivityRepositoryProvider(
             attendanceRepository: MockAttendanceRepository(),
             sessionRepository: MockSessionRepository(),
-            activityRepository: MockActivityRepository()
+            activityRepository: MockActivityRepository(),
+            studyRepository: MockStudyRepository()
         )
     }
 

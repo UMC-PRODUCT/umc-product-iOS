@@ -85,7 +85,6 @@ struct FormTextField: View {
     private var placeholderView: Text {
         Text(placeholder)
             .font(.callout)
-            .foregroundStyle(.gray)
     }
 }
 

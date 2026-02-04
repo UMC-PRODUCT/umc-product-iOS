@@ -20,7 +20,9 @@ struct NoticeDetailView: View {
         self.model = model
         let tempErrorHandler = ErrorHandler()
         _viewModel = State(initialValue: NoticeDetailViewModel(
-            errorHandler: tempErrorHandler
+            noticeID: model.id,
+            errorHandler: tempErrorHandler,
+            initialNotice: model
         ))
     }
     
@@ -65,11 +67,8 @@ struct NoticeDetailView: View {
             }
         }
         .alertPrompt(item: $viewModel.alertPrompt)
-        .onAppear {
-            viewModel = NoticeDetailViewModel(
-                noticeID: model.id,
-                errorHandler: errorHandler
-            )
+        .task {
+            viewModel.updateErrorHandler(errorHandler)
         }
     }
     
@@ -79,11 +78,11 @@ struct NoticeDetailView: View {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
                 topSection
                 Divider()
-                bottomSection
+                    .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                bottomSection(data)
                 Spacer()
             }
         }
-        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
     
     // MARK: - TopSection
@@ -93,6 +92,7 @@ struct NoticeDetailView: View {
             mainInfo
             subInfo
         }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
     
     private var mainInfo: some View {
@@ -128,19 +128,79 @@ struct NoticeDetailView: View {
     
     // MARK: - BottomSection
     // 본문, 투표/링크/사진 카드
-    private var bottomSection: some View {
-        VStack {
-            Text(model.content)
+    private func bottomSection(_ data: NoticeDetail) -> some View {
+        VStack(spacing: DefaultSpacing.spacing24) {
+            // 본문
+            Text(data.content)
                 .appFont(.body)
                 .multilineTextAlignment(.leading)
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            
+            // 투표 카드
+            if let vote = data.vote {
+                NoticeVoteCard(vote: vote) { optionIds in
+                    Task {
+                        await viewModel.handleVote(voteId: vote.id, optionIds: optionIds)
+                    }
+                }
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            }
+            
+            // 이미지 카드
+            if !data.images.isEmpty {
+                NoticeImageCard(imageURLs: model.images)
+            }
+            
+            // 링크 카드
+            if !data.links.isEmpty {
+                ForEach(Array(model.links.enumerated()), id: \.offset) { _, link in
+                    NoticeLinkCard(url: link)
+                        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                }
+            }
         }
     }
 }
 
 // MARK: - Preview
-#Preview("공지 상세") {
+#Preview("공지 상세(권한O)") {
     NavigationStack {
         NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithPermission)
+    }
+    .environment(ErrorHandler())
+}
+
+#Preview("공지 상세(권한X)") {
+    NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNotice)
+    }
+    .environment(ErrorHandler())
+}
+
+#Preview("이미지 포함 공지") {
+    NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithImages)
+    }
+    .environment(ErrorHandler())
+}
+
+#Preview("링크 포함 공지") {
+    NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithLinks)
+    }
+    .environment(ErrorHandler())
+}
+
+#Preview("투표 완료 공지") {
+    NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVoteDone)
+    }
+    .environment(ErrorHandler())
+}
+
+#Preview("투표 미완료 공지") {
+    NavigationStack {
+        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVote)
     }
     .environment(ErrorHandler())
 }

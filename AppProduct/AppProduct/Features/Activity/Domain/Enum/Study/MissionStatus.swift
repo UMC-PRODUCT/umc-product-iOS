@@ -23,7 +23,7 @@ enum MissionStatus: String, CaseIterable {
         switch self {
         case .notStarted: return .gray.opacity(0.4)
         case .inProgress: return .indigo200
-        case .pendingApproval: return Color.yellow.opacity(0.4)
+        case .pendingApproval: return .orange.opacity(0.4)
         case .pass: return .green.opacity(0.4)
         case .fail: return Color.red.opacity(0.4)
         case .locked: return .grey200

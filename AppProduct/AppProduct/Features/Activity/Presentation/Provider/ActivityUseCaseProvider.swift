@@ -24,6 +24,12 @@ protocol ActivityUseCaseProviding {
     // MARK: - Schedule Classifier
     /// 일정 분류 UseCase
     var classifyScheduleUseCase: ClassifyScheduleUseCase { get }
+
+    // MARK: - Study
+    /// 커리큘럼 데이터 조회 UseCase
+    var fetchCurriculumUseCase: FetchCurriculumUseCaseProtocol { get }
+    /// 미션 제출 UseCase
+    var submitMissionUseCase: SubmitMissionUseCaseProtocol { get }
 }
 
 /// Activity UseCase Provider 구현
@@ -39,6 +45,8 @@ final class ActivityUseCaseProvider: ActivityUseCaseProviding {
     let challengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
     let operatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol
     let classifyScheduleUseCase: ClassifyScheduleUseCase
+    let fetchCurriculumUseCase: FetchCurriculumUseCaseProtocol
+    let submitMissionUseCase: SubmitMissionUseCaseProtocol
 
     // MARK: - Init
 
@@ -60,6 +68,12 @@ final class ActivityUseCaseProvider: ActivityUseCaseProviding {
         )
         self.classifyScheduleUseCase = ClassifyScheduleUseCaseImpl(
             repository: classifierRepository
+        )
+        self.fetchCurriculumUseCase = FetchCurriculumUseCase(
+            repository: repositoryProvider.studyRepository
+        )
+        self.submitMissionUseCase = SubmitMissionUseCase(
+            repository: repositoryProvider.studyRepository
         )
     }
 }

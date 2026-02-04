@@ -194,7 +194,6 @@ struct FormEmailField: View {
     private var placeholderView: Text {
         Text(placeholder)
             .font(.callout)
-            .foregroundStyle(.gray)
     }
 
     /// 이메일 형식 오류 메시지
@@ -209,7 +208,7 @@ struct FormEmailField: View {
     /// 6자리 숫자 입력을 받으며, OTP 자동 완성을 지원합니다.
     /// 입력 글자 수가 6자를 초과하면 자동으로 잘립니다.
     private var verificationCodeField: some View {
-        TextField("", text: $verificationCode, prompt: Text("인증번호 6자리").foregroundStyle(.gray))
+        TextField("", text: $verificationCode, prompt: Text("인증번호 6자리"))
             .foregroundStyle(.grey900)
             .padding(DefaultConstant.defaultTextFieldPadding)
             .glassEffect(.regular, in: .capsule)

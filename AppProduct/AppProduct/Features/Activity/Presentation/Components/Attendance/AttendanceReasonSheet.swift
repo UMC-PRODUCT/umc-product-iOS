@@ -62,7 +62,7 @@ struct AttendanceReasonSheet: View {
         TextField(
             "",
             text: $reason,
-            prompt: Text("길이 막혀요..").foregroundStyle(.grey500)
+            prompt: Text("길이 막혀요..")
         )
         .submitLabel(.done)
     }

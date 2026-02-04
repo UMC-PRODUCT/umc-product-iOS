@@ -111,7 +111,7 @@ private struct MemberTopTextPresenter: View, Equatable {
     var body: some View {
         HStack {
             Text(memberManagementItem.name)
-                .font(.app(.calloutEmphasis, weight: .bold))
+                .appFont(.calloutEmphasis)
             
             Rectangle()
                 .frame(width: Constants.rectangleSize.width, height: Constants.rectangleSize.height)
@@ -172,7 +172,7 @@ private struct MemberPenaltyPresenter: View, Equatable {
                 Text("경고")
                 Text(String(format: "%.1f", memberManagementItem.penalty))
             }
-            .font(.app(.footnoteEmphasis, weight: .bold))
+            .appFont(.footnoteEmphasis)
             .foregroundStyle(Color.red700)
             .padding(.horizontal, Constants.horizonSpacing)
             .padding(.vertical, Constants.verticalSpacing)

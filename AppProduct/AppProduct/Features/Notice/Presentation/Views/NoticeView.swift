@@ -220,7 +220,7 @@ private struct PartFilterMenu: View, Equatable {
     private var menuLabel: some View {
         HStack(spacing: Constants.hstackSpacing) {
             Text(viewModel.selectedPart.name)
-                .appFont(.subheadline, weight: .bold)
+                .appFont(.subheadlineEmphasis)
             Image(systemName: "chevron.down")
                 .font(.system(size: Constants.chevronSize))
         }

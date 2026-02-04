@@ -25,9 +25,9 @@ enum MainButtonSize {
 
     var font: Font {
         switch self {
-        case .small: return .app(.footnote, weight: .bold)
-        case .medium: return .app(.body, weight: .bold)
-        case .large: return .app(.title3, weight: .bold)
+        case .small: return .app(.footnote, weight: .semibold)
+        case .medium: return .app(.body, weight: .semibold)
+        case .large: return .app(.title3, weight: .semibold)
         }
     }
 }

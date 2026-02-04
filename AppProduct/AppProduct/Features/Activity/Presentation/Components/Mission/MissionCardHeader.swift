@@ -43,7 +43,7 @@ struct MissionCardHeader: View, Equatable {
     // MARK: - Equatable
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.model.id == rhs.model.id
+        lhs.model == rhs.model
         && lhs.isExpanded == rhs.isExpanded
     }
 
@@ -70,7 +70,7 @@ struct MissionCardHeader: View, Equatable {
     // MARK: - View Components
 
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             titleText
             statusText
         }
@@ -80,6 +80,8 @@ struct MissionCardHeader: View, Equatable {
         Text(model.title)
             .appFont(.calloutEmphasis)
             .multilineTextAlignment(.leading)
+            .lineLimit(3)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private var statusText: some View {

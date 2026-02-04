@@ -111,15 +111,14 @@ fileprivate struct MissionCardPresenter: View, Equatable {
             }
         }
         .padding(DefaultConstant.defaultListPadding)
-        .background(Color.white)
-        .clipShape(
-            RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius))
-        .containerShape(
-            .rect(cornerRadius: DefaultConstant.defaultListCornerRadius))
+        .background {
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
+                .fill(Color.white)
+                .glass()
+        }
         .animation(
             .easeInOut(duration: DefaultConstant.animationTime),
             value: isExpanded)
-        .glass()
     }
 }
 
