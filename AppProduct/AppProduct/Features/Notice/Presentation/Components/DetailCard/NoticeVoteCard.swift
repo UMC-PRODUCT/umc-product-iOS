@@ -45,7 +45,7 @@ struct NoticeVoteCard: View {
 
     // MARK: - HeaderSection
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             HStack {
                 Label("투표", systemImage: "chart.bar.fill")
                     .appFont(.calloutEmphasis)
