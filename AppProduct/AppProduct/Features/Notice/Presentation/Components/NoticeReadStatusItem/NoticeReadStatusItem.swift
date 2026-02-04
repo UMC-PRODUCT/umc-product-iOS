@@ -20,8 +20,7 @@ private enum Constant {
     static let partTagPadding: EdgeInsets = .init(top: 2, leading: 6, bottom: 2, trailing: 6)
     static let partTagRadius: CGFloat = 8
     // isRead
-    static let readIconSize: CGFloat = 16
-    static let unReadCircleSize: CGSize = .init(width: 8, height: 8)
+    static let iconSize: CGFloat = 14
 }
 
 // MARK: - NoticeReadStatusItem
@@ -74,12 +73,12 @@ private struct NoticeReadStatusItemPresenter: View, Equatable {
 
             if model.isRead {
                 Image(systemName: "checkmark.circle")
-                    .font(.system(size: Constant.readIconSize))
+                    .font(.system(size: Constant.iconSize, weight: .bold))
                     .foregroundStyle(.green)
             } else {
-                Circle()
-                    .fill(.red)
-                    .frame(width: Constant.unReadCircleSize.width, height: Constant.unReadCircleSize.height)
+                Image(systemName: "circle.fill")
+                    .font(.system(size: Constant.iconSize))
+                    .foregroundStyle(.red)
             }
         }
         .padding(Constant.mainPadding)
@@ -97,7 +96,7 @@ private struct UserInfoSection: View, Equatable {
         VStack(alignment: .leading, spacing: Constant.userInfoVSpacing) {
             // 이름 + 파트
             HStack(spacing: Constant.userInfoHSpacing) {
-                Text(model.userName)
+                Text("\(model.userName)/\(model.nickName)")
                     .appFont(.subheadlineEmphasis, color: .grey900)
                 Text(model.part)
                     .appFont(.caption2, color: .gray)
@@ -114,14 +113,29 @@ private struct UserInfoSection: View, Equatable {
 }
 
 #Preview {
-    NoticeReadStatusItem(
-        model: .init(
-            profileImage: nil,
-            userName: "이애플",
-            part: "iOS",
-            location: "부산/경남",
-            campus: "부산대",
-            isRead: false
+    VStack {
+        NoticeReadStatusItem(
+            model: .init(
+                profileImage: nil,
+                userName: "이애플",
+                nickName: "사과",
+                part: "iOS",
+                location: "부산/경남",
+                campus: "부산대",
+                isRead: false
+            )
         )
-    )
+        
+        NoticeReadStatusItem(
+            model: .init(
+                profileImage: nil,
+                userName: "이애플",
+                nickName: "사과",
+                part: "iOS",
+                location: "부산/경남",
+                campus: "부산대",
+                isRead: true
+            )
+        )
+    }
 }

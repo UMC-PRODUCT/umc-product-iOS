@@ -306,4 +306,86 @@ struct ToolBarCollection {
             .glassEffect(.regular)
         }
     }
+    
+    /// 상단 오른쪽 섹션 메뉴 툴바 (•••)
+    struct ToolbarTrailingMenu: ToolbarContent {
+        let actions: [ActionItem]
+        
+        struct ActionItem: Identifiable {
+            let id = UUID()
+            let title: String
+            let icon: String
+            let role: ButtonRole?
+            let action: () -> Void
+            
+            init(title: String,
+                 icon: String,
+                 role: ButtonRole? = nil,
+                 action: @escaping () -> Void
+            ) {
+                self.title = title
+                self.icon = icon
+                self.role = role
+                self.action = action
+            }
+        }
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ForEach(actions) { item in
+                        Button(role: item.role) {
+                            item.action()
+                        } label: {
+                            Label(item.title, systemImage: item.icon)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                }
+            }
+        }
+    }
+    
+    /// 공지 열람 현황 필터 (학교/지부)
+    struct ReadStatusFilter<Item: Identifiable & Hashable>: ToolbarContent {
+        let items: [Item]
+        @Binding var selection: Item
+        let itemLabel: (Item) -> String
+        let itemIcon: ((Item) -> String)?
+        
+        init(
+            items: [Item],
+            selection: Binding<Item>,
+            itemLabel: @escaping (Item) -> String,
+            itemIcon: ((Item) -> String)? = nil
+        ) {
+            self.items = items
+            self._selection = selection
+            self.itemLabel = itemLabel
+            self.itemIcon = itemIcon
+        }
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ForEach(items) { item in
+                        Button {
+                            withAnimation(.snappy) {
+                                selection = item
+                            }
+                        } label: {
+                            if let itemIcon = itemIcon {
+                                Label(itemLabel(item), systemImage: itemIcon(item))
+                            } else {
+                                Text(itemLabel(item))
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
+                }
+            }
+        }
+    }
 }

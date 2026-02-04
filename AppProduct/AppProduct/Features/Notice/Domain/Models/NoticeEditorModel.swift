@@ -228,6 +228,7 @@ struct VoteFormData: Equatable {
     }
 }
 
+
 // MARK: - EditorMockData
 enum EditorMockData {
     static let branches: [String] = ["Nova", "Leo", "Cetus", "Aquarius", "Cassiopeia", "Scorpio", "Pegasus"]

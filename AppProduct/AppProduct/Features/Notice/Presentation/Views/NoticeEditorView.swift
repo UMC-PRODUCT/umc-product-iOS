@@ -55,7 +55,7 @@ struct NoticeEditorView: View {
                 itemIcon: { $0.labelIcon }
             )
             ToolBarCollection.ConfirmBtn(action: {
-                // TODO: 공지사항 업로드
+                // TODO: 공지사항 업로드 - [이예지] 26.02.03
             }, disable: !viewModel.canSubmit)
         }
         .safeAreaBar(edge: .top) {

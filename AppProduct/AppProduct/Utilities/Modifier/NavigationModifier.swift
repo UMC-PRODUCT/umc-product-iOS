@@ -35,6 +35,8 @@ struct NavigationModifier: ViewModifier {
         case branchSelection = "지부 선택"
         case schoolSelection = "학교 선택"
         case partSelection = "파트 선택"
+        case noticeDetail = "공지사항"
+        case noticeReadStatus = "공지 열람 현황"
     }
 
     func body(content: Content) -> some View {
