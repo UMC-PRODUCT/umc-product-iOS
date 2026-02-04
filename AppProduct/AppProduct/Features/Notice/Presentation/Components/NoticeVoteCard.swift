@@ -21,7 +21,7 @@ struct NoticeVoteCard: View {
         static let progressHeight: CGFloat = 8
         static let capsulePadding: CGFloat = 8
         static let capsuleOpacity: Double = 0.3
-        static let voteBtnVPadding: CGFloat = 12
+        static let voteBtnVPadding: CGFloat = 8
     }
 
     // MARK: - Body
@@ -90,7 +90,7 @@ struct NoticeVoteCard: View {
                     .padding(Constants.capsulePadding)
                     .background(Color.green.opacity(Constants.capsuleOpacity))
                     .clipShape(Capsule())
-                    .glassEffect(.clear)
+                    .glassEffect(.clear, in: .containerRelative)
             case .ended:
                 Text("마감")
                     .appFont(.footnoteEmphasis, color: .red)
@@ -142,11 +142,10 @@ struct NoticeVoteCard: View {
                         .appFont(.subheadlineEmphasis, color: .white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, Constants.voteBtnVPadding)
-                        .background(selectedOptionIds.isEmpty ? Color.grey400 : Color.indigo500)
-                        .clipShape(ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
                 }
+                .buttonStyle(.glassProminent)
+                .tint(.indigo500)
                 .disabled(selectedOptionIds.isEmpty)
-                .glassEffect()
             }
             
             Text("총 \(vote.totalVotes)명 참여")
