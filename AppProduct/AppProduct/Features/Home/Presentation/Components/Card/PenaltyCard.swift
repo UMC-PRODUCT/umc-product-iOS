@@ -26,7 +26,7 @@ struct PenaltyCard: View, Equatable {
         /// 카드 전체 패딩
         static let padding: CGFloat = 20
         /// 카드 높이 (데이터 없을 때, 있을 때)
-        static let height: (CGFloat, CGFloat) = (100, 220)
+        static let height: (CGFloat, CGFloat) = (100, 240)
     }
     
     // MARK: - Equtable
@@ -231,18 +231,11 @@ fileprivate struct CardInfo: View {
     
     // MARK: - Method
     private func progressBar(point: Int) -> some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(progressBackgroundColor(point))
-                
-                if point > 0 {
-                    Capsule()
-                        .fill(progressGradient(point))
-                        .frame(width: geometry.size.width * (CGFloat(point) / 3.0))
-                }
-            }
+        Gauge(value: Double(point), in: 0...3) {
+            EmptyView()
         }
+        .gaugeStyle(.linearCapacity)
+        .tint(progressGradient(point))
         .frame(height: Constants.progressHeight)
     }
     
