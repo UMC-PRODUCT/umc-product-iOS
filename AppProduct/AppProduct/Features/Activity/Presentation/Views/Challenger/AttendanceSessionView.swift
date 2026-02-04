@@ -177,6 +177,7 @@ struct AttendanceSessionView: View {
     private var sectionHeader: some View {
         Text("나의 출석 현황")
             .appFont(.bodyEmphasis, color: .black)
+            .padding(.leading, Constants.leadingHeader)
     }
 }
 

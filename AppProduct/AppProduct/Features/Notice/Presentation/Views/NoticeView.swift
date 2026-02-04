@@ -16,7 +16,11 @@ struct NoticeView: View {
     @Environment(ErrorHandler.self) var errorHandler
     @Environment(\.di) var di
     @State private var search: String = ""
-    
+
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
+    }
+
     // MARK: - Constants
     private enum Constants {
         static let listTopPadding: CGFloat = 10
@@ -25,42 +29,50 @@ struct NoticeView: View {
     }
     // MARK: - Body
     var body: some View {
-        Group {
-            switch viewModel.noticeItems {
-            case .idle:
-                Color.clear.task {
-                    print("API 함수")
+        NavigationStack(path: Binding(
+            get: { pathStore.noticePath },
+            set: { pathStore.noticePath = $0 }
+        )) {
+            Group {
+                switch viewModel.noticeItems {
+                case .idle:
+                    Color.clear.task {
+                        print("API 함수")
+                    }
+                case .loading:
+                    progressView
+                case .loaded(let noticeItem):
+                    noticeContent(noticeItem)
+                case .failed(_):
+                    Color.clear
                 }
-            case .loading:
-                progressView
-            case .loaded(let noticeItem):
-                noticeContent(noticeItem)
-            case .failed(_):
-                Color.clear
+            }
+            .searchable(text: $search, prompt: Constants.searchPlaceholder)
+            .searchToolbarBehavior(.minimize)
+            .toolbar {
+                ToolBarCollection.GenerationFilter(
+                    title: viewModel.selectedGeneration.title,
+                    generations: viewModel.generations,
+                    selection: generationBinding
+                )
+                ToolBarCollection.ToolBarCenterMenu(
+                    items: viewModel.mainFilterItems,
+                    selection: mainFilterBinding,
+                    itemLabel: { $0.labelText },
+                    itemIcon: { $0.labelIcon }
+                )
+            }
+            .safeAreaBar(edge: .top) {
+                if viewModel.showSubFilter {
+                    NoticeSubFilter(viewModel: viewModel)
+                        .equatable()
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                NavigationRoutingView(destination: destination)
             }
         }
-        .searchable(text: $search, prompt: Constants.searchPlaceholder)
-        .searchToolbarBehavior(.minimize)
-        .toolbar {
-            ToolBarCollection.GenerationFilter(
-                title: viewModel.selectedGeneration.title,
-                generations: viewModel.generations,
-                selection: generationBinding
-            )
-            ToolBarCollection.ToolBarCenterMenu(
-                items: viewModel.mainFilterItems,
-                selection: mainFilterBinding,
-                itemLabel: { $0.labelText },
-                itemIcon: { $0.labelIcon }
-            )
-        }
-        .safeAreaBar(edge: .top) {
-            if viewModel.showSubFilter {
-                NoticeSubFilter(viewModel: viewModel)
-                    .equatable()
-            }
-        }
-        .navigationBarTitleDisplayMode(.inline)
     }
     
     /// loading

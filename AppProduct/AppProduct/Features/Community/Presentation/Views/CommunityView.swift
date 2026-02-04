@@ -14,8 +14,8 @@ struct CommunityView: View {
     @Environment(ErrorHandler.self) var errorHandler
     @State var vm: CommunityViewModel
 
-    private var router: NavigationRouter {
-        di.resolve(NavigationRouter.self)
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
     }
 
     private enum Constant {}
@@ -29,24 +29,32 @@ struct CommunityView: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
-            switch vm.selectedMenu {
-            case .all, .question, .party:
-                contentSection
-                    .searchable(text: $vm.searchText)
-            case .fame:
-                CommunityFameView()
+        NavigationStack(path: Binding(
+            get: { pathStore.communityPath },
+            set: { pathStore.communityPath = $0 }
+        )) {
+            Group {
+                switch vm.selectedMenu {
+                case .all, .question, .party:
+                    contentSection
+                        .searchable(text: $vm.searchText)
+                case .fame:
+                    CommunityFameView()
+                }
             }
-        }
-        .navigation(naviTitle: .community, displayMode: .inline)
-        .searchToolbarBehavior(.minimize)
-        .toolbar {
-            ToolBarCollection.ToolBarCenterMenu(
-                items: CommunityMenu.allCases,
-                selection: $vm.selectedMenu,
-                itemLabel: { $0.rawValue },
-                itemIcon: { $0.icon }
-            )
+            .navigation(naviTitle: .community, displayMode: .inline)
+            .searchToolbarBehavior(.minimize)
+            .toolbar {
+                ToolBarCollection.ToolBarCenterMenu(
+                    items: CommunityMenu.allCases,
+                    selection: $vm.selectedMenu,
+                    itemLabel: { $0.rawValue },
+                    itemIcon: { $0.icon }
+                )
+            }
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                NavigationRoutingView(destination: destination)
+            }
         }
     }
 
@@ -76,7 +84,7 @@ struct CommunityView: View {
             } else {
                 List(items, rowContent: { item in
                     CommunityItem(model: item) {
-                        router.push(to: .community(.detail(postItem: item)))
+                        pathStore.communityPath.append(.community(.detail(postItem: item)))
                     }
                     .equatable()
                     .listRowBackground(Color.clear)
