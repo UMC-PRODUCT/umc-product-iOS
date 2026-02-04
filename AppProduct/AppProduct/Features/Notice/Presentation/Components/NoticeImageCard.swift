@@ -17,7 +17,7 @@ struct NoticeImageCard: View {
     
     // MARK: - Constants
     fileprivate enum Constants {
-        static let imageSize: CGFloat = 160
+        static let imageSize: CGFloat = 120
     }
     
     // MARK: - Body
