@@ -13,6 +13,8 @@ struct NoticeView: View {
 
     // MARK: - Properties
     @State var viewModel = NoticeViewModel()
+    @Environment(ErrorHandler.self) var errorHandler
+    @Environment(\.di) var di
     @State private var search: String = ""
     
     // MARK: - Constants

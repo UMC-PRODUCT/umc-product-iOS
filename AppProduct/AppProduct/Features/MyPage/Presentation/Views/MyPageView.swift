@@ -19,6 +19,7 @@ struct MyPageView: View {
     /// MyPage의 상태 및 로직을 관리하는 ViewModel
     @State var viewModel: MyPageViewModel
     @Environment(\.di) var di
+    @Environment(ErrorHandler.self) var errorHandler
 
     // MARK: - Function
 

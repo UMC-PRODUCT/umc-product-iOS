@@ -11,6 +11,7 @@ struct CommunityView: View {
     // MARK: - Properties
 
     @Environment(\.di) var di
+    @Environment(ErrorHandler.self) var errorHandler
     @State var vm: CommunityViewModel
 
     private var router: NavigationRouter {

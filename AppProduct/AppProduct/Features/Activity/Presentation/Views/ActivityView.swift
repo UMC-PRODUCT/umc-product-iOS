@@ -12,8 +12,8 @@ import SwiftUI
 /// Challenger/Admin 모드에 따라 다른 섹션을 표시합니다.
 struct ActivityView: View {
     @Environment(\.di) private var di
+    @Environment(ErrorHandler.self) var errorHandler
     @State private var selectedSection: ActivitySection?
-    @State private var errorHandler = ErrorHandler()
     @State private var viewModel: ActivityViewModel?
 
     // MARK: - Computed Property
@@ -135,4 +135,5 @@ struct ActivityView: View {
         ActivityView()
     }
     .environment(\.di, DIContainer.configured())
+    .environment(ErrorHandler())
 }
