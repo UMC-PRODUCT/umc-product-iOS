@@ -35,6 +35,7 @@ final class NoticeDetailViewModel {
     /// 선택된 탭 (확인/미확인)
     var selectedReadTab: ReadStatusTab = .confirmed
     
+    
     // MARK: - Read Status Computed Properties
     /// 현재 선택된 탭에 따른 필터링된 사용자 목록
     var filteredReadStatusUsers: [ReadStatusUser] {
@@ -56,12 +57,36 @@ final class NoticeDetailViewModel {
     var confirmedCount: Int {
         readStatusState.value?.confirmedCount ?? 0
     }
+    
+    /// 확인하지 않은 인원 수 (버튼용)
+    var unconfirmedCount: Int {
+        readStatusState.value?.unconfirmedCount ?? 0
+    }
 
     /// 전체 인원 수 (버튼용)
     var totalCount: Int {
         readStatusState.value?.totalCount ?? 0
     }
     
+    
+    // MARK: - Read Status Filter Properties
+    /// 선택된 필터 타입
+    var selectedFilter: ReadStatusFilterType = .all
+
+    // MARK: - Read Status Grouped Data
+    /// 지부별로 그룹화된 사용자
+    var groupedUsersByBranch: [String: [ReadStatusUser]] {
+        Dictionary(grouping: filteredReadStatusUsers, by: { $0.branch })
+            .sorted { $0.key < $1.key }  // 지부명 알파벳 순 정렬
+            .reduce(into: [:]) { $0[$1.key] = $1.value }
+    }
+
+    /// 학교별로 그룹화된 사용자
+    var groupedUsersBySchool: [String: [ReadStatusUser]] {
+        Dictionary(grouping: filteredReadStatusUsers, by: { $0.campus })
+            .sorted { $0.key < $1.key }  // 학교명 알파벳 순 정렬
+            .reduce(into: [:]) { $0[$1.key] = $1.value }
+    }
     
     // MARK: - Initialization
     

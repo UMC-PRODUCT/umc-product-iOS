@@ -519,4 +519,46 @@ struct ToolBarCollection {
             }
         }
     }
+    
+    /// 공지 열람 현황 필터 (학교/지부)
+    struct ReadStatusFilter<Item: Identifiable & Hashable>: ToolbarContent {
+        let items: [Item]
+        @Binding var selection: Item
+        let itemLabel: (Item) -> String
+        let itemIcon: ((Item) -> String)?
+        
+        init(
+            items: [Item],
+            selection: Binding<Item>,
+            itemLabel: @escaping (Item) -> String,
+            itemIcon: ((Item) -> String)? = nil
+        ) {
+            self.items = items
+            self._selection = selection
+            self.itemLabel = itemLabel
+            self.itemIcon = itemIcon
+        }
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ForEach(items) { item in
+                        Button {
+                            withAnimation(.snappy) {
+                                selection = item
+                            }
+                        } label: {
+                            if let itemIcon = itemIcon {
+                                Label(itemLabel(item), systemImage: itemIcon(item))
+                            } else {
+                                Text(itemLabel(item))
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
+                }
+            }
+        }
+    }
 }

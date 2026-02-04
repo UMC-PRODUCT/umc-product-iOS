@@ -240,3 +240,14 @@ struct ReadStatusUser: Equatable, Identifiable {
         )
     }
 }
+
+// MARK: - ReadStatusFilterType
+
+/// 공지 열람 현황 필터 타입
+enum ReadStatusFilterType: String, CaseIterable, Identifiable {
+    case all = "전체 보기"
+    case branch = "지부별 보기"
+    case school = "학교별 보기"
+    
+    var id: String { rawValue }
+}
