@@ -91,6 +91,18 @@ enum NetworkError: Error, Sendable, Equatable {
     /// - 해결 방법: 재로그인 필요
     case maxRetryExceeded
 
+    /// 네트워크 연결 없음
+    ///
+    /// - 발생 시점: 인터넷 연결이 끊긴 상태에서 API 호출
+    /// - 해결 방법: 네트워크 연결 확인 후 재시도
+    case noNetwork
+
+    /// 요청 시간 초과
+    ///
+    /// - 발생 시점: 서버 응답이 timeout 시간 내에 오지 않음
+    /// - 해결 방법: 네트워크 상태 확인 후 재시도
+    case timeout
+
     // MARK: - Equatable
 
     /// Equatable 비교 구현
@@ -109,6 +121,10 @@ enum NetworkError: Error, Sendable, Equatable {
         case (.invalidResponse, .invalidResponse):
             return true
         case (.maxRetryExceeded, .maxRetryExceeded):
+            return true
+        case (.noNetwork, .noNetwork):
+            return true
+        case (.timeout, .timeout):
             return true
         default:
             return false
@@ -136,6 +152,10 @@ extension NetworkError: LocalizedError {
             return "잘못된 서버 응답"
         case .maxRetryExceeded:
             return "최대 재시도 횟수 초과"
+        case .noNetwork:
+            return "네트워크 연결이 없습니다."
+        case .timeout:
+            return "요청 시간이 초과되었습니다."
         }
     }
 
@@ -159,6 +179,10 @@ extension NetworkError: LocalizedError {
             }
         case .invalidResponse:
             return "네트워크 연결이 원활하지 않습니다."
+        case .noNetwork:
+            return "인터넷 연결을 확인해주세요."
+        case .timeout:
+            return "서버 응답이 늦어지고 있어요. 잠시 후 다시 시도해주세요."
         }
     }
 
@@ -177,6 +201,8 @@ extension NetworkError: LocalizedError {
                 return .warning   // 클라이언트 에러
             }
         case .invalidResponse:
+            return .warning
+        case .noNetwork, .timeout:
             return .warning
         }
     }
@@ -197,6 +223,8 @@ extension NetworkError: LocalizedError {
             }
         case .invalidResponse:
             return true  // 네트워크 연결 재시도 가능
+        case .noNetwork, .timeout:
+            return true
         }
     }
 }
