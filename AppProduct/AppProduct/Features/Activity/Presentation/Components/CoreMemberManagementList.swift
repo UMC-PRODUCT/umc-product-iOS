@@ -35,7 +35,9 @@ struct CoreMemberManagementList: View {
             Spacer()
             
             // 운영진 뱃지 (회장, 부회장 등)
-            ManagementTeamBadgePresenter(managementTeam: memberManagementItem.managementTeam)
+            if memberManagementItem.managementTeam != .challenger {
+                ManagementTeamBadgePresenter(managementTeam: memberManagementItem.managementTeam)
+            }
             
             Image(systemName: "chevron.right")
                 .appFont(.callout, color: .grey500)
