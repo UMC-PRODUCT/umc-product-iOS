@@ -32,7 +32,7 @@ struct MemberManagementItem: Identifiable, Equatable {
     let position: String
     
     /// 파트 정보 (iOS, Web 등)
-    let part: String
+    let part: UMCPartType
     
     /// 현재 누적 패널티 점수
     let penalty: Double
