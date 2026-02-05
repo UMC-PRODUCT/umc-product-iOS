@@ -209,7 +209,7 @@ struct OperatorSessionCard: View, Equatable {
 #Preview {
     ScrollView {
         VStack(spacing: 20) {
-            // 진행 중 - 승인 대기 있음 (접힘)
+            // 진행 중 - 승인 대기 있음
             OperatorSessionCard(
                 sessionAttendance: OperatorSessionAttendance(
                     id: "session_1",
@@ -233,11 +233,10 @@ struct OperatorSessionCard: View, Equatable {
                 )
             )
 
-            // 진행 중 - 펼침 (승인 대기 명단)
             OperatorSessionCard(
                 sessionAttendance: OperatorSessionAttendance(
                     id: "session_3",
-                    session: AttendancePreviewData.sessions[1],
+                    session: AttendancePreviewData.sessions[3],
                     attendanceRate: 0.85,
                     attendedCount: 34,
                     totalCount: 40,

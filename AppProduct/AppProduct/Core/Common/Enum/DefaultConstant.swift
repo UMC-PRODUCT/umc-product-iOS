@@ -78,3 +78,10 @@ enum DefaultConstant {
     /// 뱃지 패딩.
     static let badgePadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
 }
+
+// MARK: System Image Constants
+
+extension DefaultConstant {
+    /// 화살표 아이콘 이미지 이름
+    static let chevronForwardImage: String = "chevron.forward"
+}
