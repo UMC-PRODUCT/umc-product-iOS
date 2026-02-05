@@ -123,7 +123,9 @@ enum NoticeMockData {
             isAlert: false,
             date: Date(),
             title: "[투표] 9기 기말고사 뒤풀이 메뉴 선정 안내",
-            content: "이번 해커톤 종료 후 진행될 회식 메뉴를 결정하고자 합니다. 가장 많은 표를 받은 메뉴로 진행됩니다!",
+            content: """
+            9기 UMC대 챌린저 여러분 안녕하세요! 애플입니다☺️ 기말고사 뒤풀이로 진행될 회식 메뉴를 결정하고자 합니다. 가장 많은 표를 받은 메뉴로 진행됩니다!
+            """,
             writer: "애플/박사과-9th UMC대 회장",
             links: [],
             images: [],
@@ -135,7 +137,7 @@ enum NoticeMockData {
                     VoteOption(id: "2", title: "치킨", voteCount: 9),
                     VoteOption(id: "3", title: "피자", voteCount: 5),
                 ],
-                startDate: Date(timeIntervalSinceNow: -86400),
+                startDate: Date(),
                 endDate: Date(timeIntervalSinceNow: 86400 * 7),
                 allowMultipleChoices: false,
                 isAnonymous: true,
