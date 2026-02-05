@@ -54,11 +54,23 @@ struct ChallengerMemberListView: View {
                 }
             }
         }
+        .searchable(text: $viewModel.searchText)
+        .searchToolbarBehavior(.minimize)
     }
     
     // MARK: - SubView
     
     private var memberListContent: some View {
+        Group {
+            if viewModel.isSearchResultEmpty {
+                searchEmptyView
+            } else {
+                memberList
+            }
+        }
+    }
+    
+    private var memberList: some View {
         List {
             ForEach(viewModel.groupedMembers, id: \.part) { group in
                 Section {
@@ -75,7 +87,14 @@ struct ChallengerMemberListView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        
+    }
+    
+    private var searchEmptyView: some View {
+        ContentUnavailableView {
+            Label("검색 결과가 없습니다.", systemImage: "magnifyingglass")
+        } description: {
+            Text("'\(viewModel.searchText)'에 대한 결과가 없습니다")
+        }
     }
 }
 
