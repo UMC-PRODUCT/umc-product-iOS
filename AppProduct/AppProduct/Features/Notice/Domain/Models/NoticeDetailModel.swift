@@ -95,7 +95,7 @@ struct TargetAudience: Equatable, Hashable {
             }
         case .campus:
             if schools.isEmpty {
-                components.append("전체 학교")
+                components.append("전체")
             } else {
                 components.append(schools.joined(separator: ", "))
             }

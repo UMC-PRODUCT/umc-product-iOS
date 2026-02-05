@@ -20,14 +20,18 @@ struct NoticeItemModel: Equatable, Identifiable {
     let title: String
     let content: String
     let writer: String
-    let hasLink: Bool
-    let hasVote: Bool
+    let links: [String]
+    let images: [String]
+    let vote: NoticeVote?
     let viewCount: Int
-
+    
     /// UI 표시용 태그 (scope + category 조합)
     var tag: NoticeItemTag {
         NoticeItemTag(scope: scope, category: category)
     }
+    
+    var hasLink: Bool { !links.isEmpty }
+    var hasVote: Bool { vote != nil }
 }
 
 extension NoticeItemModel {
@@ -47,9 +51,9 @@ extension NoticeItemModel {
             updatedAt: nil,
             targetAudience: .all(generation: generation, scope: scope),
             hasPermission: false,
-            images: [],
-            links: hasLink ? [] : [],
-            vote: hasVote ? nil : nil
+            images: images,
+            links: links,
+            vote: vote
         )
     }
 }

@@ -266,7 +266,10 @@ final class NoticeDetailViewModel {
     @MainActor
     func fetchReadStatus() async {
         readStatusState = .loading
-        readStatusState = .loaded(NoticeDetailMockData.sampleReadStatus)
+        
+        // noticeID에 따라 다른 수신 확인 현황 반환
+        let mockReadStatus = NoticeMockData.readStatus(for: noticeID)
+        readStatusState = .loaded(mockReadStatus)
     }
     
     /// 탭 전환
