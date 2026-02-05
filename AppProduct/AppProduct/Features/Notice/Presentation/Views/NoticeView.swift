@@ -99,7 +99,10 @@ struct NoticeView: View {
     /// Loaded - 데이터가 있을 때
     private func availableContent(_ data: [NoticeItemModel]) -> some View {
         List(data) { item in
-            NoticeItem(model: item)
+            NoticeItem(model: item) {
+                let noticeDetail = item.toNoticeDetail()
+                pathStore.noticePath.append(.notice(.detail(detailItem: noticeDetail)))
+            }
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(DefaultConstant.defaultListPadding)

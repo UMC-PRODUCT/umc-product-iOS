@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - NoticeDetail
 
 /// 공지사항 상세정보 엔티티
-struct NoticeDetail: Equatable, Identifiable {
+struct NoticeDetail: Equatable, Identifiable, Hashable {
     // 기본 정보
     let id: String
     let generation: Int
@@ -69,7 +69,7 @@ struct NoticeDetail: Equatable, Identifiable {
 // MARK: - TargetAudience
                                                                                                                                               
  /// 공지 수신 대상
-struct TargetAudience: Equatable {
+struct TargetAudience: Equatable, Hashable {
     let generation: Int
     let scope: NoticeScope
     let parts: [Part]
@@ -105,6 +105,19 @@ struct TargetAudience: Equatable {
     }
 }
 
+extension TargetAudience {
+    /// 전체 대상 (기본값)
+    static func all(generation: Int, scope: NoticeScope) -> TargetAudience {
+        TargetAudience(
+            generation: generation,
+            scope: scope,
+            parts: [],
+            branches: [],
+            schools: []
+        )
+    }
+}
+
 
 // MARK: - ImageViewerItem
 /// fullScreenCover에서 Identifiable 사용을 위한 래퍼
@@ -117,7 +130,7 @@ struct ImageViewerItem: Identifiable {
 // MARK: - NoticeVote
 
 /// 공지사항 투표
-struct NoticeVote: Equatable, Identifiable {
+struct NoticeVote: Equatable, Identifiable, Hashable {
     let id: String
     let question: String
     let options: [VoteOption]
@@ -157,7 +170,7 @@ struct NoticeVote: Equatable, Identifiable {
 }
 
 /// 투표 옵션
-struct VoteOption: Equatable, Identifiable {
+struct VoteOption: Equatable, Identifiable, Hashable {
     let id: String
     let title: String
     let voteCount: Int

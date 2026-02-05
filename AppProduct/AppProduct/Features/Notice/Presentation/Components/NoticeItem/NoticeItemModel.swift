@@ -29,3 +29,27 @@ struct NoticeItemModel: Equatable, Identifiable {
         NoticeItemTag(scope: scope, category: category)
     }
 }
+
+extension NoticeItemModel {
+    func toNoticeDetail() -> NoticeDetail {
+        NoticeDetail(
+            id: id.uuidString,
+            generation: generation,
+            scope: scope,
+            category: category,
+            isMustRead: mustRead,
+            title: title,
+            content: content,
+            authorID: "temp-\(id)",
+            authorName: writer,
+            authorImageURL: nil,
+            createdAt: date,
+            updatedAt: nil,
+            targetAudience: .all(generation: generation, scope: scope),
+            hasPermission: false,
+            images: [],
+            links: hasLink ? [] : [],
+            vote: hasVote ? nil : nil
+        )
+    }
+}
