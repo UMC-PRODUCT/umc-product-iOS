@@ -77,11 +77,14 @@ struct ChallengerMemberListView: View {
                     ForEach(group.members) { item in
                         CoreMemberManagementList(memberManagementItem: item)
                             .listRowBackground(Color.clear)
-                            
                     }
                 } header: {
-                    Text(group.part.name)
-                        .appFont(.title3Emphasis, color: .black)
+                    HStack(spacing: DefaultSpacing.spacing4) {
+                        Text(group.part.name)
+                            .appFont(.title3Emphasis, color: .black)
+                        Text("(\(group.members.count))")
+                            .appFont(.title3, color: .grey500)
+                    }
                 }
             }
         }

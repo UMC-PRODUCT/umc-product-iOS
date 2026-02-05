@@ -29,7 +29,7 @@ struct CoreMemberManagementList: View {
             // 멤버 텍스트 정보 (이름, 파트)
             CoreMemberTextPresenter(
                 name: memberManagementItem.name,
-                part: memberManagementItem.part.name
+                generation: memberManagementItem.generation
             )
             
             Spacer()
@@ -53,15 +53,15 @@ struct CoreMemberTextPresenter: View {
     /// 멤버 이름
     let name: String
     
-    /// 소속 파트
-    let part: String
+    /// 기수
+    let generation: String
     
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             Text(name)
                 .appFont(.calloutEmphasis)
             
-            Text(part)
+            Text(generation)
                 .font(.app(.subheadline, weight: .regular))
                 .foregroundStyle(Color.grey500)
         }
