@@ -30,8 +30,13 @@ protocol ActivityUseCaseProviding {
     var fetchCurriculumUseCase: FetchCurriculumUseCaseProtocol { get }
     /// 미션 제출 UseCase
     var submitMissionUseCase: SubmitMissionUseCaseProtocol { get }
+    
     /// 운영진 스터디원 관리 UseCase
     var fetchStudyMembersUseCase: FetchStudyMembersUseCaseProtocol { get }
+    
+    // MARK: - Member
+    /// 멤버 목록 조회 UseCase
+    var fetchMembersUseCase: FetchMembersUseCaseProtocol { get }
 }
 
 /// Activity UseCase Provider 구현
@@ -50,6 +55,7 @@ final class ActivityUseCaseProvider: ActivityUseCaseProviding {
     let fetchCurriculumUseCase: FetchCurriculumUseCaseProtocol
     let submitMissionUseCase: SubmitMissionUseCaseProtocol
     let fetchStudyMembersUseCase: FetchStudyMembersUseCaseProtocol
+    let fetchMembersUseCase: FetchMembersUseCaseProtocol
 
     // MARK: - Init
 
@@ -80,6 +86,9 @@ final class ActivityUseCaseProvider: ActivityUseCaseProviding {
         )
         self.fetchStudyMembersUseCase = FetchStudyMembersUseCase(
             repository: repositoryProvider.studyRepository
+        )
+        self.fetchMembersUseCase = FetchMembersUseCase(
+            repository: repositoryProvider.memberRepository
         )
     }
 }

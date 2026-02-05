@@ -13,20 +13,7 @@ import SwiftUI
 struct ChallengerMemberListView: View {
     // MARK: - Properties
     
-    @State private var viewModel: ChallengerStudyViewModel
-    
-    // 임시
-    private let items: [MemberManagementItem] = [
-        .init(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader),
-        .init(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .android), penalty: 0, badge: false, managementTeam: .schoolPartLeader),
-        .init(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader),
-    ]
-    
-    private var groupedItems: [(part: UMCPartType, members: [MemberManagementItem])] {
-        let grouped = Dictionary(grouping: items, by: { $0.part })
-        return grouped
-            .map { (part: $0.key, members: $0.value) }
-    }
+    @State private var viewModel: MemberListViewModel
     
     // MARK: - Init
     
@@ -36,8 +23,7 @@ struct ChallengerMemberListView: View {
     ) {
         let useCaseProvider = container.resolve(UsecaseProviding.self)
         self._viewModel = .init(wrappedValue: .init(
-            fetchCurriculumUseCase: useCaseProvider.activity.fetchCurriculumUseCase,
-            submitMissionUseCase: useCaseProvider.activity.submitMissionUseCase,
+            fetchMembersUseCase: useCaseProvider.activity.fetchMembersUseCase,
             errorHandler: errorHandler
         ))
     }
@@ -45,8 +31,36 @@ struct ChallengerMemberListView: View {
     // MARK: - Body
     
     var body: some View {
+        Group {
+            switch viewModel.membersState {
+            case .idle:
+                Color.clear
+                    .task {
+                        await viewModel.fetchMembers()
+                    }
+            case .loading:
+                ProgressView()
+            case .loaded:
+                memberListContent
+            case .failed(let error):
+                ContentUnavailableView {
+                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(error.localizedDescription)
+                } actions: {
+                    Button("다시 시도") {
+                        Task { await viewModel.fetchMembers() }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - SubView
+    
+    private var memberListContent: some View {
         List {
-            ForEach(groupedItems, id: \.part) { group in
+            ForEach(viewModel.groupedMembers, id: \.part) { group in
                 Section {
                     ForEach(group.members) { item in
                         CoreMemberManagementList(memberManagementItem: item)
@@ -61,6 +75,7 @@ struct ChallengerMemberListView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        
     }
 }
 
@@ -68,4 +83,4 @@ struct ChallengerMemberListView: View {
     ChallengerMemberListView(
         container: MissionPreviewData.container,
         errorHandler: MissionPreviewData.errorHandler)
-}
+} 

@@ -62,6 +62,34 @@ enum UMCPartType: Codable, Equatable, Hashable {
             return type.rawValue
         }
     }
+    
+    /// 파트의 정렬 순서를 반환합니다.
+    ///
+    /// 정렬 순서: PM(0) > Design(1) > Web(2) > iOS(3) > Android(4) > Spring(5) > NodeJS(6)
+    var sortOrder: Int {
+        switch self {
+        case .pm:
+            return 0
+        case .design:
+            return 1
+        case .front(let type):
+            switch type {
+            case .web:
+                return 2
+            case .ios:
+                return 3
+            case .android:
+                return 4
+            }
+        case .server(let type):
+            switch type {
+            case .spring:
+                return 5
+            case .node:
+                return 6
+            }
+        }
+    }
 
     // MARK: - Nested Types
 
