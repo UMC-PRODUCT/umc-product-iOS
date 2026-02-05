@@ -67,6 +67,7 @@ struct NoticeDetailView: View {
                 viewModel.openReadStatusSheet()
             })
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .padding(.bottom, DefaultSpacing.spacing8)
         }
         .sheet(isPresented: $viewModel.showReadStatusSheet) {
             NoticeReadStatusSheet(viewModel: viewModel)
