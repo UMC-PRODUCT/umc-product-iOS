@@ -78,6 +78,9 @@ struct ActivityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            .onChange(of: userSession.currentActivityMode) { _, _ in
+                selectedSection = nil
+            }
         }
     }
 
