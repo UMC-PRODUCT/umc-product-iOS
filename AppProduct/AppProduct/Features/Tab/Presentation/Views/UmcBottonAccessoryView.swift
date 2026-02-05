@@ -57,8 +57,28 @@ fileprivate struct HomeBottonAccessoryView: View {
 
 // MARK: - Notice
 fileprivate struct NoticeAccessoryView: View {
+    @Environment(\.di) private var di
+
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
+    }
+
     var body: some View {
-        Text("11")
+        Button(action: {
+            pathStore.noticePath.append(.notice(.editor))
+        }) {
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Spacer()
+                Image(systemName: "plus.circle.fill")
+                    .foregroundStyle(.indigo500)
+
+                Text("공지글 작성")
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .foregroundStyle(.grey900)
+        }
     }
 }
 

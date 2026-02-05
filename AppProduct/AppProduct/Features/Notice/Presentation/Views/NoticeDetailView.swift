@@ -51,10 +51,6 @@ struct NoticeDetailView: View {
         }
         .navigation(naviTitle: .noticeDetail, displayMode: .inline)
         .toolbar {
-            ToolBarCollection.LeadingButton(image: "chevron.left", action: {
-                dismiss()
-            })
-            
             if let notice = viewModel.noticeState.value, notice.hasPermission {
                 ToolBarCollection.ToolbarTrailingMenu(actions: [
                     .init(title: "수정하기", icon: "pencil") {

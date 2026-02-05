@@ -55,6 +55,11 @@ enum NavigationDestination: Hashable {
         case alarmHistory
         case registrationSchedule
     }
+    
+    enum Notice: Hashable {
+        case detail(detailItem: NoticeDetail)
+        case editor
+    }
 
     enum Community: Hashable {
         case detail(postItem: CommunityItemModel)
@@ -67,6 +72,7 @@ enum NavigationDestination: Hashable {
 
     case auth(Auth)
     case home(Home)
+    case notice(Notice)
     case community(Community)
     case myPage(MyPage)
 }

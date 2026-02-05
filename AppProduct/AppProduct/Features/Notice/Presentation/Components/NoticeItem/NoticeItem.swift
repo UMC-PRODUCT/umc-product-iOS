@@ -34,18 +34,23 @@ struct NoticeItem: View {
     // MARK: - Properties
 
     private let model: NoticeItemModel
+    private let action: () -> Void
 
     // MARK: - Init
 
-    init(model: NoticeItemModel) {
+    init(model: NoticeItemModel, action: @escaping () -> Void) {
         self.model = model
+        self.action = action
     }
 
     // MARK: - Body
 
     var body: some View {
-        NoticeItemPresenter(model: model)
-            .equatable()
+        Button(action: action) {
+            NoticeItemPresenter(model: model)
+                .equatable()
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -157,6 +162,8 @@ private struct BottomSection: View, Equatable {
 
 #Preview(traits: .sizeThatFitsLayout) {
     VStack(spacing: 16) {
-        NoticeItem(model: NoticeItemModel(generation: 9, scope: .campus, category: .general, mustRead: true, isAlert: true, date: Date(), title: "2026년도 UMC 신년회 안내", content: "안녕하세요! UMC 너드 및 챌린저 여러분 안녕하세요! 회장 웰시입니다! 신년회까지 어느덧 몇 주 남지 않았습니다 🥳 오늘은 신년회에 앞서 몇 가지 전달드릴 사항이 있어 공지드립니다.", writer: "웰시/최지은", hasLink: true, hasVote: false, viewCount: 32))
+        NoticeItem(model: NoticeItemModel(generation: 9, scope: .campus, category: .general, mustRead: true, isAlert: true, date: Date(), title: "2026년도 UMC 신년회 안내", content: "안녕하세요! UMC 너드 및 챌린저 여러분 안녕하세요! 회장 웰시입니다! 신년회까지 어느덧 몇 주 남지 않았습니다 🥳 오늘은 신년회에 앞서 몇 가지 전달드릴 사항이 있어 공지드립니다.", writer: "웰시/최지은", hasLink: true, hasVote: false, viewCount: 32)) {
+            print("Preview item tapped")
+        }
     }
 }

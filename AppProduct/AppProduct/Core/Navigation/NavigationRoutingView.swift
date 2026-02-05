@@ -37,6 +37,8 @@ struct NavigationRoutingView: View {
             authView(auth)
         case .home(let home):
             homeView(home)
+        case .notice(let notice):
+            noticeView(notice)
         case .community(let community):
             communityView(community)
         case .myPage(let mypage):
@@ -66,6 +68,17 @@ private extension NavigationRoutingView {
             NoticeAlarmView()
         case .registrationSchedule:
             ScheduleRegistrationView()
+        }
+    }
+    
+    /// 공지(Notice) 관련 피처의 화면들을 생성합니다.
+    @ViewBuilder
+    func noticeView(_ route: NavigationDestination.Notice) -> some View {
+        switch route {
+        case .detail(let noticeItem):
+            NoticeDetailView(model: noticeItem)
+        case .editor:
+            NoticeEditorView()
         }
     }
     
