@@ -38,7 +38,7 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 position: "Member",
                 part: .front(type: .android),
                 penalty: 1,
-                badge: true,
+                badge: false,
                 managementTeam: .challenger
             ),
             .init(
