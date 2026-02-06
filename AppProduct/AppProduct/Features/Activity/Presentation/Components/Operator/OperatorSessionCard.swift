@@ -172,7 +172,9 @@ struct OperatorSessionCard: View, Equatable {
                         width: Constants.mapPinIconSize.width,
                         height: Constants.mapPinIconSize.height)
             }
-            .buttonStyle(.glass)
+            .padding(DefaultConstant.defaultBtnPadding)
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(), in: .circle)
         }
     }
 
