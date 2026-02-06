@@ -60,4 +60,10 @@ extension Date {
     func dateRange(to endDate: Date) -> String {
         "\(self.toMonthDay()) - \(endDate.toMonthDay())"
     }
+
+    /// "yyyy.MM.dd (E)" 형식으로 변환 (예: "24.03.23 (토)")
+    func toYearMonthDayWithWeekday() -> String {
+        formatted(.dateTime.year(.twoDigits).month(.twoDigits).day(.twoDigits).weekday(.abbreviated))
+            .replacingOccurrences(of: "/", with: ".")
+    }
 }

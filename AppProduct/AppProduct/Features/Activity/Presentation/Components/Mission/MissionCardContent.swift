@@ -238,8 +238,7 @@ fileprivate struct MissionStatusResultView: View, Equatable {
     let color: Color
 
     private enum Constants {
-        static let padding: EdgeInsets = .init(
-            top: 14, leading: 12, bottom: 14, trailing: 12)
+
         static let backgroundOpacity: Double = 0.15
     }
 
@@ -252,7 +251,7 @@ fileprivate struct MissionStatusResultView: View, Equatable {
             Text(message)
                 .appFont(.callout, color: color)
         }
-        .padding(Constants.padding)
+        .padding(ActivityConstants.statusCardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             color.opacity(Constants.backgroundOpacity),
