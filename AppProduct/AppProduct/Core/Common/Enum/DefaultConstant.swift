@@ -84,4 +84,10 @@ enum DefaultConstant {
 extension DefaultConstant {
     /// 화살표 아이콘 이미지 이름
     static let chevronForwardImage: String = "chevron.forward"
+
+    /// 상향 화살표 아이콘
+    static let chevronUpImage: String = "chevron.up"
+
+    /// 하향 화살표 아이콘
+    static let chevronDownImage: String = "chevron.down"
 }

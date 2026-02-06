@@ -120,7 +120,7 @@ struct PendingMemberRow: View, Equatable {
         // 사유 있음
         PendingMemberRow(
             member: PendingMember(
-                id: "1",
+                serverID: "1",
                 name: "홍길동",
                 nickname: "닉네임",
                 university: "중앙대학교",
@@ -135,7 +135,7 @@ struct PendingMemberRow: View, Equatable {
         // 사유 없음
         PendingMemberRow(
             member: PendingMember(
-                id: "2",
+                serverID: "2",
                 name: "김철수",
                 nickname: nil,
                 university: "서울대학교",

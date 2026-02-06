@@ -62,6 +62,8 @@ struct OperatorSessionCard: View, Equatable {
         static let mapPinIconSize: CGSize = .init(width: 24, height: 24)
         static let titleLineLimit: Int = 2
         static let statusRadius: CGFloat = 8
+        static let clockIconSize: CGSize = .init(width: 14, height: 14)
+        static let backgroundOpacity: CGFloat = 0.15
     }
 
     // MARK: - Body
@@ -147,8 +149,8 @@ struct OperatorSessionCard: View, Equatable {
             .padding(4)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .buttonStyle(.glass)
-        .tint(.orange.opacity(0.15))
+        .buttonStyle(.glassProminent)
+        .tint(.orange.opacity(Constants.backgroundOpacity))
     }
 
     /// 승인 완료 섹션
@@ -165,7 +167,7 @@ struct OperatorSessionCard: View, Equatable {
         .padding(ActivityConstants.statusCardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            .green.opacity(0.15),
+            .green.opacity(Constants.backgroundOpacity),
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
     }
 
@@ -186,7 +188,9 @@ struct OperatorSessionCard: View, Equatable {
             Image(systemName: "clock")
                 .resizable()
                 .foregroundStyle(.gray)
-                .frame(width: 14, height: 14)
+                .frame(
+                    width: Constants.clockIconSize.width,
+                    height: Constants.clockIconSize.height)
             
             Text(formattedTime)
                 .appFont(.footnote, color: .gray)
@@ -212,7 +216,7 @@ struct OperatorSessionCard: View, Equatable {
             // 진행 중 - 승인 대기 있음
             OperatorSessionCard(
                 sessionAttendance: OperatorSessionAttendance(
-                    id: "session_1",
+                    serverID: "session_1",
                     session: AttendancePreviewData.sessions[1],
                     attendanceRate: 0.85,
                     attendedCount: 34,
@@ -224,7 +228,7 @@ struct OperatorSessionCard: View, Equatable {
             // 출결일 - 모두 승인 완료
             OperatorSessionCard(
                 sessionAttendance: OperatorSessionAttendance(
-                    id: "session_2",
+                    serverID: "session_2",
                     session: AttendancePreviewData.sessions[0],
                     attendanceRate: 1.0,
                     attendedCount: 40,
@@ -235,7 +239,7 @@ struct OperatorSessionCard: View, Equatable {
 
             OperatorSessionCard(
                 sessionAttendance: OperatorSessionAttendance(
-                    id: "session_3",
+                    serverID: "session_3",
                     session: AttendancePreviewData.sessions[3],
                     attendanceRate: 0.85,
                     attendedCount: 34,
@@ -251,7 +255,7 @@ struct OperatorSessionCard: View, Equatable {
 
 private let mockPendingMembers: [PendingMember] = [
     PendingMember(
-        id: "1",
+        serverID: "1",
         name: "홍길동",
         nickname: "닉네임",
         university: "중앙대학교",
@@ -259,7 +263,7 @@ private let mockPendingMembers: [PendingMember] = [
         reason: "지각 사유입니다"
     ),
     PendingMember(
-        id: "2",
+        serverID: "2",
         name: "김철수",
         nickname: nil,
         university: "서울대학교",
@@ -267,7 +271,7 @@ private let mockPendingMembers: [PendingMember] = [
         reason: nil
     ),
     PendingMember(
-        id: "3",
+        serverID: "3",
         name: "이영희",
         nickname: "영희",
         university: "연세대학교",

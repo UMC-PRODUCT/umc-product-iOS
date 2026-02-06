@@ -11,7 +11,8 @@ import Foundation
 ///
 /// 출석 승인을 기다리고 있는 멤버의 정보를 담습니다.
 struct PendingMember: Identifiable, Equatable {
-    let id: String
+    let id: UUID = .init()
+    let serverID: String?
     let name: String
     let nickname: String?
     let university: String

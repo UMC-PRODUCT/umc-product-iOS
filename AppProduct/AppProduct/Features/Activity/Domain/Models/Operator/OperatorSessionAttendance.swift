@@ -11,7 +11,8 @@ import Foundation
 ///
 /// 세션별 출석 현황과 승인 대기 멤버 목록을 관리합니다.
 struct OperatorSessionAttendance: Identifiable, Equatable {
-    let id: String
+    let id: UUID = .init()
+    let serverID: String?
     let session: Session
     let attendanceRate: Double
     let attendedCount: Int
@@ -27,5 +28,3 @@ struct OperatorSessionAttendance: Identifiable, Equatable {
         pendingMembers.isEmpty
     }
 }
-
-// PendingMember는 이미 OperatorSessionCard.swift에 정의되어 있으므로 재사용

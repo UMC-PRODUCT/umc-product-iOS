@@ -82,7 +82,7 @@ final class OperatorAttendanceViewModel {
     }
 
     /// 승인 버튼 탭
-    func approveButtonTapped(member: PendingMember, sessionId: String) {
+    func approveButtonTapped(member: PendingMember, sessionId: UUID) {
         alertPrompt = AlertPrompt(
             title: "출석 승인",
             message: "\(member.name)님의 출석을 승인하시겠습니까?",
@@ -100,7 +100,7 @@ final class OperatorAttendanceViewModel {
     }
 
     /// 반려 버튼 탭
-    func rejectButtonTapped(member: PendingMember, sessionId: String) {
+    func rejectButtonTapped(member: PendingMember, sessionId: UUID) {
         alertPrompt = AlertPrompt(
             title: "출석 반려",
             message: "\(member.name)님의 출석을 반려하시겠습니까?",
@@ -119,7 +119,7 @@ final class OperatorAttendanceViewModel {
     }
 
     /// 전체 승인 버튼 탭
-    func approveAllButtonTapped(sessionId: String) {
+    func approveAllButtonTapped(sessionId: UUID) {
         alertPrompt = AlertPrompt(
             title: "전체 승인",
             message: "모든 승인 대기 출석을 승인하시겠습니까?",
@@ -139,7 +139,7 @@ final class OperatorAttendanceViewModel {
     // MARK: - Private Action
 
     @MainActor
-    private func approveAttendance(memberId: String, sessionId: String) async {
+    private func approveAttendance(memberId: UUID, sessionId: UUID) async {
         alertPrompt = nil
 
         // TODO: 실제 API 연동
@@ -150,7 +150,7 @@ final class OperatorAttendanceViewModel {
     }
 
     @MainActor
-    private func rejectAttendance(memberId: String, sessionId: String) async {
+    private func rejectAttendance(memberId: UUID, sessionId: UUID) async {
         alertPrompt = nil
 
         // TODO: 실제 API 연동
@@ -161,7 +161,7 @@ final class OperatorAttendanceViewModel {
     }
 
     @MainActor
-    private func approveAllAttendances(sessionId: String) async {
+    private func approveAllAttendances(sessionId: UUID) async {
         alertPrompt = nil
 
         // TODO: 실제 API 연동
@@ -173,14 +173,14 @@ final class OperatorAttendanceViewModel {
 
     // MARK: - Helper
 
-    private func updateSessionByRemovingMember(memberId: String, sessionId: String) {
+    private func updateSessionByRemovingMember(memberId: UUID, sessionId: UUID) {
         guard case .loaded(var sessions) = sessionsState else { return }
 
         if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
             let updatedMembers = sessions[index].pendingMembers.filter { $0.id != memberId }
             let session = sessions[index]
             sessions[index] = OperatorSessionAttendance(
-                id: session.id,
+                serverID: session.serverID,
                 session: session.session,
                 attendanceRate: session.attendanceRate,
                 attendedCount: session.attendedCount + 1,
@@ -191,14 +191,14 @@ final class OperatorAttendanceViewModel {
         }
     }
 
-    private func updateSessionByRemovingAllMembers(sessionId: String) {
+    private func updateSessionByRemovingAllMembers(sessionId: UUID) {
         guard case .loaded(var sessions) = sessionsState else { return }
 
         if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
             let session = sessions[index]
             let approvedCount = session.pendingMembers.count
             sessions[index] = OperatorSessionAttendance(
-                id: session.id,
+                serverID: session.serverID,
                 session: session.session,
                 attendanceRate: session.attendanceRate,
                 attendedCount: session.attendedCount + approvedCount,
@@ -217,14 +217,14 @@ final class OperatorAttendanceViewModel {
 
         return [
             OperatorSessionAttendance(
-                id: "session_1",
+                serverID: "session_1",
                 session: sessions[1],
                 attendanceRate: 0.85,
                 attendedCount: 34,
                 totalCount: 40,
                 pendingMembers: [
                     PendingMember(
-                        id: "member_1",
+                        serverID: "member_1",
                         name: "홍길동",
                         nickname: "닉네임",
                         university: "중앙대학교",
@@ -232,7 +232,7 @@ final class OperatorAttendanceViewModel {
                         reason: "지각 사유입니다. 버스가 늦게 와서 조금 늦었습니다."
                     ),
                     PendingMember(
-                        id: "member_2",
+                        serverID: "member_2",
                         name: "김철수",
                         nickname: nil,
                         university: "한성대학교",
@@ -240,7 +240,7 @@ final class OperatorAttendanceViewModel {
                         reason: nil
                     ),
                     PendingMember(
-                        id: "member_3",
+                        serverID: "member_3",
                         name: "이영희",
                         nickname: "영희짱",
                         university: "서울대학교",
@@ -250,7 +250,7 @@ final class OperatorAttendanceViewModel {
                 ]
             ),
             OperatorSessionAttendance(
-                id: "session_2",
+                serverID: "session_2",
                 session: sessions[0],
                 attendanceRate: 1.0,
                 attendedCount: 40,

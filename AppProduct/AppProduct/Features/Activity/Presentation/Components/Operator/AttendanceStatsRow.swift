@@ -100,7 +100,7 @@ struct AttendanceStatsRow: View, Equatable {
 
         AttendanceStatsRow(
             sessionAttendance: OperatorSessionAttendance(
-                id: "preview",
+                serverID: "preview",
                 session: AttendancePreviewData.sessions[0],
                 attendanceRate: 0.85,
                 attendedCount: 34,
