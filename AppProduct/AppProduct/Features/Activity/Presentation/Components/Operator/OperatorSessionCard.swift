@@ -113,13 +113,18 @@ struct OperatorSessionCard: View, Equatable {
                 onPendingListTap()
             }
         } label: {
-            HStack(spacing: DefaultSpacing.spacing8) {
+            HStack(spacing: DefaultSpacing.spacing12) {
                 Image(systemName: style.icon)
                     .renderingMode(.template)
                     .foregroundStyle(style.color)
 
-                Text(style.text)
-                    .appFont(.calloutEmphasis, color: style.color)
+                if style.isEnabled {
+                    Text("\(sessionAttendance.pendingMembers.count)명의 \(style.text)")
+                        .appFont(.calloutEmphasis, color: style.color)
+                } else {
+                    Text(style.text)
+                        .appFont(.calloutEmphasis, color: style.color)
+                }
 
                 if style.showChevron {
                     Spacer()
@@ -163,7 +168,6 @@ struct OperatorSessionCard: View, Equatable {
                 Image(.Map.mapPinGrey)
                     .resizable()
                     .font(.system(size: 12))
-                    .foregroundStyle(.grey600)
                     .frame(
                         width: Constants.mapPinIconSize.width,
                         height: Constants.mapPinIconSize.height)

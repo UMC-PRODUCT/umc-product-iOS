@@ -58,7 +58,7 @@ struct AttendanceStatsRow: View, Equatable {
 
     // MARK: - Function
 
-    /// 퍼센트 헤더 (우측 정렬)
+    /// 퍼센트 헤더
     private var percentageHeader: some View {
         HStack {
             Text("\(progressPercentage)%")
@@ -71,7 +71,7 @@ struct AttendanceStatsRow: View, Equatable {
         }
     }
 
-    /// 게이지바 (CurriculumProgressCard 패턴)
+    /// 게이지바
     private var progressGauge: some View {
         Gauge(value: sessionAttendance.attendanceRate) {
             EmptyView()

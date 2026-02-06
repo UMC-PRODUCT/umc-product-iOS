@@ -44,18 +44,14 @@ struct LocationChangeSheetView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+            Form {
                 if let session = session {
                     sessionInfoSection(session: session)
 
-                    Divider()
-
                     placeSelectionSection
-
-                    Spacer()
                 }
             }
-            .padding()
+            .formStyle(.grouped)
             .navigationTitle("위치 변경")
             .navigationBarTitleDisplayMode(.inline)
             .presentationDetents([.height(310)])
@@ -81,33 +77,43 @@ struct LocationChangeSheetView: View {
     // MARK: - Session Info Section
 
     private func sessionInfoSection(session: Session) -> some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+        Section {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                Text(session.info.title)
+                    .appFont(.calloutEmphasis)
+
+                Text(session.info.startTime.timeRange(to: session.info.endTime))
+                    .appFont(.footnote, color: .grey500)
+            }
+        } header: {
             Text("세션 정보")
-                .appFont(.subheadline, color: .grey600)
-
-            Text(session.info.title)
-                .appFont(.calloutEmphasis)
-
-            Text(session.info.startTime.timeRange(to: session.info.endTime))
-                .appFont(.footnote, color: .grey500)
         }
     }
 
     // MARK: - Place Selection Section
 
     private var placeSelectionSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            Text("새 위치")
-                .appFont(.subheadline, color: .grey600)
-
-            if selectedPlace.name.isEmpty {
-                Spacer()
-                searchButton(title: "지도에서 검색")
-            } else {
-                selectedPlaceInfo
-                searchButton(title: "다시 검색")
+        Section {
+            Group {
+                if selectedPlace.name == "" {
+                    placeholderPlaceInfo
+                } else {
+                    selectedPlaceInfo
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                showSearchPlaceSheet = true
+            }
+        } header: {
+            Text("새 위치")
         }
+    }
+    
+    private var placeholderPlaceInfo: some View {
+        Text("위치 선택하기")
+            .appFont(.calloutEmphasis, color: .gray)
     }
 
     private var selectedPlaceInfo: some View {
@@ -118,19 +124,6 @@ struct LocationChangeSheetView: View {
             Text(selectedPlace.address)
                 .appFont(.footnote, color: .grey500)
         }
-    }
-
-    private func searchButton(title: String) -> some View {
-        Button {
-            showSearchPlaceSheet = true
-        } label: {
-            HStack {
-                Image(systemName: "magnifyingglass")
-                Text(title)
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.primary)
     }
 }
 
