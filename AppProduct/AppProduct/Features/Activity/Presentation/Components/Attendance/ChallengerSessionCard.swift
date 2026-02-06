@@ -77,7 +77,7 @@ struct ChallengerSessionCard: View, Equatable {
                 statusBadge
             }
 
-            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+            Image(systemName: isExpanded ? DefaultConstant.chevronUpImage : DefaultConstant.chevronDownImage)
                 .foregroundStyle(.gray)
         }
     }

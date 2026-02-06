@@ -30,8 +30,6 @@ struct ScheduleListCard: View, Equatable {
         static let iconPadding: CGFloat = 8
         /// 카드 전체 패딩
         static let padding: EdgeInsets = .init(top: 20, leading: 16, bottom: 20, trailing: 16)
-        /// 화살표 아이콘 이미지 이름
-        static let chevronImage: String = "chevron.forward"
         /// 카드 모서리 반경
         static let cornerRadius: CGFloat = 24
     }
@@ -85,7 +83,7 @@ struct ScheduleListCard: View, Equatable {
     }
     
     private var chevron: some View {
-        Image(systemName: Constants.chevronImage)
+        Image(systemName: DefaultConstant.chevronForwardImage)
             .renderingMode(.template)
             .foregroundStyle(.grey900)
             .padding(Constants.iconPadding)

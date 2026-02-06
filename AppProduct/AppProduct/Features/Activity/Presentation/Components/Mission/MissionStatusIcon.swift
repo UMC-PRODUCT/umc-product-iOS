@@ -17,12 +17,6 @@ struct MissionStatusIcon: View, Equatable {
     let status: MissionStatus
     let weekNumber: Int
 
-    // MARK: - Constants
-
-    private enum Constants {
-        static let iconSize: CGFloat = 28
-    }
-
     // MARK: - Equatable
 
     static func == (lhs: MissionStatusIcon, rhs: MissionStatusIcon) -> Bool {
@@ -34,7 +28,9 @@ struct MissionStatusIcon: View, Equatable {
 
     var body: some View {
         iconView
-            .frame(width: Constants.iconSize, height: Constants.iconSize)
+            .frame(
+                width: ActivityConstants.statusIconSize.width,
+                height: ActivityConstants.statusIconSize.height)
     }
 
     // MARK: - View Components
