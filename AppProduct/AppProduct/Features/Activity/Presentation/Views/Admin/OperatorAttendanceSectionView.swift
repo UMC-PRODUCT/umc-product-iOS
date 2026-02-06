@@ -47,7 +47,12 @@ struct OperatorAttendanceSectionView: View {
                 .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
         .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
-//        .background(Color.grey100)
+        .task {
+            // 상위 컨테이너에서 한 번만 호출 (View 교체로 인한 Task 취소 방지)
+            if viewModel.sessionsState.isIdle {
+                await viewModel.fetchSessions()
+            }
+        }
         .alertPrompt(item: $viewModel.alertPrompt)
         .sheet(isPresented: $viewModel.showLocationSheet) {
             locationChangeSheet
@@ -59,12 +64,7 @@ struct OperatorAttendanceSectionView: View {
     @ViewBuilder
     private var content: some View {
         switch viewModel.sessionsState {
-        case .idle:
-            Color.clear.task {
-                await viewModel.fetchSessions()
-            }
-
-        case .loading:
+        case .idle, .loading:
             loadingView
 
         case .loaded(let sessions):

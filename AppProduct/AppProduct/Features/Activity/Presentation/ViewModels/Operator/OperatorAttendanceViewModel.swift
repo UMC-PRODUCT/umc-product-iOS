@@ -58,7 +58,8 @@ final class OperatorAttendanceViewModel {
             let mockData = OperatorAttendancePreviewData.createMockSessions()
             sessionsState = .loaded(mockData)
         } catch is CancellationError {
-            // Task 취소는 정상 동작이므로 무시
+            // Task 취소 시 idle로 복구하여 재시도 가능하게 함
+            sessionsState = .idle
             return
         } catch {
             sessionsState = .failed(.unknown(message: "데이터 로딩 실패"))
