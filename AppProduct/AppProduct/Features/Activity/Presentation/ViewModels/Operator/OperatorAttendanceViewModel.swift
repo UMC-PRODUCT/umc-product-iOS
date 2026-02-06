@@ -50,15 +50,17 @@ final class OperatorAttendanceViewModel {
     func fetchSessions() async {
         sessionsState = .loading
 
-        // TODO: 실제 API 연동 시 구현
+        // TODO: 실제 API 연동 시 구현 - [25.02.05] 이재원
         // Mock 데이터로 임시 구현
+        #if DEBUG
         do {
             try await Task.sleep(for: .milliseconds(500))
-            let mockData = createMockSessions()
+            let mockData = OperatorAttendancePreviewData.createMockSessions()
             sessionsState = .loaded(mockData)
         } catch {
             sessionsState = .failed(.unknown(message: "데이터 로딩 실패"))
         }
+        #endif
     }
 
     /// 위치 변경 버튼 탭
@@ -209,54 +211,4 @@ final class OperatorAttendanceViewModel {
         }
     }
 
-    // MARK: - Mock Data
-
-    private func createMockSessions() -> [OperatorSessionAttendance] {
-        // AttendancePreviewData.sessions 활용
-        let sessions = AttendancePreviewData.sessions
-
-        return [
-            OperatorSessionAttendance(
-                serverID: "session_1",
-                session: sessions[1],
-                attendanceRate: 0.85,
-                attendedCount: 34,
-                totalCount: 40,
-                pendingMembers: [
-                    PendingMember(
-                        serverID: "member_1",
-                        name: "홍길동",
-                        nickname: "닉네임",
-                        university: "중앙대학교",
-                        requestTime: Date.now.addingTimeInterval(-300),
-                        reason: "지각 사유입니다. 버스가 늦게 와서 조금 늦었습니다."
-                    ),
-                    PendingMember(
-                        serverID: "member_2",
-                        name: "김철수",
-                        nickname: nil,
-                        university: "한성대학교",
-                        requestTime: Date.now.addingTimeInterval(-600),
-                        reason: nil
-                    ),
-                    PendingMember(
-                        serverID: "member_3",
-                        name: "이영희",
-                        nickname: "영희짱",
-                        university: "서울대학교",
-                        requestTime: Date.now.addingTimeInterval(-900),
-                        reason: "교통 체증으로 인한 지각"
-                    )
-                ]
-            ),
-            OperatorSessionAttendance(
-                serverID: "session_2",
-                session: sessions[0],
-                attendanceRate: 1.0,
-                attendedCount: 40,
-                totalCount: 40,
-                pendingMembers: []  // 모두 승인 완료
-            )
-        ]
-    }
 }

@@ -211,73 +211,16 @@ struct OperatorSessionCard: View, Equatable {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview {
     ScrollView {
         VStack(spacing: 20) {
-            // 진행전 (beforeStart) - 미래 세션
-            OperatorSessionCard(
-                sessionAttendance: OperatorSessionAttendance(
-                    serverID: "session_beforeStart",
-                    session: AttendancePreviewData.sessions[10],
-                    attendanceRate: 0.0,
-                    attendedCount: 0,
-                    totalCount: 40,
-                    pendingMembers: []
-                )
-            )
-
-            // 진행 중 (inProgress) - 승인 대기 있음
-            OperatorSessionCard(
-                sessionAttendance: OperatorSessionAttendance(
-                    serverID: "session_inProgress",
-                    session: AttendancePreviewData.sessions[9],
-                    attendanceRate: 0.85,
-                    attendedCount: 34,
-                    totalCount: 40,
-                    pendingMembers: mockPendingMembers
-                )
-            )
-
-            // 종료됨 (ended) - 모두 승인 완료
-            OperatorSessionCard(
-                sessionAttendance: OperatorSessionAttendance(
-                    serverID: "session_completed",
-                    session: AttendancePreviewData.sessions[0],
-                    attendanceRate: 1.0,
-                    attendedCount: 40,
-                    totalCount: 40,
-                    pendingMembers: []
-                )
-            )
+            ForEach(OperatorAttendancePreviewData.sessions) { session in
+                OperatorSessionCard(sessionAttendance: session)
+            }
         }
         .padding()
     }
     .background(Color.grey100)
 }
-
-private let mockPendingMembers: [PendingMember] = [
-    PendingMember(
-        serverID: "1",
-        name: "홍길동",
-        nickname: "닉네임",
-        university: "중앙대학교",
-        requestTime: Date.now.addingTimeInterval(-300),
-        reason: "지각 사유입니다"
-    ),
-    PendingMember(
-        serverID: "2",
-        name: "김철수",
-        nickname: nil,
-        university: "서울대학교",
-        requestTime: Date.now.addingTimeInterval(-600),
-        reason: nil
-    ),
-    PendingMember(
-        serverID: "3",
-        name: "이영희",
-        nickname: "영희",
-        university: "연세대학교",
-        requestTime: Date.now.addingTimeInterval(-900),
-        reason: "교통 지연으로 인한 지각"
-    )
-]
+#endif
