@@ -14,6 +14,7 @@ struct ChallengerMemberListView: View {
     // MARK: - Properties
     
     @State private var viewModel: MemberListViewModel
+    @State private var showSheet: Bool = false
     
     // MARK: - Init
     
@@ -56,6 +57,9 @@ struct ChallengerMemberListView: View {
         }
         .searchable(text: $viewModel.searchText)
         .searchToolbarBehavior(.minimize)
+        .sheet(isPresented: $showSheet) {
+            ChallengerMemberDetailSheetView(member: viewModel.selectedMember!)
+        }
     }
     
     // MARK: - SubView
@@ -75,21 +79,19 @@ struct ChallengerMemberListView: View {
             ForEach(viewModel.groupedMembers, id: \.part) { group in
                 Section {
                     ForEach(group.members) { item in
-                        CoreMemberManagementList(memberManagementItem: item)
-                            .listRowBackground(Color.clear)
+                        Button(action: {
+                            showSheet.toggle()
+                            viewModel.selectedMember = item
+                        }) {
+                            CoreMemberManagementList(memberManagementItem: item)
+                        }
                     }
                 } header: {
-                    HStack(spacing: DefaultSpacing.spacing4) {
-                        Text(group.part.name)
-                            .appFont(.title3Emphasis, color: .black)
-                        Text("(\(group.members.count))")
-                            .appFont(.title3, color: .grey500)
-                    }
+                    Text(group.part.name)
+                        .appFont(.title3Emphasis, color: .black)
                 }
             }
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
     }
     
     private var searchEmptyView: some View {

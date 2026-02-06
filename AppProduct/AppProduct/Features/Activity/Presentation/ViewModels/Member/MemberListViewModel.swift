@@ -14,10 +14,11 @@ final class MemberListViewModel {
     private let fetchMembersUseCase: FetchMembersUseCaseProtocol
     private let errorHandler: ErrorHandler
     
-    // MARK: - State
+    // MARK: - Properties
     
-    private(set) var membersState: Loadable<[MemberManagementItem]> = .idle
     var searchText: String = ""
+    var selectedMember: MemberManagementItem?
+    private(set) var membersState: Loadable<[MemberManagementItem]> = .idle
     
     // MARK: - Init
     

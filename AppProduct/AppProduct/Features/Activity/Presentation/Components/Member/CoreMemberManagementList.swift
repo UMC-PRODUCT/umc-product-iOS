@@ -29,18 +29,13 @@ struct CoreMemberManagementList: View {
             // 멤버 텍스트 정보 (이름, 파트)
             CoreMemberTextPresenter(
                 name: memberManagementItem.name,
-                generation: memberManagementItem.generation
+                part: memberManagementItem.generation
             )
             
             Spacer()
             
             // 운영진 뱃지 (회장, 부회장 등)
-            if memberManagementItem.managementTeam != .challenger {
-                ManagementTeamBadgePresenter(managementTeam: memberManagementItem.managementTeam)
-            }
-            
-            Image(systemName: "chevron.right")
-                .appFont(.callout, color: .grey500)
+            ManagementTeamBadgePresenter(managementTeam: memberManagementItem.managementTeam)
         }
     }
 }
@@ -53,17 +48,16 @@ struct CoreMemberTextPresenter: View {
     /// 멤버 이름
     let name: String
     
-    /// 기수
-    let generation: String
+    /// 소속 파트
+    let part: String
     
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             Text(name)
-                .appFont(.calloutEmphasis)
+                .appFont(.calloutEmphasis, color: .black)
             
-            Text(generation)
-                .font(.app(.subheadline, weight: .regular))
-                .foregroundStyle(Color.grey500)
+            Text(part)
+                .appFont(.subheadline, color: .grey500)
         }
     }
 }
@@ -79,16 +73,21 @@ struct ManagementTeamBadgePresenter: View {
     /// 운영진 직책 타입
     let managementTeam: ManagementTeam
     
-    private enum Constant {
-        static let padding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
+    private enum Constants {
+        static let verticalPadding: CGFloat = 6
+        static let horizontalPadding: CGFloat = 8
     }
     
     var body: some View {
         Text(managementTeam.korean)
             .font(.app(.footnote, weight: .regular))
             .foregroundStyle(managementTeam.textColor)
-            .padding(Constant.padding)
-            .glassEffect(.clear.tint(managementTeam.backgroundColor))
+            .padding(.vertical, Constants.verticalPadding)
+            .padding(.horizontal, Constants.horizontalPadding)
+            .background {
+                RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
+                    .fill(managementTeam.backgroundColor)
+            }
     }
 }
 
