@@ -47,7 +47,7 @@ struct OperatorAttendanceSectionView: View {
                 .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
         .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
-        .background(Color.grey100)
+//        .background(Color.grey100)
         .alertPrompt(item: $viewModel.alertPrompt)
         .sheet(isPresented: $viewModel.showLocationSheet) {
             locationChangeSheet
@@ -193,21 +193,16 @@ struct OperatorAttendanceSectionView: View {
             .navigationTitle("위치 변경")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") {
-                        viewModel.showLocationSheet = false
-                        resetSelectedPlace()
-                    }
+                ToolBarCollection.CancelBtn {
+                    viewModel.showLocationSheet = false
+                    resetSelectedPlace()
                 }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("변경") {
-                        // TODO: 실제 위치 변경 API 호출
-                        viewModel.showLocationSheet = false
-                        resetSelectedPlace()
-                    }
-                    .disabled(selectedPlace.name.isEmpty)
-                }
+                
+                ToolBarCollection.ConfirmBtn(action: {
+                    // TODO: 실제 위치 변경 API 호출 - [25.02.05] 이재원
+                    viewModel.showLocationSheet = false
+                    resetSelectedPlace()
+                }, disable: selectedPlace.name.isEmpty)
             }
         }
         .presentationDetents([.medium, .large])
