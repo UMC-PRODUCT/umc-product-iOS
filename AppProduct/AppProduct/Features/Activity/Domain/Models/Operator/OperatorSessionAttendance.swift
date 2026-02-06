@@ -28,3 +28,27 @@ struct OperatorSessionAttendance: Identifiable, Equatable {
         pendingMembers.isEmpty
     }
 }
+
+// MARK: - copyWith
+
+extension OperatorSessionAttendance {
+    /// 특정 프로퍼티만 변경한 새 인스턴스 생성
+    ///
+    /// - Parameters:
+    ///   - attendedCount: 출석 완료 인원 (nil이면 기존 값 유지)
+    ///   - pendingMembers: 승인 대기 멤버 목록 (nil이면 기존 값 유지)
+    /// - Returns: 변경된 프로퍼티가 적용된 새 인스턴스
+    func copyWith(
+        attendedCount: Int? = nil,
+        pendingMembers: [PendingMember]? = nil
+    ) -> OperatorSessionAttendance {
+        OperatorSessionAttendance(
+            serverID: self.serverID,
+            session: self.session,
+            attendanceRate: self.attendanceRate,
+            attendedCount: attendedCount ?? self.attendedCount,
+            totalCount: self.totalCount,
+            pendingMembers: pendingMembers ?? self.pendingMembers
+        )
+    }
+}

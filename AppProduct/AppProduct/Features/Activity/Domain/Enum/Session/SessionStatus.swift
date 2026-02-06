@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftUI
 
 /// 운영진 세션 진행 상태
 enum OperatorSessionStatus: String, CaseIterable {
@@ -17,24 +16,6 @@ enum OperatorSessionStatus: String, CaseIterable {
     // MARK: - Property
 
     var displayText: String { rawValue }
-
-    /// 상태 아이콘 색상
-    var iconColor: Color {
-        switch self {
-        case .beforeStart: return .gray.opacity(0.7)
-        case .inProgress: return .indigo400
-        case .ended: return .green.opacity(0.7)
-        }
-    }
-
-    /// 상태 텍스트 색상
-    var textColor: Color {
-        switch self {
-        case .beforeStart: return .grey600
-        case .inProgress: return .indigo500
-        case .ended: return .gray
-        }
-    }
 
     // MARK: - Factory Method
 

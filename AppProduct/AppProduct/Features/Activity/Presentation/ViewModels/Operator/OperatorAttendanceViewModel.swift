@@ -148,7 +148,7 @@ final class OperatorAttendanceViewModel {
     private func approveAttendance(memberId: UUID, sessionId: UUID) async {
         alertPrompt = nil
 
-        // TODO: 실제 API 연동
+        // TODO: 실제 API 연동 - [25.02.05] 이재원
         // try await useCase.approveAttendance(attendanceId: AttendanceID(value: memberId))
 
         // Mock: 해당 멤버 제거
@@ -159,7 +159,7 @@ final class OperatorAttendanceViewModel {
     private func rejectAttendance(memberId: UUID, sessionId: UUID) async {
         alertPrompt = nil
 
-        // TODO: 실제 API 연동
+        // TODO: 실제 API 연동 - [25.02.05] 이재원
         // try await useCase.rejectAttendance(attendanceId: AttendanceID(value: memberId), reason: "")
 
         // Mock: 해당 멤버 제거
@@ -170,7 +170,7 @@ final class OperatorAttendanceViewModel {
     private func approveAllAttendances(sessionId: UUID) async {
         alertPrompt = nil
 
-        // TODO: 실제 API 연동
+        // TODO: 실제 API 연동 - [25.02.05] 이재원
         // try await useCase.approveAllAttendances(sessionId: SessionID(value: sessionId))
 
         // Mock: 모든 멤버 제거
@@ -184,13 +184,8 @@ final class OperatorAttendanceViewModel {
 
         if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
             let updatedMembers = sessions[index].pendingMembers.filter { $0.id != memberId }
-            let session = sessions[index]
-            sessions[index] = OperatorSessionAttendance(
-                serverID: session.serverID,
-                session: session.session,
-                attendanceRate: session.attendanceRate,
-                attendedCount: session.attendedCount + 1,
-                totalCount: session.totalCount,
+            sessions[index] = sessions[index].copyWith(
+                attendedCount: sessions[index].attendedCount + 1,
                 pendingMembers: updatedMembers
             )
             sessionsState = .loaded(sessions)
@@ -201,14 +196,9 @@ final class OperatorAttendanceViewModel {
         guard case .loaded(var sessions) = sessionsState else { return }
 
         if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
-            let session = sessions[index]
-            let approvedCount = session.pendingMembers.count
-            sessions[index] = OperatorSessionAttendance(
-                serverID: session.serverID,
-                session: session.session,
-                attendanceRate: session.attendanceRate,
-                attendedCount: session.attendedCount + approvedCount,
-                totalCount: session.totalCount,
+            let approvedCount = sessions[index].pendingMembers.count
+            sessions[index] = sessions[index].copyWith(
+                attendedCount: sessions[index].attendedCount + approvedCount,
                 pendingMembers: []
             )
             sessionsState = .loaded(sessions)
