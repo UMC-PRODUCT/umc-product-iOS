@@ -16,11 +16,6 @@ struct OperatorAttendanceSectionView: View {
     // MARK: - Property
 
     @State private var viewModel: OperatorAttendanceViewModel
-    @State private var selectedPlace: PlaceSearchInfo = .init(
-        name: "",
-        address: "",
-        coordinate: .init(latitude: 0, longitude: 0)
-    )
 
     private let container: DIContainer
     private let errorHandler: ErrorHandler
@@ -37,6 +32,12 @@ struct OperatorAttendanceSectionView: View {
             errorHandler: errorHandler,
             useCase: useCase.operatorAttendanceUseCase
         ))
+    }
+    
+    // MARK: - Constants
+    
+    private enum Constants {
+        static let loadingPlaceholderHeight: CGFloat = 200
     }
 
     // MARK: - Body
@@ -55,7 +56,17 @@ struct OperatorAttendanceSectionView: View {
         }
         .alertPrompt(item: $viewModel.alertPrompt)
         .sheet(isPresented: $viewModel.showLocationSheet) {
-            locationChangeSheet
+            LocationChangeSheetView(
+                session: viewModel.selectedSession,
+                errorHandler: errorHandler,
+                onDismiss: {
+                    viewModel.showLocationSheet = false
+                },
+                onConfirm: { place in
+                    // TODO: 실제 위치 변경 API 호출 - [25.02.06] 이재원
+                    viewModel.showLocationSheet = false
+                }
+            )
         }
     }
 
@@ -95,8 +106,8 @@ struct OperatorAttendanceSectionView: View {
             corners: .concentric(minimum: DefaultConstant.concentricRadius),
             isUniform: true
         )
-        .fill(Color.grey200)
-        .frame(height: 200)
+        .fill(Color.grey100)
+        .frame(height: Constants.loadingPlaceholderHeight)
         .overlay {
             ProgressView()
                 .tint(.grey400)
@@ -149,75 +160,20 @@ struct OperatorAttendanceSectionView: View {
         } description: {
             Text(error.localizedDescription)
         } actions: {
-            Button("다시 시도") {
+            Button {
                 Task {
                     await viewModel.fetchSessions()
                 }
+            } label: {
+                Image(systemName: "arrow.trianglehead.clockwise")
+                    .renderingMode(.template)
+                    .foregroundStyle(.indigo600)
             }
             .buttonStyle(.glassProminent)
         }
         .padding(.top, DefaultSpacing.spacing32)
     }
 
-    // MARK: - Location Change Sheet
-
-    private var locationChangeSheet: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-                if let session = viewModel.selectedSession {
-                    // 현재 세션 정보
-                    VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-                        Text("세션 정보")
-                            .appFont(.subheadline, color: .grey600)
-
-                        Text(session.info.title)
-                            .appFont(.calloutEmphasis)
-                    }
-
-                    Divider()
-
-                    // 장소 선택
-                    VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-                        Text("새 위치 선택")
-                            .appFont(.subheadline, color: .grey600)
-
-                        PlaceSelectView(place: $selectedPlace)
-                            .padding(DefaultConstant.defaultListPadding)
-                            .background(.white, in: .rect(cornerRadius: 16))
-                    }
-
-                    Spacer()
-                }
-            }
-            .padding()
-            .navigationTitle("위치 변경")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolBarCollection.CancelBtn {
-                    viewModel.showLocationSheet = false
-                    resetSelectedPlace()
-                }
-                
-                ToolBarCollection.ConfirmBtn(action: {
-                    // TODO: 실제 위치 변경 API 호출 - [25.02.05] 이재원
-                    viewModel.showLocationSheet = false
-                    resetSelectedPlace()
-                }, disable: selectedPlace.name.isEmpty)
-            }
-        }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
-    }
-
-    // MARK: - Helper
-
-    private func resetSelectedPlace() {
-        selectedPlace = PlaceSearchInfo(
-            name: "",
-            address: "",
-            coordinate: .init(latitude: 0, longitude: 0)
-        )
-    }
 }
 
 // MARK: - Preview
