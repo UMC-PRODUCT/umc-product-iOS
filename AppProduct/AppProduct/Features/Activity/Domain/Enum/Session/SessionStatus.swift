@@ -8,8 +8,8 @@
 import Foundation
 import SwiftUI
 
-/// 세션 진행 상태
-enum SessionStatus: String, CaseIterable {
+/// 운영진 세션 진행 상태
+enum OperatorSessionStatus: String, CaseIterable {
     case beforeStart = "진행전"
     case inProgress = "진행중"
     case ended = "종료됨"
@@ -39,7 +39,7 @@ enum SessionStatus: String, CaseIterable {
     // MARK: - Factory Method
 
     /// 시작/종료 시간으로부터 현재 상태 계산
-    static func from(startTime: Date, endTime: Date, now: Date = Date()) -> SessionStatus {
+    static func from(startTime: Date, endTime: Date, now: Date = Date()) -> OperatorSessionStatus {
         if now < startTime {
             return .beforeStart
         } else if now >= startTime && now <= endTime {

@@ -16,7 +16,7 @@ struct SessionStatusIcon: View, Equatable {
 
     // MARK: - Property
 
-    let status: SessionStatus
+    let status: OperatorSessionStatus
 
     // MARK: - Constants
 
@@ -80,7 +80,7 @@ struct SessionStatusIcon: View, Equatable {
 #if DEBUG
 #Preview("SessionStatusIcon - All States", traits: .sizeThatFitsLayout) {
     VStack(spacing: DefaultSpacing.spacing24) {
-        ForEach(SessionStatus.allCases, id: \.self) { status in
+        ForEach(OperatorSessionStatus.allCases, id: \.self) { status in
             HStack(spacing: DefaultSpacing.spacing16) {
                 SessionStatusIcon(status: status)
                     .equatable()

@@ -66,6 +66,7 @@ struct OperatorSessionCard: View, Equatable {
         static let backgroundOpacity: CGFloat = 0.15
     }
 
+
     // MARK: - Body
 
     var body: some View {
@@ -75,11 +76,7 @@ struct OperatorSessionCard: View, Equatable {
             AttendanceStatsRow(sessionAttendance: sessionAttendance)
                 .equatable()
 
-            if sessionAttendance.pendingCount > 0 {
-                pendingSection
-            } else {
-                completionSection
-            }
+            statusSection
         }
         .padding(DefaultConstant.defaultCardPadding)
         .background {
@@ -94,11 +91,61 @@ struct OperatorSessionCard: View, Equatable {
 
     // MARK: - Function
 
-    /// 헤더 섹션 (아이콘, 제목, 상태, 위치 버튼)
+    /// 상태별 섹션 전환
+    @ViewBuilder
+    private var statusSection: some View {
+        let style: StatusSectionStyle = {
+            switch currentSessionStatus {
+            case .beforeStart:
+                return .beforeStart
+            case .inProgress, .ended:
+                return sessionAttendance.pendingCount > 0 ? .pending : .complete
+            }
+        }()
+
+        statusSectionView(style: style)
+    }
+
+    /// 통합 상태 섹션 뷰
+    private func statusSectionView(style: StatusSectionStyle) -> some View {
+        Button {
+            if style.isEnabled {
+                onPendingListTap()
+            }
+        } label: {
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Image(systemName: style.icon)
+                    .renderingMode(.template)
+                    .foregroundStyle(style.color)
+
+                Text(style.text)
+                    .appFont(.calloutEmphasis, color: style.color)
+
+                if style.showChevron {
+                    Spacer()
+
+                    Image(systemName: DefaultConstant.chevronForwardImage)
+                        .renderingMode(.template)
+                        .foregroundStyle(style.color)
+                }
+            }
+            .padding(ActivityConstants.statusCardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(
+            style.isEnabled
+            ? .regular.tint(style.backgroundColor).interactive()
+            : .regular.tint(style.backgroundColor),
+            in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
+        )
+        .disabled(!style.isEnabled)
+    }
+
     private var headerSection: some View {
         HStack(alignment: .center, spacing: DefaultSpacing.spacing12) {
-            SessionStatusIcon(status: currentSessionStatus)
-                .equatable()
+//            SessionStatusIcon(status: currentSessionStatus)
+//                .equatable()
 
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                 Text(info.title)
@@ -125,52 +172,6 @@ struct OperatorSessionCard: View, Equatable {
         }
     }
 
-    /// 승인 대기 섹션 (탭 가능, 펼침/접힘)
-    private var pendingSection: some View {
-        Button {
-            onPendingListTap()
-        } label: {
-            HStack {
-                Image(systemName: "person.2.fill")
-                    .renderingMode(.template)
-                    .foregroundStyle(.orange)
-                    .padding(DefaultConstant.iconPadding)
-
-                Text("승인 대기 명단 확인하기")
-                    .appFont(.calloutEmphasis, color: .orange)
-
-                Spacer()
-
-                Image(systemName: DefaultConstant.chevronForwardImage)
-                    .renderingMode(.template)
-                    .foregroundStyle(.orange)
-                    .padding(DefaultConstant.iconPadding)
-            }
-            .padding(4)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.glassProminent)
-        .tint(.orange.opacity(Constants.backgroundOpacity))
-    }
-
-    /// 승인 완료 섹션
-    private var completionSection: some View {
-        HStack {
-            Image(systemName: "checkmark.circle.fill")
-                .renderingMode(.template)
-                .foregroundStyle(.green)
-                .padding(DefaultConstant.iconPadding)
-
-            Text("모든 출석 승인이 완료되었습니다.")
-                .appFont(.calloutEmphasis, color: .green)
-        }
-        .padding(ActivityConstants.statusCardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            .green.opacity(Constants.backgroundOpacity),
-            in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
-    }
-
     /// 상태 칩 (진행 중, 출결일, 예정)
     @ViewBuilder
     private var status: some View {
@@ -179,10 +180,10 @@ struct OperatorSessionCard: View, Equatable {
     }
 
     /// 세션 상태 계산
-    private var currentSessionStatus: SessionStatus {
-        SessionStatus.from(startTime: info.startTime, endTime: info.endTime)
+    private var currentSessionStatus: OperatorSessionStatus {
+        OperatorSessionStatus.from(startTime: info.startTime, endTime: info.endTime)
     }
-    
+
     private var sessionTime: some View {
         HStack(spacing: DefaultSpacing.spacing4) {
             Image(systemName: "clock")
@@ -201,7 +202,7 @@ struct OperatorSessionCard: View, Equatable {
         info.startTime.toYearMonthDayWithWeekday()
     }
     
-    /// 시간 포맷팅 (예: 14:00 - 18:00)
+    /// 시간 포맷팅
     private var formattedTime: String {
         info.startTime.timeRange(to: info.endTime)
     }
@@ -213,38 +214,39 @@ struct OperatorSessionCard: View, Equatable {
 #Preview {
     ScrollView {
         VStack(spacing: 20) {
-            // 진행 중 - 승인 대기 있음
+            // 진행전 (beforeStart) - 미래 세션
             OperatorSessionCard(
                 sessionAttendance: OperatorSessionAttendance(
-                    serverID: "session_1",
-                    session: AttendancePreviewData.sessions[1],
-                    attendanceRate: 0.85,
-                    attendedCount: 34,
-                    totalCount: 40,
-                    pendingMembers: mockPendingMembers
-                )
-            )
-
-            // 출결일 - 모두 승인 완료
-            OperatorSessionCard(
-                sessionAttendance: OperatorSessionAttendance(
-                    serverID: "session_2",
-                    session: AttendancePreviewData.sessions[0],
-                    attendanceRate: 1.0,
-                    attendedCount: 40,
+                    serverID: "session_beforeStart",
+                    session: AttendancePreviewData.sessions[10],
+                    attendanceRate: 0.0,
+                    attendedCount: 0,
                     totalCount: 40,
                     pendingMembers: []
                 )
             )
 
+            // 진행 중 (inProgress) - 승인 대기 있음
             OperatorSessionCard(
                 sessionAttendance: OperatorSessionAttendance(
-                    serverID: "session_3",
-                    session: AttendancePreviewData.sessions[3],
+                    serverID: "session_inProgress",
+                    session: AttendancePreviewData.sessions[9],
                     attendanceRate: 0.85,
                     attendedCount: 34,
                     totalCount: 40,
                     pendingMembers: mockPendingMembers
+                )
+            )
+
+            // 종료됨 (ended) - 모두 승인 완료
+            OperatorSessionCard(
+                sessionAttendance: OperatorSessionAttendance(
+                    serverID: "session_completed",
+                    session: AttendancePreviewData.sessions[0],
+                    attendanceRate: 1.0,
+                    attendedCount: 40,
+                    totalCount: 40,
+                    pendingMembers: []
                 )
             )
         }
