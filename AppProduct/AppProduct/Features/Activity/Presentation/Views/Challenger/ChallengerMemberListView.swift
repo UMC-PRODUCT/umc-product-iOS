@@ -34,13 +34,8 @@ struct ChallengerMemberListView: View {
     var body: some View {
         Group {
             switch viewModel.membersState {
-            case .idle:
-                Color.clear
-                    .task {
-                        await viewModel.fetchMembers()
-                    }
-            case .loading:
-                ProgressView()
+            case .idle, .loading:
+                loadingView
             case .loaded:
                 memberListContent
             case .failed(let error):
@@ -55,6 +50,9 @@ struct ChallengerMemberListView: View {
                 }
             }
         }
+        .task {
+            await viewModel.fetchMembers()
+        }
         .searchable(text: $viewModel.searchText)
         .searchToolbarBehavior(.minimize)
         .sheet(isPresented: $showSheet) {
@@ -63,6 +61,16 @@ struct ChallengerMemberListView: View {
     }
     
     // MARK: - SubView
+    
+    private var loadingView: some View {
+        VStack(spacing: DefaultSpacing.spacing16) {
+            ProgressView()
+
+            Text("챌린저 목록 불러오는 중...")
+                .appFont(.subheadline, color: .grey500)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
     
     private var memberListContent: some View {
         Group {

@@ -58,16 +58,23 @@ struct MemberImagePresenter: View, Equatable {
     
     // MARK: - Body
     var body: some View {
-        Image(memberManagementItem.profile ?? "")
-            .resizable()
-            .frame(width: Constants.imageSize.width, height: Constants.imageSize.height)
-            .clipShape(Circle())
-            .aspectRatio(contentMode: .fit)
-            .overlay(alignment: .topTrailing) {
-                if memberManagementItem.badge {
-                    MemberBadgePresenter()
-                }
+        Group {
+            if memberManagementItem.profile != nil {
+                /// !!! - url 이미지 처리
+                Image(systemName: "person.fill")
+                    .resizable()
+            } else {
+                Circle().fill(.grey300)
             }
+        }
+        .frame(width: Constants.imageSize.width, height: Constants.imageSize.height)
+        .clipShape(Circle())
+        .aspectRatio(contentMode: .fit)
+        .overlay(alignment: .topTrailing) {
+            if memberManagementItem.badge {
+                MemberBadgePresenter()
+            }
+        }
     }
 }
 

@@ -55,7 +55,6 @@ struct ChallengerMemberDetailSheetView: View {
             .scrollDisabled(true)
             .presentationDetents([.height(Constants.defaultSheetFraction)])
             .presentationDragIndicator(.visible)
-            .interactiveDismissDisabled()
         }
     }
     
