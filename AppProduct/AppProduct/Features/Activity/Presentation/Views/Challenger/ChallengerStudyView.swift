@@ -50,7 +50,7 @@ struct ChallengerStudyView: View {
             loadingView
 
         case .loaded(let data):
-            CurriculumView(
+            ChallengerCurriculumView(
                 curriculumModel: data.progress,
                 missions: data.missions
             ) { mission, type, link in

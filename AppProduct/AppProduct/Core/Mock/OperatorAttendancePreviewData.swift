@@ -11,11 +11,11 @@ import Foundation
 /// 운영진 출석 관리 Preview 데이터
 struct OperatorAttendancePreviewData {
 
-    // MARK: - PendingMember Mock
+    // MARK: - OperatorPendingMember Mock
 
     /// 승인 대기 멤버 목록
-    static let pendingMembers: [PendingMember] = [
-        PendingMember(
+    static let pendingMembers: [OperatorPendingMember] = [
+        OperatorPendingMember(
             serverID: "member_1",
             name: "홍길동",
             nickname: "닉네임",
@@ -23,7 +23,7 @@ struct OperatorAttendancePreviewData {
             requestTime: Date.now.addingTimeInterval(-300),
             reason: "지각 사유입니다. 버스가 늦게 와서 조금 늦었습니다."
         ),
-        PendingMember(
+        OperatorPendingMember(
             serverID: "member_2",
             name: "김철수",
             nickname: nil,
@@ -31,7 +31,7 @@ struct OperatorAttendancePreviewData {
             requestTime: Date.now.addingTimeInterval(-600),
             reason: nil
         ),
-        PendingMember(
+        OperatorPendingMember(
             serverID: "member_3",
             name: "이영희",
             nickname: "영희짱",
