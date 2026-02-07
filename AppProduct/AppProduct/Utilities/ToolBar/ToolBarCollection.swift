@@ -561,4 +561,87 @@ struct ToolBarCollection {
             }
         }
     }
+    
+    /// 운영진 출석 승인 메뉴 (선택 모드 토글 지원)
+    ///
+    /// - 일반 모드: "선택" 버튼 표시
+    /// - 선택 모드: ellipsis 메뉴 + X 버튼 표시
+    struct OperationApprovalMenu: ToolbarContent {
+        @Binding var isSelecting: Bool
+        let selectedCount: Int
+        var onApproveSelected: () -> Void
+        var onRejectSelected: () -> Void
+        var onApproveAll: () -> Void
+        var onRejectAll: () -> Void
+
+        private var hasSelection: Bool {
+            selectedCount > 0
+        }
+
+        var body: some ToolbarContent {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if isSelecting {
+                    approvalMenu
+                    closeButton
+                } else {
+                    selectButton
+                }
+            }
+        }
+
+        // MARK: - View Components
+
+        private var approvalMenu: some View {
+            Menu {
+                Section {
+                    Button(role: .destructive, action: onRejectSelected) {
+                        Label("선택 거절 (\(selectedCount))", systemImage: "xmark.circle")
+                    }
+                    .disabled(!hasSelection)
+                    
+                    Button(action: onApproveSelected) {
+                        Label("선택 승인 (\(selectedCount))", systemImage: "checkmark.circle")
+                    }
+                    .disabled(!hasSelection)
+                }
+
+                Section {
+                    Button(role: .destructive, action: onRejectAll) {
+                        Label("전체 거절", systemImage: "xmark.circle.fill")
+                    }
+                    Button(action: onApproveAll) {
+                        Label("전체 승인", systemImage: "checkmark.circle.fill")
+                    }
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.black)
+            }
+        }
+
+        private var closeButton: some View {
+            Button {
+                withAnimation(.snappy(duration: DefaultConstant.animationTime)) {
+                    isSelecting = false
+                }
+            } label: {
+                Image(systemName: "arrow.uturn.backward")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.black)
+            }
+        }
+
+        private var selectButton: some View {
+            Button {
+                withAnimation(.snappy(duration: DefaultConstant.animationTime)) {
+                    isSelecting = true
+                }
+            } label: {
+                Image(systemName: "checklist")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.black)
+            }
+        }
+    }
 }
