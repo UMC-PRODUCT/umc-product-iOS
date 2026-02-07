@@ -1,5 +1,5 @@
 //
-//  LocationChangeSheetView.swift
+//  OperatorLocationChangeSheetView.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 2/6/26.
@@ -10,7 +10,7 @@ import SwiftUI
 /// 세션 위치 변경 시트
 ///
 /// 세션 정보를 표시하고 새 위치를 검색하여 선택할 수 있는 시트입니다.
-struct LocationChangeSheetView: View {
+struct OperatorLocationChangeSheetView: View {
 
     // MARK: - Property
 
@@ -135,7 +135,7 @@ struct LocationChangeSheetView: View {
         Text("1")
     }
     .sheet(isPresented: .constant(true)) {
-        LocationChangeSheetView(
+        OperatorLocationChangeSheetView(
             session: OperatorAttendancePreviewData.sessions.first?.session,
             errorHandler: AttendancePreviewData.errorHandler,
             onDismiss: {},

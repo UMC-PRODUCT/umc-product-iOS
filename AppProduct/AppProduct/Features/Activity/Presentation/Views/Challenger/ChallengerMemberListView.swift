@@ -1,5 +1,5 @@
 //
-//  MemberListView.swift
+//  ChallengerMemberListView.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 1/23/26.
@@ -10,7 +10,7 @@ import SwiftUI
 /// Challenger 모드의 구성원 섹션
 ///
 /// 동아리 구성원 목록을 표시합니다.
-struct MemberListView: View {
+struct ChallengerMemberListView: View {
     var body: some View {
         ScrollView {
             ContentUnavailableView {
@@ -24,5 +24,5 @@ struct MemberListView: View {
 }
 
 #Preview {
-    MemberListView()
+    ChallengerMemberListView()
 }

@@ -1,5 +1,5 @@
 //
-//  MissionCardHeader.swift
+//  ChallengerMissionCardHeader.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 01/29/26.
@@ -15,12 +15,12 @@ fileprivate enum Constants {
     static let weekBadgeCornerRadius: CGFloat = 12
 }
 
-// MARK: - MissionCardHeader
+// MARK: - ChallengerMissionCardHeader
 
 /// 미션 카드 헤더 뷰
 ///
 /// 주차 숫자 배지, 제목, 상태 텍스트, 펼치기/접기 버튼을 표시합니다.
-struct MissionCardHeader: View, Equatable {
+struct ChallengerMissionCardHeader: View, Equatable {
 
     // MARK: - Property
 
@@ -122,14 +122,14 @@ fileprivate struct WeekNumberBadge: View, Equatable {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("MissionCardHeader - All Status") {
+#Preview("ChallengerMissionCardHeader - All Status") {
     ScrollView {
         VStack(spacing: 16) {
             ForEach(
                 Array(MissionPreviewData.allStatusMissions.enumerated()),
                 id: \.element.id
             ) { index, mission in
-                MissionCardHeader(
+                ChallengerMissionCardHeader(
                     model: mission,
                     isExpanded: index == 1
                 ) { }
@@ -142,11 +142,11 @@ fileprivate struct WeekNumberBadge: View, Equatable {
     .background(Color.grey100)
 }
 
-#Preview("MissionCardHeader - iOS Missions") {
+#Preview("ChallengerMissionCardHeader - iOS Missions") {
     ScrollView {
         VStack(spacing: 12) {
             ForEach(MissionPreviewData.iosMissions) { mission in
-                MissionCardHeader(
+                ChallengerMissionCardHeader(
                     model: mission,
                     isExpanded: false
                 ) { }

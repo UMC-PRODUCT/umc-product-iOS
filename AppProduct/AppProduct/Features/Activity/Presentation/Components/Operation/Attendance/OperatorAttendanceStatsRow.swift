@@ -1,5 +1,5 @@
 //
-//  AttendanceStatsRow.swift
+//  OperatorAttendanceStatsRow.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 2/5/26.
@@ -10,7 +10,7 @@ import SwiftUI
 /// 운영진 세션 카드 출석 통계 행
 ///
 /// 출석률 게이지바, 날짜/시간, 출석 인원을 표시합니다.
-struct AttendanceStatsRow: View, Equatable {
+struct OperatorAttendanceStatsRow: View, Equatable {
 
     // MARK: - Property
 
@@ -98,7 +98,7 @@ struct AttendanceStatsRow: View, Equatable {
     ZStack {
         Color.grey100.frame(height: 300)
 
-        AttendanceStatsRow(
+        OperatorAttendanceStatsRow(
             sessionAttendance: OperatorSessionAttendance(
                 serverID: "preview",
                 session: AttendancePreviewData.sessions[0],

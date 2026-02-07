@@ -1,5 +1,5 @@
 //
-//  AttendanceReasonSheet.swift
+//  ChallengerAttendanceReasonSheet.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 1/28/26.
@@ -10,7 +10,7 @@ import SwiftUI
 /// 출석 사유 작성 시트
 ///
 /// GPS 출석이 어려운 경우 사유를 작성하여 출석을 요청할 수 있는 시트입니다.
-struct AttendanceReasonSheet: View {
+struct ChallengerAttendanceReasonSheet: View {
 
     // MARK: - Property
 
@@ -81,7 +81,7 @@ struct AttendanceReasonSheet: View {
 #Preview {
     Text("Preview Trigger")
         .sheet(isPresented: .constant(true)) {
-            AttendanceReasonSheet { reason in
+            ChallengerAttendanceReasonSheet { reason in
                 print("Submitted reason: \(reason)")
             }
         }

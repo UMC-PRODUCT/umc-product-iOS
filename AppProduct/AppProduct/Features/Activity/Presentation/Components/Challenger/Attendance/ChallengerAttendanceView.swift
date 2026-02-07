@@ -93,7 +93,7 @@ struct ChallengerAttendanceView: View, Equatable {
             switch session.attendanceStatus {
             case .pendingApproval:
                 // 승인 대기 카드 (버튼에서 모핑 전환)
-                PendingApprovalView()
+                ChallengerPendingApprovalView()
                     .glassEffect(
                         .regular,
                         in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
@@ -137,7 +137,7 @@ struct ChallengerAttendanceView: View, Equatable {
         .buttonStyle(.plain)
         .disabled(!attendanceViewModel.isAttendanceAvailable(for: session))
         .sheet(isPresented: $showReasonSheet) {
-            AttendanceReasonSheet { reason in
+            ChallengerAttendanceReasonSheet { reason in
                 await attendanceViewModel.submitAttendanceReason(
                     userId: userId,
                     session: session,

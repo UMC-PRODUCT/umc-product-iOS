@@ -10,7 +10,7 @@ import SwiftUI
 #if DEBUG
 struct ActivityStudyTestView: View {
     var body: some View {
-        CurriculumView(
+        ChallengerCurriculumView(
             curriculumModel: CurriculumProgressModel(
                 partName: "iOS PART CURRICULUM",
                 curriculumTitle: "Swift 기초 문법",

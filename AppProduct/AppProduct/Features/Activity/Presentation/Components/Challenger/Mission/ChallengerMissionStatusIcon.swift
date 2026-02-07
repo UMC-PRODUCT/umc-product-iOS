@@ -1,5 +1,5 @@
 //
-//  MissionStatusIcon.swift
+//  ChallengerMissionStatusIcon.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 02/01/26.
@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-// MARK: - MissionStatusIcon
+// MARK: - ChallengerMissionStatusIcon
 
 /// 미션 상태 아이콘 (미션 카드 좌측 상태 표시)
-struct MissionStatusIcon: View, Equatable {
+struct ChallengerMissionStatusIcon: View, Equatable {
 
     // MARK: - Property
 
@@ -19,7 +19,7 @@ struct MissionStatusIcon: View, Equatable {
 
     // MARK: - Equatable
 
-    static func == (lhs: MissionStatusIcon, rhs: MissionStatusIcon) -> Bool {
+    static func == (lhs: ChallengerMissionStatusIcon, rhs: ChallengerMissionStatusIcon) -> Bool {
         lhs.status == rhs.status &&
         lhs.weekNumber == rhs.weekNumber
     }
@@ -97,11 +97,11 @@ struct MissionStatusIcon: View, Equatable {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("MissionStatusIcon - All States") {
+#Preview("ChallengerMissionStatusIcon - All States") {
     VStack(spacing: DefaultSpacing.spacing24) {
         ForEach(MissionStatus.allCases, id: \.self) { status in
             HStack(spacing: DefaultSpacing.spacing16) {
-                MissionStatusIcon(status: status, weekNumber: 3)
+                ChallengerMissionStatusIcon(status: status, weekNumber: 3)
                     .equatable()
 
                 Text(status.displayText)
@@ -115,11 +115,11 @@ struct MissionStatusIcon: View, Equatable {
     .background(Color.grey100)
 }
 
-#Preview("MissionStatusIcon - Week Numbers") {
+#Preview("ChallengerMissionStatusIcon - Week Numbers") {
     VStack(spacing: DefaultSpacing.spacing16) {
         ForEach(1...10, id: \.self) { week in
             HStack(spacing: DefaultSpacing.spacing12) {
-                MissionStatusIcon(status: .inProgress, weekNumber: week)
+                ChallengerMissionStatusIcon(status: .inProgress, weekNumber: week)
                     .equatable()
 
                 Text("Week \(week)")
@@ -133,11 +133,11 @@ struct MissionStatusIcon: View, Equatable {
     .background(Color.grey100)
 }
 
-#Preview("MissionStatusIcon - Card Context") {
+#Preview("ChallengerMissionStatusIcon - Card Context") {
     VStack(spacing: DefaultSpacing.spacing12) {
         // Pass
         HStack(spacing: DefaultSpacing.spacing12) {
-            MissionStatusIcon(status: .pass, weekNumber: 1)
+            ChallengerMissionStatusIcon(status: .pass, weekNumber: 1)
             VStack(alignment: .leading) {
                 Text("SpringBoot 워크북 1주차")
                     .appFont(.calloutEmphasis)
@@ -149,7 +149,7 @@ struct MissionStatusIcon: View, Equatable {
 
         // In Progress
         HStack(spacing: DefaultSpacing.spacing12) {
-            MissionStatusIcon(status: .inProgress, weekNumber: 2)
+            ChallengerMissionStatusIcon(status: .inProgress, weekNumber: 2)
             VStack(alignment: .leading) {
                 Text("SpringBoot 워크북 2주차")
                     .appFont(.calloutEmphasis)
@@ -161,7 +161,7 @@ struct MissionStatusIcon: View, Equatable {
 
         // Locked
         HStack(spacing: DefaultSpacing.spacing12) {
-            MissionStatusIcon(status: .locked, weekNumber: 3)
+            ChallengerMissionStatusIcon(status: .locked, weekNumber: 3)
             VStack(alignment: .leading) {
                 Text("SpringBoot 워크북 3주차")
                     .appFont(.calloutEmphasis)
@@ -178,7 +178,7 @@ struct MissionStatusIcon: View, Equatable {
     .background(Color.grey100)
 }
 
-#Preview("MissionStatusIcon - With Connector (ZStack)") {
+#Preview("ChallengerMissionStatusIcon - With Connector (ZStack)") {
     let iconSize: CGFloat = 28
     let connectorWidth: CGFloat = 2
     let connectorLeading: CGFloat = 13
@@ -194,11 +194,11 @@ struct MissionStatusIcon: View, Equatable {
 
         // 전경: 아이콘 리스트
         VStack(spacing: DefaultSpacing.spacing16) {
-            MissionStatusIcon(status: .pass, weekNumber: 1)
-            MissionStatusIcon(status: .fail, weekNumber: 2)
-            MissionStatusIcon(status: .inProgress, weekNumber: 3)
-            MissionStatusIcon(status: .locked, weekNumber: 4)
-            MissionStatusIcon(status: .locked, weekNumber: 5)
+            ChallengerMissionStatusIcon(status: .pass, weekNumber: 1)
+            ChallengerMissionStatusIcon(status: .fail, weekNumber: 2)
+            ChallengerMissionStatusIcon(status: .inProgress, weekNumber: 3)
+            ChallengerMissionStatusIcon(status: .locked, weekNumber: 4)
+            ChallengerMissionStatusIcon(status: .locked, weekNumber: 5)
         }
     }
     .padding()

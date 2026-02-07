@@ -1,5 +1,5 @@
 //
-//  PendingMemberRow.swift
+//  OperatorPendingMemberRow.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 2/5/26.
@@ -10,11 +10,11 @@ import SwiftUI
 /// 운영진 출석 관리 승인 대기 멤버 행
 ///
 /// 승인 대기 중인 멤버 정보와 승인/반려 버튼을 표시합니다.
-struct PendingMemberRow: View, Equatable {
+struct OperatorPendingMemberRow: View, Equatable {
 
     // MARK: - Property
 
-    private let member: PendingMember
+    private let member: OperatorPendingMember
 
     var onReasonTap: (() -> Void)?
     var onRejectTap: () -> Void
@@ -23,7 +23,7 @@ struct PendingMemberRow: View, Equatable {
     // MARK: - Initializer
 
     init(
-        member: PendingMember,
+        member: OperatorPendingMember,
         onReasonTap: (() -> Void)? = nil,
         onRejectTap: @escaping () -> Void,
         onApproveTap: @escaping () -> Void
@@ -118,8 +118,8 @@ struct PendingMemberRow: View, Equatable {
 #Preview(traits: .sizeThatFitsLayout) {
     VStack(spacing: 12) {
         // 사유 있음
-        PendingMemberRow(
-            member: PendingMember(
+        OperatorPendingMemberRow(
+            member: OperatorPendingMember(
                 serverID: "1",
                 name: "홍길동",
                 nickname: "닉네임",
@@ -133,8 +133,8 @@ struct PendingMemberRow: View, Equatable {
         )
 
         // 사유 없음
-        PendingMemberRow(
-            member: PendingMember(
+        OperatorPendingMemberRow(
+            member: OperatorPendingMember(
                 serverID: "2",
                 name: "김철수",
                 nickname: nil,

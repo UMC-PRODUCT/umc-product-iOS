@@ -1,5 +1,5 @@
 //
-//  MissionCardContent.swift
+//  ChallengerMissionCardContent.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 01/29/26.
@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-// MARK: - MissionCardContent
+// MARK: - ChallengerMissionCardContent
 
 /// 미션 카드 확장 콘텐츠 (미션 설명, 제출 타입 선택, 링크 입력/제출 버튼)
-struct MissionCardContent: View, Equatable {
+struct ChallengerMissionCardContent: View, Equatable {
 
     // MARK: - Property
 
@@ -22,7 +22,7 @@ struct MissionCardContent: View, Equatable {
     let onLinkTextChanged: (String) -> Void
     let onSubmit: (MissionSubmissionType, String?) -> Void
 
-    static func == (lhs: MissionCardContent, rhs: MissionCardContent) -> Bool {
+    static func == (lhs: ChallengerMissionCardContent, rhs: ChallengerMissionCardContent) -> Bool {
         lhs.model == rhs.model &&
         lhs.submissionType == rhs.submissionType &&
         lhs.linkText == rhs.linkText
@@ -290,7 +290,7 @@ fileprivate struct SubmitButton: View, Equatable {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("MissionCardContent - InProgress", traits: .sizeThatFitsLayout) {
+#Preview("ChallengerMissionCardContent - InProgress", traits: .sizeThatFitsLayout) {
     struct Demo: View {
         @State private var submissionType: MissionSubmissionType = .link
         @State private var linkText: String = ""
@@ -300,7 +300,7 @@ fileprivate struct SubmitButton: View, Equatable {
             ZStack {
                 Color.grey100.ignoresSafeArea().frame(height: 400)
 
-                MissionCardContent(
+                ChallengerMissionCardContent(
                     model: MissionPreviewData.singleMission,
                     submissionType: submissionType,
                     linkText: linkText,
@@ -319,7 +319,7 @@ fileprivate struct SubmitButton: View, Equatable {
     return Demo()
 }
 
-#Preview("MissionCardContent - All Status") {
+#Preview("ChallengerMissionCardContent - All Status") {
     struct Demo: View {
         @FocusState private var focusedMissionID: UUID?
 
@@ -330,7 +330,7 @@ fileprivate struct SubmitButton: View, Equatable {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(model.status.displayText)
                                 .appFont(.title3, color: .gray)
-                            MissionCardContent(
+                            ChallengerMissionCardContent(
                                 model: model,
                                 submissionType: .link,
                                 linkText: "",

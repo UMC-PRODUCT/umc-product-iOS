@@ -1,5 +1,5 @@
 //
-//  SessionStatusIcon.swift
+//  OperatorSessionStatusIcon.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 2/6/26.
@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-// MARK: - SessionStatusIcon
+// MARK: - OperatorSessionStatusIcon
 
 /// 세션 상태 아이콘 (운영진 세션 카드 좌측 상태 표시)
 ///
 /// 세션 진행 상태를 아이콘으로 표시합니다.
-struct SessionStatusIcon: View, Equatable {
+struct OperatorSessionStatusIcon: View, Equatable {
 
     // MARK: - Property
 
@@ -27,7 +27,7 @@ struct SessionStatusIcon: View, Equatable {
 
     // MARK: - Equatable
 
-    static func == (lhs: SessionStatusIcon, rhs: SessionStatusIcon) -> Bool {
+    static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.status == rhs.status
     }
 
@@ -78,11 +78,11 @@ struct SessionStatusIcon: View, Equatable {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("SessionStatusIcon - All States", traits: .sizeThatFitsLayout) {
+#Preview("OperatorSessionStatusIcon - All States", traits: .sizeThatFitsLayout) {
     VStack(spacing: DefaultSpacing.spacing24) {
         ForEach(OperatorSessionStatus.allCases, id: \.self) { status in
             HStack(spacing: DefaultSpacing.spacing16) {
-                SessionStatusIcon(status: status)
+                OperatorSessionStatusIcon(status: status)
                     .equatable()
 
                 Text(status.displayText)
@@ -96,10 +96,10 @@ struct SessionStatusIcon: View, Equatable {
 //    .background(Color.grey100)
 }
 
-#Preview("SessionStatusIcon - Card Context") {
+#Preview("OperatorSessionStatusIcon - Card Context") {
     VStack(spacing: DefaultSpacing.spacing12) {
         HStack(spacing: DefaultSpacing.spacing12) {
-            SessionStatusIcon(status: .beforeStart)
+            OperatorSessionStatusIcon(status: .beforeStart)
             VStack(alignment: .leading) {
                 Text("iOS 정규 세션 1주차")
                     .appFont(.calloutEmphasis)
@@ -110,7 +110,7 @@ struct SessionStatusIcon: View, Equatable {
         }
 
         HStack(spacing: DefaultSpacing.spacing12) {
-            SessionStatusIcon(status: .inProgress)
+            OperatorSessionStatusIcon(status: .inProgress)
             VStack(alignment: .leading) {
                 Text("iOS 정규 세션 2주차")
                     .appFont(.calloutEmphasis)
@@ -121,7 +121,7 @@ struct SessionStatusIcon: View, Equatable {
         }
 
         HStack(spacing: DefaultSpacing.spacing12) {
-            SessionStatusIcon(status: .ended)
+            OperatorSessionStatusIcon(status: .ended)
             VStack(alignment: .leading) {
                 Text("iOS 정규 세션 3주차")
                     .appFont(.calloutEmphasis)

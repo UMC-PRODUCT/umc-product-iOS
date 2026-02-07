@@ -1,5 +1,5 @@
 //
-//  MyAttendanceStatusView.swift
+//  ChallengerMyAttendanceStatusView.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 1/22/26.
@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-// MARK: - MyAttendanceStatusView
+// MARK: - ChallengerMyAttendanceStatusView
 
 /// 나의 출석 현황 섹션
-struct MyAttendanceStatusView: View {
+struct ChallengerMyAttendanceStatusView: View {
     // MARK: - Property
 
     private let models: [MyAttendanceItemModel]
@@ -44,7 +44,7 @@ struct MyAttendanceStatusView: View {
     private var attendanceList: some View {
         LazyVStack(spacing: Constant.listSpacing) {
             ForEach(models, id: \.id) { model in
-                MyAttendanceCard(model: model)
+                ChallengerMyAttendanceCard(model: model)
 
                 // 마지막 아이템이 아닐 때만 Divider
                 if model.id != models.last?.id {
@@ -63,7 +63,7 @@ struct MyAttendanceStatusView: View {
     ZStack {
         Color.grey100.ignoresSafeArea()
 
-        MyAttendanceStatusView(
+        ChallengerMyAttendanceStatusView(
             sessions: AttendancePreviewData.sessions,
             categoryFor: { _ in .general }  // Preview용 기본값
         )

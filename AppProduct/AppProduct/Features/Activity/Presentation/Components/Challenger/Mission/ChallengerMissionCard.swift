@@ -1,5 +1,5 @@
 //
-//  MissionCard.swift
+//  ChallengerMissionCard.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 01/29/26.
@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-// MARK: - MissionCard (Container)
+// MARK: - ChallengerMissionCard (Container)
 
 /// 미션 카드 메인 컴포넌트 (헤더 + 확장 콘텐츠)
-struct MissionCard: View {
+struct ChallengerMissionCard: View {
 
     // MARK: - Property
 
@@ -37,7 +37,7 @@ struct MissionCard: View {
     // MARK: - Body
 
     var body: some View {
-        MissionCardPresenter(
+        ChallengerMissionCardPresenter(
             model: model,
             isExpanded: isExpanded,
             submissionType: submissionType,
@@ -60,9 +60,9 @@ struct MissionCard: View {
     }
 }
 
-// MARK: - MissionCardPresenter
+// MARK: - ChallengerMissionCardPresenter
 
-fileprivate struct MissionCardPresenter: View, Equatable {
+fileprivate struct ChallengerMissionCardPresenter: View, Equatable {
 
     // MARK: - Property
 
@@ -89,14 +89,14 @@ fileprivate struct MissionCardPresenter: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            MissionCardHeader(
+            ChallengerMissionCardHeader(
                 model: model,
                 isExpanded: isExpanded,
                 onToggle: onToggleExpanded
             )
 
             if isExpanded {
-                MissionCardContent(
+                ChallengerMissionCardContent(
                     model: model,
                     submissionType: submissionType,
                     linkText: linkText,
@@ -124,7 +124,7 @@ fileprivate struct MissionCardPresenter: View, Equatable {
 
 // MARK: - Preview
 
-#Preview("MissionCard - All Status") {
+#Preview("ChallengerMissionCard - All Status") {
     struct PreviewWrapper: View {
         @FocusState private var focusedMissionID: UUID?
 
@@ -132,7 +132,7 @@ fileprivate struct MissionCardPresenter: View, Equatable {
             ScrollView {
                 VStack(spacing: 20) {
                     ForEach(MissionPreviewData.allStatusMissions) { mission in
-                        MissionCard(
+                        ChallengerMissionCard(
                             model: mission,
                             focusedMissionID: $focusedMissionID
                         ) { type, link in
@@ -148,7 +148,7 @@ fileprivate struct MissionCardPresenter: View, Equatable {
     return PreviewWrapper()
 }
 
-#Preview("MissionCard - iOS Missions") {
+#Preview("ChallengerMissionCard - iOS Missions") {
     struct PreviewWrapper: View {
         @FocusState private var focusedMissionID: UUID?
 
@@ -156,7 +156,7 @@ fileprivate struct MissionCardPresenter: View, Equatable {
             ScrollView {
                 VStack(spacing: 16) {
                     ForEach(MissionPreviewData.iosMissions) { mission in
-                        MissionCard(
+                        ChallengerMissionCard(
                             model: mission,
                             focusedMissionID: $focusedMissionID
                         ) { type, link in
@@ -172,12 +172,12 @@ fileprivate struct MissionCardPresenter: View, Equatable {
     return PreviewWrapper()
 }
 
-#Preview("MissionCard - Single") {
+#Preview("ChallengerMissionCard - Single") {
     struct PreviewWrapper: View {
         @FocusState private var focusedMissionID: UUID?
 
         var body: some View {
-            MissionCard(
+            ChallengerMissionCard(
                 model: MissionPreviewData.singleMission,
                 focusedMissionID: $focusedMissionID
             ) { type, link in

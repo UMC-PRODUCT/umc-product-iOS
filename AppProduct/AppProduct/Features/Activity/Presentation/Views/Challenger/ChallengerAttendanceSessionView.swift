@@ -1,5 +1,5 @@
 //
-//  AttendanceSessionView.swift
+//  ChallengerAttendanceSessionView.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 1/22/26.
@@ -20,7 +20,7 @@ private final class MapViewModelCache {
     }
 }
 
-struct AttendanceSessionView: View {
+struct ChallengerAttendanceSessionView: View {
     @State private var expandedSessionId: Session.ID?
     @State private var attendanceViewModel: ChallengerAttendanceViewModel
     @State private var sessionViewModel: ChallengerSessionViewModel
@@ -121,7 +121,7 @@ struct AttendanceSessionView: View {
             if availableSessions.isEmpty {
                 emptySessionView
             } else {
-                AttendanceSessionList(
+                ChallengerAttendanceSessionList(
                     container: container,
                     errorHandler: errorHandler,
                     sessions: availableSessions,
@@ -167,7 +167,7 @@ struct AttendanceSessionView: View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             sectionHeader
 
-            MyAttendanceStatusView(
+            ChallengerMyAttendanceStatusView(
                 sessions: sessions,
                 categoryFor: categoryFor
             )
@@ -185,7 +185,7 @@ struct AttendanceSessionView: View {
     ZStack {
         Color.grey100.ignoresSafeArea()
 
-        AttendanceSessionView(
+        ChallengerAttendanceSessionView(
             container: AttendancePreviewData.container,
             errorHandler: AttendancePreviewData.errorHandler,
             sessions: AttendancePreviewData.sessions,
@@ -199,7 +199,7 @@ struct AttendanceSessionView: View {
     ZStack {
         Color.grey100.ignoresSafeArea()
 
-        AttendanceSessionView(
+        ChallengerAttendanceSessionView(
             container: AttendancePreviewData.container,
             errorHandler: AttendancePreviewData.errorHandler,
             sessions: AttendancePreviewData.multipleAvailableSessions,
@@ -214,7 +214,7 @@ struct AttendanceSessionView: View {
         Color.grey100.ignoresSafeArea()
 
         // 모든 세션이 완료된 상태
-        AttendanceSessionView(
+        ChallengerAttendanceSessionView(
             container: AttendancePreviewData.container,
             errorHandler: AttendancePreviewData.errorHandler,
             sessions: Array(AttendancePreviewData.sessions.prefix(5)), // beforeAttendance 제외

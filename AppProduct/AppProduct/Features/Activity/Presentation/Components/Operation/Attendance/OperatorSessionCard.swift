@@ -18,9 +18,9 @@ struct OperatorSessionCard: View, Equatable {
     private let onTap: () -> Void
     private let onLocationTap: () -> Void
     private let onPendingListTap: () -> Void
-    private let onReasonTap: ((PendingMember) -> Void)?
-    private let onRejectTap: ((PendingMember) -> Void)?
-    private let onApproveTap: ((PendingMember) -> Void)?
+    private let onReasonTap: ((OperatorPendingMember) -> Void)?
+    private let onRejectTap: ((OperatorPendingMember) -> Void)?
+    private let onApproveTap: ((OperatorPendingMember) -> Void)?
 
     private var session: Session {
         sessionAttendance.session
@@ -37,9 +37,9 @@ struct OperatorSessionCard: View, Equatable {
         onTap: @escaping () -> Void = {},
         onLocationTap: @escaping () -> Void = {},
         onPendingListTap: @escaping () -> Void = {},
-        onReasonTap: ((PendingMember) -> Void)? = nil,
-        onRejectTap: ((PendingMember) -> Void)? = nil,
-        onApproveTap: ((PendingMember) -> Void)? = nil
+        onReasonTap: ((OperatorPendingMember) -> Void)? = nil,
+        onRejectTap: ((OperatorPendingMember) -> Void)? = nil,
+        onApproveTap: ((OperatorPendingMember) -> Void)? = nil
     ) {
         self.sessionAttendance = sessionAttendance
         self.onTap = onTap
@@ -73,7 +73,7 @@ struct OperatorSessionCard: View, Equatable {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             headerSection
 
-            AttendanceStatsRow(sessionAttendance: sessionAttendance)
+            OperatorAttendanceStatsRow(sessionAttendance: sessionAttendance)
                 .equatable()
 
             statusSection
@@ -94,7 +94,7 @@ struct OperatorSessionCard: View, Equatable {
     /// 상태별 섹션 전환
     @ViewBuilder
     private var statusSection: some View {
-        let style: StatusSectionStyle = {
+        let style: OperatorStatusSectionStyle = {
             switch currentSessionStatus {
             case .beforeStart:
                 return .beforeStart
@@ -107,7 +107,7 @@ struct OperatorSessionCard: View, Equatable {
     }
 
     /// 통합 상태 섹션 뷰
-    private func statusSectionView(style: StatusSectionStyle) -> some View {
+    private func statusSectionView(style: OperatorStatusSectionStyle) -> some View {
         Button {
             if style.isEnabled {
                 onPendingListTap()

@@ -58,7 +58,7 @@ struct OperatorAttendanceSectionView: View {
         }
         .alertPrompt(item: $viewModel.alertPrompt)
         .sheet(isPresented: $viewModel.showLocationSheet) {
-            LocationChangeSheetView(
+            OperatorLocationChangeSheetView(
                 session: viewModel.selectedSession,
                 errorHandler: errorHandler,
                 onDismiss: {

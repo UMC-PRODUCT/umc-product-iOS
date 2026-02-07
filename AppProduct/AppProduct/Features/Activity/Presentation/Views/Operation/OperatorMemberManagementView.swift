@@ -1,5 +1,5 @@
 //
-//  MemberManagementView.swift
+//  OperatorMemberManagementView.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 1/23/26.
@@ -10,7 +10,7 @@ import SwiftUI
 /// Admin 모드의 멤버 관리 섹션
 ///
 /// 운영진이 동아리 멤버를 관리하는 화면입니다.
-struct MemberManagementView: View {
+struct OperatorMemberManagementView: View {
     var body: some View {
         ScrollView {
             ContentUnavailableView {
@@ -24,5 +24,5 @@ struct MemberManagementView: View {
 }
 
 #Preview {
-    MemberManagementView()
+    OperatorMemberManagementView()
 }

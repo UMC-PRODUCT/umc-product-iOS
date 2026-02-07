@@ -1,5 +1,5 @@
 //
-//  MyAttendanceCard.swift
+//  ChallengerMyAttendanceCard.swift
 //  AppProduct
 //
 //  Created by 김미주 on 1/9/26.
@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-// MARK: - MyAttendanceCard
+// MARK: - ChallengerMyAttendanceCard
 
 /// 나의 출석 현황 카드
-struct MyAttendanceCard: View {
+struct ChallengerMyAttendanceCard: View {
     // MARK: - Property
 
     private let model: MyAttendanceItemModel
@@ -109,7 +109,7 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     let now = Date()
 
     VStack(spacing: 8) {
-        MyAttendanceCard(
+        ChallengerMyAttendanceCard(
             model: .init(
                 week: 1,
                 title: "정기 세션",

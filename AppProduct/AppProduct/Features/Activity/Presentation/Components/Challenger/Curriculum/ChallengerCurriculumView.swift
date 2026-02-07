@@ -1,5 +1,5 @@
 //
-//  CurriculumView.swift
+//  ChallengerCurriculumView.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 02/01/26.
@@ -7,13 +7,13 @@
 
 import SwiftUI
 
-// MARK: - CurriculumView
+// MARK: - ChallengerCurriculumView
 
 /// 커리큘럼 상세 뷰 (진행률 카드 + 미션 리스트)
 ///
 /// 상단에 진행률 카드, 하단에 타임라인 형태의 미션 리스트를 표시합니다.
 /// 미션 간 연결선은 카드 높이에 맞게 동적으로 확장됩니다.
-struct CurriculumView: View {
+struct ChallengerCurriculumView: View {
 
     // MARK: - Property
     @FocusState private var focusedMissionID: UUID?
@@ -44,7 +44,7 @@ struct CurriculumView: View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing24) {
                 // Header
-                CurriculumProgressCard(model: curriculumModel)
+                ChallengerCurriculumProgressCard(model: curriculumModel)
                     .equatable()
                 // Mission List
                 missionListSection
@@ -71,14 +71,14 @@ struct CurriculumView: View {
 
                 HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
                     // Left: Status Icon
-                    MissionStatusIcon(
+                    ChallengerMissionStatusIcon(
                         status: mission.status,
                         weekNumber: mission.week
                     )
                     .equatable()
 
                     // Right: MissionCard
-                    MissionCard(
+                    ChallengerMissionCard(
                         model: mission,
                         focusedMissionID: $focusedMissionID
                     ) { submissionType, link in
@@ -105,10 +105,10 @@ struct CurriculumView: View {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("CurriculumView - iOS") {
+#Preview("ChallengerCurriculumView - iOS") {
     struct PreviewWrapper: View {
         var body: some View {
-            CurriculumView(
+            ChallengerCurriculumView(
                 curriculumModel: CurriculumProgressModel(
                     partName: "iOS PART CURRICULUM",
                     curriculumTitle: "Swift 기초 문법",
@@ -124,10 +124,10 @@ struct CurriculumView: View {
     return PreviewWrapper()
 }
 
-#Preview("CurriculumView - Web") {
+#Preview("ChallengerCurriculumView - Web") {
     struct PreviewWrapper: View {
         var body: some View {
-            CurriculumView(
+            ChallengerCurriculumView(
                 curriculumModel: CurriculumProgressModel(
                     partName: "WEB PART CURRICULUM",
                     curriculumTitle: "웹 프론트엔드 기초",
@@ -143,10 +143,10 @@ struct CurriculumView: View {
     return PreviewWrapper()
 }
 
-#Preview("CurriculumView - All Status") {
+#Preview("ChallengerCurriculumView - All Status") {
     struct PreviewWrapper: View {
         var body: some View {
-            CurriculumView(
+            ChallengerCurriculumView(
                 curriculumModel: CurriculumProgressModel(
                     partName: "SERVER PART CURRICULUM",
                     curriculumTitle: "SpringBoot 실습",

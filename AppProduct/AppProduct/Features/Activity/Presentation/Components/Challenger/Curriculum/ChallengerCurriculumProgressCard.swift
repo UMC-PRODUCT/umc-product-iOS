@@ -1,5 +1,5 @@
 //
-//  CurriculumProgressCard.swift
+//  ChallengerCurriculumProgressCard.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 02/01/26.
@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-// MARK: - CurriculumProgressCard
+// MARK: - ChallengerCurriculumProgressCard
 
 /// 커리큘럼 진행률 카드 컴포넌트
 ///
 /// 파트명, 달성률, 커리큘럼 제목, 프로그레스바를 표시합니다.
-struct CurriculumProgressCard: View, Equatable {
+struct ChallengerCurriculumProgressCard: View, Equatable {
 
     // MARK: - Property
 
@@ -104,8 +104,8 @@ struct CurriculumProgressCard: View, Equatable {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("CurriculumProgressCard - Single") {
-    CurriculumProgressCard(
+#Preview("ChallengerCurriculumProgressCard - Single") {
+    ChallengerCurriculumProgressCard(
         model: CurriculumProgressModel(
             partName: "WEB PART CURRICULUM",
             curriculumTitle: "웹 프론트엔드 기초",
@@ -117,10 +117,10 @@ struct CurriculumProgressCard: View, Equatable {
     .background(Color.grey100)
 }
 
-#Preview("CurriculumProgressCard - Multiple") {
+#Preview("ChallengerCurriculumProgressCard - Multiple") {
     ScrollView {
         VStack(spacing: DefaultSpacing.spacing16) {
-            CurriculumProgressCard(
+            ChallengerCurriculumProgressCard(
                 model: CurriculumProgressModel(
                     partName: "WEB PART CURRICULUM",
                     curriculumTitle: "웹 프론트엔드 기초",
@@ -129,7 +129,7 @@ struct CurriculumProgressCard: View, Equatable {
                 )
             )
 
-            CurriculumProgressCard(
+            ChallengerCurriculumProgressCard(
                 model: CurriculumProgressModel(
                     partName: "iOS PART CURRICULUM",
                     curriculumTitle: "Swift 기초 문법",
@@ -138,7 +138,7 @@ struct CurriculumProgressCard: View, Equatable {
                 )
             )
 
-            CurriculumProgressCard(
+            ChallengerCurriculumProgressCard(
                 model: CurriculumProgressModel(
                     partName: "ANDROID PART CURRICULUM",
                     curriculumTitle: "Kotlin 입문",

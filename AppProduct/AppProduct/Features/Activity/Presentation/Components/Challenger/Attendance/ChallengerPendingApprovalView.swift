@@ -1,5 +1,5 @@
 //
-//  PendingApprovalView.swift
+//  ChallengerPendingApprovalView.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 1/23/26.
@@ -10,7 +10,7 @@ import SwiftUI
 /// 승인 대기 상태를 표시하는 전용 뷰
 ///
 /// Glass Morphing 애니메이션과 함께 출석 버튼에서 전환됩니다.
-struct PendingApprovalView: View {
+struct ChallengerPendingApprovalView: View {
 
     // MARK: - Constant
 
@@ -60,7 +60,7 @@ struct PendingApprovalView: View {
     ZStack {
         Color.grey100.frame(height: 300)
 
-        PendingApprovalView()
+        ChallengerPendingApprovalView()
             .padding()
     }
 }

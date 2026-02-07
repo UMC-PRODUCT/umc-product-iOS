@@ -510,7 +510,7 @@ struct AttendanceTestView: View {
 #Preview("Pending Approval View") {
     ZStack {
         Color.grey100.ignoresSafeArea()
-        PendingApprovalView()
+        ChallengerPendingApprovalView()
             .padding()
     }
 }

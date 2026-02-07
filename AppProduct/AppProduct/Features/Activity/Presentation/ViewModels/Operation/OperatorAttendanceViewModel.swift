@@ -74,7 +74,7 @@ final class OperatorAttendanceViewModel {
     }
 
     /// 출석 사유 확인 버튼 탭
-    func reasonButtonTapped(member: PendingMember) {
+    func reasonButtonTapped(member: OperatorPendingMember) {
         guard let reason = member.reason else { return }
 
         alertPrompt = AlertPrompt(
@@ -88,7 +88,7 @@ final class OperatorAttendanceViewModel {
     }
 
     /// 승인 버튼 탭
-    func approveButtonTapped(member: PendingMember, sessionId: UUID) {
+    func approveButtonTapped(member: OperatorPendingMember, sessionId: UUID) {
         alertPrompt = AlertPrompt(
             title: "출석 승인",
             message: "\(member.name)님의 출석을 승인하시겠습니까?",
@@ -106,7 +106,7 @@ final class OperatorAttendanceViewModel {
     }
 
     /// 반려 버튼 탭
-    func rejectButtonTapped(member: PendingMember, sessionId: UUID) {
+    func rejectButtonTapped(member: OperatorPendingMember, sessionId: UUID) {
         alertPrompt = AlertPrompt(
             title: "출석 반려",
             message: "\(member.name)님의 출석을 반려하시겠습니까?",

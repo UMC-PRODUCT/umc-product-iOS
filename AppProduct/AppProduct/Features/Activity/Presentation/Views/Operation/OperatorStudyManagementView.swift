@@ -1,5 +1,5 @@
 //
-//  StudyManagementView.swift
+//  OperatorStudyManagementView.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 1/23/26.
@@ -10,7 +10,7 @@ import SwiftUI
 /// Admin 모드의 스터디 관리 섹션
 ///
 /// 운영진이 스터디와 활동을 관리하는 화면입니다.
-struct StudyManagementView: View {
+struct OperatorStudyManagementView: View {
     var body: some View {
         ScrollView {
             ContentUnavailableView {
@@ -24,5 +24,5 @@ struct StudyManagementView: View {
 }
 
 #Preview {
-    StudyManagementView()
+    OperatorStudyManagementView()
 }

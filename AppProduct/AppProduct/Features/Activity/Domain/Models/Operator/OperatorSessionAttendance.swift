@@ -17,7 +17,7 @@ struct OperatorSessionAttendance: Identifiable, Equatable {
     let attendanceRate: Double
     let attendedCount: Int
     let totalCount: Int
-    let pendingMembers: [PendingMember]
+    let pendingMembers: [OperatorPendingMember]
 
     var pendingCount: Int {
         pendingMembers.count
@@ -40,7 +40,7 @@ extension OperatorSessionAttendance {
     /// - Returns: 변경된 프로퍼티가 적용된 새 인스턴스
     func copyWith(
         attendedCount: Int? = nil,
-        pendingMembers: [PendingMember]? = nil
+        pendingMembers: [OperatorPendingMember]? = nil
     ) -> OperatorSessionAttendance {
         OperatorSessionAttendance(
             serverID: self.serverID,

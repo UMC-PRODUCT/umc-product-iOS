@@ -1,5 +1,5 @@
 //
-//  StatusSectionStyle.swift
+//  OperatorStatusSectionStyle.swift
 //  AppProduct
 //
 //  Created by jaewon Lee on 2/6/26.
@@ -10,7 +10,7 @@ import SwiftUI
 /// 운영진 세션 카드 상태 섹션 스타일
 ///
 /// 세션 진행 상태에 따른 하단 상태 섹션의 아이콘, 텍스트, 색상을 정의합니다.
-enum StatusSectionStyle {
+enum OperatorStatusSectionStyle {
     case beforeStart
     case pending
     case complete
