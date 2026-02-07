@@ -15,30 +15,60 @@ struct OperatorPendingMemberRow: View, Equatable {
     // MARK: - Property
 
     private let member: OperatorPendingMember
+    private let isSelecting: Bool
+    private let isSelected: Bool
+    private var onToggleSelection: (() -> Void)?
 
     // MARK: - Initializer
 
-    init(member: OperatorPendingMember) {
+    init(
+        member: OperatorPendingMember,
+        isSelecting: Bool = false,
+        isSelected: Bool = false,
+        onToggleSelection: (() -> Void)? = nil
+    ) {
         self.member = member
+        self.isSelecting = isSelecting
+        self.isSelected = isSelected
+        self.onToggleSelection = onToggleSelection
     }
 
     // MARK: - Equatable
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.member == rhs.member
+        lhs.member == rhs.member &&
+        lhs.isSelecting == rhs.isSelecting &&
+        lhs.isSelected == rhs.isSelected
     }
 
     // MARK: - Body
 
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing16) {
+            if isSelecting {
+                selectionButton
+            }
             avatarView
             memberInfoSection
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .animation(
+            .snappy(duration: DefaultConstant.animationTime), value: isSelecting)
     }
 
     // MARK: - View Components
+
+    private var selectionButton: some View {
+        Button {
+            onToggleSelection?()
+        } label: {
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 22))
+                .foregroundStyle(isSelected ? .indigo500 : .grey400)
+        }
+        .buttonStyle(.plain)
+        .transition(.scale.combined(with: .opacity))
+    }
 
     private var avatarView: some View {
         Group {
@@ -90,6 +120,7 @@ struct OperatorPendingMemberRow: View, Equatable {
 // MARK: - Preview
 
 #Preview(traits: .sizeThatFitsLayout) {
+    // 일반 모드
     OperatorPendingMemberRow(
         member: OperatorPendingMember(
             serverID: "1",
@@ -101,7 +132,23 @@ struct OperatorPendingMemberRow: View, Equatable {
             profileImageURL: "https://picsum.photos/100"
         )
     )
-    
+
+    // 선택 모드 - 미선택
+    OperatorPendingMemberRow(
+        member: OperatorPendingMember(
+            serverID: "2",
+            name: "김철수",
+            nickname: "철수",
+            university: "서울대학교",
+            requestTime: Date.now.addingTimeInterval(-300),
+            reason: nil,
+            profileImageURL: nil
+        ),
+        isSelecting: true,
+        isSelected: false
+    )
+
+    // 선택 모드 - 선택됨
     OperatorPendingMemberRow(
         member: OperatorPendingMember(
             serverID: "1",
@@ -111,6 +158,8 @@ struct OperatorPendingMemberRow: View, Equatable {
             requestTime: Date.now.addingTimeInterval(-300),
             reason: "지각 사유입니다",
             profileImageURL: nil
-        )
+        ),
+        isSelecting: true,
+        isSelected: true
     )
 }

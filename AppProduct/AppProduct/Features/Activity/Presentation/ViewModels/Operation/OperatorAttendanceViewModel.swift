@@ -161,6 +161,47 @@ final class OperatorAttendanceViewModel {
         )
     }
 
+    /// 선택 승인 버튼 탭
+    func approveSelectedButtonTapped(members: [OperatorPendingMember], sessionId: UUID) {
+        guard !members.isEmpty else { return }
+
+        alertPrompt = AlertPrompt(
+            title: "선택 승인",
+            message: "\(members.count)명의 출석을 승인하시겠습니까?",
+            positiveBtnTitle: "승인",
+            positiveBtnAction: { [weak self] in
+                Task {
+                    await self?.approveSelectedAttendances(members: members, sessionId: sessionId)
+                }
+            },
+            negativeBtnTitle: "취소",
+            negativeBtnAction: { [weak self] in
+                self?.alertPrompt = nil
+            }
+        )
+    }
+
+    /// 선택 거절 버튼 탭
+    func rejectSelectedButtonTapped(members: [OperatorPendingMember], sessionId: UUID) {
+        guard !members.isEmpty else { return }
+
+        alertPrompt = AlertPrompt(
+            title: "선택 거절",
+            message: "\(members.count)명의 출석을 거절하시겠습니까?",
+            positiveBtnTitle: "거절",
+            positiveBtnAction: { [weak self] in
+                Task {
+                    await self?.rejectSelectedAttendances(members: members, sessionId: sessionId)
+                }
+            },
+            negativeBtnTitle: "취소",
+            negativeBtnAction: { [weak self] in
+                self?.alertPrompt = nil
+            },
+            isPositiveBtnDestructive: true
+        )
+    }
+
     // MARK: - Private Action
 
     @MainActor
@@ -207,6 +248,44 @@ final class OperatorAttendanceViewModel {
         updateSessionByRemovingAllMembers(sessionId: sessionId, isApproval: false)
     }
 
+    @MainActor
+    private func approveSelectedAttendances(
+        members: [OperatorPendingMember],
+        sessionId: UUID
+    ) async {
+        alertPrompt = nil
+
+        // TODO: 실제 API 연동 - [25.02.07] 이재원
+        // let memberIds = members.map { AttendanceID(value: $0.id) }
+        // try await useCase.approveSelectedAttendances(attendanceIds: memberIds)
+
+        // Mock: 선택된 멤버들 제거 (출석 처리)
+        updateSessionByRemovingSelectedMembers(
+            memberIds: members.map(\.id),
+            sessionId: sessionId,
+            isApproval: true
+        )
+    }
+
+    @MainActor
+    private func rejectSelectedAttendances(
+        members: [OperatorPendingMember],
+        sessionId: UUID
+    ) async {
+        alertPrompt = nil
+
+        // TODO: 실제 API 연동 - [25.02.07] 이재원
+        // let memberIds = members.map { AttendanceID(value: $0.id) }
+        // try await useCase.rejectSelectedAttendances(attendanceIds: memberIds)
+
+        // Mock: 선택된 멤버들 제거 (거절 처리 - 출석 수 증가 없음)
+        updateSessionByRemovingSelectedMembers(
+            memberIds: members.map(\.id),
+            sessionId: sessionId,
+            isApproval: false
+        )
+    }
+
     // MARK: - Helper
 
     private func updateSessionByRemovingMember(memberId: UUID, sessionId: UUID) {
@@ -232,6 +311,28 @@ final class OperatorAttendanceViewModel {
                     ? sessions[index].attendedCount + memberCount
                     : sessions[index].attendedCount,
                 pendingMembers: []
+            )
+            sessionsState = .loaded(sessions)
+        }
+    }
+
+    private func updateSessionByRemovingSelectedMembers(
+        memberIds: [UUID],
+        sessionId: UUID,
+        isApproval: Bool
+    ) {
+        guard case .loaded(var sessions) = sessionsState else { return }
+
+        if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
+            let memberIdSet = Set(memberIds)
+            let updatedMembers = sessions[index].pendingMembers.filter {
+                !memberIdSet.contains($0.id)
+            }
+            sessions[index] = sessions[index].copyWith(
+                attendedCount: isApproval
+                    ? sessions[index].attendedCount + memberIds.count
+                    : sessions[index].attendedCount,
+                pendingMembers: updatedMembers
             )
             sessionsState = .loaded(sessions)
         }

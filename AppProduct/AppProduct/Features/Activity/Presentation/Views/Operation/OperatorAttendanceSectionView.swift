@@ -82,6 +82,14 @@ struct OperatorAttendanceSectionView: View {
                     viewModel.rejectButtonTapped(
                         member: member, sessionId: session.id)
                 },
+                onApproveSelected: { members in
+                    viewModel.approveSelectedButtonTapped(
+                        members: members, sessionId: session.id)
+                },
+                onRejectSelected: { members in
+                    viewModel.rejectSelectedButtonTapped(
+                        members: members, sessionId: session.id)
+                },
                 onApproveAll: {
                     viewModel.approveAllButtonTapped(sessionId: session.id)
                 },
