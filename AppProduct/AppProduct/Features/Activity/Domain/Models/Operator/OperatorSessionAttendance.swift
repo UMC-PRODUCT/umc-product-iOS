@@ -38,15 +38,22 @@ extension OperatorSessionAttendance {
     ///   - attendedCount: 출석 완료 인원 (nil이면 기존 값 유지)
     ///   - pendingMembers: 승인 대기 멤버 목록 (nil이면 기존 값 유지)
     /// - Returns: 변경된 프로퍼티가 적용된 새 인스턴스
+    ///
+    /// - Note: `attendedCount` 변경 시 `attendanceRate`가 자동 재계산됩니다.
     func copyWith(
         attendedCount: Int? = nil,
         pendingMembers: [OperatorPendingMember]? = nil
     ) -> OperatorSessionAttendance {
-        OperatorSessionAttendance(
+        let newAttendedCount = attendedCount ?? self.attendedCount
+        let newAttendanceRate = totalCount > 0
+            ? Double(newAttendedCount) / Double(totalCount)
+            : 0.0
+
+        return OperatorSessionAttendance(
             serverID: self.serverID,
             session: self.session,
-            attendanceRate: self.attendanceRate,
-            attendedCount: attendedCount ?? self.attendedCount,
+            attendanceRate: newAttendanceRate,
+            attendedCount: newAttendedCount,
             totalCount: self.totalCount,
             pendingMembers: pendingMembers ?? self.pendingMembers
         )

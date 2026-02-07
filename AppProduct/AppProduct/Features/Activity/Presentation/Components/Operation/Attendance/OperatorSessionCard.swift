@@ -12,15 +12,22 @@ import SwiftUI
 /// 세션 정보와 출석 통계를 표시하며, 펼침 상태에서 승인 대기 명단을 보여줍니다.
 struct OperatorSessionCard: View, Equatable {
 
+    // MARK: - Actions
+
+    /// 세션 카드 액션 그룹
+    struct Actions {
+        var onTap: () -> Void = {}
+        var onLocationTap: () -> Void = {}
+        var onPendingListTap: () -> Void = {}
+        var onReasonTap: ((OperatorPendingMember) -> Void)?
+        var onRejectTap: ((OperatorPendingMember) -> Void)?
+        var onApproveTap: ((OperatorPendingMember) -> Void)?
+    }
+
     // MARK: - Property
 
     private let sessionAttendance: OperatorSessionAttendance
-    private let onTap: () -> Void
-    private let onLocationTap: () -> Void
-    private let onPendingListTap: () -> Void
-    private let onReasonTap: ((OperatorPendingMember) -> Void)?
-    private let onRejectTap: ((OperatorPendingMember) -> Void)?
-    private let onApproveTap: ((OperatorPendingMember) -> Void)?
+    private let actions: Actions
 
     private var session: Session {
         sessionAttendance.session
@@ -32,22 +39,9 @@ struct OperatorSessionCard: View, Equatable {
 
     // MARK: - Initializer
 
-    init(
-        sessionAttendance: OperatorSessionAttendance,
-        onTap: @escaping () -> Void = {},
-        onLocationTap: @escaping () -> Void = {},
-        onPendingListTap: @escaping () -> Void = {},
-        onReasonTap: ((OperatorPendingMember) -> Void)? = nil,
-        onRejectTap: ((OperatorPendingMember) -> Void)? = nil,
-        onApproveTap: ((OperatorPendingMember) -> Void)? = nil
-    ) {
+    init(sessionAttendance: OperatorSessionAttendance, actions: Actions = .init()) {
         self.sessionAttendance = sessionAttendance
-        self.onTap = onTap
-        self.onLocationTap = onLocationTap
-        self.onPendingListTap = onPendingListTap
-        self.onReasonTap = onReasonTap
-        self.onRejectTap = onRejectTap
-        self.onApproveTap = onApproveTap
+        self.actions = actions
     }
 
     // MARK: - Equatable
@@ -92,25 +86,41 @@ struct OperatorSessionCard: View, Equatable {
     // MARK: - Function
 
     /// 상태별 섹션 전환
+    ///
+    /// - 진행전: "세션이 아직 시작되지 않았습니다"
+    /// - 승인대기 있음: "N명의 승인 대기 명단 확인하기" (탭 가능)
+    /// - 진행중 + 승인대기 없음: "현재 승인 대기가 없습니다"
+    /// - 종료 + 승인대기 없음 + 100%: "모든 출석 승인이 완료되었습니다"
+    /// - 종료 + 승인대기 없음 + <100%: 표시 안 함
     @ViewBuilder
     private var statusSection: some View {
-        let style: OperatorStatusSectionStyle = {
+        let style: OperatorStatusSectionStyle? = {
             switch currentSessionStatus {
             case .beforeStart:
                 return .beforeStart
-            case .inProgress, .ended:
-                return sessionAttendance.pendingCount > 0 ? .pending : .complete
+            case .inProgress:
+                return sessionAttendance.pendingCount > 0 ? .pending : .inProgress
+            case .ended:
+                if sessionAttendance.pendingCount > 0 {
+                    return .pending
+                } else if sessionAttendance.attendanceRate >= 1.0 {
+                    return .complete
+                } else {
+                    return nil
+                }
             }
         }()
 
-        statusSectionView(style: style)
+        if let style {
+            statusSectionView(style: style)
+        }
     }
 
     /// 통합 상태 섹션 뷰
     private func statusSectionView(style: OperatorStatusSectionStyle) -> some View {
         Button {
             if style.isEnabled {
-                onPendingListTap()
+                actions.onPendingListTap()
             }
         } label: {
             HStack(spacing: DefaultSpacing.spacing12) {
@@ -164,7 +174,7 @@ struct OperatorSessionCard: View, Equatable {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button(action: onLocationTap) {
+            Button(action: actions.onLocationTap) {
                 Image(.Map.mapPinGrey)
                     .resizable()
                     .font(.system(size: 12))

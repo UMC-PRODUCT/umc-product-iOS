@@ -18,6 +18,7 @@ struct OperatorPendingMember: Identifiable, Equatable {
     let university: String
     let requestTime: Date
     let reason: String?
+    let profileImageURL: String?
 
     /// 사유가 있는지 여부
     var hasReason: Bool {
