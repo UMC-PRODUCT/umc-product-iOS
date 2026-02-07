@@ -8,34 +8,33 @@
 import SwiftUI
 
 struct OperatorPendingSheetView: View {
+
+    // MARK: - Actions
+
+    /// 승인 대기 시트 액션 그룹
+    struct Actions {
+        let onApprove: (OperatorPendingMember) -> Void
+        let onReject: (OperatorPendingMember) -> Void
+        let onApproveSelected: ([OperatorPendingMember]) -> Void
+        let onRejectSelected: ([OperatorPendingMember]) -> Void
+        let onApproveAll: () -> Void
+        let onRejectAll: () -> Void
+    }
+
+    // MARK: - Property
+
     @Environment(\.dismiss) private var dismiss
     @State private var isSelecting: Bool = false
     @State private var selectedMemberIDs: Set<UUID> = []
 
     private let sessionAttendance: OperatorSessionAttendance
-    private let onApprove: (OperatorPendingMember) -> Void
-    private let onReject: (OperatorPendingMember) -> Void
-    private let onApproveSelected: ([OperatorPendingMember]) -> Void
-    private let onRejectSelected: ([OperatorPendingMember]) -> Void
-    private let onApproveAll: () -> Void
-    private let onRejectAll: () -> Void
+    private let actions: Actions
 
-    init(
-        sessionAttendance: OperatorSessionAttendance,
-        onApprove: @escaping (OperatorPendingMember) -> Void,
-        onReject: @escaping (OperatorPendingMember) -> Void,
-        onApproveSelected: @escaping ([OperatorPendingMember]) -> Void,
-        onRejectSelected: @escaping ([OperatorPendingMember]) -> Void,
-        onApproveAll: @escaping () -> Void,
-        onRejectAll: @escaping () -> Void
-    ) {
+    // MARK: - Initializer
+
+    init(sessionAttendance: OperatorSessionAttendance, actions: Actions) {
         self.sessionAttendance = sessionAttendance
-        self.onApprove = onApprove
-        self.onReject = onReject
-        self.onApproveSelected = onApproveSelected
-        self.onRejectSelected = onRejectSelected
-        self.onApproveAll = onApproveAll
-        self.onRejectAll = onRejectAll
+        self.actions = actions
     }
     
     var body: some View {
@@ -65,7 +64,7 @@ struct OperatorPendingSheetView: View {
                 ToolBarCollection.CancelBtn {
                     dismiss()
                 }
-                
+
                 ToolBarCollection.OperationApprovalMenu(
                     isSelecting: $isSelecting,
                     selectedCount: selectedMemberIDs.count,
@@ -78,14 +77,19 @@ struct OperatorPendingSheetView: View {
                         dismiss()
                     },
                     onApproveAll: {
-                        onApproveAll()
+                        actions.onApproveAll()
                         dismiss()
                     },
                     onRejectAll: {
-                        onRejectAll()
+                        actions.onRejectAll()
                         dismiss()
                     }
                 )
+            }
+            .onChange(of: isSelecting) { _, newValue in
+                if !newValue {
+                    selectedMemberIDs.removeAll()
+                }
             }
         }
     }
@@ -102,7 +106,7 @@ struct OperatorPendingSheetView: View {
         let selectedMembers = sessionAttendance.pendingMembers.filter {
             selectedMemberIDs.contains($0.id)
         }
-        onApproveSelected(selectedMembers)
+        actions.onApproveSelected(selectedMembers)
         selectedMemberIDs.removeAll()
     }
 
@@ -110,20 +114,20 @@ struct OperatorPendingSheetView: View {
         let selectedMembers = sessionAttendance.pendingMembers.filter {
             selectedMemberIDs.contains($0.id)
         }
-        onRejectSelected(selectedMembers)
+        actions.onRejectSelected(selectedMembers)
         selectedMemberIDs.removeAll()
     }
 
     private func swipeActionBtn(member: OperatorPendingMember) -> some View {
         Group {
             Button {
-                onApprove(member)
+                actions.onApprove(member)
             } label: {
                 Label("승인", systemImage: "checkmark")
             }
             .tint(.green)
             Button {
-                onReject(member)
+                actions.onReject(member)
             } label: {
                 Label("거절", systemImage: "xmark")
             }
@@ -139,12 +143,14 @@ struct OperatorPendingSheetView: View {
     .sheet(isPresented: .constant(true)) {
         OperatorPendingSheetView(
             sessionAttendance: OperatorAttendancePreviewData.sessions.first!,
-            onApprove: { member in print("승인: \(member.name)") },
-            onReject: { member in print("거절: \(member.name)") },
-            onApproveSelected: { members in print("선택 승인: \(members.count)명") },
-            onRejectSelected: { members in print("선택 거절: \(members.count)명") },
-            onApproveAll: { print("전체 승인") },
-            onRejectAll: { print("전체 거절") }
+            actions: .init(
+                onApprove: { print("승인: \($0.name)") },
+                onReject: { print("거절: \($0.name)") },
+                onApproveSelected: { print("선택 승인: \($0.count)명") },
+                onRejectSelected: { print("선택 거절: \($0.count)명") },
+                onApproveAll: { print("전체 승인") },
+                onRejectAll: { print("전체 거절") }
+            )
         )
     }
 }

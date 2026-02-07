@@ -74,28 +74,7 @@ struct OperatorAttendanceSectionView: View {
         .sheet(item: $selectedPendingSession) { session in
             OperatorPendingSheetView(
                 sessionAttendance: session,
-                onApprove: { member in
-                    viewModel.approveButtonTapped(
-                        member: member, sessionId: session.id)
-                },
-                onReject: { member in
-                    viewModel.rejectButtonTapped(
-                        member: member, sessionId: session.id)
-                },
-                onApproveSelected: { members in
-                    viewModel.approveSelectedButtonTapped(
-                        members: members, sessionId: session.id)
-                },
-                onRejectSelected: { members in
-                    viewModel.rejectSelectedButtonTapped(
-                        members: members, sessionId: session.id)
-                },
-                onApproveAll: {
-                    viewModel.approveAllButtonTapped(sessionId: session.id)
-                },
-                onRejectAll: {
-                    viewModel.rejectAllButtonTapped(sessionId: session.id)
-                }
+                actions: pendingSheetActions(for: session)
             )
         }
     }
@@ -163,26 +142,55 @@ struct OperatorAttendanceSectionView: View {
             ForEach(sessions) { sessionAttendance in
                 OperatorSessionCard(
                     sessionAttendance: sessionAttendance,
-                    onLocationTap: {
-                        viewModel.locationButtonTapped(session: sessionAttendance.session)
-                    },
-                    onPendingListTap: {
-                        selectedPendingSession = sessionAttendance
-                    },
-                    onReasonTap: { member in
-                        viewModel.reasonButtonTapped(member: member)
-                    },
-                    onRejectTap: { member in
-                        viewModel.rejectButtonTapped(member: member, sessionId: sessionAttendance.id)
-                    },
-                    onApproveTap: { member in
-                        viewModel.approveButtonTapped(member: member, sessionId: sessionAttendance.id)
-                    }
+                    actions: sessionCardActions(for: sessionAttendance)
                 )
                 .equatable()
             }
         }
         .padding(.top, DefaultSpacing.spacing16)
+    }
+
+    // MARK: - Action Factories
+
+    private func pendingSheetActions(
+        for session: OperatorSessionAttendance
+    ) -> OperatorPendingSheetView.Actions {
+        .init(
+            onApprove: {
+                viewModel.approveButtonTapped(
+                    member: $0, sessionId: session.id)
+            },
+            onReject: {
+                viewModel.rejectButtonTapped(
+                    member: $0, sessionId: session.id)
+            },
+            onApproveSelected: {
+                viewModel.approveSelectedButtonTapped(
+                    members: $0, sessionId: session.id)
+            },
+            onRejectSelected: {
+                viewModel.rejectSelectedButtonTapped(
+                    members: $0, sessionId: session.id)
+            },
+            onApproveAll: {
+                viewModel.approveAllButtonTapped(sessionId: session.id)
+            },
+            onRejectAll: {
+                viewModel.rejectAllButtonTapped(sessionId: session.id)
+            }
+        )
+    }
+
+    private func sessionCardActions(
+        for sessionAttendance: OperatorSessionAttendance
+    ) -> OperatorSessionCard.Actions {
+        .init(
+            onLocationTap: { viewModel.locationButtonTapped(session: sessionAttendance.session) },
+            onPendingListTap: { selectedPendingSession = sessionAttendance },
+            onReasonTap: { viewModel.reasonButtonTapped(member: $0) },
+            onRejectTap: { viewModel.rejectButtonTapped(member: $0, sessionId: sessionAttendance.id) },
+            onApproveTap: { viewModel.approveButtonTapped(member: $0, sessionId: sessionAttendance.id) }
+        )
     }
 
     // MARK: - Error View

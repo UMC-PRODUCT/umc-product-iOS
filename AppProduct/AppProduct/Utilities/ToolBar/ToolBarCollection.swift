@@ -371,8 +371,9 @@ struct ToolBarCollection {
                     isSelecting = false
                 }
             } label: {
-                Text("취소")
-                    .appFont(.subheadline, color: .black)
+                Image(systemName: "arrow.uturn.backward")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.black)
             }
         }
 
@@ -382,8 +383,9 @@ struct ToolBarCollection {
                     isSelecting = true
                 }
             } label: {
-                Text("선택")
-                    .appFont(.subheadline, color: .black)
+                Image(systemName: "checklist")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.black)
             }
         }
     }
