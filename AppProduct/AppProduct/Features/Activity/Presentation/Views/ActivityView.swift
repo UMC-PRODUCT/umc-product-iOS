@@ -99,14 +99,14 @@ struct ActivityView: View {
             ChallengerStudyView(
                 container: di, errorHandler: errorHandler)
         case (.challenger, .members):
-            MemberListView()
+            ChallengerMemberListView()
         case (.admin, .attendanceManage):
             OperatorAttendanceSectionView(
                 container: di, errorHandler: errorHandler)
         case (.admin, .studyManage):
-            StudyManagementView()
+            OperatorStudyManagementView()
         case (.admin, .memberManage):
-            MemberManagementView()
+            OperatorMemberManagementView()
         default:
             EmptyView()
         }
@@ -121,7 +121,7 @@ struct ActivityView: View {
                 ProgressView("세션 로딩 중...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded(let sessions):
-                AttendanceSessionView(
+                ChallengerAttendanceSessionView(
                     container: di,
                     errorHandler: errorHandler,
                     sessions: sessions,
