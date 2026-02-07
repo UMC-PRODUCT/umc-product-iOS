@@ -17,27 +17,39 @@ struct OperatorAttendancePreviewData {
     static let pendingMembers: [OperatorPendingMember] = [
         OperatorPendingMember(
             serverID: "member_1",
-            name: "홍길동",
-            nickname: "닉네임",
-            university: "중앙대학교",
+            name: "이재원",
+            nickname: "리버",
+            university: "한성대학교",
             requestTime: Date.now.addingTimeInterval(-300),
-            reason: "지각 사유입니다. 버스가 늦게 와서 조금 늦었습니다."
+            reason: "지각 사유입니다. 버스가 늦게 와서 조금 늦었습니다.",
+            profileImageURL: "https://picsum.photos/100"
         ),
         OperatorPendingMember(
             serverID: "member_2",
-            name: "김철수",
-            nickname: nil,
-            university: "한성대학교",
+            name: "정의찬",
+            nickname: "제옹",
+            university: "중앙대학교",
             requestTime: Date.now.addingTimeInterval(-600),
-            reason: nil
+            reason: nil,
+            profileImageURL: "https://picsum.photos/101"
         ),
         OperatorPendingMember(
             serverID: "member_3",
-            name: "이영희",
-            nickname: "영희짱",
-            university: "서울대학교",
+            name: "이예지",
+            nickname: "소피",
+            university: "가천대학교",
             requestTime: Date.now.addingTimeInterval(-900),
-            reason: "교통 체증으로 인한 지각"
+            reason: "교통 체증으로 인한 지각",
+            profileImageURL: "https://picsum.photos/102"
+        ),
+        OperatorPendingMember(
+            serverID: "member_4",
+            name: "김미주",
+            nickname: "마티",
+            university: "덕성여대",
+            requestTime: Date.now.addingTimeInterval(-1200),
+            reason: nil,
+            profileImageURL: "https://picsum.photos/103"
         )
     ]
 

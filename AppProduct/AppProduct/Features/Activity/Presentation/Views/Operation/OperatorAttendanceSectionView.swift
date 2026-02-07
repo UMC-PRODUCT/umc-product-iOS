@@ -16,6 +16,7 @@ struct OperatorAttendanceSectionView: View {
     // MARK: - Property
 
     @State private var viewModel: OperatorAttendanceViewModel
+    @State private var selectedPendingSession: OperatorSessionAttendance?
 
     private let container: DIContainer
     private let errorHandler: ErrorHandler
@@ -68,6 +69,12 @@ struct OperatorAttendanceSectionView: View {
                     // TODO: 실제 위치 변경 API 호출 - [25.02.06] 이재원
                     viewModel.showLocationSheet = false
                 }
+            )
+        }
+        .sheet(item: $selectedPendingSession) { session in
+            OperatorPendingSheetView(
+                sessionAttendance: session,
+                actions: pendingSheetActions(for: session)
             )
         }
     }
@@ -135,23 +142,55 @@ struct OperatorAttendanceSectionView: View {
             ForEach(sessions) { sessionAttendance in
                 OperatorSessionCard(
                     sessionAttendance: sessionAttendance,
-                    onLocationTap: {
-                        viewModel.locationButtonTapped(session: sessionAttendance.session)
-                    },
-                    onReasonTap: { member in
-                        viewModel.reasonButtonTapped(member: member)
-                    },
-                    onRejectTap: { member in
-                        viewModel.rejectButtonTapped(member: member, sessionId: sessionAttendance.id)
-                    },
-                    onApproveTap: { member in
-                        viewModel.approveButtonTapped(member: member, sessionId: sessionAttendance.id)
-                    }
+                    actions: sessionCardActions(for: sessionAttendance)
                 )
                 .equatable()
             }
         }
         .padding(.top, DefaultSpacing.spacing16)
+    }
+
+    // MARK: - Action Factories
+
+    private func pendingSheetActions(
+        for session: OperatorSessionAttendance
+    ) -> OperatorPendingSheetView.Actions {
+        .init(
+            onApprove: {
+                viewModel.approveButtonTapped(
+                    member: $0, sessionId: session.id)
+            },
+            onReject: {
+                viewModel.rejectButtonTapped(
+                    member: $0, sessionId: session.id)
+            },
+            onApproveSelected: {
+                viewModel.approveSelectedButtonTapped(
+                    members: $0, sessionId: session.id)
+            },
+            onRejectSelected: {
+                viewModel.rejectSelectedButtonTapped(
+                    members: $0, sessionId: session.id)
+            },
+            onApproveAll: {
+                viewModel.approveAllButtonTapped(sessionId: session.id)
+            },
+            onRejectAll: {
+                viewModel.rejectAllButtonTapped(sessionId: session.id)
+            }
+        )
+    }
+
+    private func sessionCardActions(
+        for sessionAttendance: OperatorSessionAttendance
+    ) -> OperatorSessionCard.Actions {
+        .init(
+            onLocationTap: { viewModel.locationButtonTapped(session: sessionAttendance.session) },
+            onPendingListTap: { selectedPendingSession = sessionAttendance },
+            onReasonTap: { viewModel.reasonButtonTapped(member: $0) },
+            onRejectTap: { viewModel.rejectButtonTapped(member: $0, sessionId: sessionAttendance.id) },
+            onApproveTap: { viewModel.approveButtonTapped(member: $0, sessionId: sessionAttendance.id) }
+        )
     }
 
     // MARK: - Error View

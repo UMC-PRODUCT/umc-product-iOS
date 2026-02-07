@@ -13,6 +13,7 @@ import SwiftUI
 enum OperatorStatusSectionStyle {
     case beforeStart
     case pending
+    case inProgress
     case complete
 
     // MARK: - Property
@@ -21,6 +22,7 @@ enum OperatorStatusSectionStyle {
         switch self {
         case .beforeStart: "hourglass.badge.lock"
         case .pending: "person.2.fill"
+        case .inProgress: "clock.fill"
         case .complete: "checkmark.circle.fill"
         }
     }
@@ -29,6 +31,7 @@ enum OperatorStatusSectionStyle {
         switch self {
         case .beforeStart: "세션이 아직 시작되지 않았습니다."
         case .pending: "승인 대기 명단 확인하기"
+        case .inProgress: "현재 승인 대기가 없습니다."
         case .complete: "모든 출석 승인이 완료되었습니다."
         }
     }
@@ -37,6 +40,7 @@ enum OperatorStatusSectionStyle {
         switch self {
         case .beforeStart: .gray
         case .pending: .orange
+        case .inProgress: .indigo500
         case .complete: .green
         }
     }
@@ -45,6 +49,7 @@ enum OperatorStatusSectionStyle {
         switch self {
         case .beforeStart: .grey200
         case .pending: .orange.opacity(0.15)
+        case .inProgress: .indigo100
         case .complete: .green.opacity(0.15)
         }
     }
