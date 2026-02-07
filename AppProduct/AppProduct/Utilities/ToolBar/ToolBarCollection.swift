@@ -306,4 +306,26 @@ struct ToolBarCollection {
             .glassEffect(.regular)
         }
     }
+    
+    struct OperationApprovalMenu: ToolbarContent {
+        var onApproveAll: () -> Void
+        var onRejectAll: () -> Void
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button(action: onApproveAll) {
+                        Label("전체 승인", systemImage: "checkmark.circle")
+                            .tint(.green)
+                    }
+                    Button(role: .destructive, action: onRejectAll) {
+                        Label("전체 거절", systemImage: "xmark.circle")
+                            .tint(.red)
+                    }
+                  } label: {
+                      Image(systemName: "ellipsis")
+                  }
+            }
+        }
+    }
 }

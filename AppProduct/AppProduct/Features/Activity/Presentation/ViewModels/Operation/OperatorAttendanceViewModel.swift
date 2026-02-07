@@ -142,6 +142,25 @@ final class OperatorAttendanceViewModel {
         )
     }
 
+    /// 전체 거절 버튼 탭
+    func rejectAllButtonTapped(sessionId: UUID) {
+        alertPrompt = AlertPrompt(
+            title: "전체 거절",
+            message: "모든 승인 대기 출석을 거절하시겠습니까?",
+            positiveBtnTitle: "전체 거절",
+            positiveBtnAction: { [weak self] in
+                Task {
+                    await self?.rejectAllAttendances(sessionId: sessionId)
+                }
+            },
+            negativeBtnTitle: "취소",
+            negativeBtnAction: { [weak self] in
+                self?.alertPrompt = nil
+            },
+            isPositiveBtnDestructive: true
+        )
+    }
+
     // MARK: - Private Action
 
     @MainActor
@@ -173,8 +192,19 @@ final class OperatorAttendanceViewModel {
         // TODO: 실제 API 연동 - [25.02.05] 이재원
         // try await useCase.approveAllAttendances(sessionId: SessionID(value: sessionId))
 
-        // Mock: 모든 멤버 제거
-        updateSessionByRemovingAllMembers(sessionId: sessionId)
+        // Mock: 모든 멤버 제거 (출석 처리)
+        updateSessionByRemovingAllMembers(sessionId: sessionId, isApproval: true)
+    }
+
+    @MainActor
+    private func rejectAllAttendances(sessionId: UUID) async {
+        alertPrompt = nil
+
+        // TODO: 실제 API 연동 - [25.02.05] 이재원
+        // try await useCase.rejectAllAttendances(sessionId: SessionID(value: sessionId))
+
+        // Mock: 모든 멤버 제거 (거절 처리 - 출석 수 증가 없음)
+        updateSessionByRemovingAllMembers(sessionId: sessionId, isApproval: false)
     }
 
     // MARK: - Helper
@@ -192,13 +222,15 @@ final class OperatorAttendanceViewModel {
         }
     }
 
-    private func updateSessionByRemovingAllMembers(sessionId: UUID) {
+    private func updateSessionByRemovingAllMembers(sessionId: UUID, isApproval: Bool) {
         guard case .loaded(var sessions) = sessionsState else { return }
 
         if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
-            let approvedCount = sessions[index].pendingMembers.count
+            let memberCount = sessions[index].pendingMembers.count
             sessions[index] = sessions[index].copyWith(
-                attendedCount: sessions[index].attendedCount + approvedCount,
+                attendedCount: isApproval
+                    ? sessions[index].attendedCount + memberCount
+                    : sessions[index].attendedCount,
                 pendingMembers: []
             )
             sessionsState = .loaded(sessions)

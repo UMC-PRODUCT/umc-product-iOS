@@ -16,6 +16,7 @@ struct OperatorAttendanceSectionView: View {
     // MARK: - Property
 
     @State private var viewModel: OperatorAttendanceViewModel
+    @State private var selectedPendingSession: OperatorSessionAttendance?
 
     private let container: DIContainer
     private let errorHandler: ErrorHandler
@@ -67,6 +68,25 @@ struct OperatorAttendanceSectionView: View {
                 onConfirm: { place in
                     // TODO: 실제 위치 변경 API 호출 - [25.02.06] 이재원
                     viewModel.showLocationSheet = false
+                }
+            )
+        }
+        .sheet(item: $selectedPendingSession) { session in
+            OperatorPendingSheetView(
+                sessionAttendance: session,
+                onApprove: { member in
+                    viewModel.approveButtonTapped(
+                        member: member, sessionId: session.id)
+                },
+                onReject: { member in
+                    viewModel.rejectButtonTapped(
+                        member: member, sessionId: session.id)
+                },
+                onApproveAll: {
+                    viewModel.approveAllButtonTapped(sessionId: session.id)
+                },
+                onRejectAll: {
+                    viewModel.rejectAllButtonTapped(sessionId: session.id)
                 }
             )
         }
@@ -137,6 +157,9 @@ struct OperatorAttendanceSectionView: View {
                     sessionAttendance: sessionAttendance,
                     onLocationTap: {
                         viewModel.locationButtonTapped(session: sessionAttendance.session)
+                    },
+                    onPendingListTap: {
+                        selectedPendingSession = sessionAttendance
                     },
                     onReasonTap: { member in
                         viewModel.reasonButtonTapped(member: member)

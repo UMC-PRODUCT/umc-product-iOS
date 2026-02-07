@@ -21,7 +21,8 @@ struct OperatorAttendancePreviewData {
             nickname: "닉네임",
             university: "중앙대학교",
             requestTime: Date.now.addingTimeInterval(-300),
-            reason: "지각 사유입니다. 버스가 늦게 와서 조금 늦었습니다."
+            reason: "지각 사유입니다. 버스가 늦게 와서 조금 늦었습니다.",
+            profileImageURL: "https://picsum.photos/100"
         ),
         OperatorPendingMember(
             serverID: "member_2",
@@ -29,7 +30,8 @@ struct OperatorAttendancePreviewData {
             nickname: nil,
             university: "한성대학교",
             requestTime: Date.now.addingTimeInterval(-600),
-            reason: nil
+            reason: nil,
+            profileImageURL: nil
         ),
         OperatorPendingMember(
             serverID: "member_3",
@@ -37,7 +39,8 @@ struct OperatorAttendancePreviewData {
             nickname: "영희짱",
             university: "서울대학교",
             requestTime: Date.now.addingTimeInterval(-900),
-            reason: "교통 체증으로 인한 지각"
+            reason: "교통 체증으로 인한 지각",
+            profileImageURL: "https://picsum.photos/100"
         )
     ]
 

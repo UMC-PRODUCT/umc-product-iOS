@@ -41,11 +41,29 @@ struct OperatorPendingMemberRow: View, Equatable {
     // MARK: - View Components
 
     private var avatarView: some View {
-        Image(systemName: "person.2.fill")
+        Group {
+            if let urlString = member.profileImageURL {
+                RemoteImage(
+                    urlString: urlString,
+                    size: CGSize(
+                        width: DefaultConstant.iconSize,
+                        height: DefaultConstant.iconSize
+                    ),
+                    cornerRadius: 0,
+                    placeholderImage: "person.fill"
+                )
+            } else {
+                defaultAvatarImage
+                    .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
+                    .background(Color.grey200, in: .circle)
+            }
+        }
+    }
+
+    private var defaultAvatarImage: some View {
+        Image(systemName: "person.fill")
             .font(.system(size: 16))
             .foregroundStyle(.grey400)
-            .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
-            .background(Color.grey200, in: .circle)
     }
 
     private var memberInfoSection: some View {
@@ -72,31 +90,27 @@ struct OperatorPendingMemberRow: View, Equatable {
 // MARK: - Preview
 
 #Preview(traits: .sizeThatFitsLayout) {
-    VStack(spacing: 12) {
-        // 사유 있음
-        OperatorPendingMemberRow(
-            member: OperatorPendingMember(
-                serverID: "1",
-                name: "홍길동",
-                nickname: "닉네임",
-                university: "중앙대학교",
-                requestTime: Date.now.addingTimeInterval(-300),
-                reason: "지각 사유입니다"
-            )
+    OperatorPendingMemberRow(
+        member: OperatorPendingMember(
+            serverID: "1",
+            name: "이재원",
+            nickname: "리버",
+            university: "한성대학교",
+            requestTime: Date.now.addingTimeInterval(-300),
+            reason: "지각 사유입니다",
+            profileImageURL: "https://picsum.photos/100"
         )
-
-        // 사유 없음
-        OperatorPendingMemberRow(
-            member: OperatorPendingMember(
-                serverID: "2",
-                name: "김철수",
-                nickname: nil,
-                university: "서울대학교",
-                requestTime: Date.now.addingTimeInterval(-600),
-                reason: nil
-            )
+    )
+    
+    OperatorPendingMemberRow(
+        member: OperatorPendingMember(
+            serverID: "1",
+            name: "이예지",
+            nickname: "소피",
+            university: "가천대학교",
+            requestTime: Date.now.addingTimeInterval(-300),
+            reason: "지각 사유입니다",
+            profileImageURL: nil
         )
-    }
-    .padding()
-    .background(Color.grey100)
+    )
 }
