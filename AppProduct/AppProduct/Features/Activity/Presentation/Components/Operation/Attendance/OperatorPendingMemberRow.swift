@@ -16,22 +16,10 @@ struct OperatorPendingMemberRow: View, Equatable {
 
     private let member: OperatorPendingMember
 
-    var onReasonTap: (() -> Void)?
-    var onRejectTap: () -> Void
-    var onApproveTap: () -> Void
-
     // MARK: - Initializer
 
-    init(
-        member: OperatorPendingMember,
-        onReasonTap: (() -> Void)? = nil,
-        onRejectTap: @escaping () -> Void,
-        onApproveTap: @escaping () -> Void
-    ) {
+    init(member: OperatorPendingMember) {
         self.member = member
-        self.onReasonTap = onReasonTap
-        self.onRejectTap = onRejectTap
-        self.onApproveTap = onApproveTap
     }
 
     // MARK: - Equatable
@@ -44,65 +32,33 @@ struct OperatorPendingMemberRow: View, Equatable {
 
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing16) {
-            // Avatar
-            Image(systemName: "person.2.fill")
-                .font(.system(size: 16))
-                .foregroundStyle(.grey400)
-                .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
-                .background(Color.grey200, in: .circle)
-
-            // 텍스트 영역
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                // 이름(닉네임)
-                Text(member.displayName)
-                    .appFont(.calloutEmphasis, color: .black)
-
-                // 학교 + 시간
-                Text("\(member.university) \(formattedTime) 요청")
-                    .appFont(.subheadline, color: .grey600)
-            }
-
-            Spacer()
-
-            // 버튼들
-            HStack(spacing: DefaultSpacing.spacing8) {
-                // 사유 확인 버튼 (reason이 있을 때만)
-                if member.hasReason {
-                    Button(action: { onReasonTap?() }) {
-                        Image(systemName: "exclamationmark")
-                            .font(.system(size: 16, weight: .bold))
-                            .frame(width: 24, height: 24)
-                            .foregroundStyle(.white)
-                            .background(Color.orange500, in: Circle())
-                    }
-                }
-
-                // 반려 버튼
-                Button(action: onRejectTap) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .bold))
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(.white)
-                        .background(Color.red500, in: Circle())
-                }
-
-                // 승인 버튼
-                Button(action: onApproveTap) {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .bold))
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(.green500)
-                        .background(Color.green100, in: Circle())
-                }
-            }
-            .buttonStyle(.plain)
+            avatarView
+            memberInfoSection
         }
-        .padding(DefaultConstant.defaultListPadding)
-        .background(.white, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.grey200, lineWidth: 1)
-        )
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - View Components
+
+    private var avatarView: some View {
+        Image(systemName: "person.2.fill")
+            .font(.system(size: 16))
+            .foregroundStyle(.grey400)
+            .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
+            .background(Color.grey200, in: .circle)
+    }
+
+    private var memberInfoSection: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            Text(member.displayName)
+                .appFont(.calloutEmphasis, color: .black)
+
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Text(member.university)
+                Text("\(formattedTime) 요청")
+            }
+            .appFont(.footnote, color: .grey600)
+        }
     }
 
     // MARK: - Function
@@ -126,10 +82,7 @@ struct OperatorPendingMemberRow: View, Equatable {
                 university: "중앙대학교",
                 requestTime: Date.now.addingTimeInterval(-300),
                 reason: "지각 사유입니다"
-            ),
-            onReasonTap: { print("사유 확인") },
-            onRejectTap: { print("반려") },
-            onApproveTap: { print("승인") }
+            )
         )
 
         // 사유 없음
@@ -141,10 +94,7 @@ struct OperatorPendingMemberRow: View, Equatable {
                 university: "서울대학교",
                 requestTime: Date.now.addingTimeInterval(-600),
                 reason: nil
-            ),
-            onReasonTap: nil,
-            onRejectTap: { print("반려") },
-            onApproveTap: { print("승인") }
+            )
         )
     }
     .padding()
