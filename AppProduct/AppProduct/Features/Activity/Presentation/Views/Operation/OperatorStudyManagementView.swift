@@ -20,8 +20,6 @@ struct OperatorStudyManagementView: View {
     private let errorHandler: ErrorHandler
 
     @State private var selectedTab: ManagementTab = .submission
-    @State private var selectedMemberForReview: StudyMemberItem?
-    @State private var selectedMemberForBest: StudyMemberItem?
 
     // MARK: - Constants
 
@@ -97,36 +95,35 @@ struct OperatorStudyManagementView: View {
                 )
             }
         }
-        .sheet(item: $selectedMemberForReview) { member in
+        .sheet(item: $viewModel.selectedMemberForReview) { member in
             OperatorStudyReviewSheet(
                 member: member,
                 onApprove: { feedback in
-                    viewModel.submitReview(
+                    viewModel.confirmReviewApproval(
                         member: member,
-                        feedback: feedback,
-                        isApproved: true
+                        feedback: feedback
                     )
                 },
                 onReject: { feedback in
-                    viewModel.submitReview(
+                    viewModel.confirmReviewRejection(
                         member: member,
-                        feedback: feedback,
-                        isApproved: false
+                        feedback: feedback
                     )
                 }
             )
         }
-        .sheet(item: $selectedMemberForBest) { member in
+        .sheet(item: $viewModel.selectedMemberForBest) { member in
             OperatorBestWorkbookSheet(
                 member: member,
                 onSelect: { recommendation in
-                    viewModel.submitBestWorkbook(
+                    viewModel.confirmBestWorkbookSelection(
                         member: member,
                         recommendation: recommendation
                     )
                 }
             )
         }
+        .alertPrompt(item: $viewModel.alertPrompt)
     }
 
     // MARK: - Submission Content View
@@ -222,14 +219,14 @@ struct OperatorStudyManagementView: View {
                     ))
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button {
-                            selectedMemberForReview = member
+                            viewModel.selectedMemberForReview = member
                         } label: {
                             Label("검토", systemImage: "checkmark.circle.fill")
                         }
                         .tint(.indigo500)
 
                         Button {
-                            selectedMemberForBest = member
+                            viewModel.selectedMemberForBest = member
                         } label: {
                             Label("베스트", systemImage: "trophy")
                         }

@@ -10,7 +10,6 @@ import SwiftUI
 struct OperatorStudyReviewSheet: View {
     // MARK: - Property
 
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
     @FocusState private var focusedID: UUID?

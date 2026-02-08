@@ -21,6 +21,13 @@ final class OperatorStudyManagementViewModel {
     private(set) var weeks: [Int] = []
     var selectedWeek: Int = 1
 
+    /// 시트 표시 상태
+    var selectedMemberForReview: StudyMemberItem?
+    var selectedMemberForBest: StudyMemberItem?
+
+    /// 확인 다이얼로그
+    var alertPrompt: AlertPrompt?
+
     /// 필터링 전 전체 멤버 목록
     private var allMembers: [StudyMemberItem] = []
 
@@ -71,7 +78,47 @@ final class OperatorStudyManagementViewModel {
         filterMembers()
     }
 
-    func submitReview(
+    func confirmReviewApproval(member: StudyMemberItem, feedback: String) {
+        alertPrompt = AlertPrompt(
+            title: "스터디 승인",
+            message: "\(member.displayName)님의 \(member.week)주차 스터디를 승인하시겠습니까?",
+            positiveBtnTitle: "승인",
+            positiveBtnAction: { [weak self] in
+                self?.submitReview(member: member, feedback: feedback, isApproved: true)
+            },
+            negativeBtnTitle: "취소"
+        )
+    }
+
+    func confirmReviewRejection(member: StudyMemberItem, feedback: String) {
+        alertPrompt = AlertPrompt(
+            title: "스터디 반려",
+            message: "\(member.displayName)님의 \(member.week)주차 스터디를 반려하시겠습니까?",
+            positiveBtnTitle: "반려",
+            positiveBtnAction: { [weak self] in
+                self?.submitReview(member: member, feedback: feedback, isApproved: false)
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
+    }
+
+    func confirmBestWorkbookSelection(member: StudyMemberItem, recommendation: String) {
+        alertPrompt = AlertPrompt(
+            title: "베스트 워크북 선정",
+            message: "\(member.displayName)님을 베스트 워크북으로 선정하시겠습니까?",
+            positiveBtnTitle: "선정",
+            positiveBtnAction: { [weak self] in
+                self?.submitBestWorkbook(
+                    member: member,
+                    recommendation: recommendation
+                )
+            },
+            negativeBtnTitle: "취소"
+        )
+    }
+
+    private func submitReview(
         member: StudyMemberItem,
         feedback: String,
         isApproved: Bool
@@ -79,7 +126,7 @@ final class OperatorStudyManagementViewModel {
         // TODO: UseCase 연동
     }
 
-    func submitBestWorkbook(
+    private func submitBestWorkbook(
         member: StudyMemberItem,
         recommendation: String
     ) {

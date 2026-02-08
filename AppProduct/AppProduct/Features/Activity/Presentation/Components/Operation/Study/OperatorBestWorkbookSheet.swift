@@ -10,7 +10,6 @@ import SwiftUI
 struct OperatorBestWorkbookSheet: View {
     // MARK: - Property
 
-    @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedID: UUID?
     @State private var recommendation: String = ""
 
@@ -35,10 +34,8 @@ struct OperatorBestWorkbookSheet: View {
             .navigationTitle("베스트 워크북 선정")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolBarCollection.CancelBtn(action: {
-                    dismiss()
-                })
-                
+                ToolBarCollection.CancelBtn(action: {})
+
                 ToolBarCollection.ConfirmBtn {
                     onSelect(recommendation)
                 }
@@ -72,9 +69,9 @@ struct OperatorBestWorkbookSheet: View {
             footerSection
         }
     }
-    
+
     private var footerSection: some View {
-        Text("우수한 스터디를 명예의 전당에 등록하고\n\(member.displayName)님의 경고 점수를 차감할 수 있습니다.")
+        Text("우수한 스터디를 명예의 전당에 등록하고 \(member.displayName)님의 경고 점수를 차감할 수 있습니다.")
             .appFont(.subheadline, color: .grey600)
     }
 }
