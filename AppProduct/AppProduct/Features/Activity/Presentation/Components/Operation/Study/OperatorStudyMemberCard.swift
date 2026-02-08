@@ -9,7 +9,7 @@ import SwiftUI
 
 /// 운영진 스터디 출석 관리 - 스터디원 카드
 ///
-/// 스터디원 정보와 수동 출석 버튼을 표시합니다.
+/// 스터디원 정보를 표시합니다.
 ///
 /// ## 구성 요소
 /// - 프로필 이미지 (원형)
@@ -67,6 +67,13 @@ struct OperatorStudyMemberCard: View, Equatable {
             memberInfoSection
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(DefaultConstant.defaultListPadding)
+        .background(
+            ConcentricRectangle(
+                corners: .concentric(minimum: DefaultConstant.concentricRadius))
+                .fill(.white)
+                .glass()
+        )
     }
 
     // MARK: - View Components
@@ -115,10 +122,7 @@ struct OperatorStudyMemberCard: View, Equatable {
         Text(member.part)
             .appFont(.footnote, color: .grey600)
             .padding(DefaultConstant.iconPadding)
-            .background(
-                .gray.opacity(Constants.badgeBackgroundOpacity),
-                in: .rect(corners: .concentric(minimum: .concentric(minimum: DefaultConstant.concentricRadius)))
-            )
+            .glassEffect(.regular.tint(.gray.opacity(Constants.badgeBackgroundOpacity)))
     }
 
     private var memberDetailRow: some View {
@@ -132,17 +136,6 @@ struct OperatorStudyMemberCard: View, Equatable {
             Text(member.studyTopic)
                 .appFont(.subheadline, color: .indigo500)
         }
-    }
-
-    private var manualAttendanceButton: some View {
-        Button {
-            onManualAttendance?()
-        } label: {
-            Image(systemName: "hand.tap")
-                .font(.system(size: Constants.manualAttendanceIconSize))
-                .foregroundStyle(.grey500)
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -189,6 +182,5 @@ struct OperatorStudyMemberCard: View, Equatable {
         )
     }
     .padding()
-    .background(Color.grey100)
 }
 #endif
