@@ -47,6 +47,31 @@ struct ToolBarCollection {
         }
     }
     
+    /// 반려 버튼
+    struct RejectBtn: ToolbarContent {
+        @Environment(\.dismiss) var dismiss
+        let action: () -> Void
+        let disable: Bool
+
+        init(action: @escaping () -> Void, disable: Bool = false) {
+            self.action = action
+            self.disable = disable
+        }
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(role: .destructive, action: {
+                    action()
+                    dismiss()
+                }) {
+                    Image(systemName: "xmark")
+                }
+                .tint(.red)
+                .disabled(disable)
+            }
+        }
+    }
+
     /// 추가 버튼
     struct AddBtn: ToolbarContent {
         let action: () -> Void
@@ -343,7 +368,7 @@ struct ToolBarCollection {
                         Label("선택 거절 (\(selectedCount))", systemImage: "xmark.circle")
                     }
                     .disabled(!hasSelection)
-                    
+
                     Button(action: onApproveSelected) {
                         Label("선택 승인 (\(selectedCount))", systemImage: "checkmark.circle")
                     }
@@ -386,6 +411,71 @@ struct ToolBarCollection {
                 Image(systemName: "checklist")
                     .font(.system(size: 16))
                     .foregroundStyle(.black)
+            }
+        }
+    }
+
+    // MARK: - Study Management Filters
+
+    /// 스터디 주차 필터
+    struct StudyWeekFilter: ToolbarContent {
+        let weeks: [Int]
+        @Binding var selection: Int
+        let onChange: (Int) -> Void
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarLeading) {
+                Menu {
+                    weekPicker
+                } label: {
+                    Text("\(selection)주차")
+                        .appFont(.callout)
+                }
+            }
+        }
+
+        private var weekPicker: some View {
+            Picker("주차", selection: $selection) {
+                ForEach(weeks, id: \.self) { week in
+                    Text("\(week)주차")
+                        .tag(week)
+                }
+            }
+            .onChange(of: selection) { _, newValue in
+                onChange(newValue)
+            }
+        }
+    }
+
+    /// 스터디 그룹 필터
+    struct StudyGroupFilter: ToolbarContent {
+        let studyGroups: [StudyGroupItem]
+        @Binding var selection: StudyGroupItem
+        let onChange: (StudyGroupItem) -> Void
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    groupPicker
+                } label: {
+                    Image(
+                        systemName: selection == .all
+                            ? "line.3.horizontal.decrease"
+                            : selection.iconName
+                    )
+                }
+            }
+        }
+
+        private var groupPicker: some View {
+            Picker("스터디 그룹", selection: $selection) {
+                ForEach(studyGroups, id: \.self) { group in
+                    Label(group.name, systemImage: group.iconName)
+                        .tag(group)
+                }
+            }
+            .onChange(of: selection) { _, newValue in
+                onChange(newValue)
             }
         }
     }

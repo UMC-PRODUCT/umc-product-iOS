@@ -127,4 +127,21 @@ final class MockStudyRepository: StudyRepositoryProtocol {
         missions[index].status = .pendingApproval
         return missions[index]
     }
+
+    // MARK: - 운영진 스터디 관리
+
+    func fetchStudyMembers() async throws -> [StudyMemberItem] {
+        try await Task.sleep(for: .milliseconds(500))
+        return StudyMemberItem.preview
+    }
+
+    func fetchStudyGroups() async throws -> [StudyGroupItem] {
+        try await Task.sleep(for: .milliseconds(300))
+        return StudyGroupItem.preview
+    }
+
+    func fetchWeeks() async throws -> [Int] {
+        try await Task.sleep(for: .milliseconds(200))
+        return Array(1...10)
+    }
 }

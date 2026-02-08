@@ -104,7 +104,7 @@ struct ActivityView: View {
             OperatorAttendanceSectionView(
                 container: di, errorHandler: errorHandler)
         case (.admin, .studyManage):
-            OperatorStudyManagementView()
+            OperatorStudyManagementView(container: di, errorHandler: errorHandler)
         case (.admin, .memberManage):
             OperatorMemberManagementView()
         default:

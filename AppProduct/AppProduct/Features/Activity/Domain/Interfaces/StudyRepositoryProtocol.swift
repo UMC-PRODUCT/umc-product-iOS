@@ -30,4 +30,21 @@ protocol StudyRepositoryProtocol {
         type: MissionSubmissionType,
         link: String?
     ) async throws -> MissionCardModel
+
+    // MARK: - 운영진 스터디 관리
+
+    /// 스터디원 목록을 가져옵니다.
+    /// - Returns: 스터디원 모델 배열
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func fetchStudyMembers() async throws -> [StudyMemberItem]
+
+    /// 스터디 그룹 목록을 가져옵니다.
+    /// - Returns: 스터디 그룹 모델 배열
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func fetchStudyGroups() async throws -> [StudyGroupItem]
+
+    /// 스터디 주차 목록을 가져옵니다.
+    /// - Returns: 주차 번호 배열
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func fetchWeeks() async throws -> [Int]
 }
