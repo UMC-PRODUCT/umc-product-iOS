@@ -95,7 +95,10 @@ struct OperatorStudyManagementView: View {
                 )
             }
         }
-        .sheet(item: $viewModel.selectedMemberForReview) { member in
+        .sheet(
+            item: $viewModel.selectedMemberForReview,
+            onDismiss: { viewModel.presentPendingAlert() }
+        ) { member in
             OperatorStudyReviewSheet(
                 member: member,
                 onApprove: { feedback in
@@ -112,7 +115,10 @@ struct OperatorStudyManagementView: View {
                 }
             )
         }
-        .sheet(item: $viewModel.selectedMemberForBest) { member in
+        .sheet(
+            item: $viewModel.selectedMemberForBest,
+            onDismiss: { viewModel.presentPendingAlert() }
+        ) { member in
             OperatorBestWorkbookSheet(
                 member: member,
                 onSelect: { recommendation in

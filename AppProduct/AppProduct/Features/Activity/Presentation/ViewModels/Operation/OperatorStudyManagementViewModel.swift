@@ -28,6 +28,9 @@ final class OperatorStudyManagementViewModel {
     /// 확인 다이얼로그
     var alertPrompt: AlertPrompt?
 
+    /// 시트 dismiss 후 표시할 대기 중인 AlertPrompt
+    private var pendingAlertPrompt: AlertPrompt?
+
     /// 필터링 전 전체 멤버 목록
     private var allMembers: [StudyMemberItem] = []
 
@@ -78,8 +81,15 @@ final class OperatorStudyManagementViewModel {
         filterMembers()
     }
 
+    /// 시트 dismiss 후 대기 중인 AlertPrompt를 표시
+    func presentPendingAlert() {
+        guard let pending = pendingAlertPrompt else { return }
+        pendingAlertPrompt = nil
+        alertPrompt = pending
+    }
+
     func confirmReviewApproval(member: StudyMemberItem, feedback: String) {
-        alertPrompt = AlertPrompt(
+        pendingAlertPrompt = AlertPrompt(
             title: "스터디 승인",
             message: "\(member.displayName)님의 \(member.week)주차 스터디를 승인하시겠습니까?",
             positiveBtnTitle: "승인",
@@ -91,7 +101,7 @@ final class OperatorStudyManagementViewModel {
     }
 
     func confirmReviewRejection(member: StudyMemberItem, feedback: String) {
-        alertPrompt = AlertPrompt(
+        pendingAlertPrompt = AlertPrompt(
             title: "스터디 반려",
             message: "\(member.displayName)님의 \(member.week)주차 스터디를 반려하시겠습니까?",
             positiveBtnTitle: "반려",
@@ -103,8 +113,11 @@ final class OperatorStudyManagementViewModel {
         )
     }
 
-    func confirmBestWorkbookSelection(member: StudyMemberItem, recommendation: String) {
-        alertPrompt = AlertPrompt(
+    func confirmBestWorkbookSelection(
+        member: StudyMemberItem,
+        recommendation: String
+    ) {
+        pendingAlertPrompt = AlertPrompt(
             title: "베스트 워크북 선정",
             message: "\(member.displayName)님을 베스트 워크북으로 선정하시겠습니까?",
             positiveBtnTitle: "선정",
@@ -124,6 +137,7 @@ final class OperatorStudyManagementViewModel {
         isApproved: Bool
     ) {
         // TODO: UseCase 연동
+        removeMember(member)
     }
 
     private func submitBestWorkbook(
@@ -131,9 +145,25 @@ final class OperatorStudyManagementViewModel {
         recommendation: String
     ) {
         // TODO: UseCase 연동
+        markAsBestWorkbook(member)
     }
 
     // MARK: - Private
+
+    /// 서버 제출 완료된 멤버를 목록에서 제거
+    private func removeMember(_ member: StudyMemberItem) {
+        allMembers.removeAll { $0.id == member.id }
+        filterMembers()
+    }
+
+    /// 멤버를 베스트 워크북으로 표시
+    private func markAsBestWorkbook(_ member: StudyMemberItem) {
+        guard let index = allMembers.firstIndex(
+            where: { $0.id == member.id }
+        ) else { return }
+        allMembers[index].isBestWorkbook = true
+        filterMembers()
+    }
 
     /// 선택된 스터디 그룹과 주차에 따라 멤버 필터링
     private func filterMembers() {
