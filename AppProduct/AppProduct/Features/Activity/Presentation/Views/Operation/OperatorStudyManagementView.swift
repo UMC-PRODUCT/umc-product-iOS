@@ -19,10 +19,24 @@ struct OperatorStudyManagementView: View {
     private let container: DIContainer
     private let errorHandler: ErrorHandler
 
+    @State private var selectedTab: ManagementTab = .submission
+
     // MARK: - Constants
 
     private enum Constants {
         static let loadingPlaceholderHeight: CGFloat = 80
+    }
+
+    private enum ManagementTab: Int, CaseIterable {
+        case submission
+        case groupManagement
+
+        var title: String {
+            switch self {
+            case .submission: "제출 현황"
+            case .groupManagement: "스터디 그룹 관리"
+            }
+        }
     }
 
     // MARK: - Initializer
@@ -44,22 +58,22 @@ struct OperatorStudyManagementView: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
-            switch viewModel.membersState {
-            case .idle, .loading:
-                loadingView
-
-            case .loaded(let members):
-                if members.isEmpty {
-                    emptyView
-                } else {
-                    VStack {
-                        memberListView(members: members)
-                    }
+        VStack(spacing: 0) {
+            Picker("관리", selection: $selectedTab) {
+                ForEach(ManagementTab.allCases, id: \.self) { tab in
+                    Text(tab.title).tag(tab)
                 }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .padding(.vertical, DefaultSpacing.spacing8)
 
-            case .failed(let error):
-                errorView(error: error)
+            switch selectedTab {
+            case .submission:
+                submissionContentView
+
+            case .groupManagement:
+                groupManagementPlaceholder
             }
         }
         .task {
@@ -68,42 +82,52 @@ struct OperatorStudyManagementView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Menu {
-                    Picker("주차", selection: $viewModel.selectedWeek) {
-                        ForEach(viewModel.weeks, id: \.self) { week in
-                            Text("\(week)주차")
-                                .tag(week)
-                        }
-                    }
-                    .onChange(of: viewModel.selectedWeek) { _, newValue in
-                        viewModel.selectWeek(newValue)
-                    }
-                } label: {
-                    Text("\(viewModel.selectedWeek)주차")
-                        .appFont(.callout)
-                }
+            if selectedTab == .submission {
+                ToolBarCollection.StudyWeekFilter(
+                    weeks: viewModel.weeks,
+                    selection: $viewModel.selectedWeek,
+                    onChange: viewModel.selectWeek
+                )
+                ToolBarCollection.StudyGroupFilter(
+                    studyGroups: viewModel.studyGroups,
+                    selection: $viewModel.selectedStudyGroup,
+                    onChange: viewModel.selectStudyGroup
+                )
             }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Picker("스터디 그룹", selection: $viewModel.selectedStudyGroup) {
-                        ForEach(viewModel.studyGroups, id: \.self) { group in
-                            Label(group.name, systemImage: group.iconName)
-                                .tag(group)
-                        }
-                    }
-                    .onChange(of: viewModel.selectedStudyGroup) { _, newValue in
-                        viewModel.selectStudyGroup(newValue)
-                    }
-                } label: {
-                    Image(
-                        systemName: viewModel.selectedStudyGroup == .all
-                            ? "line.3.horizontal.decrease"
-                            : viewModel.selectedStudyGroup.iconName
-                    )
-                }
+        }
+    }
+
+    // MARK: - Submission Content View
+
+    @ViewBuilder
+    private var submissionContentView: some View {
+        switch viewModel.membersState {
+        case .idle, .loading:
+            loadingView
+
+        case .loaded(let members):
+            if members.isEmpty {
+                emptyView
+            } else {
+                memberListView(members: members)
             }
+
+        case .failed(let error):
+            errorView(error: error)
+        }
+    }
+
+    // MARK: - Group Management View
+
+    private var groupManagementPlaceholder: some View {
+        ScrollView {
+            ContentUnavailableView {
+                Label("스터디 그룹 관리", systemImage: "person.2.badge.gearshape")
+            } description: {
+                Text("준비 중입니다")
+            }
+            .padding(.top, DefaultSpacing.spacing32)
+            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
     }
 
