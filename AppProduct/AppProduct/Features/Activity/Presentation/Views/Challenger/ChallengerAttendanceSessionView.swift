@@ -63,7 +63,6 @@ struct ChallengerAttendanceSessionView: View {
     private enum Constants {
         static let animationResponse: Double = 0.35
         static let animationDamping: Double = 0.8
-        static let leadingHeader: CGFloat = 24
     }
 
     // MARK: - Computed Properties
@@ -160,7 +159,7 @@ struct ChallengerAttendanceSessionView: View {
     private var attendanceSectionHeader: some View {
         Text("출석 가능한 세션")
             .appFont(.bodyEmphasis, color: .black)
-            .padding(.leading, Constants.leadingHeader)
+            .padding(.leading, DefaultConstant.sectionLeadingHeader)
     }
     
     private var myAttendanceStatusView: some View {
@@ -177,7 +176,7 @@ struct ChallengerAttendanceSessionView: View {
     private var sectionHeader: some View {
         Text("나의 출석 현황")
             .appFont(.bodyEmphasis, color: .black)
-            .padding(.leading, Constants.leadingHeader)
+            .padding(.leading, DefaultConstant.sectionLeadingHeader)
     }
 }
 

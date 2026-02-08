@@ -71,6 +71,21 @@ final class OperatorStudyManagementViewModel {
         filterMembers()
     }
 
+    func submitReview(
+        member: StudyMemberItem,
+        feedback: String,
+        isApproved: Bool
+    ) {
+        // TODO: UseCase 연동
+    }
+
+    func submitBestWorkbook(
+        member: StudyMemberItem,
+        recommendation: String
+    ) {
+        // TODO: UseCase 연동
+    }
+
     // MARK: - Private
 
     /// 선택된 스터디 그룹과 주차에 따라 멤버 필터링

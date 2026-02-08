@@ -52,6 +52,9 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
     /// 프로필 이미지 URL
     let profileImageURL: String?
 
+    /// 제출 URL
+    let submissionURL: String?
+
     // MARK: - Initializer
 
     init(
@@ -63,7 +66,8 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
         university: String,
         studyTopic: String,
         week: Int = 1,
-        profileImageURL: String? = nil
+        profileImageURL: String? = nil,
+        submissionURL: String? = nil
     ) {
         self.id = id
         self.serverID = serverID
@@ -74,6 +78,7 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
         self.studyTopic = studyTopic
         self.week = week
         self.profileImageURL = profileImageURL
+        self.submissionURL = submissionURL
     }
 
     // MARK: - Computed Property

@@ -47,6 +47,31 @@ struct ToolBarCollection {
         }
     }
     
+    /// 반려 버튼
+    struct RejectBtn: ToolbarContent {
+        @Environment(\.dismiss) var dismiss
+        let action: () -> Void
+        let disable: Bool
+
+        init(action: @escaping () -> Void, disable: Bool = false) {
+            self.action = action
+            self.disable = disable
+        }
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(role: .destructive, action: {
+                    action()
+                    dismiss()
+                }) {
+                    Image(systemName: "xmark")
+                }
+                .tint(.red)
+                .disabled(disable)
+            }
+        }
+    }
+
     /// 추가 버튼
     struct AddBtn: ToolbarContent {
         let action: () -> Void

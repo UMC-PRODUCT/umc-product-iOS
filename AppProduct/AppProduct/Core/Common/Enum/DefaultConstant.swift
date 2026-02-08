@@ -67,6 +67,9 @@ enum DefaultConstant {
     /// 카드 기본 패딩.
     static let defaultCardPadding: EdgeInsets = .init(top: 24, leading: 16, bottom: 24, trailing: 16)
     
+    // Form-Section에 따른 커스텀 패딩값
+    static let sectionLeadingHeader: CGFloat = 24
+    
     /// 기본 애니메이션 지속 시간 (초).
     static let animationTime: TimeInterval = 0.3
     

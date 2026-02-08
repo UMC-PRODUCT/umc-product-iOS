@@ -20,6 +20,8 @@ struct OperatorStudyManagementView: View {
     private let errorHandler: ErrorHandler
 
     @State private var selectedTab: ManagementTab = .submission
+    @State private var selectedMemberForReview: StudyMemberItem?
+    @State private var selectedMemberForBest: StudyMemberItem?
 
     // MARK: - Constants
 
@@ -94,6 +96,36 @@ struct OperatorStudyManagementView: View {
                     onChange: viewModel.selectStudyGroup
                 )
             }
+        }
+        .sheet(item: $selectedMemberForReview) { member in
+            OperatorStudyReviewSheet(
+                member: member,
+                onApprove: { feedback in
+                    viewModel.submitReview(
+                        member: member,
+                        feedback: feedback,
+                        isApproved: true
+                    )
+                },
+                onReject: { feedback in
+                    viewModel.submitReview(
+                        member: member,
+                        feedback: feedback,
+                        isApproved: false
+                    )
+                }
+            )
+        }
+        .sheet(item: $selectedMemberForBest) { member in
+            OperatorBestWorkbookSheet(
+                member: member,
+                onSelect: { recommendation in
+                    viewModel.submitBestWorkbook(
+                        member: member,
+                        recommendation: recommendation
+                    )
+                }
+            )
         }
     }
 
@@ -190,14 +222,14 @@ struct OperatorStudyManagementView: View {
                     ))
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button {
-                            // 검토 액션
+                            selectedMemberForReview = member
                         } label: {
                             Label("검토", systemImage: "checkmark.circle.fill")
                         }
                         .tint(.indigo500)
 
                         Button {
-                            // 베스트 액션
+                            selectedMemberForBest = member
                         } label: {
                             Label("베스트", systemImage: "trophy")
                         }
