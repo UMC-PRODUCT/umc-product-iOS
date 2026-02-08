@@ -116,7 +116,23 @@ struct OperatorStudyMemberCard: View, Equatable {
 
             infoBadge(member.university)
             infoBadge(member.part.rawValue)
+
+            if member.isBestWorkbook {
+                trophyBadge
+            }
         }
+    }
+
+    private var trophyBadge: some View {
+        Image(systemName: "trophy.fill")
+            .font(.app(.footnote))
+            .foregroundStyle(.orange)
+            .padding(DefaultConstant.iconPadding)
+            .glassEffect(
+                .regular.tint(
+                    .orange.opacity(Constants.badgeBackgroundOpacity)
+                )
+            )
     }
 
     private func infoBadge(_ text: String) -> some View {

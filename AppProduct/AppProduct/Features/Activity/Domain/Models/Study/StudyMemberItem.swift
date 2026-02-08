@@ -55,6 +55,9 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
     /// 제출 URL
     let submissionURL: String?
 
+    /// 베스트 워크북 선정 여부
+    var isBestWorkbook: Bool
+
     // MARK: - Initializer
 
     init(
@@ -67,7 +70,8 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
         studyTopic: String,
         week: Int = 1,
         profileImageURL: String? = nil,
-        submissionURL: String? = nil
+        submissionURL: String? = nil,
+        isBestWorkbook: Bool = false
     ) {
         self.id = id
         self.serverID = serverID
@@ -79,6 +83,7 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
         self.week = week
         self.profileImageURL = profileImageURL
         self.submissionURL = submissionURL
+        self.isBestWorkbook = isBestWorkbook
     }
 
     // MARK: - Computed Property
