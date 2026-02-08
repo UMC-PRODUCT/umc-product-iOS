@@ -114,28 +114,27 @@ struct OperatorStudyMemberCard: View, Equatable {
             Text(member.displayName)
                 .appFont(.calloutEmphasis)
 
-            partBadge
+            infoBadge(member.university)
+            infoBadge(member.part)
         }
     }
 
-    private var partBadge: some View {
-        Text(member.part)
+    private func infoBadge(_ text: String) -> some View {
+        Text(text)
             .appFont(.footnote, color: .grey600)
+            .lineLimit(1)
             .padding(DefaultConstant.iconPadding)
-            .glassEffect(.regular.tint(.gray.opacity(Constants.badgeBackgroundOpacity)))
+            .glassEffect(
+                .regular.tint(
+                    .gray.opacity(Constants.badgeBackgroundOpacity)
+                )
+            )
     }
 
     private var memberDetailRow: some View {
-        HStack(spacing: DefaultSpacing.spacing4) {
-            Text(member.university)
-                .appFont(.subheadline, color: .grey600)
-
-            Text("|")
-                .appFont(.subheadline, color: .grey400)
-
-            Text(member.studyTopic)
-                .appFont(.subheadline, color: .indigo500)
-        }
+        Text(member.studyTopic)
+            .appFont(.subheadline, color: .indigo500)
+            .lineLimit(1)
     }
 }
 

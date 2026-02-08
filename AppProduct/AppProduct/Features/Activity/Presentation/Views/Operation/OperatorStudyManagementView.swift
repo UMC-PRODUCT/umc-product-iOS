@@ -72,7 +72,7 @@ struct OperatorStudyManagementView: View {
                     }
                 } label: {
                     Text("\(viewModel.selectedWeek)주차")
-                        .appFont(.calloutEmphasis)
+                        .appFont(.callout)
                 }
             }
             
@@ -88,7 +88,11 @@ struct OperatorStudyManagementView: View {
                         viewModel.selectStudyGroup(newValue)
                     }
                 } label: {
-                    Image(systemName: "line.3.horizontal.decrease")
+                    Image(
+                        systemName: viewModel.selectedStudyGroup == .all
+                            ? "line.3.horizontal.decrease"
+                            : viewModel.selectedStudyGroup.iconName
+                    )
                 }
             }
         }
