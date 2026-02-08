@@ -15,7 +15,6 @@ struct OperatorStudyManagementView: View {
     // MARK: - Property
 
     @State private var viewModel: OperatorStudyManagementViewModel
-    @State private var swipeState = SwipeStateManager()
 
     private let container: DIContainer
     private let errorHandler: ErrorHandler
@@ -109,37 +108,38 @@ struct OperatorStudyManagementView: View {
     // MARK: - Member List View
 
     private func memberListView(members: [StudyMemberItem]) -> some View {
-        ScrollView {
-            LazyVStack(spacing: DefaultSpacing.spacing12) {
-                ForEach(members) { member in
-                    SwipeableRow(id: member.id, actionWidth: 156) {
-                        OperatorStudyMemberCard(member: member)
-                            .equatable()
-                    } actions: {
-                        HStack(spacing: 12) {
-                            SwipeActionButton(
-                                icon: "star.fill",
-                                title: "베스트",
-                                color: .orange
-                            ) {
-                                swipeState.close()
-                            }
-
-                            SwipeActionButton(
-                                icon: "checkmark.circle.fill",
-                                title: "검토",
-                                color: .indigo500
-                            ) {
-                                swipeState.close()
-                            }
+        List {
+            ForEach(members) { member in
+                OperatorStudyMemberCard(member: member)
+                    .equatable()
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(
+                        top: DefaultSpacing.spacing4,
+                        leading: DefaultConstant.defaultSafeHorizon,
+                        bottom: DefaultSpacing.spacing4,
+                        trailing: DefaultConstant.defaultSafeHorizon
+                    ))
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button {
+                            // 검토 액션
+                        } label: {
+                            Label("검토", systemImage: "checkmark.circle.fill")
                         }
+                        .tint(.indigo500)
+
+                        Button {
+                            // 베스트 액션
+                        } label: {
+                            Label("베스트", systemImage: "star.fill")
+                        }
+                        .tint(.orange)
                     }
-                }
             }
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
-        .environment(swipeState)
     }
 
     // MARK: - Error View
