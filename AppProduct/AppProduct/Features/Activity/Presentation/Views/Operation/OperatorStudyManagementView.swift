@@ -31,9 +31,13 @@ struct OperatorStudyManagementView: View {
         self.container = container
         self.errorHandler = errorHandler
 
+        let useCase = container
+            .resolve(ActivityUseCaseProviding.self)
+            .fetchStudyMembersUseCase
         _viewModel = State(initialValue: OperatorStudyManagementViewModel(
             container: container,
-            errorHandler: errorHandler
+            errorHandler: errorHandler,
+            useCase: useCase
         ))
     }
 

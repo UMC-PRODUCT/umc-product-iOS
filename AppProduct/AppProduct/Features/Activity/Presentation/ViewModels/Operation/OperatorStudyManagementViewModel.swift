@@ -13,6 +13,7 @@ final class OperatorStudyManagementViewModel {
 
     private var container: DIContainer
     private var errorHandler: ErrorHandler
+    private var useCase: FetchStudyMembersUseCaseProtocol
 
     private(set) var membersState: Loadable<[StudyMemberItem]> = .idle
     private(set) var studyGroups: [StudyGroupItem] = []
@@ -27,10 +28,12 @@ final class OperatorStudyManagementViewModel {
 
     init(
         container: DIContainer,
-        errorHandler: ErrorHandler
+        errorHandler: ErrorHandler,
+        useCase: FetchStudyMembersUseCaseProtocol
     ) {
         self.container = container
         self.errorHandler = errorHandler
+        self.useCase = useCase
     }
 
     // MARK: - Function
@@ -39,27 +42,32 @@ final class OperatorStudyManagementViewModel {
     func fetchMembers() async {
         membersState = .loading
 
-        #if DEBUG
         do {
-            try await Task.sleep(for: .milliseconds(500))
-            let mockData = StudyMemberItem.preview
-            weeks = Array(1...10)
-            studyGroups = StudyGroupItem.preview
-            allMembers = mockData
+            let members = try await useCase.fetchMembers()
+            let groups = try await useCase.fetchStudyGroups()
+            let fetchedWeeks = try await useCase.fetchWeeks()
+            allMembers = members
+            studyGroups = groups
+            weeks = fetchedWeeks
             filterMembers()
+        } catch let error as DomainError {
+            membersState = .failed(.domain(error))
         } catch {
-            membersState = .failed(.unknown(message: error.localizedDescription))
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Activity",
+                action: "fetchStudyMembers",
+                retryAction: { [weak self] in
+                    await self?.fetchMembers()
+                }
+            ))
         }
-        #endif
     }
 
     func selectWeek(_ week: Int) {
-        selectedWeek = week
         filterMembers()
     }
 
     func selectStudyGroup(_ group: StudyGroupItem) {
-        selectedStudyGroup = group
         filterMembers()
     }
 

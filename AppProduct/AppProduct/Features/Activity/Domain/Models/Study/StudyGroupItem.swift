@@ -10,22 +10,22 @@ import Foundation
 struct StudyGroupItem: Identifiable, Equatable, Hashable {
     // MARK: - Property
 
-    let id: UUID
     let serverID: String
     let name: String
     let iconName: String
     let part: StudyPart?
 
+    /// serverID 기반 identity
+    var id: String { serverID }
+
     // MARK: - Initializer
 
     init(
-        id: UUID = UUID(),
         serverID: String,
         name: String,
         iconName: String,
         part: StudyPart? = nil
     ) {
-        self.id = id
         self.serverID = serverID
         self.name = name
         self.iconName = iconName
@@ -35,7 +35,7 @@ struct StudyGroupItem: Identifiable, Equatable, Hashable {
     // MARK: - Static Property
 
     static let all = StudyGroupItem(
-        serverID: "",
+        serverID: "__all__",
         name: "전체 스터디 그룹",
         iconName: "person.2.fill",
         part: nil

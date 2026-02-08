@@ -103,7 +103,8 @@ extension StudyMemberItem {
         for (index, base) in baseMembers.enumerated() {
             let memberNumber = index + 1
             for week in 1...10 {
-                guard (memberNumber + week) % 4 != 0
+                guard week == 1
+                    || (memberNumber + week) % 4 != 0
                 else {
                     continue
                 }
