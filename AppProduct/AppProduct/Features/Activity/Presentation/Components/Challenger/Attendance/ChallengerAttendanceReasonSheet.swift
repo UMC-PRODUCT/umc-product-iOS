@@ -20,7 +20,7 @@ struct ChallengerAttendanceReasonSheet: View {
     let onSubmit: (String) async -> Void
 
     private enum Constants {
-        static let defaultSheetFraction: CGFloat = 200
+        static let defaultSheetFraction: CGFloat = 230
     }
 
     // MARK: - Body
