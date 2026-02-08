@@ -9,135 +9,118 @@
 import Foundation
 
 extension StudyMemberItem {
-    static let preview: [StudyMemberItem] = [
-        StudyMemberItem(
-            serverID: "member_001",
-            name: "정의찬",
-            nickname: "제옹",
-            part: "iOS",
-            university: "중앙대학교",
-            studyTopic: "SwiftUI 심화"
+    /// 기본 멤버 정보 (주차 없이)
+    private static let baseMembers: [(
+        serverID: String, name: String, nickname: String,
+        part: StudyPart, university: String,
+        studyTopic: String
+    )] = [
+        (
+            "member_001", "정의찬", "제옹",
+            .ios, "중앙대학교",
+            "SwiftUI 심화"
         ),
-        StudyMemberItem(
-            serverID: "member_002",
-            name: "이재원",
-            nickname: "리버",
-            part: "iOS",
-            university: "한성대학교",
-            studyTopic: "UIKit to SwiftUI 마이그레이션"
+        (
+            "member_002", "이재원", "리버",
+            .ios, "한성대학교",
+            "UIKit to SwiftUI 마이그레이션"
         ),
-        StudyMemberItem(
-            serverID: "member_003",
-            name: "김연진",
-            nickname: "코튼",
-            part: "Web",
-            university: "상명대학교",
-            studyTopic: "Next.js App Router"
+        (
+            "member_003", "김연진", "코튼",
+            .web, "상명대학교",
+            "Next.js App Router"
         ),
-        StudyMemberItem(
-            serverID: "member_004",
-            name: "박경운",
-            nickname: "하늘",
-            part: "Server",
-            university: "중앙대학교",
-            studyTopic: "Spring Boot JPA"
+        (
+            "member_004", "박경운", "하늘",
+            .spring, "중앙대학교",
+            "Spring Boot JPA"
         ),
-        StudyMemberItem(
-            serverID: "member_005",
-            name: "박유수",
-            nickname: "어헛차",
-            part: "Android",
-            university: "숭실대학교",
-            studyTopic: "Jetpack Compose"
+        (
+            "member_005", "박유수", "어헛차",
+            .android, "숭실대학교",
+            "Jetpack Compose"
         ),
-        StudyMemberItem(
-            serverID: "member_006",
-            name: "이희원",
-            nickname: "삼이",
-            part: "Design",
-            university: "성신여자대학교",
-            studyTopic: "디자인 시스템 구축"
+        (
+            "member_006", "이희원", "삼이",
+            .design, "성신여자대학교",
+            "디자인 시스템 구축"
         ),
-        StudyMemberItem(
-            serverID: "member_007",
-            name: "김미주",
-            nickname: "마티",
-            part: "iOS",
-            university: "덕성여자대학교",
-            studyTopic: "Combine & 비동기 처리"
+        (
+            "member_007", "김미주", "마티",
+            .ios, "덕성여자대학교",
+            "Combine & 비동기 처리"
         ),
-        StudyMemberItem(
-            serverID: "member_008",
-            name: "이예지",
-            nickname: "소피",
-            part: "iOS",
-            university: "가천대학교",
-            studyTopic: "iOS 클린 아키텍처"
+        (
+            "member_008", "이예지", "소피",
+            .ios, "가천대학교",
+            "iOS 클린 아키텍처"
         ),
-        StudyMemberItem(
-            serverID: "member_009",
-            name: "양지애",
-            nickname: "나루",
-            part: "Android",
-            university: "서울여자대학교",
-            studyTopic: "Kotlin Coroutines"
+        (
+            "member_009", "양지애", "나루",
+            .android, "서울여자대학교",
+            "Kotlin Coroutines"
         ),
-        StudyMemberItem(
-            serverID: "member_010",
-            name: "조경석",
-            nickname: "조나단",
-            part: "Android",
-            university: "명지대학교",
-            studyTopic: "MVVM 아키텍처 패턴"
+        (
+            "member_010", "조경석", "조나단",
+            .android, "명지대학교",
+            "MVVM 아키텍처 패턴"
         ),
-        StudyMemberItem(
-            serverID: "member_011",
-            name: "김도연",
-            nickname: "도리",
-            part: "Android",
-            university: "서울여자대학교",
-            studyTopic: "Hilt 의존성 주입"
+        (
+            "member_011", "김도연", "도리",
+            .android, "서울여자대학교",
+            "Hilt 의존성 주입"
         ),
-        StudyMemberItem(
-            serverID: "member_012",
-            name: "박지현",
-            nickname: "박박지현",
-            part: "Server",
-            university: "동국대학교",
-            studyTopic: "REST API 설계"
+        (
+            "member_012", "박지현", "박박지현",
+            .nodejs, "동국대학교",
+            "REST API 설계"
         ),
-        StudyMemberItem(
-            serverID: "member_013",
-            name: "강하나",
-            nickname: "와나",
-            part: "Server",
-            university: "한양대학교 ERICA",
-            studyTopic: "Spring Security"
+        (
+            "member_013", "강하나", "와나",
+            .spring, "한양대학교 ERICA",
+            "Spring Security"
         ),
-        StudyMemberItem(
-            serverID: "member_014",
-            name: "박세은",
-            nickname: "세니",
-            part: "Server",
-            university: "동덕여자대학교",
-            studyTopic: "Docker & CI/CD"
+        (
+            "member_014", "박세은", "세니",
+            .nodejs, "동덕여자대학교",
+            "Docker & CI/CD"
         ),
-        StudyMemberItem(
-            serverID: "member_015",
-            name: "이예은",
-            nickname: "스읍",
-            part: "Server",
-            university: "중앙대학교",
-            studyTopic: "MySQL 쿼리 최적화"
+        (
+            "member_015", "이예은", "스읍",
+            .spring, "중앙대학교",
+            "MySQL 쿼리 최적화"
         ),
-        StudyMemberItem(
-            serverID: "member_016",
-            name: "김민서",
-            nickname: "갈래",
-            part: "Server",
-            university: "동국대학교",
-            studyTopic: "Node.js Express"
+        (
+            "member_016", "김민서", "갈래",
+            .nodejs, "동국대학교",
+            "Node.js Express"
         )
     ]
+
+    /// 주차별 mock 데이터 (약 75% 출석률 시뮬레이션)
+    static let preview: [StudyMemberItem] = {
+        var items: [StudyMemberItem] = []
+        for (index, base) in baseMembers.enumerated() {
+            let memberNumber = index + 1
+            for week in 1...10 {
+                guard (memberNumber + week) % 4 != 0
+                else {
+                    continue
+                }
+                items.append(
+                    StudyMemberItem(
+                        serverID: base.serverID,
+                        name: base.name,
+                        nickname: base.nickname,
+                        part: base.part,
+                        university: base.university,
+                        studyTopic: base.studyTopic,
+                        week: week
+                    )
+                )
+            }
+        }
+        return items
+    }()
 }
 #endif

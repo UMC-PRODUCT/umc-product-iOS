@@ -7,6 +7,17 @@
 
 import Foundation
 
+/// 스터디 파트
+enum StudyPart: String, CaseIterable, Codable, Hashable {
+    case ios = "iOS"
+    case android = "Android"
+    case web = "Web"
+    case spring = "Spring"
+    case nodejs = "Node.js"
+    case design = "Design"
+    case pm = "PM"
+}
+
 /// 운영진 스터디 출석 관리에서 사용되는 스터디원 모델
 ///
 /// 스터디원의 기본 정보와 출석 상태를 표시합니다.
@@ -26,14 +37,17 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
     /// 닉네임
     let nickname: String
 
-    /// 파트 (iOS, Android, Web 등)
-    let part: String
+    /// 파트
+    let part: StudyPart
 
     /// 대학교
     let university: String
 
     /// 스터디 주제
     let studyTopic: String
+
+    /// 주차
+    let week: Int
 
     /// 프로필 이미지 URL
     let profileImageURL: String?
@@ -45,9 +59,10 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
         serverID: String,
         name: String,
         nickname: String,
-        part: String,
+        part: StudyPart,
         university: String,
         studyTopic: String,
+        week: Int = 1,
         profileImageURL: String? = nil
     ) {
         self.id = id
@@ -57,6 +72,7 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
         self.part = part
         self.university = university
         self.studyTopic = studyTopic
+        self.week = week
         self.profileImageURL = profileImageURL
     }
 

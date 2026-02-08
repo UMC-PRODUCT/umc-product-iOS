@@ -115,7 +115,7 @@ struct OperatorStudyMemberCard: View, Equatable {
                 .appFont(.calloutEmphasis)
 
             infoBadge(member.university)
-            infoBadge(member.part)
+            infoBadge(member.part.rawValue)
         }
     }
 
@@ -148,7 +148,7 @@ struct OperatorStudyMemberCard: View, Equatable {
                 serverID: "1",
                 name: "홍길동",
                 nickname: "닉네임",
-                part: "iOS",
+                part: .ios,
                 university: "중앙대",
                 studyTopic: "SwiftUI 클론 코딩",
                 profileImageURL: nil
@@ -162,7 +162,7 @@ struct OperatorStudyMemberCard: View, Equatable {
                 serverID: "2",
                 name: "김철수",
                 nickname: "철수",
-                part: "Android",
+                part: .android,
                 university: "서울대",
                 studyTopic: "Jetpack Compose",
                 profileImageURL: "https://picsum.photos/100"
@@ -174,7 +174,7 @@ struct OperatorStudyMemberCard: View, Equatable {
                 serverID: "3",
                 name: "이영희",
                 nickname: "영희",
-                part: "Spring Boot",
+                part: .spring,
                 university: "한양대",
                 studyTopic: "백엔드 아키텍처"
             )

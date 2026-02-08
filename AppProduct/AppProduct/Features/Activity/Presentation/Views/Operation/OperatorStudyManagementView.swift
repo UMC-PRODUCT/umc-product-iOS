@@ -49,7 +49,9 @@ struct OperatorStudyManagementView: View {
                 if members.isEmpty {
                     emptyView
                 } else {
-                    memberListView(members: members)
+                    VStack {
+                        memberListView(members: members)
+                    }
                 }
 
             case .failed(let error):
@@ -69,6 +71,9 @@ struct OperatorStudyManagementView: View {
                             Text("\(week)주차")
                                 .tag(week)
                         }
+                    }
+                    .onChange(of: viewModel.selectedWeek) { _, newValue in
+                        viewModel.selectWeek(newValue)
                     }
                 } label: {
                     Text("\(viewModel.selectedWeek)주차")

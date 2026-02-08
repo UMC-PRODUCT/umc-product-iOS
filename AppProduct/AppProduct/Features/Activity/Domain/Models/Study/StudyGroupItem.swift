@@ -14,60 +14,77 @@ struct StudyGroupItem: Identifiable, Equatable, Hashable {
     let serverID: String
     let name: String
     let iconName: String
+    let part: StudyPart?
+
+    // MARK: - Initializer
+
+    init(
+        id: UUID = UUID(),
+        serverID: String,
+        name: String,
+        iconName: String,
+        part: StudyPart? = nil
+    ) {
+        self.id = id
+        self.serverID = serverID
+        self.name = name
+        self.iconName = iconName
+        self.part = part
+    }
 
     // MARK: - Static Property
 
     static let all = StudyGroupItem(
-        id: UUID(),
         serverID: "",
         name: "전체 스터디 그룹",
-        iconName: "person.2.fill"
+        iconName: "person.2.fill",
+        part: nil
     )
 
     #if DEBUG
     static let preview: [StudyGroupItem] = [
         .all,
         StudyGroupItem(
-            id: UUID(),
             serverID: "group_001",
             name: "iOS 스터디",
-            iconName: "apple.logo"
+            iconName: "apple.logo",
+            part: .ios
         ),
         StudyGroupItem(
-            id: UUID(),
             serverID: "group_002",
             name: "Android 스터디",
-            iconName: "inset.filled.applewatch.case"
+            iconName: "inset.filled.applewatch.case",
+            part: .android
         ),
         StudyGroupItem(
-            id: UUID(),
             serverID: "group_003",
             name: "Web 스터디",
-            iconName: "globe"
+            iconName: "globe",
+            part: .web
         ),
         StudyGroupItem(
-            id: UUID(),
             serverID: "group_004",
             name: "Spring 스터디",
-            iconName: "leaf.fill"
+            iconName: "leaf.fill",
+            part: .spring
         ),
         StudyGroupItem(
-            id: UUID(),
             serverID: "group_005",
             name: "Node.js 스터디",
-            iconName: "hexagon.fill"
+            iconName: "hexagon.fill",
+            part: .nodejs
         ),
         StudyGroupItem(
-            id: UUID(),
             serverID: "group_006",
             name: "Design 스터디",
-            iconName: "paintpalette.fill"
+            iconName: "paintpalette.fill",
+            part: .design
         ),
         StudyGroupItem(
-            id: UUID(),
             serverID: "group_007",
             name: "PM 스터디",
-            iconName: "doc.text.fill"
+            iconName: "doc.text.fill",
+            part: .pm
         )
     ]
     #endif
