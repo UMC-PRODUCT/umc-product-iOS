@@ -61,6 +61,37 @@ struct OperatorStudyManagementView: View {
                 await viewModel.fetchMembers()
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Menu {
+                    Picker("주차", selection: $viewModel.selectedWeek) {
+                        ForEach(viewModel.weeks, id: \.self) { week in
+                            Text("\(week)주차")
+                                .tag(week)
+                        }
+                    }
+                } label: {
+                    Text("\(viewModel.selectedWeek)주차")
+                        .appFont(.calloutEmphasis)
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Picker("스터디 그룹", selection: $viewModel.selectedStudyGroup) {
+                        ForEach(viewModel.studyGroups, id: \.self) { group in
+                            Label(group.name, systemImage: group.iconName)
+                                .tag(group)
+                        }
+                    }
+                    .onChange(of: viewModel.selectedStudyGroup) { _, newValue in
+                        viewModel.selectStudyGroup(newValue)
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
+                }
+            }
+        }
     }
 
     // MARK: - Loading View
@@ -131,7 +162,7 @@ struct OperatorStudyManagementView: View {
                         Button {
                             // 베스트 액션
                         } label: {
-                            Label("베스트", systemImage: "star.fill")
+                            Label("베스트", systemImage: "trophy")
                         }
                         .tint(.orange)
                     }
@@ -172,9 +203,11 @@ struct OperatorStudyManagementView: View {
 
 #if DEBUG
 #Preview {
-    OperatorStudyManagementView(
-        container: AttendancePreviewData.container,
-        errorHandler: AttendancePreviewData.errorHandler
-    )
+    NavigationStack {
+        OperatorStudyManagementView(
+            container: AttendancePreviewData.container,
+            errorHandler: AttendancePreviewData.errorHandler
+        )
+    }
 }
 #endif
