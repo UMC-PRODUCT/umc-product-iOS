@@ -31,6 +31,9 @@ struct StudyGroupMember: Identifiable, Equatable, Hashable {
     /// 이름
     let name: String
 
+    /// 닉네임
+    let nickname: String?
+
     /// 대학교
     let university: String
 
@@ -40,17 +43,27 @@ struct StudyGroupMember: Identifiable, Equatable, Hashable {
     /// 역할
     let role: MemberRole
 
+    // MARK: - Computed Property
+
+    /// 표시용 이름 (닉네임/이름 또는 이름만)
+    var displayName: String {
+        if let nickname { return "\(nickname)/\(name)" }
+        return name
+    }
+
     // MARK: - Initializer
 
     init(
         serverID: String,
         name: String,
+        nickname: String? = nil,
         university: String,
         profileImageURL: String? = nil,
         role: MemberRole = .member
     ) {
         self.serverID = serverID
         self.name = name
+        self.nickname = nickname
         self.university = university
         self.profileImageURL = profileImageURL
         self.role = role

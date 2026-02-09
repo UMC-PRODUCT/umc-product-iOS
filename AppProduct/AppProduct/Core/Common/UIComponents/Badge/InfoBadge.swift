@@ -35,7 +35,7 @@ struct InfoBadge: View, Equatable {
         _ text: String,
         textColor: Color = .grey600,
         tintColor: Color? = nil,
-        glassVariant: GlassVariant = .regular
+        glassVariant: GlassVariant = .clear
     ) {
         self.text = text
         self.textColor = textColor

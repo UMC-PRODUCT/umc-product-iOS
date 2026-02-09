@@ -5,7 +5,7 @@
 //  Created by euijjang97 on 1/24/26.
 //
 
-import Foundation
+import SwiftUI
 
 /// UMC 동아리의 파트(직무) 유형을 정의하는 열거형입니다.
 ///
@@ -60,6 +60,27 @@ enum UMCPartType: Codable, Equatable, Hashable {
             return type.rawValue
         case .front(let type):
             return type.rawValue
+        }
+    }
+
+    /// 파트별 고유 색상
+    var color: Color {
+        switch self {
+        case .pm:
+            return .purple
+        case .design:
+            return .pink
+        case .server(let type):
+            switch type {
+            case .spring: return .green
+            case .node:   return .yellow
+            }
+        case .front(let type):
+            switch type {
+            case .web:     return .indigo
+            case .android: return .teal
+            case .ios:     return .orange
+            }
         }
     }
 

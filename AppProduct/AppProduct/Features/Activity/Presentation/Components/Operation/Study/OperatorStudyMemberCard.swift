@@ -115,7 +115,11 @@ struct OperatorStudyMemberCard: View, Equatable {
                 .appFont(.calloutEmphasis)
 
             InfoBadge(member.university, tintColor: .gray)
-            InfoBadge(member.part.rawValue, tintColor: .gray)
+            InfoBadge(
+                member.part.rawValue,
+                textColor: member.part.color,
+                tintColor: member.part.color
+            )
 
             if member.isBestWorkbook {
                 trophyBadge

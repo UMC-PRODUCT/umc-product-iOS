@@ -72,7 +72,11 @@ struct StudyGroupCard: View, Equatable {
                 Text(detail.name)
                     .appFont(.calloutEmphasis, color: .black)
 
-                InfoBadge(detail.part.name)
+                InfoBadge(
+                    detail.part.name,
+                    textColor: detail.part.color,
+                    tintColor: detail.part.color
+                )
 
                 Spacer()
 
@@ -101,7 +105,7 @@ struct StudyGroupCard: View, Equatable {
         } label: {
             Image(systemName: "gearshape")
                 .font(.system(size: 20))
-                .foregroundStyle(.grey500)
+                .foregroundStyle(.black)
                 .padding(DefaultConstant.iconPadding)
                 .glassEffect()
         }
@@ -144,7 +148,7 @@ struct StudyGroupCard: View, Equatable {
         } label: {
             Image(systemName: "plus")
                 .padding(DefaultConstant.defaultBtnPadding)
-                .foregroundStyle(.gray)
+                .foregroundStyle(.black)
         }
         .glassEffect()
     }

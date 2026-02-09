@@ -41,7 +41,7 @@ struct StudyGroupLeaderRow: View, Equatable {
         HStack(spacing: DefaultSpacing.spacing16) {
             avatarView
 
-            Text(leader.name)
+            Text(leader.displayName)
                 .appFont(.calloutEmphasis, color: .black)
 
             InfoBadge(leader.university)
@@ -95,6 +95,7 @@ struct StudyGroupLeaderRow: View, Equatable {
             leader: StudyGroupMember(
                 serverID: "1",
                 name: "김운영",
+                nickname: "운영이",
                 university: "홍익대학교",
                 profileImageURL: nil,
                 role: .leader

@@ -84,6 +84,7 @@ extension StudyGroupInfo {
         leader: StudyGroupMember(
             serverID: "member_001",
             name: "홍길동",
+            nickname: "길동이",
             university: "중앙대",
             role: .leader
         ),
@@ -91,11 +92,13 @@ extension StudyGroupInfo {
             StudyGroupMember(
                 serverID: "member_002",
                 name: "홍길동",
+                nickname: "길동2",
                 university: "서울대"
             ),
             StudyGroupMember(
                 serverID: "member_003",
                 name: "홍길동",
+                nickname: "길동3",
                 university: "한양대"
             ),
             StudyGroupMember(
