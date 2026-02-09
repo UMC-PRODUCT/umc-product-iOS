@@ -42,13 +42,11 @@ struct StudyGroupLeaderRow: View, Equatable {
             avatarView
 
             Text(leader.name)
-                .appFont(.calloutEmphasis, color: .white)
+                .appFont(.calloutEmphasis, color: .black)
 
-            InfoBadge(
-                leader.university, textColor: .white, glassVariant: .clear)
+            InfoBadge(leader.university)
 
-            InfoBadge(
-                leader.role.rawValue, textColor: .white, glassVariant: .clear)
+            InfoBadge(leader.role.rawValue)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Constants.rowPadding)
@@ -78,12 +76,12 @@ struct StudyGroupLeaderRow: View, Equatable {
             } else {
                 Image(systemName: "person.fill")
                     .font(.system(size: Constants.defaultAvatarIconSize))
-                    .foregroundStyle(.grey400)
+                    .foregroundStyle(.white)
                     .frame(
                         width: Constants.avatarSize,
                         height: Constants.avatarSize
                     )
-                    .background(Color.grey200, in: Circle())
+                    .background(.gray.opacity(0.4), in: Circle())
             }
         }
     }

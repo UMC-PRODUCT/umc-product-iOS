@@ -102,6 +102,8 @@ struct StudyGroupCard: View, Equatable {
             Image(systemName: "gearshape")
                 .font(.system(size: 20))
                 .foregroundStyle(.grey500)
+                .padding(DefaultConstant.iconPadding)
+                .glassEffect()
         }
     }
 
@@ -159,7 +161,8 @@ struct StudyGroupCard: View, Equatable {
             .frame(maxWidth: .infinity)
             .padding(.vertical, DefaultSpacing.spacing12)
         }
-        .buttonStyle(.glass)
+        .buttonStyle(.glassProminent)
+        .tint(.indigo500)
     }
 }
 

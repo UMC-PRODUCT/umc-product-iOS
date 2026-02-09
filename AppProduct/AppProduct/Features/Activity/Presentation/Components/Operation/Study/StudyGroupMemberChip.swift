@@ -32,11 +32,11 @@ struct StudyGroupMemberChip: View, Equatable {
         VStack(spacing: DefaultSpacing.spacing8) {
             avatarView
             Text(member.name)
-                .appFont(.subheadline, color: .white)
+                .appFont(.subheadline)
         }
         .padding(DefaultConstant.badgePadding)
         .glassEffect(
-            .regular.tint(.indigo100),
+            .regular.tint(.gray.opacity(0.15)),
             in: .rect(corners: .concentric(minimum: 16))
         )
     }
@@ -58,12 +58,12 @@ struct StudyGroupMemberChip: View, Equatable {
         } else {
             Image(systemName: "person.fill")
                 .font(.system(size: Constants.defaultIconSize))
-                .foregroundStyle(.grey400)
+                .foregroundStyle(.white)
                 .frame(
                     width: Constants.avatarSize,
                     height: Constants.avatarSize
                 )
-                .background(Color.grey200, in: Circle())
+                .background(Color.gray.opacity(0.4), in: Circle())
         }
     }
 }

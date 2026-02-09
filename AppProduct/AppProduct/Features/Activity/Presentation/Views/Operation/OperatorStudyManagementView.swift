@@ -171,7 +171,9 @@ struct OperatorStudyManagementView: View {
                 onAddMember: { print("Add") },
                 onSchedule: { print("Schedule") }
             )
+            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeBtnPadding)
         }
+        .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
     }
 
     // MARK: - Loading View
