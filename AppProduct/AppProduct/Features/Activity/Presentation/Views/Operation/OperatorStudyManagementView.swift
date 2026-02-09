@@ -156,13 +156,21 @@ struct OperatorStudyManagementView: View {
 
     private var groupManagementPlaceholder: some View {
         ScrollView {
-            ContentUnavailableView {
-                Label("스터디 그룹 관리", systemImage: "person.2.badge.gearshape")
-            } description: {
-                Text("준비 중입니다")
-            }
-            .padding(.top, DefaultSpacing.spacing32)
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+//            ContentUnavailableView {
+//                Label("스터디 그룹 관리", systemImage: "person.2.badge.gearshape")
+//            } description: {
+//                Text("준비 중입니다")
+//            }
+//            .padding(.top, DefaultSpacing.spacing32)
+//            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            StudyGroupCard(
+                detail: .preview,
+                onEdit: { print("Edit") },
+                onDelete: { print("Delete") },
+                onManageMembers: { print("Manage") },
+                onAddMember: { print("Add") },
+                onSchedule: { print("Schedule") }
+            )
         }
     }
 
