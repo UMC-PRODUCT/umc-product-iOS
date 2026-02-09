@@ -44,4 +44,9 @@ struct MemberManagementItem: Identifiable, Equatable {
     
     /// 운영진 직책 정보 (회장, 부회장 등)
     let managementTeam: ManagementTeam
+    
+    // 상세 시트 사용
+    
+    /// 출석/활동 기록 목록
+    let attendanceRecords: [MemberAttendanceRecord]
 }

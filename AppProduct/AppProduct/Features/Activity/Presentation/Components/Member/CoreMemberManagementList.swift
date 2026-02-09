@@ -94,12 +94,12 @@ struct ManagementTeamBadgePresenter: View {
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
     VStack(spacing: 4) {
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader))
+        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
         
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader))
+        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
         
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader))
+        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
         
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader))
+        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
     }
 }
