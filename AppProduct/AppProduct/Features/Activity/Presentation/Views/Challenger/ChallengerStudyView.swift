@@ -14,27 +14,27 @@ struct ChallengerStudyView: View {
 
     // MARK: - Property
 
-    @State private var viewModel = ChallengerStudyViewModel()
+    @State private var viewModel: ChallengerStudyViewModel
+    
+    // MARK: - Init
+    
+    init(
+        container: DIContainer,
+        errorHandler: ErrorHandler
+    ) {
+        let useCaseProvider = container.resolve(UsecaseProviding.self)
+        self._viewModel = .init(wrappedValue: .init(
+            fetchCurriculumUseCase: useCaseProvider.activity.fetchCurriculumUseCase,
+            submitMissionUseCase: useCaseProvider.activity.submitMissionUseCase,
+            errorHandler: errorHandler
+        ))
+    }
 
     // MARK: - Body
 
     var body: some View {
         Group {
-            switch viewModel.curriculumState {
-            case .idle, .loading:
-                loadingView
-
-            case .loaded(let data):
-                CurriculumView(
-                    curriculumModel: data.progress,
-                    missions: data.missions
-                ) { mission, type, link in
-                    viewModel.submitMission(mission, type: type, link: link)
-                }
-
-            case .failed(let error):
-                errorView(error: error)
-            }
+            contentView(viewModel: viewModel)
         }
         .task {
             await viewModel.fetchCurriculum()
@@ -42,6 +42,27 @@ struct ChallengerStudyView: View {
     }
 
     // MARK: - View Components
+
+    @ViewBuilder
+    private func contentView(viewModel: ChallengerStudyViewModel) -> some View {
+        switch viewModel.curriculumState {
+        case .idle, .loading:
+            loadingView
+
+        case .loaded(let data):
+            ChallengerCurriculumView(
+                curriculumModel: data.progress,
+                missions: data.missions
+            ) { mission, type, link in
+                Task {
+                    await viewModel.submitMission(mission, type: type, link: link)
+                }
+            }
+
+        case .failed(let error):
+            errorView(error: error, viewModel: viewModel)
+        }
+    }
 
     private var loadingView: some View {
         VStack(spacing: DefaultSpacing.spacing16) {
@@ -53,7 +74,7 @@ struct ChallengerStudyView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func errorView(error: AppError) -> some View {
+    private func errorView(error: AppError, viewModel: ChallengerStudyViewModel) -> some View {
         ContentUnavailableView {
             Label("로딩 실패", systemImage: "exclamationmark.triangle")
         } description: {
@@ -72,5 +93,7 @@ struct ChallengerStudyView: View {
 // MARK: - Preview
 
 #Preview {
-    ChallengerStudyView()
+    ChallengerStudyView(
+        container: MissionPreviewData.container,
+        errorHandler: MissionPreviewData.errorHandler)
 }

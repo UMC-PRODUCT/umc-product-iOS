@@ -23,7 +23,7 @@ struct AttendanceTestWrapper: View {
         ZStack(alignment: .bottom) {
 //            Color.grey100.ignoresSafeArea()
 
-            AttendanceSessionView(
+            ChallengerAttendanceSessionView(
                 container: container,
                 errorHandler: errorHandler,
                 sessions: sessions,

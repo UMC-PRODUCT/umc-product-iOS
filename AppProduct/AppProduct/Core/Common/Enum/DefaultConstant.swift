@@ -39,9 +39,6 @@ enum DefaultConstant {
     static let defaultCornerRadius: CGFloat = 30
     
     /// 리스트 카드의 기본 모서리 둥글기.
-    static let defaultListCornerRadius: CGFloat = 40
-    
-    /// 리스트 카드의 기본 모서리 둥글기.
     static let concentricRadius: Edge.Corner.Style = 40
 
     /// 콘텐츠 영역 하단 마진.
@@ -70,6 +67,9 @@ enum DefaultConstant {
     /// 카드 기본 패딩.
     static let defaultCardPadding: EdgeInsets = .init(top: 24, leading: 16, bottom: 24, trailing: 16)
     
+    // Form-Section에 따른 커스텀 패딩값
+    static let sectionLeadingHeader: CGFloat = 24
+    
     /// 기본 애니메이션 지속 시간 (초).
     static let animationTime: TimeInterval = 0.3
     
@@ -80,4 +80,17 @@ enum DefaultConstant {
 
     /// 뱃지 패딩.
     static let badgePadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
+}
+
+// MARK: System Image Constants
+
+extension DefaultConstant {
+    /// 화살표 아이콘 이미지 이름
+    static let chevronForwardImage: String = "chevron.forward"
+
+    /// 상향 화살표 아이콘
+    static let chevronUpImage: String = "chevron.up"
+
+    /// 하향 화살표 아이콘
+    static let chevronDownImage: String = "chevron.down"
 }

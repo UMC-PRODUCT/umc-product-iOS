@@ -64,7 +64,7 @@ struct LinkAttachmentCard: View, Equatable {
     private var textfieldSection: some View {
         TextField("",
                   text: $link,
-                  prompt: Text(verbatim: "https://example.com").foregroundStyle(.grey400))
+                  prompt: Text(verbatim: "https://example.com"))
             .textInputAutocapitalization(.never)
             .keyboardType(.URL)
             .autocorrectionDisabled()

@@ -66,9 +66,8 @@ private struct NoticeItemPresenter: View, Equatable {
         }
         .frame(height: Constant.mainBoxHeight)
         .padding(Constant.mainPadding)
-        .containerShape(.rect(cornerRadius: DefaultConstant.defaultListCornerRadius))
         .background {
-            RoundedRectangle(cornerRadius: DefaultConstant.defaultListCornerRadius)
+            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
                 .fill(model.mustRead ? .indigo100 : .white)
                 .glass()
         }
@@ -117,7 +116,7 @@ private struct ContentSection: View, Equatable {
     let model: NoticeItemModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Constant.contentSpacing) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             Text(model.title)
                 .appFont(.bodyEmphasis, color: model.mustRead ? Color.indigo900 : .grey900)
                 .lineLimit(1)

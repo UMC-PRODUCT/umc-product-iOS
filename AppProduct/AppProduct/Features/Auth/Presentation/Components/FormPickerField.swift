@@ -71,7 +71,7 @@ struct FormPickerField<T: Hashable>: View {
     private var menuLabel: some View {
         HStack {
             Text(selection.map(displayText) ?? placeholder)
-                .appFont(.callout, color: selection == nil ? .gray : .black)
+                .appFont(.callout, color: selection == nil ? Color(.placeholderText) : .black)
             Spacer()
             Image(systemName: "chevron.down")
                 .foregroundStyle(.grey900)

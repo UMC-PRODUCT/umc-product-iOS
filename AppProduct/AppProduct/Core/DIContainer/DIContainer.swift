@@ -119,8 +119,23 @@ extension DIContainer {
     /// 앱에서 사용하는 모든 의존성을 등록한 DIContainer를 반환합니다.
     static func configured() -> DIContainer {
         let container = DIContainer()
+        container.register(PathStore.self) { PathStore() }
         container.register(NavigationRouter.self) { NavigationRouter() }
         container.register(UserSessionManager.self) { UserSessionManager() }
+
+        // MARK: - Network Infrastructure
+        container.register(NetworkClient.self) {
+            AuthSystemFactory.makeNetworkClient(
+                baseURL: URL(string: Config.baseURL)!
+            )
+        }
+
+        container.register(MoyaNetworkAdapter.self) {
+            MoyaNetworkAdapter(
+                networkClient: container.resolve(NetworkClient.self),
+                baseURL: URL(string: Config.baseURL)!
+            )
+        }
 
         // MARK: - Cross-Feature Repository
         container.register(ScheduleClassifierRepository.self) {
