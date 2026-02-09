@@ -23,9 +23,9 @@ struct ProfileCardSection: View {
         static let chevron: String = "chevron.right"
     }
 
-    /// DI Container에서 주입받은 NavigationRouter
-    var router: NavigationRouter {
-        di.resolve(NavigationRouter.self)
+    /// DI Container에서 주입받은 PathStore
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
     }
 
     // MARK: - Function
@@ -38,7 +38,7 @@ struct ProfileCardSection: View {
 
     var body: some View {
         Button(action: {
-            router.push(to: .myPage(.myInfo(profileData: profileData)))
+            pathStore.mypagePath.append(.myPage(.myInfo(profileData: self.profileData)))
         }, label: {
             HStack(spacing: DefaultSpacing.spacing12, content: {
                 profileImage

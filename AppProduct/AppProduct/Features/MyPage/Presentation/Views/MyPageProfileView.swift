@@ -14,7 +14,7 @@ import PhotosUI
 struct MyPageProfileView: View {
     /// 뷰모델 상태 객체
     @State var viewModel: MyPageProfileViewModel
-    
+
     init(profileData: ProfileData) {
         self._viewModel = .init(initialValue: .init(profileData: profileData))
     }
