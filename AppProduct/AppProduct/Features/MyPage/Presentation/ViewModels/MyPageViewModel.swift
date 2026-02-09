@@ -24,15 +24,20 @@ class MyPageViewModel {
         challangerInfo: .init(
             challengeId: 0,
             gen: 11,
-            name: "정의찬",
-            nickname: "제옹",
-            schoolName: "중앙대",
+            name: "유엠씨",
+            nickname: "네임",
+            schoolName: "유엠씨대학교",
             profileImage: nil,
             part: .design
         ),
-        socialConnected: [],
+        socialConnected: [
+            .apple,
+            .kakao
+        ],
         activityLogs: [
-            .init(part: .design, generation: 11, role: .campusPartLeader)
+            .init(part: .design, generation: 11, role: .campusPartLeader),
+            .init(part: .pm, generation: 10, role: .challenger),
+            .init(part: .front(type: .ios), generation: 9, role: .campusPresident)
         ],
         profileLink: []
     ))

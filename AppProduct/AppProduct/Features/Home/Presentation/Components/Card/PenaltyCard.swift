@@ -19,14 +19,20 @@ struct PenaltyCard: View, Equatable {
     
     /// 현재 표시 중인 탭(기수) 인덱스
     @State private var currentIndex: Int = 0
-    
+    /// 드래그 오프셋 (손가락 추적용)
+    @State private var dragOffset: CGFloat = 0
+    /// 수평 드래그 여부 (방향 잠금용)
+    @State private var isHorizontalDrag: Bool?
+
     // MARK: - Constants
-    
+
     enum Constants {
         /// 카드 전체 패딩
         static let padding: CGFloat = 20
-        /// 카드 높이 (데이터 없을 때, 있을 때)
-        static let height: (CGFloat, CGFloat) = (100, 240)
+        /// 스와이프 임계 거리
+        static let swipeThreshold: CGFloat = 50
+        /// 스와이프 임계 속도
+        static let velocityThreshold: CGFloat = 300
     }
     
     // MARK: - Equtable
@@ -50,26 +56,81 @@ struct PenaltyCard: View, Equatable {
                 currentIndex: $currentIndex
             )
             
-            TabView(selection: $currentIndex) {
-                ForEach(generations.indices, id: \.self) { index in
-                    HStack(alignment: .top, spacing: DefaultSpacing.spacing16) {
-                        
-                        CardInfo(infoType: .penalties(generations[index].penaltyPoint))
-                        
-                        CardInfo(infoType: .infoText(generations[index].penaltyLogs))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .tag(index)
-                    .padding(.horizontal, DefaultSpacing.spacing4)
-                    .frame(maxHeight: .infinity, alignment: .top)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            cardContent
+                .offset(x: dragOffset)
+                .contentShape(.rect)
+                .gesture(swipeGesture)
         })
-        .frame(minHeight: generations.isEmpty ? Constants.height.0 : Constants.height.1)
+        .animation(.smooth(duration: 0.3), value: currentIndex)
         .padding(Constants.padding)
+        .clipped()
         .clipShape(.rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
         .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+    }
+
+    // MARK: - Function
+
+    /// 현재 선택된 기수의 패널티 포인트 및 상세 기록을 표시하는 콘텐츠 영역
+    @ViewBuilder
+    private var cardContent: some View {
+        if generations.indices.contains(currentIndex) {
+            let generation = generations[currentIndex]
+            HStack(alignment: .top, spacing: DefaultSpacing.spacing16) {
+                CardInfo(infoType: .penalties(generation.penaltyPoint))
+
+                CardInfo(infoType: .infoText(generation.penaltyLogs))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, DefaultSpacing.spacing4)
+            .id(currentIndex)
+            .transition(.blurReplace)
+        }
+    }
+
+    /// 기수 간 전환을 위한 수평 스와이프 제스처
+    ///
+    /// 방향 잠금, 러버밴드 효과, 속도 기반 전환을 포함합니다.
+    ///
+    /// - Note: 첫 터치 방향으로 수평/수직을 판별하여 세로 스크롤과 충돌을 방지합니다.
+    private var swipeGesture: some Gesture {
+        DragGesture(minimumDistance: 15)
+            .onChanged { value in
+                // 최초 드래그 방향으로 수평/수직 잠금
+                if isHorizontalDrag == nil {
+                    isHorizontalDrag = abs(value.translation.width) > abs(value.translation.height)
+                }
+                guard isHorizontalDrag == true else { return }
+
+                let translation = value.translation.width
+                let isAtLeadingEdge = currentIndex == 0 && translation > 0
+                let isAtTrailingEdge = currentIndex == generations.count - 1 && translation < 0
+
+                // 양 끝에서 러버밴드 효과 (저항감 적용)
+                if isAtLeadingEdge || isAtTrailingEdge {
+                    dragOffset = translation * 0.3
+                } else {
+                    dragOffset = translation
+                }
+            }
+            .onEnded { value in
+                defer { isHorizontalDrag = nil }
+                guard isHorizontalDrag == true else { return }
+
+                let translation = value.translation.width
+                let velocity = value.predictedEndTranslation.width
+
+                // 거리 또는 속도 임계값 초과 시 페이지 전환
+                withAnimation(.smooth(duration: 0.3)) {
+                    if (translation < -Constants.swipeThreshold || velocity < -Constants.velocityThreshold),
+                       currentIndex < generations.count - 1 {
+                        currentIndex += 1
+                    } else if (translation > Constants.swipeThreshold || velocity > Constants.velocityThreshold),
+                              currentIndex > 0 {
+                        currentIndex -= 1
+                    }
+                    dragOffset = 0
+                }
+            }
     }
 }
 

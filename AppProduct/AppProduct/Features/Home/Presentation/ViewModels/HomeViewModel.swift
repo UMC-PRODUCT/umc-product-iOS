@@ -28,18 +28,18 @@ class HomeViewModel {
     var generationData: Loadable<[GenerationData]> = .loaded([
         GenerationData(
             gen: 11,
-            penaltyPoint: 3,
+            penaltyPoint: 1,
             penaltyLogs: [
                 .init(reason: "지각", date: "03.26", penaltyPoint: 1),
-                .init(reason: "과제 미제출", date: "03.27", penaltyPoint: 1),
-                .init(reason: "과제 미제출", date: "03.27", penaltyPoint: 2)
             ]
         ),
         GenerationData(
             gen: 12,
-            penaltyPoint: 1,
+            penaltyPoint: 2,
             penaltyLogs: [
                 .init(reason: "지각", date: "03.14", penaltyPoint: 1),
+                .init(reason: "워크북 미제출", date: "03.16", penaltyPoint: 1),
+                .init(reason: "행사 노쇼", date: "04.16", penaltyPoint: 1)
             ]
         )
     ])
