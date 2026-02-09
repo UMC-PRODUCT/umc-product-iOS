@@ -331,7 +331,7 @@ struct ToolBarCollection {
             .glassEffect(.regular)
         }
     }
-    
+  
     /// 상단 오른쪽 섹션 메뉴 툴바 (•••)
     struct ToolbarTrailingMenu: ToolbarContent {
         let actions: [ActionItem]
