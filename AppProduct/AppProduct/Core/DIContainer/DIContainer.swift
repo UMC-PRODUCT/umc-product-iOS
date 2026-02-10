@@ -137,6 +137,11 @@ extension DIContainer {
             )
         }
 
+        // MARK: - Token Store
+        container.register(TokenStore.self) {
+            KeychainTokenStore()
+        }
+
         // MARK: - Cross-Feature Repository
         container.register(ScheduleClassifierRepository.self) {
             ScheduleClassifierRepositoryImpl()
@@ -148,15 +153,39 @@ extension DIContainer {
         }
         container.register(ActivityUseCaseProviding.self) {
             ActivityUseCaseProvider(
-                repositoryProvider: container.resolve(ActivityRepositoryProviding.self),
-                classifierRepository: container.resolve(ScheduleClassifierRepository.self)
+                repositoryProvider: container.resolve(
+                    ActivityRepositoryProviding.self
+                ),
+                classifierRepository: container.resolve(
+                    ScheduleClassifierRepository.self
+                )
+            )
+        }
+
+        // MARK: - Auth Feature
+        container.register(AuthRepositoryProviding.self) {
+            AuthRepositoryProvider.real(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(AuthUseCaseProviding.self) {
+            AuthUseCaseProvider(
+                repositoryProvider: container.resolve(
+                    AuthRepositoryProviding.self
+                ),
+                tokenStore: container.resolve(TokenStore.self)
             )
         }
 
         // MARK: - Global UseCase Provider (Feature 간 접근용)
         container.register(UsecaseProviding.self) {
             UseCaseProvider(
-                activity: container.resolve(ActivityUseCaseProviding.self)
+                activity: container.resolve(
+                    ActivityUseCaseProviding.self
+                ),
+                auth: container.resolve(
+                    AuthUseCaseProviding.self
+                )
             )
         }
 
