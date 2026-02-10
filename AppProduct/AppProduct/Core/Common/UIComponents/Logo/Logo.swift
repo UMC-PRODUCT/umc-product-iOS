@@ -30,12 +30,12 @@ struct Logo: View {
                 .frame(width: self.logoSize)
             
             Text(Constants.logoSubtitle)
-                .appFont(.title1, color: .grey900)
+                .appFont(.title2, color: .grey900)
         })
     }
 }
 
 #Preview {
-    SplashView()
+    Logo()
 }
 
