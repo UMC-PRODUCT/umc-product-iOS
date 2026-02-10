@@ -101,7 +101,16 @@ struct MyPageView: View {
         case .socialConnect:
             SocialSection(sectionType: section, socialType: profileData.socialConnected)
         case .auth:
-            AuthSection(sectionType: section, alertPrompt: $viewModel.alertPrompt)
+            AuthSection(
+                sectionType: section,
+                alertPrompt: $viewModel.alertPrompt,
+                onLogout: {
+                    NotificationCenter.default.post(
+                        name: .authSessionExpired,
+                        object: nil
+                    )
+                }
+            )
         }
     }
 }

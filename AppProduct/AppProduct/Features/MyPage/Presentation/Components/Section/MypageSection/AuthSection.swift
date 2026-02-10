@@ -15,13 +15,16 @@ struct AuthSection: View {
 
     let sectionType: MyPageSectionType
     @Binding var alertPrompt: AlertPrompt?
-    
+    var onLogout: () -> Void
+
     init(
         sectionType: MyPageSectionType,
-        alertPrompt: Binding<AlertPrompt?>
+        alertPrompt: Binding<AlertPrompt?>,
+        onLogout: @escaping () -> Void
     ) {
         self.sectionType = sectionType
         self._alertPrompt = alertPrompt
+        self.onLogout = onLogout
     }
 
     // MARK: - Body
@@ -60,7 +63,7 @@ struct AuthSection: View {
                 message: "정말 로그아웃 하시겠습니까?",
                 positiveBtnTitle: "로그아웃",
                 positiveBtnAction: {
-                    // TODO: - 로그아웃
+                    onLogout()
                 },
                 negativeBtnTitle: "취소",
                 isPositiveBtnDestructive: true

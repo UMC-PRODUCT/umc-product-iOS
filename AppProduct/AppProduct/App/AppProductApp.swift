@@ -117,6 +117,21 @@ struct AppProductApp: App {
             .environment(errorHandler)
             .environment(\.di, container)
             .modelContainer(for: NoticeHistoryData.self)
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: .authSessionExpired
+                )
+            ) { _ in
+                Task {
+                    try? await container.resolve(
+                        NetworkClient.self
+                    ).logout()
+                }
+                container.resetCache()
+                withAnimation {
+                    appState = .login
+                }
+            }
         }
     }
 }
