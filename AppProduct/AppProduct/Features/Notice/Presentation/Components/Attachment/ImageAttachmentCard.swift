@@ -1,5 +1,5 @@
 //
-//  AttachedImageCard.swift
+//  ImageAttachmentCard.swift
 //  AppProduct
 //
 //  Created by 이예지 on 1/26/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 import PhotosUI
 
-struct AttachedImageCard: View, Equatable {
+struct ImageAttachmentCard: View, Equatable {
 
     // MARK: - Property
     let id: UUID
@@ -77,7 +77,7 @@ struct AttachedImageCard: View, Equatable {
         ScrollView(.horizontal) {
             HStack(spacing: 12) {
                 ForEach(noticeImageItems) { item in
-                    AttachedImageCard(
+                    ImageAttachmentCard(
                         id: item.id,
                         imageData: item.imageData,
                         isLoading: item.isLoading
@@ -104,7 +104,7 @@ struct AttachedImageCard: View, Equatable {
 #Preview("로딩 중인 카드") {
     HStack(spacing: 12) {
         // 로딩 중인 카드
-        AttachedImageCard(
+        ImageAttachmentCard(
             id: UUID(),
             imageData: nil,
             isLoading: true,
@@ -112,7 +112,7 @@ struct AttachedImageCard: View, Equatable {
         )
         
         // 로딩 중인 카드 2개
-        AttachedImageCard(
+        ImageAttachmentCard(
             id: UUID(),
             imageData: nil,
             isLoading: true,
@@ -120,7 +120,7 @@ struct AttachedImageCard: View, Equatable {
         )
         
         // 로드된 카드 (예시용 더미 데이터)
-        AttachedImageCard(
+        ImageAttachmentCard(
             id: UUID(),
             imageData: UIImage(systemName: "photo")?.pngData(),
             isLoading: false,

@@ -1,5 +1,5 @@
 //
-//  VotingEditorCard.swift
+//  VoteAttachmentCard.swift
 //  AppProduct
 //
 //  Created by 이예지 on 1/29/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct VotingEditorCard: View {
+struct VoteAttachmentCard: View {
     
     @Binding var formData: VoteFormData
     
@@ -58,5 +58,5 @@ struct VotingEditorCard: View {
 #Preview(traits: .sizeThatFitsLayout) {
     @Previewable @State var formData = VoteFormData()
     
-    VotingEditorCard(formData: $formData)
+    VoteAttachmentCard(formData: $formData)
 }

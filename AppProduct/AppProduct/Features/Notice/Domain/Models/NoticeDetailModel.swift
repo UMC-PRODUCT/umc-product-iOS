@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - NoticeDetail
 
 /// 공지사항 상세정보 엔티티
-struct NoticeDetail: Equatable, Identifiable {
+struct NoticeDetail: Equatable, Identifiable, Hashable {
     // 기본 정보
     let id: String
     let generation: Int
@@ -40,6 +40,12 @@ struct NoticeDetail: Equatable, Identifiable {
     // 권한
     let hasPermission: Bool
     
+    // 추가 콘텐츠
+    let images: [String]
+    let links: [String]
+    let vote: NoticeVote?
+
+    
     /// NoticeChip에 표시할 공지 타입
     var noticeType: NoticeType {
         // 파트 공지인 경우
@@ -63,7 +69,7 @@ struct NoticeDetail: Equatable, Identifiable {
 // MARK: - TargetAudience
                                                                                                                                               
  /// 공지 수신 대상
-struct TargetAudience: Equatable {
+struct TargetAudience: Equatable, Hashable {
     let generation: Int
     let scope: NoticeScope
     let parts: [Part]
@@ -89,7 +95,7 @@ struct TargetAudience: Equatable {
             }
         case .campus:
             if schools.isEmpty {
-                components.append("전체 학교")
+                components.append("전체")
             } else {
                 components.append(schools.joined(separator: ", "))
             }
@@ -97,4 +103,164 @@ struct TargetAudience: Equatable {
         
         return components.joined(separator: " / ")
     }
+}
+
+extension TargetAudience {
+    /// 전체 대상 (기본값)
+    static func all(generation: Int, scope: NoticeScope) -> TargetAudience {
+        TargetAudience(
+            generation: generation,
+            scope: scope,
+            parts: [],
+            branches: [],
+            schools: []
+        )
+    }
+}
+
+
+// MARK: - ImageViewerItem
+/// fullScreenCover에서 Identifiable 사용을 위한 래퍼
+struct ImageViewerItem: Identifiable {
+    let id = UUID()
+    let index: Int
+}
+
+
+// MARK: - NoticeVote
+
+/// 공지사항 투표
+struct NoticeVote: Equatable, Identifiable, Hashable {
+    let id: String
+    let question: String
+    let options: [VoteOption]
+    let startDate: Date
+    let endDate: Date
+    // 단일/복수 선택
+    let allowMultipleChoices: Bool
+    // 익명/실명
+    let isAnonymous: Bool
+    // 사용자가 투표한 옵션 ID들
+    let userVotedOptionIds: [String]
+    
+    /// 전체 투표 수
+    var totalVotes: Int {
+        options.reduce(0) { $0 + $1.voteCount }
+    }
+    
+    /// 투표 종료 여부
+    var isEnded: Bool {
+        Date() > endDate
+    }
+    
+    /// 투표 상태
+    var status: VoteStatus {
+        isEnded ? .ended : .active
+    }
+    
+    /// 사용자 투표 여부
+    var hasUserVoted: Bool {
+        !userVotedOptionIds.isEmpty
+    }
+    
+    /// 날짜 포맷 (MM.dd - MM.dd)
+    var formattedPeriod: String {
+        startDate.dateRange(to: endDate)
+    }
+}
+
+/// 투표 옵션
+struct VoteOption: Equatable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let voteCount: Int
+
+    /// 투표율 계산
+    func percentage(totalVotes: Int) -> Double {
+        guard totalVotes > 0 else { return 0 }
+        return Double(voteCount) / Double(totalVotes) * 100
+    }
+}
+
+/// 투표 상태
+enum VoteStatus {
+    case active  // 진행 중
+    case ended   // 종료
+}
+
+
+// MARK: - ReadStatusTab
+
+/// 공지 열람 현황 탭 (확인/미확인)
+enum ReadStatusTab: String, CaseIterable {
+    case confirmed = "확인"
+    case unconfirmed = "미확인"
+}
+
+// MARK: - NoticeReadStatus
+
+/// 공지 열람 현황 전체 데이터
+struct NoticeReadStatus: Equatable {
+    let noticeId: String
+    let confirmedUsers: [ReadStatusUser]
+    let unconfirmedUsers: [ReadStatusUser]
+    
+    /// 확인한 사람 수
+    var confirmedCount: Int {
+        confirmedUsers.count
+    }
+    
+    /// 미확인한 사람 수
+    var unconfirmedCount: Int {
+        unconfirmedUsers.count
+    }
+    
+    /// 전체 대상자 수
+    var totalCount: Int {
+        confirmedCount + unconfirmedCount
+    }
+    
+    /// 하단 메시지 (예: "이미 3명이 공지를 확인했습니다.")
+    var bottomMessage: String {
+        "이미 \(confirmedCount)명이 공지를 확인했습니다."
+    }
+}
+
+
+// MARK: - ReadStatusUser
+
+/// 공지 열람 현황 - 사용자 정보
+struct ReadStatusUser: Equatable, Identifiable {
+    let id: String
+    let name: String
+    let nickName: String
+    let part: String
+    let branch: String
+    let campus: String
+    let profileImageURL: String?
+    let isRead: Bool
+    
+    /// NoticeReadStatusItemModel로 변환
+    func toItemModel() -> NoticeReadStatusItemModel {
+        NoticeReadStatusItemModel(
+            profileImage: nil,
+            userName: name,
+            nickName: nickName,
+            part: part,
+            location: branch,
+            campus: campus,
+            isRead: isRead
+        )
+    }
+}
+
+// MARK: - ReadStatusFilterType
+
+/// 공지 열람 현황 필터 타입
+enum ReadStatusFilterType: String, CaseIterable, Identifiable {
+    case all = "전체 보기"
+    case branch = "지부별 보기"
+    case school = "학교별 보기"
+    
+    var id: String { rawValue }
 }
