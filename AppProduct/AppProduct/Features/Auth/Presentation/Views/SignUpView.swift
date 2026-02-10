@@ -10,33 +10,50 @@ import SwiftUI
 /// 회원가입 정보 입력 화면
 ///
 /// 사용자의 이름, 닉네임, 이메일, 학교 정보를 입력받고
-/// 이메일 인증 프로세스를 처리합니다.
+/// 이메일 인증 프로세스와 약관 동의를 처리합니다.
 struct SignUpView: View {
 
     // MARK: - Property
 
     /// 회원가입 뷰 모델 (@Observable 패턴)
-    @State var viewModel: SignUpViewModel
+    @State private var viewModel: SignUpViewModel
 
     /// 현재 포커스된 입력 필드
     @FocusState private var focusedField: SignUpFieldType?
+
+    /// 회원가입 완료 시 호출되는 콜백
+    private let onSignUpComplete: () -> Void
 
     // MARK: - Constant
 
     /// 레이아웃 및 텍스트 상수
     private enum Constants {
-        /// 네비게이션 서브타이틀 (현재 미사용)
-        static let naviSubTitle: String = "동아리 활동을 위해 정보를 입려해주세요."
-
+        /// 네비게이션 서브타이틀
+        static let naviSubTitle: String = "동아리 활동을 위해 정보를 입력해주세요."
         /// 필드 간 수직 간격
         static let spacerSize: CGFloat = 30
     }
 
     // MARK: - Init
 
-    /// SignUpView 초기화
-    init() {
-        self._viewModel = .init(wrappedValue: .init())
+    init(
+        oAuthVerificationToken: String,
+        sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol,
+        verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol,
+        registerUseCase: RegisterUseCaseProtocol,
+        fetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol,
+        onSignUpComplete: @escaping () -> Void
+    ) {
+        self._viewModel = .init(
+            wrappedValue: SignUpViewModel(
+                oAuthVerificationToken: oAuthVerificationToken,
+                sendEmailVerificationUseCase: sendEmailVerificationUseCase,
+                verifyEmailCodeUseCase: verifyEmailCodeUseCase,
+                registerUseCase: registerUseCase,
+                fetchSignUpDataUseCase: fetchSignUpDataUseCase
+            )
+        )
+        self.onSignUpComplete = onSignUpComplete
     }
 
     // MARK: - Body
@@ -50,6 +67,7 @@ struct SignUpView: View {
                 }
                 buildField(.email)
                 buildField(.univ)
+                termsSection
             }
             .safeAreaPadding(.vertical, DefaultConstant.defaultContentTopMargins)
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
@@ -61,8 +79,17 @@ struct SignUpView: View {
             mainBtn
         })
         .background(Color(.systemGroupedBackground))
+        .task {
+            await viewModel.fetchSchools()
+            await viewModel.fetchTerms()
+        }
+        .onChange(of: viewModel.registerState) { _, newState in
+            if case .loaded = newState {
+                onSignUpComplete()
+            }
+        }
     }
-    
+
     /// 필드 타입에 따른 입력 컴포넌트 생성
     ///
     /// - Parameter field: 생성할 필드 타입 (이름, 닉네임, 이메일, 학교)
@@ -102,20 +129,111 @@ struct SignUpView: View {
             )
             .focused($focusedField, equals: field)
         case .picker:
-            // 학교 선택 피커
-            FormPickerField(
-                title: field.title,
-                placeholder: field.placeholder,
-                selection: $viewModel.selectedUniv,
-                options: viewModel.univList,
-                displayText: { $0 }
-            )
+            schoolPicker
+        }
+    }
+
+    /// 학교 선택 피커 (API에서 가져온 학교 목록)
+    private var schoolPicker: some View {
+        Group {
+            switch viewModel.schoolsState {
+            case .idle, .loading:
+                FormPickerField(
+                    title: "학교",
+                    placeholder: "학교를 선택하세요",
+                    selection: .constant(nil as String?),
+                    options: [String](),
+                    displayText: { $0 }
+                )
+            case .loaded(let schools):
+                FormPickerField(
+                    title: "학교",
+                    placeholder: "학교를 선택하세요",
+                    selection: $viewModel.selectedSchool,
+                    options: schools,
+                    displayText: { $0.name }
+                )
+            case .failed:
+                FormPickerField(
+                    title: "학교",
+                    placeholder: "학교 목록을 불러올 수 없습니다",
+                    selection: .constant(nil as String?),
+                    options: [String](),
+                    displayText: { $0 }
+                )
+            }
+        }
+    }
+
+    /// 약관 동의 섹션
+    private var termsSection: some View {
+        Group {
+            if case .loaded(let terms) = viewModel.termsState {
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+                    TitleLabel(title: "약관 동의", isRequired: true)
+
+                    // 전체 동의
+                    Button(action: {
+                        viewModel.toggleAllTerms(!viewModel.isAllTermsAgreed)
+                    }) {
+                        HStack(spacing: DefaultSpacing.spacing8) {
+                            Image(systemName: viewModel.isAllTermsAgreed
+                                  ? "checkmark.circle.fill"
+                                  : "circle")
+                                .foregroundStyle(
+                                    viewModel.isAllTermsAgreed
+                                    ? .indigo500 : .grey400
+                                )
+                            Text("전체 동의")
+                                .appFont(.calloutEmphasis)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    Divider()
+
+                    // 개별 약관
+                    ForEach(terms) { term in
+                        Button(action: {
+                            viewModel.termsAgreements[term.id]?.toggle()
+                        }) {
+                            HStack(spacing: DefaultSpacing.spacing8) {
+                                Image(
+                                    systemName: viewModel
+                                        .termsAgreements[term.id] == true
+                                    ? "checkmark.circle.fill"
+                                    : "circle"
+                                )
+                                .foregroundStyle(
+                                    viewModel
+                                        .termsAgreements[term.id] == true
+                                    ? .indigo500 : .grey400
+                                )
+                                Text(term.title)
+                                    .appFont(.subheadline)
+                                if term.isMandatory {
+                                    Text("(필수)")
+                                        .appFont(
+                                            .footnote,
+                                            color: .red500
+                                        )
+                                } else {
+                                    Text("(선택)")
+                                        .appFont(
+                                            .footnote,
+                                            color: .grey400
+                                        )
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         }
     }
 
     /// 하단 완료 버튼
-    ///
-    /// 모든 필수 입력이 완료되면 활성화되며, 권한 요청 프로세스를 시작합니다.
     private var mainBtn: some View {
         MainButton("완료", action: {
             signUpCompleted()
@@ -144,7 +262,7 @@ extension SignUpView {
         case .email:
             return $viewModel.email
         case .univ:
-            return .constant("") // 피커는 별도 바인딩 사용
+            return .constant("")
         }
     }
 
@@ -172,6 +290,7 @@ extension SignUpView {
     /// - 사진 권한 (프로필 이미지 업로드)
     private func signUpCompleted() {
         Task {
+            // 권한 요청
             let results = await viewModel.requestPermission(
                 notification: true,
                 location: true,
@@ -181,22 +300,9 @@ extension SignUpView {
             #if DEBUG
             print("권한 요청: \(results)")
             #endif
-        }
-    }
-}
 
-#Preview {
-    
-    @Previewable @State var show: Bool = false
-    
-    NavigationStack {
-        Button(action: {
-            show.toggle()
-        }, label: {
-            Text("!1")
-        })
-        .navigationDestination(isPresented: $show, destination: {
-            SignUpView()
-        })
+            // 회원가입 API 호출
+            await viewModel.register()
+        }
     }
 }
