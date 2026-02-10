@@ -1,3 +1,4 @@
+
 //
 //  CurriculumRouter.swift
 //  AppProduct
@@ -16,17 +17,17 @@ enum CurriculumRouter {
     // MARK: - GET
 
     /// 파트별 커리큘럼 조회
-    case getCurriculums(part: String)
+    case getCurriculums(query: PartQuery)
     /// 워크북 제출 현황 조회
-    case getWorkbookSubmissions(query: WorkbookSubmissionQuery)
+    case getWorkbookSubmissions(query: CurriculumWorkbook)
     /// 파트별 커리큘럼 주차 목록 조회
-    case getWeeks(part: String)
+    case getWeeks(query: PartQuery)
     /// 필터용 스터디 그룹 목록 조회
-    case getStudyGroups(schoolId: Int, part: String)
+    case getStudyGroups(query: StudyGroupFilterQuery)
     /// 내 커리큘럼 진행 상황 조회
     case getMyProgress
     /// 배포된 주차 번호 목록 조회
-    case getAvailableWeeks(parameters: [String: Any])
+    case getAvailableWeeks(parameters: [String: Any]) 
 
     // MARK: - POST
 
@@ -49,19 +50,19 @@ extension CurriculumRouter: BaseTargetType {
     var path: String {
         switch self {
         case .getCurriculums, .manageCurriculums:
-            "/api/v1/curriculums"
+            return "/api/v1/curriculums"
         case .getWorkbookSubmissions:
-            "/api/v1/curriculums/workbook-submissions"
+            return "/api/v1/curriculums/workbook-submissions"
         case .getWeeks:
-            "/api/v1/curriculums/weeks"
+            return "/api/v1/curriculums/weeks"
         case .getStudyGroups:
-            "/api/v1/curriculums/study-groups"
+            return "/api/v1/curriculums/study-groups"
         case .getMyProgress:
-            "/api/v1/curriculums/challengers/me/progress"
+            return "/api/v1/curriculums/challengers/me/progress"
         case .getAvailableWeeks:
-            "/api/v1/curriculums/available-weeks"
+            return "/api/v1/curriculums/available-weeks"
         case .submitWorkbook(let challengerWorkbookId, _):
-            "/api/v1/challenger-workbooks/\(challengerWorkbookId)/submissions"
+            return "/api/v1/challenger-workbooks/\(challengerWorkbookId)/submissions"
         }
     }
 
@@ -69,42 +70,43 @@ extension CurriculumRouter: BaseTargetType {
         switch self {
         case .getCurriculums, .getWorkbookSubmissions, .getWeeks,
              .getStudyGroups, .getMyProgress, .getAvailableWeeks:
-            .get
+            return .get
         case .submitWorkbook:
-            .post
+            return .post
         case .manageCurriculums:
-            .put
+            return .put
         }
     }
 
     var task: Moya.Task {
         switch self {
         case .getMyProgress:
-            .requestPlain
+            return .requestPlain
 
-        case .getCurriculums(let part):
-            .requestParameters(parameters: ["part": part], encoding: URLEncoding.queryString)
+        case .getCurriculums(let query):
+            return .requestParameters(parameters: query.toParameters, encoding: URLEncoding.queryString)
 
         case .getWorkbookSubmissions(let query):
-            .requestParameters(parameters: query.toParameters, encoding: URLEncoding.queryString)
+            return .requestParameters(parameters: query.toParameters, encoding: URLEncoding.queryString)
 
-        case .getWeeks(let part):
-            .requestParameters(parameters: ["part": part], encoding: URLEncoding.queryString)
+        case .getWeeks(let query):
+            return .requestParameters(parameters: query.toParameters, encoding: URLEncoding.queryString)
 
-        case .getStudyGroups(let schoolId, let part):
-            .requestParameters(
-                parameters: ["schoolId": schoolId, "part": part],
+        case .getStudyGroups(let query):
+            return .requestParameters(
+                parameters: query.toParameters,
                 encoding: URLEncoding.queryString
             )
 
         case .getAvailableWeeks(let parameters):
-            .requestParameters(parameters: parameters, encoding: URLEncoding.queryString)
+            return .requestParameters(parameters: parameters, encoding: URLEncoding.queryString)
 
         case .submitWorkbook(_, let body):
-            .requestJSONEncodable(body)
+            return .requestJSONEncodable(body)
 
         case .manageCurriculums(let parameters):
-            .requestParameters(parameters: parameters, encoding: JSONEncoding.default)
+            return .requestParameters(parameters: parameters, encoding: JSONEncoding.default)
         }
     }
 }
+

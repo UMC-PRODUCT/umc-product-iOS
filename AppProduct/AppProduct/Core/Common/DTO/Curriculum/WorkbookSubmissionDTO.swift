@@ -14,7 +14,7 @@ import Foundation
 /// `GET /api/v1/curriculums/workbook-submissions` 쿼리 파라미터
 ///
 /// - Important: 학교 운영진(회장/부회장/파트장/기타 운영진)만 접근 가능
-struct WorkbookSubmissionQuery {
+struct CurriculumWorkbook {
     /// 주차 (필수)
     let weekNo: Int
     /// 스터디 그룹 ID (선택)
