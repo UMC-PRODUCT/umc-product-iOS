@@ -29,7 +29,7 @@ import Foundation
 ///     refreshToken: tokenPair.refreshToken
 /// )
 /// ```
-struct TokenPair: Sendable, Codable {
+struct TokenPair: Sendable, Codable, Equatable {
     // MARK: - Property
 
     /// API 요청 시 사용하는 액세스 토큰

@@ -144,6 +144,63 @@ struct MoyaNetworkAdapter {
             response: httpResponse
         )
     }
+
+    /// 인증 없이 API 요청을 수행합니다 (로그인, 회원가입 등)
+    ///
+    /// - Parameter target: Moya TargetType (API 정의)
+    ///
+    /// - Returns: Moya Response (상태 코드, 데이터, 요청, 응답 포함)
+    ///
+    /// - Throws:
+    ///   - `NetworkError.requestFailed`: HTTP 상태 코드가 200-299 범위 밖인 경우
+    ///   - `NetworkError.invalidResponse`: 응답을 HTTPURLResponse로 변환할 수 없는 경우
+    ///   - 인코딩 에러 (JSON, URL 파라미터 등)
+    ///
+    /// - Important:
+    ///   - NetworkClient를 거치지 않음 (JWT 인증 없음)
+    ///   - URLSession.shared를 직접 사용
+    ///
+    /// - Usage:
+    /// ```swift
+    /// // 로그인 API 호출
+    /// let response = try await adapter.requestWithoutAuth(
+    ///     AuthAPI.loginKakao(accessToken: token, email: email)
+    /// )
+    ///
+    /// // 응답 파싱
+    /// let result = try JSONDecoder().decode(
+    ///     APIResponse<LoginDTO>.self,
+    ///     from: response.data
+    /// )
+    /// ```
+    func requestWithoutAuth<T: TargetType>(_ target: T) async throws -> Response {
+        // 1. TargetType을 URLRequest로 변환
+        let urlRequest = try buildURLRequest(target)
+
+        // 2. URLSession으로 직접 요청 (인증 없음)
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+
+        // 3. HTTPURLResponse 검증
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+
+        // 4. 상태 코드 검증 (200-299만 허용)
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.requestFailed(
+                statusCode: httpResponse.statusCode,
+                data: data
+            )
+        }
+
+        // 5. Moya Response 생성
+        return .init(
+            statusCode: httpResponse.statusCode,
+            data: data,
+            request: urlRequest,
+            response: httpResponse
+        )
+    }
 }
 
 // MARK: - Private Methods
