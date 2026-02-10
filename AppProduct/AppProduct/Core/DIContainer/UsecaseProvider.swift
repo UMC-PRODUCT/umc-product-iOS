@@ -12,6 +12,7 @@ import Foundation
 /// 각 Feature별 Provider를 통해 UseCase에 접근합니다.
 protocol UsecaseProviding {
     var activity: ActivityUseCaseProviding { get }
+    var auth: AuthUseCaseProviding { get }
 }
 
 /// UseCase Provider 구현
@@ -21,8 +22,14 @@ protocol UsecaseProviding {
 final class UseCaseProvider: UsecaseProviding {
     /// Activity Feature UseCase Provider
     let activity: ActivityUseCaseProviding
+    /// Auth Feature UseCase Provider
+    let auth: AuthUseCaseProviding
 
-    init(activity: ActivityUseCaseProviding) {
+    init(
+        activity: ActivityUseCaseProviding,
+        auth: AuthUseCaseProviding
+    ) {
         self.activity = activity
+        self.auth = auth
     }
 }

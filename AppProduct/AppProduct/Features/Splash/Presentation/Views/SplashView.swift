@@ -7,22 +7,42 @@
 
 import SwiftUI
 
+/// 스플래시 화면
+///
+/// 앱 시작 시 로고를 표시하며 토큰 검사를 수행합니다.
+/// 검사 완료 시 `onComplete` 콜백으로 로그인 상태를 전달합니다.
 struct SplashView: View {
+
     // MARK: - Property
-    @Environment(\.di) var di
-    @State var viewModel: SplashViewModel
+
+    @State private var viewModel: SplashViewModel
+
+    /// 토큰 검사 완료 콜백
+    private let onComplete: (Bool) -> Void
 
     // MARK: - Init
-    init() {
-        self._viewModel = .init(wrappedValue: .init())
+
+    init(
+        networkClient: NetworkClient,
+        onComplete: @escaping (Bool) -> Void
+    ) {
+        self._viewModel = .init(
+            wrappedValue: SplashViewModel(networkClient: networkClient)
+        )
+        self.onComplete = onComplete
     }
-    
+
     // MARK: - Body
+
     var body: some View {
         Logo()
+            .task {
+                await viewModel.checkAuthStatus()
+            }
+            .onChange(of: viewModel.isCheckComplete) { _, isComplete in
+                if isComplete {
+                    onComplete(viewModel.isLoggedIn)
+                }
+            }
     }
-}
-
-#Preview {
-    SplashView()
 }
