@@ -170,6 +170,29 @@ final class SpyAuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
     func getMyOAuth() async throws -> [MemberOAuth] {
         fatalError("Not needed in LoginUseCase tests")
     }
+
+    func sendEmailVerification(email: String) async throws -> String {
+        fatalError("Not needed in LoginUseCase tests")
+    }
+
+    func verifyEmailCode(
+        emailVerificationId: String,
+        verificationCode: String
+    ) async throws -> String {
+        fatalError("Not needed in LoginUseCase tests")
+    }
+
+    func register(request: RegisterRequestDTO) async throws -> Int {
+        fatalError("Not needed in LoginUseCase tests")
+    }
+
+    func getSchools() async throws -> [School] {
+        fatalError("Not needed in LoginUseCase tests")
+    }
+
+    func getTerms(termsType: String) async throws -> Terms {
+        fatalError("Not needed in LoginUseCase tests")
+    }
 }
 
 actor SpyTokenStore: TokenStore {

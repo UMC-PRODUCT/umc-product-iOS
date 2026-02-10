@@ -142,3 +142,6 @@ Secrets.xcconfig
 ## Claude Code (개인 설정)
 CLAUDE.local.md
 .claude/
+
+## 테스트 설정 (토큰, 인증코드 등 민감 정보)
+.test-config.*

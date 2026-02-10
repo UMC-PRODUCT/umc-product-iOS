@@ -45,7 +45,8 @@ final class LoginViewModel {
         do {
             let (accessToken, email) = try await kakaoLoginManager.login()
             #if DEBUG
-            print("[Auth] 카카오 토큰 획득 성공, 서버 로그인 시도...")
+            print("[Auth] 카카오 accessToken: \(accessToken)")
+            print("[Auth] 카카오 email: \(email)")
             #endif
             let result = try await loginUseCase.executeKakao(
                 accessToken: accessToken,
