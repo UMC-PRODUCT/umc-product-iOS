@@ -13,16 +13,33 @@ import SwiftUI
 /// 중앙에 로고와 설명을 배치하고, 하단에 소셜 로그인 옵션을 표시합니다.
 struct LoginView: View {
 
-    // MARK:  - Property
+    // MARK: - Property
 
     /// 로그인 뷰 모델 (@Observable 패턴)
-    @State var viewModel: LoginViewModel
+    @State private var viewModel: LoginViewModel
+
+    /// 로그인 성공 시 호출되는 콜백
+    private let onLoginSuccess: () -> Void
+
+    /// 신규 회원 시 호출되는 콜백 (verificationToken 전달)
+    private let onNewMember: (String) -> Void
 
     // MARK: - Init
 
-    /// LoginView 초기화
-    init() {
-        self._viewModel = .init(wrappedValue: .init())
+    init(
+        loginUseCase: LoginUseCaseProtocol,
+        errorHandler: ErrorHandler,
+        onLoginSuccess: @escaping () -> Void,
+        onNewMember: @escaping (String) -> Void
+    ) {
+        self._viewModel = .init(
+            wrappedValue: LoginViewModel(
+                loginUseCase: loginUseCase,
+                errorHandler: errorHandler
+            )
+        )
+        self.onLoginSuccess = onLoginSuccess
+        self.onNewMember = onNewMember
     }
 
     // MARK: - Body
@@ -32,7 +49,25 @@ struct LoginView: View {
             Spacer()
             TopLogo()
             Spacer()
-            BottomSocialBtns()
+            BottomSocialBtns(
+                isLoading: viewModel.loginState.isLoading,
+                onKakaoTapped: {
+                    Task { await viewModel.loginWithKakao() }
+                },
+                onAppleTapped: {
+                    viewModel.loginWithApple()
+                }
+            )
+        }
+        .onChange(of: viewModel.loginState) { _, newState in
+            if case .loaded(let result) = newState {
+                switch result {
+                case .existingMember:
+                    onLoginSuccess()
+                case .newMember(let verificationToken):
+                    onNewMember(verificationToken)
+                }
+            }
         }
     }
 }
@@ -66,11 +101,8 @@ fileprivate struct TopLogo: View, Equatable {
 
 // MARK: - BottomSocialBtns
 
-/// 하단 소셜 로그인 버튼 영역 (Presenter 패턴)
-///
-/// 모든 소셜 로그인 타입의 버튼을 세로로 나열합니다.
-/// Equatable 준수로 불필요한 렌더링을 방지합니다.
-fileprivate struct BottomSocialBtns: View, Equatable {
+/// 하단 소셜 로그인 버튼 영역
+fileprivate struct BottomSocialBtns: View {
 
     // MARK: - Constant
 
@@ -80,16 +112,35 @@ fileprivate struct BottomSocialBtns: View, Equatable {
         static let btnSpacing: CGFloat = 16
     }
 
+    // MARK: - Property
+
+    let isLoading: Bool
+    var onKakaoTapped: () -> Void
+    var onAppleTapped: () -> Void
+
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: Constants.btnSpacing, content: {
+        VStack(spacing: Constants.btnSpacing) {
             ForEach(SocialType.allCases, id: \.self) { btn in
-                Button(action: {}, label: {
+                Button(action: {
+                    switch btn {
+                    case .kakao:
+                        onKakaoTapped()
+                    case .apple:
+                        onAppleTapped()
+                    }
+                }, label: {
                     btn.image
                 })
                 .glassEffect(.regular.interactive())
+                .disabled(isLoading)
             }
-        })
+
+            if isLoading {
+                ProgressView()
+                    .padding(.top, DefaultSpacing.spacing8)
+            }
+        }
     }
 }
