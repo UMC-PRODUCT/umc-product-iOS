@@ -19,6 +19,10 @@ struct OperatorStudyManagementView: View {
     private let container: DIContainer
     private let errorHandler: ErrorHandler
 
+    private var pathStore: PathStore {
+        container.resolve(PathStore.self)
+    }
+
     @State private var selectedTab: ManagementTab = .submission
 
     // MARK: - Constants
@@ -169,7 +173,15 @@ struct OperatorStudyManagementView: View {
                 onDelete: { print("Delete") },
                 onManageMembers: { print("Manage") },
                 onAddMember: { print("Add") },
-                onSchedule: { print("Schedule") }
+                onSchedule: {
+                    pathStore.activityPath.append(
+                        .activity(
+                            .studyScheduleRegistration(
+                                studyName: StudyGroupInfo.preview.name
+                            )
+                        )
+                    )
+                }
             )
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeBtnPadding)
         }

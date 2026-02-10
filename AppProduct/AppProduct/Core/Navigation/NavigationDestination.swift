@@ -85,9 +85,14 @@ enum NavigationDestination: Hashable {
         case myInfo(profileData: ProfileData)
     }
 
+    enum Activity: Hashable {
+        case studyScheduleRegistration(studyName: String)
+    }
+
     case auth(Auth)
     case home(Home)
     case notice(Notice)
     case community(Community)
     case myPage(MyPage)
+    case activity(Activity)
 }

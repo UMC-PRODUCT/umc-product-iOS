@@ -1,0 +1,9 @@
+{
+    "kakaoAccessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMCIsImF1dGgiOltdLCJpYXQiOjE3NzA3MDI3NDgsImV4cCI6MTc3MDcwNjM0OH0.XHqVNY15w6LW-fd8ax75uWl0tqf2v5gxzHKjvVdWt1RLWtC7llOj3mKxbTUYZJDZxSHQA2azGaoxu2SBzSxFmw","refreshToken":"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMCIsImlhdCI6MTc3MDcwMjc0OCwiZXhwIjoxNzcxMzA3NTQ4fQ.sCF6PRUCHVXfKlG32f9UBZhcvwIl3gy5gn-LaXXaTZ2XdRBDtVA29asKe_ze3k7ALyuuVMR-gBRONuD-0X8B1w",
+    "kakaoEmail": "jwlee010523@gmail.com",
+    "testEmail": "jwon010523@gmail.com",
+    "emailVerificationId": "66",
+    "emailVerificationCode": "347767",
+    "testName": "이재원",
+    "testNickname": "리버_테스트1"
+}

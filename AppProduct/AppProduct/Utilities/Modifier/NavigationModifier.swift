@@ -39,6 +39,7 @@ struct NavigationModifier: ViewModifier {
         case noticeDetail = "공지사항"
         case noticeReadStatus = "공지 열람 현황"
         case detailSchedule = "일정 상세"
+        case studyScheduleRegistration = "스터디 일정 등록"
     }
 
     func body(content: Content) -> some View {
