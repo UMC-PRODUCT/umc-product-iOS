@@ -64,7 +64,7 @@ struct OperatorBestWorkbookSheet: View {
                 }
         } header: {
             SectionHeaderView(
-                title: "\(member.nickname)에게 전하는 추천사(커뷰니티 공개용)")
+                title: "\(member.nickname)에게 전하는 추천사(커뮤니티 공개용)")
         } footer: {
             footerSection
         }
