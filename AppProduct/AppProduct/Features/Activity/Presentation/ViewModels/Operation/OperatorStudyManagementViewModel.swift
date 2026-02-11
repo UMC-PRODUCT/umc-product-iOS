@@ -24,6 +24,7 @@ final class OperatorStudyManagementViewModel {
     /// 스터디 그룹 관리 상태
     var studyGroupDetail: StudyGroupInfo = .preview
     var showAddMemberSheet = false
+    var showEditSheet = false
     var selectedChallengers: [ChallengerInfo] = []
 
     /// 시트 표시 상태
@@ -96,6 +97,18 @@ final class OperatorStudyManagementViewModel {
             .filter { !existingIDs.contains($0.serverID) }
         studyGroupDetail.members.append(contentsOf: newMembers)
         selectedChallengers = []
+    }
+
+    func applyGroupEdit(name: String, part: UMCPartType) {
+        studyGroupDetail = StudyGroupInfo(
+            id: studyGroupDetail.id,
+            serverID: studyGroupDetail.serverID,
+            name: name,
+            part: part,
+            createdDate: studyGroupDetail.createdDate,
+            leader: studyGroupDetail.leader,
+            members: studyGroupDetail.members
+        )
     }
 
     func selectWeek(_ week: Int) {

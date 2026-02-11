@@ -141,6 +141,17 @@ struct OperatorStudyManagementView: View {
                 challenger: $viewModel.selectedChallengers
             )
         }
+        .sheet(isPresented: $viewModel.showEditSheet) {
+            OperatorStudyGroupEditSheet(
+                detail: viewModel.studyGroupDetail,
+                onSave: { name, part in
+                    viewModel.applyGroupEdit(
+                        name: name,
+                        part: part
+                    )
+                }
+            )
+        }
         .alertPrompt(item: $viewModel.alertPrompt)
     }
 
@@ -177,7 +188,7 @@ struct OperatorStudyManagementView: View {
 //            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
             StudyGroupCard(
                 detail: viewModel.studyGroupDetail,
-                onEdit: { print("Edit") },
+                onEdit: { viewModel.showEditSheet = true },
                 onDelete: { print("Delete") },
                 onAddMember: {
                     viewModel.showAddMemberSheet = true
