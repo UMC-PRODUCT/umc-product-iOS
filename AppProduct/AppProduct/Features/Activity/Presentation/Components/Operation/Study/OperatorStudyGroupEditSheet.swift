@@ -84,19 +84,3 @@ struct OperatorStudyGroupEditSheet: View {
         }
     }
 }
-
-// MARK: - Preview
-
-#if DEBUG
-#Preview {
-    Text("Preview")
-        .sheet(isPresented: .constant(true)) {
-            OperatorStudyGroupEditSheet(
-                detail: .preview,
-                onSave: { name, part in
-                    print("Save: \(name), \(part.name)")
-                }
-            )
-        }
-}
-#endif

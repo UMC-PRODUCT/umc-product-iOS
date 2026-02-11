@@ -147,19 +147,10 @@ struct StudyGroupCard: View, Equatable {
     }
 
     private var scheduleButton: some View {
-        Button {
+        MainButton("스터디 일정 등록하기") {
             onSchedule?()
-        } label: {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                Image(systemName: "calendar.badge.plus")
-                Text("스터디 일정 등록하기")
-            }
-            .appFont(.subheadline)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, DefaultSpacing.spacing12)
         }
         .buttonStyle(.glassProminent)
-        .tint(.indigo500)
     }
 }
 

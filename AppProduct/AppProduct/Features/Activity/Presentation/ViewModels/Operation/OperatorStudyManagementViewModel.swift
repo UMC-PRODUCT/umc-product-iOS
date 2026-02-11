@@ -22,9 +22,9 @@ final class OperatorStudyManagementViewModel {
     var selectedWeek: Int = 1
 
     /// 스터디 그룹 관리 상태
-    var studyGroupDetail: StudyGroupInfo = .preview
-    var showAddMemberSheet = false
-    var showEditSheet = false
+    private(set) var studyGroupDetails: [StudyGroupInfo] = []
+    var editingGroup: StudyGroupInfo?
+    var addMemberGroup: StudyGroupInfo?
     var selectedChallengers: [ChallengerInfo] = []
 
     /// 시트 표시 상태
@@ -50,6 +50,10 @@ final class OperatorStudyManagementViewModel {
         self.container = container
         self.errorHandler = errorHandler
         self.useCase = useCase
+
+        #if DEBUG
+        self.studyGroupDetails = StudyGroupPreviewData.groups
+        #endif
     }
 
     // MARK: - Function
@@ -81,8 +85,17 @@ final class OperatorStudyManagementViewModel {
 
     /// Sheet dismiss 시 호출 — ChallengerInfo → StudyGroupMember 변환
     func applySelectedChallengers() {
+        guard let targetGroup = addMemberGroup,
+              let index = studyGroupDetails.firstIndex(
+                  where: { $0.id == targetGroup.id }
+              )
+        else {
+            selectedChallengers = []
+            return
+        }
+
         let existingIDs = Set(
-            studyGroupDetail.members.map(\.serverID)
+            studyGroupDetails[index].members.map(\.serverID)
         )
         let newMembers = selectedChallengers
             .map { challenger in
@@ -95,19 +108,53 @@ final class OperatorStudyManagementViewModel {
                 )
             }
             .filter { !existingIDs.contains($0.serverID) }
-        studyGroupDetail.members.append(contentsOf: newMembers)
+        studyGroupDetails[index].members.append(
+            contentsOf: newMembers
+        )
         selectedChallengers = []
     }
 
-    func applyGroupEdit(name: String, part: UMCPartType) {
-        studyGroupDetail = StudyGroupInfo(
-            id: studyGroupDetail.id,
-            serverID: studyGroupDetail.serverID,
+    func applyGroupEdit(
+        groupID: UUID,
+        name: String,
+        part: UMCPartType
+    ) {
+        guard let index = studyGroupDetails.firstIndex(
+            where: { $0.id == groupID }
+        ) else { return }
+
+        let old = studyGroupDetails[index]
+        studyGroupDetails[index] = StudyGroupInfo(
+            id: old.id,
+            serverID: old.serverID,
             name: name,
             part: part,
-            createdDate: studyGroupDetail.createdDate,
-            leader: studyGroupDetail.leader,
-            members: studyGroupDetail.members
+            createdDate: old.createdDate,
+            leader: old.leader,
+            members: old.members
+        )
+    }
+
+    func showEditSheet(for group: StudyGroupInfo) {
+        editingGroup = group
+    }
+
+    func showAddMemberSheet(for group: StudyGroupInfo) {
+        addMemberGroup = group
+    }
+
+    func deleteGroup(_ group: StudyGroupInfo) {
+        alertPrompt = AlertPrompt(
+            title: "그룹 삭제",
+            message: "'\(group.name)' 그룹을 삭제하시겠습니까?",
+            positiveBtnTitle: "삭제",
+            positiveBtnAction: { [weak self] in
+                self?.studyGroupDetails.removeAll {
+                    $0.id == group.id
+                }
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
         )
     }
 

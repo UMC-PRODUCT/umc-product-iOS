@@ -97,6 +97,10 @@ struct OperatorStudyManagementView: View {
                     selection: $viewModel.selectedStudyGroup,
                     onChange: viewModel.selectStudyGroup
                 )
+            } else {
+                ToolBarCollection.AddBtn {
+                    // 그룹 생성 함수 호출
+                }
             }
         }
         .sheet(
@@ -134,18 +138,19 @@ struct OperatorStudyManagementView: View {
             )
         }
         .sheet(
-            isPresented: $viewModel.showAddMemberSheet,
+            item: $viewModel.addMemberGroup,
             onDismiss: { viewModel.applySelectedChallengers() }
-        ) {
+        ) { _ in
             SelectedChallengerView(
                 challenger: $viewModel.selectedChallengers
             )
         }
-        .sheet(isPresented: $viewModel.showEditSheet) {
+        .sheet(item: $viewModel.editingGroup) { group in
             OperatorStudyGroupEditSheet(
-                detail: viewModel.studyGroupDetail,
+                detail: group,
                 onSave: { name, part in
                     viewModel.applyGroupEdit(
+                        groupID: group.id,
                         name: name,
                         part: part
                     )
@@ -179,34 +184,44 @@ struct OperatorStudyManagementView: View {
 
     private var groupManagementPlaceholder: some View {
         ScrollView {
-//            ContentUnavailableView {
-//                Label("스터디 그룹 관리", systemImage: "person.2.badge.gearshape")
-//            } description: {
-//                Text("준비 중입니다")
-//            }
-//            .padding(.top, DefaultSpacing.spacing32)
-//            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            StudyGroupCard(
-                detail: viewModel.studyGroupDetail,
-                onEdit: { viewModel.showEditSheet = true },
-                onDelete: { print("Delete") },
-                onAddMember: {
-                    viewModel.showAddMemberSheet = true
-                },
-                onSchedule: {
-                    pathStore.activityPath.append(
-                        .activity(
-                            .studyScheduleRegistration(
-                                studyName: viewModel
-                                    .studyGroupDetail.name
+            LazyVStack(spacing: DefaultSpacing.spacing16) {
+                ForEach(viewModel.studyGroupDetails) { group in
+                    StudyGroupCard(
+                        detail: group,
+                        onEdit: {
+                            viewModel.showEditSheet(for: group)
+                        },
+                        onDelete: {
+                            viewModel.deleteGroup(group)
+                        },
+                        onAddMember: {
+                            viewModel.showAddMemberSheet(
+                                for: group
                             )
-                        )
+                        },
+                        onSchedule: {
+                            pathStore.activityPath.append(
+                                .activity(
+                                    .studyScheduleRegistration(
+                                        studyName: group.name
+                                    )
+                                )
+                            )
+                        }
                     )
+                    .equatable()
                 }
+            }
+            .safeAreaPadding(
+                .horizontal,
+                DefaultConstant.defaultSafeBtnPadding
             )
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeBtnPadding)
         }
-        .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
+        .contentMargins(
+            .bottom,
+            DefaultConstant.defaultContentBottomMargins,
+            for: .scrollContent
+        )
     }
 
     // MARK: - Loading View
