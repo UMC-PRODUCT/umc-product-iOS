@@ -133,6 +133,14 @@ struct OperatorStudyManagementView: View {
                 }
             )
         }
+        .sheet(
+            isPresented: $viewModel.showAddMemberSheet,
+            onDismiss: { viewModel.applySelectedChallengers() }
+        ) {
+            SelectedChallengerView(
+                challenger: $viewModel.selectedChallengers
+            )
+        }
         .alertPrompt(item: $viewModel.alertPrompt)
     }
 
@@ -168,16 +176,18 @@ struct OperatorStudyManagementView: View {
 //            .padding(.top, DefaultSpacing.spacing32)
 //            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
             StudyGroupCard(
-                detail: .preview,
+                detail: viewModel.studyGroupDetail,
                 onEdit: { print("Edit") },
                 onDelete: { print("Delete") },
-                onManageMembers: { print("Manage") },
-                onAddMember: { print("Add") },
+                onAddMember: {
+                    viewModel.showAddMemberSheet = true
+                },
                 onSchedule: {
                     pathStore.activityPath.append(
                         .activity(
                             .studyScheduleRegistration(
-                                studyName: StudyGroupInfo.preview.name
+                                studyName: viewModel
+                                    .studyGroupDetail.name
                             )
                         )
                     )

@@ -16,7 +16,6 @@ struct StudyGroupCard: View, Equatable {
     private let detail: StudyGroupInfo
     private var onEdit: (() -> Void)?
     private var onDelete: (() -> Void)?
-    private var onManageMembers: (() -> Void)?
     private var onAddMember: (() -> Void)?
     private var onSchedule: (() -> Void)?
 
@@ -26,14 +25,12 @@ struct StudyGroupCard: View, Equatable {
         detail: StudyGroupInfo,
         onEdit: (() -> Void)? = nil,
         onDelete: (() -> Void)? = nil,
-        onManageMembers: (() -> Void)? = nil,
         onAddMember: (() -> Void)? = nil,
         onSchedule: (() -> Void)? = nil
     ) {
         self.detail = detail
         self.onEdit = onEdit
         self.onDelete = onDelete
-        self.onManageMembers = onManageMembers
         self.onAddMember = onAddMember
         self.onSchedule = onSchedule
     }
@@ -91,10 +88,6 @@ struct StudyGroupCard: View, Equatable {
         Menu {
             Button("그룹 편집", systemImage: "pencil") {
                 onEdit?()
-            }
-
-            Button("멤버 관리", systemImage: "person.badge.plus") {
-                onManageMembers?()
             }
 
             Divider()
@@ -178,7 +171,6 @@ struct StudyGroupCard: View, Equatable {
         detail: .preview,
         onEdit: { print("Edit") },
         onDelete: { print("Delete") },
-        onManageMembers: { print("Manage") },
         onAddMember: { print("Add") },
         onSchedule: { print("Schedule") }
     )

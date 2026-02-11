@@ -21,6 +21,11 @@ final class OperatorStudyManagementViewModel {
     private(set) var weeks: [Int] = []
     var selectedWeek: Int = 1
 
+    /// 스터디 그룹 관리 상태
+    var studyGroupDetail: StudyGroupInfo = .preview
+    var showAddMemberSheet = false
+    var selectedChallengers: [ChallengerInfo] = []
+
     /// 시트 표시 상태
     var selectedMemberForReview: StudyMemberItem?
     var selectedMemberForBest: StudyMemberItem?
@@ -71,6 +76,26 @@ final class OperatorStudyManagementViewModel {
                 }
             ))
         }
+    }
+
+    /// Sheet dismiss 시 호출 — ChallengerInfo → StudyGroupMember 변환
+    func applySelectedChallengers() {
+        let existingIDs = Set(
+            studyGroupDetail.members.map(\.serverID)
+        )
+        let newMembers = selectedChallengers
+            .map { challenger in
+                StudyGroupMember(
+                    serverID: String(challenger.challengeId),
+                    name: challenger.name,
+                    nickname: challenger.nickname,
+                    university: challenger.schoolName,
+                    profileImageURL: challenger.profileImage
+                )
+            }
+            .filter { !existingIDs.contains($0.serverID) }
+        studyGroupDetail.members.append(contentsOf: newMembers)
+        selectedChallengers = []
     }
 
     func selectWeek(_ week: Int) {

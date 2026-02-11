@@ -33,7 +33,7 @@ struct StudyGroupInfo: Identifiable, Equatable {
     let leader: StudyGroupMember
 
     /// 스터디원 목록 (파트장 제외)
-    let members: [StudyGroupMember]
+    var members: [StudyGroupMember]
 
     // MARK: - Computed Property
 
