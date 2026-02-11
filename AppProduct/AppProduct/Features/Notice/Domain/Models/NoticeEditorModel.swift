@@ -192,12 +192,15 @@ struct VoteOptionItem: Identifiable, Equatable {
 // MARK: - VoteFormData
 /// 투표 폼 데이터
 struct VoteFormData: Equatable {
+    var title: String = ""
     var options: [VoteOptionItem] = [
         VoteOptionItem(),
         VoteOptionItem()
     ]
     var isAnonymous: Bool = true
     var allowMultipleSelection: Bool = false
+    var startDate: Date = Date()
+    var endDate: Date = Date().addingTimeInterval(3 * 24 * 60 * 60)
     
     static let minOptionCount = 2
     static let maxOptionCount = 5
@@ -222,9 +225,19 @@ struct VoteFormData: Equatable {
         return count
     }
     
-    /// 투표 확정 가능 여부 (2개 이상 항목이 채워져야 함)
+    /// 날짜 범위 유효성 검증
+    var isDateRangeValid: Bool {
+          let calendar = Calendar.current
+          let startDay = calendar.startOfDay(for: startDate)
+          let endDay = calendar.startOfDay(for: endDate)
+          return endDay > startDay
+      }
+    
+    /// 투표 확정 가능 여부 (제목 + 2개 이상 항목 + 날짜 유효성)
     var canConfirm: Bool {
-        validOptionsCount >= 2
+        !title.trimmingCharacters(in: .whitespaces).isEmpty &&
+        validOptionsCount >= 2 &&
+        isDateRangeValid
     }
 }
 
