@@ -27,9 +27,13 @@ final class StudyScheduleRegistrationViewModel {
 
     // MARK: - DatePicker Toggle State
 
+    /// 시작 날짜 DatePicker 표시 여부
     var showStartDatePicker = false
+    /// 시작 시간 DatePicker 표시 여부
     var showStartTimePicker = false
+    /// 종료 날짜 DatePicker 표시 여부
     var showEndDatePicker = false
+    /// 종료 시간 DatePicker 표시 여부
     var showEndTimePicker = false
 
     // MARK: - Computed Property
@@ -42,6 +46,7 @@ final class StudyScheduleRegistrationViewModel {
 
     // MARK: - Init
 
+    /// - Parameter studyName: 스터디 그룹 이름 (초기값)
     init(studyName: String) {
         self.studyName = studyName
     }

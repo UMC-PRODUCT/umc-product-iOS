@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+/// 스터디 그룹 멤버 칩
+///
+/// 프로필 아바타와 이름을 표시하는 컴팩트 뷰입니다.
 struct StudyGroupMemberChip: View, Equatable {
     // MARK: - Constants
     fileprivate enum Constants {
@@ -15,9 +18,11 @@ struct StudyGroupMemberChip: View, Equatable {
     }
 
     // MARK: - Property
+    /// 표시할 멤버 정보
     let member: StudyGroupMember
 
     // MARK: - Initializer
+    /// - Parameter member: 표시할 멤버 정보
     init(member: StudyGroupMember) {
         self.member = member
     }

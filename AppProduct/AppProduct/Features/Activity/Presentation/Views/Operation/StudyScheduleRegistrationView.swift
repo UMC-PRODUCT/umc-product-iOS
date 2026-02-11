@@ -19,6 +19,7 @@ struct StudyScheduleRegistrationView: View {
 
     // MARK: - Init
 
+    /// - Parameter studyName: 스터디 그룹 이름 (초기값)
     init(studyName: String) {
         _viewModel = State(
             initialValue: StudyScheduleRegistrationViewModel(

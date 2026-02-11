@@ -76,6 +76,7 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
 
     // MARK: - Initializer
 
+    /// 스터디원 모델 초기화
     init(
         id: UUID = UUID(),
         serverID: String,

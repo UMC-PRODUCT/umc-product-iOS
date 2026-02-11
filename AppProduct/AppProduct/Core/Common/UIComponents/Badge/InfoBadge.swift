@@ -9,6 +9,9 @@ import SwiftUI
 
 // MARK: - InfoBadge
 
+/// 텍스트 뱃지 컴포넌트
+///
+/// Glass Effect 기반의 간결한 정보 뱃지를 표시합니다.
 struct InfoBadge: View, Equatable {
 
     // MARK: - Constants
@@ -24,6 +27,7 @@ struct InfoBadge: View, Equatable {
     private let tintColor: Color?
     private let glassVariant: GlassVariant
 
+    /// Glass Effect 변형 타입
     enum GlassVariant: Equatable {
         case regular
         case clear
@@ -31,6 +35,11 @@ struct InfoBadge: View, Equatable {
 
     // MARK: - Initializer
 
+    /// - Parameters:
+    ///   - text: 뱃지에 표시할 텍스트
+    ///   - textColor: 텍스트 색상
+    ///   - tintColor: Glass Effect 틴트 색상
+    ///   - glassVariant: Glass Effect 변형 타입
     init(
         _ text: String,
         textColor: Color = .grey600,

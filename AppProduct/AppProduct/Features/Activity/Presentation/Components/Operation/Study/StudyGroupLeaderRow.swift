@@ -9,6 +9,9 @@ import SwiftUI
 
 // MARK: - StudyGroupLeaderRow
 
+/// 스터디 그룹 파트장 행
+///
+/// 프로필 이미지, 이름, 대학교, 역할 뱃지를 표시합니다.
 struct StudyGroupLeaderRow: View, Equatable {
 
     // MARK: - Constants
@@ -21,10 +24,12 @@ struct StudyGroupLeaderRow: View, Equatable {
 
     // MARK: - Property
 
+    /// 파트장 정보
     let leader: StudyGroupMember
 
     // MARK: - Initializer
 
+    /// - Parameter leader: 표시할 파트장 정보
     init(leader: StudyGroupMember) {
         self.leader = leader
     }

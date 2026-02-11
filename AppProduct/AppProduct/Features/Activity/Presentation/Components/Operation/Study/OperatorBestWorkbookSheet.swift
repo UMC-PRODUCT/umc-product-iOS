@@ -7,13 +7,18 @@
 
 import SwiftUI
 
+/// 베스트 워크북 선정 시트
+///
+/// 추천사를 입력받아 베스트 워크북으로 선정합니다.
 struct OperatorBestWorkbookSheet: View {
     // MARK: - Property
 
     @FocusState private var focusedID: UUID?
     @State private var recommendation: String = ""
 
+    /// 선정 대상 스터디원
     let member: StudyMemberItem
+    /// 선정 완료 콜백 (추천사 전달)
     let onSelect: (String) -> Void
 
     fileprivate enum Constants {

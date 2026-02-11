@@ -9,6 +9,9 @@ import SwiftUI
 
 // MARK: - StudyGroupDetailCard
 
+/// 스터디 그룹 상세 카드
+///
+/// 그룹명, 파트, 파트장, 멤버 목록과 관리 액션을 표시합니다.
 struct StudyGroupCard: View, Equatable {
 
     // MARK: - Property
@@ -21,6 +24,12 @@ struct StudyGroupCard: View, Equatable {
 
     // MARK: - Initializer
 
+    /// - Parameters:
+    ///   - detail: 그룹 상세 정보
+    ///   - onEdit: 편집 버튼 탭 콜백
+    ///   - onDelete: 삭제 버튼 탭 콜백
+    ///   - onAddMember: 멤버 추가 버튼 탭 콜백
+    ///   - onSchedule: 일정 등록 버튼 탭 콜백
     init(
         detail: StudyGroupInfo,
         onEdit: (() -> Void)? = nil,
