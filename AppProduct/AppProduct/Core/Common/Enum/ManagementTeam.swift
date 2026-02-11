@@ -10,52 +10,80 @@ import SwiftUI
 
 /// 멤버 역할/권한 구분
 ///
-/// 계층 구조 (높은 → 낮은)
-/// 1. general (총괄단) - 최고 관리자
-/// 2. centralOperator (중앙운영진)
-/// 3. campusPresident (교내회장단)
-/// 4. campusPartLeader (교내파트장)
-/// 5. challenger (챌린저)
+/// 서버 API `roleType` 값과 1:1 매핑됩니다.
 ///
-/// - Note: 추후 역할 추가 시 case와 level만 조정하면 됩니다.
-enum ManagementTeam: String, CaseIterable, Comparable {
+/// 계층 구조 (높은 → 낮은)
+/// 1. superAdmin (총괄 관리자)
+/// 2. centralPresident / centralVicePresident (중앙 회장단)
+/// 3. centralOperatingTeamMember / centralEducationTeamMember (중앙 운영진)
+/// 4. chapterPresident (지부장)
+/// 5. schoolPresident / schoolVicePresident (교내 회장단)
+/// 6. schoolPartLeader (교내 파트장)
+/// 7. schoolEtcAdmin (교내 기타 운영진)
+/// 8. challenger (챌린저)
+enum ManagementTeam: String, CaseIterable, Codable, Comparable {
 
     // MARK: - Cases
 
-    case general = "총괄단"
-    case centralOperator = "중앙운영진"
-    case campusPresident = "교내회장단"
-    case campusPartLeader = "교내파트장"
-    case challenger = "챌린저"
+    case superAdmin = "SUPER_ADMIN"
+    case centralPresident = "CENTRAL_PRESIDENT"
+    case centralVicePresident = "CENTRAL_VICE_PRESIDENT"
+    case centralOperatingTeamMember = "CENTRAL_OPERATING_TEAM_MEMBER"
+    case centralEducationTeamMember = "CENTRAL_EDUCATION_TEAM_MEMBER"
+    case chapterPresident = "CHAPTER_PRESIDENT"
+    case schoolPresident = "SCHOOL_PRESIDENT"
+    case schoolVicePresident = "SCHOOL_VICE_PRESIDENT"
+    case schoolPartLeader = "SCHOOL_PART_LEADER"
+    case schoolEtcAdmin = "SCHOOL_ETC_ADMIN"
+    case challenger = "CHALLENGER"
 
-    // MARK: - Level (확장성)
+    // MARK: - Level
 
     /// 권한 레벨 (높을수록 상위 권한)
     var level: Int {
         switch self {
-        case .general: return 100
-        case .centralOperator: return 80
-        case .campusPresident: return 60
-        case .campusPartLeader: return 40
-        case .challenger: return 0
+        case .superAdmin:                   return 100
+        case .centralPresident:             return 90
+        case .centralVicePresident:         return 85
+        case .centralOperatingTeamMember:   return 80
+        case .centralEducationTeamMember:   return 80
+        case .chapterPresident:             return 70
+        case .schoolPresident:              return 60
+        case .schoolVicePresident:          return 55
+        case .schoolPartLeader:             return 40
+        case .schoolEtcAdmin:              return 30
+        case .challenger:                   return 0
         }
     }
 
     /// Admin 모드 접근 가능 여부
     var canAccessAdminMode: Bool {
-        level >= Self.campusPartLeader.level
+        level >= Self.schoolEtcAdmin.level
     }
 
     // MARK: - Comparable
 
-    /// 두 역할의 권한 레벨을 비교합니다.
-    ///
-    /// - Parameters:
-    ///   - lhs: 비교할 첫 번째 역할
-    ///   - rhs: 비교할 두 번째 역할
-    /// - Returns: lhs의 권한이 rhs보다 낮으면 true
     static func < (lhs: ManagementTeam, rhs: ManagementTeam) -> Bool {
         lhs.level < rhs.level
+    }
+
+    // MARK: - Display
+
+    /// 한글 표시명
+    var korean: String {
+        switch self {
+        case .superAdmin:                   return "총괄단"
+        case .centralPresident:             return "중앙 회장"
+        case .centralVicePresident:         return "중앙 부회장"
+        case .centralOperatingTeamMember:   return "중앙 운영팀"
+        case .centralEducationTeamMember:   return "중앙 교육팀"
+        case .chapterPresident:             return "지부장"
+        case .schoolPresident:              return "교내 회장"
+        case .schoolVicePresident:          return "교내 부회장"
+        case .schoolPartLeader:             return "교내 파트장"
+        case .schoolEtcAdmin:              return "교내 운영진"
+        case .challenger:                   return "챌린저"
+        }
     }
 
     // MARK: - UI Styling
@@ -63,46 +91,66 @@ enum ManagementTeam: String, CaseIterable, Comparable {
     /// 배지 아이콘
     var icon: String {
         switch self {
-        case .general: return "👑"
-        case .centralOperator: return "⭐️"
-        case .campusPresident: return "🏫"
-        case .campusPartLeader: return "🚩"
-        case .challenger: return ""
+        case .superAdmin:                                           return "👑"
+        case .centralPresident, .centralVicePresident:               return "⭐️"
+        case .centralOperatingTeamMember, .centralEducationTeamMember: return "⭐️"
+        case .chapterPresident:                                     return "🏛️"
+        case .schoolPresident, .schoolVicePresident:                 return "🏫"
+        case .schoolPartLeader, .schoolEtcAdmin:                    return "🚩"
+        case .challenger:                                           return ""
         }
     }
 
     /// 아이콘 포함 표시명
     var displayName: String {
-        icon.isEmpty ? rawValue : "\(icon) \(rawValue)"
+        icon.isEmpty ? korean : "\(icon) \(korean)"
     }
 
     var textColor: Color {
         switch self {
-        case .general: return .red100
-        case .centralOperator: return .indigo100
-        case .campusPresident: return .orange500
-        case .campusPartLeader: return .green500
-        case .challenger: return .clear
+        case .superAdmin:
+            return .red100
+        case .centralPresident, .centralVicePresident,
+             .centralOperatingTeamMember, .centralEducationTeamMember:
+            return .indigo100
+        case .chapterPresident, .schoolPresident, .schoolVicePresident:
+            return .orange500
+        case .schoolPartLeader, .schoolEtcAdmin:
+            return .green500
+        case .challenger:
+            return .clear
         }
     }
 
     var backgroundColor: Color {
         switch self {
-        case .general: return .red300
-        case .centralOperator: return .indigo400
-        case .campusPresident: return .orange100
-        case .campusPartLeader: return .green100
-        case .challenger: return .clear
+        case .superAdmin:
+            return .red300
+        case .centralPresident, .centralVicePresident,
+             .centralOperatingTeamMember, .centralEducationTeamMember:
+            return .indigo400
+        case .chapterPresident, .schoolPresident, .schoolVicePresident:
+            return .orange100
+        case .schoolPartLeader, .schoolEtcAdmin:
+            return .green100
+        case .challenger:
+            return .clear
         }
     }
 
     var borderColor: Color {
         switch self {
-        case .general: return .red500
-        case .centralOperator: return .indigo700
-        case .campusPresident: return .orange300
-        case .campusPartLeader: return .green300
-        case .challenger: return .clear
+        case .superAdmin:
+            return .red500
+        case .centralPresident, .centralVicePresident,
+             .centralOperatingTeamMember, .centralEducationTeamMember:
+            return .indigo700
+        case .chapterPresident, .schoolPresident, .schoolVicePresident:
+            return .orange300
+        case .schoolPartLeader, .schoolEtcAdmin:
+            return .green300
+        case .challenger:
+            return .clear
         }
     }
 }

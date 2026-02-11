@@ -12,4 +12,6 @@ import Foundation
 enum AppStorageKey {
     static let userFCMToken: String = "UserFCMToken"
     static let recentSearchPlaces: String = "recentSearchPlaces"
+    static let memeberRole: String = "memberRole"
+    static let challengerId: String = "challengerId"
 }

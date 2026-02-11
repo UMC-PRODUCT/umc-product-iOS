@@ -85,4 +85,39 @@ enum UMCPartType: Equatable, Hashable {
         /// iOS 네이티브 앱 개발 (Swift)
         case ios = "iOS"
     }
+
+    // MARK: - API 변환
+
+    /// 서버 API 쿼리 파라미터용 문자열
+    var apiValue: String {
+        switch self {
+        case .pm:                       return "PLAN"
+        case .design:                   return "DESIGN"
+        case .server(let type):
+            switch type {
+            case .spring:               return "SPRINGBOOT"
+            case .node:                 return "NODEJS"
+            }
+        case .front(let type):
+            switch type {
+            case .web:                  return "WEB"
+            case .android:              return "ANDROID"
+            case .ios:                  return "IOS"
+            }
+        }
+    }
+
+    /// 서버 API 문자열로부터 생성
+    init?(apiValue: String) {
+        switch apiValue {
+        case "PLAN":        self = .pm
+        case "DESIGN":      self = .design
+        case "SPRINGBOOT":  self = .server(type: .spring)
+        case "NODEJS":      self = .server(type: .node)
+        case "WEB":         self = .front(type: .web)
+        case "ANDROID":     self = .front(type: .android)
+        case "IOS":         self = .front(type: .ios)
+        default:            return nil
+        }
+    }
 }
