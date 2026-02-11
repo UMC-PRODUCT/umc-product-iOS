@@ -84,6 +84,14 @@ enum UMCPartType: Codable, Equatable, Hashable {
         }
     }
 
+    /// 모든 파트 조합 (Associated Value로 CaseIterable 불가하여 직접 정의)
+    static let allCases: [UMCPartType] = [
+        .pm, .design,
+        .server(type: .spring), .server(type: .node),
+        .front(type: .web), .front(type: .android),
+        .front(type: .ios)
+    ]
+
     // MARK: - Nested Types
 
     /// 서버 파트의 기술 스택을 정의하는 열거형입니다.

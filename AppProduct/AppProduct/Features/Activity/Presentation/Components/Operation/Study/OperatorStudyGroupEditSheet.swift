@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+/// 스터디 그룹 정보 수정 시트
+///
+/// 그룹 이름과 소속 파트를 수정할 수 있는 시트입니다.
 struct OperatorStudyGroupEditSheet: View {
     // MARK: - Property
 
@@ -14,20 +17,20 @@ struct OperatorStudyGroupEditSheet: View {
     @State private var name: String
     @State private var selectedPart: UMCPartType
 
+    /// 수정 대상 그룹 정보
     let detail: StudyGroupInfo
+    /// 저장 완료 콜백 (이름, 파트 전달)
     let onSave: (String, UMCPartType) -> Void
 
     fileprivate enum Constants {
-        static let allParts: [UMCPartType] = [
-            .pm, .design,
-            .server(type: .spring), .server(type: .node),
-            .front(type: .web), .front(type: .android),
-            .front(type: .ios)
-        ]
+        static let allParts: [UMCPartType] = UMCPartType.allCases
     }
 
     // MARK: - Initializer
 
+    /// - Parameters:
+    ///   - detail: 수정할 그룹 정보 (초기값으로 사용)
+    ///   - onSave: 저장 시 호출될 콜백
     init(
         detail: StudyGroupInfo,
         onSave: @escaping (String, UMCPartType) -> Void

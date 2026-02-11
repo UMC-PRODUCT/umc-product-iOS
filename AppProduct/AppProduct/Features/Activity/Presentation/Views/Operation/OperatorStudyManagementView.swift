@@ -24,6 +24,7 @@ struct OperatorStudyManagementView: View {
     }
 
     @State private var selectedTab: ManagementTab = .submission
+    @State private var showCreateView = false
 
     // MARK: - Constants
 
@@ -31,10 +32,12 @@ struct OperatorStudyManagementView: View {
         static let loadingPlaceholderHeight: CGFloat = 80
     }
 
+    /// 관리 화면 탭 구분
     private enum ManagementTab: Int, CaseIterable {
         case submission
         case groupManagement
 
+        /// 탭 표시 제목
         var title: String {
             switch self {
             case .submission: "제출 현황"
@@ -45,6 +48,9 @@ struct OperatorStudyManagementView: View {
 
     // MARK: - Initializer
 
+    /// - Parameters:
+    ///   - container: 의존성 주입 컨테이너
+    ///   - errorHandler: 전역 에러 핸들러
     init(container: DIContainer, errorHandler: ErrorHandler) {
         self.container = container
         self.errorHandler = errorHandler
@@ -99,7 +105,7 @@ struct OperatorStudyManagementView: View {
                 )
             } else {
                 ToolBarCollection.AddBtn {
-                    // 그룹 생성 함수 호출
+                    showCreateView = true
                 }
             }
         }
@@ -156,6 +162,16 @@ struct OperatorStudyManagementView: View {
                     )
                 }
             )
+        }
+        .navigationDestination(isPresented: $showCreateView) {
+            OperatorStudyGroupCreateView { name, part, leader, members in
+                viewModel.createGroup(
+                    name: name,
+                    part: part,
+                    leader: leader,
+                    members: members
+                )
+            }
         }
         .alertPrompt(item: $viewModel.alertPrompt)
     }
