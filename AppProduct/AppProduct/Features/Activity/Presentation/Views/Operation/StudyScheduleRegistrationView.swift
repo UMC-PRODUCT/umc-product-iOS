@@ -40,10 +40,10 @@ struct StudyScheduleRegistrationView: View {
             }
 
             Section {
-                locationField
+                PlaceSelectView(place: $viewModel.place)
             }
         }
-        .scrollDismissesKeyboard(.immediately)
+        .scrollDismissesKeyboard(.interactively)
         .navigation(
             naviTitle: .studyScheduleRegistration,
             displayMode: .inline
@@ -68,19 +68,6 @@ struct StudyScheduleRegistrationView: View {
         )
         .appFont(.body, color: .black)
         .submitLabel(.next)
-        .tint(.indigo500)
-    }
-
-    /// 장소 입력 필드
-    private var locationField: some View {
-        TextField(
-            "",
-            text: $viewModel.location,
-            prompt: Text("장소를 입력해주세요")
-                .foregroundStyle(.grey400)
-        )
-        .appFont(.body, color: .black)
-        .submitLabel(.done)
         .tint(.indigo500)
     }
 

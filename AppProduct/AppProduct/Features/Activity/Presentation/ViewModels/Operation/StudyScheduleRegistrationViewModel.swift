@@ -13,6 +13,9 @@ final class StudyScheduleRegistrationViewModel {
 
     // MARK: - Property
 
+    /// 선택된 장소
+    var place: PlaceSearchInfo = .init(name: "", address: "", coordinate: .init(latitude: 0.0, longitude: 0.0))
+    
     /// 스터디명 (초기값은 스터디 그룹 이름)
     var studyName: String
 
@@ -21,9 +24,6 @@ final class StudyScheduleRegistrationViewModel {
 
     /// 종료 일시
     var endDate: Date = .now.addingTimeInterval(7200)
-
-    /// 장소
-    var location: String = ""
 
     // MARK: - DatePicker Toggle State
 
@@ -37,7 +37,7 @@ final class StudyScheduleRegistrationViewModel {
     /// 등록 버튼 활성화 여부
     var canSubmit: Bool {
         !studyName.trimmingCharacters(in: .whitespaces).isEmpty
-            && !location.trimmingCharacters(in: .whitespaces).isEmpty
+            && !place.name.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     // MARK: - Init
