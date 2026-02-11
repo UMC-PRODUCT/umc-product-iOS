@@ -35,9 +35,9 @@ class MyPageViewModel {
             .kakao
         ],
         activityLogs: [
-            .init(part: .design, generation: 11, role: .campusPartLeader),
+            .init(part: .design, generation: 11, role: .centralOperatingTeamMember),
             .init(part: .pm, generation: 10, role: .challenger),
-            .init(part: .front(type: .ios), generation: 9, role: .campusPresident)
+            .init(part: .front(type: .ios), generation: 9, role: .centralOperatingTeamMember)
         ],
         profileLink: []
     ))
