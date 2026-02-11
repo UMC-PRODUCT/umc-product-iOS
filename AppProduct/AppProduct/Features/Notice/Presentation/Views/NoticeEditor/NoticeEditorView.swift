@@ -183,7 +183,7 @@ struct NoticeEditorView: View {
         ScrollView(.horizontal) {
             HStack {
                 ForEach(viewModel.noticeImages, id: \.id) { item in
-                    AttachedImageCard(
+                    ImageAttachmentCard(
                         id: item.id,
                         imageData: item.imageData,
                         isLoading: item.isLoading,
@@ -218,7 +218,7 @@ struct NoticeEditorView: View {
         Button {
             viewModel.editVote()
         } label: {
-            VotingEditorCard(formData: $viewModel.voteFormData)
+            VoteAttachmentCard(formData: $viewModel.voteFormData)
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .buttonStyle(.plain)
