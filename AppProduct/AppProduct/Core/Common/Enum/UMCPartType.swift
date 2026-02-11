@@ -77,7 +77,7 @@ enum UMCPartType: Codable, Equatable, Hashable {
             }
         case .front(let type):
             switch type {
-            case .web:     return .indigo
+            case .web:     return .brown
             case .android: return .teal
             case .ios:     return .orange
             }
