@@ -19,5 +19,7 @@ struct CommunityItemModel: Equatable, Identifiable, Hashable {
     let createdAt: Date
     let likeCount: Int
     let commentCount: Int
+    let scrapCount: Int
     var isLiked: Bool = false
+    var isScrapped: Bool = false
 }

@@ -52,7 +52,8 @@ final class MockCommunityRepository: CommunityRepositoryProtocol {
             part: .front(type: .ios),
             createdAt: Date(),
             likeCount: 0,
-            commentCount: 0
+            commentCount: 0,
+            scrapCount: 0
         )
     }
     
@@ -147,7 +148,8 @@ extension MockCommunityRepository {
             part: .server(type: .spring),
             createdAt: Date(),
             likeCount: 5,
-            commentCount: 3
+            commentCount: 3,
+            scrapCount: 10
         ),
         .init(
             userId: 2,
@@ -159,7 +161,8 @@ extension MockCommunityRepository {
             part: .front(type: .web),
             createdAt: Date(),
             likeCount: 12,
-            commentCount: 8
+            commentCount: 8,
+            scrapCount: 20
         ),
         .init(
             userId: 3,
@@ -171,7 +174,8 @@ extension MockCommunityRepository {
             part: .front(type: .web),
             createdAt: Date(),
             likeCount: 23,
-            commentCount: 15
+            commentCount: 15,
+            scrapCount: 48
         ),
     ]
     

@@ -12,6 +12,7 @@ struct CommunityPostCard: View {
 
     private let model: CommunityItemModel
     @State private var isLiked: Bool
+    @State private var isScrapped: Bool
 
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
@@ -26,6 +27,7 @@ struct CommunityPostCard: View {
     init(model: CommunityItemModel) {
         self.model = model
         self._isLiked = State(initialValue: model.isLiked)
+        self._isScrapped = State(initialValue: model.isScrapped)
     }
 
     // MARK: - Body
@@ -95,8 +97,9 @@ struct CommunityPostCard: View {
                 isLiked.toggle()
                 // TODO: 좋아요 API
             }
-            makeButton(type: .comment, isSelected: false) {
-                // TODO: 댓글
+            makeButton(type: .scrap, isSelected: isScrapped) {
+                isScrapped.toggle()
+                // TODO: 스크랩 API
             }
         }
     }
@@ -107,7 +110,7 @@ struct CommunityPostCard: View {
         let count: Int = {
             switch type {
             case .like: return model.likeCount
-            case .comment: return model.commentCount
+            case .scrap: return model.scrapCount
             }
         }()
 
