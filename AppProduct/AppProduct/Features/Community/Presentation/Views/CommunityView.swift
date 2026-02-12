@@ -38,7 +38,10 @@ struct CommunityView: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
+        NavigationStack(path: Binding(
+            get: { pathStore.communityPath },
+            set: { pathStore.communityPath = $0 }
+        )) {
             if let vm = viewModel {
                 switch vm.selectedMenu {
                 case .all, .question, .party:
@@ -77,6 +80,9 @@ struct CommunityView: View {
                     itemIcon: { $0.icon }
                 )
             }
+        }
+        .navigationDestination(for: NavigationDestination.self) { destination in
+            NavigationRoutingView(destination: destination)
         }
     }
 
