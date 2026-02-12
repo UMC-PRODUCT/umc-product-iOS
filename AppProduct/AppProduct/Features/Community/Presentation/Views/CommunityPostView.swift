@@ -83,12 +83,9 @@ struct CommunityPostView: View {
         .navigation(naviTitle: .communityPost, displayMode: .inline)
         .toolbar {
             if let vm = viewModel {
-                ToolBarCollection.CommunityPostDoneBtn(
-                    isEnabled: vm.isValid,
-                    action: {
-                        // TODO: 글 작성 API 연결
-                    }
-                )
+                ToolBarCollection.ConfirmBtn(action: {
+                    // TODO: 게시글 작성 API
+                }, disable: vm.isValid)
             }
         }
     }

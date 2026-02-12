@@ -70,6 +70,18 @@ struct CommunityDetailView: View {
             }
             await viewModel?.fetchComments()
         }
+        .toolbar {
+            if viewModel == nil {
+                ToolBarCollection.ToolbarTrailingMenu(actions: [
+                    .init(title: "수정하기", icon: "pencil") {
+                        // TODO: 수정 API
+                    },
+                    .init(title: "삭제하기", icon: "trash", role: .destructive) {
+                        // TODO: 삭제 API
+                    }
+                ])
+            }
+        }
     }
 
     // MARK: - Comment

@@ -13,8 +13,8 @@ struct CommunityView: View {
     @Environment(\.di) private var di
     @State private var viewModel: CommunityViewModel?
     
-    private var router: NavigationRouter {
-        di.resolve(NavigationRouter.self)
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
     }
     
     private var communityProvider: CommunityUseCaseProviding {
@@ -24,7 +24,10 @@ struct CommunityView: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
+        NavigationStack(path: Binding(
+            get: { pathStore.communityPath },
+            set: { pathStore.communityPath = $0 }
+        )) {
             if let vm = viewModel {
                 switch vm.selectedMenu {
                 case .all, .question, .party:
@@ -61,6 +64,9 @@ struct CommunityView: View {
                 )
             }
         }
+        .navigationDestination(for: NavigationDestination.self) { destination in
+            NavigationRoutingView(destination: destination)
+        }
     }
 
     private func contentSection(vm: CommunityViewModel) -> some View {
@@ -94,7 +100,7 @@ struct CommunityView: View {
             } else {
                 List(vm.filteredItems, rowContent: { item in
                     CommunityItem(model: item) {
-                        router.push(to: .community(.detail(postItem: item)))
+                        pathStore.communityPath.append(.community(.detail(postItem: item)))
                     }
                     .equatable()
                     .listRowBackground(Color.clear)
