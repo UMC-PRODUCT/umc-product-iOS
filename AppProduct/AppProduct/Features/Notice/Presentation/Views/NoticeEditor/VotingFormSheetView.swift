@@ -165,7 +165,12 @@ struct VotingFormSheetView: View, Equatable {
                 
                 DatePicker(
                     "",
-                    selection: $formData.startDate,
+                    selection: Binding(
+                        get: { formData.startDate },
+                        set: { newDate in
+                            formData.startDate = Calendar.current.startOfDay(for: newDate)
+                        }
+                    ),
                     in: Date()...,
                     displayedComponents: [.date]
                 )
@@ -180,7 +185,14 @@ struct VotingFormSheetView: View, Equatable {
                 
                 DatePicker(
                     "",
-                    selection: $formData.endDate,
+                    selection: Binding(
+                        get: { formData.endDate },
+                        set: { newDate in
+                            let calendar = Calendar.current
+                            let startOfDay = calendar.startOfDay(for: newDate)
+                            formData.endDate = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: startOfDay) ?? newDate
+                        }
+                    ),
                     in: Calendar.current.date(byAdding: .day, value: 1, to: formData.startDate)!...,
                     displayedComponents: [.date]
                 )
