@@ -58,16 +58,7 @@ struct MemberImagePresenter: View, Equatable {
     
     // MARK: - Body
     var body: some View {
-        Group {
-            if memberManagementItem.profile != nil {
-                /// !!! - url 이미지 처리
-                Image(systemName: "person.fill")
-                    .resizable()
-            } else {
-                Circle().fill(.grey300)
-            }
-        }
-        .frame(width: Constants.imageSize.width, height: Constants.imageSize.height)
+        RemoteImage(urlString: memberManagementItem.profile ?? "", size: Constants.imageSize)
         .clipShape(Circle())
         .aspectRatio(contentMode: .fit)
         .overlay(alignment: .topTrailing) {

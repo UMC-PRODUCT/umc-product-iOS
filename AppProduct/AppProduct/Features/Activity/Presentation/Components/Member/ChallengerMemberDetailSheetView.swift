@@ -17,6 +17,7 @@ struct ChallengerMemberDetailSheetView: View {
         static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
         static let boxPadding: EdgeInsets = .init(top: 12, leading: 0, bottom: 12, trailing: 0)
         static let listPadding: EdgeInsets = .init(top: 12, leading: 12, bottom: 12, trailing: 12)
+        static let profileSize: CGSize = .init(width: 60, height: 60)
         
         static let baseHeight: CGFloat = 340  // 기본 정보 영역
         static let emptyRecordHeight: CGFloat = 150 // 빈 상태 뷰 높이
@@ -105,7 +106,7 @@ struct ChallengerMemberDetailSheetView: View {
     /// 멤버 기본 정보
     private var memberInfoView: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
-            Circle().fill(.white).frame(width: 60)
+            RemoteImage(urlString: member.profile ?? "", size: Constants.profileSize)
             
             HStack (spacing: DefaultSpacing.spacing8) {
                 Text(member.name)
