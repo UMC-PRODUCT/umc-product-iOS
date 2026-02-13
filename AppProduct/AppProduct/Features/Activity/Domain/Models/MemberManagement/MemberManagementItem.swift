@@ -25,6 +25,9 @@ struct MemberManagementItem: Identifiable, Equatable {
     /// 멤버 이름
     let name: String
     
+    /// 멤버 닉네임
+    let nickname: String
+    
     /// 기수 정보 (예: "9기")
     let generation: String
     

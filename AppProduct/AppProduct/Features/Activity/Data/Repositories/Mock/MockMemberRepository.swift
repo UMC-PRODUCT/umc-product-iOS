@@ -15,6 +15,7 @@ final class MockMemberRepository: MemberRepositoryProtocol {
             .init(
                 profile: nil,
                 name: "이예지",
+                nickname: "소피",
                 generation: "9기",
                 position: "Part Leader",
                 part: .front(type: .ios),
@@ -28,6 +29,7 @@ final class MockMemberRepository: MemberRepositoryProtocol {
             .init(
                 profile: nil,
                 name: "이예지",
+                nickname: "소피",
                 generation: "9기",
                 position: "Part Leader",
                 part: .front(type: .ios),
@@ -41,6 +43,7 @@ final class MockMemberRepository: MemberRepositoryProtocol {
             .init(
                 profile: nil,
                 name: "김철수",
+                nickname: "철수",
                 generation: "9기",
                 position: "Member",
                 part: .front(type: .android),
@@ -54,6 +57,7 @@ final class MockMemberRepository: MemberRepositoryProtocol {
             .init(
                 profile: nil,
                 name: "박영희",
+                nickname: "영희",
                 generation: "9기",
                 position: "Member",
                 part: .server(type: .spring),
@@ -67,6 +71,7 @@ final class MockMemberRepository: MemberRepositoryProtocol {
             .init(
                 profile: nil,
                 name: "최민수",
+                nickname: "민수",
                 generation: "9기",
                 position: "Member",
                 part: .front(type: .web),
@@ -80,6 +85,7 @@ final class MockMemberRepository: MemberRepositoryProtocol {
             .init(
                 profile: nil,
                 name: "정다은",
+                nickname: "다은",
                 generation: "9기",
                 position: "Member",
                 part: .design,
@@ -93,6 +99,7 @@ final class MockMemberRepository: MemberRepositoryProtocol {
             .init(
                 profile: nil,
                 name: "강호진",
+                nickname: "호진",
                 generation: "9기",
                 position: "Member",
                 part: .pm,
@@ -106,6 +113,7 @@ final class MockMemberRepository: MemberRepositoryProtocol {
             .init(
                 profile: nil,
                 name: "이신입",
+                nickname: "신입",
                 generation: "9기",
                 position: "Member",
                 part: .front(type: .ios),

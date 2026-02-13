@@ -29,6 +29,7 @@ struct CoreMemberManagementList: View {
             // 멤버 텍스트 정보 (이름, 파트)
             CoreMemberTextPresenter(
                 name: memberManagementItem.name,
+                nickname: memberManagementItem.nickname,
                 part: memberManagementItem.generation
             )
             
@@ -48,12 +49,15 @@ struct CoreMemberTextPresenter: View {
     /// 멤버 이름
     let name: String
     
+    /// 멤버 닉네임
+    let nickname: String
+    
     /// 소속 파트
     let part: String
     
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            Text(name)
+            Text("\(name)/\(nickname)")
                 .appFont(.calloutEmphasis, color: .black)
             
             Text(part)
@@ -94,12 +98,6 @@ struct ManagementTeamBadgePresenter: View {
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
     VStack(spacing: 4) {
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
-        
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
-        
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
-        
-        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
+        CoreMemberManagementList(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", nickname: "소피", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
     }
 }

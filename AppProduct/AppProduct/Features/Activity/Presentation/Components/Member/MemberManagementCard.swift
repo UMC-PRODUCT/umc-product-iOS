@@ -218,13 +218,9 @@ private struct MemberBadgePresenter: View, Equatable {
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
     VStack {
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "8기", position: "Challenger", part: .front(type: .ios), penalty: 0, badge: true, managementTeam: .challenger, attendanceRecords: []))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", nickname: "소피", generation: "8기", position: "Challenger", part: .front(type: .ios), penalty: 0, badge: true, managementTeam: .challenger, attendanceRecords: []))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "8기", position: "Challenger", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .challenger, attendanceRecords: []))
-        
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Challenger", part: .server(type: .spring), penalty: 1.0, badge: true, managementTeam: .challenger, attendanceRecords: []))
-        
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", generation: "9기", position: "Part Leader", part: .front(type: .ios), penalty: 1.0, badge: false, managementTeam: .schoolPartLeader, attendanceRecords: []))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", nickname: "소피", generation: "8기", position: "Challenger", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .challenger, attendanceRecords: []))
         
     }
 }
