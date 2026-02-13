@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftData
 
 // MARK: - DIContainer 사용 예시
 /// DIContainer는 의존성 주입(Dependency Injection)을 관리하는 컨테이너입니다.
@@ -117,7 +118,10 @@ final class DIContainer {
 extension DIContainer {
     
     /// 앱에서 사용하는 모든 의존성을 등록한 DIContainer를 반환합니다.
-    static func configured() -> DIContainer {
+    /// - Parameter modelContext: SwiftData ModelContext (CloudKit 저장소용)
+    static func configured(
+        modelContext: ModelContext
+    ) -> DIContainer {
         let container = DIContainer()
         container.register(PathStore.self) { PathStore() }
         container.register(NavigationRouter.self) { NavigationRouter() }
@@ -176,15 +180,39 @@ extension DIContainer {
                 tokenStore: container.resolve(TokenStore.self)
             )
         }
-
-        // MARK: - Global UseCase Provider (Feature 간 접근용)
-        container.register(UsecaseProviding.self) {
-            UseCaseProvider(
-                activity: container.resolve(
-                    ActivityUseCaseProviding.self
+        
+        // MARK: - Home Feature
+        container.register(HomeRepositoryProtocol.self) {
+            HomeRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(ScheduleRepositoryProtocol.self) {
+            ScheduleRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(ChallengerGenRepositoryProtocol.self) {
+            ChallengerGenRepository(modelContext: modelContext)
+        }
+        container.register(ChallengerSearchRepositoryProtocol.self) {
+            ChallengerSearchRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(HomeUseCaseProviding.self) {
+            HomeUseCaseProvider(
+                homeRepository: container.resolve(
+                    HomeRepositoryProtocol.self
                 ),
-                auth: container.resolve(
-                    AuthUseCaseProviding.self
+                genRepository: container.resolve(
+                    ChallengerGenRepositoryProtocol.self
+                ),
+                scheduleRepository: container.resolve(
+                    ScheduleRepositoryProtocol.self
+                ),
+                challengerSearchRepository: container.resolve(
+                    ChallengerSearchRepositoryProtocol.self
                 )
             )
         }

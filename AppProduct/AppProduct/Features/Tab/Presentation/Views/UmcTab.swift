@@ -50,7 +50,7 @@ struct UmcTab: View {
     private func tabView(_ tab: TabCase) -> some View {
         switch tab {
         case .home:
-            HomeView()
+            HomeView(container: di)
         case .notice:
             NoticeView()
         case .activity:

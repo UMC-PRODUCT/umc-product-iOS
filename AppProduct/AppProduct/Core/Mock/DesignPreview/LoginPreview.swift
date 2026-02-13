@@ -107,8 +107,9 @@ private struct PreviewFetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol {
 }
 
 #Preview("홈") {
+    @Previewable @Environment(\.di) var di
     NavigationStack {
-        HomeView()
+        HomeView(container: di)
     }
     .environment(DIContainer())
     .environment(ErrorHandler())

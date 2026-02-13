@@ -7,12 +7,22 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
 #if DEBUG
 struct MissionPreviewData {
     
     static let errorHandler = ErrorHandler()
-    static let container = DIContainer.configured()
+    static let container: DIContainer = {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let modelContainer = try! ModelContainer(
+            for: PenaltyRecord.self, NoticeHistoryData.self,
+            configurations: config
+        )
+        return DIContainer.configured(
+            modelContext: modelContainer.mainContext
+        )
+    }()
 
     // MARK: - Single Mission
 

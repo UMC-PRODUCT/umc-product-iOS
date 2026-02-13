@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// 패널티 정보 아이템
-struct PenaltyInfoItem: Equatable {
+struct PenaltyInfoItem: Equatable, Codable {
     /// 패널티 사유 (예: 지각, 결석 등)
     let reason: String
     /// 패널티 발생 날짜 (YYYY.MM.DD)

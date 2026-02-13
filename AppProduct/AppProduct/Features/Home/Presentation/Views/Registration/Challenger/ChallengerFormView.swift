@@ -17,8 +17,8 @@ struct ChallengerFormView: View {
     /// 표시할 챌린저 목록 바인딩
     @Binding var challenger: [ChallengerInfo]
     
-    /// 현재 선택된 챌린저들의 ID 집합 (체크박스 모드일 때 사용)
-    @Binding var selectedIds: Set<UUID>
+    /// 현재 선택된 챌린저들의 memberId 집합 (체크박스 모드일 때 사용)
+    @Binding var selectedIds: Set<Int>
     
     /// 삭제 기능 활성화 여부 (true일 경우 스와이프로 삭제 가능)
     let isDeletAction: Bool
@@ -28,6 +28,9 @@ struct ChallengerFormView: View {
     
     /// 챌린저 항목 탭 액션 클로저
     let tap: ((ChallengerInfo) -> Void)?
+
+    /// 마지막 아이템이 화면에 나타났을 때 호출 (페이지네이션용)
+    let onBottomReached: (() -> Void)?
     
     // MARK: - Init
     
@@ -36,20 +39,23 @@ struct ChallengerFormView: View {
     ///   - challenger: 챌린저 목록 바인딩
     ///   - isDeletAction: 삭제 기능 활성화 여부 (기본값: false)
     ///   - showCheckBox: 체크박스 표시 여부 (기본값: false)
-    ///   - selectedIds: 선택된 ID 집합 바인딩 (기본값: 빈 집합)
+    ///   - selectedIds: 선택된 memberId 집합 바인딩 (기본값: 빈 집합)
     ///   - tap: 탭 액션 클로저 (기본값: nil)
+    ///   - onBottomReached: 리스트 마지막 아이템 도달 시 호출되는 클로저 (페이지네이션용, 기본값: nil)
     init(
         challenger: Binding<[ChallengerInfo]>,
         isDeletAction: Bool = false,
         showCheckBox: Bool = false,
-        selectedIds: Binding<Set<UUID>> = .constant([]),
-        tap: ((ChallengerInfo) -> Void)? = nil
+        selectedIds: Binding<Set<Int>> = .constant([]),
+        tap: ((ChallengerInfo) -> Void)? = nil,
+        onBottomReached: (() -> Void)? = nil
     ) {
         self._challenger = challenger
         self.isDeletAction = isDeletAction
         self.showCheckBox = showCheckBox
         self._selectedIds = selectedIds
         self.tap = tap
+        self.onBottomReached = onBottomReached
     }
     
     // MARK: - Body
@@ -73,12 +79,18 @@ struct ChallengerFormView: View {
                 ChallengerSearchCard(
                     participant: participant,
                     showCheck: showCheckBox,
-                    isSelected: selectedIds.contains(participant.id)
+                    isSelected: selectedIds.contains(participant.memberId)
                 )
                 .equatable()
                 .contentShape(Rectangle()) // 터치 영역 확장
                 .onTapGesture {
                     tap?(participant)
+                }
+                .onAppear {
+                    // 마지막 아이템 도달 시 페이지네이션 트리거
+                    if participant.memberId == challenger.last?.memberId {
+                        onBottomReached?()
+                    }
                 }
             }
             

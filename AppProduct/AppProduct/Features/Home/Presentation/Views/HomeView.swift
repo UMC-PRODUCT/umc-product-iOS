@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ClockKit
 
 /// 홈 화면의 메인 뷰입니다.
 ///
@@ -20,7 +21,7 @@ struct HomeView: View {
     @Environment(ErrorHandler.self) var errorHandler
 
     /// 홈 화면의 비즈니스 로직을 담당하는 뷰 모델
-    @State var viewModel = HomeViewModel()
+    @State private var viewModel: HomeViewModel
 
     /// 캘린더에서 선택된 날짜 (기본값: 현재 날짜)
     @State var selectedDate: Date = .init()
@@ -32,10 +33,12 @@ struct HomeView: View {
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
-
-    /// 네비게이션 라우터 (화면 이동 담당)
-    private var router: NavigationRouter {
-        di.resolve(NavigationRouter.self)
+    
+    // MARK: - Init
+    init(container: DIContainer) {
+        _viewModel = State(
+            initialValue: HomeViewModel(container: container)
+        )
     }
     
     // MARK: - Constants
@@ -77,6 +80,9 @@ struct HomeView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            .task {
+                await viewModel.fetchAll()
+            }
         }
     }
     
@@ -86,11 +92,7 @@ struct HomeView: View {
     @ViewBuilder
     private var seasonCard: some View {
         switch viewModel.seasonData {
-        case .idle:
-            Color.clear.task {
-                print("hello")
-            }
-        case .loading:
+        case .idle, .loading:
             LoadingView(.home(.seasonLoading))
         case .loaded(let seasonData):
             seasonLoaded(seasonData)
@@ -114,11 +116,7 @@ struct HomeView: View {
     @ViewBuilder
     private var generations: some View {
         switch viewModel.generationData {
-        case .idle:
-            Color.clear.task {
-                print("hello")
-            }
-        case .loading:
+        case .idle, .loading:
             LoadingView(.home(.penaltyLoading))
         case .loaded(let generation):
             generationLoaded(generation)
@@ -143,16 +141,23 @@ struct HomeView: View {
                          scheduledDates: viewModel.scheduleDates
             )
             .equatable()
-            
+
             scheduleList
         })
-        
+        .onChange(of: currentMonth) { _, newMonth in
+            let calendar = Calendar.current
+            let year = calendar.component(.year, from: newMonth)
+            let month = calendar.component(.month, from: newMonth)
+            Task {
+                await viewModel.fetchSchedules(year: year, month: month)
+            }
+        }
     }
     
     /// 선택된 날짜의 상세 일정 리스트 표시
     @ViewBuilder
     private var scheduleList: some View {
-        let schedules = viewModel.getShedules(selectedDate)
+        let schedules = viewModel.getSchedules(selectedDate)
         
         if schedules.isEmpty {
             emptySchedule
@@ -195,11 +200,7 @@ struct HomeView: View {
     @ViewBuilder
     private var sectionContent: some View {
         switch viewModel.recentNoticeData {
-        case .idle:
-            Color.clear.task {
-                print("hello")
-            }
-        case .loading:
+        case .idle, .loading:
             LoadingView(.home(.recentNoticeLoading))
         case .loaded(let recentNoticeData):
             recentView(recentNoticeData)
@@ -230,8 +231,9 @@ struct HomeView: View {
 }
 
 #Preview {
+    @Previewable @Environment(\.di) var di
     NavigationStack {
-        HomeView()
+        HomeView(container: di)
     }
     .environment(DIContainer())
     .environment(ErrorHandler())

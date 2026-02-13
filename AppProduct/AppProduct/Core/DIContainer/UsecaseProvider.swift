@@ -13,6 +13,7 @@ import Foundation
 protocol UsecaseProviding {
     var activity: ActivityUseCaseProviding { get }
     var auth: AuthUseCaseProviding { get }
+    var home: HomeUseCaseProviding { get }
 }
 
 /// UseCase Provider 구현
@@ -24,12 +25,16 @@ final class UseCaseProvider: UsecaseProviding {
     let activity: ActivityUseCaseProviding
     /// Auth Feature UseCase Provider
     let auth: AuthUseCaseProviding
+    /// Home Feature UseCase Provider
+    let home: HomeUseCaseProviding
 
     init(
         activity: ActivityUseCaseProviding,
-        auth: AuthUseCaseProviding
+        auth: AuthUseCaseProviding,
+        home: HomeUseCaseProviding
     ) {
         self.activity = activity
         self.auth = auth
+        self.home = home
     }
 }

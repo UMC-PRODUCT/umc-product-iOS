@@ -348,6 +348,7 @@ fileprivate struct CardInfo: View {
 #Preview(traits: .sizeThatFitsLayout) {
     PenaltyCard(generations: [
         GenerationData(
+            gisuId: 0,
             gen: 11,
             penaltyPoint: 3,
             penaltyLogs: [
@@ -357,6 +358,7 @@ fileprivate struct CardInfo: View {
             ]
         ),
         GenerationData(
+            gisuId: 0,
             gen: 12,
             penaltyPoint: 1,
             penaltyLogs: [
@@ -364,6 +366,7 @@ fileprivate struct CardInfo: View {
             ]
         ),
         GenerationData(
+            gisuId: 0,
             gen: 13,
             penaltyPoint: 0,
             penaltyLogs: []

@@ -25,10 +25,12 @@ struct SearchChallengerView: View {
     // MARK: - Init
     
     /// 초기화 메서드
-    /// - Parameter selectedChallengers: 초기 선택된 챌린저 목록 바인딩
-    init(selectedChallengers: Binding<[ChallengerInfo]>) {
+    /// - Parameters:
+    ///   - container: 의존성 주입 컨테이너
+    ///   - selectedChallengers: 초기 선택된 챌린저 목록 바인딩
+    init(container: DIContainer, selectedChallengers: Binding<[ChallengerInfo]>) {
         self._selectedChallengers = selectedChallengers
-        self._viewModel = .init(initialValue: .init())
+        self._viewModel = .init(initialValue: .init(container: container))
     }
     
     // MARK: - Body
@@ -36,14 +38,17 @@ struct SearchChallengerView: View {
     var body: some View {
         Group {
             // 검색 결과 유무에 따른 분기 처리
-            if filteredChallengers.isEmpty {
+            if viewModel.allChallengers.isEmpty {
                 emptyResultView
             } else {
                 ChallengerFormView(
-                    challenger: .constant(filteredChallengers),
+                    challenger: .constant(viewModel.allChallengers),
                     showCheckBox: true,
-                    selectedIds: $viewModel.selectedChallengerIds,
-                    tap: toggleSelection
+                    selectedIds: $viewModel.selectedMemberIds,
+                    tap: toggleSelection,
+                    onBottomReached: {
+                        Task { await viewModel.fetchNextPage() }
+                    }
                 )
             }
         }
@@ -51,10 +56,13 @@ struct SearchChallengerView: View {
         .searchPresentationToolbarBehavior(.avoidHidingContent)
         .navigation(naviTitle: .searchChallenger, displayMode: .inline)
         .toolbar(content: {
+            // FIXME: - 수정 사항
+            /*
             ToolBarCollection.LeadingButton(image: "doc.text.fill", action: {
                 // CSV 파일 가져오기 모달 표시
                 viewModel.showCSVImporter = true
             })
+             */
             ToolBarCollection.ConfirmBtn(action: {
                 confirmSelection()
             })
@@ -74,29 +82,15 @@ struct SearchChallengerView: View {
         .alertPrompt(item: $viewModel.alertPrompt)
         .task {
             initializeSelectedIds()
+            await viewModel.fetchChallengers()
+        }
+        .onChange(of: viewModel.searchText) {
+            Task { await viewModel.fetchChallengers() }
         }
     }
     
     // MARK: - Computed Properties
-    
-    /// 검색어에 따라 필터링된 챌린저 목록
-    ///
-    /// 검색어(searchText)가 비어있으면 전체 목록을 반환합니다.
-    private var filteredChallengers: [ChallengerInfo] {
-        if viewModel.searchText.isEmpty {
-            return viewModel.allChallengers
-        }
-        
-        // 검색어가 포함된 챌린저만 필터링 (대소문자 무시)
-        return viewModel.allChallengers.filter { participant in
-            participant.name.localizedCaseInsensitiveContains(viewModel.searchText) ||       // 이름 검색
-            participant.nickname.localizedCaseInsensitiveContains(viewModel.searchText) ||   // 닉네임 검색
-            participant.schoolName.localizedCaseInsensitiveContains(viewModel.searchText) || // 학교명 검색
-            participant.part.name.localizedCaseInsensitiveContains(viewModel.searchText) ||  // 파트명 검색
-            "\(participant.gen)".contains(viewModel.searchText)                              // 기수 검색
-        }
-    }
-    
+
     /// 검색 결과가 없을 때 표시되는 뷰
     private var emptyResultView: some View {
         ContentUnavailableView(
@@ -108,23 +102,35 @@ struct SearchChallengerView: View {
     
     // MARK: - Actions
     
-    /// 챌린저 선택/해제 토글
+    /// 챌린저 선택/해제 토글 (memberId 기반)
+    ///
+    /// 선택 시 `selectedChallengersMap`에 보관하여 검색 결과가 바뀌어도 선택 정보 유지
     private func toggleSelection(participant: ChallengerInfo) {
-        if viewModel.selectedChallengerIds.contains(participant.id) {
-            viewModel.selectedChallengerIds.remove(participant.id)
+        let id = participant.memberId
+        if viewModel.selectedMemberIds.contains(id) {
+            viewModel.selectedMemberIds.remove(id)
+            viewModel.selectedChallengersMap.removeValue(forKey: id)
         } else {
-            viewModel.selectedChallengerIds.insert(participant.id)
+            viewModel.selectedMemberIds.insert(id)
+            viewModel.selectedChallengersMap[id] = participant
         }
     }
-    
+
     /// 선택 확정 및 상위 뷰에 전달
+    ///
+    /// `selectedChallengersMap`에서 최종 선택된 챌린저 목록을 추출합니다.
     private func confirmSelection() {
-        selectedChallengers = viewModel.allChallengers.filter { viewModel.selectedChallengerIds.contains($0.id) }
+        selectedChallengers = Array(viewModel.selectedChallengersMap.values)
     }
-    
-    /// 기존에 선택되어 있던 챌린저들을 selectedIds에 초기화
+
+    /// 기존에 선택되어 있던 챌린저들을 memberId 기반으로 초기화
+    ///
+    /// 상위 뷰에서 전달받은 `selectedChallengers`를 ViewModel의 선택 상태에 반영합니다.
     private func initializeSelectedIds() {
-        viewModel.selectedChallengerIds = Set(selectedChallengers.map { $0.id })
+        viewModel.selectedMemberIds = Set(selectedChallengers.map(\.memberId))
+        for challenger in selectedChallengers {
+            viewModel.selectedChallengersMap[challenger.memberId] = challenger
+        }
     }
     
     /// CSV 파일 가져오기 완료 후 처리 액션
