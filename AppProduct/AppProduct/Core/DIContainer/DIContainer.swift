@@ -102,6 +102,22 @@ final class DIContainer {
         cachedInstances[key] = instance
         return instance
     }
+
+    /// 등록 여부를 확인하며 의존성을 안전하게 조회합니다.
+    ///
+    /// - Returns: 등록된 경우 인스턴스, 미등록 시 nil
+    func resolveIfRegistered<T>(_ type: T.Type) -> T? {
+        let key = ObjectIdentifier(type)
+        if let cached = cachedInstances[key] as? T {
+            return cached
+        }
+        guard let factory = factories[key] as? () -> T else {
+            return nil
+        }
+        let instance = factory()
+        cachedInstances[key] = instance
+        return instance
+    }
     
     // MARK: - Cache Management
     func resetCache() {

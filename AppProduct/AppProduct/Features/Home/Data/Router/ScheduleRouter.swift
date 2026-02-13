@@ -15,6 +15,10 @@ import Moya
 enum ScheduleRouter {
     /// 출석 포함 일정 생성
     case postGenerateSchedule(schedule: GenerateScheduleRequetDTO)
+    /// 일정 수정
+    case patchUpdateSchedule(scheduleId: Int, schedule: UpdateScheduleRequestDTO)
+    /// 일정 + 출석부 통합 삭제
+    case deleteScheduleWithAttendance(scheduleId: Int)
 }
 
 extension ScheduleRouter: BaseTargetType {
@@ -25,6 +29,10 @@ extension ScheduleRouter: BaseTargetType {
         switch self {
         case .postGenerateSchedule:
             return "/api/v1/schedules/with-attendance"
+        case .patchUpdateSchedule(let scheduleId, _):
+            return "/api/v1/schedules/\(scheduleId)"
+        case .deleteScheduleWithAttendance(let scheduleId):
+            return "/api/v1/schedules/\(scheduleId)/with-attendance"
         }
     }
 
@@ -34,6 +42,10 @@ extension ScheduleRouter: BaseTargetType {
         switch self {
         case .postGenerateSchedule:
             return .post
+        case .patchUpdateSchedule:
+            return .patch
+        case .deleteScheduleWithAttendance:
+            return .delete
         }
     }
 
@@ -43,6 +55,10 @@ extension ScheduleRouter: BaseTargetType {
         switch self {
         case .postGenerateSchedule(let schedule):
             return .requestJSONEncodable(schedule)
+        case .patchUpdateSchedule(_, let schedule):
+            return .requestJSONEncodable(schedule)
+        case .deleteScheduleWithAttendance:
+            return .requestPlain
         }
     }
 }

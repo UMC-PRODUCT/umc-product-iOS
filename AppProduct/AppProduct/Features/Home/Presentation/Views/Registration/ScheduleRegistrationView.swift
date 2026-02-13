@@ -12,94 +12,164 @@ import SwiftUI
 /// 새로운 일정을 생성하거나 기존 일정을 편집할 때 사용되는 화면입니다.
 /// 제목, 장소, 날짜, 시간, 참여자, 태그, 메모 등의 정보를 입력받습니다.
 struct ScheduleRegistrationView: View {
-    
-    // MARK: - Properties
-    
+
+    // MARK: - Property
+
     /// 일정 등록 뷰 모델
     @State var viewModel: ScheduleRegistrationViewModel
-    
+
     /// 전역 에러 핸들러
     @Environment(ErrorHandler.self) var errorHandler
     @Environment(\.dismiss) var dismiss
 
     @AppStorage(AppStorageKey.gisuId) private var gisuId: Int = 0
     @AppStorage(AppStorageKey.memberRole) private var memberRole: ManagementTeam = .challenger
+    private let mode: Mode
+
+    enum Mode {
+        case create
+        case edit
+    }
+
+    private enum Constants {
+        static let createLoadingMessage: String = "일정 생성 중입니다."
+        static let editLoadingMessage: String = "일정 수정 중입니다."
+    }
 
     // MARK: - Init
 
     /// 초기화 메서드
-    init(container: DIContainer, errorHandler: ErrorHandler) {
-        self._viewModel = .init(
-            wrappedValue: .init(container: container, errorHandler: errorHandler)
+    init(
+        container: DIContainer,
+        errorHandler: ErrorHandler,
+        mode: Mode = .create,
+        prefill: ScheduleDetailData? = nil,
+        prefillRoadAddress: String? = nil
+    ) {
+        self.mode = mode
+        let viewModel = ScheduleRegistrationViewModel(
+            container: container,
+            errorHandler: errorHandler
         )
+        if let prefill {
+            viewModel.applyPrefill(from: prefill, roadAddress: prefillRoadAddress)
+        }
+        self._viewModel = .init(wrappedValue: viewModel)
     }
     
     // MARK: - Body
-    
+
     var body: some View {
-        Form {
-            // 섹션 1: 제목 및 장소
-            Section {
-                sectionView(.title)
-                sectionView(.place)
-            }
-            
-            // 섹션 2: 날짜 및 시간
-            Section {
-                sectionView(.allDay)
-                sectionView(.date)
-            }
-            
-            // 섹션 3: 참여자
-            Section {
-                sectionView(.participation)
-            }
-            
-            // 섹션 4: 태그
-            Section {
-                sectionView(.tag)
-            }
-            
-            // 섹션 5: 메모
-            Section {
-                sectionView(.memo)
-            }
-        }
+        formContent
         .scrollDismissesKeyboard(.immediately) // 스크롤 시 키보드 내림
-        .navigation(naviTitle: .registration, displayMode: .inline)
-        .toolbar(content: {
-            ToolBarCollection.AddBtn(action: {
-                // 챌린저: 출석부 없이 바로 생성, 운영진: Alert으로 출석부 포함 여부 선택
-                if memberRole == .challenger {
-                    Task {
-                        await viewModel.submitSchedule(
-                            gisuId: gisuId, requiresApproval: false
-                        )
-                    }
-                } else {
-                    viewModel.alertAction(gisuId: gisuId)
-                }
-            }, disable: viewModel.title.isEmpty || viewModel.tag.isEmpty)
-        })
+        .navigation(naviTitle: navigationTitle, displayMode: .inline)
+        .toolbar { toolbarContent }
         .alertPrompt(item: $viewModel.alertPrompt)
-        // 일정 생성 중 로딩 overlay
-        .overlay {
-            if viewModel.submitState == .loading {
-                ZStack {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                    ProgressView()
-                        .controlSize(.large)
-                        .tint(.white)
-                }
-                .allowsHitTesting(true)
-            }
-        }
+        .overlay { submittingOverlay }
         // 생성 성공 시 화면 자동 닫기
         .onChange(of: viewModel.submitState) {
             if case .loaded = viewModel.submitState {
                 dismiss()
             }
+        }
+    }
+
+    // MARK: - Content
+
+    private var formContent: some View {
+        Form {
+            section(.title, .place)
+            section(.allDay, .date)
+            section(.participation)
+            section(.tag)
+            section(.memo)
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if mode == .edit {
+            ToolBarCollection.RejectBtn(action: {})
+            ToolBarCollection.ConfirmBtn(
+                action: {
+                    Task {
+                        await viewModel.updateSchedule()
+                    }
+                },
+                disable: isActionDisabled,
+                dismissOnTap: false,
+            )
+        } else {
+            ToolBarCollection.AddBtn(
+                action: { submitCreateAction() },
+                disable: isActionDisabled
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var submittingOverlay: some View {
+        if isSubmitting {
+            ZStack {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                Progress(
+                    progressColor: .white,
+                    message: mode == .edit ? Constants.editLoadingMessage : Constants.createLoadingMessage,
+                    messageColor: .white,
+                    size: .regular
+                )
+                .padding(24)
+            }
+            .allowsHitTesting(true)
+        }
+    }
+
+    // MARK: - Section Builder
+
+    @ViewBuilder
+    private func section(_ types: ScheduleGenerationType...) -> some View {
+        Section {
+            ForEach(types, id: \.self) { type in
+                sectionView(type)
+            }
+        }
+    }
+
+    // MARK: - Helper
+
+    private var navigationTitle: NavigationModifier.Navititle {
+        mode == .create ? .registration : .registrationEdit
+    }
+
+    private var isSubmitting: Bool {
+        if case .loading = viewModel.submitState {
+            return true
+        }
+        return false
+    }
+
+    private var isActionDisabled: Bool {
+        let hasRequired = !viewModel.title.isEmpty && !viewModel.tag.isEmpty
+        if mode == .edit {
+            return !hasRequired || !viewModel.hasChangesInEditMode || isSubmitting
+        }
+        return !hasRequired || isSubmitting
+    }
+
+    // MARK: - Action
+
+    private func submitCreateAction() {
+        // 챌린저: 출석부 없이 바로 생성, 운영진: Alert으로 출석부 포함 여부 선택
+        if memberRole == .challenger {
+            Task {
+                await viewModel.submitSchedule(
+                    gisuId: gisuId,
+                    requiresApproval: false
+                )
+            }
+        } else {
+            viewModel.alertAction(gisuId: gisuId)
         }
     }
     
@@ -193,7 +263,7 @@ fileprivate struct AllDayToggle: View, Equatable {
 /// 시작 날짜/시간 행과 종료 날짜/시간 행, 그리고 각각의 Picker를 포함합니다.
 fileprivate struct DateTimeSection: View {
     
-    // MARK: - Properties
+    // MARK: - Property
     
     @Binding var isAllDay: Bool
     @Binding var startDate: Date

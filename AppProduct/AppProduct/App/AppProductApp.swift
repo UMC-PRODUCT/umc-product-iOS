@@ -15,24 +15,10 @@ import CloudKit
 struct AppProductApp: App {
     @State private var container: DIContainer
     @State private var errorHandler: ErrorHandler = .init()
-    @State private var appState: AppState = .splash
+    @State private var appState: AppState = .main
+    private let sharedModelContainer: ModelContainer
 
     // MARK: - ModelContainer
-
-    private var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            NoticeHistoryData.self,
-            PenaltyRecord.self
-        ])
-        let configuration = ModelConfiguration(
-            schema: schema,
-            cloudKitDatabase: .automatic
-        )
-        return try! ModelContainer(
-            for: schema,
-            configurations: [configuration]
-        )
-    }()
 
     // MARK: - AppState
 
@@ -51,6 +37,7 @@ struct AppProductApp: App {
     }
 
     init() {
+        sharedModelContainer = Self.makeModelContainer()
         KakaoSDK.initSDK(appKey: Config.kakaoAppKey)
         _container = State(
             initialValue: DIContainer.configured(
@@ -59,6 +46,7 @@ struct AppProductApp: App {
         )
     }
 
+    // MARK: - Factory
     var body: some Scene {
         WindowGroup {
             Group {
@@ -129,7 +117,10 @@ struct AppProductApp: App {
                     )
 
                 case .main:
-                    UmcTab()
+//                    UmcTab()
+                    NavigationStack {
+                        ScheduleDetailView(scheduleId: 1, selectedDate: .now)
+                    }
                 }
             }
             .onOpenURL { url in
@@ -157,4 +148,42 @@ struct AppProductApp: App {
             }
         }
     }
+}
+
+extension AppProductApp {
+
+    private static func makeModelContainer() -> ModelContainer {
+        let schema = Schema([
+            NoticeHistoryData.self,
+            PenaltyRecord.self
+        ])
+
+        do {
+            let cloudConfiguration = ModelConfiguration(
+                schema: schema,
+                cloudKitDatabase: .automatic
+            )
+            return try ModelContainer(
+                for: schema,
+                configurations: [cloudConfiguration]
+            )
+        } catch {
+            // CloudKit 설정/권한/모델 제약 이슈가 있으면 로컬 저장소로 폴백합니다.
+            print("SwiftData CloudKit init failed. Fallback to local store: \(error)")
+
+            do {
+                let localConfiguration = ModelConfiguration(
+                    schema: schema,
+                    cloudKitDatabase: .none
+                )
+                return try ModelContainer(
+                    for: schema,
+                    configurations: [localConfiguration]
+                )
+            } catch {
+                fatalError("Failed to initialize ModelContainer: \(error)")
+            }
+        }
+    }
+
 }

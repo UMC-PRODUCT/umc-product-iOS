@@ -19,6 +19,10 @@ protocol HomeUseCaseProviding {
     var fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol { get }
     /// 일정 생성 UseCase
     var generateScheduleUseCase: GenerateScheduleUseCaseProtocol { get }
+    /// 일정 수정 UseCase
+    var updateScheduleUseCase: UpdateScheduleUseCaseProtocol { get }
+    /// 일정 + 출석부 통합 삭제 UseCase
+    var deleteScheduleUseCase: DeleteScheduleUseCaseProtocol { get }
     /// 챌린저 검색 UseCase
     var searchChallengersUseCase: SearchChallengersUseCaseProtocol { get }
 }
@@ -36,6 +40,8 @@ final class HomeUseCaseProvider: HomeUseCaseProviding {
     let fetchSchedulesUseCase: FetchSchedulesUseCaseProtocol
     let fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol
     let generateScheduleUseCase: GenerateScheduleUseCaseProtocol
+    let updateScheduleUseCase: UpdateScheduleUseCaseProtocol
+    let deleteScheduleUseCase: DeleteScheduleUseCaseProtocol
     let searchChallengersUseCase: SearchChallengersUseCaseProtocol
 
     // MARK: - Init
@@ -60,6 +66,12 @@ final class HomeUseCaseProvider: HomeUseCaseProviding {
             repository: homeRepository
         )
         self.generateScheduleUseCase = GenerateScheduleUseCase(
+            repository: scheduleRepository
+        )
+        self.updateScheduleUseCase = UpdateScheduleUseCase(
+            repository: scheduleRepository
+        )
+        self.deleteScheduleUseCase = DeleteScheduleUseCase(
             repository: scheduleRepository
         )
         self.searchChallengersUseCase = SearchChallengersUseCase(
