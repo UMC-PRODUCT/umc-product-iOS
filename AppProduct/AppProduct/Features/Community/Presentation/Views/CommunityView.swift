@@ -66,8 +66,6 @@ struct CommunityView: View {
                 case .fame:
                     break
                 }
-            } else {
-                ProgressView()
             }
             .navigation(naviTitle: .community, displayMode: .inline)
             .toolbar {
@@ -80,9 +78,6 @@ struct CommunityView: View {
                     itemIcon: { $0.icon }
                 )
             }
-        }
-        .navigationDestination(for: NavigationDestination.self) { destination in
-            NavigationRoutingView(destination: destination)
         }
     }
 
