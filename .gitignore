@@ -143,6 +143,7 @@ Secrets.xcconfig
 CLAUDE.local.md
 AGENTS.local.md
 CODEX.md
+AGENTS.md
 .claude/
 PROJECT_CONTEXT.md
 
@@ -155,4 +156,4 @@ AppProduct/AppProduct/Features/*/Data/Generated/
 .test-config.*
 
 # Personal agent context
-AGENT.md
+
