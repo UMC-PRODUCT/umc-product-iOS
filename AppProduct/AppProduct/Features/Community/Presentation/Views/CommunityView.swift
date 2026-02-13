@@ -28,44 +28,46 @@ struct CommunityView: View {
             get: { pathStore.communityPath },
             set: { pathStore.communityPath = $0 }
         )) {
-            if let vm = viewModel {
-                switch vm.selectedMenu {
-                case .all, .question, .party:
-                    contentSection(vm: vm)
-                        .searchable(text: Binding(
-                            get: { vm.searchText }, set: { vm.searchText = $0 }
-                        ))
-                        .searchToolbarBehavior(.minimize)
-                case .fame:
-                    CommunityFameView()
+            Group {
+                if let vm = viewModel {
+                    switch vm.selectedMenu {
+                    case .all, .question, .party:
+                        contentSection(vm: vm)
+                            .searchable(text: Binding(
+                                get: { vm.searchText }, set: { vm.searchText = $0 }
+                            ))
+                            .searchToolbarBehavior(.minimize)
+                    case .fame:
+                        CommunityFameView()
+                    }
+                } else {
+                    ProgressView()
                 }
-            } else {
-                ProgressView()
             }
-        }
-        .task {
-            if viewModel == nil {
-                viewModel = CommunityViewModel(
-                    fetchCommunityItemsUseCase: communityProvider.fetchCommunityItemsUseCase
-                )
+            .task {
+                if viewModel == nil {
+                    viewModel = CommunityViewModel(
+                        fetchCommunityItemsUseCase: communityProvider.fetchCommunityItemsUseCase
+                    )
+                }
+                await viewModel?.fetchCommunityItems()
             }
-            await viewModel?.fetchCommunityItems()
-        }
-        .navigation(naviTitle: .community, displayMode: .inline)
-        .toolbar {
-            if let vm = viewModel {
-                ToolBarCollection.ToolBarCenterMenu(
-                    items: CommunityMenu.allCases,
-                    selection: Binding(
-                        get: { vm.selectedMenu }, set: { vm.selectedMenu = $0 }
-                    ),
-                    itemLabel: { $0.rawValue },
-                    itemIcon: { $0.icon }
-                )
+            .navigation(naviTitle: .community, displayMode: .inline)
+            .toolbar {
+                if let vm = viewModel {
+                    ToolBarCollection.ToolBarCenterMenu(
+                        items: CommunityMenu.allCases,
+                        selection: Binding(
+                            get: { vm.selectedMenu }, set: { vm.selectedMenu = $0 }
+                        ),
+                        itemLabel: { $0.rawValue },
+                        itemIcon: { $0.icon }
+                    )
+                }
             }
-        }
-        .navigationDestination(for: NavigationDestination.self) { destination in
-            NavigationRoutingView(destination: destination)
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                NavigationRoutingView(destination: destination)
+            }
         }
     }
 

@@ -85,7 +85,7 @@ struct CommunityPostView: View {
             if let vm = viewModel {
                 ToolBarCollection.ConfirmBtn(action: {
                     // TODO: 게시글 작성 API
-                }, disable: vm.isValid)
+                }, disable: !vm.isValid)
             }
         }
     }
@@ -139,4 +139,12 @@ struct CommunityPostView: View {
             .autocapitalization(.none)
             .autocorrectionDisabled()
     }
+}
+
+#Preview {
+    NavigationStack {
+        CommunityPostView()
+    }
+    .environment(\.di, .configured())
+    .environment(ErrorHandler())
 }
