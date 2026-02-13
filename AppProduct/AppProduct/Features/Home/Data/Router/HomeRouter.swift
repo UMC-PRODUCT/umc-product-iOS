@@ -9,12 +9,18 @@ import Foundation
 internal import Alamofire
 import Moya
 
+/// 홈 Feature API 라우터
+///
+/// 홈 대시보드에 필요한 API 엔드포인트를 정의합니다.
 enum HomeRouter {
-    case getGen // 기수 정보 조회
-    case getPenalty(id: Int) // 패널티 정보 조회
-    case getSchedules // 스케줄 조회
-    case postGenerateSchedule(schedule: GenerateScheduleDTO) // 일정 생성
-    case getNoticeRecent(query: NoticeListRequestDTO) // 최근 공지 아이템 조회
+    /// 내 프로필 조회 (기수 + 역할 정보)
+    case getGen
+    /// 챌린저 패널티 조회
+    case getPenalty(id: Int)
+    /// 월별 내 일정 조회
+    case getSchedules(year: Int, month: Int)
+    /// 최근 공지사항 조회
+    case getNoticeRecent(query: NoticeListRequestDTO)
 }
 
 extension HomeRouter: BaseTargetType {
@@ -28,9 +34,7 @@ extension HomeRouter: BaseTargetType {
         case .getPenalty(let id):
             return "/api/v1/challenger/\(id)"
         case .getSchedules:
-            return "/api/v1/schedules"
-        case .postGenerateSchedule:
-            return "/api/v1/schedules/with-attendance"
+            return "/api/v1/schedules/my-list"
         case .getNoticeRecent:
             return "/api/v1/notices"
         }
@@ -42,8 +46,6 @@ extension HomeRouter: BaseTargetType {
         switch self {
         case .getGen, .getPenalty, .getSchedules, .getNoticeRecent:
             return .get
-        case .postGenerateSchedule:
-            return .post
         }
     }
 
@@ -51,10 +53,13 @@ extension HomeRouter: BaseTargetType {
 
     var task: Moya.Task {
         switch self {
-        case .getGen, .getPenalty, .getSchedules:
+        case .getGen, .getPenalty:
             return .requestPlain
-        case .postGenerateSchedule(let schedule):
-            return .requestJSONEncodable(schedule)
+        case .getSchedules(let year, let month):
+            return .requestParameters(
+                parameters: ["year": year, "month": month],
+                encoding: URLEncoding.queryString
+            )
         case .getNoticeRecent(let query):
             return .requestParameters(
                 parameters: query.queryItems,

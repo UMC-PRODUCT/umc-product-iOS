@@ -36,8 +36,8 @@ struct ChallengerInfo: Identifiable, Equatable, Hashable {
     /// 고유 식별자
     var id: UUID = .init()
     
-    /// 챌린지 ID (서버 연동 등 식별용)
-    let challengeId: Int
+    /// member ID (서버 연동 등 식별용)
+    let memberId: Int
     
     /// 기수 (예: 11기)
     let gen: Int

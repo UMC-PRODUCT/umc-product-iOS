@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct GenerateScheduleDTO: Codable {
+/// 홈 일정 생성 Request DTO
+struct GenerateScheduleRequetDTO: Encodable {
     let name: String
     let startsAt: Date
     let endsAt: Date
@@ -51,44 +52,6 @@ struct GenerateScheduleDTO: Codable {
         case name, startsAt, endsAt, isAllDay, locationName
         case latitude, longitude, description, participantMemberIds, tags
         case gisuId, requiresApproval
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.name = try container.decode(String.self, forKey: .name)
-        self.isAllDay = try container.decode(Bool.self, forKey: .isAllDay)
-        self.locationName = try container.decode(String.self, forKey: .locationName)
-        self.latitude = try container.decode(Double.self, forKey: .latitude)
-        self.longitude = try container.decode(Double.self, forKey: .longitude)
-        self.description = try container.decode(String.self, forKey: .description)
-        self.participantMemberIds = try container.decode([Int].self, forKey: .participantMemberIds)
-        self.tags = try container.decode([ScheduleIconCategory].self, forKey: .tags)
-        self.gisuId = try container.decode(Int.self, forKey: .gisuId)
-        self.requiresApproval = try container.decode(Bool.self, forKey: .requiresApproval)
-
-        let startsAtString = try container.decode(String.self, forKey: .startsAt)
-        let endsAtString = try container.decode(String.self, forKey: .endsAt)
-
-        let formatterWithFraction = ISO8601DateFormatter()
-        formatterWithFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-
-        if let starts = formatterWithFraction.date(from: startsAtString) ?? formatter.date(from: startsAtString) {
-            self.startsAt = starts
-        } else {
-            throw DecodingError.dataCorruptedError(forKey: .startsAt,
-                                                   in: container,
-                                                   debugDescription: "Invalid ISO8601 date string for startsAt: \(startsAtString)")
-        }
-
-        if let ends = formatterWithFraction.date(from: endsAtString) ?? formatter.date(from: endsAtString) {
-            self.endsAt = ends
-        } else {
-            throw DecodingError.dataCorruptedError(forKey: .endsAt,
-                                                   in: container,
-                                                   debugDescription: "Invalid ISO8601 date string for endsAt: \(endsAtString)")
-        }
     }
 
     func encode(to encoder: Encoder) throws {

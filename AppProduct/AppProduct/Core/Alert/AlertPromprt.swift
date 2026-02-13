@@ -56,6 +56,14 @@ struct AlertPrompt: Identifiable {
     /// 긍정 버튼 탭 시 실행될 액션
     let positiveBtnAction: (() -> Void)?
 
+    /// 보조 버튼 텍스트 (3번째 선택지)
+    ///
+    /// - Note: nil인 경우 보조 버튼이 표시되지 않습니다.
+    let secondaryBtnTitle: String?
+
+    /// 보조 버튼 탭 시 실행될 액션
+    let secondaryBtnAction: (() -> Void)?
+
     /// 부정 버튼 텍스트 (예: "취소")
     ///
     /// - Note: nil인 경우 부정 버튼이 표시되지 않습니다.
@@ -81,6 +89,8 @@ struct AlertPrompt: Identifiable {
     ///   - message: Alert 메시지 본문
     ///   - positiveBtnTitle: 긍정 버튼 텍스트 (기본값: nil)
     ///   - positiveBtnAction: 긍정 버튼 탭 액션 (기본값: nil)
+    ///   - secondaryBtnTitle: 보조 버튼 텍스트 (기본값: nil)
+    ///   - secondaryBtnAction: 보조 버튼 탭 액션 (기본값: nil)
     ///   - negativeBtnTitle: 부정 버튼 텍스트 (기본값: nil)
     ///   - negativeBtnAction: 부정 버튼 탭 액션 (기본값: nil)
     ///   - isPositiveBtnDestructive: 긍정 버튼이 파괴적 작업인지 여부 (기본값: false)
@@ -90,6 +100,8 @@ struct AlertPrompt: Identifiable {
         message: String,
         positiveBtnTitle: String? = nil,
         positiveBtnAction: (() -> Void)? = nil,
+        secondaryBtnTitle: String? = nil,
+        secondaryBtnAction: (() -> Void)? = nil,
         negativeBtnTitle: String? = nil,
         negativeBtnAction: (() -> Void)? = nil,
         isPositiveBtnDestructive: Bool = false
@@ -99,6 +111,8 @@ struct AlertPrompt: Identifiable {
         self.message = message
         self.positiveBtnTitle = positiveBtnTitle
         self.positiveBtnAction = positiveBtnAction
+        self.secondaryBtnTitle = secondaryBtnTitle
+        self.secondaryBtnAction = secondaryBtnAction
         self.negativeBtnTitle = negativeBtnTitle
         self.negativeBtnAction = negativeBtnAction
         self.isPositiveBtnDestructive = isPositiveBtnDestructive

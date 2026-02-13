@@ -76,8 +76,8 @@ struct ScheduleListCard: View, Equatable {
             // 일정 제목
             Text(data.title)
                 .appFont(.calloutEmphasis, color: .grey900)
-            // 일정 부제목 (시간 등)
-            Text(data.subTitle)
+            // 참여 상태 + D-Day
+            Text("\(data.status) · D-\(data.dDay)")
                 .appFont(.subheadline, color: .grey600)
         })
     }
@@ -92,8 +92,14 @@ struct ScheduleListCard: View, Equatable {
 
 #Preview {
     VStack {
-        ScheduleListCard(data: .init(title: "컨퍼런스", subTitle: "테스트"))
-        ScheduleListCard(data: .init(title: "데모데이", subTitle: "테스트"))
+        ScheduleListCard(data: .init(
+            scheduleId: 1, title: "컨퍼런스",
+            startsAt: .now, endsAt: .now, status: "참여 예정", dDay: 7
+        ))
+        ScheduleListCard(data: .init(
+            scheduleId: 2, title: "데모데이",
+            startsAt: .now, endsAt: .now, status: "참여 예정", dDay: 14
+        ))
     }
     .safeAreaPadding(.horizontal, 16)
 }

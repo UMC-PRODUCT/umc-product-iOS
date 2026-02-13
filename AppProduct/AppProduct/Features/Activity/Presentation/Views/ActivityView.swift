@@ -144,11 +144,3 @@ struct ActivityView: View {
         }
     }
 }
-
-#Preview("Challenger Mode") {
-    NavigationStack {
-        ActivityView()
-    }
-    .environment(\.di, DIContainer.configured())
-    .environment(ErrorHandler())
-}

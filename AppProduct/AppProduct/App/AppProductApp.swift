@@ -9,12 +9,30 @@ import SwiftUI
 import KakaoSDKCommon
 import KakaoSDKAuth
 import SwiftData
+import CloudKit
 
 @main
 struct AppProductApp: App {
-    @State private var container: DIContainer = DIContainer.configured()
+    @State private var container: DIContainer
     @State private var errorHandler: ErrorHandler = .init()
     @State private var appState: AppState = .splash
+
+    // MARK: - ModelContainer
+
+    private var sharedModelContainer: ModelContainer = {
+        let schema = Schema([
+            NoticeHistoryData.self,
+            PenaltyRecord.self
+        ])
+        let configuration = ModelConfiguration(
+            schema: schema,
+            cloudKitDatabase: .automatic
+        )
+        return try! ModelContainer(
+            for: schema,
+            configurations: [configuration]
+        )
+    }()
 
     // MARK: - AppState
 
@@ -34,6 +52,11 @@ struct AppProductApp: App {
 
     init() {
         KakaoSDK.initSDK(appKey: Config.kakaoAppKey)
+        _container = State(
+            initialValue: DIContainer.configured(
+                modelContext: sharedModelContainer.mainContext
+            )
+        )
     }
 
     var body: some Scene {
@@ -116,7 +139,7 @@ struct AppProductApp: App {
             }
             .environment(errorHandler)
             .environment(\.di, container)
-            .modelContainer(for: NoticeHistoryData.self)
+            .modelContainer(sharedModelContainer)
             .onReceive(
                 NotificationCenter.default.publisher(
                     for: .authSessionExpired

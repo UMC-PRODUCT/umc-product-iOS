@@ -1,0 +1,69 @@
+//
+//  HomeUseCaseProvider.swift
+//  AppProduct
+//
+//  Created by Claude on 2/12/26.
+//
+
+import Foundation
+
+/// Home Feature에서 사용하는 UseCase들을 제공하는 Provider Protocol
+protocol HomeUseCaseProviding {
+    /// 내 프로필 조회 UseCase
+    var fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol { get }
+    /// 패널티 조회 UseCase (API → CloudKit 저장 → 전체 기수 반환)
+    var fetchPenaltyUseCase: FetchPenaltyUseCaseProtocol { get }
+    /// 월별 일정 조회 UseCase
+    var fetchSchedulesUseCase: FetchSchedulesUseCaseProtocol { get }
+    /// 최근 공지 조회 UseCase
+    var fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol { get }
+    /// 일정 생성 UseCase
+    var generateScheduleUseCase: GenerateScheduleUseCaseProtocol { get }
+    /// 챌린저 검색 UseCase
+    var searchChallengersUseCase: SearchChallengersUseCaseProtocol { get }
+}
+
+/// Home UseCase Provider 구현
+///
+/// HomeRepository, ChallengerGenRepository, ScheduleRepository를
+/// 주입받아 UseCase들을 생성합니다.
+final class HomeUseCaseProvider: HomeUseCaseProviding {
+
+    // MARK: - Property
+
+    let fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol
+    let fetchPenaltyUseCase: FetchPenaltyUseCaseProtocol
+    let fetchSchedulesUseCase: FetchSchedulesUseCaseProtocol
+    let fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol
+    let generateScheduleUseCase: GenerateScheduleUseCaseProtocol
+    let searchChallengersUseCase: SearchChallengersUseCaseProtocol
+
+    // MARK: - Init
+
+    init(
+        homeRepository: HomeRepositoryProtocol,
+        genRepository: ChallengerGenRepositoryProtocol,
+        scheduleRepository: ScheduleRepositoryProtocol,
+        challengerSearchRepository: ChallengerSearchRepositoryProtocol
+    ) {
+        self.fetchMyProfileUseCase = FetchMyProfileUseCase(
+            repository: homeRepository
+        )
+        self.fetchPenaltyUseCase = FetchPenaltyUseCase(
+            homeRepository: homeRepository,
+            genRepository: genRepository
+        )
+        self.fetchSchedulesUseCase = FetchSchedulesUseCase(
+            repository: homeRepository
+        )
+        self.fetchRecentNoticesUseCase = FetchRecentNoticesUseCase(
+            repository: homeRepository
+        )
+        self.generateScheduleUseCase = GenerateScheduleUseCase(
+            repository: scheduleRepository
+        )
+        self.searchChallengersUseCase = SearchChallengersUseCase(
+            repository: challengerSearchRepository
+        )
+    }
+}

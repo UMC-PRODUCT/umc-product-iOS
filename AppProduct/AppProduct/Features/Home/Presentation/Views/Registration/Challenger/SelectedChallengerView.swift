@@ -13,12 +13,15 @@ import SwiftUI
 struct SelectedChallengerView: View {
     
     // MARK: - Properties
-    
+
+    /// DI 컨테이너
+    @Environment(\.di) private var container
+
     /// 외부에서 주입받는 선택된 챌린저 목록 (Binding)
     ///
     /// 이 배열은 상위 뷰와 공유되며, 챌린저 추가 및 삭제 시 실시간으로 업데이트됩니다.
     @Binding var challenger: [ChallengerInfo]
-    
+
     /// 챌린저 검색 화면으로의 네비게이션 활성화 여부
     @State var searchNavi: Bool = false
     
@@ -40,7 +43,10 @@ struct SelectedChallengerView: View {
                 })
                 // 검색 화면으로 네비게이션 이동
                 .navigationDestination(isPresented: $searchNavi, destination: {
-                    SearchChallengerView(selectedChallengers: $challenger)
+                    SearchChallengerView(
+                        container: container,
+                        selectedChallengers: $challenger
+                    )
                 })
         }
     }

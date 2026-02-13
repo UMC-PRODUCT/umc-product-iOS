@@ -114,10 +114,3 @@ struct MyPageView: View {
         }
     }
 }
-
-#Preview {
-    NavigationStack {
-        MyPageView()
-            .environment(DIContainer.configured())
-    }
-}

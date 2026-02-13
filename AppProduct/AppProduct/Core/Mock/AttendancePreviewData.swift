@@ -7,11 +7,22 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
 #if DEBUG
 struct AttendancePreviewData {
-    static let container = DIContainer.configured()
+
     static let errorHandler = ErrorHandler()
+    static let container: DIContainer = {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let modelContainer = try! ModelContainer(
+            for: PenaltyRecord.self, NoticeHistoryData.self,
+            configurations: config
+        )
+        return DIContainer.configured(
+            modelContext: modelContainer.mainContext
+        )
+    }()
     static let challengerAttendanceUseCase = ChallengerAttendanceUseCase(repository: MockAttendanceRepository())
     static let mockUseCase = MockChallengerAttendanceUseCase()
     static let mapViewModel: BaseMapViewModel = .init(container: container, info: sessionInfo, errorHandler: errorHandler)

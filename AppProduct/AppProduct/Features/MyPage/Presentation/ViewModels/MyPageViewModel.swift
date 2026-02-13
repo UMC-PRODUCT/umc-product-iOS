@@ -22,7 +22,7 @@ class MyPageViewModel {
     let profileData: Loadable<ProfileData> = .loaded(.init(
         challengeId: 0,
         challangerInfo: .init(
-            challengeId: 0,
+            memberId: 0,
             gen: 11,
             name: "유엠씨",
             nickname: "네임",

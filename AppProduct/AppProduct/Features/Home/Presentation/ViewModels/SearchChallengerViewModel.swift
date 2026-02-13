@@ -13,20 +13,80 @@ import UniformTypeIdentifiers
 /// 챌린저 목록 로드, 검색 필터링, CSV 파일을 통한 일괄 선택 기능을 제공합니다.
 @Observable
 class SearchChallengerViewModel {
+
+    // MARK: - Property
+
+    /// 챌린저 검색 UseCase
+    private let searchChallengersUseCase: SearchChallengersUseCaseProtocol
+
     /// 전체 챌린저 목록 데이터
     var allChallengers: [ChallengerInfo] = []
-    
-    /// 현재 선택된 챌린저들의 ID 목록 (중복 방지를 위한 Set 사용)
-    var selectedChallengerIds: Set<UUID> = []
-    
+
+    /// 현재 선택된 챌린저들의 memberId 목록 (서버 ID 기반, 검색 결과가 바뀌어도 유지)
+    var selectedMemberIds: Set<Int> = []
+
+    /// 선택된 챌린저 정보를 별도 보관 (검색 결과 교체 시에도 유지)
+    var selectedChallengersMap: [Int: ChallengerInfo] = [:]
+
     /// 검색창 입력 텍스트
     var searchText: String = ""
-    
+
     /// CSV 파일 가져오기 문서 피커 표시 여부
     var showCSVImporter: Bool = false
-    
+
     /// 알림창 상태 관리 객체 (에러 메시지, 결과 통보 등)
     var alertPrompt: AlertPrompt?
+
+    /// 챌린저 목록 로드 상태
+    private(set) var loadState: Loadable<Bool> = .idle
+
+    /// 다음 페이지 커서
+    private var nextCursor: Int?
+
+    /// 다음 페이지 존재 여부
+    private(set) var hasNext: Bool = false
+
+    // MARK: - Init
+
+    /// - Parameter container: 의존성 주입 컨테이너 (HomeUseCaseProviding에서 UseCase 해소)
+    init(container: DIContainer) {
+        let provider = container.resolve(HomeUseCaseProviding.self)
+        self.searchChallengersUseCase = provider.searchChallengersUseCase
+    }
+
+    // MARK: - Function
+
+    /// searchText 기반으로 챌린저 목록을 서버에서 가져옵니다.
+    @MainActor
+    func fetchChallengers() async {
+        loadState = .loading
+        do {
+            let trimmed = searchText.trimmingCharacters(in: .whitespaces)
+            let query = ChallengerSearchRequestDTO(
+                name: trimmed.isEmpty ? nil : trimmed
+            )
+            let (challengers, hasNext, nextCursor) = try await searchChallengersUseCase.execute(query: query)
+            self.allChallengers = challengers
+            self.hasNext = hasNext
+            self.nextCursor = nextCursor
+            loadState = .loaded(true)
+        } catch {
+            loadState = .failed(.unknown(message: "챌린저 검색 에러"))
+        }
+    }
+
+    /// 다음 페이지 챌린저를 추가 로드합니다.
+    @MainActor
+    func fetchNextPage() async {
+        guard hasNext, let cursor = nextCursor else { return }
+        do {
+            let query = ChallengerSearchRequestDTO(cursor: cursor)
+            let (challengers, hasNext, nextCursor) = try await searchChallengersUseCase.execute(query: query)
+            self.allChallengers.append(contentsOf: challengers)
+            self.hasNext = hasNext
+            self.nextCursor = nextCursor
+        } catch {}
+    }
 }
 
 // MARK: - CSV Import
@@ -46,7 +106,7 @@ extension SearchChallengerViewModel {
             showErrorAlert(message: "CSV 파일을 읽을 수 없습니다: \(error.localizedDescription)")
         }
     }
-    
+
     /// CSV 내용을 파싱하고 매칭되는 챌린저를 선택
     private func parseAndSelectChallengers(csvContent: String) {
         let rows = csvContent.components(separatedBy: .newlines)
@@ -75,7 +135,8 @@ extension SearchChallengerViewModel {
 
             // 이름 또는 닉네임으로 챌린저 찾기
             if let matched = findChallenger(name: searchName, nickname: searchNickname) {
-                selectedChallengerIds.insert(matched.id)
+                selectedMemberIds.insert(matched.memberId)
+                selectedChallengersMap[matched.memberId] = matched
                 matchedCount += 1
             } else {
                 unmatchedNames.append("\(searchName)/\(searchNickname)")
@@ -88,7 +149,7 @@ extension SearchChallengerViewModel {
             unmatchedNames: unmatchedNames
         )
     }
-    
+
     /// 이름과 닉네임으로 챌린저 찾기
     private func findChallenger(name: String, nickname: String) -> ChallengerInfo? {
         allChallengers.first { participant in

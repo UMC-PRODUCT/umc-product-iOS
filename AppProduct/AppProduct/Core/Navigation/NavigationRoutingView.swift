@@ -67,7 +67,7 @@ private extension NavigationRoutingView {
         case .alarmHistory:
             NoticeAlarmView()
         case .registrationSchedule:
-            ScheduleRegistrationView()
+            ScheduleRegistrationView(container: di, errorHandler: errorHandler)
         }
     }
     

@@ -107,10 +107,3 @@ struct CommunityView: View {
         }
     }
 }
-
-#Preview {
-    NavigationStack {
-        CommunityView()
-    }
-    .environment(\.di, .configured())
-}

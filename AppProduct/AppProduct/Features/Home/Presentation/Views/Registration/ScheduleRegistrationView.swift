@@ -20,17 +20,18 @@ struct ScheduleRegistrationView: View {
     
     /// 전역 에러 핸들러
     @Environment(ErrorHandler.self) var errorHandler
-    @Environment(\.di) var di
-    
-    private var router: NavigationRouter {
-        di.resolve(NavigationRouter.self)
-    }
-    
+    @Environment(\.dismiss) var dismiss
+
+    @AppStorage(AppStorageKey.gisuId) private var gisuId: Int = 0
+    @AppStorage(AppStorageKey.memberRole) private var memberRole: ManagementTeam = .challenger
+
     // MARK: - Init
-    
+
     /// 초기화 메서드
-    init() {
-        self._viewModel = .init(wrappedValue: .init())
+    init(container: DIContainer, errorHandler: ErrorHandler) {
+        self._viewModel = .init(
+            wrappedValue: .init(container: container, errorHandler: errorHandler)
+        )
     }
     
     // MARK: - Body
@@ -68,9 +69,38 @@ struct ScheduleRegistrationView: View {
         .navigation(naviTitle: .registration, displayMode: .inline)
         .toolbar(content: {
             ToolBarCollection.AddBtn(action: {
-                router.pop()
-            }, disable: viewModel.title.isEmpty)
+                // 챌린저: 출석부 없이 바로 생성, 운영진: Alert으로 출석부 포함 여부 선택
+                if memberRole == .challenger {
+                    Task {
+                        await viewModel.submitSchedule(
+                            gisuId: gisuId, requiresApproval: false
+                        )
+                    }
+                } else {
+                    viewModel.alertAction(gisuId: gisuId)
+                }
+            }, disable: viewModel.title.isEmpty || viewModel.tag.isEmpty)
         })
+        .alertPrompt(item: $viewModel.alertPrompt)
+        // 일정 생성 중 로딩 overlay
+        .overlay {
+            if viewModel.submitState == .loading {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    ProgressView()
+                        .controlSize(.large)
+                        .tint(.white)
+                }
+                .allowsHitTesting(true)
+            }
+        }
+        // 생성 성공 시 화면 자동 닫기
+        .onChange(of: viewModel.submitState) {
+            if case .loaded = viewModel.submitState {
+                dismiss()
+            }
+        }
     }
     
     // MARK: - Section Components
@@ -389,6 +419,6 @@ fileprivate struct Memo: View, Equatable {
 }
 
 #Preview {
-    ScheduleRegistrationView()
+    ScheduleRegistrationView(container: DIContainer(), errorHandler: ErrorHandler())
         .environment(ErrorHandler())
 }
