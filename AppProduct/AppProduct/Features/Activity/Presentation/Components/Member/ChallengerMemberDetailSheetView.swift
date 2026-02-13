@@ -98,7 +98,7 @@ struct ChallengerMemberDetailSheetView: View {
             .padding()
             .scrollContentBackground(.hidden)
             .presentationDetents([.height(dynamicSheetHeight)])
-            .presentationDragIndicator(.visible)
+            .interactiveDismissDisabled()
         }
     }
     
@@ -117,7 +117,7 @@ struct ChallengerMemberDetailSheetView: View {
                     .padding(Constants.tagPadding)
                     .background(.white, in: Capsule())
                 if member.managementTeam != .challenger {
-                    Text(member.managementTeam.rawValue)
+                    Text(member.managementTeam.korean)
                         .appFont(.callout, color: member.managementTeam.textColor)
                         .padding(Constants.tagPadding)
                         .background(member.managementTeam.backgroundColor, in: Capsule())
