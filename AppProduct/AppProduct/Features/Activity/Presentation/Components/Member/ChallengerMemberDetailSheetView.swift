@@ -20,7 +20,7 @@ struct ChallengerMemberDetailSheetView: View {
         
         static let baseHeight: CGFloat = 340  // 기본 정보 영역
         static let emptyRecordHeight: CGFloat = 150 // 빈 상태 뷰 높이
-        static let recordRowHeight: CGFloat = 47  // 각 출석 기록 행의 높이
+        static let recordRowHeight: CGFloat = 50  // 각 출석 기록 행의 높이
         static let maxVisibleRecords: Int = 5  // 스크롤 없이 보이는 최대 기록 수
         static let minSheetHeight: CGFloat = 420  // 최소 시트 높이
         static let maxSheetHeight: CGFloat = 700  // 최대 시트 높이
@@ -53,7 +53,6 @@ struct ChallengerMemberDetailSheetView: View {
         let visibleRecords = min(recordCount, Constants.maxVisibleRecords)
         let recordsHeight = (CGFloat(visibleRecords) * Constants.recordRowHeight)
         + (CGFloat(max(0, visibleRecords - 1)) * DefaultSpacing.spacing8)
-        + Constants.listPadding.top + Constants.listPadding.bottom
 
         let calculatedHeight = Constants.baseHeight + recordsHeight
 
@@ -72,7 +71,6 @@ struct ChallengerMemberDetailSheetView: View {
         let visibleRecords = min(recordCount, Constants.maxVisibleRecords)
         let recordsHeight = (CGFloat(visibleRecords) * Constants.recordRowHeight)
         + (CGFloat(max(0, visibleRecords - 1)) * DefaultSpacing.spacing8)
-        + Constants.listPadding.top + Constants.listPadding.bottom
 
         return recordsHeight
     }
@@ -172,16 +170,13 @@ struct ChallengerMemberDetailSheetView: View {
     
     /// 기록 리스트 뷰
     private var recordListView: some View {
-        ScrollView {
-            VStack(spacing: DefaultSpacing.spacing8) {
-                ForEach(member.attendanceRecords) { record in
-                    attendanceRecordRow(record)
-                }
-            }
-            .padding(Constants.listPadding)
-        }
+        List(member.attendanceRecords, rowContent:  { record in
+            attendanceRecordRow(record)
+                .listRowBackground(Color.clear)
+        })
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
-        .scrollDisabled(member.attendanceRecords.count < Constants.maxVisibleRecords)
         .frame(height: scrollViewHeight)
         .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
         .glass()
@@ -203,7 +198,6 @@ struct ChallengerMemberDetailSheetView: View {
             
             Spacer()
         }
-        .padding(Constants.listPadding)
     }
 }
 
