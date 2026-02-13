@@ -59,7 +59,7 @@
 
 ### 커밋 형식
 
-- 형식: `[TYPE] 작업 내용`
+- 형식: `TYPE 작업 내용`
 - TYPE: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`, `design`
 
 ### PR 규칙

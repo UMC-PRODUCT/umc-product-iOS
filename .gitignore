@@ -153,3 +153,6 @@ AppProduct/AppProduct/Features/*/Data/Generated/
 
 ## 테스트 설정 (토큰, 인증코드 등 민감 정보)
 .test-config.*
+
+# Personal agent context
+AGENT.md
