@@ -22,10 +22,10 @@ struct ChallengerStudyView: View {
         container: DIContainer,
         errorHandler: ErrorHandler
     ) {
-        let useCaseProvider = container.resolve(UsecaseProviding.self)
+        let useCaseProvider = container.resolve(ActivityUseCaseProviding.self)
         self._viewModel = .init(wrappedValue: .init(
-            fetchCurriculumUseCase: useCaseProvider.activity.fetchCurriculumUseCase,
-            submitMissionUseCase: useCaseProvider.activity.submitMissionUseCase,
+            fetchCurriculumUseCase: useCaseProvider.fetchCurriculumUseCase,
+            submitMissionUseCase: useCaseProvider.submitMissionUseCase,
             errorHandler: errorHandler
         ))
     }

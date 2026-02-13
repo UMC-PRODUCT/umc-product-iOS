@@ -22,9 +22,9 @@ struct ChallengerMemberListView: View {
         container: DIContainer,
         errorHandler: ErrorHandler
     ) {
-        let useCaseProvider = container.resolve(UsecaseProviding.self)
+        let useCaseProvider = container.resolve(ActivityUseCaseProviding.self)
         self._viewModel = .init(wrappedValue: .init(
-            fetchMembersUseCase: useCaseProvider.activity.fetchMembersUseCase,
+            fetchMembersUseCase: useCaseProvider.fetchMembersUseCase,
             errorHandler: errorHandler
         ))
     }

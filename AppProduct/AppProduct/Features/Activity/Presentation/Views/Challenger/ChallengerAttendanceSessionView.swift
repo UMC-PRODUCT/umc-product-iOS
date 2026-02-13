@@ -45,13 +45,13 @@ struct ChallengerAttendanceSessionView: View {
         self.userId = userId
         self.categoryFor = categoryFor
         
-        let useCaseProvider = container.resolve(UsecaseProviding.self)
+        let useCaseProvider = container.resolve(ActivityUseCaseProviding.self)
         let repositoryProvider = container.resolve(ActivityRepositoryProviding.self)
 
         self._attendanceViewModel = .init(wrappedValue: .init(
             container: container,
             errorHandler: errorHandler,
-            challengeAttendanceUseCase: useCaseProvider.activity.challengerAttendanceUseCase
+            challengeAttendanceUseCase: useCaseProvider.challengerAttendanceUseCase
         ))
         self._sessionViewModel = .init(wrappedValue: .init(
             container: container,
