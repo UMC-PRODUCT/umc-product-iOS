@@ -77,7 +77,7 @@ extension PostListItemDTO {
             category: category,
             title: title,
             content: content,
-            profileImage: authorProfileImage,
+            profileImage: nil,
             userName: authorName,
             part: authorPart,
             createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
