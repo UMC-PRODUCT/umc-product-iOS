@@ -77,6 +77,25 @@ struct OperatorAttendanceSectionView: View {
                 actions: pendingSheetActions(for: session)
             )
         }
+        .onChange(of: viewModel.sessionsState) { _, newState in
+            guard let selected = selectedPendingSession,
+                  case .loaded(let sessions) = newState,
+                  let updated = sessions.first(where: {
+                      $0.id == selected.id
+                  })
+            else {
+                // 세션을 못 찾으면 시트 닫기
+                if selectedPendingSession != nil {
+                    selectedPendingSession = nil
+                }
+                return
+            }
+            if updated.pendingMembers.isEmpty {
+                selectedPendingSession = nil
+            } else {
+                selectedPendingSession = updated
+            }
+        }
     }
 
     // MARK: - Content
@@ -162,6 +181,14 @@ struct OperatorAttendanceSectionView: View {
             },
             onReject: {
                 viewModel.rejectButtonTapped(
+                    member: $0, sessionId: session.id)
+            },
+            onApproveDirectly: {
+                viewModel.approveDirectly(
+                    member: $0, sessionId: session.id)
+            },
+            onRejectDirectly: {
+                viewModel.rejectDirectly(
                     member: $0, sessionId: session.id)
             },
             onApproveSelected: {
