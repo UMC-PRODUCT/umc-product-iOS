@@ -2,7 +2,7 @@
 //  PathStore.swift
 //  AppProduct
 //
-//  Created by Claude on 2/4/26.
+//  Created by euijjang97 on 2/4/26.
 //
 
 import Foundation
