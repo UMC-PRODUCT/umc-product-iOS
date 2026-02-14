@@ -11,9 +11,7 @@ import SwiftUI
 #Preview("로그인") {
     LoginView(
         loginUseCase: PreviewLoginUseCase(),
-        errorHandler: ErrorHandler(),
-        onLoginSuccess: {},
-        onNewMember: { _ in }
+        errorHandler: ErrorHandler()
     )
 }
 
@@ -50,8 +48,7 @@ private struct PreviewLoginUseCase: LoginUseCaseProtocol {
             sendEmailVerificationUseCase: PreviewSendEmailUseCase(),
             verifyEmailCodeUseCase: PreviewVerifyCodeUseCase(),
             registerUseCase: PreviewRegisterUseCase(),
-            fetchSignUpDataUseCase: PreviewFetchSignUpDataUseCase(),
-            onSignUpComplete: {}
+            fetchSignUpDataUseCase: PreviewFetchSignUpDataUseCase()
         )
     }
 }
@@ -103,7 +100,7 @@ private struct PreviewFetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol {
 }
 
 #Preview("승인 대기") {
-    PendingApprovalView(onRetryLogin: {})
+    FailedVerificationUMC()
 }
 
 #Preview("홈") {

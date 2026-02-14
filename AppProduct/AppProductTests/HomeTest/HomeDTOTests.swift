@@ -2,7 +2,7 @@
 //  HomeDTOTests.swift
 //  AppProductTests
 //
-//  Created by Claude on 2/12/26.
+//  Created by euijjang97 on 2/12/26.
 //
 
 import Testing
@@ -207,7 +207,8 @@ struct HomeDTOTests {
                         organizationId: 5, responsiblePart: nil,
                         gisu: 10, gisuId: 60
                     )
-                ]
+                ],
+                challengerRecords: nil
             )
 
             // When
@@ -254,7 +255,8 @@ struct HomeDTOTests {
                         organizationId: 5, responsiblePart: "IOS",
                         gisu: 10, gisuId: 60
                     )
-                ]
+                ],
+                challengerRecords: nil
             )
 
             // When
@@ -297,7 +299,8 @@ struct HomeDTOTests {
                         organizationId: 1, responsiblePart: "IOS",
                         gisu: 10, gisuId: 60
                     )
-                ]
+                ],
+                challengerRecords: nil
             )
 
             // When

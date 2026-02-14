@@ -73,8 +73,17 @@ struct EmailVelificationTests {
         return try JSONDecoder().decode(TestConfig.self, from: data)
     }
 
+    /// 통합 테스트 실행 조건을 확인합니다.
+    private func isIntegrationReady() -> Bool {
+        guard ProcessInfo.processInfo.environment["RUN_INTEGRATION_TESTS"] == "1" else {
+            return false
+        }
+        return (try? loadConfig()) != nil
+    }
+
     @Test("이메일 인증 발송")
     func sendEmailVerification() async throws {
+        guard isIntegrationReady() else { return }
         let config = try loadConfig()
 
         let emailVerificationId = try await repository.sendEmailVerification(
@@ -87,6 +96,7 @@ struct EmailVelificationTests {
 
     @Test("3. 이메일 인증코드 검증")
     func verifyEmailCode() async throws {
+        guard isIntegrationReady() else { return }
         let config = try loadConfig()
 
         let emailVerificationToken = try await repository.verifyEmailCode(
@@ -100,6 +110,7 @@ struct EmailVelificationTests {
 
     @Test("4. 학교 목록 조회")
     func fetchSchools() async throws {
+        guard isIntegrationReady() else { return }
         let schools = try await repository.getSchools()
 
         print("[Test] 학교 수: \(schools.count)")
@@ -111,6 +122,7 @@ struct EmailVelificationTests {
 
     @Test("5. 약관 조회")
     func fetchTerms() async throws {
+        guard isIntegrationReady() else { return }
         for type in TermsType.allCases {
             let terms = try await repository.getTerms(
                 termsType: type.rawValue

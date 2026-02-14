@@ -20,9 +20,7 @@ struct SignUpView: View {
 
     /// 현재 포커스된 입력 필드
     @FocusState private var focusedField: SignUpFieldType?
-
-    /// 회원가입 완료 시 호출되는 콜백
-    private let onSignUpComplete: () -> Void
+    @Environment(\.appFlow) private var appFlow
 
     // MARK: - Constant
 
@@ -41,8 +39,7 @@ struct SignUpView: View {
         sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol,
         verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol,
         registerUseCase: RegisterUseCaseProtocol,
-        fetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol,
-        onSignUpComplete: @escaping () -> Void
+        fetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol
     ) {
         self._viewModel = .init(
             wrappedValue: SignUpViewModel(
@@ -53,7 +50,6 @@ struct SignUpView: View {
                 fetchSignUpDataUseCase: fetchSignUpDataUseCase
             )
         )
-        self.onSignUpComplete = onSignUpComplete
     }
 
     // MARK: - Body
@@ -86,7 +82,7 @@ struct SignUpView: View {
             }
             .onChange(of: viewModel.registerState) { _, newState in
                 if case .loaded = newState {
-                    onSignUpComplete()
+                    appFlow.showPendingApproval()
                 }
             }
         }

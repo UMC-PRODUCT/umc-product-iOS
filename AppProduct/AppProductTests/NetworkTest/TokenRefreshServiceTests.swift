@@ -21,6 +21,12 @@ final class TokenRefreshServiceTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        guard ProcessInfo.processInfo.environment["RUN_INTEGRATION_TESTS"] == "1" else {
+            throw XCTSkip("Integration tests are disabled. Set RUN_INTEGRATION_TESTS=1 to run.")
+        }
+        guard await isServerReachable() else {
+            throw XCTSkip("AppProductTestServer(localhost:8080) is not running.")
+        }
         sut = TokenRefreshServiceImpl(baseURL: baseURL)
     }
 
@@ -131,5 +137,16 @@ final class TokenRefreshServiceTests: XCTestCase {
         let tokenPair = try await sut.refresh(validToken)
 
         XCTAssertNotNil(tokenPair)
+    }
+
+    private func isServerReachable() async -> Bool {
+        var request = URLRequest(url: baseURL)
+        request.timeoutInterval = 1
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            return (response as? HTTPURLResponse)?.statusCode == 200
+        } catch {
+            return false
+        }
     }
 }
