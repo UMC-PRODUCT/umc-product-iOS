@@ -16,20 +16,16 @@ struct SplashView: View {
     // MARK: - Property
 
     @State private var viewModel: SplashViewModel
-
-    /// 토큰 검사 완료 콜백
-    private let onComplete: (Bool) -> Void
+    @Environment(\.appFlow) private var appFlow
 
     // MARK: - Init
 
     init(
-        networkClient: NetworkClient,
-        onComplete: @escaping (Bool) -> Void
+        networkClient: NetworkClient
     ) {
         self._viewModel = .init(
             wrappedValue: SplashViewModel(networkClient: networkClient)
         )
-        self.onComplete = onComplete
     }
 
     // MARK: - Body
@@ -41,7 +37,11 @@ struct SplashView: View {
             }
             .onChange(of: viewModel.isCheckComplete) { _, isComplete in
                 if isComplete {
-                    onComplete(viewModel.isLoggedIn)
+                    if viewModel.isLoggedIn {
+                        appFlow.showMain()
+                    } else {
+                        appFlow.showLogin()
+                    }
                 }
             }
     }

@@ -21,6 +21,9 @@ struct HomeViewModelTests {
     ) -> DIContainer {
         let container = DIContainer()
         container.register(HomeUseCaseProviding.self) { provider }
+        container.register(ChallengerGenRepositoryProtocol.self) {
+            SpyGenRepository()
+        }
         return container
     }
 
@@ -50,7 +53,8 @@ struct HomeViewModelTests {
                             roleType: .challenger, responsiblePart: nil,
                             organizationType: .school, organizationId: 5
                         )
-                    ]
+                    ],
+                    generations: []
                 )
             )
             let container = HomeViewModelTests.makeContainer(provider: provider)
@@ -93,94 +97,6 @@ struct HomeViewModelTests {
         }
     }
 
-    // MARK: - FetchPenalties
-
-    @Suite("FetchPenalties")
-    @MainActor
-    struct FetchPenaltiesTests {
-
-        @Test("fetchPenalties_roles_비어있으면_스킵")
-        func fetchPenalties_roles_비어있으면_스킵() async {
-            // Given
-            let provider = SpyHomeUseCaseProvider()
-            let container = HomeViewModelTests.makeContainer(provider: provider)
-            let sut = HomeViewModel(container: container)
-
-            // When - roles가 비어있는 상태
-            await sut.fetchPenalties()
-
-            // Then - idle 유지
-            #expect(sut.generationData == .idle)
-        }
-
-        @Test("fetchPenalties_역할별_순차_호출")
-        func fetchPenalties_역할별_순차_호출() async {
-            // Given
-            let provider = SpyHomeUseCaseProvider()
-            let allPenalties = [
-                GenerationData(
-                    gisuId: 50, gen: 9,
-                    penaltyPoint: 1,
-                    penaltyLogs: [
-                        PenaltyInfoItem(reason: "지각", date: "2026.03.14", penaltyPoint: 1)
-                    ]
-                ),
-                GenerationData(
-                    gisuId: 60, gen: 10,
-                    penaltyPoint: 2,
-                    penaltyLogs: [
-                        PenaltyInfoItem(reason: "결석", date: "2026.04.01", penaltyPoint: 2)
-                    ]
-                )
-            ]
-            provider.stubPenaltyResult = .success(allPenalties)
-
-            let container = HomeViewModelTests.makeContainer(provider: provider)
-            let sut = HomeViewModel(container: container)
-
-            // 프로필에서 roles 설정 (fetchProfile 시뮬레이션)
-            provider.stubProfileResult = .success(
-                HomeProfileResult(
-                    memberId: 1,
-                    schoolId: 5,
-                    seasonTypes: [.gens([9, 10])],
-                    roles: [
-                        ChallengerRole(
-                            challengerId: 100, gisu: 9, gisuId: 50,
-                            roleType: .challenger, responsiblePart: nil,
-                            organizationType: .school, organizationId: 5
-                        ),
-                        ChallengerRole(
-                            challengerId: 200, gisu: 10, gisuId: 60,
-                            roleType: .challenger, responsiblePart: nil,
-                            organizationType: .school, organizationId: 5
-                        )
-                    ]
-                )
-            )
-            await sut.fetchProfile()
-
-            // When
-            await sut.fetchPenalties()
-
-            // Then
-            if case .loaded(let generations) = sut.generationData {
-                #expect(generations.count == 2)
-                #expect(generations[0].gen == 9)
-                #expect(generations[1].gen == 10)
-            } else {
-                Issue.record("Expected .loaded but got \(sut.generationData)")
-            }
-
-            // 각 role에 대해 호출됐는지
-            #expect(provider.penaltyCallCount == 2)
-            #expect(provider.penaltyCallArgs[0].challengerId == 100)
-            #expect(provider.penaltyCallArgs[0].gisuId == 50)
-            #expect(provider.penaltyCallArgs[1].challengerId == 200)
-            #expect(provider.penaltyCallArgs[1].gisuId == 60)
-        }
-    }
-
     // MARK: - FetchRecentNotices
 
     @Suite("FetchRecentNotices")
@@ -215,7 +131,8 @@ struct HomeViewModelTests {
                             roleType: .challenger, responsiblePart: nil,
                             organizationType: .school, organizationId: 5
                         )
-                    ]
+                    ],
+                    generations: []
                 )
             )
 
@@ -353,32 +270,25 @@ final class SpyHomeUseCaseProvider: HomeUseCaseProviding, @unchecked Sendable {
     // MARK: - Stubs
 
     var stubProfileResult: Result<HomeProfileResult, Error> = .success(
-        HomeProfileResult(memberId: 0, schoolId: 0, seasonTypes: [], roles: [])
+        HomeProfileResult(
+            memberId: 0,
+            schoolId: 0,
+            seasonTypes: [],
+            roles: [],
+            generations: []
+        )
     )
-    var stubPenaltyResult: Result<[GenerationData], Error> = .success([])
     var stubSchedulesResult: Result<[Date: [ScheduleData]], Error> = .success([:])
     var stubRecentNoticesResult: Result<[RecentNoticeData], Error> = .success([])
 
     // MARK: - Call Tracking
 
-    var penaltyCallCount = 0
-    var penaltyCallArgs: [(challengerId: Int, gisuId: Int)] = []
     var recentNoticesGisuId: Int?
 
     // MARK: - UseCase Properties
 
     var fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol {
         StubFetchMyProfileUseCase(result: stubProfileResult)
-    }
-
-    var fetchPenaltyUseCase: FetchPenaltyUseCaseProtocol {
-        StubFetchPenaltyUseCase(
-            result: stubPenaltyResult,
-            onExecute: { [weak self] challengerId, gisuId in
-                self?.penaltyCallCount += 1
-                self?.penaltyCallArgs.append((challengerId, gisuId))
-            }
-        )
     }
 
     var fetchSchedulesUseCase: FetchSchedulesUseCaseProtocol {
@@ -397,6 +307,22 @@ final class SpyHomeUseCaseProvider: HomeUseCaseProviding, @unchecked Sendable {
     var generateScheduleUseCase: GenerateScheduleUseCaseProtocol {
         StubGenerateScheduleUseCase()
     }
+
+    var registerFCMTokenUseCase: RegisterFCMTokenUseCaseProtocol {
+        StubRegisterFCMTokenUseCase()
+    }
+
+    var updateScheduleUseCase: UpdateScheduleUseCaseProtocol {
+        StubUpdateScheduleUseCase()
+    }
+
+    var deleteScheduleUseCase: DeleteScheduleUseCaseProtocol {
+        StubDeleteScheduleUseCase()
+    }
+
+    var searchChallengersUseCase: SearchChallengersUseCaseProtocol {
+        StubSearchChallengersUseCase()
+    }
 }
 
 // MARK: - Stub UseCases
@@ -406,28 +332,6 @@ private struct StubFetchMyProfileUseCase: FetchMyProfileUseCaseProtocol {
 
     func execute() async throws -> HomeProfileResult {
         try result.get()
-    }
-}
-
-private final class StubFetchPenaltyUseCase:
-    FetchPenaltyUseCaseProtocol, @unchecked Sendable
-{
-    let result: Result<[GenerationData], Error>
-    let onExecute: (Int, Int) -> Void
-
-    init(
-        result: Result<[GenerationData], Error>,
-        onExecute: @escaping (Int, Int) -> Void
-    ) {
-        self.result = result
-        self.onExecute = onExecute
-    }
-
-    func execute(
-        challengerId: Int, gisuId: Int
-    ) async throws -> [GenerationData] {
-        onExecute(challengerId, gisuId)
-        return try result.get()
     }
 }
 
@@ -465,4 +369,37 @@ private final class StubFetchRecentNoticesUseCase:
 
 private struct StubGenerateScheduleUseCase: GenerateScheduleUseCaseProtocol {
     func execute(schedule: GenerateScheduleRequetDTO) async throws {}
+}
+
+private struct StubRegisterFCMTokenUseCase: RegisterFCMTokenUseCaseProtocol {
+    func execute(challengerId: Int, fcmToken: String) async throws {}
+}
+
+private struct StubUpdateScheduleUseCase: UpdateScheduleUseCaseProtocol {
+    func execute(
+        scheduleId: Int,
+        schedule: UpdateScheduleRequestDTO
+    ) async throws {}
+}
+
+private struct StubDeleteScheduleUseCase: DeleteScheduleUseCaseProtocol {
+    func execute(scheduleId: Int) async throws {}
+}
+
+private struct StubSearchChallengersUseCase: SearchChallengersUseCaseProtocol {
+    func execute(
+        query: ChallengerSearchRequestDTO
+    ) async throws -> ([ChallengerInfo], hasNext: Bool, nextCursor: Int?) {
+        ([], false, nil)
+    }
+}
+
+private final class SpyGenRepository:
+    ChallengerGenRepositoryProtocol, @unchecked Sendable
+{
+    func replaceMappings(_ pairs: [(gen: Int, gisuId: Int)]) throws {}
+
+    func fetchGenGisuIdPairs() throws -> [(gen: Int, gisuId: Int)] {
+        []
+    }
 }

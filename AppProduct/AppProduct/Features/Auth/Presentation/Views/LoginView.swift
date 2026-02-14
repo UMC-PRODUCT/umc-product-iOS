@@ -17,20 +17,13 @@ struct LoginView: View {
 
     /// 로그인 뷰 모델 (@Observable 패턴)
     @State private var viewModel: LoginViewModel
-
-    /// 로그인 성공 시 호출되는 콜백
-    private let onLoginSuccess: () -> Void
-
-    /// 신규 회원 시 호출되는 콜백 (verificationToken 전달)
-    private let onNewMember: (String) -> Void
+    @Environment(\.appFlow) private var appFlow
 
     // MARK: - Init
 
     init(
         loginUseCase: LoginUseCaseProtocol,
-        errorHandler: ErrorHandler,
-        onLoginSuccess: @escaping () -> Void,
-        onNewMember: @escaping (String) -> Void
+        errorHandler: ErrorHandler
     ) {
         self._viewModel = .init(
             wrappedValue: LoginViewModel(
@@ -38,8 +31,6 @@ struct LoginView: View {
                 errorHandler: errorHandler
             )
         )
-        self.onLoginSuccess = onLoginSuccess
-        self.onNewMember = onNewMember
     }
 
     // MARK: - Body
@@ -63,9 +54,9 @@ struct LoginView: View {
             if case .loaded(let result) = newState {
                 switch result {
                 case .existingMember:
-                    onLoginSuccess()
+                    appFlow.showMain()
                 case .newMember(let verificationToken):
-                    onNewMember(verificationToken)
+                    appFlow.showSignUp(verificationToken)
                 }
             }
         }

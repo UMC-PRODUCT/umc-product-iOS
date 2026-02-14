@@ -40,7 +40,8 @@ struct HomeUseCaseTests {
                         roleType: .challenger, responsiblePart: nil,
                         organizationType: .school, organizationId: 5
                     )
-                ]
+                ],
+                generations: []
             )
             repository.getMyProfileResult = .success(expectedResult)
 
@@ -71,79 +72,6 @@ struct HomeUseCaseTests {
             await #expect(throws: RepositoryError.self) {
                 try await sut.execute()
             }
-        }
-    }
-
-    // MARK: - FetchPenaltyUseCase
-
-    @Suite("FetchPenaltyUseCase")
-    @MainActor
-    struct FetchPenaltyUseCaseTests {
-
-        @Test("패널티_조회_저장_후_전체_반환")
-        func 패널티_조회_저장_후_전체_반환() async throws {
-            // Given
-            let homeRepository = SpyHomeRepository()
-            let genRepository = SpyGenRepository()
-
-            let currentPenalty = GenerationData(
-                gisuId: 50, gen: 9,
-                penaltyPoint: 2,
-                penaltyLogs: [
-                    PenaltyInfoItem(reason: "지각", date: "2026.03.14", penaltyPoint: 1),
-                    PenaltyInfoItem(reason: "결석", date: "2026.03.20", penaltyPoint: 1)
-                ]
-            )
-            homeRepository.getPenaltyResult = .success(currentPenalty)
-
-            let allPenalties = [
-                currentPenalty,
-                GenerationData(
-                    gisuId: 60, gen: 10,
-                    penaltyPoint: 1,
-                    penaltyLogs: [
-                        PenaltyInfoItem(reason: "지각", date: "2026.04.01", penaltyPoint: 1)
-                    ]
-                )
-            ]
-            genRepository.fetchAllPenaltiesResult = .success(allPenalties)
-
-            let sut = FetchPenaltyUseCase(
-                homeRepository: homeRepository,
-                genRepository: genRepository
-            )
-
-            // When
-            let result = try await sut.execute(challengerId: 100, gisuId: 50)
-
-            // Then
-            #expect(result.count == 2)
-            #expect(homeRepository.getPenaltyCalled)
-            #expect(homeRepository.getPenaltyChallengerId == 100)
-            #expect(homeRepository.getPenaltyGisuId == 50)
-            #expect(genRepository.savePenaltyCalled)
-            #expect(genRepository.fetchAllPenaltiesCalled)
-        }
-
-        @Test("패널티_API_실패시_에러_전파")
-        func 패널티_API_실패시_에러_전파() async {
-            // Given
-            let homeRepository = SpyHomeRepository()
-            let genRepository = SpyGenRepository()
-            homeRepository.getPenaltyResult = .failure(
-                RepositoryError.serverError(code: "404", message: "챌린저를 찾을 수 없습니다")
-            )
-
-            let sut = FetchPenaltyUseCase(
-                homeRepository: homeRepository,
-                genRepository: genRepository
-            )
-
-            // When/Then
-            await #expect(throws: RepositoryError.self) {
-                try await sut.execute(challengerId: 999, gisuId: 99)
-            }
-            #expect(!genRepository.savePenaltyCalled)
         }
     }
 
@@ -218,28 +146,18 @@ final class SpyHomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
 
     var getMyProfileCalled = false
     var getMyProfileResult: Result<HomeProfileResult, Error> = .success(
-        HomeProfileResult(memberId: 0, schoolId: 0, seasonTypes: [], roles: [])
+        HomeProfileResult(
+            memberId: 0,
+            schoolId: 0,
+            seasonTypes: [],
+            roles: [],
+            generations: []
+        )
     )
 
     func getMyProfile() async throws -> HomeProfileResult {
         getMyProfileCalled = true
         return try getMyProfileResult.get()
-    }
-
-    // MARK: - getPenalty
-
-    var getPenaltyCalled = false
-    var getPenaltyChallengerId: Int?
-    var getPenaltyGisuId: Int?
-    var getPenaltyResult: Result<GenerationData, Error> = .success(
-        GenerationData(gisuId: 0, gen: 0, penaltyPoint: 0, penaltyLogs: [])
-    )
-
-    func getPenalty(challengerId: Int, gisuId: Int) async throws -> GenerationData {
-        getPenaltyCalled = true
-        getPenaltyChallengerId = challengerId
-        getPenaltyGisuId = gisuId
-        return try getPenaltyResult.get()
     }
 
     // MARK: - getSchedules
@@ -260,33 +178,23 @@ final class SpyHomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
         return try getRecentNoticesResult.get()
     }
 
+    // MARK: - registerFCMToken
+
+    var registerFCMTokenCalled = false
+    var registerFCMTokenChallengerId: Int?
+    var registerFCMTokenValue: String?
+
+    func registerFCMToken(challengerId: Int, fcmToken: String) async throws {
+        registerFCMTokenCalled = true
+        registerFCMTokenChallengerId = challengerId
+        registerFCMTokenValue = fcmToken
+    }
+
     // MARK: - searchChallengers
 
     func searchChallengers(
         query: ChallengerSearchRequestDTO
     ) async throws -> ChallengerSearchResponseDTO {
         fatalError("Not needed in Home tests")
-    }
-}
-
-final class SpyGenRepository: ChallengerGenRepositoryProtocol, @unchecked Sendable {
-
-    var savePenaltyCalled = false
-    var savedPenalty: GenerationData?
-    var fetchAllPenaltiesCalled = false
-    var fetchAllPenaltiesResult: Result<[GenerationData], Error> = .success([])
-
-    func savePenalty(_ data: GenerationData) throws {
-        savePenaltyCalled = true
-        savedPenalty = data
-    }
-
-    func fetchAllPenalties() throws -> [GenerationData] {
-        fetchAllPenaltiesCalled = true
-        return try fetchAllPenaltiesResult.get()
-    }
-
-    func fetchGenGisuIdPairs() throws -> [(gen: Int, gisuId: Int)] {
-        []
     }
 }

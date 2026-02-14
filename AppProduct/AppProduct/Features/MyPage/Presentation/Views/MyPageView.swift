@@ -103,13 +103,7 @@ struct MyPageView: View {
         case .auth:
             AuthSection(
                 sectionType: section,
-                alertPrompt: $viewModel.alertPrompt,
-                onLogout: {
-                    NotificationCenter.default.post(
-                        name: .authSessionExpired,
-                        object: nil
-                    )
-                }
+                alertPrompt: $viewModel.alertPrompt
             )
         }
     }
