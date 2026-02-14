@@ -6,10 +6,20 @@
 //
 
 import Foundation
+import SwiftData
 
 #if DEBUG
 struct StudyGroupPreviewData {
-    static let container = DIContainer.configured()
+    static let container: DIContainer = {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let modelContainer = try! ModelContainer(
+            for: PenaltyRecord.self, NoticeHistoryData.self,
+            configurations: config
+        )
+        return DIContainer.configured(
+            modelContext: modelContainer.mainContext
+        )
+    }()
     static let errorHandler = ErrorHandler()
 
     // MARK: - Mock Groups

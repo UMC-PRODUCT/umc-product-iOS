@@ -125,7 +125,7 @@ final class OperatorStudyManagementViewModel {
         let newMembers = selectedChallengers
             .map { challenger in
                 StudyGroupMember(
-                    serverID: String(challenger.challengeId),
+                    serverID: String(challenger.memberId),
                     name: challenger.name,
                     nickname: challenger.nickname,
                     university: challenger.schoolName,
@@ -188,7 +188,7 @@ final class OperatorStudyManagementViewModel {
         members: [ChallengerInfo]
     ) {
         let leaderMember = StudyGroupMember(
-            serverID: String(leader.challengeId),
+            serverID: String(leader.memberId),
             name: leader.name,
             nickname: leader.nickname,
             university: leader.schoolName,
@@ -197,7 +197,7 @@ final class OperatorStudyManagementViewModel {
         )
         let memberList = members.map { challenger in
             StudyGroupMember(
-                serverID: String(challenger.challengeId),
+                serverID: String(challenger.memberId),
                 name: challenger.name,
                 nickname: challenger.nickname,
                 university: challenger.schoolName,
