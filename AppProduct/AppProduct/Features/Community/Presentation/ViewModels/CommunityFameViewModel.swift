@@ -9,11 +9,10 @@ import Foundation
 
 @Observable
 class CommunityFameViewModel {
-    // MARK: - Dependencies
-    
-    private let fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol
-    
     // MARK: - Properties
+    
+    private let container: DIContainer
+    private let useCaseProvider: CommunityUseCaseProviding
     
     var selectedWeek: Int = 1
     var selectedUniversity: String = "전체"
@@ -68,18 +67,19 @@ class CommunityFameViewModel {
     
     // MARK: - Init
     
-    init(fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol) {
-        self.fetchFameItemsUseCase = fetchFameItemsUseCase
+    init(container: DIContainer) {
+        self.container = container
+        self.useCaseProvider = container.resolve(CommunityUseCaseProviding.self)
     }
 
     // MARK: - Function
     
     @MainActor
-    func fetchFameItems() async {
+    func fetchFameItems(query: TrophyListQuery) async {
         fameItems = .loading
         do {
-//            let items = try await fetchFameItemsUseCase.execute()
-//            fameItems = .loaded(items)
+            let items = try await useCaseProvider.fetchFameItemsUseCase.execute(query: query)
+            fameItems = .loaded(items)
         } catch let error as DomainError {
             fameItems = .failed(.domain(error))
         } catch {

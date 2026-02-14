@@ -39,7 +39,7 @@ struct CommunityView: View {
                         .searchable(text: $vm.searchText)
                         .searchToolbarBehavior(.minimize)
                 case .fame:
-                    CommunityFameView()
+                    CommunityFameView(container: di)
                 }
             }
             .task {
@@ -47,8 +47,7 @@ struct CommunityView: View {
                 case .all, .question, .party:
                     await vm.fetchCommunityItems(query: .init(category: vm.selectedMenu.toCategoryType(), page: 0, size: 10))
                 case .fame:
-                    print("")
-                    // TODO: 명예의전당
+                    break
                 }
             }
             .navigation(naviTitle: .community, displayMode: .inline)

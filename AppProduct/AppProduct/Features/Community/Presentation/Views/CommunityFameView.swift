@@ -11,72 +11,67 @@ struct CommunityFameView: View {
     // MARK: - Properties
     
     @Environment(\.di) private var di
-    @State var viewModel: CommunityFameViewModel?
+    @Environment(ErrorHandler.self) var errorHandler
     
-    private var communityProvider: CommunityUseCaseProviding {
-        di.resolve(UsecaseProviding.self).community
-    }
+    @State private var vm: CommunityFameViewModel
 
     private enum Constants {
         static let weekPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
+    }
+    
+    // MARK: - Init
+    
+    init(container: DIContainer) {
+        _vm = State(initialValue: CommunityFameViewModel(container: container))
     }
 
     // MARK: - Body
 
     var body: some View {
         Group {
-            if let vm = viewModel {
-                switch vm.fameItems {
-                case .idle, .loading:
-                    ProgressView("명예의전당 로딩 중...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                case .loaded:
-                    listSection(vm: vm)
-                case .failed(let error):
-                    ContentUnavailableView {
-                        Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                    } description: {
-                        Text(error.localizedDescription)
-                    } actions: {
-                        Button("다시 시도") {
-                            Task { await vm.fetchFameItems() }
+            switch vm.fameItems {
+            case .idle, .loading:
+                ProgressView("명예의전당 로딩 중...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            case .loaded:
+                listSection(vm: vm)
+            case .failed(let error):
+                ContentUnavailableView {
+                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(error.localizedDescription)
+                } actions: {
+                    Button("다시 시도") {
+                        Task {
+                            await vm.fetchFameItems(query: .init(week: 1, school: nil, part: nil))
                         }
                     }
                 }
-            } else {
-                ProgressView()
             }
         }
         .task {
-            if viewModel == nil {
-                viewModel = CommunityFameViewModel(
-                    fetchFameItemsUseCase: communityProvider.fetchFameItemsUseCase
-                )
-            }
-            await viewModel?.fetchFameItems()
+            await vm.fetchFameItems(query: .init(week: 1, school: nil, part: nil))
         }
         .toolbar {
-            if let vm = viewModel {
-                ToolBarCollection.CommunityWeekFilter(
-                    weeks: vm.availableWeeks,
-                    selection: Binding(
-                        get: { vm.selectedWeek }, set: { vm.selectedWeek = $0 }
-                    )
+            ToolBarCollection.CommunityWeekFilter(
+                weeks: vm.availableWeeks,
+                selection: Binding(
+                    get: { vm.selectedWeek }, set: { vm.selectedWeek = $0 }
                 )
-                
-                ToolBarCollection.CommunityUnivFilter(
-                    selectedUniversity: Binding(
-                        get: { vm.selectedUniversity }, set: { vm.selectedUniversity = $0 }
-                    ),
-                    universities: vm.availableUniversities
-                )
-                ToolBarCollection.CommunityPartFilter(
-                    selectedPart: Binding(
-                        get: { vm.selectedPart }, set: { vm.selectedPart = $0 }
-                    ),
-                    parts: vm.availableParts
-                )
-            }
+            )
+            
+            ToolBarCollection.CommunityUnivFilter(
+                selectedUniversity: Binding(
+                    get: { vm.selectedUniversity }, set: { vm.selectedUniversity = $0 }
+                ),
+                universities: vm.availableUniversities
+            )
+            ToolBarCollection.CommunityPartFilter(
+                selectedPart: Binding(
+                    get: { vm.selectedPart }, set: { vm.selectedPart = $0 }
+                ),
+                parts: vm.availableParts
+            )
         }
     }
 
