@@ -13,9 +13,7 @@ import SwiftData
 /// `ModelContext`를 주입받아 (gen, gisuId) 매핑을 upsert/조회합니다.
 /// CloudKit Sync 활성화 시 `@Attribute(.unique)` 사용 불가하므로,
 /// `gen` 기준 fetch 후 upsert 방식으로 처리합니다.
-final class ChallengerGenRepository:
-    ChallengerGenRepositoryProtocol, @unchecked Sendable
-{
+final class ChallengerGenRepository: ChallengerGenRepositoryProtocol, @unchecked Sendable {
 
     // MARK: - Property
 

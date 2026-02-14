@@ -114,8 +114,12 @@ struct OperatorStudyMemberCard: View, Equatable {
             Text(member.displayName)
                 .appFont(.calloutEmphasis)
 
-            infoBadge(member.university)
-            infoBadge(member.part.rawValue)
+            InfoBadge(member.university, tintColor: .gray)
+            InfoBadge(
+                member.part.rawValue,
+                textColor: member.part.color,
+                tintColor: member.part.color
+            )
 
             if member.isBestWorkbook {
                 trophyBadge
@@ -131,18 +135,6 @@ struct OperatorStudyMemberCard: View, Equatable {
             .glassEffect(
                 .regular.tint(
                     .orange.opacity(Constants.badgeBackgroundOpacity)
-                )
-            )
-    }
-
-    private func infoBadge(_ text: String) -> some View {
-        Text(text)
-            .appFont(.footnote, color: .grey600)
-            .lineLimit(1)
-            .padding(DefaultConstant.iconPadding)
-            .glassEffect(
-                .regular.tint(
-                    .gray.opacity(Constants.badgeBackgroundOpacity)
                 )
             )
     }

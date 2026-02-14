@@ -5,7 +5,7 @@
 //  Created by jaewon Lee on 2/8/26.
 //
 
-import Foundation
+import SwiftUI
 
 /// 스터디 파트
 enum StudyPart: String, CaseIterable, Codable, Hashable {
@@ -16,6 +16,22 @@ enum StudyPart: String, CaseIterable, Codable, Hashable {
     case nodejs = "Node.js"
     case design = "Design"
     case pm = "PM"
+
+    /// UMCPartType 변환
+    var partType: UMCPartType {
+        switch self {
+        case .ios:     return .front(type: .ios)
+        case .android: return .front(type: .android)
+        case .web:     return .front(type: .web)
+        case .spring:  return .server(type: .spring)
+        case .nodejs:  return .server(type: .node)
+        case .design:  return .design
+        case .pm:      return .pm
+        }
+    }
+
+    /// 파트별 고유 색상 (UMCPartType에 위임)
+    var color: Color { partType.color }
 }
 
 /// 운영진 스터디 출석 관리에서 사용되는 스터디원 모델
@@ -60,6 +76,7 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
 
     // MARK: - Initializer
 
+    /// 스터디원 모델 초기화
     init(
         id: UUID = UUID(),
         serverID: String,

@@ -19,7 +19,12 @@ struct OperatorStudyManagementView: View {
     private let container: DIContainer
     private let errorHandler: ErrorHandler
 
+    private var pathStore: PathStore {
+        container.resolve(PathStore.self)
+    }
+
     @State private var selectedTab: ManagementTab = .submission
+    @State private var showCreateView = false
 
     // MARK: - Constants
 
@@ -27,10 +32,12 @@ struct OperatorStudyManagementView: View {
         static let loadingPlaceholderHeight: CGFloat = 80
     }
 
+    /// 관리 화면 탭 구분
     private enum ManagementTab: Int, CaseIterable {
         case submission
         case groupManagement
 
+        /// 탭 표시 제목
         var title: String {
             switch self {
             case .submission: "제출 현황"
@@ -41,6 +48,9 @@ struct OperatorStudyManagementView: View {
 
     // MARK: - Initializer
 
+    /// - Parameters:
+    ///   - container: 의존성 주입 컨테이너
+    ///   - errorHandler: 전역 에러 핸들러
     init(container: DIContainer, errorHandler: ErrorHandler) {
         self.container = container
         self.errorHandler = errorHandler
@@ -93,6 +103,10 @@ struct OperatorStudyManagementView: View {
                     selection: $viewModel.selectedStudyGroup,
                     onChange: viewModel.selectStudyGroup
                 )
+            } else {
+                ToolBarCollection.AddBtn {
+                    showCreateView = true
+                }
             }
         }
         .sheet(
@@ -129,6 +143,36 @@ struct OperatorStudyManagementView: View {
                 }
             )
         }
+        .sheet(
+            item: $viewModel.addMemberGroup,
+            onDismiss: { viewModel.applySelectedChallengers() }
+        ) { _ in
+            SelectedChallengerView(
+                challenger: $viewModel.selectedChallengers
+            )
+        }
+        .sheet(item: $viewModel.editingGroup) { group in
+            OperatorStudyGroupEditSheet(
+                detail: group,
+                onSave: { name, part in
+                    viewModel.applyGroupEdit(
+                        groupID: group.id,
+                        name: name,
+                        part: part
+                    )
+                }
+            )
+        }
+        .navigationDestination(isPresented: $showCreateView) {
+            OperatorStudyGroupCreateView { name, part, leader, members in
+                viewModel.createGroup(
+                    name: name,
+                    part: part,
+                    leader: leader,
+                    members: members
+                )
+            }
+        }
         .alertPrompt(item: $viewModel.alertPrompt)
     }
 
@@ -156,14 +200,44 @@ struct OperatorStudyManagementView: View {
 
     private var groupManagementPlaceholder: some View {
         ScrollView {
-            ContentUnavailableView {
-                Label("스터디 그룹 관리", systemImage: "person.2.badge.gearshape")
-            } description: {
-                Text("준비 중입니다")
+            LazyVStack(spacing: DefaultSpacing.spacing16) {
+                ForEach(viewModel.studyGroupDetails) { group in
+                    StudyGroupCard(
+                        detail: group,
+                        onEdit: {
+                            viewModel.showEditSheet(for: group)
+                        },
+                        onDelete: {
+                            viewModel.deleteGroup(group)
+                        },
+                        onAddMember: {
+                            viewModel.showAddMemberSheet(
+                                for: group
+                            )
+                        },
+                        onSchedule: {
+                            pathStore.activityPath.append(
+                                .activity(
+                                    .studyScheduleRegistration(
+                                        studyName: group.name
+                                    )
+                                )
+                            )
+                        }
+                    )
+                    .equatable()
+                }
             }
-            .padding(.top, DefaultSpacing.spacing32)
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .safeAreaPadding(
+                .horizontal,
+                DefaultConstant.defaultSafeBtnPadding
+            )
         }
+        .contentMargins(
+            .bottom,
+            DefaultConstant.defaultContentBottomMargins,
+            for: .scrollContent
+        )
     }
 
     // MARK: - Loading View
