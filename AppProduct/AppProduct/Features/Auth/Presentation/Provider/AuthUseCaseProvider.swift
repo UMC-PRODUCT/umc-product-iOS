@@ -13,6 +13,8 @@ protocol AuthUseCaseProviding {
     var loginUseCase: LoginUseCaseProtocol { get }
     /// 내 OAuth 정보 조회 UseCase
     var fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol { get }
+    /// OAuth 수단 추가 연동 UseCase
+    var addMemberOAuthUseCase: AddMemberOAuthUseCaseProtocol { get }
     /// 이메일 인증 발송 UseCase
     var sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol { get }
     /// 이메일 인증코드 검증 UseCase
@@ -32,6 +34,7 @@ final class AuthUseCaseProvider: AuthUseCaseProviding {
 
     let loginUseCase: LoginUseCaseProtocol
     let fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol
+    let addMemberOAuthUseCase: AddMemberOAuthUseCaseProtocol
     let sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol
     let verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol
     let registerUseCase: RegisterUseCaseProtocol
@@ -50,6 +53,9 @@ final class AuthUseCaseProvider: AuthUseCaseProviding {
             tokenStore: tokenStore
         )
         self.fetchMyOAuthUseCase = FetchMyOAuthUseCase(
+            repository: repository
+        )
+        self.addMemberOAuthUseCase = AddMemberOAuthUseCase(
             repository: repository
         )
         self.sendEmailVerificationUseCase = SendEmailVerificationUseCase(

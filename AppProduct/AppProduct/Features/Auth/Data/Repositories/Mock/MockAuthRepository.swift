@@ -58,7 +58,26 @@ final class MockAuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
             MemberOAuth(
                 memberOAuthId: 1,
                 memberId: 102,
-                provider: "KAKAO"
+                provider: .kakao
+            )
+        ]
+    }
+
+    func addMemberOAuth(
+        oAuthVerificationToken: String
+    ) async throws -> [MemberOAuth] {
+        try await Task.sleep(for: .milliseconds(300))
+
+        return [
+            MemberOAuth(
+                memberOAuthId: 1,
+                memberId: 102,
+                provider: .kakao
+            ),
+            MemberOAuth(
+                memberOAuthId: 2,
+                memberId: 102,
+                provider: .apple
             )
         ]
     }

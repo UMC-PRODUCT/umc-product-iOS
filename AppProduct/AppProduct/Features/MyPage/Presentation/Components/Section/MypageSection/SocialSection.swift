@@ -15,6 +15,8 @@ struct SocialSection: View {
 
     let sectionType: MyPageSectionType
     let socialType: [SocialType]
+    /// 소셜 연동 버튼 탭 시 호출되는 클로저
+    let onConnect: (SocialType) -> Void
 
     /// 연결되지 않은 소셜 타입만 필터링
     ///
@@ -26,7 +28,7 @@ struct SocialSection: View {
     // MARK: - Body
 
     var body: some View {
-        if socialType.contains(SocialType.allCases) {
+        if availableSocialTypes.isEmpty {
             EmptyView()
         } else {
             Section(content: {
@@ -47,21 +49,9 @@ struct SocialSection: View {
     
     private func content(_ social: SocialType) -> some View {
         Button(action: {
-            socialLoginAction(social)
+            onConnect(social)
         }, label: {
             MyPageSectionRow(icon: social.imageResource, title: social.rawValue, rightText: "연동하기")
         })
-    }
-
-    /// 소셜 로그인 연동 액션 처리
-    ///
-    /// - Parameter social: 연동할 소셜 타입
-    private func socialLoginAction(_ social: SocialType) {
-        switch social {
-        case .kakao:
-            print("카카오")
-        case .apple:
-            print("애플")
-        }
     }
 }

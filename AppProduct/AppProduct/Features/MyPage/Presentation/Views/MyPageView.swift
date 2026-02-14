@@ -44,6 +44,9 @@ struct MyPageView: View {
                 .navigationDestination(for: NavigationDestination.self) { destination in
                     NavigationRoutingView(destination: destination)
                 }
+                .task {
+                    await viewModel.fetchProfile(container: di)
+                }
         }
     }
 
@@ -51,13 +54,7 @@ struct MyPageView: View {
     @ViewBuilder
     private var content: some View {
         switch viewModel.profileData {
-        case .idle:
-            // 데이터 fetch가 필요한 경우 여기서 호출
-            Color.clear.task {
-
-                print("hello")
-            }
-        case .loading:
+        case .idle, .loading:
             Progress(message: "내 정보 가져오는 중입니다. 잠시 기다려주세요!")
         case .loaded(let profileData):
             Form {
@@ -65,9 +62,31 @@ struct MyPageView: View {
                 sections(profileData)
                 FollowsSection()
             }
-        case .failed:
-            Color.clear
+        case .failed(let error):
+            errorView(error: error)
         }
+    }
+
+    /// 프로필 로딩 실패 시 에러 메시지와 재시도 버튼을 표시하는 뷰
+    /// - Parameter error: 표시할 AppError
+    private func errorView(error: AppError) -> some View {
+        ContentUnavailableView {
+            Label("로딩 실패", systemImage: "exclamationmark.triangle")
+        } description: {
+            Text(error.localizedDescription)
+        } actions: {
+            Button {
+                Task {
+                    await viewModel.fetchProfile(container: di)
+                }
+            } label: {
+                Image(systemName: "arrow.trianglehead.clockwise")
+                    .renderingMode(.template)
+                    .foregroundStyle(.indigo600)
+            }
+            .buttonStyle(.glassProminent)
+        }
+        .padding(.top, DefaultSpacing.spacing32)
     }
 
     /// MyPageSectionType 전체에 대해 Section을 생성하는 ForEach (현재 미사용)
@@ -99,7 +118,24 @@ struct MyPageView: View {
         case .info:
             InfoSection(sectionType: section)
         case .socialConnect:
-            SocialSection(sectionType: section, socialType: profileData.socialConnected)
+            SocialSection(
+                sectionType: section,
+                socialType: profileData.socialConnected
+            ) { social in
+                Task {
+                    do {
+                        try await viewModel.connectSocial(social, container: di)
+                    } catch {
+                        errorHandler.handle(
+                            error,
+                            context: .init(
+                                feature: "MyPage",
+                                action: "connectSocial"
+                            )
+                        )
+                    }
+                }
+            }
         case .auth:
             AuthSection(
                 sectionType: section,

@@ -52,6 +52,7 @@ final class LoginViewModel {
                 accessToken: accessToken,
                 email: email
             )
+            SocialType.addConnected(.kakao)
             #if DEBUG
             print("[Auth] 서버 로그인 결과: \(result)")
             #endif
@@ -81,6 +82,7 @@ final class LoginViewModel {
                     let result = try await self.loginUseCase.executeApple(
                         authorizationCode: code
                     )
+                    SocialType.addConnected(.apple)
                     self.loginState = .loaded(result)
                 } catch {
                     self.loginState = .idle

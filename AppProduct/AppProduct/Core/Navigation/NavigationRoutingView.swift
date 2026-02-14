@@ -105,7 +105,7 @@ private extension NavigationRoutingView {
     func myPage(_ route: NavigationDestination.MyPage) -> some View {
         switch route {
         case .myInfo(let profileData):
-            MyPageProfileView(profileData: profileData)
+            MyPageProfileView(container: di, profileData: profileData)
         }
     }
 
