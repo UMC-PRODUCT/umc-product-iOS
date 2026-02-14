@@ -13,7 +13,7 @@ struct StudyGroupPreviewData {
     static let container: DIContainer = {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let modelContainer = try! ModelContainer(
-            for: PenaltyRecord.self, NoticeHistoryData.self,
+            for: GenerationMappingRecord.self, NoticeHistoryData.self,
             configurations: config
         )
         return DIContainer.configured(
