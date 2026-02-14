@@ -9,5 +9,5 @@ import Foundation
 
 /// 게시글 작성 UseCase Protocol
 protocol CreatePostUseCaseProtocol {
-    func execute(request: CreatePostRequest) async throws -> CommunityItemModel
+    func execute(request: PostRequestDTO) async throws -> CommunityItemModel
 }

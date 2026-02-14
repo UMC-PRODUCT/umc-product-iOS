@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Community Feature에서 사용하는 UseCase들을 제공하는 Provider Protocol
 protocol CommunityUseCaseProviding {
     var fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol { get }
     var fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol { get }
@@ -14,22 +15,31 @@ protocol CommunityUseCaseProviding {
     var fetchCommentUseCase: FetchCommentsUseCaseProtocol { get }
 }
 
+/// Community UseCase Provider 구현
+///
+/// CommunityRepository를 직접 주입받아 UseCase들을 생성합니다.
 final class CommunityUseCaseProvider: CommunityUseCaseProviding {
     // MARK: - Property
-    
+
     let fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol
     let fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol
     let createPostUseCase: CreatePostUseCaseProtocol
-    let fetchCommentUseCase: any FetchCommentsUseCaseProtocol
-    
+    let fetchCommentUseCase: FetchCommentsUseCaseProtocol
+
     // MARK: - Init
-    
-    init(
-        repositoryProvider: CommunityRepositoryProviding
-    ) {
-        self.fetchFameItemsUseCase = FetchFameItemsUseCase(repository: repositoryProvider.communityRepository)
-        self.fetchCommunityItemsUseCase = FetchCommunityItemsUseCase(repository: repositoryProvider.communityRepository)
-        self.createPostUseCase = CreatePostUseCase(repository: repositoryProvider.communityRepository)
-        self.fetchCommentUseCase = FetchCommentsUseCase(repository: repositoryProvider.communityRepository)
+
+    init(communityRepository: CommunityRepositoryProtocol) {
+        self.fetchFameItemsUseCase = FetchFameItemsUseCase(
+            repository: communityRepository
+        )
+        self.fetchCommunityItemsUseCase = FetchCommunityItemsUseCase(
+            repository: communityRepository
+        )
+        self.createPostUseCase = CreatePostUseCase(
+            repository: communityRepository
+        )
+        self.fetchCommentUseCase = FetchCommentsUseCase(
+            repository: communityRepository
+        )
     }
 }

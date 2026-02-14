@@ -21,6 +21,7 @@ final class FetchCommentsUseCase: FetchCommentsUseCaseProtocol {
     // MARK: - Function
     
     func execute(postId: Int) async throws -> [CommunityCommentModel] {
-        try await repository.fetchComments(postId: postId)
+//        try await repository.fetchComments(postId: postId)
+        return []
     }
 }

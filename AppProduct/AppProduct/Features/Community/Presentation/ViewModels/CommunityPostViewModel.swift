@@ -29,7 +29,7 @@ class CommunityPostViewModel {
     // MARK: - Computed Properties
     var isValid: Bool {
         let hasBasicInfo = !titleText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !contentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        if selectedCategory == .impromptu {
+        if selectedCategory == .lighting {
             let hasPlace = !selectedPlace.name.isEmpty
             let hasLink = !linkText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             
@@ -46,27 +46,26 @@ class CommunityPostViewModel {
     
     // MARK: - Function
     
-    @MainActor
-    func createPost() async {
-        createPostState = .loading
-        
-        let request = CreatePostRequest(
-            category: selectedCategory,
-            title: titleText,
-            content: contentText,
-            date: selectedCategory == .impromptu ? selectedDate : nil,
-            maxParticipants: selectedCategory == .impromptu ? maxParticipants : nil,
-            place: selectedCategory == .impromptu ? selectedPlace : nil,
-            link: selectedCategory == .impromptu ? linkText : nil
-        )
-        
-        do {
-            let createPost = try await createPostUseCase.execute(request: request)
-            createPostState = .loaded(createPost)
-        } catch let error as DomainError {
-            createPostState = .failed(.domain(error))
-        } catch {
-            createPostState = .failed(.unknown(message: error.localizedDescription))
-        }
-    }
+//    @MainActor
+//    func createPost() async {
+//        createPostState = .loading
+//        
+//        let request = CreateLightningPostRequestDTO(
+//            title: titleText,
+//            content: contentText,
+//            meetAt: selectedDate,
+//            location: selectedPlace,
+//            maxParticipants: maxParticipants,
+//            link: linkText
+//        )
+//        
+//        do {
+//            let createPost = try await createPostUseCase.execute(request: request)
+//            createPostState = .loaded(createPost)
+//        } catch let error as DomainError {
+//            createPostState = .failed(.domain(error))
+//        } catch {
+//            createPostState = .failed(.unknown(message: error.localizedDescription))
+//        }
+//    }
 }

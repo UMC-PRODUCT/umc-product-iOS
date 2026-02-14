@@ -78,8 +78,8 @@ class CommunityFameViewModel {
     func fetchFameItems() async {
         fameItems = .loading
         do {
-            let items = try await fetchFameItemsUseCase.execute()
-            fameItems = .loaded(items)
+//            let items = try await fetchFameItemsUseCase.execute()
+//            fameItems = .loaded(items)
         } catch let error as DomainError {
             fameItems = .failed(.domain(error))
         } catch {

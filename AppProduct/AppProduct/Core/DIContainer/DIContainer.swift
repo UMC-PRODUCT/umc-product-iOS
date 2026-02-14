@@ -306,24 +306,26 @@ extension DIContainer {
         }
         
         // MARK: - Community Feature
-        container.register(CommunityRepositoryProviding.self) {
-            CommunityRepositoryProvider.mock()
-        }
-
-        container.register(CommunityUseCaseProviding.self) {
-            CommunityUseCaseProvider(
-                repositoryProvider: container.resolve(CommunityRepositoryProviding.self)
+        container.register(CommunityRepositoryProtocol.self) {
+            CommunityRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
             )
         }
-        
-        // MARK: - Community Feature
-        container.register(CommunityRepositoryProviding.self) {
-            CommunityRepositoryProvider.mock()
-        }
-        
         container.register(CommunityUseCaseProviding.self) {
             CommunityUseCaseProvider(
-                repositoryProvider: container.resolve(CommunityRepositoryProviding.self)
+                communityRepository: container.resolve(
+                    CommunityRepositoryProtocol.self
+                )
+            )
+        }
+
+        // MARK: - Global UseCase Provider
+        container.register(UsecaseProviding.self) {
+            UseCaseProvider(
+                activity: container.resolve(ActivityUseCaseProviding.self),
+                auth: container.resolve(AuthUseCaseProviding.self),
+                home: container.resolve(HomeUseCaseProviding.self),
+                community: container.resolve(CommunityUseCaseProviding.self)
             )
         }
 

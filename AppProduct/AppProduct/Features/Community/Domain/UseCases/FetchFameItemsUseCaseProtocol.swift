@@ -9,5 +9,5 @@ import Foundation
 
 /// 명예의전당 조회 UseCase Protocol
 protocol FetchFameItemsUseCaseProtocol {
-    func execute() async throws -> [CommunityFameItemModel]
+    func execute(query: TrophyListQuery) async throws -> [CommunityFameItemModel]
 }

@@ -37,7 +37,7 @@ struct PostSearchQuery: Encodable {
 /// `GET /api/v1/posts` 쿼리 파라미터
 struct PostListQuery: Encodable {
     /// 카테고리 (LIGHTNING, QUESTION, FREE, etc.)
-    let category: String?
+    let category: CommunityItemCategory?
     /// 페이지 (0부터 시작)
     let page: Int
     /// 페이지 크기

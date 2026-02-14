@@ -20,7 +20,7 @@ final class FetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol {
     
     // MARK: - Function
     
-    func execute() async throws -> [CommunityItemModel] {
-        try await repository.fetchCommunityItems()
+    func execute(query: PostListQuery) async throws -> (items: [CommunityItemModel], hasNext: Bool) {
+        try await repository.getPosts(query: query)
     }
 }

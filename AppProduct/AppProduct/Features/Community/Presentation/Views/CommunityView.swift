@@ -11,14 +11,18 @@ struct CommunityView: View {
     // MARK: - Properties
     
     @Environment(\.di) private var di
-    @State private var viewModel: CommunityViewModel?
+    @Environment(ErrorHandler.self) var errorHandler
+    
+    @State private var vm: CommunityViewModel
     
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
     
-    private var communityProvider: CommunityUseCaseProviding {
-        di.resolve(UsecaseProviding.self).community
+    init(container: DIContainer) {
+        _vm = State(
+            initialValue: CommunityViewModel(container: container)
+        )
     }
 
     // MARK: - Body
@@ -29,41 +33,32 @@ struct CommunityView: View {
             set: { pathStore.communityPath = $0 }
         )) {
             Group {
-                if let vm = viewModel {
-                    switch vm.selectedMenu {
-                    case .all, .question, .party:
-                        contentSection(vm: vm)
-                            .searchable(text: Binding(
-                                get: { vm.searchText }, set: { vm.searchText = $0 }
-                            ))
-                            .searchToolbarBehavior(.minimize)
-                    case .fame:
-                        CommunityFameView()
-                    }
-                } else {
-                    ProgressView()
+                switch vm.selectedMenu {
+                case .all, .question, .party:
+                    contentSection
+                        .searchable(text: $vm.searchText)
+                        .searchToolbarBehavior(.minimize)
+                case .fame:
+                    CommunityFameView()
                 }
             }
             .task {
-                if viewModel == nil {
-                    viewModel = CommunityViewModel(
-                        fetchCommunityItemsUseCase: communityProvider.fetchCommunityItemsUseCase
-                    )
+                switch vm.selectedMenu {
+                case .all, .question, .party:
+                    await vm.fetchCommunityItems(query: .init(category: vm.selectedMenu.toCategoryType(), page: 0, size: 10))
+                case .fame:
+                    print("")
+                    // TODO: 명예의전당
                 }
-                await viewModel?.fetchCommunityItems()
             }
             .navigation(naviTitle: .community, displayMode: .inline)
             .toolbar {
-                if let vm = viewModel {
-                    ToolBarCollection.ToolBarCenterMenu(
-                        items: CommunityMenu.allCases,
-                        selection: Binding(
-                            get: { vm.selectedMenu }, set: { vm.selectedMenu = $0 }
-                        ),
-                        itemLabel: { $0.rawValue },
-                        itemIcon: { $0.icon }
-                    )
-                }
+                ToolBarCollection.ToolBarCenterMenu(
+                    items: CommunityMenu.allCases,
+                    selection: $vm.selectedMenu,
+                    itemLabel: { $0.rawValue },
+                    itemIcon: { $0.icon }
+                )
             }
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
@@ -71,14 +66,14 @@ struct CommunityView: View {
         }
     }
 
-    private func contentSection(vm: CommunityViewModel) -> some View {
+    private var contentSection: some View {
         Group {
             switch vm.items {
             case .idle,.loading:
                 ProgressView("커뮤니티 게시글 로딩 중...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
-                listSection(vm: vm)
+                listSection
             case .failed(let error):
                 ContentUnavailableView {
                     Label("로딩 실패", systemImage: "exclamationmark.triangle")
@@ -86,7 +81,9 @@ struct CommunityView: View {
                     Text(error.localizedDescription)
                 } actions: {
                     Button("다시 시도") {
-                        Task { await vm.fetchCommunityItems() }
+                        Task {
+                            await vm.fetchCommunityItems(query: .init(category: vm.selectedMenu.toCategoryType(), page: 0, size: 10))
+                        }
                     }
                 }
             }
@@ -95,7 +92,7 @@ struct CommunityView: View {
 
     // MARK: - List
 
-    private func listSection(vm: CommunityViewModel) -> some View {
+    private var listSection: some View {
         Group {
             if vm.filteredItems.isEmpty {
                 unableContent
@@ -107,6 +104,9 @@ struct CommunityView: View {
                     .equatable()
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
+                    .task {
+                        await vm.loadMoreIfNeeded(currentItem: item)
+                    }
                 })
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)

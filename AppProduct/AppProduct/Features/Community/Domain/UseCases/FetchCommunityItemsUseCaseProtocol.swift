@@ -9,5 +9,5 @@ import Foundation
 
 /// 커뮤니티 게시글 조회 UseCase Protocol
 protocol FetchCommunityItemsUseCaseProtocol {
-    func execute() async throws -> [CommunityItemModel]
+    func execute(query: PostListQuery) async throws -> (items: [CommunityItemModel], hasNext: Bool)
 }

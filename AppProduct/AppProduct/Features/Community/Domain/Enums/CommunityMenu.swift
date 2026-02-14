@@ -23,4 +23,12 @@ enum CommunityMenu: String, Identifiable, CaseIterable {
         case .fame: return "trophy.fill"
         }
     }
+    
+    func toCategoryType() -> CommunityItemCategory? {
+        switch self {
+        case .all, .fame: return nil
+        case .question: return .question
+        case .party: return .lighting
+        }
+    }
 }

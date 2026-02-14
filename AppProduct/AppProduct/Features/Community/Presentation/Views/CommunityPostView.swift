@@ -33,7 +33,7 @@ struct CommunityPostView: View {
                 }
                 
                 // 2. 번개폼
-                if vm.selectedCategory == .impromptu {
+                if vm.selectedCategory == .lighting {
                     // 2-1. 날짜 및 시간
                     Section {
                         dateSection(vm: vm)
@@ -139,12 +139,4 @@ struct CommunityPostView: View {
             .autocapitalization(.none)
             .autocorrectionDisabled()
     }
-}
-
-#Preview {
-    NavigationStack {
-        CommunityPostView()
-    }
-    .environment(\.di, .configured())
-    .environment(ErrorHandler())
 }

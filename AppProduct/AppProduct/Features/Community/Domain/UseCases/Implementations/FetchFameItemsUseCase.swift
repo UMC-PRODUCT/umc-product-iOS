@@ -20,7 +20,7 @@ final class FetchFameItemsUseCase: FetchFameItemsUseCaseProtocol {
     
     // MARK: - Function
     
-    func execute() async throws -> [CommunityFameItemModel] {
-        try await repository.fetchFameItems()
+    func execute(query: TrophyListQuery) async throws -> [CommunityFameItemModel] {
+        try await repository.getTrophies(query: query)
     }
 }
