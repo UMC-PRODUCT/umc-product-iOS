@@ -157,3 +157,6 @@ AppProduct/AppProduct/Features/*/Data/Generated/
 
 # Personal agent context
 
+
+# Firebase local config
+GoogleService-Info.plist

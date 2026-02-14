@@ -17,6 +17,10 @@ enum AppStorageKey {
 
     /// FCM 푸시 토큰
     static let userFCMToken: String = "UserFCMToken"
+    /// 서버에 마지막으로 등록한 FCM 토큰
+    static let uploadedFCMToken: String = "UploadedFCMToken"
+    /// 서버에 마지막으로 등록한 챌린저 ID
+    static let uploadedFCMChallengerId: String = "UploadedFCMChallengerId"
     /// 최근 검색 장소 목록
     static let recentSearchPlaces: String = "recentSearchPlaces"
 

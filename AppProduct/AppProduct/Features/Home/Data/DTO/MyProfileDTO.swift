@@ -34,6 +34,8 @@ struct MyProfileResponseDTO: Codable {
     let status: MemberStatus
     /// 기수별 역할 목록
     let roles: [RoleDTO]
+    /// 챌린저 이력 목록 (기수별 포인트 포함)
+    let challengerRecords: [ChallengerMemberDTO]?
 }
 
 // MARK: - RoleDTO
@@ -116,11 +118,21 @@ extension MyProfileResponseDTO {
                 organizationId: $0.organizationId
             )
         }
+
+        let gisuIdByGisu = Dictionary(
+            uniqueKeysWithValues: roles.map { ($0.gisu, $0.gisuId) }
+        )
+        let generations: [GenerationData] = (challengerRecords ?? []).compactMap { record in
+            guard let gisuId = gisuIdByGisu[record.gisu] else { return nil }
+            return record.toGenerationData(gisuId: gisuId)
+        }
+
         return HomeProfileResult(
             memberId: id,
             schoolId: schoolId,
             seasonTypes: toSeasonTypes(),
-            roles: challengerRoles
+            roles: challengerRoles,
+            generations: generations
         )
     }
 }

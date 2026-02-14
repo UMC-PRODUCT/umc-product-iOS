@@ -5,23 +5,30 @@
 //  Created by jaewon Lee on 12/30/25.
 //
 
-import SwiftUI
-import KakaoSDKCommon
-import KakaoSDKAuth
-import SwiftData
 import CloudKit
+import KakaoSDKAuth
+import KakaoSDKCommon
+import SwiftData
+import SwiftUI
 
+/// UMC 동아리 운영 관리 앱의 진입점
+///
+/// 앱 상태(splash/login/signUp/main)에 따라 루트 화면을 전환하고,
+/// DIContainer, ErrorHandler, ModelContainer를 하위 뷰에 주입합니다.
 @main
 struct AppProductApp: App {
+    
+    // MARK: - Property
+    
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var container: DIContainer
+    @State private var didConfigureAppDelegate: Bool = false
     @State private var errorHandler: ErrorHandler = .init()
     @State private var appState: AppState = .main
     private let sharedModelContainer: ModelContainer
-
-    // MARK: - ModelContainer
-
+    
     // MARK: - AppState
-
+    
     /// 앱 전체 화면 상태
     private enum AppState {
         /// 스플래시 화면 (토큰 검사 중)
@@ -35,7 +42,7 @@ struct AppProductApp: App {
         /// 메인 화면 (탭)
         case main
     }
-
+    
     init() {
         sharedModelContainer = Self.makeModelContainer()
         KakaoSDK.initSDK(appKey: Config.kakaoAppKey)
@@ -45,119 +52,119 @@ struct AppProductApp: App {
             )
         )
     }
-
-    // MARK: - Factory
+    
+    // MARK: - Body
+    
     var body: some Scene {
         WindowGroup {
-            Group {
-                switch appState {
-                case .splash:
-                    SplashView(
-                        networkClient: container.resolve(
-                            NetworkClient.self
-                        ),
-                        onComplete: { isLoggedIn in
-                            withAnimation {
-                                appState = isLoggedIn ? .main : .login
-                            }
-                        }
-                    )
-
-                case .login:
-                    let authProvider = container.resolve(
-                        AuthUseCaseProviding.self
-                    )
-                    LoginView(
-                        loginUseCase: authProvider.loginUseCase,
-                        errorHandler: errorHandler,
-                        onLoginSuccess: {
-                            withAnimation {
-                                appState = .main
-                            }
-                        },
-                        onNewMember: { verificationToken in
-                            withAnimation {
-                                appState = .signUp(
-                                    verificationToken: verificationToken
-                                )
-                            }
-                        }
-                    )
-
-                case .signUp(let verificationToken):
-                    let authProvider = container.resolve(
-                        AuthUseCaseProviding.self
-                    )
-                    NavigationStack {
-                        SignUpView(
-                            oAuthVerificationToken: verificationToken,
-                            sendEmailVerificationUseCase: authProvider
-                                .sendEmailVerificationUseCase,
-                            verifyEmailCodeUseCase: authProvider
-                                .verifyEmailCodeUseCase,
-                            registerUseCase: authProvider
-                                .registerUseCase,
-                            fetchSignUpDataUseCase: authProvider
-                                .fetchSignUpDataUseCase,
-                            onSignUpComplete: {
-                                withAnimation {
-                                    appState = .pendingApproval
-                                }
-                            }
-                        )
-                    }
-
-                case .pendingApproval:
-                    PendingApprovalView(
-                        onRetryLogin: {
-                            withAnimation {
-                                appState = .login
-                            }
-                        }
-                    )
-
-                case .main:
-//                    UmcTab()
-                    NavigationStack {
-                        ScheduleDetailView(scheduleId: 1, selectedDate: .now)
-                    }
+            rootView
+                .onOpenURL(perform: handleOpenURL)
+                .environment(errorHandler)
+                .environment(\.di, container)
+                .modelContainer(sharedModelContainer)
+                .onAppear(perform: configureAppDelegateIfNeeded)
+                .onReceive(
+                    NotificationCenter.default.publisher(for: .authSessionExpired)
+                ) { _ in
+                    handleAuthSessionExpired()
                 }
-            }
-            .onOpenURL { url in
-                if AuthApi.isKakaoTalkLoginUrl(url) {
-                    _ = AuthController.handleOpenUrl(url: url)
-                }
-            }
-            .environment(errorHandler)
-            .environment(\.di, container)
-            .modelContainer(sharedModelContainer)
-            .onReceive(
-                NotificationCenter.default.publisher(
-                    for: .authSessionExpired
-                )
-            ) { _ in
-                Task {
-                    try? await container.resolve(
-                        NetworkClient.self
-                    ).logout()
-                }
-                container.resetCache()
-                withAnimation {
-                    appState = .login
-                }
-            }
         }
     }
 }
 
-extension AppProductApp {
+// MARK: - Private Helpers
 
+extension AppProductApp {
+    @ViewBuilder
+    private var rootView: some View {
+        switch appState {
+        case .splash:
+            SplashView(
+                networkClient: container.resolve(NetworkClient.self),
+                onComplete: { isLoggedIn in
+                    transition(to: isLoggedIn ? .main : .login)
+                }
+            )
+            
+        case .login:
+            LoginView(
+                loginUseCase: authProvider.loginUseCase,
+                errorHandler: errorHandler,
+                onLoginSuccess: {
+                    transition(to: .main)
+                },
+                onNewMember: { verificationToken in
+                    transition(to: .signUp(verificationToken: verificationToken))
+                }
+            )
+            
+        case .signUp(let verificationToken):
+            SignUpView(
+                oAuthVerificationToken: verificationToken,
+                sendEmailVerificationUseCase: authProvider
+                    .sendEmailVerificationUseCase,
+                verifyEmailCodeUseCase: authProvider
+                    .verifyEmailCodeUseCase,
+                registerUseCase: authProvider.registerUseCase,
+                fetchSignUpDataUseCase: authProvider.fetchSignUpDataUseCase,
+                onSignUpComplete: {
+                    transition(to: .pendingApproval)
+                }
+            )
+        case .pendingApproval:
+            PendingApprovalView(
+                onRetryLogin: {
+                    transition(to: .login)
+                }
+            )
+            
+        case .main:
+            UmcTab()
+        }
+    }
+    
+    private var authProvider: AuthUseCaseProviding {
+        container.resolve(AuthUseCaseProviding.self)
+    }
+    
+    private func transition(to state: AppState) {
+        withAnimation {
+            appState = state
+        }
+    }
+    
+    private func handleOpenURL(_ url: URL) {
+        guard AuthApi.isKakaoTalkLoginUrl(url) else { return }
+        _ = AuthController.handleOpenUrl(url: url)
+    }
+    
+    private func configureAppDelegateIfNeeded() {
+        guard !didConfigureAppDelegate else { return }
+        didConfigureAppDelegate = true
+        appDelegate.configure(
+            container: container,
+            modelContext: sharedModelContainer.mainContext
+        )
+    }
+    
+    private func handleAuthSessionExpired() {
+        Task {
+            try? await container.resolve(NetworkClient.self).logout()
+        }
+        container.resetCache()
+        transition(to: .login)
+    }
+    
+    /// SwiftData ModelContainer를 생성합니다.
+    ///
+    /// CloudKit 동기화를 시도하고, 실패 시 로컬 저장소로 폴백합니다.
+    /// - Returns: 생성된 ModelContainer (CloudKit 또는 로컬)
     private static func makeModelContainer() -> ModelContainer {
         let schema = Schema([
             NoticeHistoryData.self,
-            PenaltyRecord.self
+            GenerationMappingRecord.self
         ])
-
+        
         do {
             let cloudConfiguration = ModelConfiguration(
                 schema: schema,
@@ -170,7 +177,7 @@ extension AppProductApp {
         } catch {
             // CloudKit 설정/권한/모델 제약 이슈가 있으면 로컬 저장소로 폴백합니다.
             print("SwiftData CloudKit init failed. Fallback to local store: \(error)")
-
+            
             do {
                 let localConfiguration = ModelConfiguration(
                     schema: schema,
@@ -181,9 +188,20 @@ extension AppProductApp {
                     configurations: [localConfiguration]
                 )
             } catch {
-                fatalError("Failed to initialize ModelContainer: \(error)")
+                print("SwiftData local init failed. Fallback to in-memory store: \(error)")
+                do {
+                    let memoryConfiguration = ModelConfiguration(
+                        schema: schema,
+                        isStoredInMemoryOnly: true
+                    )
+                    return try ModelContainer(
+                        for: schema,
+                        configurations: [memoryConfiguration]
+                    )
+                } catch {
+                    fatalError("Failed to initialize ModelContainer: \(error)")
+                }
             }
         }
     }
-
 }
