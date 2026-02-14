@@ -90,7 +90,7 @@ struct NoticeVoteCard: View {
                     .padding(Constants.capsulePadding)
                     .background(Color.green.opacity(Constants.capsuleOpacity))
                     .clipShape(Capsule())
-                    .glassEffect(.clear, in: .containerRelative)
+                    .glassEffect(.clear, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
             case .ended:
                 Text("마감")
                     .appFont(.footnoteEmphasis, color: .red)
