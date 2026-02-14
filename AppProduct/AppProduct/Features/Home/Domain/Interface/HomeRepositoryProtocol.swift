@@ -14,13 +14,6 @@ protocol HomeRepositoryProtocol: Sendable {
     /// - Returns: 기수 카드용 데이터 + 역할별 (challengerId, gisuId) 매핑
     func getMyProfile() async throws -> HomeProfileResult
 
-    /// 패널티 정보 조회
-    /// - Parameters:
-    ///   - challengerId: 챌린저 ID
-    ///   - gisuId: 기수 식별 ID (RoleDTO에서 전달)
-    /// - Returns: 기수별 패널티 데이터
-    func getPenalty(challengerId: Int, gisuId: Int) async throws -> GenerationData
-
     /// 월별 내 일정 조회
     /// - Parameters:
     ///   - year: 연도 (예: 2026)
@@ -36,4 +29,13 @@ protocol HomeRepositoryProtocol: Sendable {
     func getRecentNotices(
         query: NoticeListRequestDTO
     ) async throws -> [RecentNoticeData]
+
+    /// FCM 토큰 등록/갱신
+    /// - Parameters:
+    ///   - challengerId: 챌린저 ID
+    ///   - fcmToken: Firebase Cloud Messaging 토큰
+    func registerFCMToken(
+        challengerId: Int,
+        fcmToken: String
+    ) async throws
 }

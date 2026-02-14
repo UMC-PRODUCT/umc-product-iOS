@@ -57,10 +57,12 @@ struct HomeView: View {
     
     // MARK: - Body
     var body: some View {
+        // NavigationStack의 path를 PathStore에 바인딩하여 홈 내 네비게이션 상태를 유지합니다.
         NavigationStack(path: Binding(
             get: { pathStore.homePath },
             set: { pathStore.homePath = $0 }
         )) {
+            // 스크롤 위치 제어를 위해 ScrollViewReader를 사용합니다.
             ScrollViewReader { proxy in
                 ScrollView(.vertical) {
                     LazyVStack(spacing: DefaultSpacing.spacing24) {
@@ -80,6 +82,7 @@ struct HomeView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            // 화면 진입 시 홈 화면에 필요한 모든 데이터를 한 번에 로드합니다.
             .task {
                 await viewModel.fetchAll()
             }
@@ -136,6 +139,7 @@ struct HomeView: View {
     /// 캘린더 및 일정 리스트를 포함하는 뷰
     private var calendar: some View {
         VStack(spacing: DefaultSpacing.spacing8, content: {
+            // 캘린더 카드: 선택 날짜와 현재 월 상태를 전달합니다.
             ScheduleCard(selectedDate: $selectedDate,
                          currentMonth: $currentMonth,
                          scheduledDates: viewModel.scheduleDates
@@ -144,6 +148,7 @@ struct HomeView: View {
 
             scheduleList
         })
+        // 월 변경 시 해당 월의 일정을 다시 불러옵니다.
         .onChange(of: currentMonth) { _, newMonth in
             let calendar = Calendar.current
             let year = calendar.component(.year, from: newMonth)
@@ -163,9 +168,22 @@ struct HomeView: View {
             emptySchedule
         } else {
             LazyVStack(spacing: DefaultSpacing.spacing8) {
-                ForEach(Array(schedules.enumerated()), id: \.offset) { index, schedule in
-                    ScheduleListCard(data: schedule)
-                        .equatable()
+                ForEach(schedules, id: \.id) { schedule in
+                    Button(action: {
+                        // 일정 상세 화면으로 이동하며 선택 날짜를 함께 전달합니다.
+                        pathStore.homePath.append(
+                            .home(
+                                .detailSchedule(
+                                    scheduleId: schedule.scheduleId,
+                                    selectedDate: selectedDate
+                                )
+                            )
+                        )
+                    }) {
+                        ScheduleListCard(data: schedule)
+                            .equatable()
+                    }
+                    .buttonStyle(ScheduleCardPressStyle())
                 }
             }
         }
@@ -227,6 +245,16 @@ struct HomeView: View {
                 }
             }
         }
+    }
+}
+
+/// 일정 카드 탭 시 눌림 효과를 제공하는 ButtonStyle
+private struct ScheduleCardPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .opacity(configuration.isPressed ? 0.92 : 1.0)
+            .animation(.spring(response: 0.22, dampingFraction: 0.8), value: configuration.isPressed)
     }
 }
 

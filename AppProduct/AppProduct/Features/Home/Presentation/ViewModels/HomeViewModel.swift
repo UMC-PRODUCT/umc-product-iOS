@@ -18,8 +18,9 @@ final class HomeViewModel {
 
     private let container: DIContainer
     private let useCaseProvider: HomeUseCaseProviding
+    private let genRepository: ChallengerGenRepositoryProtocol
 
-    /// 프로필에서 받은 역할 정보 (패널티/공지 API 호출 시 사용)
+    /// 프로필에서 받은 역할 정보 (공지 API 호출 시 사용)
     private(set) var roles: [ChallengerRole] = []
 
     /// 기수 정보 데이터 (로딩 상태 포함)
@@ -46,22 +47,21 @@ final class HomeViewModel {
     init(container: DIContainer) {
         self.container = container
         self.useCaseProvider = container.resolve(HomeUseCaseProviding.self)
+        self.genRepository = container.resolve(ChallengerGenRepositoryProtocol.self)
     }
 
     // MARK: - Function
 
     /// 홈 화면 진입 시 전체 데이터 로드
     ///
-    /// 프로필 조회 후 역할 정보를 기반으로
-    /// 패널티, 일정, 공지를 병렬 조회합니다.
+    /// 프로필 조회 후 역할 정보를 기반으로 일정, 공지를 병렬 조회합니다.
     @MainActor
     func fetchAll() async {
         await fetchProfile()
 
-        async let penaltyTask: () = fetchPenalties()
         async let scheduleTask: () = fetchSchedules()
         async let noticeTask: () = fetchRecentNotices()
-        _ = await (penaltyTask, scheduleTask, noticeTask)
+        _ = await (scheduleTask, noticeTask)
     }
 
     /// 프로필 조회 (기수 카드 + 역할 정보 + AppStorage 저장)
@@ -74,6 +74,8 @@ final class HomeViewModel {
             roles = result.roles
             seasonData = .loaded(result.seasonTypes)
             saveProfileToStorage(result)
+            syncGenerationMappings(result.roles)
+            applyGenerationsFromProfile(result.generations)
         } catch let error as AppError {
             seasonData = .failed(error)
         } catch {
@@ -114,29 +116,25 @@ final class HomeViewModel {
             latestRole.organizationId,
             forKey: AppStorageKey.organizationId
         )
+        NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
     }
 
-    /// 전체 기수 패널티 조회 (역할별 순차 호출 → SwiftData 누적 저장)
+    /// 프로필 응답의 기수 데이터를 홈 화면 상태로 반영합니다.
     @MainActor
-    func fetchPenalties() async {
-        guard !roles.isEmpty else { return }
+    private func applyGenerationsFromProfile(_ generations: [GenerationData]) {
         generationData = .loading
+        generationData = .loaded(generations.sorted { $0.gen < $1.gen })
+    }
+
+    /// 역할 정보로 (gen, gisuId) 매핑을 SwiftData(CloudKit)에 동기화합니다.
+    @MainActor
+    private func syncGenerationMappings(_ roles: [ChallengerRole]) {
+        let pairs = roles.map { (gen: $0.gisu, gisuId: $0.gisuId) }
         do {
-            var result: [GenerationData] = []
-            for role in roles {
-                result = try await useCaseProvider
-                    .fetchPenaltyUseCase.execute(
-                        challengerId: role.challengerId,
-                        gisuId: role.gisuId
-                    )
-            }
-            generationData = .loaded(result)
-        } catch let error as AppError {
-            generationData = .failed(error)
+            try genRepository.replaceMappings(pairs)
         } catch {
-            generationData = .failed(
-                .unknown(message: error.localizedDescription)
-            )
+            // 매핑 저장 실패는 홈 화면 표시에 치명적이지 않으므로 상태를 깨지 않습니다.
+            print("[Home] failed to sync generation mappings: \(error)")
         }
     }
 

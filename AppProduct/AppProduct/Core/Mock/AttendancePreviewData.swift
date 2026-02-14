@@ -10,13 +10,14 @@ import SwiftUI
 import SwiftData
 
 #if DEBUG
+/// 출석 관련 프리뷰에서 사용하는 더미 데이터 모음
 struct AttendancePreviewData {
 
     static let errorHandler = ErrorHandler()
     static let container: DIContainer = {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let modelContainer = try! ModelContainer(
-            for: PenaltyRecord.self, NoticeHistoryData.self,
+            for: GenerationMappingRecord.self, NoticeHistoryData.self,
             configurations: config
         )
         return DIContainer.configured(
@@ -465,6 +466,7 @@ struct AttendancePreviewData {
 
 // MARK: - Attendance Status Preview
 
+/// 출석 상태별 배지 디자인을 확인하는 프리뷰 뷰
 struct AttendanceStatusPreview: View {
     var body: some View {
         ScrollView {
@@ -496,6 +498,7 @@ struct AttendanceStatusPreview: View {
     }
 }
 
+/// 출석 화면 진입 테스트용 프리뷰 뷰
 struct AttendanceTestView: View {
     @Binding var show: Bool
 

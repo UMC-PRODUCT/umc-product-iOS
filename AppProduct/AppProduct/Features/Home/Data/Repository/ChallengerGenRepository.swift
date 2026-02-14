@@ -8,11 +8,11 @@
 import Foundation
 import SwiftData
 
-/// SwiftData 기반 기수별 패널티 로컬 저장소 구현체
+/// SwiftData 기반 기수-기수ID 매핑 로컬 저장소 구현체
 ///
-/// `ModelContext`를 주입받아 기수별 패널티 데이터를 upsert/조회합니다.
+/// `ModelContext`를 주입받아 (gen, gisuId) 매핑을 upsert/조회합니다.
 /// CloudKit Sync 활성화 시 `@Attribute(.unique)` 사용 불가하므로,
-/// `gisuId` 기준 fetch 후 upsert 방식으로 처리합니다.
+/// `gen` 기준 fetch 후 upsert 방식으로 처리합니다.
 final class ChallengerGenRepository:
     ChallengerGenRepositoryProtocol, @unchecked Sendable
 {
@@ -20,8 +20,6 @@ final class ChallengerGenRepository:
     // MARK: - Property
 
     private let modelContext: ModelContext
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
 
     // MARK: - Init
 
@@ -31,65 +29,51 @@ final class ChallengerGenRepository:
 
     // MARK: - Function
 
-    func savePenalty(_ data: GenerationData) throws {
-        let logsData = try encoder.encode(data.penaltyLogs)
+    /// 전체 매핑을 교체 저장합니다 (upsert + 미사용 레코드 삭제).
+    ///
+    /// - Note: CloudKit Sync에서 `@Attribute(.unique)` 사용 불가하므로
+    ///   gen 기준 fetch 후 수동 upsert 방식으로 처리합니다.
+    func replaceMappings(_ pairs: [(gen: Int, gisuId: Int)]) throws {
+        let incomingGens = Set(pairs.map(\.gen))
+        let existingDescriptor = FetchDescriptor<GenerationMappingRecord>()
+        let existing = try modelContext.fetch(existingDescriptor)
+        let existingByGen = Dictionary(uniqueKeysWithValues: existing.map { ($0.gen, $0) })
 
-        let targetGisuId = data.gisuId
-        let descriptor = FetchDescriptor<PenaltyRecord>(
-            predicate: #Predicate { $0.gisuId == targetGisuId }
-        )
-        let existing = try modelContext.fetch(descriptor)
-
-        if let record = existing.first {
-            record.penaltyPoint = data.penaltyPoint
-            record.logsData = logsData
-            record.updatedAt = .now
-
-            // CloudKit 동기화로 인한 중복 레코드 제거
-            for duplicate in existing.dropFirst() {
-                modelContext.delete(duplicate)
+        for pair in pairs {
+            if let record = existingByGen[pair.gen] {
+                record.gisuId = pair.gisuId
+                record.updatedAt = .now
+            } else {
+                let record = GenerationMappingRecord(
+                    gisuId: pair.gisuId,
+                    gen: pair.gen
+                )
+                modelContext.insert(record)
             }
-        } else {
-            let record = PenaltyRecord(
-                gisuId: data.gisuId,
-                gen: data.gen,
-                penaltyPoint: data.penaltyPoint,
-                logsData: logsData
-            )
-            modelContext.insert(record)
+        }
+
+        for record in existing where !incomingGens.contains(record.gen) {
+            modelContext.delete(record)
         }
 
         try modelContext.save()
     }
 
-    func fetchAllPenalties() throws -> [GenerationData] {
-        let descriptor = FetchDescriptor<PenaltyRecord>(
+    /// 전체 기수의 (gen, gisuId) 매핑을 gen 오름차순으로 조회합니다.
+    ///
+    /// - Note: CloudKit Sync로 인한 중복 레코드를 `seenGens` 집합으로 필터링합니다.
+    func fetchGenGisuIdPairs() throws -> [(gen: Int, gisuId: Int)] {
+        let descriptor = FetchDescriptor<GenerationMappingRecord>(
             sortBy: [SortDescriptor(\.gen, order: .forward)]
         )
         let records = try modelContext.fetch(descriptor)
+        var seenGens = Set<Int>()
 
-        return records.compactMap { record in
-            guard let logs = try? decoder.decode(
-                [PenaltyInfoItem].self,
-                from: record.logsData
-            ) else {
+        return records.compactMap {
+            guard seenGens.insert($0.gen).inserted else {
                 return nil
             }
-            return GenerationData(
-                gisuId: record.gisuId,
-                gen: record.gen,
-                penaltyPoint: record.penaltyPoint,
-                penaltyLogs: logs
-            )
+            return (gen: $0.gen, gisuId: $0.gisuId)
         }
-    }
-
-    func fetchGenGisuIdPairs() throws -> [(gen: Int, gisuId: Int)] {
-        let descriptor = FetchDescriptor<PenaltyRecord>(
-            sortBy: [SortDescriptor(\.gen, order: .forward)]
-        )
-        let records = try modelContext.fetch(descriptor)
-
-        return records.map { (gen: $0.gen, gisuId: $0.gisuId) }
     }
 }

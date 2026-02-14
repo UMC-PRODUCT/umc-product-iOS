@@ -47,26 +47,41 @@ import Foundation
 /// ```
 
 enum NavigationDestination: Hashable {
+
+    /// 인증(Auth) 관련 화면 목적지
     enum Auth: Hashable {
         case test
     }
 
+    /// 홈(Home) 관련 화면 목적지
     enum Home: Hashable {
+        /// 알림 히스토리
         case alarmHistory
+        /// 일정 등록
         case registrationSchedule
+        /// 일정 상세 (scheduleId: 일정 ID, selectedDate: 선택 날짜)
+        case detailSchedule(scheduleId: Int, selectedDate: Date)
     }
-    
+
+    /// 공지사항(Notice) 관련 화면 목적지
     enum Notice: Hashable {
+        /// 공지 상세
         case detail(detailItem: NoticeDetail)
+        /// 공지 작성/편집
         case editor
     }
 
+    /// 커뮤니티(Community) 관련 화면 목적지
     enum Community: Hashable {
+        /// 게시글 상세
         case detail(postItem: CommunityItemModel)
+        /// 게시글 작성
         case post
     }
-    
+
+    /// 마이페이지(MyPage) 관련 화면 목적지
     enum MyPage: Hashable {
+        /// 내 정보 수정
         case myInfo(profileData: ProfileData)
     }
 

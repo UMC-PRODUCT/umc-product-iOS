@@ -59,33 +59,35 @@ struct SignUpView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: Constants.spacerSize) {
-                HStack {
-                    buildField(.name)
-                    buildField(.nickname)
+        NavigationStack {
+            ScrollView(.vertical) {
+                VStack(spacing: Constants.spacerSize) {
+                    HStack {
+                        buildField(.name)
+                        buildField(.nickname)
+                    }
+                    buildField(.email)
+                    buildField(.univ)
+                    termsSection
                 }
-                buildField(.email)
-                buildField(.univ)
-                termsSection
+                .safeAreaPadding(.vertical, DefaultConstant.defaultContentTopMargins)
+                .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                .navigation(naviTitle: .signUp, displayMode: .large)
+                .navigationSubtitle(Constants.naviSubTitle)
             }
-            .safeAreaPadding(.vertical, DefaultConstant.defaultContentTopMargins)
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            .navigation(naviTitle: .signUp, displayMode: .large)
-            .navigationSubtitle(Constants.naviSubTitle)
-        }
-        .keyboardToolbar(focusedField: $focusedField)
-        .safeAreaInset(edge: .bottom, content: {
-            mainBtn
-        })
-        .background(Color(.systemGroupedBackground))
-        .task {
-            await viewModel.fetchSchools()
-            await viewModel.fetchTerms()
-        }
-        .onChange(of: viewModel.registerState) { _, newState in
-            if case .loaded = newState {
-                onSignUpComplete()
+            .keyboardToolbar(focusedField: $focusedField)
+            .safeAreaInset(edge: .bottom, content: {
+                mainBtn
+            })
+            .background(Color(.systemGroupedBackground))
+            .task {
+                await viewModel.fetchSchools()
+                await viewModel.fetchTerms()
+            }
+            .onChange(of: viewModel.registerState) { _, newState in
+                if case .loaded = newState {
+                    onSignUpComplete()
+                }
             }
         }
     }

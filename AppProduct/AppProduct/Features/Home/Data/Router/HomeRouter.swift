@@ -15,28 +15,27 @@ import Moya
 enum HomeRouter {
     /// 내 프로필 조회 (기수 + 역할 정보)
     case getGen
-    /// 챌린저 패널티 조회
-    case getPenalty(id: Int)
     /// 월별 내 일정 조회
     case getSchedules(year: Int, month: Int)
     /// 최근 공지사항 조회
     case getNoticeRecent(query: NoticeListRequestDTO)
+    /// FCM 토큰 등록/갱신
+    case postFCMToken(challengerId: Int, request: RegisterFCMTokenRequestDTO)
 }
 
 extension HomeRouter: BaseTargetType {
 
     // MARK: - Path
-
     var path: String {
         switch self {
         case .getGen:
             return "/api/v1/member/me"
-        case .getPenalty(let id):
-            return "/api/v1/challenger/\(id)"
         case .getSchedules:
             return "/api/v1/schedules/my-list"
         case .getNoticeRecent:
             return "/api/v1/notices"
+        case .postFCMToken(let challengerId, _):
+            return "/api/v1/notification/fcm/\(challengerId)"
         }
     }
 
@@ -44,8 +43,10 @@ extension HomeRouter: BaseTargetType {
 
     var method: Moya.Method {
         switch self {
-        case .getGen, .getPenalty, .getSchedules, .getNoticeRecent:
+        case .getGen, .getSchedules, .getNoticeRecent:
             return .get
+        case .postFCMToken:
+            return .post
         }
     }
 
@@ -53,7 +54,7 @@ extension HomeRouter: BaseTargetType {
 
     var task: Moya.Task {
         switch self {
-        case .getGen, .getPenalty:
+        case .getGen:
             return .requestPlain
         case .getSchedules(let year, let month):
             return .requestParameters(
@@ -65,6 +66,8 @@ extension HomeRouter: BaseTargetType {
                 parameters: query.queryItems,
                 encoding: URLEncoding.queryString
             )
+        case .postFCMToken(_, let request):
+            return .requestJSONEncodable(request)
         }
     }
 }
