@@ -23,8 +23,10 @@ struct PostSearchResponse: Codable {
 
 // MARK: - Post List
 
-/// 게시글 목록 조회 응답 DTO
+/// 게시글 목록 조회 응답, 게시글 생성/수정 응답, 번개글 생성/수정 응답 DTO
 /// `GET /api/v1/posts`
+/// `POST /api/v1/posts`, `PATCH /api/v1/posts/{postId}`
+/// `POST /api/v1/posts/lightning`, `PATCH /api/v1/posts/{postId}/lightning`
 struct PostListResponse: Codable {
     let postId: Int
     let title: String
@@ -39,13 +41,13 @@ struct PostListResponse: Codable {
     let likeCount: Int
     let isLiked: Bool
     let lightningInfo: PostListLightningInfo?
-}
-
-struct PostListLightningInfo: Codable {
-    let meetAt: String
-    let location: String
-    let maxParticipants: Int
-    let openChatUrl: String
+    
+    struct PostListLightningInfo: Codable {
+        let meetAt: String
+        let location: String
+        let maxParticipants: Int
+        let openChatUrl: String
+    }
 }
 
 extension PostListResponse {
@@ -53,6 +55,7 @@ extension PostListResponse {
         let date = ISO8601DateFormatter().date(from: createdAt) ?? Date()
         
         return CommunityItemModel(
+            postId: postId,
             userId: authorId,
             category: category,
             title: title,

@@ -1,13 +1,13 @@
 //
-//  CreatePostUseCase.swift
+//  CreateLightningUseCase.swift
 //  AppProduct
 //
-//  Created by 김미주 on 2/3/26.
+//  Created by 김미주 on 2/15/26.
 //
 
 import Foundation
 
-final class CreatePostUseCase: CreatePostUseCaseProtocol {
+final class CreateLightningUseCase: CreateLightningUseCaseProtocol {
     // MARK: - Property
     
     private let repository: CommunityPostRepositoryProtocol
@@ -20,7 +20,7 @@ final class CreatePostUseCase: CreatePostUseCaseProtocol {
     
     // MARK: - Function
     
-    func execute(request: PostRequestDTO) async throws {
+    func execute(request: CreateLightningPostRequestDTO) async throws {
         // 유효성 검증
         guard !request.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw DomainError.custom(message: "제목을 입력해주세요.")
@@ -30,6 +30,15 @@ final class CreatePostUseCase: CreatePostUseCaseProtocol {
             throw DomainError.custom(message: "내용을 입력해주세요.")
         }
         
-        try await repository.postPosts(request: request)
+        // 번개 카테고리 유효성 검증
+        guard !request.location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw DomainError.custom(message: "장소를 선택해주세요.")
+        }
+
+        guard !request.openChatUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw DomainError.custom(message: "오픈채팅 링크를 입력해주세요.")
+        }
+        
+        try await repository.postLightning(request: request)
     }
 }

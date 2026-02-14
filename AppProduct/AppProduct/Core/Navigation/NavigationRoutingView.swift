@@ -100,7 +100,7 @@ private extension NavigationRoutingView {
         case .detail(let postItem):
             CommunityDetailView(postItem: postItem)
         case .post:
-            CommunityPostView()
+            CommunityPostView(container: di, errorHandler: errorHandler)
         }
     }
     

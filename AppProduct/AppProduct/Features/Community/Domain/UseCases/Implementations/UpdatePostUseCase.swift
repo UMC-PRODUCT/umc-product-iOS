@@ -1,13 +1,13 @@
 //
-//  CreatePostUseCase.swift
+//  UpdatePostUseCase.swift
 //  AppProduct
 //
-//  Created by 김미주 on 2/3/26.
+//  Created by 김미주 on 2/15/26.
 //
 
 import Foundation
 
-final class CreatePostUseCase: CreatePostUseCaseProtocol {
+final class UpdatePostUseCase: UpdatePostUseCaseProtocol {
     // MARK: - Property
     
     private let repository: CommunityPostRepositoryProtocol
@@ -20,7 +20,7 @@ final class CreatePostUseCase: CreatePostUseCaseProtocol {
     
     // MARK: - Function
     
-    func execute(request: PostRequestDTO) async throws {
+    func execute(postId: Int, request: PostRequestDTO) async throws {
         // 유효성 검증
         guard !request.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw DomainError.custom(message: "제목을 입력해주세요.")
@@ -30,6 +30,6 @@ final class CreatePostUseCase: CreatePostUseCaseProtocol {
             throw DomainError.custom(message: "내용을 입력해주세요.")
         }
         
-        try await repository.postPosts(request: request)
+        try await repository.patchPosts(postId: postId, request: request)
     }
 }

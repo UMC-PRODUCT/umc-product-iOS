@@ -15,7 +15,7 @@ struct CommunityDetailView: View {
     let postItem: CommunityItemModel
     
     private var communityProvider: CommunityUseCaseProviding {
-        di.resolve(UsecaseProviding.self).community
+        di.resolve(CommunityUseCaseProviding.self)
     }
     
     private enum Constant {

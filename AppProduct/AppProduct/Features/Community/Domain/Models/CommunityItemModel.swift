@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CommunityItemModel: Equatable, Identifiable, Hashable {
     let id = UUID()
+    let postId: Int
     let userId: Int
     let category: CommunityItemCategory
     let title: String
