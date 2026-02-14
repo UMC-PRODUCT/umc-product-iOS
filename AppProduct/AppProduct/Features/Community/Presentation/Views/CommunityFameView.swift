@@ -32,6 +32,12 @@ struct CommunityFameView: View {
     init(container: DIContainer) {
         _vm = State(initialValue: CommunityFameViewModel(container: container))
     }
+    
+    // MARK: - Init
+    
+    init(container: DIContainer) {
+        _vm = State(initialValue: CommunityFameViewModel(container: container))
+    }
 
     // MARK: - Body
 
