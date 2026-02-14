@@ -44,9 +44,17 @@ UMC(University MakeUs Challenge) 동아리 운영 관리 앱입니다.
 ## 🤔 요구사항
 For building and running the application you need:
 
-iOS 18.0+ <br>
+iOS 26.0+ <br>
 Xcode 26.2 <br>
 Swift 6.2
+
+<br>
+
+## 🔐 시크릿 / Firebase 설정 안내
+
+- `Secrets.xcconfig`의 실제 키 값(`BASE_URL`, `KAKAO_KEY`)은 **팀 내부 문서**를 확인해 설정해주세요.
+- `GoogleService-Info.plist` 역시 **팀 내부 문서 가이드**에 따라 발급/배치 후 사용해주세요.
+- 보안상 실제 키/설정 파일은 원격 저장소에 업로드하지 않습니다.
 
 <br>
 
@@ -91,3 +99,83 @@ Swift 6.2
    
   </tr>
 </table>
+
+<br>
+
+## 🧪 테스트 실행 방법
+
+```bash
+# 전체 테스트
+xcodebuild -project AppProduct/AppProduct.xcodeproj \
+  -scheme AppProduct \
+  test
+```
+
+- 인증 연동 테스트는 루트의 `.test-config.json`이 필요합니다.
+- 샘플 형식은 `AppProduct/AppProductTests/AuhTest/EmailVerificationTests.swift`를 참고하세요.
+
+<br>
+
+## 🔔 FCM / 알림 히스토리 동작 요약
+
+- 앱 실행 시 `AppDelegate`에서 Firebase Messaging을 초기화합니다.
+- 권한/토큰 상태를 확인해 FCM 토큰 서버 등록을 시도합니다.
+- 수신된 알림은 `NoticeHistoryData`로 SwiftData에 저장됩니다.
+- CloudKit 사용 가능 시 동기화하고, 실패 시 로컬 저장소로 폴백합니다.
+
+관련 코드:
+- `AppProduct/AppProduct/App/AppDelegate.swift`
+- `AppProduct/AppProduct/App/AppProductApp.swift`
+- `AppProduct/AppProduct/Features/Home/Domain/Models/NoticeHistory/NoticeHistoryData.swift`
+
+<br>
+
+## 🧾 Git / PR 규칙
+
+### 커밋 메시지
+
+- 형식: `feat: 작업 내용`
+- 본문: 상세 설명 2줄 이상 필수
+
+예시:
+
+```text
+feat: 일정 상세 수정 API 연동
+
+- 수정 모드에서 확인 버튼 액션을 updateSchedule 호출로 연결했습니다.
+- API 완료 전 화면이 닫히지 않도록 처리하고 로딩 상태를 분리했습니다.
+```
+
+### PR
+
+- PR 제목은 작업 의도가 바로 보이도록 `기능/영향 범위` 중심으로 작성합니다.
+- PR 본문에는 최소한 `작업 내용`, `변경 이유`, `리뷰 포인트`, `추후 작업`을 모두 작성합니다.
+- UI 변경이 있으면 스크린샷 또는 영상을 반드시 첨부합니다.
+- `main`/`develop` 브랜치에는 직접 푸시하지 않고, 기능 브랜치에서 PR로만 반영합니다.
+- 머지 전 최소 1명 이상의 Approve를 받은 뒤 병합합니다.
+- 머지 방식은 `Squash and Merge`를 기본으로 사용합니다.
+
+<br>
+
+## 📚 참고 문서 / 트러블슈팅
+
+### 참고 문서
+
+- `AppProduct/Documentation.docc/Resources/NETWORK_API_GUIDE.md`
+- `AppProduct/Documentation.docc/Resources/SECRET_CIDCD_GUIDE.md`
+- `AppProduct/Documentation.docc/Resources/NOTICE_CLASSIFIER_GUIDE.md`
+- `AppProduct/Documentation.docc/Resources/SCHEDULE_CLASSIFIER_GUIDE.md`
+
+### 트러블슈팅
+
+- `SwiftData CloudKit init failed` 로그는 CloudKit 실패 후 로컬 폴백 상황일 수 있습니다.
+- 시뮬레이터에서는 APNS 토큰 미설정으로 FCM 토큰 발급이 제한될 수 있습니다.
+- Preview에서 ModelContainer 관련 오류가 나면 in-memory 컨테이너 주입 여부를 확인하세요.
+
+<br>
+
+## 🤖 CoreML
+
+- CoreML 기반 알림 분류(예: success/warning/error/info) 테스트 코드를 통해 분류 결과를 검증합니다.
+- 학습/실험 관련 리소스는 `AppProduct/AppleCreateML` 경로를 기준으로 관리합니다.
+- 분류 결과는 알림 히스토리 UI 아이콘/색상 매핑에 활용됩니다.
