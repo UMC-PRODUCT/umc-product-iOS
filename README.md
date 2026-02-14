@@ -15,7 +15,7 @@
 |:------:|:------:|:------:|:------:|
 | <img src="https://github.com/user-attachments/assets/a4ddee14-419e-41da-a89a-e2c2fb23a03f" width="300" height="250"> | <img src="https://github.com/user-attachments/assets/00ba6ec3-d252-4e93-b467-b0d0ba654fb4" width="300" height="250"> | <img src="https://github.com/user-attachments/assets/7842f405-80c3-4394-8978-617c020f47d5" width="300" height="250"> | <img src="https://github.com/user-attachments/assets/1749df32-f292-4613-916d-b88cf2390cd2" width="300" height="250"> |
 | PL | iOS, PM | iOS | iOS |
-| [리버]https://github.com/jwon0523) | [제옹](https://github.com/JEONG-J) | [마티](https://github.com/alwn8918) | [소피](https://github.com/LeeYeJi546) |
+| [리버](https://github.com/jwon0523) | [제옹](https://github.com/JEONG-J) | [마티](https://github.com/alwn8918) | [소피](https://github.com/LeeYeJi546) |
 
 <br>
 
