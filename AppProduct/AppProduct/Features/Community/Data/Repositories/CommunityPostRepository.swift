@@ -31,7 +31,7 @@ final class CommunityPostRepository: CommunityPostRepositoryProtocol {
             CommunityPostRouter.postPosts(request: request)
         )
         let apiResponse = try decoder.decode(
-            APIResponse<PostListResponse>.self,
+            APIResponse<PostListItemDTO>.self,
             from: response.data
         )
         _ = try apiResponse.unwrap()
@@ -42,7 +42,7 @@ final class CommunityPostRepository: CommunityPostRepositoryProtocol {
             CommunityPostRouter.postLighting(request: request)
         )
         let apiResponse = try decoder.decode(
-            APIResponse<PostListResponse>.self,
+            APIResponse<PostListItemDTO>.self,
             from: response.data
         )
         _ = try apiResponse.unwrap()
@@ -53,7 +53,7 @@ final class CommunityPostRepository: CommunityPostRepositoryProtocol {
             CommunityPostRouter.patchPosts(postId: postId, request: request)
         )
         let apiResponse = try decoder.decode(
-            APIResponse<PostListResponse>.self,
+            APIResponse<PostListItemDTO>.self,
             from: response.data
         )
         _ = try apiResponse.unwrap()
@@ -64,7 +64,7 @@ final class CommunityPostRepository: CommunityPostRepositoryProtocol {
             CommunityPostRouter.patchLighting(postId: postId, request: request)
         )
         let apiResponse = try decoder.decode(
-            APIResponse<PostListResponse>.self,
+            APIResponse<PostListItemDTO>.self,
             from: response.data
         )
         _ = try apiResponse.unwrap()

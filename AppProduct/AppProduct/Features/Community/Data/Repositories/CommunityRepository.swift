@@ -44,7 +44,7 @@ final class CommunityRepository: CommunityRepositoryProtocol {
     ) async throws -> (items: [CommunityItemModel], hasNext: Bool) {
         let response = try await adapter.request(CommunityRouter.getPosts(query: query))
         let apiResponse = try decoder.decode(
-            APIResponse<PageDTO<PostListResponse>>.self,
+            APIResponse<PageDTO<PostListItemDTO>>.self,
             from: response.data
         )
         

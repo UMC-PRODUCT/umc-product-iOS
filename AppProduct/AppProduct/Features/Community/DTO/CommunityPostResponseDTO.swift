@@ -21,52 +21,90 @@ struct PostSearchResponse: Codable {
     let matchType: String
 }
 
-// MARK: - Post List
-
-/// 게시글 목록 조회 응답, 게시글 생성/수정 응답, 번개글 생성/수정 응답 DTO
-/// `GET /api/v1/posts`
-/// `POST /api/v1/posts`, `PATCH /api/v1/posts/{postId}`
-/// `POST /api/v1/posts/lightning`, `PATCH /api/v1/posts/{postId}/lightning`
-struct PostListResponse: Codable {
+// MARK: - 1. 공통 게시글 DTO (상세 조회용)
+struct PostDetailDTO: Codable {
     let postId: Int
     let title: String
     let content: String
     let category: CommunityItemCategory
     let authorId: Int
     let authorName: String
-    let authorProfileImage: String? // 추가요청
-    let authorPart: UMCPartType // 추가요청
+    let authorPart: UMCPartType?
+    let createdAt: String
+    let commentCount: Int
+    let likeCount: Int
+    let scrapCount: Int?
+    let isLiked: Bool
+    let isScrapped: Bool?
+    let lightningInfo: LightningInfo?
+
+    enum CodingKeys: String, CodingKey {
+        case postId, title, content, category, authorId, authorName, commentCount, likeCount, scrapCount, isLiked, isScrapped, lightningInfo
+        case authorPart = "userPart"
+        case createdAt = "writeTime"
+    }
+}
+
+// MARK: - 2. 리스트 내 개별 항목 DTO
+struct PostListItemDTO: Codable {
+    let postId: Int
+    let title: String
+    let content: String
+    let category: CommunityItemCategory
+    let authorId: Int
+    let authorName: String
     let createdAt: String
     let commentCount: Int
     let likeCount: Int
     let isLiked: Bool
-    let lightningInfo: PostListLightningInfo?
-    
-    struct PostListLightningInfo: Codable {
-        let meetAt: String
-        let location: String
-        let maxParticipants: Int
-        let openChatUrl: String
-    }
+    let lightningInfo: LightningInfo?
 }
 
-extension PostListResponse {
+// MARK: - 3. 공통 번개 정보
+struct LightningInfo: Codable {
+    let meetAt: String
+    let location: String
+    let maxParticipants: Int
+    let openChatUrl: String
+}
+
+// 리스트 항목 변환
+extension PostListItemDTO {
     func toCommunityItemModel() -> CommunityItemModel {
-        let date = ISO8601DateFormatter().date(from: createdAt) ?? Date()
-        
         return CommunityItemModel(
             postId: postId,
             userId: authorId,
             category: category,
             title: title,
             content: content,
-            profileImage: authorProfileImage,
+            profileImage: nil,
             userName: authorName,
-            part: authorPart,
-            createdAt: date,
+            part: .pm, // 임시
+            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
             likeCount: likeCount,
             commentCount: commentCount,
             scrapCount: 0,
+            isLiked: isLiked
+        )
+    }
+}
+
+// 상세 정보 변환
+extension PostDetailDTO {
+    func toCommunityItemModel() -> CommunityItemModel {
+        return CommunityItemModel(
+            postId: postId,
+            userId: authorId,
+            category: category,
+            title: title,
+            content: content,
+            profileImage: nil,
+            userName: authorName,
+            part: authorPart ?? .pm, // 임시
+            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
+            likeCount: likeCount,
+            commentCount: commentCount,
+            scrapCount: scrapCount ?? 0,
             isLiked: isLiked
         )
     }
