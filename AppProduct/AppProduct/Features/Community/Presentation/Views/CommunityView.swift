@@ -81,7 +81,7 @@ struct CommunityView: View {
         }
     }
 
-    private func contentSection(vm: CommunityViewModel) -> some View {
+    private var contentSection: some View {
         Group {
             switch vm.items {
             case .idle,.loading:
