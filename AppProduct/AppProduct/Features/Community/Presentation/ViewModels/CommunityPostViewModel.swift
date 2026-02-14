@@ -9,10 +9,6 @@ import Foundation
 
 @Observable
 class CommunityPostViewModel {
-    // MARK: - Dependencies
-    
-    private let createPostUseCase: CreatePostUseCaseProtocol
-    
     // MARK: - Properties
 
     private let useCaseProvider: CommunityUseCaseProviding

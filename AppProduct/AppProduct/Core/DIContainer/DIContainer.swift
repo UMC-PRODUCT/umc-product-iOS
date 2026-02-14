@@ -351,17 +351,10 @@ extension DIContainer {
             CommunityUseCaseProvider(
                 communityRepository: container.resolve(
                     CommunityRepositoryProtocol.self
+                ),
+                communityPostRepository: container.resolve(
+                    CommunityPostRepositoryProtocol.self
                 )
-            )
-        }
-
-        // MARK: - Global UseCase Provider
-        container.register(UsecaseProviding.self) {
-            UseCaseProvider(
-                activity: container.resolve(ActivityUseCaseProviding.self),
-                auth: container.resolve(AuthUseCaseProviding.self),
-                home: container.resolve(HomeUseCaseProviding.self),
-                community: container.resolve(CommunityUseCaseProviding.self)
             )
         }
 
