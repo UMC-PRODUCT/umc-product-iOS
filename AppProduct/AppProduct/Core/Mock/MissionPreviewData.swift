@@ -10,13 +10,14 @@ import SwiftUI
 import SwiftData
 
 #if DEBUG
+/// 미션 관련 프리뷰에서 사용하는 더미 데이터 모음
 struct MissionPreviewData {
     
     static let errorHandler = ErrorHandler()
     static let container: DIContainer = {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let modelContainer = try! ModelContainer(
-            for: PenaltyRecord.self, NoticeHistoryData.self,
+            for: GenerationMappingRecord.self, NoticeHistoryData.self,
             configurations: config
         )
         return DIContainer.configured(

@@ -17,10 +17,12 @@ struct VotingFormSheetView: View, Equatable {
 
     // MARK: - Constant
     fileprivate enum Constants {
+        static let questionBottomMargin: CGFloat = 4
         static let trashSize: CGFloat = 16
         static let trashPadding: CGFloat = 12
         static let optionHPadding: CGFloat = 8
-        static let toggleMargin: CGFloat = 16
+        static let toggleTopMargin: CGFloat = 16
+        static let dateTopMargin: CGFloat = 4
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -31,11 +33,13 @@ struct VotingFormSheetView: View, Equatable {
     var body: some View {
         NavigationStack {
             VStack(spacing: DefaultSpacing.spacing12) {
+                titleSection
                 optionsSection
                 if formData.canAddOption {
                     addOptionButton
                 }
                 toggleSection
+                dateSection
                 Spacer()
             }
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
@@ -53,6 +57,22 @@ struct VotingFormSheetView: View, Equatable {
                 )
             }
         }
+    }
+    
+    // MARK: - Title Section
+    private var titleSection: some View {
+        VStack {
+            TextField(
+                "",
+                text: $formData.title,
+                prompt: Text("투표 제목을 입력하세요")
+            )
+            .appFont(.calloutEmphasis)
+            .padding(.horizontal, Constants.optionHPadding)
+            
+            Divider()
+        }
+        .padding(.bottom, Constants.questionBottomMargin)
     }
     
     // MARK: - Options
@@ -118,7 +138,7 @@ struct VotingFormSheetView: View, Equatable {
 
             toggleItem(title: "복수 선택 허용", isOn: $formData.allowMultipleSelection)
         }
-        .padding(.top, Constants.toggleMargin)
+        .padding(.top, Constants.toggleTopMargin)
     }
 
     private func toggleItem(title: String, isOn: Binding<Bool>) -> some View {
@@ -132,6 +152,54 @@ struct VotingFormSheetView: View, Equatable {
                 .labelsHidden()
                 .tint(.indigo500)
         }
+    }
+    
+    // MARK: - Date Section
+    private var dateSection: some View {
+        VStack(spacing: DefaultSpacing.spacing16) {
+            HStack {
+                Text("투표 시작일")
+                    .appFont(.subheadline)
+                
+                Spacer()
+                
+                DatePicker(
+                    "",
+                    selection: Binding(
+                        get: { formData.startDate },
+                        set: { newDate in
+                            formData.startDate = Calendar.current.startOfDay(for: newDate)
+                        }
+                    ),
+                    in: Date()...,
+                    displayedComponents: [.date]
+                )
+                .datePickerStyle(.compact)
+            }
+            
+            HStack {
+                Text("투표 마감일")
+                    .appFont(.subheadline)
+                
+                Spacer()
+                
+                DatePicker(
+                    "",
+                    selection: Binding(
+                        get: { formData.endDate },
+                        set: { newDate in
+                            let calendar = Calendar.current
+                            let startOfDay = calendar.startOfDay(for: newDate)
+                            formData.endDate = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: startOfDay) ?? newDate
+                        }
+                    ),
+                    in: Calendar.current.date(byAdding: .day, value: 1, to: formData.startDate)!...,
+                    displayedComponents: [.date]
+                )
+                .datePickerStyle(.compact)
+            }
+        }
+        .padding(.top, Constants.dateTopMargin)
     }
 
     // MARK: - Function

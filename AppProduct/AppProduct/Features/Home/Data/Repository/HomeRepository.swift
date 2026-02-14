@@ -28,6 +28,7 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
 
     // MARK: - Function
 
+    /// 내 프로필 조회 (기수 카드 + 역할 정보)
     func getMyProfile() async throws -> HomeProfileResult {
         let response = try await adapter.request(HomeRouter.getGen)
         let apiResponse = try decoder.decode(
@@ -37,17 +38,7 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().toHomeProfileResult()
     }
 
-    func getPenalty(challengerId: Int, gisuId: Int) async throws -> GenerationData {
-        let response = try await adapter.request(
-            HomeRouter.getPenalty(id: challengerId)
-        )
-        let apiResponse = try decoder.decode(
-            APIResponse<ChallengerMemberDTO>.self,
-            from: response.data
-        )
-        return try apiResponse.unwrap().toGenerationData(gisuId: gisuId)
-    }
-
+    /// 월별 일정을 조회하고 날짜별로 그룹핑하여 반환합니다.
     func getSchedules(
         year: Int, month: Int
     ) async throws -> [Date: [ScheduleData]] {
@@ -67,6 +58,7 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
         }
     }
 
+    /// 최근 공지사항을 조회합니다 (최대 5개).
     func getRecentNotices(
         query: NoticeListRequestDTO
     ) async throws -> [RecentNoticeData] {
@@ -79,6 +71,24 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
         )
         let page = try apiResponse.unwrap()
         return Array(page.content.prefix(5).map { $0.toRecentNoticeData() })
+    }
+
+    /// FCM 토큰을 서버에 등록/갱신합니다.
+    func registerFCMToken(
+        challengerId: Int,
+        fcmToken: String
+    ) async throws {
+        let response = try await adapter.request(
+            HomeRouter.postFCMToken(
+                challengerId: challengerId,
+                request: RegisterFCMTokenRequestDTO(fcmToken: fcmToken)
+            )
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        )
+        _ = try apiResponse.unwrap()
     }
 
 }

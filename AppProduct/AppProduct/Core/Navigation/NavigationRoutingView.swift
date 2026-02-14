@@ -43,6 +43,8 @@ struct NavigationRoutingView: View {
             communityView(community)
         case .myPage(let mypage):
             myPage(mypage)
+        case .activity(let activity):
+            activityView(activity)
         }
     }
 }
@@ -68,6 +70,11 @@ private extension NavigationRoutingView {
             NoticeAlarmView()
         case .registrationSchedule:
             ScheduleRegistrationView(container: di, errorHandler: errorHandler)
+        case .detailSchedule(let scheduleId, let selectedDate):
+            ScheduleDetailView(
+                scheduleId: scheduleId,
+                selectedDate: selectedDate
+            )
         }
     }
     
@@ -82,8 +89,8 @@ private extension NavigationRoutingView {
         }
     }
     
+    /// 커뮤니티(Community) 관련 피처의 화면들을 생성합니다.
     @ViewBuilder
-    /// 커뮤니티(commu) 관련 피처의 화면들을 생성합니다.
     func communityView(_ route: NavigationDestination.Community) -> some View {
         switch route {
         case .detail(let postItem):
@@ -93,12 +100,23 @@ private extension NavigationRoutingView {
         }
     }
     
+    /// 마이페이지(MyPage) 관련 피처의 화면들을 생성합니다.
     @ViewBuilder
-    /// 마이페이지(myPage) 마이페이지 화면들을 생성합니다.
     func myPage(_ route: NavigationDestination.MyPage) -> some View {
         switch route {
         case .myInfo(let profileData):
             MyPageProfileView(profileData: profileData)
+        }
+    }
+
+    @ViewBuilder
+    /// 활동(Activity) 관련 피처의 화면들을 생성합니다.
+    func activityView(
+        _ route: NavigationDestination.Activity
+    ) -> some View {
+        switch route {
+        case .studyScheduleRegistration(let studyName):
+            StudyScheduleRegistrationView(studyName: studyName)
         }
     }
 }

@@ -11,7 +11,7 @@ import SwiftUI
 /// 일정 등록 화면에서 사용되는 섹션 타입
 ///
 /// 일정 생성 및 수정 시, 각 입력 필드(제목, 장소, 시간 등)를 구분하는 데 사용됩니다.
-enum ScheduleGenerationType: CaseIterable {
+enum ScheduleGenerationType: CaseIterable, Hashable {
     /// 일정 제목 입력 섹션
     case title
     /// 장소 입력 섹션

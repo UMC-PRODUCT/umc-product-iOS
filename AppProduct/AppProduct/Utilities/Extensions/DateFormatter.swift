@@ -8,6 +8,8 @@
 import Foundation
 
 extension Date {
+    // MARK: - Function
+
     /// "yyyy.MM.dd" 형식으로 변환 (예: "2026.01.17")
     func toYearMonthDay() -> String {
         formatted(.dateTime.year().month(.twoDigits).day(.twoDigits))
@@ -22,10 +24,10 @@ extension Date {
     
     /// "HH:mm" 24시간제 형식으로 변환 (예: "14:30")
     func toHourMinutes() -> String {
-        formatted(.dateTime.hour(
-            .twoDigits(amPM: .omitted)).minute(.twoDigits))
+        Date.hourMinuteFormatter.string(from: self)
     }
     
+    /// 현재 시간 기준 상대적 시간 표현 (예: "3시간 전", "2일 전")
     var timeAgoText: String {
         let now = Date()
         let interval = now.timeIntervalSince(self)
@@ -61,9 +63,23 @@ extension Date {
         "\(self.toMonthDay()) - \(endDate.toMonthDay())"
     }
 
-    /// "yyyy.MM.dd (E)" 형식으로 변환 (예: "24.03.23 (토)")
+    /// "yyyy.MM.dd (E)" 형식으로 변환 (예: "2026.01.01 (토)")
     func toYearMonthDayWithWeekday() -> String {
-        formatted(.dateTime.year(.twoDigits).month(.twoDigits).day(.twoDigits).weekday(.abbreviated))
+        formatted(.dateTime.year().month(.twoDigits).day(.twoDigits).weekday(.abbreviated))
             .replacingOccurrences(of: "/", with: ".")
     }
+
+    // MARK: - Helper
+}
+
+private extension Date {
+    // MARK: - Property
+
+    static let hourMinuteFormatter: Foundation.DateFormatter = {
+        let formatter = Foundation.DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
 }

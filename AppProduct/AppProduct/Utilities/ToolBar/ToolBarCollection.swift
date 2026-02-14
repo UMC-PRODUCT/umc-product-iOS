@@ -29,19 +29,30 @@ struct ToolBarCollection {
         @Environment(\.dismiss) var dismiss
         let action: () -> Void
         let disable: Bool
+        let dismissOnTap: Bool
+        let tintColor: Color
         
-        init(action: @escaping () -> Void, disable: Bool = false) {
+        init(
+            action: @escaping () -> Void,
+            disable: Bool = false,
+            dismissOnTap: Bool = true,
+            tintColor: Color = .indigo500
+        ) {
             self.action = action
             self.disable = disable
+            self.dismissOnTap = dismissOnTap
+            self.tintColor = tintColor
         }
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .confirmationAction, content: {
                 Button(role: .confirm, action: {
                     action()
-                    dismiss()
+                    if dismissOnTap {
+                        dismiss()
+                    }
                 })
-                .tint(.indigo500)
+                .tint(disable ? .grey300 : tintColor)
                 .disabled(disable)
             })
         }
@@ -76,10 +87,22 @@ struct ToolBarCollection {
     struct AddBtn: ToolbarContent {
         let action: () -> Void
         let disable: Bool
+        let title: String?
+        let imageSystemName: String
+        let tintColor: Color
         
-        init(action: @escaping () -> Void, disable: Bool = false) {
+        init(
+            title: String? = nil,
+            imageSystemName: String = "plus",
+            action: @escaping () -> Void,
+            disable: Bool = false,
+            tintColor: Color = .indigo500
+        ) {
+            self.title = title
+            self.imageSystemName = imageSystemName
             self.action = action
             self.disable = disable
+            self.tintColor = tintColor
         }
         
         var body: some ToolbarContent {
@@ -87,8 +110,13 @@ struct ToolBarCollection {
                 Button(action: {
                     action()
                 }, label: {
-                    Image(systemName: "plus")
+                    if let title {
+                        Text(title)
+                    } else {
+                        Image(systemName: imageSystemName)
+                    }
                 })
+                .tint(disable ? .grey300 : tintColor)
                 .disabled(disable)
             })
         }

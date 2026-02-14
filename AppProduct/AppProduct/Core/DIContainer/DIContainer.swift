@@ -84,12 +84,27 @@ final class DIContainer {
     private var cachedInstances: [ObjectIdentifier: Any] = [:]
     
     // MARK: - Registration
+
+    /// 프로토콜 타입과 팩토리 클로저를 등록합니다.
+    ///
+    /// - Parameters:
+    ///   - type: 등록할 프로토콜/타입 (예: `UserRepositoryProtocol.self`)
+    ///   - factory: 인스턴스를 생성하는 클로저
     func register<T>(_ type: T.Type, factory: @escaping () -> T) {
         let key = ObjectIdentifier(type)
         factories[key] = factory
     }
     
     // MARK: - Resolution
+
+    /// 등록된 의존성을 조회합니다 (캐싱됨).
+    ///
+    /// 최초 호출 시 팩토리 클로저로 인스턴스를 생성하고 캐시합니다.
+    /// 이후 호출부터는 캐시된 인스턴스를 반환합니다 (싱글톤 동작).
+    ///
+    /// - Parameter type: 조회할 프로토콜/타입
+    /// - Returns: 등록된 타입의 인스턴스
+    /// - Warning: 미등록 타입 조회 시 `fatalError` 발생. 안전한 조회는 `resolveIfRegistered` 사용.
     func resolve<T>(_ type: T.Type) -> T {
         let key = ObjectIdentifier(type)
         if let cached = cachedInstances[key] as? T {
@@ -102,12 +117,35 @@ final class DIContainer {
         cachedInstances[key] = instance
         return instance
     }
+
+    /// 등록 여부를 확인하며 의존성을 안전하게 조회합니다.
+    ///
+    /// - Returns: 등록된 경우 인스턴스, 미등록 시 nil
+    func resolveIfRegistered<T>(_ type: T.Type) -> T? {
+        let key = ObjectIdentifier(type)
+        if let cached = cachedInstances[key] as? T {
+            return cached
+        }
+        guard let factory = factories[key] as? () -> T else {
+            return nil
+        }
+        let instance = factory()
+        cachedInstances[key] = instance
+        return instance
+    }
     
     // MARK: - Cache Management
+
+    /// 모든 캐시된 인스턴스를 초기화합니다.
+    ///
+    /// - Note: 로그아웃 시 호출하여 이전 사용자 상태를 제거합니다.
     func resetCache() {
         cachedInstances.removeAll()
     }
     
+    /// 특정 타입의 캐시된 인스턴스만 초기화합니다.
+    ///
+    /// - Parameter type: 캐시를 제거할 타입
     func resetCache<T>(for type: T.Type) {
         let key = ObjectIdentifier(type)
         cachedInstances.removeValue(forKey: key)
@@ -204,9 +242,6 @@ extension DIContainer {
             HomeUseCaseProvider(
                 homeRepository: container.resolve(
                     HomeRepositoryProtocol.self
-                ),
-                genRepository: container.resolve(
-                    ChallengerGenRepositoryProtocol.self
                 ),
                 scheduleRepository: container.resolve(
                     ScheduleRepositoryProtocol.self

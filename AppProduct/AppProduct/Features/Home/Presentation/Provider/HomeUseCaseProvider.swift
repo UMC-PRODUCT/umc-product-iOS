@@ -2,7 +2,7 @@
 //  HomeUseCaseProvider.swift
 //  AppProduct
 //
-//  Created by Claude on 2/12/26.
+//  Created by euijjang97 on 2/12/26.
 //
 
 import Foundation
@@ -11,14 +11,18 @@ import Foundation
 protocol HomeUseCaseProviding {
     /// 내 프로필 조회 UseCase
     var fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol { get }
-    /// 패널티 조회 UseCase (API → CloudKit 저장 → 전체 기수 반환)
-    var fetchPenaltyUseCase: FetchPenaltyUseCaseProtocol { get }
     /// 월별 일정 조회 UseCase
     var fetchSchedulesUseCase: FetchSchedulesUseCaseProtocol { get }
     /// 최근 공지 조회 UseCase
     var fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol { get }
+    /// FCM 토큰 등록 UseCase
+    var registerFCMTokenUseCase: RegisterFCMTokenUseCaseProtocol { get }
     /// 일정 생성 UseCase
     var generateScheduleUseCase: GenerateScheduleUseCaseProtocol { get }
+    /// 일정 수정 UseCase
+    var updateScheduleUseCase: UpdateScheduleUseCaseProtocol { get }
+    /// 일정 + 출석부 통합 삭제 UseCase
+    var deleteScheduleUseCase: DeleteScheduleUseCaseProtocol { get }
     /// 챌린저 검색 UseCase
     var searchChallengersUseCase: SearchChallengersUseCaseProtocol { get }
 }
@@ -32,26 +36,23 @@ final class HomeUseCaseProvider: HomeUseCaseProviding {
     // MARK: - Property
 
     let fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol
-    let fetchPenaltyUseCase: FetchPenaltyUseCaseProtocol
     let fetchSchedulesUseCase: FetchSchedulesUseCaseProtocol
     let fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol
+    let registerFCMTokenUseCase: RegisterFCMTokenUseCaseProtocol
     let generateScheduleUseCase: GenerateScheduleUseCaseProtocol
+    let updateScheduleUseCase: UpdateScheduleUseCaseProtocol
+    let deleteScheduleUseCase: DeleteScheduleUseCaseProtocol
     let searchChallengersUseCase: SearchChallengersUseCaseProtocol
 
     // MARK: - Init
 
     init(
         homeRepository: HomeRepositoryProtocol,
-        genRepository: ChallengerGenRepositoryProtocol,
         scheduleRepository: ScheduleRepositoryProtocol,
         challengerSearchRepository: ChallengerSearchRepositoryProtocol
     ) {
         self.fetchMyProfileUseCase = FetchMyProfileUseCase(
             repository: homeRepository
-        )
-        self.fetchPenaltyUseCase = FetchPenaltyUseCase(
-            homeRepository: homeRepository,
-            genRepository: genRepository
         )
         self.fetchSchedulesUseCase = FetchSchedulesUseCase(
             repository: homeRepository
@@ -59,7 +60,16 @@ final class HomeUseCaseProvider: HomeUseCaseProviding {
         self.fetchRecentNoticesUseCase = FetchRecentNoticesUseCase(
             repository: homeRepository
         )
+        self.registerFCMTokenUseCase = RegisterFCMTokenUseCase(
+            repository: homeRepository
+        )
         self.generateScheduleUseCase = GenerateScheduleUseCase(
+            repository: scheduleRepository
+        )
+        self.updateScheduleUseCase = UpdateScheduleUseCase(
+            repository: scheduleRepository
+        )
+        self.deleteScheduleUseCase = DeleteScheduleUseCase(
             repository: scheduleRepository
         )
         self.searchChallengersUseCase = SearchChallengersUseCase(

@@ -2,7 +2,7 @@
 //  ChallengerRole.swift
 //  AppProduct
 //
-//  Created by Claude on 2/12/26.
+//  Created by euijjang97 on 2/12/26.
 //
 
 import Foundation
@@ -37,4 +37,6 @@ struct HomeProfileResult: Equatable {
     let seasonTypes: [SeasonType]
     /// 역할별 상세 정보 매핑
     let roles: [ChallengerRole]
+    /// 프로필 응답에서 파생한 기수별 패널티 데이터
+    let generations: [GenerationData]
 }

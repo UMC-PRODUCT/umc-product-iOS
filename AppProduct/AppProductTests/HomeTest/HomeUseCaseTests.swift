@@ -2,7 +2,7 @@
 //  HomeUseCaseTests.swift
 //  AppProductTests
 //
-//  Created by Claude on 2/12/26.
+//  Created by euijjang97 on 2/12/26.
 //
 
 import Testing

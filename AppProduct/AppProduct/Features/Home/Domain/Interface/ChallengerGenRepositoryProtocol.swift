@@ -2,23 +2,21 @@
 //  ChallengerGenRepositoryProtocol.swift
 //  AppProduct
 //
-//  Created by Claude on 2/12/26.
+//  Created by euijjang97 on 2/12/26.
 //
 
 import Foundation
 
-/// 기수별 패널티 로컬 저장소 Repository Protocol
+/// 기수-기수ID 매핑 로컬 저장소 Repository Protocol
 ///
-/// SwiftData + CloudKit 기반으로 기수별 패널티 데이터를 저장/조회합니다.
+/// SwiftData + CloudKit 기반으로 (gen, gisuId) 매핑을 저장/조회합니다.
 protocol ChallengerGenRepositoryProtocol: Sendable {
 
-    /// 패널티 데이터 저장 (gisuId 기준 upsert)
-    /// - Parameter data: 저장할 기수별 패널티 데이터
-    func savePenalty(_ data: GenerationData) throws
-
-    /// 전체 기수 패널티 조회
-    /// - Returns: 기수 오름차순 정렬된 패널티 데이터 목록
-    func fetchAllPenalties() throws -> [GenerationData]
+    /// 전체 매핑을 교체 저장합니다.
+    ///
+    /// 입력 목록 기준으로 upsert 후, 입력에 없는 기존 레코드는 삭제합니다.
+    /// - Parameter pairs: 저장할 (gen, gisuId) 매핑 목록
+    func replaceMappings(_ pairs: [(gen: Int, gisuId: Int)]) throws
 
     /// 전체 기수의 (gen, gisuId) 매핑 배열 조회
     /// - Returns: gen 오름차순 정렬된 (gen, gisuId) 튜플 배열

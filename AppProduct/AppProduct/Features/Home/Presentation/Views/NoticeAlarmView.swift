@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import Playgrounds
 
 /// 알림 내역을 보여주는 뷰입니다.
 struct NoticeAlarmView: View {
@@ -19,15 +18,14 @@ struct NoticeAlarmView: View {
     
     /// 저장된 알림 내역 데이터 (최신순 정렬)
     @Query(sort: \NoticeHistoryData.createdAt, order: .reverse)
-    var notice: [NoticeHistoryData]
+    private var notices: [NoticeHistoryData]
     
     
     // MARK: - Body
     
     var body: some View {
         Form {
-            // 알림 내역 유무에 따라 다른 뷰 표시
-            if notice.isEmpty {
+            if notices.isEmpty {
                 unavailableView
             } else {
                 alarmHistoryView
@@ -35,6 +33,15 @@ struct NoticeAlarmView: View {
         }
         // 네비게이션 설정 (타이틀 및 모드)
         .navigation(naviTitle: .noticeAlarmType, displayMode: .inline)
+        .toolbar {
+            if !notices.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("전체 삭제", role: .destructive) {
+                        deleteAllNotices()
+                    }
+                }
+            }
+        }
     }
     
     // MARK: - UI Components
@@ -47,13 +54,15 @@ struct NoticeAlarmView: View {
             description: Text("새로운 소식이 도착하면 이곳에 표시됩니다.")
         )
     }
-    
+
     /// 알림 내역 리스트 뷰
     private var alarmHistoryView: some View {
-        ForEach(notice, id: \.hashValue) { notice in
-            NoticeAlarmCard(notice: notice)
+        Section {
+            ForEach(notices) { notice in
+                NoticeAlarmCard(notice: notice)
+            }
+            .onDelete(perform: deleteNotices)
         }
-        .onDelete(perform: deleteNotices)
     }
     
     // MARK: - Methods
@@ -62,64 +71,83 @@ struct NoticeAlarmView: View {
     /// - Parameter offsets: 삭제할 인덱스 셋
     private func deleteNotices(at offsets: IndexSet) {
         for index in offsets {
-            let noticeToDelete = notice[index]
+            let noticeToDelete = notices[index]
             modelContext.delete(noticeToDelete)
         }
+        try? modelContext.save()
+    }
+
+    /// 전체 알림 삭제
+    private func deleteAllNotices() {
+        for notice in notices {
+            modelContext.delete(notice)
+        }
+        try? modelContext.save()
     }
 }
 
 #Preview("네비게이션 진입 테스트") {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: NoticeHistoryData.self, configurations: config)
-    
-    let sampleData: [NoticeHistoryData] = [
-        NoticeHistoryData(title: "중앙 해커톤 참여 확정", content: "축하합니다!", createdAt: .now),
-        NoticeHistoryData(title: "정기 세션 불참 경고", content: "무단 결석", createdAt: .now),
-        NoticeHistoryData(title: "운영진 면접 결과", content: "불합격", createdAt: .now)
-    ]
-    
-    for item in sampleData {
-        container.mainContext.insert(item)
+    NavigationStack {
+        NoticeAlarmPreviewSeedView()
     }
-    
-    return NavigationStack {
-        VStack {
-            Text("메인 화면이라고 가정")
-                .font(.headline)
-                .padding()
-            
-            NavigationLink("알림 화면으로 진입 >") {
-                NoticeAlarmView()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-        }
-        .navigationTitle("메인")
-    }
-    .modelContainer(container)
+    .modelContainer(
+        for: [NoticeHistoryData.self, GenerationMappingRecord.self],
+        inMemory: true
+    )
 }
 
-#Playground {
-    let repository = NoticeClassifierRepositoryImpl()
-    let useCase = NoticeClassifierUseCaseImpl(repository: repository)
-    
-    let testCases = [
-        ("중앙 해커톤 참여 확정", "축하합니다!"),
-        ("정기 세션 불참 경고", "무단 결석으로 경고가 누적되었습니다"),
-        ("운영진 면접 결과 안내", "아쉽게도 불합격"),
-        ("12기 활동 가이드라인", "필독 가이드라인을 확인해주세요"),
-        ("결제 완료", "결제가 성공적으로 완료되었습니다"),
-        ("과제 제출 마감 임박", "3일 남았습니다"),
-    ]
-    
-    print("=== CoreML 분류 테스트 ===\n")
-    
-    for (title, content) in testCases {
-        let result = useCase.execute(title: title, content: content)
-        print("📢 제목: \(title)")
-        print("   내용: \(content)")
-        print("   결과: \(result.rawValue) \(result.image)")
-        print("   색상: \(result.color)")
-        print()
+#Preview("알림 히스토리 더미") {
+    NavigationStack {
+        NoticeAlarmPreviewSeedView()
     }
+    .modelContainer(
+        for: [NoticeHistoryData.self, GenerationMappingRecord.self],
+        inMemory: true
+    )
+}
+
+private struct NoticeAlarmPreviewSeedView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \NoticeHistoryData.createdAt, order: .reverse)
+    private var notices: [NoticeHistoryData]
+
+    var body: some View {
+        NoticeAlarmView()
+            .task {
+                guard notices.isEmpty else { return }
+                seedDummyNotices(modelContext: modelContext)
+            }
+    }
+}
+
+private func seedDummyNotices(modelContext: ModelContext) {
+    let dummyNotices: [NoticeHistoryData] = [
+        NoticeHistoryData(
+            title: "중앙 해커톤 참여 확정",
+            content: "축하합니다! 해커톤 참가가 확정되었습니다.",
+            icon: .success,
+            createdAt: .now.addingTimeInterval(-60 * 5)
+        ),
+        NoticeHistoryData(
+            title: "정기 세션 불참 경고",
+            content: "무단 결석 1회가 누적되었습니다.",
+            icon: .warning,
+            createdAt: .now.addingTimeInterval(-60 * 30)
+        ),
+        NoticeHistoryData(
+            title: "운영진 면접 결과 안내",
+            content: "이번 기수 운영진 면접 결과를 확인해주세요.",
+            icon: .info,
+            createdAt: .now.addingTimeInterval(-60 * 60 * 2)
+        ),
+        NoticeHistoryData(
+            title: "출석 점검 필요",
+            content: "출석률이 기준 미만입니다. 다음 세션 출석이 필요합니다.",
+            icon: .error,
+            createdAt: .now.addingTimeInterval(-60 * 60 * 24)
+        )
+    ]
+
+    dummyNotices.forEach { modelContext.insert($0) }
+    try? modelContext.save()
 }

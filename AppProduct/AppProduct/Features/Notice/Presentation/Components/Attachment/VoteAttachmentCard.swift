@@ -7,20 +7,27 @@
 
 import SwiftUI
 
+enum VoteCardMode {
+    case editable    // 공지 작성: 수정 가능
+    case readonly    // 공지 수정: 읽기 전용 (삭제만 가능)
+}
+
 struct VoteAttachmentCard: View {
     
     @Binding var formData: VoteFormData
+    var mode: VoteCardMode = .editable
+    var onDelete: (() -> Void)?
     
     fileprivate enum Constants {
         static let textSpacing: CGFloat = 35
         static let bgOpacity: Double = 0.6
     }
-  
+    
     var body: some View {
         HStack(alignment: .center) {
             textSection
             Spacer()
-            chevronSection
+            iconSection
         }
         .padding(DefaultConstant.defaultSafeHorizon)
         .background {
@@ -49,14 +56,34 @@ struct VoteAttachmentCard: View {
         formData.allowMultipleSelection ? "복수 선택 가능" : "1개 선택 가능"
     }
     
-    private var chevronSection: some View {
-        Image(systemName: "chevron.right")
-            .foregroundStyle(.grey500)
+    private var iconSection: some View {
+        Group {
+            switch mode {
+            case .editable:
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.grey500)
+            case .readonly:
+                Button {
+                    onDelete?()
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundStyle(.grey500)
+                }
+            }
+        }
     }
 }
 
 #Preview(traits: .sizeThatFitsLayout) {
     @Previewable @State var formData = VoteFormData()
     
-    VoteAttachmentCard(formData: $formData)
+    VStack {
+        VoteAttachmentCard(formData: $formData, mode: .editable)
+        
+        VoteAttachmentCard(
+            formData: $formData,
+            mode: .readonly,
+            onDelete: { print("투표 삭제됨") }
+        )
+    }
 }

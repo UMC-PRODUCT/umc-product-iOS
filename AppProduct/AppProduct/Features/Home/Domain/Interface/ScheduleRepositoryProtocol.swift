@@ -2,7 +2,7 @@
 //  ScheduleRepositoryProtocol.swift
 //  AppProduct
 //
-//  Created by Claude on 2/12/26.
+//  Created by euijjang97 on 2/12/26.
 //
 
 import Foundation
@@ -21,5 +21,24 @@ protocol ScheduleRepositoryProtocol: Sendable {
     /// - Throws: 서버 에러 또는 네트워크 에러
     func generateSchedule(
         schedule: GenerateScheduleRequetDTO
+    ) async throws
+
+    /// 일정 정보를 부분 수정합니다.
+    ///
+    /// - Parameters:
+    ///   - scheduleId: 수정할 일정 ID
+    ///   - schedule: 일정 수정 요청 DTO (변경 필드만 포함 가능)
+    /// - Throws: 서버 에러 또는 네트워크 에러
+    func updateSchedule(
+        scheduleId: Int,
+        schedule: UpdateScheduleRequestDTO
+    ) async throws
+
+    /// 일정과 연결된 출석부를 함께 삭제합니다.
+    ///
+    /// - Parameter scheduleId: 삭제할 일정 ID
+    /// - Throws: 서버 에러 또는 네트워크 에러
+    func deleteScheduleWithAttendance(
+        scheduleId: Int
     ) async throws
 }
