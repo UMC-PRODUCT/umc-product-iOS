@@ -13,9 +13,9 @@
 ## 👥 멤버
 | 리버/이재원 | 제옹/정의찬 | 마티/김미주 | 소피/이예지 |
 |:------:|:------:|:------:|:------:|
-| 사진1 | <img src="https://github.com/user-attachments/assets/a1584790-a4be-403c-aca4-8677a4844379" width="300"> | 사진3 | 사진4 |
+| <img src="https://github.com/user-attachments/assets/a4ddee14-419e-41da-a89a-e2c2fb23a03f" width="300"> | <img src="https://github.com/user-attachments/assets/a1584790-a4be-403c-aca4-8677a4844379" width="300"> | <img src="https://github.com/user-attachments/assets/7842f405-80c3-4394-8978-617c020f47d5" width="300"> | <img src="https://github.com/user-attachments/assets/1749df32-f292-4613-916d-b88cf2390cd2" width="300" |
 | PL | iOS, PM | iOS | iOS |
-| [GitHub](깃허브 링크) | [제옹](https://github.com/JEONG-J) | [GitHub](깃허브 링크) | [GitHub](깃허브 링크) |
+| [리버]https://github.com/jwon0523) | [제옹](https://github.com/JEONG-J) | [마티](https://github.com/alwn8918) | [소피](https://github.com/LeeYeJi546) |
 
 <br>
 
