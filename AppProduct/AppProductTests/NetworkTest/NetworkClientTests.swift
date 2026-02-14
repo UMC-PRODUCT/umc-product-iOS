@@ -71,6 +71,12 @@ final class NetworkClientTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        guard ProcessInfo.processInfo.environment["RUN_INTEGRATION_TESTS"] == "1" else {
+            throw XCTSkip("Integration tests are disabled. Set RUN_INTEGRATION_TESTS=1 to run.")
+        }
+        guard await isServerReachable() else {
+            throw XCTSkip("AppProductTestServer(localhost:8080) is not running.")
+        }
 
         tokenStore = TestTokenStore(
             accessToken: "valid_access_token",
@@ -393,6 +399,17 @@ final class NetworkClientTests: XCTestCase {
         
         let saveCount = await tokenStore.getSaveCallCount()
         XCTAssertEqual(saveCount, 1, "동시 요청에서도 토큰 갱신은 한 번만 수행되어야 합니다")
+    }
+
+    private func isServerReachable() async -> Bool {
+        var request = URLRequest(url: baseURL)
+        request.timeoutInterval = 1
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            return (response as? HTTPURLResponse)?.statusCode == 200
+        } catch {
+            return false
+        }
     }
 }
 

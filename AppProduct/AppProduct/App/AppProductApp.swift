@@ -61,12 +61,18 @@ struct AppProductApp: App {
                 .onOpenURL(perform: handleOpenURL)
                 .environment(errorHandler)
                 .environment(\.di, container)
+                .environment(\.appFlow, appFlow)
                 .modelContainer(sharedModelContainer)
                 .onAppear(perform: configureAppDelegateIfNeeded)
                 .onReceive(
                     NotificationCenter.default.publisher(for: .authSessionExpired)
                 ) { _ in
                     handleAuthSessionExpired()
+                }
+                .onReceive(
+                    NotificationCenter.default.publisher(for: .navigateToPendingApproval)
+                ) { _ in
+                    transition(to: .pendingApproval)
                 }
         }
     }
@@ -80,22 +86,13 @@ extension AppProductApp {
         switch appState {
         case .splash:
             SplashView(
-                networkClient: container.resolve(NetworkClient.self),
-                onComplete: { isLoggedIn in
-                    transition(to: isLoggedIn ? .main : .login)
-                }
+                networkClient: container.resolve(NetworkClient.self)
             )
             
         case .login:
             LoginView(
                 loginUseCase: authProvider.loginUseCase,
-                errorHandler: errorHandler,
-                onLoginSuccess: {
-                    transition(to: .main)
-                },
-                onNewMember: { verificationToken in
-                    transition(to: .signUp(verificationToken: verificationToken))
-                }
+                errorHandler: errorHandler
             )
             
         case .signUp(let verificationToken):
@@ -106,17 +103,10 @@ extension AppProductApp {
                 verifyEmailCodeUseCase: authProvider
                     .verifyEmailCodeUseCase,
                 registerUseCase: authProvider.registerUseCase,
-                fetchSignUpDataUseCase: authProvider.fetchSignUpDataUseCase,
-                onSignUpComplete: {
-                    transition(to: .pendingApproval)
-                }
+                fetchSignUpDataUseCase: authProvider.fetchSignUpDataUseCase
             )
         case .pendingApproval:
-            PendingApprovalView(
-                onRetryLogin: {
-                    transition(to: .login)
-                }
-            )
+            FailedVerificationUMC()
             
         case .main:
             UmcTab()
@@ -153,6 +143,18 @@ extension AppProductApp {
         }
         container.resetCache()
         transition(to: .login)
+    }
+
+    private var appFlow: AppFlow {
+        AppFlow(
+            showLogin: { transition(to: .login) },
+            showMain: { transition(to: .main) },
+            showSignUp: { verificationToken in
+                transition(to: .signUp(verificationToken: verificationToken))
+            },
+            showPendingApproval: { transition(to: .pendingApproval) },
+            logout: { handleAuthSessionExpired() }
+        )
     }
     
     /// SwiftData ModelContainer를 생성합니다.
