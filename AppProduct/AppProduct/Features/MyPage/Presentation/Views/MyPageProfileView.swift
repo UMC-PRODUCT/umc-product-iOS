@@ -14,9 +14,17 @@ import PhotosUI
 struct MyPageProfileView: View {
     /// 뷰모델 상태 객체
     @State var viewModel: MyPageProfileViewModel
+    @Environment(ErrorHandler.self) private var errorHandler
+    @Environment(\.dismiss) private var dismiss
 
-    init(profileData: ProfileData) {
-        self._viewModel = .init(initialValue: .init(profileData: profileData))
+    init(container: DIContainer, profileData: ProfileData) {
+        let provider = container.resolve(MyPageUseCaseProviding.self)
+        self._viewModel = .init(
+            initialValue: .init(
+                profileData: profileData,
+                useCaseProvider: provider
+            )
+        )
     }
     
     var body: some View {
@@ -26,14 +34,23 @@ struct MyPageProfileView: View {
         .navigation(naviTitle: .myProfile, displayMode: .inline)
         .toolbar(content: {
             // 완료 버튼
-            ToolBarCollection.ConfirmBtn(action: {
-                print("hello")
-                // TODO: 수정 완료 액션 구현
-            })
+            ToolBarCollection.ConfirmBtn(
+                action: { submitProfileUpdate() },
+                disable: !viewModel.canSubmit,
+                dismissOnTap: false
+            )
         })
         .onChange(of: viewModel.selectedPhotoItem) { _, _ in
             Task {
                 await viewModel.loadSelectedImage()
+            }
+        }
+        .overlay {
+            if viewModel.isUpdatingProfileImage {
+                Progress(
+                    message: "프로필 이미지를 저장하는 중입니다.",
+                    size: .regular
+                )
             }
         }
     }
@@ -56,5 +73,25 @@ struct MyPageProfileView: View {
         ActiveLogs(rows: profile.activityLogs.wrappedValue, header: "활동 이력")
         // 외부 프로필 링크 수정
         ProfileLinkSection(profileLink: profile.profileLink, header: "외부 프로링크")
+    }
+
+    /// 프로필 이미지 업데이트를 서버에 제출하고 완료 시 화면을 dismiss합니다.
+    ///
+    /// 실패 시 ErrorHandler를 통해 Alert를 표시합니다.
+    private func submitProfileUpdate() {
+        Task {
+            do {
+                try await viewModel.submitProfileImageUpdate()
+                dismiss()
+            } catch {
+                errorHandler.handle(
+                    error,
+                    context: .init(
+                        feature: "MyPage",
+                        action: "submitProfileImageUpdate"
+                    )
+                )
+            }
+        }
     }
 }

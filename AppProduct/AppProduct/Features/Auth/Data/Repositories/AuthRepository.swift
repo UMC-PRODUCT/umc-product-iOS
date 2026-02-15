@@ -90,6 +90,25 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().map { $0.toDomain() }
     }
 
+    /// OAuth 수단을 추가 연동하고 갱신된 전체 연동 목록을 반환합니다.
+    ///
+    /// - Parameter oAuthVerificationToken: 소셜 로그인으로 발급받은 검증 토큰
+    /// - Returns: 연동 완료 후 전체 OAuth 목록
+    func addMemberOAuth(
+        oAuthVerificationToken: String
+    ) async throws -> [MemberOAuth] {
+        let response = try await adapter.request(
+            AuthAPI.addMemberOAuth(
+                oAuthVerificationToken: oAuthVerificationToken
+            )
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<[MemberOAuthDTO]>.self,
+            from: response.data
+        )
+        return try apiResponse.unwrap().map { $0.toDomain() }
+    }
+
     func sendEmailVerification(
         email: String
     ) async throws -> String {

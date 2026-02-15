@@ -12,14 +12,15 @@ import SwiftUI
 /// 프로필 정보, 외부 링크, 활동 내역, 설정 등 사용자와 관련된 모든 정보를 섹션별로 보여줍니다.
 /// Loadable 패턴을 사용하여 데이터 로딩 상태(idle, loading, loaded, failed)를 관리합니다.
 ///
-/// - Note: 일부 섹션은 아직 구현되지 않았으며 임시로 Text("11")로 표시됩니다.
 struct MyPageView: View {
     // MARK: - Property
 
     /// MyPage의 상태 및 로직을 관리하는 ViewModel
     @State var viewModel: MyPageViewModel
     @Environment(\.di) var di
+    @Environment(\.appFlow) private var appFlow
     @Environment(ErrorHandler.self) var errorHandler
+    private let shouldFetchOnAppear: Bool
 
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
@@ -29,6 +30,14 @@ struct MyPageView: View {
 
     init() {
         self._viewModel = .init(initialValue: .init())
+        self.shouldFetchOnAppear = true
+    }
+
+    init(previewProfileData: ProfileData) {
+        self._viewModel = .init(
+            initialValue: .init(previewProfileData: previewProfileData)
+        )
+        self.shouldFetchOnAppear = false
     }
 
     // MARK: - Body
@@ -44,6 +53,10 @@ struct MyPageView: View {
                 .navigationDestination(for: NavigationDestination.self) { destination in
                     NavigationRoutingView(destination: destination)
                 }
+                .task {
+                    guard shouldFetchOnAppear else { return }
+                    await viewModel.fetchProfile(container: di)
+                }
         }
     }
 
@@ -51,13 +64,7 @@ struct MyPageView: View {
     @ViewBuilder
     private var content: some View {
         switch viewModel.profileData {
-        case .idle:
-            // 데이터 fetch가 필요한 경우 여기서 호출
-            Color.clear.task {
-
-                print("hello")
-            }
-        case .loading:
+        case .idle, .loading:
             Progress(message: "내 정보 가져오는 중입니다. 잠시 기다려주세요!")
         case .loaded(let profileData):
             Form {
@@ -65,9 +72,31 @@ struct MyPageView: View {
                 sections(profileData)
                 FollowsSection()
             }
-        case .failed:
-            Color.clear
+        case .failed(let error):
+            errorView(error: error)
         }
+    }
+
+    /// 프로필 로딩 실패 시 에러 메시지와 재시도 버튼을 표시하는 뷰
+    /// - Parameter error: 표시할 AppError
+    private func errorView(error: AppError) -> some View {
+        ContentUnavailableView {
+            Label("로딩 실패", systemImage: "exclamationmark.triangle")
+        } description: {
+            Text(error.localizedDescription)
+        } actions: {
+            Button {
+                Task {
+                    await viewModel.fetchProfile(container: di)
+                }
+            } label: {
+                Image(systemName: "arrow.trianglehead.clockwise")
+                    .renderingMode(.template)
+                    .foregroundStyle(.indigo600)
+            }
+            .buttonStyle(.glassProminent)
+        }
+        .padding(.top, DefaultSpacing.spacing32)
     }
 
     /// MyPageSectionType 전체에 대해 Section을 생성하는 ForEach (현재 미사용)
@@ -99,12 +128,82 @@ struct MyPageView: View {
         case .info:
             InfoSection(sectionType: section)
         case .socialConnect:
-            SocialSection(sectionType: section, socialType: profileData.socialConnected)
+            SocialSection(
+                sectionType: section,
+                socialType: profileData.socialConnected
+            ) { social in
+                Task {
+                    do {
+                        try await viewModel.connectSocial(social, container: di)
+                    } catch {
+                        errorHandler.handle(
+                            error,
+                            context: .init(
+                                feature: "MyPage",
+                                action: "connectSocial"
+                            )
+                        )
+                    }
+                }
+            }
         case .auth:
             AuthSection(
                 sectionType: section,
-                alertPrompt: $viewModel.alertPrompt
+                alertPrompt: $viewModel.alertPrompt,
+                onLogout: {
+                    appFlow.logout()
+                },
+                onDeleteAccount: {
+                    Task {
+                        do {
+                            try await viewModel.deleteMember(container: di)
+                            appFlow.logout()
+                        } catch {
+                            errorHandler.handle(
+                                error,
+                                context: .init(
+                                    feature: "MyPage",
+                                    action: "deleteMember"
+                                )
+                            )
+                        }
+                    }
+                }
             )
         }
     }
+}
+
+// MARK: - Preview
+
+private var myPagePreviewContainer: DIContainer {
+    let container = DIContainer()
+    container.register(PathStore.self) { PathStore() }
+    return container
+}
+
+private let myPagePreviewProfileData = ProfileData(
+    challengeId: 123,
+    challangerInfo: ChallengerInfo(
+        memberId: 1,
+        gen: 8,
+        name: "홍길동",
+        nickname: "길동",
+        schoolName: "UMC University",
+        profileImage: nil,
+        part: .front(type: .ios)
+    ),
+    socialConnected: [.kakao, .apple],
+    activityLogs: [
+        .init(part: .front(type: .ios), generation: 8, role: .challenger),
+        .init(part: .server(type: .spring), generation: 7, role: .centralPresident)
+    ],
+    profileLink: []
+)
+
+#Preview("Loaded") {
+    let container = myPagePreviewContainer
+    return MyPageView(previewProfileData: myPagePreviewProfileData)
+        .environment(\.di, container)
+        .environment(ErrorHandler())
 }

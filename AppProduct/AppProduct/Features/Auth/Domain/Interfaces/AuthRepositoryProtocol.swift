@@ -38,6 +38,13 @@ protocol AuthRepositoryProtocol: Sendable {
     /// - Returns: OAuth 연동 정보 목록
     func getMyOAuth() async throws -> [MemberOAuth]
 
+    /// 로그인 OAuth 수단 추가 연동
+    /// - Parameter oAuthVerificationToken: 소셜 로그인 검증 토큰
+    /// - Returns: 연동 완료된 OAuth 목록
+    func addMemberOAuth(
+        oAuthVerificationToken: String
+    ) async throws -> [MemberOAuth]
+
     /// 이메일 인증 발송
     /// - Parameter email: 인증할 이메일 주소
     /// - Returns: 이메일 인증 ID

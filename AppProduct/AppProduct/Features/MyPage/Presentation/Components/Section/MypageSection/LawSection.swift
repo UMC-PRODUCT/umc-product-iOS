@@ -14,11 +14,9 @@ struct LawSection: View {
     // MARK: - Property
 
     @Environment(\.di) var di
+    @Environment(\.openURL) private var openURL
+    @Environment(ErrorHandler.self) private var errorHandler
     let sectionType: MyPageSectionType
-
-    private var router: NavigationRouter {
-        di.resolve(NavigationRouter.self)
-    }
 
     // MARK: - Body
 
@@ -39,6 +37,7 @@ struct LawSection: View {
         }
     }
     
+    /// 약관 타입에 해당하는 Row를 생성합니다.
     private func sectionContent(_ law: LawsType) -> some View {
         Button(action: {
             sectionAction(law)
@@ -50,16 +49,32 @@ struct LawSection: View {
     /// 약관 타입에 따라 적절한 화면으로 이동
     ///
     /// - Parameter law: 이동할 약관 타입 (개인정보처리방침/이용약관)
-    ///
-    /// - Note: 현재는 개발 중이며, 추후 WebView 또는 PDF 뷰어로 연결 예정
     private func sectionAction(_ law: LawsType) {
-        switch law {
-        case .policy:
-            // TODO: 개인정보처리방침 화면으로 이동
-            print("개인정보처리 방침")
-        case .terms:
-            // TODO: 이용약관 화면으로 이동
-            print("이용약관")
+        Task {
+            do {
+                let provider = di.resolve(MyPageUseCaseProviding.self)
+                let terms = try await provider.fetchTermsUseCase.execute(
+                    termsType: law.apiType
+                )
+
+                guard let url = URL(string: terms.link) else {
+                    throw AppError.validation(
+                        .invalidFormat(
+                            field: "termsLink",
+                            expected: "https://..."
+                        )
+                    )
+                }
+                openURL(url)
+            } catch {
+                errorHandler.handle(
+                    error,
+                    context: .init(
+                        feature: "MyPage",
+                        action: "openTerms(\(law.apiType))"
+                    )
+                )
+            }
         }
     }
 }

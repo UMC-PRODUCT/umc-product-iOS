@@ -23,6 +23,8 @@ enum AppStorageKey {
     static let uploadedFCMChallengerId: String = "UploadedFCMChallengerId"
     /// 최근 검색 장소 목록
     static let recentSearchPlaces: String = "recentSearchPlaces"
+    /// OAuth 연동된 소셜 provider 목록(JSON 문자열 배열)
+    static let connectedSocialProviders: String = "connectedSocialProviders"
 
     // MARK: - Profile (최신 기수 기준)
 

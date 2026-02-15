@@ -22,6 +22,8 @@ enum AuthAPI: BaseTargetType {
     case renewToken(refreshToken: String)
     /// 내 OAuth 연동 정보 조회
     case getMyOAuth
+    /// 로그인 OAuth 수단 추가 연동
+    case addMemberOAuth(oAuthVerificationToken: String)
     /// 이메일 인증 발송
     case sendEmailVerification(email: String)
     /// 이메일 인증코드 검증
@@ -48,6 +50,8 @@ enum AuthAPI: BaseTargetType {
             return "/api/v1/auth/token/renew"
         case .getMyOAuth:
             return "/api/v1/member-oauth/me"
+        case .addMemberOAuth:
+            return "/api/v1/member-oauth"
         case .sendEmailVerification:
             return "/api/v1/auth/email-verification"
         case .verifyEmailCode:
@@ -67,6 +71,8 @@ enum AuthAPI: BaseTargetType {
         switch self {
         case .loginKakao, .loginApple, .renewToken,
              .sendEmailVerification, .verifyEmailCode, .register:
+            return .post
+        case .addMemberOAuth:
             return .post
         case .getMyOAuth, .getSchools, .getTerms:
             return .get
@@ -101,6 +107,12 @@ enum AuthAPI: BaseTargetType {
             )
         case .getMyOAuth:
             return .requestPlain
+        case .addMemberOAuth(let oAuthVerificationToken):
+            return .requestJSONEncodable(
+                AddMemberOAuthRequestDTO(
+                    oAuthVerificationToken: oAuthVerificationToken
+                )
+            )
         case .sendEmailVerification(let email):
             return .requestParameters(
                 parameters: ["email": email],

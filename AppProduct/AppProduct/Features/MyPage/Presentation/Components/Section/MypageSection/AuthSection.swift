@@ -15,11 +15,19 @@ struct AuthSection: View {
 
     let sectionType: MyPageSectionType
     @Binding var alertPrompt: AlertPrompt?
-    @Environment(\.appFlow) private var appFlow
+    private let onLogout: () -> Void
+    private let onDeleteAccount: () -> Void
 
-    init(sectionType: MyPageSectionType, alertPrompt: Binding<AlertPrompt?>) {
+    init(
+        sectionType: MyPageSectionType,
+        alertPrompt: Binding<AlertPrompt?>,
+        onLogout: @escaping () -> Void,
+        onDeleteAccount: @escaping () -> Void
+    ) {
         self.sectionType = sectionType
         self._alertPrompt = alertPrompt
+        self.onLogout = onLogout
+        self.onDeleteAccount = onDeleteAccount
     }
 
     // MARK: - Body
@@ -58,7 +66,7 @@ struct AuthSection: View {
                 message: "정말 로그아웃 하시겠습니까?",
                 positiveBtnTitle: "로그아웃",
                 positiveBtnAction: {
-                    appFlow.logout()
+                    onLogout()
                 },
                 negativeBtnTitle: "취소",
                 isPositiveBtnDestructive: true
@@ -69,7 +77,7 @@ struct AuthSection: View {
                 message: "계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까",
                 positiveBtnTitle: "삭제",
                 positiveBtnAction: {
-                    // TODO: - 계정 삭재 로직
+                    onDeleteAccount()
                 },
                 negativeBtnTitle: "취소",
                 isPositiveBtnDestructive: true

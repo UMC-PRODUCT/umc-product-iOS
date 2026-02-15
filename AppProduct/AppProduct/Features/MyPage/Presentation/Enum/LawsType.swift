@@ -17,6 +17,16 @@ enum LawsType: String, CaseIterable {
     /// 이용약관
     case terms = "이용약관"
 
+    /// 약관 조회 API에서 사용하는 termsType 값
+    var apiType: String {
+        switch self {
+        case .policy:
+            return "PRIVACY"
+        case .terms:
+            return "SERVICE"
+        }
+    }
+
     /// 각 법률 문서 타입에 맞는 SF Symbol 아이콘 이름
     var icon: String {
         switch self {
