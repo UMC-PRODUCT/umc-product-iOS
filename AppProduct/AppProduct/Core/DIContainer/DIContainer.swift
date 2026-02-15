@@ -178,6 +178,13 @@ extension DIContainer {
                 baseURL: URL(string: Config.baseURL)!
             )
         }
+
+        // MARK: - Storage Infrastructure
+        container.register(StorageRepositoryProtocol.self) {
+            StorageRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
         
         // MARK: - Token Store
         container.register(TokenStore.self) {
@@ -267,7 +274,7 @@ extension DIContainer {
         // MARK: - Storage Feature
         container.register(NoticeStorageRepositoryProtocol.self) {
             NoticeStorageRepository(
-                adapter: container.resolve(MoyaNetworkAdapter.self)
+                storageRepository: container.resolve(StorageRepositoryProtocol.self)
             )
         }
         container.register(NoticeStorageUseCaseProtocol.self) {
@@ -292,7 +299,8 @@ extension DIContainer {
             return MockMyPageRepository()
             #else
             MyPageRepository(
-                adapter: container.resolve(MoyaNetworkAdapter.self)
+                adapter: container.resolve(MoyaNetworkAdapter.self),
+                storageRepository: container.resolve(StorageRepositoryProtocol.self)
             )
             #endif
         }

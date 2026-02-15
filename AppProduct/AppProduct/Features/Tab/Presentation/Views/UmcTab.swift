@@ -7,15 +7,24 @@
 
 import SwiftUI
 
+/// 메인 탭 네비게이션 뷰
+///
+/// Home, Notice, Activity, Community, MyPage 5개 탭을 제공하며
+/// 탭별 독립 NavigationStack으로 상태를 보존합니다.
 struct UmcTab: View {
+
+    // MARK: - Property
+
     @State var tabCase: TabCase = .home
     @State var isShowMyPage: Bool = false
     @Environment(\.di) var di
     @Environment(ErrorHandler.self) var errorHandler
-    
+
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
+
+    // MARK: - Body
 
     var body: some View {
         TabView(selection: $tabCase, content: {
@@ -33,6 +42,8 @@ struct UmcTab: View {
         }
     }
 
+    // MARK: - Private Function
+
     private func tabLabel(_ tab: TabCase) -> some View {
         VStack(alignment: .center, spacing: DefaultSpacing.spacing8, content: {
             tab.icon
@@ -46,6 +57,7 @@ struct UmcTab: View {
         .tint(.blue)
     }
 
+    /// 탭 케이스에 따른 루트 뷰를 반환합니다.
     @ViewBuilder
     private func tabView(_ tab: TabCase) -> some View {
         switch tab {
@@ -66,6 +78,11 @@ struct UmcTab: View {
     ///
     /// Activity 탭에서는 Admin 권한이 있는 경우에만 Accessory를 표시합니다.
     private func shouldShowAccessory() -> Bool {
+        // MyPage 탭에서는 항상 Accessory 숨김
+        if tabCase == .mypage {
+            return false
+        }
+
         // 현재 탭의 NavigationStack에 화면이 쌓여있으면 Accessory 숨김
         let currentPath: [NavigationDestination] = {
             switch tabCase {
