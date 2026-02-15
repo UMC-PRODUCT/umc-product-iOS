@@ -8,6 +8,9 @@
 import Foundation
 import SwiftUI
 
+/// 앱 전체에서 사용되는 재사용 가능한 Toolbar 컴포넌트 모음
+///
+/// 취소/확인/추가 등 공통 액션 버튼과 필터 메뉴를 제공합니다.
 struct ToolBarCollection {
     /// 취소 버튼
     struct CancelBtn: ToolbarContent {
@@ -122,6 +125,7 @@ struct ToolBarCollection {
         }
     }
     
+    /// 좌측 커스텀 아이콘 버튼
     struct LeadingButton: ToolbarContent {
         let image: String
         let action: () -> Void
@@ -256,6 +260,7 @@ struct ToolBarCollection {
         }
     }
     
+    /// 커뮤니티 파트별 필터
     struct CommunityPartFilter: ToolbarContent {
         @Binding var selectedPart: String
         let parts: [String]
@@ -587,6 +592,73 @@ struct ToolBarCollection {
                     Image(systemName: "line.3.horizontal.decrease")
                 }
             }
+        }
+    }
+
+    /// 챌린저 인증 실패 화면 하단 툴바
+    struct FailedVerificationBottomToolbar: ToolbarContent {
+        let isSubmitting: Bool
+        let onHome: () -> Void
+        let onCode: () -> Void
+        let onInquiry: () -> Void
+
+        private enum Constants {
+            static let iconSize: CGFloat = 18
+        }
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .bottomBar) {
+                actionButton(
+                    icon: "house.fill",
+                    title: "홈페이지",
+                    color: .indigo,
+                    disabled: false,
+                    action: onHome
+                )
+            }
+
+            ToolbarItem(placement: .bottomBar) {
+                actionButton(
+                    icon: "number.square.fill",
+                    title: "기존 챌린저",
+                    color: .orange,
+                    disabled: isSubmitting,
+                    action: onCode
+                )
+            }
+
+            ToolbarItem(placement: .bottomBar) {
+                actionButton(
+                    icon: "message.fill",
+                    title: "문의하기",
+                    color: .yellow,
+                    disabled: false,
+                    action: onInquiry
+                )
+            }
+        }
+
+        private func actionButton(
+            icon: String,
+            title: String,
+            color: Color,
+            disabled: Bool,
+            action: @escaping () -> Void
+        ) -> some View {
+            Button(action: action) {
+                VStack(spacing: DefaultSpacing.spacing4) {
+                    Image(systemName: icon)
+                        .font(.system(size: Constants.iconSize, weight: .semibold))
+                        .foregroundStyle(color)
+
+                    Text(title)
+                        .appFont(.caption2, weight: .medium, color: .black)
+                        .lineLimit(1)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+            }
+            .disabled(disabled)
         }
     }
 }

@@ -31,12 +31,18 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
 
     // MARK: - Function
 
+    /// 카카오 소셜 로그인을 수행합니다.
+    ///
+    /// - Parameters:
+    ///   - accessToken: 카카오 SDK에서 발급받은 액세스 토큰
+    ///   - email: 카카오 계정 이메일
+    /// - Returns: 기존 회원/신규 회원 분기 결과
     func loginKakao(
         accessToken: String,
         email: String
     ) async throws -> OAuthLoginResult {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.loginKakao(accessToken: accessToken, email: email)
+            AuthRouter.loginKakao(accessToken: accessToken, email: email)
         )
         #if DEBUG
         if let json = String(data: response.data, encoding: .utf8) {
@@ -50,11 +56,15 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().toDomain()
     }
 
+    /// Apple 소셜 로그인을 수행합니다.
+    ///
+    /// - Parameter authorizationCode: Apple Sign In에서 발급받은 인증 코드
+    /// - Returns: 기존 회원/신규 회원 분기 결과
     func loginApple(
         authorizationCode: String
     ) async throws -> OAuthLoginResult {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.loginApple(authorizationCode: authorizationCode)
+            AuthRouter.loginApple(authorizationCode: authorizationCode)
         )
         #if DEBUG
         if let json = String(data: response.data, encoding: .utf8) {
@@ -68,11 +78,12 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().toDomain()
     }
 
+    /// 리프레시 토큰으로 새 토큰 쌍을 발급받습니다.
     func renewToken(
         refreshToken: String
     ) async throws -> TokenPair {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.renewToken(refreshToken: refreshToken)
+            AuthRouter.renewToken(refreshToken: refreshToken)
         )
         let apiResponse = try decoder.decode(
             APIResponse<TokenRenewResponseDTO>.self,
@@ -81,8 +92,9 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().toDomain()
     }
 
+    /// 내 OAuth 연동 정보 목록을 조회합니다.
     func getMyOAuth() async throws -> [MemberOAuth] {
-        let response = try await adapter.request(AuthAPI.getMyOAuth)
+        let response = try await adapter.request(AuthRouter.getMyOAuth)
         let apiResponse = try decoder.decode(
             APIResponse<[MemberOAuthDTO]>.self,
             from: response.data
@@ -98,7 +110,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         oAuthVerificationToken: String
     ) async throws -> [MemberOAuth] {
         let response = try await adapter.request(
-            AuthAPI.addMemberOAuth(
+            AuthRouter.addMemberOAuth(
                 oAuthVerificationToken: oAuthVerificationToken
             )
         )
@@ -109,11 +121,15 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().map { $0.toDomain() }
     }
 
+    /// 이메일 인증 코드를 발송합니다.
+    ///
+    /// - Parameter email: 인증할 이메일 주소
+    /// - Returns: 발급된 이메일 인증 ID
     func sendEmailVerification(
         email: String
     ) async throws -> String {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.sendEmailVerification(email: email)
+            AuthRouter.sendEmailVerification(email: email)
         )
         let apiResponse = try decoder.decode(
             APIResponse<EmailVerificationResponseDTO>.self,
@@ -122,12 +138,18 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().emailVerificationId
     }
 
+    /// 이메일 인증 코드를 검증합니다.
+    ///
+    /// - Parameters:
+    ///   - emailVerificationId: 이메일 인증 ID
+    ///   - verificationCode: 사용자가 입력한 인증 코드
+    /// - Returns: 이메일 인증 토큰
     func verifyEmailCode(
         emailVerificationId: String,
         verificationCode: String
     ) async throws -> String {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.verifyEmailCode(
+            AuthRouter.verifyEmailCode(
                 emailVerificationId: emailVerificationId,
                 verificationCode: verificationCode
             )
@@ -139,12 +161,17 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().emailVerificationToken
     }
 
+    /// 회원가입을 수행합니다.
+    ///
+    /// - Parameter request: 회원가입 요청 DTO
+    /// - Returns: 생성된 회원 ID
+    /// - Throws: `RepositoryError.decodingError` memberId 변환 실패 시
     func register(
         request: RegisterRequestDTO
     ) async throws -> Int {
         do {
             let response = try await adapter.requestWithoutAuth(
-                AuthAPI.register(body: request)
+                AuthRouter.register(body: request)
             )
             let apiResponse = try decoder.decode(
                 APIResponse<RegisterResponseDTO>.self,
@@ -172,9 +199,19 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         }
     }
 
+    /// 기존 챌린저 코드로 인증합니다.
+    func registerExistingChallenger(
+        code: String
+    ) async throws {
+        _ = try await adapter.request(
+            AuthRouter.registerExistingChallenger(code: code)
+        )
+    }
+
+    /// 학교 목록을 조회합니다.
     func getSchools() async throws -> [School] {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.getSchools
+            AuthRouter.getSchools
         )
         let apiResponse = try decoder.decode(
             APIResponse<SchoolListResponseDTO>.self,
@@ -183,11 +220,15 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().schools.map { $0.toDomain() }
     }
 
+    /// 약관 정보를 조회합니다.
+    ///
+    /// - Parameter termsType: 약관 종류 (SERVICE, PRIVACY, MARKETING)
+    /// - Returns: 약관 정보
     func getTerms(
         termsType: String
     ) async throws -> Terms {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.getTerms(termsType: termsType)
+            AuthRouter.getTerms(termsType: termsType)
         )
         let apiResponse = try decoder.decode(
             APIResponse<TermsDTO>.self,

@@ -11,7 +11,7 @@ import Foundation
 protocol RegisterFCMTokenUseCaseProtocol {
     /// 사용자 FCM 토큰을 서버에 등록/갱신합니다.
     /// - Parameters:
-    ///   - challengerId: 챌린저 ID
+    ///   - memberId: 멤버 ID
     ///   - fcmToken: FCM 토큰 문자열
-    func execute(challengerId: Int, fcmToken: String) async throws
+    func execute(memberId: Int, fcmToken: String) async throws
 }

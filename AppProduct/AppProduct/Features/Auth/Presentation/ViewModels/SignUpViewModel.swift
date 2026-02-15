@@ -165,6 +165,17 @@ final class SignUpViewModel {
         isEmailVerified = true
     }
 
+    /// 이메일 변경 시 이메일 인증 상태를 초기화합니다.
+    ///
+    /// 기존 인증번호/토큰은 이전 이메일 기준이므로 폐기되어야 합니다.
+    @MainActor
+    func resetEmailVerification() {
+        isEmailVerified = false
+        emailVerificationId = nil
+        emailVerificationToken = nil
+        emailCode = ""
+    }
+
     /// 회원가입 실행
     @MainActor
     func register() async {

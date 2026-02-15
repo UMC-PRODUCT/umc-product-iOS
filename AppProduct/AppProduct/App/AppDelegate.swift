@@ -141,27 +141,27 @@ private extension AppDelegate {
 
     /// FCM 토큰을 서버에 동기화합니다.
     ///
-    /// challengerId와 fcmToken이 모두 존재하고,
-    /// 이전에 업로드한 토큰/챌린저ID와 다를 때만 서버에 등록합니다.
+    /// memberId와 fcmToken이 모두 존재하고,
+    /// 이전에 업로드한 토큰/멤버ID와 다를 때만 서버에 등록합니다.
     ///
     /// - Parameter trigger: 동기화를 트리거한 이벤트 이름 (디버그 로그용)
     @MainActor
     func syncFCMTokenIfPossible(trigger: String) async {
         guard let container else { return }
-        let challengerId = UserDefaults.standard.integer(forKey: AppStorageKey.challengerId)
+        let memberId = UserDefaults.standard.integer(forKey: AppStorageKey.memberId)
         let fcmToken = UserDefaults.standard.string(forKey: AppStorageKey.userFCMToken) ?? ""
-        guard challengerId != 0, !fcmToken.isEmpty else {
+        guard memberId != 0, !fcmToken.isEmpty else {
             #if DEBUG
-            print("[FCM] skip upload (\(trigger)) challengerId=\(challengerId), tokenEmpty=\(fcmToken.isEmpty)")
+            print("[FCM] skip upload (\(trigger)) memberId=\(memberId), tokenEmpty=\(fcmToken.isEmpty)")
             #endif
             return
         }
 
         let uploadedToken = UserDefaults.standard.string(forKey: AppStorageKey.uploadedFCMToken) ?? ""
-        let uploadedChallengerId = UserDefaults.standard.integer(forKey: AppStorageKey.uploadedFCMChallengerId)
-        guard uploadedToken != fcmToken || uploadedChallengerId != challengerId else {
+        let uploadedMemberId = UserDefaults.standard.integer(forKey: AppStorageKey.uploadedFCMMemberId)
+        guard uploadedToken != fcmToken || uploadedMemberId != memberId else {
             #if DEBUG
-            print("[FCM] already uploaded challengerId=\(challengerId)")
+            print("[FCM] already uploaded memberId=\(memberId)")
             #endif
             return
         }
@@ -169,13 +169,13 @@ private extension AppDelegate {
         do {
             let provider = container.resolve(HomeUseCaseProviding.self)
             try await provider.registerFCMTokenUseCase.execute(
-                challengerId: challengerId,
+                memberId: memberId,
                 fcmToken: fcmToken
             )
             UserDefaults.standard.set(fcmToken, forKey: AppStorageKey.uploadedFCMToken)
-            UserDefaults.standard.set(challengerId, forKey: AppStorageKey.uploadedFCMChallengerId)
+            UserDefaults.standard.set(memberId, forKey: AppStorageKey.uploadedFCMMemberId)
             #if DEBUG
-            print("[FCM] upload success challengerId=\(challengerId)")
+            print("[FCM] upload success memberId=\(memberId)")
             #endif
         } catch {
             #if DEBUG

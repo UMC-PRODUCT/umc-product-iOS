@@ -75,12 +75,12 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
 
     /// FCM 토큰을 서버에 등록/갱신합니다.
     func registerFCMToken(
-        challengerId: Int,
+        memberId: Int,
         fcmToken: String
     ) async throws {
         let response = try await adapter.request(
             HomeRouter.postFCMToken(
-                challengerId: challengerId,
+                memberId: memberId,
                 request: RegisterFCMTokenRequestDTO(fcmToken: fcmToken)
             )
         )

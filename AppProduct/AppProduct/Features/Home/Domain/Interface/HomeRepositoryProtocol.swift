@@ -32,10 +32,10 @@ protocol HomeRepositoryProtocol: Sendable {
 
     /// FCM 토큰 등록/갱신
     /// - Parameters:
-    ///   - challengerId: 챌린저 ID
+    ///   - memberId: 멤버 ID
     ///   - fcmToken: Firebase Cloud Messaging 토큰
     func registerFCMToken(
-        challengerId: Int,
+        memberId: Int,
         fcmToken: String
     ) async throws
 }

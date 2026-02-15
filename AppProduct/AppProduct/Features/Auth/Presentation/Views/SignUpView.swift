@@ -20,7 +20,11 @@ struct SignUpView: View {
 
     /// 현재 포커스된 입력 필드
     @FocusState private var focusedField: SignUpFieldType?
+    @State private var lastEmailSnapshot: String = ""
     @Environment(\.appFlow) private var appFlow
+    @Environment(\.di) private var di
+    @Environment(\.openURL) private var openURL
+    @Environment(ErrorHandler.self) private var errorHandler
 
     // MARK: - Constant
 
@@ -30,6 +34,12 @@ struct SignUpView: View {
         static let naviSubTitle: String = "동아리 활동을 위해 정보를 입력해주세요."
         /// 필드 간 수직 간격
         static let spacerSize: CGFloat = 30
+        /// 약관 섹션 타이틀
+        static let termsTitle: String = "약관 동의"
+        /// 전체 동의 문구
+        static let allAgreeTitle: String = "전체 동의"
+        /// 약관 로드 실패 문구
+        static let termsLoadFailedMessage: String = "약관 정보를 불러오지 못했습니다."
     }
 
     // MARK: - Init
@@ -75,10 +85,10 @@ struct SignUpView: View {
             .safeAreaInset(edge: .bottom, content: {
                 mainBtn
             })
-            .background(Color(.systemGroupedBackground))
             .task {
                 await viewModel.fetchSchools()
                 await viewModel.fetchTerms()
+                lastEmailSnapshot = viewModel.email
             }
             .onChange(of: viewModel.registerState) { _, newState in
                 if case .loaded = newState {
@@ -123,6 +133,14 @@ struct SignUpView: View {
                 submitLabel: .return,
                 onSubmit: {
                     focusedField = nil
+                },
+                onEmailChanged: {
+                    if lastEmailSnapshot != viewModel.email {
+                        Task { @MainActor in
+                            viewModel.resetEmailVerification()
+                            lastEmailSnapshot = viewModel.email
+                        }
+                    }
                 }
             )
             .focused($focusedField, equals: field)
@@ -165,67 +183,59 @@ struct SignUpView: View {
 
     /// 약관 동의 섹션
     private var termsSection: some View {
-        Group {
-            if case .loaded(let terms) = viewModel.termsState {
-                VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-                    TitleLabel(title: "약관 동의", isRequired: true)
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+            TitleLabel(title: Constants.termsTitle, isRequired: true)
 
-                    // 전체 동의
-                    Button(action: {
-                        viewModel.toggleAllTerms(!viewModel.isAllTermsAgreed)
-                    }) {
-                        HStack(spacing: DefaultSpacing.spacing8) {
-                            Image(systemName: viewModel.isAllTermsAgreed
-                                  ? "checkmark.circle.fill"
-                                  : "circle")
-                                .foregroundStyle(
-                                    viewModel.isAllTermsAgreed
-                                    ? .indigo500 : .grey400
-                                )
-                            Text("전체 동의")
-                                .appFont(.calloutEmphasis)
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+                allAgreeButton
+                Divider()
+                termsSectionContent
+            }
+            .padding()
+            .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
+        }
+    }
+
+    private var allAgreeButton: some View {
+        Button(action: {
+            viewModel.toggleAllTerms(!viewModel.isAllTermsAgreed)
+        }) {
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Image(
+                    systemName: viewModel.isAllTermsAgreed
+                    ? "checkmark.circle.fill" : "circle"
+                )
+                .foregroundStyle(viewModel.isAllTermsAgreed ? .indigo500 : .grey400)
+                Text(Constants.allAgreeTitle)
+                    .appFont(.calloutEmphasis)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var termsSectionContent: some View {
+        switch viewModel.termsState {
+        case .idle, .loading:
+            ProgressView()
+        case .failed:
+            Text(Constants.termsLoadFailedMessage)
+                .appFont(.footnote, color: .grey500)
+        case .loaded:
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+                ForEach(requiredTermRows) { row in
+                    SignUpTermsRow(
+                        title: row.title,
+                        isMandatory: row.isMandatory,
+                        isAgreed: row.isAgreed,
+                        showsDetailButton: true,
+                        onToggle: {
+                            viewModel.termsAgreements[row.id]?.toggle()
+                        },
+                        onTapDetail: {
+                            openTerms(row.termsType)
                         }
-                    }
-                    .buttonStyle(.plain)
-
-                    Divider()
-
-                    // 개별 약관
-                    ForEach(terms) { term in
-                        Button(action: {
-                            viewModel.termsAgreements[term.id]?.toggle()
-                        }) {
-                            HStack(spacing: DefaultSpacing.spacing8) {
-                                Image(
-                                    systemName: viewModel
-                                        .termsAgreements[term.id] == true
-                                    ? "checkmark.circle.fill"
-                                    : "circle"
-                                )
-                                .foregroundStyle(
-                                    viewModel
-                                        .termsAgreements[term.id] == true
-                                    ? .indigo500 : .grey400
-                                )
-                                Text(term.title)
-                                    .appFont(.subheadline)
-                                if term.isMandatory {
-                                    Text("(필수)")
-                                        .appFont(
-                                            .footnote,
-                                            color: .red500
-                                        )
-                                } else {
-                                    Text("(선택)")
-                                        .appFont(
-                                            .footnote,
-                                            color: .grey400
-                                        )
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    )
                 }
             }
         }
@@ -240,6 +250,143 @@ struct SignUpView: View {
         .disabled(!viewModel.isFormValid)
         .buttonStyle(.glassProminent)
         .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+    }
+
+    private var requiredTermRows: [SignUpTermRowModel] {
+        guard case .loaded(let terms) = viewModel.termsState else {
+            return []
+        }
+
+        return terms
+            .filter { $0.termsType == .service || $0.termsType == .privacy }
+            .sorted { $0.termsType.displayOrder < $1.termsType.displayOrder }
+            .map {
+                SignUpTermRowModel(
+                    id: $0.id,
+                    title: $0.termsType.displayTitle,
+                    isMandatory: $0.isMandatory,
+                    isAgreed: viewModel.termsAgreements[$0.id] == true,
+                    termsType: $0.termsType
+                )
+            }
+    }
+
+    /// 약관 상세 링크를 외부 브라우저로 엽니다.
+    ///
+    /// - Parameter termsType: 열람할 약관 종류
+    private func openTerms(_ termsType: TermsType) {
+        Task {
+            do {
+                let provider = di.resolve(MyPageUseCaseProviding.self)
+                let termsLink = try await provider.fetchTermsUseCase.execute(
+                    termsType: termsType.apiType
+                )
+                guard let url = URL(string: termsLink.link) else {
+                    throw AppError.validation(
+                        .invalidFormat(
+                            field: "termsLink",
+                            expected: "https://..."
+                        )
+                    )
+                }
+                openURL(url)
+            } catch {
+                errorHandler.handle(
+                    error,
+                    context: .init(
+                        feature: "Auth",
+                        action: "openTerms(\(termsType.rawValue))"
+                    )
+                )
+            }
+        }
+    }
+}
+
+// MARK: - TermsType Display
+
+private extension TermsType {
+    var displayTitle: String {
+        switch self {
+        case .service:
+            return "서비스 이용 약관"
+        case .privacy:
+            return "개인정보처리 방침"
+        case .marketing:
+            return "마케팅 정보 수신 동의"
+        }
+    }
+
+    var displayOrder: Int {
+        switch self {
+        case .service:
+            return 0
+        case .privacy:
+            return 1
+        case .marketing:
+            return 2
+        }
+    }
+
+    var apiType: String {
+        switch self {
+        case .service:
+            return LawsType.terms.apiType
+        case .privacy:
+            return LawsType.policy.apiType
+        case .marketing:
+            return rawValue
+        }
+    }
+}
+
+// MARK: - Models
+
+/// 약관 Row 표시를 위한 뷰 모델
+private struct SignUpTermRowModel: Identifiable {
+    let id: Int
+    let title: String
+    let isMandatory: Bool
+    let isAgreed: Bool
+    let termsType: TermsType
+}
+
+/// 약관 동의 체크박스 Row 컴포넌트
+private struct SignUpTermsRow: View {
+    let title: String
+    let isMandatory: Bool
+    let isAgreed: Bool
+    let showsDetailButton: Bool
+    let onToggle: () -> Void
+    let onTapDetail: () -> Void
+
+    var body: some View {
+        HStack(spacing: DefaultSpacing.spacing8) {
+            Button(action: {
+                onToggle()
+            }) {
+                HStack(spacing: DefaultSpacing.spacing8) {
+                    Image(systemName: isAgreed ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(isAgreed ? .indigo500 : .grey400)
+                    Text(title)
+                        .appFont(.subheadline)
+                    Text(isMandatory ? "(필수)" : "(선택)")
+                        .appFont(
+                            .footnote,
+                            color: isMandatory ? .red500 : .grey400
+                        )
+                }
+            }
+            .buttonStyle(.plain)
+
+            Spacer(minLength: 0)
+
+            if showsDetailButton {
+                Button("보기", action: onTapDetail)
+                    .appFont(.footnote, color: .indigo500)
+                    .buttonStyle(.plain)
+            }
+        }
     }
 }
 
@@ -302,5 +449,81 @@ extension SignUpView {
             // 회원가입 API 호출
             await viewModel.register()
         }
+    }
+}
+
+// MARK: - Preview
+
+#Preview("회원가입 기본") {
+    signUpPreview()
+}
+
+#Preview("회원가입 약관 로드 실패") {
+    signUpPreview(shouldFailTerms: true)
+}
+
+private func signUpPreview(shouldFailTerms: Bool = false) -> some View {
+    NavigationStack {
+        SignUpView(
+            oAuthVerificationToken: "preview_token",
+            sendEmailVerificationUseCase: SignUpPreviewSendEmailUseCase(),
+            verifyEmailCodeUseCase: SignUpPreviewVerifyCodeUseCase(),
+            registerUseCase: SignUpPreviewRegisterUseCase(),
+            fetchSignUpDataUseCase: SignUpPreviewFetchSignUpDataUseCase(
+                shouldFailTerms: shouldFailTerms
+            )
+        )
+    }
+    .environment(DIContainer())
+    .environment(ErrorHandler())
+}
+
+private struct SignUpPreviewSendEmailUseCase: SendEmailVerificationUseCaseProtocol {
+    func execute(email: String) async throws -> String {
+        "preview_verification_id"
+    }
+}
+
+private struct SignUpPreviewVerifyCodeUseCase: VerifyEmailCodeUseCaseProtocol {
+    func execute(
+        emailVerificationId: String,
+        verificationCode: String
+    ) async throws -> String {
+        "preview_email_token"
+    }
+}
+
+private struct SignUpPreviewRegisterUseCase: RegisterUseCaseProtocol {
+    func execute(request: RegisterRequestDTO) async throws -> Int {
+        1
+    }
+}
+
+private struct SignUpPreviewFetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol {
+    let shouldFailTerms: Bool
+
+    init(shouldFailTerms: Bool = false) {
+        self.shouldFailTerms = shouldFailTerms
+    }
+
+    func fetchSchools() async throws -> [School] {
+        [
+            School(id: "1", name: "중앙대학교"),
+            School(id: "2", name: "서울대학교")
+        ]
+    }
+
+    func fetchTerms(termsType: String) async throws -> Terms {
+        if shouldFailTerms {
+            throw AppError.unknown(message: "약관 로딩 실패")
+        }
+        let type = TermsType(rawValue: termsType) ?? .service
+        return Terms(
+            id: type == .service ? 1 : (type == .privacy ? 2 : 3),
+            title: type == .service ? "서비스 이용 약관" : "개인정보처리 방침",
+            content: "<p>약관 내용</p>",
+            isMandatory: type != .marketing,
+            termsType: type
+        )
     }
 }

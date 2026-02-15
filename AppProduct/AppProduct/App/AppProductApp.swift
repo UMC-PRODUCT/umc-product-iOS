@@ -24,7 +24,7 @@ struct AppProductApp: App {
     @State private var container: DIContainer
     @State private var didConfigureAppDelegate: Bool = false
     @State private var errorHandler: ErrorHandler = .init()
-    @State private var appState: AppState = .main
+    @State private var appState: AppState = .splash
     private let sharedModelContainer: ModelContainer
     
     // MARK: - AppState
@@ -86,7 +86,10 @@ extension AppProductApp {
         switch appState {
         case .splash:
             SplashView(
-                networkClient: container.resolve(NetworkClient.self)
+                networkClient: container.resolve(NetworkClient.self),
+                fetchMyProfileUseCase: container.resolve(
+                    HomeUseCaseProviding.self
+                ).fetchMyProfileUseCase
             )
             
         case .login:
@@ -113,21 +116,25 @@ extension AppProductApp {
         }
     }
     
+    /// Auth Feature의 UseCase Provider
     private var authProvider: AuthUseCaseProviding {
         container.resolve(AuthUseCaseProviding.self)
     }
     
+    /// 앱 상태를 애니메이션과 함께 전환합니다.
     private func transition(to state: AppState) {
         withAnimation {
             appState = state
         }
     }
     
+    /// 카카오 로그인 딥링크 URL을 처리합니다.
     private func handleOpenURL(_ url: URL) {
         guard AuthApi.isKakaoTalkLoginUrl(url) else { return }
         _ = AuthController.handleOpenUrl(url: url)
     }
     
+    /// AppDelegate 초기 설정을 1회만 수행합니다.
     private func configureAppDelegateIfNeeded() {
         guard !didConfigureAppDelegate else { return }
         didConfigureAppDelegate = true
@@ -137,6 +144,7 @@ extension AppProductApp {
         )
     }
     
+    /// 세션 만료 시 캐시 초기화 후 로그인 화면으로 전환합니다.
     private func handleAuthSessionExpired() {
         Task {
             try? await container.resolve(NetworkClient.self).logout()
@@ -145,6 +153,7 @@ extension AppProductApp {
         transition(to: .login)
     }
 
+    /// 하위 뷰에서 앱 상태를 전환할 수 있도록 제공하는 AppFlow Environment 값
     private var appFlow: AppFlow {
         AppFlow(
             showLogin: { transition(to: .login) },

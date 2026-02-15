@@ -104,6 +104,18 @@ final class MockAuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return 1
     }
 
+    func registerExistingChallenger(
+        code: String
+    ) async throws {
+        try await Task.sleep(for: .milliseconds(300))
+        guard code == "123456" else {
+            throw RepositoryError.serverError(
+                code: "CHALLENGER_CODE_NOT_FOUND",
+                message: "입력 코드 번호가 존재하지 않습니다."
+            )
+        }
+    }
+
     func getSchools() async throws -> [School] {
         try await Task.sleep(for: .milliseconds(300))
         return [
