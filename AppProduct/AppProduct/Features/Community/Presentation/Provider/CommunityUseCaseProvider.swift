@@ -23,6 +23,18 @@ protocol CommunityUseCaseProviding {
     var updateLightningUseCase: UpdateLightningUseCaseProtocol { get }
     /// 댓글 조회
     var fetchCommentUseCase: FetchCommentsUseCaseProtocol { get }
+    /// 게시글 삭제
+    var deletePostUseCase: DeletePostUseCaseProtocol { get }
+    /// 댓글 삭제
+    var deleteCommentUseCase: DeleteCommentUseCaseProtocol { get }
+    /// 게시글 상세 조회
+    var fetchPostDetailUseCase: FetchPostDetailUseCaseProtocol { get }
+    /// 게시글 스크랩
+    var postScrapUseCase: PostScrapUseCaseProtocol { get }
+    /// 게시글 좋아요
+    var postLikeUseCase: PostLikeUseCaseProtocol { get }
+    /// 댓글 작성
+    var postCommentUseCase: PostCommentUseCaseProtocol { get }
 }
 
 /// Community UseCase Provider 구현
@@ -38,12 +50,19 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
     let updatePostUseCase: UpdatePostUseCaseProtocol
     let updateLightningUseCase: UpdateLightningUseCaseProtocol
     let fetchCommentUseCase: FetchCommentsUseCaseProtocol
+    let deletePostUseCase: DeletePostUseCaseProtocol
+    let deleteCommentUseCase: DeleteCommentUseCaseProtocol
+    let fetchPostDetailUseCase: FetchPostDetailUseCaseProtocol
+    let postScrapUseCase: PostScrapUseCaseProtocol
+    let postLikeUseCase: PostLikeUseCaseProtocol
+    let postCommentUseCase: PostCommentUseCaseProtocol
 
     // MARK: - Init
 
     init(
         communityRepository: CommunityRepositoryProtocol,
-        communityPostRepository: CommunityPostRepositoryProtocol
+        communityPostRepository: CommunityPostRepositoryProtocol,
+        communityDetailRepository: CommunityDetailRepositoryProtocol
     ) {
         self.fetchFameItemsUseCase = FetchFameItemsUseCase(
             repository: communityRepository
@@ -65,6 +84,24 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
         )
         self.fetchCommentUseCase = FetchCommentsUseCase(
             repository: communityRepository
+        )
+        self.deletePostUseCase = DeletePostUseCase(
+            repository: communityDetailRepository
+        )
+        self.deleteCommentUseCase = DeleteCommentUseCase(
+            repository: communityDetailRepository
+        )
+        self.fetchPostDetailUseCase = FetchPostDetailUseCase(
+            repository: communityDetailRepository
+        )
+        self.postScrapUseCase = PostScrapUseCase(
+            repository: communityDetailRepository
+        )
+        self.postLikeUseCase = PostLikeUseCase(
+            repository: communityDetailRepository
+        )
+        self.postCommentUseCase = PostCommentUseCase(
+            repository: communityDetailRepository
         )
     }
 }

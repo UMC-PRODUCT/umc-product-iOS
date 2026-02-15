@@ -109,3 +109,14 @@ extension PostDetailDTO {
         )
     }
 }
+
+// MARK: - 좋아요/스크랩
+struct CommunityLikeDTO: Codable {
+    let liked: Bool
+    let likeCount: Int
+}
+
+struct CommunityScrapDTO: Codable {
+    let scrapped: Bool
+    let scrapCount: Int
+}

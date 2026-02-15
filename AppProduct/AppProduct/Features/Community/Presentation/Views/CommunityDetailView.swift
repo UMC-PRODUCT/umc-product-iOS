@@ -9,13 +9,14 @@ import SwiftUI
 
 struct CommunityDetailView: View {
     // MARK: - Properties
-
+    
+    @State private var vm: CommunityDetailViewModel
     @Environment(\.di) private var di
-    @State var viewModel: CommunityDetailViewModel?
+    @Environment(ErrorHandler.self) var errorHandler
     let postItem: CommunityItemModel
     
-    private var communityProvider: CommunityUseCaseProviding {
-        di.resolve(CommunityUseCaseProviding.self)
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
     }
     
     private enum Constant {
@@ -24,8 +25,15 @@ struct CommunityDetailView: View {
     }
     
     // MARK: - Init
-    init(postItem: CommunityItemModel) {
+    init(container: DIContainer,
+         errorHandler: ErrorHandler,
+         postItem: CommunityItemModel
+    ) {
         self.postItem = postItem
+        let viewModel = CommunityDetailViewModel(
+            container: container, errorHandler: errorHandler, postItem: postItem
+        )
+        self._vm = .init(wrappedValue: viewModel)
     }
 
     // MARK: - Body
@@ -33,54 +41,45 @@ struct CommunityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing32) {
-                if let vm = viewModel {
-                    CommunityPostCard(model: vm.postItem)
+                CommunityPostCard(model: vm.postItem)
 
-                    Group {
-                        switch vm.comments {
-                        case .idle, .loading:
-                            ProgressView("댓글 로딩 중...")
-                        case .loaded(let comments):
-                            commentSection(comments)
-                        case .failed(let error):
-                            ContentUnavailableView {
-                                Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                            } description: {
-                                Text(error.localizedDescription)
-                            } actions: {
-                                Button("다시 시도") {
-                                    Task { await vm.fetchComments() }
-                                }
+                Group {
+                    switch vm.comments {
+                    case .idle, .loading:
+                        ProgressView("댓글 로딩 중...")
+                    case .loaded(let comments):
+                        commentSection(comments)
+                    case .failed(let error):
+                        ContentUnavailableView {
+                            Label("로딩 실패", systemImage: "exclamationmark.triangle")
+                        } description: {
+                            Text(error.localizedDescription)
+                        } actions: {
+                            Button("다시 시도") {
+                                Task { await vm.fetchComments() }
                             }
                         }
                     }
-                } else {
-                    ProgressView()
                 }
             }
             .padding(Constant.mainPadding)
         }
         .navigation(naviTitle: .communityDetail, displayMode: .inline)
         .task {
-            if viewModel == nil {
-                viewModel = CommunityDetailViewModel(
-                    fetchCommentsUseCase: communityProvider.fetchCommentUseCase,
-                    postItem: postItem
-                )
-            }
-            await viewModel?.fetchComments()
+            await vm.fetchComments()
         }
         .toolbar {
-            if viewModel == nil {
-                ToolBarCollection.ToolbarTrailingMenu(actions: [
-                    .init(title: "수정하기", icon: "pencil") {
-                        // TODO: 수정 API
-                    },
-                    .init(title: "삭제하기", icon: "trash", role: .destructive) {
-                        // TODO: 삭제 API
+            ToolBarCollection.ToolbarTrailingMenu(actions: [
+                .init(title: "수정하기", icon: "pencil") {
+                    // TODO: 수정모드
+                    pathStore.communityPath.append(.community(.post))
+                },
+                .init(title: "삭제하기", icon: "trash", role: .destructive) {
+                    Task {
+                        await vm.deletePost()
                     }
-                ])
-            }
+                }
+            ])
         }
     }
 

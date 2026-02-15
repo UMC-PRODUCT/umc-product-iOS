@@ -11,7 +11,6 @@ struct CommunityView: View {
     // MARK: - Properties
     
     @Environment(\.di) private var di
-    @Environment(ErrorHandler.self) var errorHandler
     
     @State private var vm: CommunityViewModel
     

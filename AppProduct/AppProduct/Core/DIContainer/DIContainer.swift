@@ -316,6 +316,11 @@ extension DIContainer {
                 adapter: container.resolve(MoyaNetworkAdapter.self)
             )
         }
+        container.register(CommunityDetailRepositoryProtocol.self) {
+            CommunityDetailRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
         container.register(CommunityUseCaseProviding.self) {
             CommunityUseCaseProvider(
                 communityRepository: container.resolve(
@@ -323,6 +328,9 @@ extension DIContainer {
                 ),
                 communityPostRepository: container.resolve(
                     CommunityPostRepositoryProtocol.self
+                ),
+                communityDetailRepository: container.resolve(
+                    CommunityDetailRepositoryProtocol.self
                 )
             )
         }
