@@ -8,15 +8,14 @@
 import Foundation
 import UIKit
 
-final class StorageUseCase: StorageUseCaseProtocol {
-    private let repository: StorageRepositoryProtocol
+final class NoticeStorageUseCase: NoticeStorageUseCaseProtocol {
+    private let repository: NoticeStorageRepositoryProtocol
 
-    init(repository: StorageRepositoryProtocol) {
+    init(repository: NoticeStorageRepositoryProtocol) {
         self.repository = repository
     }
 
-    func uploadImage(_ image: UIImage, category: FileCategory) async throws -> String {
-        // 1. 이미지 → JPEG Data 변환
+    func uploadImage(_ image: UIImage, category: NoticeFileCategory) async throws -> String {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             throw DomainError.custom(message: "이미지 변환 실패")
         }
@@ -25,7 +24,7 @@ final class StorageUseCase: StorageUseCaseProtocol {
         let contentType = "image/jpeg"
         let fileSize = imageData.count
 
-        // 2. Presigned URL 준비
+        // 1. Presigned URL 준비
         let prepareResponse = try await repository.prepareUpload(
             fileName: fileName,
             contentType: contentType,
@@ -33,7 +32,7 @@ final class StorageUseCase: StorageUseCaseProtocol {
             category: category
         )
 
-        // 3. Presigned URL로 파일 업로드
+        // 2. Presigned URL로 파일 업로드
         try await repository.uploadFile(
             to: prepareResponse.uploadUrl,
             data: imageData,
@@ -41,14 +40,14 @@ final class StorageUseCase: StorageUseCaseProtocol {
             headers: prepareResponse.headers
         )
 
-        // 4. 업로드 완료 확인
-        _ = try await repository.confirmUpload(fileId: prepareResponse.fileId)
+        // 3. 업로드 완료 확인
+        try await repository.confirmUpload(fileId: prepareResponse.fileId)  // ✅ 리턴값 제거
 
-        // 5. fileId 반환
+        // 4. fileId 반환
         return prepareResponse.fileId
     }
 
-    func uploadImages(_ images: [UIImage], category: FileCategory) async throws -> [String] {
+    func uploadImages(_ images: [UIImage], category: NoticeFileCategory) async throws -> [String] {
         var fileIds: [String] = []
 
         for image in images {

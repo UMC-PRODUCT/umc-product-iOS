@@ -1,5 +1,5 @@
 //
-//  StorageDTO.swift
+//  NoticeStorageDTO.swift
 //  AppProduct
 //
 //  Created by 이예지 on 2/15/26.
@@ -9,16 +9,16 @@ import Foundation
 
 // MARK: - Prepare Upload Request
 
-struct PrepareUploadRequestDTO: Codable {
+struct NoticePrepareUploadRequestDTO: Codable {
     let fileName: String
     let contentType: String
     let fileSize: Int
-    let category: String
+    let category: NoticeFileCategory
 }
 
 // MARK: - Prepare Upload Response
 
-struct PrepareUploadResponseDTO: Codable {
+struct NoticePrepareUploadResponseDTO: Codable {
     let fileId: String
     let uploadUrl: String
     let uploadMethod: String
@@ -28,22 +28,16 @@ struct PrepareUploadResponseDTO: Codable {
 
 // MARK: - Confirm Upload Response
 
-struct ConfirmUploadResponseDTO: Codable {
+struct NoticeConfirmUploadResponseDTO: Codable {
     let success: Bool
 }
 
 // MARK: - File Category
 
-enum FileCategory: String {
-    case profileImage = "PROFILE_IMAGE"
+enum NoticeFileCategory: String, Codable {
     case postImage = "POST_IMAGE"
-    case postAttachment = "POST_ATTACHMENT"
     case noticeAttachment = "NOTICE_ATTACHMENT"
-    case workbookSubmission = "WORKBOOK_SUBMISSION"
-    case schoolLogo = "SCHOOL_LOGO"
-    case portfolio = "PORTFOLIO"
     case etc = "ETC"
-    
 }
 
 

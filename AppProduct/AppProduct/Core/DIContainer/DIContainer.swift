@@ -265,14 +265,14 @@ extension DIContainer {
         }
         
         // MARK: - Storage Feature
-        container.register(StorageRepositoryProtocol.self) {
-            StorageRepository(
+        container.register(NoticeStorageRepositoryProtocol.self) {
+            NoticeStorageRepository(
                 adapter: container.resolve(MoyaNetworkAdapter.self)
             )
         }
-        container.register(StorageUseCaseProtocol.self) {
-            StorageUseCase(
-                repository: container.resolve(StorageRepositoryProtocol.self)
+        container.register(NoticeStorageUseCaseProtocol.self) {
+            NoticeStorageUseCase(
+                repository: container.resolve(NoticeStorageRepositoryProtocol.self)
             )
         }
         

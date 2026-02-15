@@ -19,7 +19,7 @@ struct NoticeEditorView: View {
         self.container = container
 
         let noticeUseCase = container.resolve(NoticeUseCaseProtocol.self)
-        let storageUseCase = container.resolve(StorageUseCaseProtocol.self)
+        let storageUseCase = container.resolve(NoticeStorageUseCaseProtocol.self)
 
         _viewModel = State(initialValue: NoticeEditorViewModel(
             noticeUseCase: noticeUseCase,
@@ -131,15 +131,12 @@ struct NoticeEditorView: View {
             VotingFormSheetView(
                 formData: $viewModel.voteFormData,
                 onCancel: {
-                    viewModel.dismissVotingFormSheet()
+                    viewModel.cancelVotingEdit()
                 },
                 onConfirm: {
                     viewModel.confirmVote()
                 },
-                onDelete: {
-                    viewModel.deleteVoteData()
-                },
-                isEditingConfirmedVote: viewModel.isVoteConfirmed
+                mode: viewModel.isVoteConfirmed ? .edit : .create
             )
         }
         .alertPrompt(item: $viewModel.alertPrompt)
@@ -239,30 +236,36 @@ struct NoticeEditorView: View {
     
     // MARK: - voteSection
     private var voteSection: some View {
-        Group {
-            if viewModel.isEditMode {
-                // 수정 모드: 읽기 전용 (삭제만 가능)
-                VoteAttachmentCard(
-                    formData: $viewModel.voteFormData,
-                    mode: .readonly,
-                    onDelete: {
-                        viewModel.deleteVote()
-                    }
-                )
-                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            } else {
-                // 생성 모드: 수정 가능
-                Button {
-                    viewModel.editVote()
-                } label: {
+        VStack(spacing: DefaultSpacing.spacing8) {
+            Group {
+                if viewModel.isEditMode {
+                    // 수정 모드: 읽기 전용 (삭제만 가능)
                     VoteAttachmentCard(
                         formData: $viewModel.voteFormData,
-                        mode: .editable
+                        mode: .readonly,
+                        onDelete: {
+                            viewModel.deleteVote()
+                        }
                     )
+                    .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                } else {
+                    VoteAttachmentCard(
+                        formData: $viewModel.voteFormData,
+                        mode: .editable,
+                        onDelete: {
+                            viewModel.deleteVote()
+                        },
+                        onEdit: {
+                            viewModel.editVote()
+                        }
+                    )
+                    .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
                 }
-                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-                .buttonStyle(.plain)
             }
+            
+            Label("글 게시 후 투표는 수정이 불가능해요.", systemImage: "exclamationmark.circle")
+                .foregroundStyle(.grey500)
+                .appFont(.footnote)
         }
     }
     

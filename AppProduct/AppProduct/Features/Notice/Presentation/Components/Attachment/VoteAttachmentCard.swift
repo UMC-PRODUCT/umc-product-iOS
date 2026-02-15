@@ -17,6 +17,7 @@ struct VoteAttachmentCard: View {
     @Binding var formData: VoteFormData
     var mode: VoteCardMode = .editable
     var onDelete: (() -> Void)?
+    var onEdit: (() -> Void)? = nil
     
     fileprivate enum Constants {
         static let textSpacing: CGFloat = 35
@@ -35,6 +36,20 @@ struct VoteAttachmentCard: View {
                 .fill(.indigo100)
                 .opacity(Constants.bgOpacity)
                 .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        }
+        .contextMenu{
+            if mode == VoteCardMode.editable {
+                Button {
+                    onEdit?()
+                } label: {
+                    Label("수정하기", systemImage: "pencil")
+                }
+            }
+            Button(role: .destructive) {
+                onDelete?()
+            } label: {
+                Label("삭제하기", systemImage: "trash")
+            }
         }
     }
     
@@ -60,7 +75,7 @@ struct VoteAttachmentCard: View {
         Group {
             switch mode {
             case .editable:
-                Image(systemName: "chevron.right")
+                Image(systemName: "ellipsis")
                     .foregroundStyle(.grey500)
             case .readonly:
                 Button {

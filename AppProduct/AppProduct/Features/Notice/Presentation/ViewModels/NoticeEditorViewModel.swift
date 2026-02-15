@@ -17,7 +17,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     
     /// UseCase
     private let noticeUseCase: NoticeUseCaseProtocol
-    private let storageUseCase: StorageUseCaseProtocol
+    private let storageUseCase: NoticeStorageUseCaseProtocol
     
     /// 편집 모드 (생성 or 수정)
     private let mode: NoticeEditorMode
@@ -74,6 +74,9 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     /// 투표 폼 데이터
     var voteFormData: VoteFormData = VoteFormData()
     
+    /// 수정 전 데이터
+    private var originalVoteFormData: VoteFormData?
+    
     /// 투표 확정 여부
     var isVoteConfirmed: Bool = false
     
@@ -113,7 +116,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
 
     init(
         noticeUseCase: NoticeUseCaseProtocol,
-        storageUseCase: StorageUseCaseProtocol,
+        storageUseCase: NoticeStorageUseCaseProtocol,
         userPart: Part?,
         mode: NoticeEditorMode = .create,
         branches: [String] = EditorMockData.branches,
@@ -484,44 +487,44 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
             )
         } else {
             voteFormData = VoteFormData()
+            originalVoteFormData = nil
             showVoting = true
         }
     }
     
-    func dismissVotingFormSheet() {
-        showVoting = false
-        if !isVoteConfirmed {
-            voteFormData = VoteFormData()
-        }
-    }
-    
-    func deleteVoteData() {
-        voteFormData = VoteFormData()
-        isVoteConfirmed = false
-        showVoting = false
-    }
+    func cancelVotingEdit() {
+          if isVoteConfirmed, let original = originalVoteFormData {
+              voteFormData = original
+          } else if !isVoteConfirmed {
+              voteFormData = VoteFormData()
+          }
+
+          originalVoteFormData = nil
+          showVoting = false
+      }
     
     func confirmVote() {
         isVoteConfirmed = true
+        originalVoteFormData = nil
+        showVoting = false
     }
     
     func editVote() {
+        originalVoteFormData = VoteFormData(
+            title: voteFormData.title,
+            options: voteFormData.options.map { VoteOptionItem(text: $0.text) },
+            isAnonymous: voteFormData.isAnonymous,
+            allowMultipleSelection: voteFormData.allowMultipleSelection,
+            startDate: voteFormData.startDate,
+            endDate: voteFormData.endDate
+        )
         showVoting = true
     }
     
     func deleteVote() {
-        alertPrompt = AlertPrompt(
-            id: .init(),
-            title: "투표 삭제",
-            message: "투표를 삭제하시겠습니까?",
-            positiveBtnTitle: "삭제",
-            positiveBtnAction: { [weak self] in
-                self?.voteFormData = VoteFormData()
-                self?.isVoteConfirmed = false
-            },
-            negativeBtnTitle: "취소",
-            isPositiveBtnDestructive: true
-        )
+        voteFormData = VoteFormData()
+        isVoteConfirmed = false
+        originalVoteFormData = nil
     }
     
     func addVoteOption() {
