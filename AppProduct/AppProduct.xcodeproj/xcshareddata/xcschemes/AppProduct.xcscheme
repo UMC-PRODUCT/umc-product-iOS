@@ -63,6 +63,20 @@
             ReferencedContainer = "container:AppProduct.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-homeDebugState failed"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-homeDebugState loaded"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-homeDebugState loading"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "KAKAO_APP_KEY"
