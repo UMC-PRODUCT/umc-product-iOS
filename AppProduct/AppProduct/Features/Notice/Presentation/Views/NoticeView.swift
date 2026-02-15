@@ -16,6 +16,7 @@ struct NoticeView: View {
     @Environment(ErrorHandler.self) var errorHandler
     @State private var viewModel: NoticeViewModel
     @State private var search: String = ""
+    @State private var searchTask: Task<Void, Never>?
     
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
@@ -54,15 +55,13 @@ struct NoticeView: View {
             .searchable(text: $search, prompt: Constants.searchPlaceholder)
             .searchToolbarBehavior(.minimize)
             .onChange(of: search) { oldValue, newValue in
-                Task {
-                    try? await Task.sleep(nanoseconds: 500_000_000)
-
-                    if search == newValue {
-                        if newValue.isEmpty {
-                            await viewModel.clearSearch()
-                        } else {
-                            await viewModel.searchNotices(keyword: newValue)
-                        }
+                searchTask?.cancel()
+                searchTask = Task {
+                    guard !Task.isCancelled else { return }
+                    if newValue.isEmpty {
+                        await viewModel.clearSearch()
+                    } else {
+                        await viewModel.searchNotices(keyword: newValue)
                     }
                 }
             }
@@ -92,6 +91,9 @@ struct NoticeView: View {
             .task {
                 viewModel.updateErrorHandler(errorHandler)
                 viewModel.fetchGisuList()
+            }
+            .onDisappear {
+                searchTask?.cancel()
             }
         }
     }
@@ -282,10 +284,3 @@ private struct PartFilterMenu: View, Equatable {
         .glassEffect(.clear.interactive(), in: Capsule())
     }
 }
-
-//// MARK: - Preview
-//#Preview("Loading") {
-//    NavigationStack {
-//        NoticeView(container: DIContainer(), errorHandler: ErrorHandler())
-//    }
-//}

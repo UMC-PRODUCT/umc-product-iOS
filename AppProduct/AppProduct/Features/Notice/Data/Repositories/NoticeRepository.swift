@@ -196,13 +196,13 @@ struct NoticeRepository: NoticeRepositoryProtocol {
     /// 공지사항 전체 조회
     func getAllNotices(
         request: NoticeListRequestDTO
-    ) async throws -> PageDTO<NoticeDTO> {
+    ) async throws -> NoticePageDTO<NoticeDTO> {
         let response = try await adapter.request(
             NoticeRouter.getAllNotices(request: request)
         )
         
         let apiResponse = try JSONDecoder().decode(
-            APIResponse<PageDTO<NoticeDTO>>.self,
+            APIResponse<NoticePageDTO<NoticeDTO>>.self,
             from: response.data
         )
         return try apiResponse.unwrap()
@@ -265,13 +265,13 @@ struct NoticeRepository: NoticeRepositoryProtocol {
     func searchNotice(
         keyword: String,
         request: NoticeListRequestDTO
-    ) async throws -> PageDTO<NoticeDTO> {
+    ) async throws -> NoticePageDTO<NoticeDTO> {
         let response = try await adapter.request(
             NoticeRouter.searchNotice(keyword: keyword, request: request)
         )
         
         let apiResponse = try JSONDecoder().decode(
-            APIResponse<PageDTO<NoticeDTO>>.self,
+            APIResponse<NoticePageDTO<NoticeDTO>>.self,
             from: response.data
         )
         return try apiResponse.unwrap()

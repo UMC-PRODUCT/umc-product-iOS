@@ -125,7 +125,7 @@ protocol NoticeUseCaseProtocol {
     ///   - `sort`: 정렬 조건 (예: ["createdAt,DESC"])
     /// - Returns: 공지사항 목록 페이지 (content: 공지 배열, hasNext: 다음 페이지 존재 여부)
     /// - Note: **[문제 2: 무한로딩]** 이 메서드가 실패하면 NoticeViewModel에서 무한 로딩 발생 가능
-    func getAllNotices(request: NoticeListRequestDTO) async throws -> PageDTO<NoticeDTO>
+    func getAllNotices(request: NoticeListRequestDTO) async throws -> NoticePageDTO<NoticeDTO>
 
     /// 공지사항 상세 조회
     /// - Parameter noticeId: 조회할 공지 ID
@@ -161,7 +161,7 @@ protocol NoticeUseCaseProtocol {
     func searchNotice(
         keyword: String,
         request: NoticeListRequestDTO
-    ) async throws -> PageDTO<NoticeDTO>
+    ) async throws -> NoticePageDTO<NoticeDTO>
     
     // MARK: - 공지 삭제 (DELETE)
     

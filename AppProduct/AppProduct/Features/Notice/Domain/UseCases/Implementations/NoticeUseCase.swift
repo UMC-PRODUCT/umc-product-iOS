@@ -183,7 +183,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
     /// 공지사항 전체 조회
     func getAllNotices(
         request: NoticeListRequestDTO
-    ) async throws -> PageDTO<NoticeDTO> {
+    ) async throws -> NoticePageDTO<NoticeDTO> {
         guard request.gisuId > 0 else {
             throw DomainError.custom(message: "기수를 선택해주세요")
         }
@@ -222,7 +222,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
     func searchNotice(
         keyword: String,
         request: NoticeListRequestDTO
-    ) async throws -> PageDTO<NoticeDTO> {
+    ) async throws -> NoticePageDTO<NoticeDTO> {
         guard !keyword.isEmpty else {
             throw DomainError.custom(message: "검색어를 입력해주세요")
         }

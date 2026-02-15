@@ -132,7 +132,7 @@ struct TargetInfoDTO: Codable {
     let targetGisuId: Int
     let targetChapterId: Int?
     let targetSchoolId: Int?
-    let targetParts: UMCPartType?
+    let targetParts: [UMCPartType]?
 
     private enum CodingKeys: String, CodingKey {
         case targetGisuId
@@ -150,7 +150,7 @@ struct TargetInfoDTO: Codable {
         self.targetGisuId = targetGisuId
         self.targetChapterId = targetChapterId
         self.targetSchoolId = targetSchoolId
-        self.targetParts = targetParts
+        self.targetParts = targetParts.map { [$0] }
     }
 
     init(from decoder: Decoder) throws {
@@ -158,7 +158,7 @@ struct TargetInfoDTO: Codable {
         self.targetGisuId = try container.decodeIntFlexible(forKey: .targetGisuId)
         self.targetChapterId = try container.decodeIntFlexibleIfPresent(forKey: .targetChapterId)
         self.targetSchoolId = try container.decodeIntFlexibleIfPresent(forKey: .targetSchoolId)
-        self.targetParts = try container.decodeIfPresent(UMCPartType.self, forKey: .targetParts)
+        self.targetParts = try container.decodeIfPresent([UMCPartType].self, forKey: .targetParts)
     }
 }
 

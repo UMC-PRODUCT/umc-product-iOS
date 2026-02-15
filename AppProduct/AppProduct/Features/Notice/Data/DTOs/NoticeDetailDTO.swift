@@ -56,7 +56,7 @@ extension NoticeDetailDTO {
             switch category.uppercased() {
             case "PART":
                 // targetInfo에서 targetParts 사용
-                if let partType = firstTarget?.targetParts {
+                if let partType = firstTarget?.targetParts?.first {
                     return .part(partType.toPart())
                 }
                 return .part(.all)
@@ -68,7 +68,9 @@ extension NoticeDetailDTO {
         }()
         
         // parts 배열 구성
-        let parts: [Part] = targetInfo.compactMap { $0.targetParts?.toPart() }
+        let parts: [Part] = targetInfo
+            .flatMap { $0.targetParts ?? [] }
+            .map { $0.toPart() }
         
         // TargetAudience 구성
         let targetAudience = TargetAudience(

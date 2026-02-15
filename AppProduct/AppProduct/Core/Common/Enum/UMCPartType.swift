@@ -177,4 +177,24 @@ enum UMCPartType: Codable, Equatable, Hashable {
         default:            return nil
         }
     }
+
+    // MARK: - Codable
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+
+        guard let part = UMCPartType(apiValue: rawValue) else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Invalid UMCPartType api value: \(rawValue)"
+            )
+        }
+        self = part
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(apiValue)
+    }
 }

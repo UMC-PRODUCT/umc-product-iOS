@@ -60,7 +60,7 @@ protocol NoticeRepositoryProtocol {
     
     // MARK: - 공지 조회
     /// 공지사항 전체 조회
-    func getAllNotices(request: NoticeListRequestDTO) async throws -> PageDTO<NoticeDTO>
+    func getAllNotices(request: NoticeListRequestDTO) async throws -> NoticePageDTO<NoticeDTO>
     
     /// 공지사항 상세 조회
     func getDetailNotice(noticeId: Int) async throws -> NoticeDetail
@@ -81,7 +81,7 @@ protocol NoticeRepositoryProtocol {
     func searchNotice(
         keyword: String,
         request: NoticeListRequestDTO
-    ) async throws -> PageDTO<NoticeDTO>
+    ) async throws -> NoticePageDTO<NoticeDTO>
     
     // MARK: - 공지 삭제
     /// 공지사항 삭제
