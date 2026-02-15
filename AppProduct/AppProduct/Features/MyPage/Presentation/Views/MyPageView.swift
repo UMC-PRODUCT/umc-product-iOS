@@ -21,6 +21,7 @@ struct MyPageView: View {
     @Environment(\.appFlow) private var appFlow
     @Environment(ErrorHandler.self) var errorHandler
     private let shouldFetchOnAppear: Bool
+    @State private var isRetryingProfile: Bool = false
 
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
@@ -54,6 +55,12 @@ struct MyPageView: View {
                     NavigationRoutingView(destination: destination)
                 }
                 .task {
+                    #if DEBUG
+                    if let debugState = MyPageDebugState.fromLaunchArgument() {
+                        debugState.apply(to: viewModel)
+                        return
+                    }
+                    #endif
                     guard shouldFetchOnAppear else { return }
                     await viewModel.fetchProfile(container: di)
                 }
@@ -83,20 +90,37 @@ struct MyPageView: View {
         ContentUnavailableView {
             Label("로딩 실패", systemImage: "exclamationmark.triangle")
         } description: {
-            Text(error.localizedDescription)
+            Text("마이페이지 데이터를 불러오지 못했습니다.")
+                .multilineTextAlignment(.center)
         } actions: {
             Button {
                 Task {
-                    await viewModel.fetchProfile(container: di)
+                    await retryProfile()
                 }
             } label: {
-                Image(systemName: "arrow.trianglehead.clockwise")
-                    .renderingMode(.template)
-                    .foregroundStyle(.indigo600)
+                ZStack {
+                    Text("다시 시도")
+                        .opacity(isRetryingProfile ? 0 : 1)
+                    if isRetryingProfile {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+                .frame(minWidth: 72, minHeight: 20)
             }
             .buttonStyle(.glassProminent)
+            .disabled(isRetryingProfile)
         }
         .padding(.top, DefaultSpacing.spacing32)
+    }
+
+    /// 프로필 재시도 (중복 호출 방지 포함)
+    @MainActor
+    private func retryProfile() async {
+        guard !isRetryingProfile else { return }
+        isRetryingProfile = true
+        defer { isRetryingProfile = false }
+        await viewModel.fetchProfile(container: di)
     }
 
     /// MyPageSectionType 전체에 대해 Section을 생성하는 ForEach (현재 미사용)
