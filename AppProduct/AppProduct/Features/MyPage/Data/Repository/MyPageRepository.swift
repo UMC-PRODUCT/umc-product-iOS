@@ -160,16 +160,18 @@ private extension MyPagePostResponseDTO {
     /// MyPagePostResponseDTO를 커뮤니티 아이템 모델로 변환합니다.
     func toCommunityItemModel() -> CommunityItemModel {
         CommunityItemModel(
+            postId: postId,
             userId: authorId,
             category: toCommunityCategory(),
             title: title,
             content: content,
             profileImage: authorProfileImage,
             userName: authorName,
-            part: "UMC",
-            createdAt: toRelativeCreatedAt(),
+            part: .pm, // 임시
+            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
             likeCount: likeCount,
             commentCount: commentCount,
+            scrapCount: 0,
             isLiked: isLiked
         )
     }
@@ -179,9 +181,9 @@ private extension MyPagePostResponseDTO {
         case "QUESTION":
             return .question
         case "LIGHTNING":
-            return .impromptu
+            return .lighting
         default:
-            return .hobby
+            return .free
         }
     }
 

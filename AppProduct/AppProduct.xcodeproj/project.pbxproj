@@ -377,6 +377,8 @@
 		};
 		0E6380B52F02F1050060E4D9 /* Debug configuration for PBXNativeTarget "AppProduct" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 0E6380AB2F02F1020060E4D9 /* AppProduct */;
+			baseConfigurationReferenceRelativePath = Core/Secret/Secrets.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
@@ -427,6 +429,8 @@
 		};
 		0E6380B62F02F1050060E4D9 /* Release configuration for PBXNativeTarget "AppProduct" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 0E6380AB2F02F1020060E4D9 /* AppProduct */;
+			baseConfigurationReferenceRelativePath = Core/Secret/Secrets.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;

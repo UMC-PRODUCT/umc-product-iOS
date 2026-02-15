@@ -274,29 +274,33 @@ private struct FetchTermsPreviewUseCase: FetchTermsUseCaseProtocol {
 
 private let previewPosts: [CommunityItemModel] = [
     .init(
+        postId: 1,
         userId: 1,
-        category: .hobby,
+        category: .free,
         title: "스터디원 모집합니다",
         content: "Spring Boot 스터디원 모집합니다.",
         profileImage: nil,
         userName: "홍길동",
-        part: "Server",
-        createdAt: "2시간 전",
+        part: .server(type: .spring),
+        createdAt: Date(),
         likeCount: 42,
         commentCount: 5,
+        scrapCount: 0,
         isLiked: true
     ),
     .init(
+        postId: 1,
         userId: 1,
         category: .question,
         title: "iOS 네트워크 구조 질문",
         content: "Moya + Clean Architecture 조합에서 repository 계층 경계 질문입니다.",
         profileImage: nil,
         userName: "홍길동",
-        part: "iOS",
-        createdAt: "1일 전",
+        part: .front(type: .ios),
+        createdAt: Date(),
         likeCount: 8,
         commentCount: 3,
+        scrapCount: 0,
         isLiked: false
     )
 ]
