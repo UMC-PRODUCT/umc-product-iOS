@@ -354,6 +354,9 @@ extension DIContainer {
                 ),
                 communityPostRepository: container.resolve(
                     CommunityPostRepositoryProtocol.self
+                ),
+                communityDetailRepository: container.resolve(
+                    CommunityDetailRepositoryProtocol.self
                 )
             )
         }

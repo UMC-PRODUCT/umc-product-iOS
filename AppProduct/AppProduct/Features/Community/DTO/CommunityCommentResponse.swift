@@ -32,3 +32,15 @@ extension CommentDTO {
         )
     }
 }
+
+extension CommentDTO {
+    func toCommentModel() -> CommunityCommentModel {
+        return CommunityCommentModel(
+            userId: challengerId,
+            profileImage: nil,
+            userName: challengerName,
+            content: content,
+            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date()
+        )
+    }
+}

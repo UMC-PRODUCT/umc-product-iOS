@@ -51,8 +51,15 @@ struct CommunityDetailView: View {
     }
     
     // MARK: - Init
-    init(postItem: CommunityItemModel) {
+    init(container: DIContainer,
+         errorHandler: ErrorHandler,
+         postItem: CommunityItemModel
+    ) {
         self.postItem = postItem
+        let viewModel = CommunityDetailViewModel(
+            container: container, errorHandler: errorHandler, postItem: postItem
+        )
+        self._vm = .init(wrappedValue: viewModel)
     }
 
     // MARK: - Body
@@ -85,8 +92,6 @@ struct CommunityDetailView: View {
                     case .failed:
                         failedContent()
                     }
-                } else {
-                    ProgressView()
                 }
             }
             .padding(Constant.mainPadding)
