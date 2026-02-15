@@ -2,13 +2,14 @@
 //  StorageUploadDTO.swift
 //  AppProduct
 //
-//  Created by Codex on 2/16/26.
+//  Created by euijjang97 on 2/16/26.
 //
 
 import Foundation
 
 // MARK: - Prepare Upload Request
 
+/// 파일 업로드 준비 요청 DTO (Presigned URL 발급용)
 struct StoragePrepareUploadRequestDTO: Codable {
     let fileName: String
     let contentType: String
@@ -18,6 +19,7 @@ struct StoragePrepareUploadRequestDTO: Codable {
 
 // MARK: - Prepare Upload Response
 
+/// 파일 업로드 준비 응답 DTO (Presigned URL + 헤더 포함)
 struct StoragePrepareUploadResponseDTO: Codable {
     let fileId: String
     let uploadUrl: String
@@ -28,6 +30,7 @@ struct StoragePrepareUploadResponseDTO: Codable {
 
 // MARK: - File Category
 
+/// 서버 파일 저장소 카테고리
 enum StorageFileCategory: String, Codable {
     case profileImage = "PROFILE_IMAGE"
     case postImage = "POST_IMAGE"

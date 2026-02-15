@@ -24,26 +24,9 @@ struct NoticeDTO: Codable {
 extension NoticeDTO {
     /// NoticeDTO → NoticeItemModel 변환 (공지 목록용)
     func toItemModel() -> NoticeItemModel {
-        let generation = Int(targetInfo.targetGisuId) ?? 0
-        
-        // scope 결정
-        let scope: NoticeScope = {
-            if targetInfo.targetSchoolId != nil {
-                return .campus
-            } else if targetInfo.targetChapterId != nil {
-                return .branch
-            } else {
-                return .central
-            }
-        }()
-        
-        // category 결정
-        let category: NoticeCategory = {
-            if let partType = targetInfo.targetParts?.first {
-                return .part(partType.toPart())
-            }
-            return .general
-        }()
+        let generation = targetInfo.generationValue
+        let scope = targetInfo.resolvedScope
+        let category = targetInfo.resolvedCategory
         
         return NoticeItemModel(
             noticeId: id,

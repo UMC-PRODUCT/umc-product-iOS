@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+/// 공지사항 상세 화면
+///
+/// 공지 본문, 투표, 이미지, 링크를 표시하며 열람 통계 및 수정/삭제 기능을 제공합니다.
 struct NoticeDetailView: View {
     
     // MARK: - Property
@@ -87,7 +90,7 @@ struct NoticeDetailView: View {
     private func detailContent(_ data: NoticeDetail) -> some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-                topSection
+                topSection(data)
                 Divider()
                     .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
                 bottomSection(data)
@@ -98,41 +101,41 @@ struct NoticeDetailView: View {
     
     // MARK: - TopSection
     // 공지 구분칩, 제목, 게시자, 날짜, 수신대상
-    private var topSection: some View {
+    private func topSection(_ data: NoticeDetail) -> some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            mainInfo
-            subInfo
+            mainInfo(data)
+            subInfo(data)
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
     
-    private var mainInfo: some View {
+    private func mainInfo(_ data: NoticeDetail) -> some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             HStack {
-                NoticeChip(noticeType: model.noticeType)
-                if model.isMustRead {
+                NoticeChip(noticeType: data.noticeType)
+                if data.isMustRead {
                     NoticeChip(noticeType: .essential)
                 }
             }
-            Text(model.title)
+            Text(data.title)
                 .appFont(.title2Emphasis)
         }
     }
     
-    private var subInfo: some View {
+    private func subInfo(_ data: NoticeDetail) -> some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             HStack {
                 HStack {
-                    Image(model.authorImageURL ?? "defaultProfile")
+                    Image(data.authorImageURL ?? "defaultProfile")
                         .resizable()
                         .frame(width: Constants.profileSize.width, height: Constants.profileSize.height)
-                    Text(model.authorName)
+                    Text(data.authorName)
                 }
                 Spacer()
-                Text(model.createdAt.toYearMonthDay())
+                Text(data.createdAt.toYearMonthDay())
             }
             .appFont(.subheadline, color: .grey700)
-            Label("수신대상: \(model.targetAudience.displayText)", systemImage: "paperplane")
+            Label("수신대상: \(data.targetAudience.displayText)", systemImage: "paperplane")
                 .appFont(.footnote, color: .grey500)
         }
     }
@@ -159,12 +162,12 @@ struct NoticeDetailView: View {
             
             // 이미지 카드
             if !data.images.isEmpty {
-                NoticeImageCard(imageURLs: model.images)
+                NoticeImageCard(imageURLs: data.images)
             }
             
             // 링크 카드
             if !data.links.isEmpty {
-                ForEach(Array(model.links.enumerated()), id: \.offset) { _, link in
+                ForEach(Array(data.links.enumerated()), id: \.offset) { _, link in
                     NoticeLinkCard(url: link)
                         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
                 }

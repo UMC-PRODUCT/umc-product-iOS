@@ -2,16 +2,20 @@
 //  StorageRouter.swift
 //  AppProduct
 //
-//  Created by Codex on 2/16/26.
+//  Created by euijjang97 on 2/16/26.
 //
 
 import Foundation
 internal import Alamofire
 import Moya
 
+/// 파일 저장소 API 라우터 (Presigned URL 기반 업로드/삭제)
 enum StorageRouter: BaseTargetType {
+    /// 업로드 준비 (Presigned URL 발급)
     case prepareUpload(request: StoragePrepareUploadRequestDTO)
+    /// 업로드 완료 확인
     case confirmUpload(fileId: String)
+    /// 파일 삭제
     case deleteFile(fileId: String)
 
     var path: String {
