@@ -10,18 +10,24 @@ import SwiftUI
 struct NoticeDetailView: View {
     
     // MARK: - Property
-    @State var viewModel: NoticeDetailViewModel
-    @Environment(\.dismiss) private var dismiss
-    @Environment(ErrorHandler.self) private var errorHandler
+    @Environment(\.di) var di
+    @State private var viewModel: NoticeDetailViewModel
     private let model: NoticeDetail
-    
+    private let errorHandler: ErrorHandler
+
     // MARK: - Initializer
-    init(model: NoticeDetail) {
+    init(container: DIContainer, errorHandler: ErrorHandler, model: NoticeDetail) {
         self.model = model
-        let tempErrorHandler = ErrorHandler()
+        self.errorHandler = errorHandler
+        
+        let noticeUseCase = container.resolve(NoticeUseCaseProtocol.self)
+        
+        let noticeIDInt = Int(model.id) ?? 0
+        
         _viewModel = State(initialValue: NoticeDetailViewModel(
-            noticeID: model.id,
-            errorHandler: tempErrorHandler,
+            noticeUseCase: noticeUseCase,
+            noticeID: noticeIDInt,
+            errorHandler: errorHandler,
             initialNotice: model
         ))
     }
@@ -35,11 +41,7 @@ struct NoticeDetailView: View {
     var body: some View {
         Group {
             switch viewModel.noticeState {
-            case .idle:
-                Color.clear.task {
-                    print("데이터 로딩이 시작되지 않음")
-                }
-            case .loading:
+            case .idle, .loading:
                 Progress()
             case .loaded(let noticeDetail):
                 detailContent(noticeDetail)
@@ -54,10 +56,10 @@ struct NoticeDetailView: View {
             if let notice = viewModel.noticeState.value, notice.hasPermission {
                 ToolBarCollection.ToolbarTrailingMenu(actions: [
                     .init(title: "수정하기", icon: "pencil") {
-                        viewModel.editNotice()
+                        handleEditNotice()
                     },
                     .init(title: "삭제하기", icon: "trash", role: .destructive) {
-                        viewModel.showDeleteConfirmation()
+                        handleDeleteNotice()
                     }
                 ])
             }
@@ -77,6 +79,7 @@ struct NoticeDetailView: View {
         .task {
             viewModel.updateErrorHandler(errorHandler)
             await viewModel.fetchReadStatus()
+            await viewModel.fetchNoticeDetail()
         }
     }
     
@@ -168,47 +171,29 @@ struct NoticeDetailView: View {
             }
         }
     }
-}
+    
+    // MARK: - Private Methods
 
-// MARK: - Preview
-#Preview("공지 상세(권한O)") {
-    NavigationStack {
-        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithPermission)
+    /// 공지 수정 처리
+    private func handleEditNotice() {
+        guard let notice = viewModel.noticeState.value else { return }
+        let noticeID = Int(notice.id) ?? 0
+        let editMode = NoticeEditorMode.edit(noticeId: noticeID, notice: notice)
+        pathStore.noticePath.append(.notice(.editor(mode: editMode)))
     }
-    .environment(ErrorHandler())
-}
 
-#Preview("공지 상세(권한X)") {
-    NavigationStack {
-        NoticeDetailView(model: NoticeDetailMockData.sampleNotice)
+    /// 공지 삭제 처리
+    private func handleDeleteNotice() {
+        viewModel.showDeleteConfirmation {
+            // 삭제 성공 후 이전 화면으로 돌아가기
+            if !pathStore.noticePath.isEmpty {
+                pathStore.noticePath.removeLast()
+            }
+        }
     }
-    .environment(ErrorHandler())
-}
 
-#Preview("이미지 포함 공지") {
-    NavigationStack {
-        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithImages)
+    /// PathStore 접근
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
     }
-    .environment(ErrorHandler())
-}
-
-#Preview("링크 포함 공지") {
-    NavigationStack {
-        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithLinks)
-    }
-    .environment(ErrorHandler())
-}
-
-#Preview("종료돤 투표 공지") {
-    NavigationStack {
-        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVoteDone)
-    }
-    .environment(ErrorHandler())
-}
-
-#Preview("투표 미완료 공지") {
-    NavigationStack {
-        NoticeDetailView(model: NoticeDetailMockData.sampleNoticeWithVote)
-    }
-    .environment(ErrorHandler())
 }

@@ -65,7 +65,7 @@ fileprivate struct NoticeAccessoryView: View {
 
     var body: some View {
         Button(action: {
-            pathStore.noticePath.append(.notice(.editor))
+            pathStore.noticePath.append(.notice(.editor(mode: .create)))
         }) {
             HStack(spacing: DefaultSpacing.spacing8) {
                 Spacer()

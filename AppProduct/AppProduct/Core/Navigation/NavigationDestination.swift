@@ -68,7 +68,7 @@ enum NavigationDestination: Hashable {
         /// 공지 상세
         case detail(detailItem: NoticeDetail)
         /// 공지 작성/편집
-        case editor
+        case editor(mode: NoticeEditorMode)
     }
 
     /// 커뮤니티(Community) 관련 화면 목적지

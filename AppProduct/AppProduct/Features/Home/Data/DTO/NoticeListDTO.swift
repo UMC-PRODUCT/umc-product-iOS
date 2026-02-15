@@ -100,9 +100,9 @@ extension NoticeListResponseDTO {
 // MARK: - TargetInfoDTO
 
 struct TargetInfoDTO: Codable {
-    let targetGisuId: String
-    let targetChapterId: String?
-    let targetSchoolId: String?
+    let targetGisuId: Int
+    let targetChapterId: Int?
+    let targetSchoolId: Int?
     let targetParts: UMCPartType?
 }
 

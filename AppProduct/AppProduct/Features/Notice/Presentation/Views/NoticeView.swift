@@ -10,23 +10,31 @@ import SwiftUI
 // MARK: - NoticeView
 /// 공지사항 메인 화면
 struct NoticeView: View {
-
+    
     // MARK: - Properties
-    @State var viewModel = NoticeViewModel()
-    @Environment(ErrorHandler.self) var errorHandler
     @Environment(\.di) var di
+    @Environment(ErrorHandler.self) var errorHandler
+    @State private var viewModel: NoticeViewModel
     @State private var search: String = ""
-
+    
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
-
+    
+    // MARK: - Initializer
+    init(container: DIContainer) {
+        _viewModel = State(
+            initialValue: NoticeViewModel(container: container)
+        )
+    }
+    
     // MARK: - Constants
     private enum Constants {
         static let listTopPadding: CGFloat = 10
         static let searchPlaceholder: String = "제목, 내용 검색"
         static let tintOpacity: Double = 0.5
     }
+    
     // MARK: - Body
     var body: some View {
         NavigationStack(path: Binding(
@@ -35,12 +43,8 @@ struct NoticeView: View {
         )) {
             Group {
                 switch viewModel.noticeItems {
-                case .idle:
-                    Color.clear.task {
-                        print("API 함수")
-                    }
-                case .loading:
-                    progressView
+                case .idle, .loading:
+                          progressView
                 case .loaded(let noticeItem):
                     noticeContent(noticeItem)
                 case .failed(_):
@@ -49,6 +53,19 @@ struct NoticeView: View {
             }
             .searchable(text: $search, prompt: Constants.searchPlaceholder)
             .searchToolbarBehavior(.minimize)
+            .onChange(of: search) { oldValue, newValue in
+                Task {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+
+                    if search == newValue {
+                        if newValue.isEmpty {
+                            await viewModel.clearSearch()
+                        } else {
+                            await viewModel.searchNotices(keyword: newValue)
+                        }
+                    }
+                }
+            }
             .toolbar {
                 ToolBarCollection.GenerationFilter(
                     title: viewModel.selectedGeneration.title,
@@ -72,6 +89,10 @@ struct NoticeView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            .task {
+                viewModel.updateErrorHandler(errorHandler)
+                viewModel.fetchGisuList()
+            }
         }
     }
     
@@ -85,7 +106,6 @@ struct NoticeView: View {
         .tint(.indigo500)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
     
     @ViewBuilder
     private func noticeContent(_ data: [NoticeItemModel]) -> some View {
@@ -103,9 +123,9 @@ struct NoticeView: View {
                 let noticeDetail = item.toNoticeDetail()
                 pathStore.noticePath.append(.notice(.detail(detailItem: noticeDetail)))
             }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(DefaultConstant.defaultListPadding)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(DefaultConstant.defaultListPadding)
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
@@ -129,7 +149,7 @@ struct NoticeView: View {
             set: { viewModel.selectGeneration($0) }
         )
     }
-
+    
     /// 메인필터 선택 바인딩
     private var mainFilterBinding: Binding<NoticeMainFilterType> {
         Binding(
@@ -140,25 +160,25 @@ struct NoticeView: View {
 }
 
 
-// MARK: - NoticeSubFilter
-/// 서브필터 영역 (전체, 운영진 공지 칩 + 파트 메뉴)
+  // MARK: - NoticeSubFilter
+  /// 서브필터 영역 (전체, 운영진 공지 칩 + 파트 메뉴)
 private struct NoticeSubFilter: View, Equatable {
-
-    @Bindable var viewModel = NoticeViewModel()
-
+    
+    @Bindable var viewModel: NoticeViewModel  // = 제거
+    
     static func == (lhs: NoticeSubFilter, rhs: NoticeSubFilter) -> Bool {
         lhs.viewModel.selectedSubFilter == rhs.viewModel.selectedSubFilter &&
         lhs.viewModel.selectedPart == rhs.viewModel.selectedPart
     }
-
+    
     private enum Constants {
         static let hstackSpacing: CGFloat = 8
     }
-
+    
     private var subFilterItems: [NoticeSubFilterType] {
         [.all, .staff]
     }
-
+    
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Constants.hstackSpacing) {
@@ -171,7 +191,7 @@ private struct NoticeSubFilter: View, Equatable {
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
     }
-
+    
     /// 칩버튼 생성
     @ViewBuilder
     private func filterChip(for filter: NoticeSubFilterType) -> some View {
@@ -185,22 +205,22 @@ private struct NoticeSubFilter: View, Equatable {
     }
 }
 
-// MARK: - PartFilterMenu
-/// 파트 선택 메뉴
+  // MARK: - PartFilterMenu
+  /// 파트 선택 메뉴
 private struct PartFilterMenu: View, Equatable {
-
-    @Bindable var viewModel = NoticeViewModel()
-
+    
+    @Bindable var viewModel: NoticeViewModel  // = 제거
+    
     static func == (lhs: PartFilterMenu, rhs: PartFilterMenu) -> Bool {
         lhs.viewModel.selectedPart == rhs.viewModel.selectedPart
     }
-
+    
     private enum Constants {
         static let hstackSpacing: CGFloat = 4
         static let chevronSize: CGFloat = 10
         static let chipPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
     }
-
+    
     /// 파트 선택 바인딩
     private var partBinding: Binding<Part> {
         Binding(
@@ -208,7 +228,7 @@ private struct PartFilterMenu: View, Equatable {
             set: { viewModel.selectPart($0) }
         )
     }
-
+    
     var body: some View {
         Menu {
             partPicker
@@ -216,7 +236,7 @@ private struct PartFilterMenu: View, Equatable {
             menuLabel
         }
     }
-
+    
     /// 파트 Picker
     private var partPicker: some View {
         Picker("파트 선택", selection: partBinding) {
@@ -227,12 +247,12 @@ private struct PartFilterMenu: View, Equatable {
         }
         .pickerStyle(.inline)
     }
-
+    
     /// 파트가 실제로 선택되었는지 (기본값 "파트"가 아닌 경우)
     private var isPartSelected: Bool {
         viewModel.selectedPart != .all
     }
-
+    
     /// 메뉴 라벨
     private var menuLabel: some View {
         HStack(spacing: Constants.hstackSpacing) {
@@ -252,33 +272,9 @@ private struct PartFilterMenu: View, Equatable {
     }
 }
 
-// MARK: - Preview
-#Preview("Loading") {
-    NavigationStack {
-        NoticeView(viewModel: {
-            let vm = NoticeViewModel()
-            vm.noticeItems = .loading
-            return vm
-        }())
-    }
-}
-
-#Preview("Loaded - 데이터 있음") {
-    NavigationStack {
-        NoticeView(viewModel: {
-            let vm = NoticeViewModel()
-            vm.noticeItems = .loaded(NoticeMockData.items)
-            return vm
-        }())
-    }
-}
-
-#Preview("Loaded - 빈 데이터") {
-    NavigationStack {
-        NoticeView(viewModel: {
-            let vm = NoticeViewModel()
-            vm.noticeItems = .loaded([])
-            return vm
-        }())
-    }
-}
+//// MARK: - Preview
+//#Preview("Loading") {
+//    NavigationStack {
+//        NoticeView(container: DIContainer(), errorHandler: ErrorHandler())
+//    }
+//}

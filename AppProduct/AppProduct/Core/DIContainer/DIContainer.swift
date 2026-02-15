@@ -164,31 +164,31 @@ extension DIContainer {
         container.register(PathStore.self) { PathStore() }
         container.register(NavigationRouter.self) { NavigationRouter() }
         container.register(UserSessionManager.self) { UserSessionManager() }
-
+        
         // MARK: - Network Infrastructure
         container.register(NetworkClient.self) {
             AuthSystemFactory.makeNetworkClient(
                 baseURL: URL(string: Config.baseURL)!
             )
         }
-
+        
         container.register(MoyaNetworkAdapter.self) {
             MoyaNetworkAdapter(
                 networkClient: container.resolve(NetworkClient.self),
                 baseURL: URL(string: Config.baseURL)!
             )
         }
-
+        
         // MARK: - Token Store
         container.register(TokenStore.self) {
             KeychainTokenStore()
         }
-
+        
         // MARK: - Cross-Feature Repository
         container.register(ScheduleClassifierRepository.self) {
             ScheduleClassifierRepositoryImpl()
         }
-
+        
         // MARK: - Activity Feature
         container.register(ActivityRepositoryProviding.self) {
             ActivityRepositoryProvider.mock()
@@ -203,7 +203,7 @@ extension DIContainer {
                 )
             )
         }
-
+        
         // MARK: - Auth Feature
         container.register(AuthRepositoryProviding.self) {
             AuthRepositoryProvider.real(
@@ -251,6 +251,40 @@ extension DIContainer {
                 )
             )
         }
+        
+        // MARK: - Notice Feature
+        container.register(NoticeRepositoryProtocol.self) {
+            NoticeRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(NoticeUseCaseProtocol.self) {
+            NoticeUseCase(
+                repository: container.resolve(NoticeRepositoryProtocol.self)
+            )
+        }
+        
+        // MARK: - Storage Feature
+        container.register(StorageRepositoryProtocol.self) {
+            StorageRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(StorageUseCaseProtocol.self) {
+            StorageUseCase(
+                repository: container.resolve(StorageRepositoryProtocol.self)
+            )
+        }
+        
+        // MARK: - UsecaseProviding (통합)
+        container.register(UsecaseProviding.self) {
+            UseCaseProvider(
+                activity: container.resolve(ActivityUseCaseProviding.self),
+                auth: container.resolve(AuthUseCaseProviding.self),
+                home: container.resolve(HomeUseCaseProviding.self)
+            )
+        }
+        
 
         // MARK: - MyPage Feature
         container.register(MyPageRepositoryProtocol.self) {

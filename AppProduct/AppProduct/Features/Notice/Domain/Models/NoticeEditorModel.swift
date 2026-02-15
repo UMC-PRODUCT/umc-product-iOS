@@ -175,6 +175,7 @@ struct NoticeImageItem: Identifiable {
     let id = UUID()
     var imageData: Data?
     var isLoading: Bool = false
+    var fileId: String? = nil
     
     static func == (lhs: NoticeImageItem, rhs: NoticeImageItem) -> Bool {
         lhs.id == rhs.id &&
@@ -255,4 +256,14 @@ struct VoteFormData: Equatable {
 enum EditorMockData {
     static let branches: [String] = ["Nova", "Leo", "Cetus", "Aquarius", "Cassiopeia", "Scorpio", "Pegasus"]
     static let schools: [String] = ["가천대", "강릉원주대", "숭실대"]
+}
+
+// MARK: - NoticeEditorMode
+
+/// 공지 에디터 모드
+enum NoticeEditorMode: Equatable, Hashable {
+    /// 새 공지 작성
+    case create
+    /// 기존 공지 수정
+    case edit(noticeId: Int, notice: NoticeDetail)
 }

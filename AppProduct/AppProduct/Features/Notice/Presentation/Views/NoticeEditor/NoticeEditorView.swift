@@ -11,11 +11,22 @@ import PhotosUI
 struct NoticeEditorView: View {
 
     // MARK: - Property
+    private let container: DIContainer
     @State private var viewModel: NoticeEditorViewModel
 
     // MARK: - Initializer
-    init(userPart: Part? = nil) {
-        _viewModel = State(initialValue: NoticeEditorViewModel(userPart: userPart))
+    init(container: DIContainer, userPart: Part?, mode: NoticeEditorMode = .create) {
+        self.container = container
+
+        let noticeUseCase = container.resolve(NoticeUseCaseProtocol.self)
+        let storageUseCase = container.resolve(StorageUseCaseProtocol.self)
+
+        _viewModel = State(initialValue: NoticeEditorViewModel(
+            noticeUseCase: noticeUseCase,
+            storageUseCase: storageUseCase,
+            userPart: userPart,
+            mode: mode
+        ))
     }
     
     // MARK: - Constant
@@ -34,7 +45,6 @@ struct NoticeEditorView: View {
             VStack(spacing: DefaultSpacing.spacing16) {
                 textfieldSection
                     
-                
                 if !viewModel.noticeImages.isEmpty {
                     imageSection
                 }
@@ -48,18 +58,24 @@ struct NoticeEditorView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolBarCollection.ToolBarCenterMenu(
-                items: viewModel.availableCategories,
-                selection: categoryBinding,
-                itemLabel: { $0.labelText },
-                itemIcon: { $0.labelIcon }
-            )
+            // 수정 모드에서는 카테고리 변경 불가
+            if !viewModel.isEditMode {
+                ToolBarCollection.ToolBarCenterMenu(
+                    items: viewModel.availableCategories,
+                    selection: categoryBinding,
+                    itemLabel: { $0.labelText },
+                    itemIcon: { $0.labelIcon }
+                )
+            }
+            
             ToolBarCollection.ConfirmBtn(action: {
-                // TODO: 공지사항 업로드 - [이예지] 26.02.03
+                Task {
+                    await viewModel.saveNotice()
+                }
             }, disable: !viewModel.canSubmit)
         }
         .safeAreaBar(edge: .top) {
-            if viewModel.selectedCategory.hasSubCategories {
+            if viewModel.selectedCategory.hasSubCategories && !viewModel.isEditMode {
                 subCategorySection
             }
         }
@@ -88,15 +104,19 @@ struct NoticeEditorView: View {
                             viewModel.noticeLinks.append(NoticeLinkItem())
                         })
                         
-                        ToolBtn(icon: "chart.bar.fill", action: {
-                            viewModel.showVotingFormSheet()
-                        })
+                        if !viewModel.isEditMode {
+                            ToolBtn(icon: "chart.bar.fill", action: {
+                                viewModel.showVotingFormSheet()
+                            })
+                        }
                     }
                 }
                 .glassEffect()
                 Spacer()
-                alarmToggle
-                    .glassEffect()
+                if !viewModel.isEditMode {
+                    alarmToggle
+                        .glassEffect()
+                }
             }
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
             .padding(.bottom, DefaultSpacing.spacing16)
@@ -115,7 +135,11 @@ struct NoticeEditorView: View {
                 },
                 onConfirm: {
                     viewModel.confirmVote()
-                }
+                },
+                onDelete: {
+                    viewModel.deleteVoteData()
+                },
+                isEditingConfirmedVote: viewModel.isVoteConfirmed
             )
         }
         .alertPrompt(item: $viewModel.alertPrompt)
@@ -215,13 +239,31 @@ struct NoticeEditorView: View {
     
     // MARK: - voteSection
     private var voteSection: some View {
-        Button {
-            viewModel.editVote()
-        } label: {
-            VoteAttachmentCard(formData: $viewModel.voteFormData)
+        Group {
+            if viewModel.isEditMode {
+                // 수정 모드: 읽기 전용 (삭제만 가능)
+                VoteAttachmentCard(
+                    formData: $viewModel.voteFormData,
+                    mode: .readonly,
+                    onDelete: {
+                        viewModel.deleteVote()
+                    }
+                )
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            } else {
+                // 생성 모드: 수정 가능
+                Button {
+                    viewModel.editVote()
+                } label: {
+                    VoteAttachmentCard(
+                        formData: $viewModel.voteFormData,
+                        mode: .editable
+                    )
+                }
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                .buttonStyle(.plain)
+            }
         }
-        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        .buttonStyle(.plain)
     }
     
     // MARK: - alarmToggle
@@ -248,15 +290,15 @@ struct NoticeEditorView: View {
     }
 }
 
-// MARK: - Preview
-#Preview("iOS 파트장의 화면") {
-    NavigationStack {
-        NoticeEditorView(userPart: .ios)
-    }
-}
-
-#Preview("파트장이 아닌 운영진의 화면") {
-    NavigationStack {
-        NoticeEditorView(userPart: nil)
-    }
-}
+//// MARK: - Preview
+//#Preview("iOS 파트장의 화면") {
+//    NavigationStack {
+//        NoticeEditorView(userPart: .ios)
+//    }
+//}
+//
+//#Preview("파트장이 아닌 운영진의 화면") {
+//    NavigationStack {
+//        NoticeEditorView(userPart: nil)
+//    }
+//}

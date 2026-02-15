@@ -14,6 +14,10 @@ struct VotingFormSheetView: View, Equatable {
     @Environment(\.dismiss) private var dismiss
     var onCancel: () -> Void
     var onConfirm: () -> Void
+    var onDelete: (() -> Void)? = nil
+    var isEditingConfirmedVote: Bool = false
+    
+    @State private var alertPrompt: AlertPrompt?
 
     // MARK: - Constant
     fileprivate enum Constants {
@@ -47,8 +51,7 @@ struct VotingFormSheetView: View, Equatable {
             .navigation(naviTitle: .vote, displayMode: .inline)
             .toolbar {
                 ToolBarCollection.CancelBtn(action: {
-                    onCancel()
-                    dismiss()
+                    showCancelAlert()
                 })
                 ToolBarCollection.ConfirmBtn(action: {
                     onConfirm()
@@ -56,6 +59,7 @@ struct VotingFormSheetView: View, Equatable {
                 }, disable: !formData.canConfirm
                 )
             }
+            .alertPrompt(item: $alertPrompt)
         }
     }
     
@@ -210,7 +214,7 @@ struct VotingFormSheetView: View, Equatable {
     private func canDeleteOption(at index: Int) -> Bool {
         index >= VoteFormData.minOptionCount
     }
-    
+
     private func addOption() {
         guard formData.canAddOption else { return }
         formData.options.append(VoteOptionItem())
@@ -219,6 +223,36 @@ struct VotingFormSheetView: View, Equatable {
     private func removeOption(_ option: VoteOptionItem) {
         guard formData.canRemoveOption else { return }
         formData.options.removeAll { $0.id == option.id }
+    }
+    
+    private func showCancelAlert() {
+        if isEditingConfirmedVote {
+            // 확정된 투표를 수정 중이면 삭제 확인
+            alertPrompt = AlertPrompt(
+                title: "투표 삭제",
+                message: "투표를 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.",
+                positiveBtnTitle: "삭제",
+                positiveBtnAction: {
+                    self.onDelete?()
+                    self.dismiss()
+                },
+                negativeBtnTitle: "취소",
+                isPositiveBtnDestructive: true
+            )
+        } else {
+            // 새로 만드는 중이면 변경사항 폐기 확인
+            alertPrompt = AlertPrompt(
+                title: "투표 작성 취소",
+                message: "작성 중인 투표를 취소하시겠습니까?\n입력한 내용이 저장되지 않습니다.",
+                positiveBtnTitle: "취소",
+                positiveBtnAction: {
+                    self.onCancel()
+                    self.dismiss()
+                },
+                negativeBtnTitle: "계속 작성",
+                isPositiveBtnDestructive: true
+            )
+        }
     }
 }
 

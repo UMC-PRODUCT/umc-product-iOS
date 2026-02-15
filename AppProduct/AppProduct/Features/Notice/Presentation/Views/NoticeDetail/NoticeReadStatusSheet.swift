@@ -26,11 +26,7 @@ struct NoticeReadStatusSheet: View {
         NavigationStack {
             Group {
                 switch viewModel.readStatusState {
-                case .idle:
-                    Color.clear.task {
-                        print("데이터 로딩이 시작되지 않음")
-                    }
-                case .loading:
+                case .idle, .loading:
                     Progress()
                 case .loaded(_):
                     userListSection
@@ -129,7 +125,15 @@ struct NoticeReadStatusSheet: View {
     private var reAlarmSection: some View {
         Button(action: {
             rotationTrigger += 1
-            // TODO: 재알림 전송 API - [이예지] 26.02.04
+            
+            // 미확인 사용자들의 ID 추출 (String → Int 변환)
+            let targetIds = viewModel.filteredReadStatusUsers
+                .compactMap { Int($0.id) }
+            
+            // 리마인더 발송
+            Task {
+                await viewModel.sendReminder(targetIds: targetIds)
+            }
         }) {
             Label {
                 Text("재알림 보내기")
@@ -147,21 +151,4 @@ struct NoticeReadStatusSheet: View {
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
-}
-
-// MARK: - Preview
-#Preview {
-    let previewVM = NoticeDetailViewModel(
-        noticeID: "1",
-        errorHandler: ErrorHandler(),
-        initialNotice: NoticeDetailMockData.sampleNoticeWithPermission
-    )
-    previewVM.readStatusState = .loaded(NoticeDetailMockData.sampleReadStatus)
-    
-    return Text("Preview Trigger")
-        .sheet(isPresented: .constant(true)) {
-            NavigationStack {
-                NoticeReadStatusSheet(viewModel: previewVM)
-            }
-        }
 }
