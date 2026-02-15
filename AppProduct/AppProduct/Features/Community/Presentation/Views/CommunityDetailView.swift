@@ -79,8 +79,7 @@ struct CommunityDetailView: View {
         .toolbar {
             ToolBarCollection.ToolbarTrailingMenu(actions: [
                 .init(title: "수정하기", icon: "pencil") {
-                    // TODO: 수정모드
-                    pathStore.communityPath.append(.community(.post))
+                    pathStore.communityPath.append(.community(.post(editItem: vm.postItem)))
                 },
                 .init(title: "삭제하기", icon: "trash", role: .destructive) {
                     Task {

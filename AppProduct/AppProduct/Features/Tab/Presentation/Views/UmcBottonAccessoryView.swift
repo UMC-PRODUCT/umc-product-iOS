@@ -160,7 +160,7 @@ fileprivate struct CommunityAccessoryView: View {
         Group {
             if pathStore.communityPath.isEmpty {
                 Button(action: {
-                    pathStore.communityPath.append(.community(.post))
+                    pathStore.communityPath.append(.community(.post()))
                 }) {
                     HStack(spacing: DefaultSpacing.spacing8) {
                         Spacer()

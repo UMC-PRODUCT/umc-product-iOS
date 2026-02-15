@@ -99,8 +99,13 @@ private extension NavigationRoutingView {
         switch route {
         case .detail(let postItem):
             CommunityDetailView(container: di, errorHandler: errorHandler, postItem: postItem)
-        case .post:
-            CommunityPostView(container: di, errorHandler: errorHandler)
+        case .post(let editItem):
+            CommunityPostView(
+                container: di,
+                errorHandler: errorHandler,
+                mode: editItem != nil ? .edit : .create,
+                prefill: editItem
+            )
         }
     }
     
