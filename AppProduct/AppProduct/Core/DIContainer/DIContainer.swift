@@ -254,9 +254,13 @@ extension DIContainer {
 
         // MARK: - MyPage Feature
         container.register(MyPageRepositoryProtocol.self) {
+            #if DEBUG && targetEnvironment(simulator)
+            return MockMyPageRepository()
+            #else
             MyPageRepository(
                 adapter: container.resolve(MoyaNetworkAdapter.self)
             )
+            #endif
         }
         /// 프로필 조회/수정 UseCase를 제공하는 Provider
         container.register(MyPageUseCaseProviding.self) {
