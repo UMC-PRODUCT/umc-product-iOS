@@ -80,8 +80,8 @@ class CommunityFameViewModel {
         do {
             let items = try await useCaseProvider.fetchFameItemsUseCase.execute(query: query)
             fameItems = .loaded(items)
-        } catch let error as DomainError {
-            fameItems = .failed(.domain(error))
+        } catch let error as AppError {
+            fameItems = .failed(error)
         } catch {
             fameItems = .failed(.unknown(message: error.localizedDescription))
         }

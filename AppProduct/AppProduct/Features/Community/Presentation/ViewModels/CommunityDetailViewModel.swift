@@ -16,11 +16,12 @@ class CommunityDetailViewModel {
 
     private(set) var postItem: CommunityItemModel
     private(set) var comments: Loadable<[CommunityCommentModel]> = .idle
-    private(set) var deletePostState: Loadable<Bool> = .idle
-    private(set) var deleteCommentState: Loadable<Bool> = .idle
-    private(set) var scrapState: Loadable<Bool> = .idle
-    private(set) var likeState: Loadable<Bool> = .idle
-    private(set) var postCommentState: Loadable<Bool> = .idle
+    private(set) var postDetailState: Loadable<CommunityItemModel> = .idle
+    private(set) var isDeleting: Bool = false
+    private(set) var isDeletingComment: Bool = false
+    private(set) var isScrapToggling: Bool = false
+    private(set) var isLikeToggling: Bool = false
+    private(set) var isPostingComment: Bool = false
 
     // MARK: - Init
 
@@ -44,8 +45,8 @@ class CommunityDetailViewModel {
         do {
             let fetchedComments = try await useCaseProvider.fetchCommentUseCase.execute(postId: postItem.postId)
             comments = .loaded(fetchedComments)
-        } catch let error as DomainError {
-            comments = .failed(.domain(error))
+        } catch let error as AppError {
+            comments = .failed(error)
         } catch {
             comments = .failed(.unknown(message: error.localizedDescription))
         }
@@ -54,13 +55,13 @@ class CommunityDetailViewModel {
     /// 게시글 삭제
     @MainActor
     func deletePost() async {
-        deletePostState = .loading
+        isDeleting = true
 
         do {
             try await useCaseProvider.deletePostUseCase.execute(postId: postItem.postId)
-            deletePostState = .loaded(true)
+            isDeleting = false
         } catch {
-            deletePostState = .idle
+            isDeleting = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
                 action: "deletePost",
@@ -74,18 +75,18 @@ class CommunityDetailViewModel {
     /// 댓글 삭제
     @MainActor
     func deleteComment(commentId: Int) async {
-        deleteCommentState = .loading
+        isDeletingComment = true
 
         do {
             try await useCaseProvider.deleteCommentUseCase.execute(
                 postId: postItem.postId,
                 commentId: commentId
             )
-            deleteCommentState = .loaded(true)
+            isDeletingComment = false
             // 댓글 삭제 후 목록 새로고침
             await fetchComments()
         } catch {
-            deleteCommentState = .idle
+            isDeletingComment = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
                 action: "deleteComment",
@@ -99,14 +100,23 @@ class CommunityDetailViewModel {
     /// 게시글 스크랩
     @MainActor
     func toggleScrap() async {
-        scrapState = .loading
+        guard !isScrapToggling else { return }
+        isScrapToggling = true
+
+        // 낙관적 업데이트
+        let previousScrapState = postItem.isScrapped
+        let previousScrapCount = postItem.scrapCount
+        postItem.isScrapped.toggle()
+        postItem.scrapCount += postItem.isScrapped ? 1 : -1
 
         do {
             try await useCaseProvider.postScrapUseCase.execute(postId: postItem.postId)
-            scrapState = .loaded(true)
-            // TODO: postItem의 스크랩 상태 업데이트
+            isScrapToggling = false
         } catch {
-            scrapState = .idle
+            // 실패 시 이전 상태로 롤백
+            postItem.isScrapped = previousScrapState
+            postItem.scrapCount = previousScrapCount
+            isScrapToggling = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
                 action: "toggleScrap",
@@ -120,14 +130,23 @@ class CommunityDetailViewModel {
     /// 게시글 좋아요
     @MainActor
     func toggleLike() async {
-        likeState = .loading
+        guard !isLikeToggling else { return }
+        isLikeToggling = true
+
+        // 낙관적 업데이트
+        let previousLikeState = postItem.isLiked
+        let previousLikeCount = postItem.likeCount
+        postItem.isLiked.toggle()
+        postItem.likeCount += postItem.isLiked ? 1 : -1
 
         do {
             try await useCaseProvider.postLikeUseCase.execute(postId: postItem.postId)
-            likeState = .loaded(true)
-            // TODO: postItem의 좋아요 상태 업데이트
+            isLikeToggling = false
         } catch {
-            likeState = .idle
+            // 실패 시 이전 상태로 롤백
+            postItem.isLiked = previousLikeState
+            postItem.likeCount = previousLikeCount
+            isLikeToggling = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
                 action: "toggleLike",
@@ -141,7 +160,8 @@ class CommunityDetailViewModel {
     /// 댓글 작성
     @MainActor
     func postComment(content: String, parentId: Int) async {
-        postCommentState = .loading
+        guard !isPostingComment else { return }
+        isPostingComment = true
 
         let request = PostCommentRequest(content: content, parentId: parentId)
 
@@ -150,11 +170,11 @@ class CommunityDetailViewModel {
                 postId: postItem.postId,
                 request: request
             )
-            postCommentState = .loaded(true)
+            isPostingComment = false
             // 댓글 작성 후 목록 새로고침
             await fetchComments()
         } catch {
-            postCommentState = .idle
+            isPostingComment = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
                 action: "postComment",
@@ -168,17 +188,16 @@ class CommunityDetailViewModel {
     /// 게시글 상세 새로고침 (상세 조회 API 사용)
     @MainActor
     func refreshPostDetail() async {
+        postDetailState = .loading
+
         do {
             let updatedPost = try await useCaseProvider.fetchPostDetailUseCase.execute(postId: postItem.postId)
             postItem = updatedPost
+            postDetailState = .loaded(updatedPost)
+        } catch let error as AppError {
+            postDetailState = .failed(error)
         } catch {
-            errorHandler.handle(error, context: ErrorContext(
-                feature: "Community",
-                action: "refreshPostDetail",
-                retryAction: { [weak self] in
-                    await self?.refreshPostDetail()
-                }
-            ))
+            postDetailState = .failed(.unknown(message: error.localizedDescription))
         }
     }
 }

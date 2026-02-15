@@ -73,8 +73,8 @@ class CommunityViewModel {
             let (fetchedItems, nextPageExists) = try await useCaseProvider.fetchCommunityItemsUseCase.execute(query: query)
             items = .loaded(fetchedItems)
             hasNext = nextPageExists
-        } catch let error as DomainError {
-            items = .failed(.domain(error))
+        } catch let error as AppError {
+            items = .failed(error)
         } catch {
             items = .failed(.unknown(message: error.localizedDescription))
         }
@@ -101,14 +101,19 @@ class CommunityViewModel {
         
         do {
             let (newItems, nextPageExists) = try await useCaseProvider.fetchCommunityItemsUseCase.execute(query: query)
-            
-            guard case .loaded(var existingItems) = items else { return }
+
+            guard case .loaded(var existingItems) = items else {
+                isLoadingMore = false
+                return
+            }
             existingItems.append(contentsOf: newItems)
             items = .loaded(existingItems)
             currentPage = nextPage
             hasNext = nextPageExists
+            isLoadingMore = false
         } catch {
-            
+            isLoadingMore = false
+            print("[Community] pagination failed: \(error)")
         }
     }
 }

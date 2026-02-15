@@ -41,7 +41,15 @@ struct CommunityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing32) {
-                CommunityPostCard(model: vm.postItem)
+                CommunityPostCard(
+                    model: vm.postItem,
+                    onLikeTapped: {
+                        await vm.toggleLike()
+                    },
+                    onScrapTapped: {
+                        await vm.toggleScrap()
+                    }
+                )
 
                 Group {
                     switch vm.comments {

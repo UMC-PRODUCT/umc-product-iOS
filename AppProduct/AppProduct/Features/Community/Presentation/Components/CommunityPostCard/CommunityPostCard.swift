@@ -11,8 +11,8 @@ struct CommunityPostCard: View {
     // MARK: - Properties
 
     private let model: CommunityItemModel
-    @State private var isLiked: Bool
-    @State private var isScrapped: Bool
+    private let onLikeTapped: () async -> Void
+    private let onScrapTapped: () async -> Void
 
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
@@ -24,10 +24,14 @@ struct CommunityPostCard: View {
 
     // MARK: - Init
 
-    init(model: CommunityItemModel) {
+    init(
+        model: CommunityItemModel,
+        onLikeTapped: @escaping () async -> Void = {},
+        onScrapTapped: @escaping () async -> Void = {}
+    ) {
         self.model = model
-        self._isLiked = State(initialValue: model.isLiked)
-        self._isScrapped = State(initialValue: model.isScrapped)
+        self.onLikeTapped = onLikeTapped
+        self.onScrapTapped = onScrapTapped
     }
 
     // MARK: - Body
@@ -93,13 +97,15 @@ struct CommunityPostCard: View {
 
     private var buttonSection: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
-            makeButton(type: .like, isSelected: isLiked) {
-                isLiked.toggle()
-                // TODO: 좋아요 API
+            makeButton(type: .like, isSelected: model.isLiked) {
+                Task {
+                    await onLikeTapped()
+                }
             }
-            makeButton(type: .scrap, isSelected: isScrapped) {
-                isScrapped.toggle()
-                // TODO: 스크랩 API
+            makeButton(type: .scrap, isSelected: model.isScrapped) {
+                Task {
+                    await onScrapTapped()
+                }
             }
         }
     }
