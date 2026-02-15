@@ -22,4 +22,19 @@ protocol MyPageRepositoryProtocol: Sendable {
         fileName: String,
         contentType: String
     ) async throws -> ProfileData
+
+    /// 회원 탈퇴를 수행합니다.
+    func deleteMember() async throws
+
+    /// 내가 쓴 글 목록을 조회합니다.
+    func fetchMyPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage
+
+    /// 댓글 단 글 목록을 조회합니다.
+    func fetchCommentedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage
+
+    /// 스크랩한 글 목록을 조회합니다.
+    func fetchScrappedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage
+
+    /// 약관 타입으로 약관 링크 정보를 조회합니다.
+    func fetchTerms(termsType: String) async throws -> MyPageTerms
 }

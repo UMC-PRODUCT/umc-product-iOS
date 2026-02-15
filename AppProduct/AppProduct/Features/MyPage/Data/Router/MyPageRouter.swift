@@ -21,7 +21,19 @@ enum MyPageRouter {
     case prepareUpload(request: PrepareUploadRequestDTO)
     /// 파일 업로드 완료 확정
     case confirmUpload(fileId: String)
+    /// 회원 탈퇴
+    case deleteMember
+    /// 내가 쓴 글 목록
+    case getMyPosts(query: MyPagePostListQuery)
+    /// 댓글 단 글 목록
+    case getCommentedPosts(query: MyPagePostListQuery)
+    /// 스크랩한 글 목록
+    case getScrappedPosts(query: MyPagePostListQuery)
+    /// 약관 조회
+    case getTerms(termsType: String)
 }
+
+// MARK: - BaseTargetType
 
 extension MyPageRouter: BaseTargetType {
 
@@ -35,6 +47,16 @@ extension MyPageRouter: BaseTargetType {
             return "/api/v1/∫storage/prepare-upload"
         case .confirmUpload(let fileId):
             return "/api/v1/storage/\(fileId)/confirm"
+        case .deleteMember:
+            return "/api/v1/member"
+        case .getMyPosts:
+            return "/api/v1/posts/my"
+        case .getCommentedPosts:
+            return "/api/v1/posts/commented"
+        case .getScrappedPosts:
+            return "/api/v1/posts/scrapped"
+        case .getTerms(let termsType):
+            return "/api/v1/terms/type/\(termsType)"
         }
     }
 
@@ -46,17 +68,32 @@ extension MyPageRouter: BaseTargetType {
             return .patch
         case .prepareUpload, .confirmUpload:
             return .post
+        case .deleteMember:
+            return .delete
+        case .getMyPosts, .getCommentedPosts, .getScrappedPosts:
+            return .get
+        case .getTerms:
+            return .get
         }
     }
 
     var task: Task {
         switch self {
-        case .getMyProfile, .confirmUpload:
+        case .getMyProfile, .confirmUpload, .deleteMember:
             return .requestPlain
         case .patchMember(let request):
             return .requestJSONEncodable(request)
         case .prepareUpload(let request):
             return .requestJSONEncodable(request)
+        case .getMyPosts(let query),
+             .getCommentedPosts(let query),
+             .getScrappedPosts(let query):
+            return .requestParameters(
+                parameters: query.queryItems,
+                encoding: URLEncoding.queryString
+            )
+        case .getTerms:
+            return .requestPlain
         }
     }
 }
