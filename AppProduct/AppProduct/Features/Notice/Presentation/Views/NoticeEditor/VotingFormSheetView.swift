@@ -14,7 +14,13 @@ struct VotingFormSheetView: View, Equatable {
     @Environment(\.dismiss) private var dismiss
     var onCancel: () -> Void
     var onConfirm: () -> Void
+    var mode: VoteEditorMode = .create
 
+    enum VoteEditorMode {
+        case create
+        case edit
+    }
+    
     // MARK: - Constant
     fileprivate enum Constants {
         static let questionBottomMargin: CGFloat = 4
@@ -44,15 +50,16 @@ struct VotingFormSheetView: View, Equatable {
             }
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
             .padding(.top, DefaultConstant.defaultContentTopMargins)
-            .navigation(naviTitle: .vote, displayMode: .inline)
+            .navigation(
+                naviTitle: mode == .create ? .voteCreate : .voteEdit, 
+                displayMode: .inline
+            )
             .toolbar {
                 ToolBarCollection.CancelBtn(action: {
                     onCancel()
-                    dismiss()
                 })
                 ToolBarCollection.ConfirmBtn(action: {
                     onConfirm()
-                    dismiss()
                 }, disable: !formData.canConfirm
                 )
             }
@@ -210,7 +217,7 @@ struct VotingFormSheetView: View, Equatable {
     private func canDeleteOption(at index: Int) -> Bool {
         index >= VoteFormData.minOptionCount
     }
-    
+
     private func addOption() {
         guard formData.canAddOption else { return }
         formData.options.append(VoteOptionItem())

@@ -46,11 +46,11 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     var subCategories: [EditorSubCategory] {
         switch self {
         case .central:
-            return [.all, .staff, .part, .branch]
+            return [.all, .part, .branch]
         case .branch:
-            return [.all, .staff, .part, .school]
+            return [.all, .part, .school]
         case .school:
-            return [.all, .staff, .part]
+            return [.all, .part]
         case .part:
             return []
         }
@@ -66,7 +66,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
 /// 공지 에디터 서브 카테고리
 enum EditorSubCategory: Identifiable, Equatable, Hashable {
     case all
-    case staff
+    //case staff
     case branch
     case school
     case part
@@ -74,7 +74,7 @@ enum EditorSubCategory: Identifiable, Equatable, Hashable {
     var id: String {
         switch self {
         case .all: return "all"
-        case .staff: return "staff"
+        //case .staff: return "staff"
         case .branch: return "branch"
         case .school: return "school"
         case .part: return "part"
@@ -84,7 +84,7 @@ enum EditorSubCategory: Identifiable, Equatable, Hashable {
     var labelText: String {
         switch self {
         case .all: return "전체"
-        case .staff: return "운영진 공지"
+        //case .staff: return "운영진 공지"
         case .branch: return "지부"
         case .school: return "학교"
         case .part: return "파트"
@@ -96,7 +96,7 @@ enum EditorSubCategory: Identifiable, Equatable, Hashable {
         switch self {
         case .branch, .school, .part:
             return true
-        case .all, .staff:
+        case .all:
             return false
         }
     }
@@ -118,8 +118,8 @@ struct EditorSubCategorySelection: Equatable {
             switch subCategory {
             case .all:
                 items.append("전체")
-            case .staff:
-                items.append("운영진")
+//            case .staff:
+//                items.append("운영진")
             case .branch:
                 if selectedBranches.isEmpty {
                     items.append("지부")
@@ -175,6 +175,7 @@ struct NoticeImageItem: Identifiable {
     let id = UUID()
     var imageData: Data?
     var isLoading: Bool = false
+    var fileId: String? = nil
     
     static func == (lhs: NoticeImageItem, rhs: NoticeImageItem) -> Bool {
         lhs.id == rhs.id &&
@@ -255,4 +256,14 @@ struct VoteFormData: Equatable {
 enum EditorMockData {
     static let branches: [String] = ["Nova", "Leo", "Cetus", "Aquarius", "Cassiopeia", "Scorpio", "Pegasus"]
     static let schools: [String] = ["가천대", "강릉원주대", "숭실대"]
+}
+
+// MARK: - NoticeEditorMode
+
+/// 공지 에디터 모드
+enum NoticeEditorMode: Equatable, Hashable {
+    /// 새 공지 작성
+    case create
+    /// 기존 공지 수정
+    case edit(noticeId: Int, notice: NoticeDetail)
 }

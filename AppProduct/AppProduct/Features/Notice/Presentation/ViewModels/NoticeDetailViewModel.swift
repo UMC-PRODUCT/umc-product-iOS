@@ -10,6 +10,11 @@ import SwiftUI
 @Observable
 final class NoticeDetailViewModel {
     
+    // MARK: - Property
+    
+    /// UseCase
+    private let noticeUseCase: NoticeUseCaseProtocol
+    
     /// 공지 상세 상태
     var noticeState: Loadable<NoticeDetail>
     
@@ -20,10 +25,14 @@ final class NoticeDetailViewModel {
     var alertPrompt: AlertPrompt?
     
     /// 공지 ID
-    private let noticeID: String
+    private let noticeID: Int
     
     /// Error Handler
     private var errorHandler: ErrorHandler
+    
+    /// Navigation 콜백
+    var onEditNotice: ((Int) -> Void)?
+    var onDeleteSuccess: (() -> Void)?
     
     // MARK: - Read Status Properties
     /// 공지 열람 현황 Sheet 표시 여부
@@ -62,7 +71,7 @@ final class NoticeDetailViewModel {
     var unconfirmedCount: Int {
         readStatusState.value?.unconfirmedCount ?? 0
     }
-
+    
     /// 전체 인원 수 (버튼용)
     var totalCount: Int {
         readStatusState.value?.totalCount ?? 0
@@ -72,7 +81,7 @@ final class NoticeDetailViewModel {
     // MARK: - Read Status Filter Properties
     /// 선택된 필터 타입
     var selectedFilter: ReadStatusFilterType = .all
-
+    
     // MARK: - Read Status Grouped Data
     /// 지부별로 그룹화된 사용자
     var groupedUsersByBranch: [String: [ReadStatusUser]] {
@@ -80,7 +89,7 @@ final class NoticeDetailViewModel {
             .sorted { $0.key < $1.key }  // 지부명 알파벳 순 정렬
             .reduce(into: [:]) { $0[$1.key] = $1.value }
     }
-
+    
     /// 학교별로 그룹화된 사용자
     var groupedUsersBySchool: [String: [ReadStatusUser]] {
         Dictionary(grouping: filteredReadStatusUsers, by: { $0.campus })
@@ -91,17 +100,24 @@ final class NoticeDetailViewModel {
     // MARK: - Initialization
     
     init(
-        noticeID: String = "1",
+        noticeUseCase: NoticeUseCaseProtocol,
+        noticeID: Int,
         errorHandler: ErrorHandler,
         initialNotice: NoticeDetail? = nil
     ) {
+        self.noticeUseCase = noticeUseCase
         self.noticeID = noticeID
         self.errorHandler = errorHandler
-        
+
         if let initialNotice = initialNotice {
             self.noticeState = .loaded(initialNotice)
         } else {
             self.noticeState = .loaded(NoticeDetailMockData.sampleNoticeWithPermission)
+        }
+
+        // 공지 진입 시 자동으로 읽음 처리
+        Task {
+            await markAsRead()
         }
     }
     
@@ -117,14 +133,28 @@ final class NoticeDetailViewModel {
         showingActionMenu = true
     }
     
-    /// 공지 수정
-    func editNotice() {
-        // TODO: NoticeEditorView로 이동 - [이예지] 26.02.03
-        print("[NoticeDetail] 공지 수정: \(noticeID)")
+    /// 공지사항 상세 조회 (최신 데이터 fetch)
+    @MainActor
+    func fetchNoticeDetail() async {
+        if noticeState.isIdle {
+            noticeState = .loading
+        }
+
+        do {
+            let noticeDetail = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
+            noticeState = .loaded(noticeDetail)
+
+        } catch let error as DomainError {
+            noticeState = .failed(.domain(error))
+        } catch let error as NetworkError {
+            noticeState = .failed(.network(error))
+        } catch {
+            noticeState = .failed(.unknown(message: error.localizedDescription))
+        }
     }
     
     /// 삭제 확인 다이얼로그 표시
-    func showDeleteConfirmation() {
+    func showDeleteConfirmation(onDeleteSuccess: @escaping () -> Void) {
         alertPrompt = AlertPrompt(
             id: .init(),
             title: "공지 삭제",
@@ -132,39 +162,219 @@ final class NoticeDetailViewModel {
             positiveBtnTitle: "삭제",
             positiveBtnAction: { [weak self] in
                 Task {
-                    await self?.deleteNotice()
+                    await self?.deleteNotice(onSuccess: onDeleteSuccess)
                 }
             },
             negativeBtnTitle: "취소"
         )
     }
     
+    /// 공지사항 읽음 처리
+    @MainActor
+    private func markAsRead() async {
+        do {
+            try await noticeUseCase.readNotice(noticeId: noticeID)
+            print("[NoticeDetail] 읽음 처리 완료: \(noticeID)")
+        } catch {
+            print("[NoticeDetail] 읽음 처리 실패: \(error)")
+        }
+    }
+    
+    /// 리마인더 발송
+    @MainActor
+    func sendReminder(targetIds: [Int]) async {
+        do {
+            try await noticeUseCase.sendReminder(
+                noticeId: noticeID,
+                targetIds: targetIds
+            )
+            
+            // 성공 알림
+            alertPrompt = AlertPrompt(
+                id: .init(),
+                title: "리마인더 발송 완료",
+                message: "\(targetIds.count)명에게 리마인더를 발송했습니다.",
+                positiveBtnTitle: "확인"
+            )
+            
+        } catch let error as DomainError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "sendReminder",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.sendReminder(targetIds: targetIds)
+                        }
+                    }
+                )
+            )
+        } catch {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "sendReminder",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.sendReminder(targetIds: targetIds)
+                        }
+                    }
+                )
+            )
+        }
+    }
+    
     /// 공지 삭제
     @MainActor
-    private func deleteNotice() async {
-        // TODO: UseCase로 삭제 처리 - [이예지] 26.02.03
+    private func deleteNotice(onSuccess: @escaping () -> Void) async {
         print("[NoticeDetail] 공지 삭제 시작: \(noticeID)")
+
+        do {
+            try await noticeUseCase.deleteNotice(noticeId: noticeID)
+
+            print("[NoticeDetail] 공지 삭제 완료")
+
+            // 삭제 성공 시 AlertPrompt로 알림 후 화면 닫기
+            alertPrompt = AlertPrompt(
+                id: .init(),
+                title: "삭제 완료",
+                message: "공지사항이 삭제되었습니다.",
+                positiveBtnTitle: "확인",
+                positiveBtnAction: onSuccess
+            )
+
+        } catch let error as DomainError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "deleteNotice",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.deleteNotice(onSuccess: onSuccess)
+                        }
+                    }
+                )
+            )
+        } catch let error as NetworkError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "deleteNotice",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.deleteNotice(onSuccess: onSuccess)
+                        }
+                    }
+                )
+            )
+        } catch {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "deleteNotice",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.deleteNotice(onSuccess: onSuccess)
+                        }
+                    }
+                )
+            )
+        }
+    }
+    
+    // MARK: - Update Actions
+    
+    /// 공지사항 수정 완료 (제목, 본문)
+    @MainActor
+    func updateNoticeContent(title: String, content: String) async {
+        noticeState = .loading
         
         do {
-            // 삭제 API 호출 시뮬레이션
-            try await Task.sleep(nanoseconds: 500_000_000)
+            let updatedNotice = try await noticeUseCase.updateNotice(
+                noticeId: noticeID,
+                title: title,
+                content: content
+            )
+            noticeState = .loaded(updatedNotice)
             
-            // 삭제 성공
-            print("[NoticeDetail] 공지 삭제 완료")
+            // 성공 알림
+            alertPrompt = AlertPrompt(
+                id: .init(),
+                title: "수정 완료",
+                message: "공지사항이 수정되었습니다.",
+                positiveBtnTitle: "확인"
+            )
             
-            // TODO: 이전 화면으로 돌아가기 - [이예지] 26.02.03
+        } catch let error as DomainError {
+            noticeState = .failed(.domain(error))
+        } catch let error as NetworkError {
+            noticeState = .failed(.network(error))
         } catch {
-            // 삭제 실패 시 에러 처리
-            errorHandler.handle(error, context: ErrorContext(
-                feature: "Notice",
-                action: "deleteNotice",
-                retryAction: { [weak self] in
-                    guard let self = self else { return }
-                    Task {
-                        await self.deleteNotice()
+            noticeState = .failed(.unknown(message: error.localizedDescription))
+        }
+    }
+    
+    /// 공지사항 링크 수정
+    @MainActor
+    func updateNoticeLinks(links: [String]) async {
+        do {
+            let updatedNotice = try await noticeUseCase.updateLinks(
+                noticeId: noticeID,
+                links: links
+            )
+            noticeState = .loaded(updatedNotice)
+            
+        } catch {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "updateLinks",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.updateNoticeLinks(links: links)
+                        }
                     }
-                }
-            ))
+                )
+            )
+        }
+    }
+    
+    /// 공지사항 이미지 수정
+    @MainActor
+    func updateNoticeImages(imageIds: [String]) async {
+        do {
+            let updatedNotice = try await noticeUseCase.updateImages(
+                noticeId: noticeID,
+                imageIds: imageIds
+            )
+            noticeState = .loaded(updatedNotice)
+            
+        } catch {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "updateImages",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.updateNoticeImages(imageIds: imageIds)
+                        }
+                    }
+                )
+            )
         }
     }
     
@@ -262,14 +472,61 @@ final class NoticeDetailViewModel {
         }
     }
     
-    /// 공지 열람 현황 데이터 로드
+    /// 공지 열람 현황 데이터 로드 (통계 + 상세)
     @MainActor
     func fetchReadStatus() async {
         readStatusState = .loading
-        
-        // noticeID에 따라 다른 수신 확인 현황 반환
-        let mockReadStatus = NoticeMockData.readStatus(for: noticeID)
-        readStatusState = .loaded(mockReadStatus)
+
+        do {
+            // 1. 확인한 사람 목록 조회 (READ)
+            let confirmedResponse = try await noticeUseCase.getReadStatusList(
+                noticeId: noticeID,
+                cursorId: 0,
+                filterType: "ALL",
+                organizationIds: [],
+                status: "READ"
+            )
+
+            // 2. 미확인한 사람 목록 조회 (UNREAD)
+            let unconfirmedResponse = try await noticeUseCase.getReadStatusList(
+                noticeId: noticeID,
+                cursorId: 0,
+                filterType: "ALL",
+                organizationIds: [],
+                status: "UNREAD"
+            )
+
+            // 3. DTO → 도메인 모델 변환
+            let confirmedUsers = confirmedResponse.content.map { dto in
+                dto.toDomain(isRead: true)
+            }
+
+            let unconfirmedUsers = unconfirmedResponse.content.map { dto in
+                dto.toDomain(isRead: false)
+            }
+
+            // 4. NoticeReadStatus 생성
+            let readStatus = NoticeReadStatus(
+                noticeId: String(noticeID),
+                confirmedUsers: confirmedUsers,
+                unconfirmedUsers: unconfirmedUsers
+            )
+
+            readStatusState = .loaded(readStatus)
+
+        } catch let error as DomainError {
+            readStatusState = .failed(.domain(error))
+        } catch let error as NetworkError {
+            readStatusState = .failed(.network(error))
+        } catch {
+            readStatusState = .failed(.unknown(message: error.localizedDescription))
+        }
+    }
+    
+    /// 읽음률 포맷팅 (0.85 → "85%")
+    private func formattedReadRate(_ rate: Double) -> String {
+        let percentage = Int(rate * 100)
+        return "\(percentage)%"
     }
     
     /// 탭 전환

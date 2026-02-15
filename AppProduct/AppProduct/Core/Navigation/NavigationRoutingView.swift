@@ -82,10 +82,14 @@ private extension NavigationRoutingView {
     @ViewBuilder
     func noticeView(_ route: NavigationDestination.Notice) -> some View {
         switch route {
-        case .detail(let noticeItem):
-            NoticeDetailView(model: noticeItem)
-        case .editor:
-            NoticeEditorView()
+        case .detail(let detailItem):
+            NoticeDetailView(
+                container: di,
+                errorHandler: errorHandler,
+                model: detailItem
+            )
+        case .editor(let mode):
+              NoticeEditorView(container: di, userPart: nil, mode: mode)
         }
     }
     

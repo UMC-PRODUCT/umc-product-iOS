@@ -107,15 +107,3 @@ struct TargetSheetView: View {
         .frame(maxWidth: .infinity)
     }
 }
-
-#Preview("지부") {
-    TargetSheetView(viewModel: NoticeEditorViewModel(userPart: .ios), sheetType: .branch)
-}
-
-#Preview("학교") {
-    TargetSheetView(viewModel: NoticeEditorViewModel(userPart: .ios), sheetType: .school)
-}
-
-#Preview("파트") {
-    TargetSheetView(viewModel: NoticeEditorViewModel(userPart: .ios), sheetType: .part)
-}
