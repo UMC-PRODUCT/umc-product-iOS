@@ -2,7 +2,7 @@
 //  RegisterExistingChallengerRequestDTO.swift
 //  AppProduct
 //
-//  Created by Codex on 2/15/26.
+//  Created by euijjang97 on 2/15/26.
 //
 
 import Foundation
