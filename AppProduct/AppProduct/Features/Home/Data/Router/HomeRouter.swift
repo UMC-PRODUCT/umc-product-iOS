@@ -20,7 +20,7 @@ enum HomeRouter {
     /// 최근 공지사항 조회
     case getNoticeRecent(query: NoticeListRequestDTO)
     /// FCM 토큰 등록/갱신
-    case postFCMToken(challengerId: Int, request: RegisterFCMTokenRequestDTO)
+    case postFCMToken(memberId: Int, request: RegisterFCMTokenRequestDTO)
 }
 
 extension HomeRouter: BaseTargetType {
@@ -34,8 +34,8 @@ extension HomeRouter: BaseTargetType {
             return "/api/v1/schedules/my-list"
         case .getNoticeRecent:
             return "/api/v1/notices"
-        case .postFCMToken(let challengerId, _):
-            return "/api/v1/notification/fcm/\(challengerId)"
+        case .postFCMToken(let memberId, _):
+            return "/api/v1/notification/fcm/\(memberId)"
         }
     }
 
