@@ -83,9 +83,13 @@ enum NavigationDestination: Hashable {
     enum MyPage: Hashable {
         /// 내 정보 수정
         case myInfo(profileData: ProfileData)
+        /// 내 활동 게시글 목록
+        case myActivePosts(type: MyActiveLogsType)
     }
 
+    /// 활동(Activity) 관련 화면 목적지
     enum Activity: Hashable {
+        /// 스터디 일정 등록 (studyName: 스터디명)
         case studyScheduleRegistration(studyName: String)
     }
 

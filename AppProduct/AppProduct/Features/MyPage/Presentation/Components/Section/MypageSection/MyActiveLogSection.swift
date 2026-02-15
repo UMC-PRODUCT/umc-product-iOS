@@ -17,13 +17,11 @@ struct MyActiveLogSection: View {
     let sectionType: MyPageSectionType
     @Environment(\.di) var di
 
-    /// DI Container에서 주입받은 NavigationRouter
-    private var router: NavigationRouter {
-        di.resolve(NavigationRouter.self)
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
     }
 
-    // MARK: - Function
-
+    // MARK: - Init
     init(sectionType: MyPageSectionType) {
         self.sectionType = sectionType
     }
@@ -37,14 +35,15 @@ struct MyActiveLogSection: View {
             SectionHeaderView(title: sectionType.rawValue)
         })
     }
-    
+
     @ViewBuilder
     private var sectionRow: some View {
         ForEach(MyActiveLogsType.allCases, id: \.hashValue) { log in
             sectionContent(log)
         }
     }
-    
+
+    /// 활동 로그 타입에 해당하는 Row를 생성합니다.
     private func sectionContent(_ log: MyActiveLogsType) -> some View {
         Button(action: {
             sectionAction(log)
@@ -52,15 +51,11 @@ struct MyActiveLogSection: View {
             MyPageSectionRow(systemIcon: log.icon, title: log.rawValue, rightImage: "chevron.right", iconBackgroundColor: log.backgroundColor)
         })
     }
-    
+
+    /// 활동 로그 Row 탭 시 해당 게시글 목록 화면으로 이동합니다.
     private func sectionAction(_ log: MyActiveLogsType) {
-        switch log {
-        case .myWritePost:
-            print("내 가 쓴글")
-        case .myWriteComment:
-            print("댓글 단 글")
-        case .myScrapPost:
-            print("스크랩")
-        }
+        pathStore.mypagePath.append(
+            .myPage(.myActivePosts(type: log))
+        )
     }
 }
