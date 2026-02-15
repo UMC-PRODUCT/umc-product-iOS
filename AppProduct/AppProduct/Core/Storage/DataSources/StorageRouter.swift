@@ -1,27 +1,19 @@
 //
-//  NoticeStorageRouter.swift
+//  StorageRouter.swift
 //  AppProduct
 //
-//  Created by 이예지 on 2/15/26.
+//  Created by Codex on 2/16/26.
 //
 
 import Foundation
-import Moya
 internal import Alamofire
+import Moya
 
-enum NoticeStorageRouter: BaseTargetType {
-    
-    // MARK: - Cases
-    
-    /// 파일 업로드 준비 (Presigned URL 생성)
-    case prepareUpload(request: NoticePrepareUploadRequestDTO)
-    /// 파일 업로드 완료 확인
+enum StorageRouter: BaseTargetType {
+    case prepareUpload(request: StoragePrepareUploadRequestDTO)
     case confirmUpload(fileId: String)
-    /// 파일 삭제
     case deleteFile(fileId: String)
-    
-    // MARK: - Path
-    
+
     var path: String {
         switch self {
         case .prepareUpload:
@@ -32,9 +24,7 @@ enum NoticeStorageRouter: BaseTargetType {
             return "/api/v1/storage/\(fileId)"
         }
     }
-    
-    // MARK: - Method
-    
+
     var method: Moya.Method {
         switch self {
         case .prepareUpload, .confirmUpload:
@@ -43,10 +33,8 @@ enum NoticeStorageRouter: BaseTargetType {
             return .delete
         }
     }
-    
-    // MARK: - Task
-    
-    var task: Moya.Task {
+
+    var task: Task {
         switch self {
         case .prepareUpload(let request):
             return .requestJSONEncodable(request)

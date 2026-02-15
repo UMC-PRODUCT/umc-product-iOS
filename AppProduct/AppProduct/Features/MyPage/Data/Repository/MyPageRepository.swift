@@ -15,15 +15,18 @@ final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable {
     // MARK: - Property
 
     private let adapter: MoyaNetworkAdapter
+    private let storageRepository: StorageRepositoryProtocol
     private let decoder: JSONDecoder
 
     // MARK: - Init
 
     init(
         adapter: MoyaNetworkAdapter,
+        storageRepository: StorageRepositoryProtocol,
         decoder: JSONDecoder = JSONDecoder()
     ) {
         self.adapter = adapter
+        self.storageRepository = storageRepository
         self.decoder = decoder
     }
 
@@ -38,28 +41,39 @@ final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().toProfileData()
     }
 
+    /// 프로필 이미지 업로드 3단계 플로우: prepare → upload → confirm → patch
+    ///
+    /// - Parameters:
+    ///   - imageData: 업로드할 이미지 바이너리 데이터
+    ///   - fileName: 파일 이름 (예: "profile.jpg")
+    ///   - contentType: MIME 타입 (예: "image/jpeg")
+    /// - Returns: 갱신된 프로필 데이터
     func updateProfileImage(
         imageData: Data,
         fileName: String,
         contentType: String
     ) async throws -> ProfileData {
-        let prepared = try await prepareUpload(
+        let prepared = try await storageRepository.prepareUpload(
             fileName: fileName,
             contentType: contentType,
-            fileSize: imageData.count
+            fileSize: imageData.count,
+            category: .profileImage
         )
 
-        try await uploadToSignedURL(
-            request: prepared,
+        try await storageRepository.uploadFile(
+            to: prepared.uploadUrl,
             data: imageData,
+            method: prepared.uploadMethod,
+            headers: prepared.headers,
             contentType: contentType
         )
 
-        try await confirmUpload(fileId: prepared.fileId)
+        try await storageRepository.confirmUpload(fileId: prepared.fileId)
 
         return try await patchMemberProfileImage(profileImageId: prepared.fileId)
     }
 
+    /// 회원 탈퇴 처리
     func deleteMember() async throws {
         let response = try await adapter.request(MyPageRouter.deleteMember)
         let apiResponse = try decoder.decode(
@@ -119,80 +133,6 @@ private extension MyPageRepository {
             page: result.page,
             hasNext: result.hasNext
         )
-    }
-
-    /// 파일 업로드를 위한 Signed URL을 서버로부터 발급받습니다.
-    func prepareUpload(
-        fileName: String,
-        contentType: String,
-        fileSize: Int
-    ) async throws -> PrepareUploadResultDTO {
-        let request = PrepareUploadRequestDTO(
-            fileName: fileName,
-            contentType: contentType,
-            fileSize: fileSize,
-            category: .profileImage
-        )
-
-        let response = try await adapter.request(
-            MyPageRouter.prepareUpload(request: request)
-        )
-
-        let apiResponse = try decoder.decode(
-            APIResponse<PrepareUploadResultDTO>.self,
-            from: response.data
-        )
-        return try apiResponse.unwrap()
-    }
-
-    /// Signed URL로 실제 파일 데이터를 업로드합니다.
-    func uploadToSignedURL(
-        request: PrepareUploadResultDTO,
-        data: Data,
-        contentType: String
-    ) async throws {
-        guard let url = URL(string: request.uploadUrl) else {
-            throw RepositoryError.decodingError(detail: "invalid uploadUrl")
-        }
-
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = request.uploadMethod.uppercased()
-
-        if let headers = request.headers {
-            for (key, value) in headers {
-                urlRequest.setValue(value, forHTTPHeaderField: key)
-            }
-        }
-
-        if urlRequest.value(forHTTPHeaderField: "Content-Type") == nil {
-            urlRequest.setValue(contentType, forHTTPHeaderField: "Content-Type")
-        }
-
-        let (_, response) = try await URLSession.shared.upload(for: urlRequest, from: data)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-
-        guard (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.requestFailed(
-                statusCode: httpResponse.statusCode,
-                data: nil
-            )
-        }
-    }
-
-    /// 파일 업로드 완료를 서버에 확정합니다.
-    func confirmUpload(fileId: String) async throws {
-        let response = try await adapter.request(
-            MyPageRouter.confirmUpload(fileId: fileId)
-        )
-
-        let apiResponse = try decoder.decode(
-            APIResponse<EmptyResult>.self,
-            from: response.data
-        )
-
-        _ = try apiResponse.unwrap()
     }
 
     /// 업로드된 이미지 ID로 회원 프로필 이미지를 갱신합니다.
