@@ -20,9 +20,20 @@ struct FailedVerificationUMC: View {
 
     /// URL을 외부 브라우저로 여는 환경 값
     @Environment(\.openURL) private var openURL
+    @Environment(\.appFlow) private var appFlow
+    @Environment(\.di) private var di
 
     /// 카카오톡 채널 연동 매니저
     let kakaoPlusManager: KakaoPlusManager = .init()
+
+    /// 코드 입력 얼럿 표시 상태
+    @State private var showCodeAlert: Bool = false
+    /// 공통 알럿 프롬프트 상태
+    @State private var alertPrompt: AlertPrompt?
+    /// 전송 중 상태
+    @State private var isSubmitting: Bool = false
+    /// 입력된 챌린저 코드
+    @State private var challengerCode: String = ""
     
     // MARK: - Constant
 
@@ -48,12 +59,11 @@ struct FailedVerificationUMC: View {
 
         /// 메인 버튼 텍스트
         static let mainBtnText: String = "UMC 공식 홈페이지 방문"
-
-        /// 문의하기 버튼 텍스트
-        static let inquriyText: String = "문의하기"
+        /// 기존 챌린저 인증 버튼 텍스트
+        static let verifyBtnText: String = "기존 챌린저 코드 입력"
 
         /// UMC 공식 홈페이지 URL
-        static let homePageURL: String = "https://umc.makeus.in"
+        static let homePageURL: String = "https://umc.it.kr"
     }
     
     var body: some View {
@@ -63,18 +73,37 @@ struct FailedVerificationUMC: View {
             Spacer().frame(maxHeight: Constants.mianVspacing)
             warningTitle
             Spacer()
-            MainButton(Constants.mainBtnText, action: {
-                if let url = URL(string: Constants.homePageURL) {
-                    openURL(url)
-                }
-            })
-            .buttonStyle(.glassProminent)
-            .tint(.indigo500)
         }
         .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        .safeAreaInset(edge: .bottom, content: {
-            inquiryBtn
-        })
+        .toolbar {
+            ToolBarCollection.FailedVerificationBottomToolbar(
+                isSubmitting: isSubmitting,
+                onHome: {
+                    if let url = URL(string: Constants.homePageURL) {
+                        openURL(url)
+                    }
+                },
+                onCode: {
+                    showCodeAlert = true
+                },
+                onInquiry: {
+                    kakaoPlusManager.openKakaoChannel()
+                }
+            )
+        }
+        .alert("기존 챌린저 코드 입력", isPresented: $showCodeAlert) {
+            TextField("6자리 코드", text: $challengerCode)
+                .keyboardType(.numberPad)
+            Button("닫기", role: .cancel) {
+                challengerCode = ""
+            }
+            Button("전송") {
+                submitChallengerCode()
+            }
+        } message: {
+            Text("운영진에게 발급받은 6자리 코드를 입력해주세요.")
+        }
+        .alertPrompt(item: $alertPrompt)
     }
     
     // MARK: - Top
@@ -111,17 +140,57 @@ struct FailedVerificationUMC: View {
         }
     }
 
-    /// 문의하기 버튼
-    ///
-    /// 카카오톡 채널로 연결되는 텍스트 버튼입니다.
-    private var inquiryBtn: some View {
-        Button(action: {
-            kakaoPlusManager.openKakaoChannel()
-        }, label: {
-            Text(Constants.inquriyText)
-                .appFont(.callout, color: .grey700)
-                .underline()
-        })
+    // MARK: - Private Function
+
+    /// 기존 챌린저 인증 코드를 서버에 전송합니다.
+    private func submitChallengerCode() {
+        let trimmedCode = challengerCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isDigitsOnly = trimmedCode.allSatisfy(\.isNumber)
+        guard trimmedCode.count == 6, isDigitsOnly else {
+            presentInvalidCodePrompt()
+            return
+        }
+
+        isSubmitting = true
+        Task {
+            do {
+                let useCase = di.resolve(AuthUseCaseProviding.self)
+                    .registerExistingChallengerUseCase
+                try await useCase.execute(code: trimmedCode)
+                await MainActor.run {
+                    isSubmitting = false
+                    challengerCode = ""
+                    presentSuccessPrompt()
+                }
+            } catch {
+                await MainActor.run {
+                    isSubmitting = false
+                    challengerCode = ""
+                    presentInvalidCodePrompt()
+                }
+            }
+        }
+    }
+
+    /// 인증 성공 안내 프롬프트를 표시합니다.
+    private func presentSuccessPrompt() {
+        alertPrompt = AlertPrompt(
+            title: "인증 완료",
+            message: "기존 챌린저로 인증되었습니다.",
+            positiveBtnTitle: "확인",
+            positiveBtnAction: {
+                appFlow.showMain()
+            }
+        )
+    }
+
+    /// 인증 실패 안내 프롬프트를 표시합니다.
+    private func presentInvalidCodePrompt() {
+        alertPrompt = AlertPrompt(
+            title: "인증 실패",
+            message: "입력 코드 번호가 존재하지 않습니다.",
+            positiveBtnTitle: "확인"
+        )
     }
 }
 

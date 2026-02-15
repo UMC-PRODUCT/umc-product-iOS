@@ -33,6 +33,8 @@ enum AuthRouter: BaseTargetType {
     )
     /// 회원가입
     case register(body: RegisterRequestDTO)
+    /// 기존 챌린저 코드 인증
+    case registerExistingChallenger(code: String)
     /// 학교 목록 조회
     case getSchools
     /// 약관 조회
@@ -58,6 +60,8 @@ enum AuthRouter: BaseTargetType {
             return "/api/v1/auth/email-verification/code"
         case .register:
             return "/api/v1/member/register"
+        case .registerExistingChallenger:
+            return "/api/v1/challenger-record/member"
         case .getSchools:
             return "/api/v1/schools/all"
         case .getTerms(let termsType):
@@ -70,7 +74,8 @@ enum AuthRouter: BaseTargetType {
     var method: Moya.Method {
         switch self {
         case .loginKakao, .loginApple, .renewToken,
-             .sendEmailVerification, .verifyEmailCode, .register:
+             .sendEmailVerification, .verifyEmailCode, .register,
+             .registerExistingChallenger:
             return .post
         case .addMemberOAuth:
             return .post
@@ -128,6 +133,10 @@ enum AuthRouter: BaseTargetType {
             )
         case .register(let body):
             return .requestJSONEncodable(body)
+        case .registerExistingChallenger(let code):
+            return .requestJSONEncodable(
+                RegisterExistingChallengerRequestDTO(code: code)
+            )
         case .getSchools, .getTerms:
             return .requestPlain
         }

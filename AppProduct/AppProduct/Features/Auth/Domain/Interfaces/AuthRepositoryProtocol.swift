@@ -69,6 +69,12 @@ protocol AuthRepositoryProtocol: Sendable {
         request: RegisterRequestDTO
     ) async throws -> Int
 
+    /// 기존 챌린저 코드 인증
+    /// - Parameter code: 운영진 발급 6자리 코드
+    func registerExistingChallenger(
+        code: String
+    ) async throws
+
     /// 학교 목록 조회
     /// - Returns: 학교 목록
     func getSchools() async throws -> [School]
