@@ -7,8 +7,12 @@
 
 import SwiftUI
 
+/// 공지사항 목록 아이템 모델
+///
+/// 공지 리스트 셀에 표시할 정보를 담으며, scope/category 조합으로 태그를 생성합니다.
 struct NoticeItemModel: Equatable, Identifiable {
     let id = UUID()
+    let noticeId: String
     let generation: Int
     // 공지 출처 (중앙/지부/교내)
     let scope: NoticeScope
@@ -24,6 +28,38 @@ struct NoticeItemModel: Equatable, Identifiable {
     let images: [String]
     let vote: NoticeVote?
     let viewCount: Int
+
+    init(
+        noticeId: String = UUID().uuidString,
+        generation: Int,
+        scope: NoticeScope,
+        category: NoticeCategory,
+        mustRead: Bool,
+        isAlert: Bool,
+        date: Date,
+        title: String,
+        content: String,
+        writer: String,
+        links: [String],
+        images: [String],
+        vote: NoticeVote?,
+        viewCount: Int
+    ) {
+        self.noticeId = noticeId
+        self.generation = generation
+        self.scope = scope
+        self.category = category
+        self.mustRead = mustRead
+        self.isAlert = isAlert
+        self.date = date
+        self.title = title
+        self.content = content
+        self.writer = writer
+        self.links = links
+        self.images = images
+        self.vote = vote
+        self.viewCount = viewCount
+    }
     
     /// UI 표시용 태그 (scope + category 조합)
     var tag: NoticeItemTag {
@@ -35,9 +71,10 @@ struct NoticeItemModel: Equatable, Identifiable {
 }
 
 extension NoticeItemModel {
+    /// 목록 아이템을 상세 화면용 NoticeDetail로 변환합니다.
     func toNoticeDetail() -> NoticeDetail {
         NoticeDetail(
-            id: id.uuidString,
+            id: noticeId,
             generation: generation,
             scope: scope,
             category: category,

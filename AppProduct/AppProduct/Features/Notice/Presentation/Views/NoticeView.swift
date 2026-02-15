@@ -123,9 +123,20 @@ struct NoticeView: View {
                 let noticeDetail = item.toNoticeDetail()
                 pathStore.noticePath.append(.notice(.detail(detailItem: noticeDetail)))
             }
+            .onAppear {
+                Task {
+                    await viewModel.loadNextPageIfNeeded(currentItem: item)
+                }
+            }
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
             .listRowInsets(DefaultConstant.defaultListPadding)
+        }
+        .overlay(alignment: .bottom) {
+            if viewModel.isLoadingMore {
+                ProgressView()
+                    .padding(.bottom, DefaultSpacing.spacing16)
+            }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)

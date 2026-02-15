@@ -8,6 +8,9 @@
 import Foundation
 import Moya
 
+/// 공지사항 Repository 구현체
+///
+/// 공지 CRUD, 열람 처리, 리마인더, 검색 등 공지 관련 전체 API를 처리합니다.
 struct NoticeRepository: NoticeRepositoryProtocol {
     
     // MARK: - Property
@@ -34,7 +37,9 @@ struct NoticeRepository: NoticeRepositoryProtocol {
             from: response.data
         )
         let noticeDTO = try apiResponse.unwrap()
-        let noticeId = noticeDTO.id
+        guard let noticeId = Int(noticeDTO.id) else {
+            throw RepositoryError.decodingError(detail: "Invalid notice id: \(noticeDTO.id)")
+        }
         
         if !links.isEmpty {
             _ = try await adapter.request(

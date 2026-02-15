@@ -58,6 +58,7 @@ final class NoticeViewModel {
     /// 페이징 정보
     private var currentPage: Int = 0
     private var hasNextPage: Bool = false
+    private(set) var isLoadingMore: Bool = false
 
     /// 검색 관련
     var searchQuery: String = ""
@@ -145,10 +146,9 @@ final class NoticeViewModel {
                     generationStates[latestGen.value] = GenerationFilterState()
                 }
 
-                // ✅ [해결방법] 여기서 fetchNotices() 호출 필요
-                // Task {
-                //     await fetchNotices()
-                // }
+                Task {
+                    await fetchNotices()
+                }
             }
         } catch {
             // ⚠️ [문제 1] 오류 발생 시 빈 배열 - 사용자에게 알림 필요
@@ -220,23 +220,43 @@ final class NoticeViewModel {
     ///   - response.content의 이미지 데이터가 올바른지 확인
     @MainActor
     func fetchNotices(page: Int = 0) async {
-        noticeItems = .loading
-        currentPage = page
+        if page == 0 {
+            noticeItems = .loading
+        } else {
+            guard hasNextPage, !isLoadingMore else { return }
+            isLoadingMore = true
+        }
 
         do {
             let request = buildNoticeListRequest(page: page)
             let response = try await noticeUseCase.getAllNotices(request: request)
             let items = response.content.map { $0.toItemModel() }
 
+            currentPage = page
             hasNextPage = response.hasNext
-            noticeItems = .loaded(items)
+            if page == 0 {
+                noticeItems = .loaded(items)
+            } else {
+                let mergedItems = (noticeItems.value ?? []) + items
+                noticeItems = .loaded(mergedItems)
+            }
+            isLoadingMore = false
 
         } catch let error as DomainError {
-            noticeItems = .failed(.domain(error))
+            if page == 0 {
+                noticeItems = .failed(.domain(error))
+            }
+            isLoadingMore = false
         } catch let error as NetworkError {
-            noticeItems = .failed(.network(error))
+            if page == 0 {
+                noticeItems = .failed(.network(error))
+            }
+            isLoadingMore = false
         } catch {
-            noticeItems = .failed(.unknown(message: error.localizedDescription))
+            if page == 0 {
+                noticeItems = .failed(.unknown(message: error.localizedDescription))
+            }
+            isLoadingMore = false
         }
     }
     
@@ -250,8 +270,12 @@ final class NoticeViewModel {
             return
         }
 
-        noticeItems = .loading
-        currentPage = page
+        if page == 0 {
+            noticeItems = .loading
+        } else {
+            guard hasNextPage, !isLoadingMore else { return }
+            isLoadingMore = true
+        }
         isSearchMode = true
         searchQuery = keyword
 
@@ -263,15 +287,31 @@ final class NoticeViewModel {
             )
             let items = response.content.map { $0.toItemModel() }
 
+            currentPage = page
             hasNextPage = response.hasNext
-            noticeItems = .loaded(items)
+            if page == 0 {
+                noticeItems = .loaded(items)
+            } else {
+                let mergedItems = (noticeItems.value ?? []) + items
+                noticeItems = .loaded(mergedItems)
+            }
+            isLoadingMore = false
 
         } catch let error as DomainError {
-            noticeItems = .failed(.domain(error))
+            if page == 0 {
+                noticeItems = .failed(.domain(error))
+            }
+            isLoadingMore = false
         } catch let error as NetworkError {
-            noticeItems = .failed(.network(error))
+            if page == 0 {
+                noticeItems = .failed(.network(error))
+            }
+            isLoadingMore = false
         } catch {
-            noticeItems = .failed(.unknown(message: error.localizedDescription))
+            if page == 0 {
+                noticeItems = .failed(.unknown(message: error.localizedDescription))
+            }
+            isLoadingMore = false
         }
     }
     
@@ -281,6 +321,25 @@ final class NoticeViewModel {
         searchQuery = ""
         isSearchMode = false
         await fetchNotices()
+    }
+
+    /// 리스트 마지막 셀 진입 시 다음 페이지 로드
+    @MainActor
+    func loadNextPageIfNeeded(currentItem: NoticeItemModel) async {
+        guard case .loaded(let items) = noticeItems,
+              let last = items.last,
+              currentItem.id == last.id,
+              hasNextPage,
+              !isLoadingMore else {
+            return
+        }
+
+        let nextPage = currentPage + 1
+        if isSearchMode {
+            await searchNotices(keyword: searchQuery, page: nextPage)
+        } else {
+            await fetchNotices(page: nextPage)
+        }
     }
     
     // MARK: - Private Helpers

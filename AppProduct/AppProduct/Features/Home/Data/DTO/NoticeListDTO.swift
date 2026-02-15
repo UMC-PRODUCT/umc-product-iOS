@@ -67,10 +67,39 @@ struct NoticeListResponseDTO: Codable {
     let shouldSendNotification: Bool
     let viewCount: String
     let createdAt: String
+    /// 서버 응답은 targetInfo를 단일 객체로 내려줍니다.
     let targetInfo: TargetInfoDTO
     let authorChallengerId: String
     let authorNickname: String
     let authorName: String
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case content
+        case shouldSendNotification
+        case viewCount
+        case createdAt
+        case targetInfo
+        case authorChallengerId
+        case authorNickname
+        case authorName
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        self.id = try container.decodeStringFlexible(forKey: .id)
+        self.title = try container.decode(String.self, forKey: .title)
+        self.content = try container.decode(String.self, forKey: .content)
+        self.shouldSendNotification = try container.decode(Bool.self, forKey: .shouldSendNotification)
+        self.viewCount = try container.decodeStringFlexible(forKey: .viewCount)
+        self.createdAt = try container.decode(String.self, forKey: .createdAt)
+        self.targetInfo = try container.decode(TargetInfoDTO.self, forKey: .targetInfo)
+        self.authorChallengerId = try container.decodeStringFlexible(forKey: .authorChallengerId)
+        self.authorNickname = try container.decode(String.self, forKey: .authorNickname)
+        self.authorName = try container.decode(String.self, forKey: .authorName)
+    }
 }
 
 // MARK: - toDomain
@@ -87,7 +116,7 @@ extension NoticeListResponseDTO {
             category = .operationsTeam
         }
 
-        let date = ISO8601DateFormatter().date(from: createdAt) ?? Date()
+        let date = createdAt.toISO8601Date()
 
         return RecentNoticeData(
             category: category,
@@ -104,6 +133,33 @@ struct TargetInfoDTO: Codable {
     let targetChapterId: Int?
     let targetSchoolId: Int?
     let targetParts: UMCPartType?
+
+    private enum CodingKeys: String, CodingKey {
+        case targetGisuId
+        case targetChapterId
+        case targetSchoolId
+        case targetParts
+    }
+
+    init(
+        targetGisuId: Int,
+        targetChapterId: Int?,
+        targetSchoolId: Int?,
+        targetParts: UMCPartType?
+    ) {
+        self.targetGisuId = targetGisuId
+        self.targetChapterId = targetChapterId
+        self.targetSchoolId = targetSchoolId
+        self.targetParts = targetParts
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.targetGisuId = try container.decodeIntFlexible(forKey: .targetGisuId)
+        self.targetChapterId = try container.decodeIntFlexibleIfPresent(forKey: .targetChapterId)
+        self.targetSchoolId = try container.decodeIntFlexibleIfPresent(forKey: .targetSchoolId)
+        self.targetParts = try container.decodeIfPresent(UMCPartType.self, forKey: .targetParts)
+    }
 }
 
 // MARK: - PageDTO
@@ -126,3 +182,63 @@ struct PageDTO<T: Codable>: Codable {
     let hasPrevious: Bool
 }
 
+private extension KeyedDecodingContainer {
+    func decodeStringFlexible(forKey key: Key) throws -> String {
+        if let value = try? decode(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return String(Int(value))
+        }
+        throw DecodingError.typeMismatch(
+            String.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected String/Int/Double for key '\(key.stringValue)'"
+            )
+        )
+    }
+
+    func decodeIntFlexible(forKey key: Key) throws -> Int {
+        if let value = try? decode(Int.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(String.self, forKey: key),
+           let intValue = Int(value) {
+            return intValue
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return Int(value)
+        }
+        throw DecodingError.typeMismatch(
+            Int.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected Int/String-number/Double for key '\(key.stringValue)'"
+            )
+        )
+    }
+
+    func decodeIntFlexibleIfPresent(forKey key: Key) throws -> Int? {
+        if (try? decodeNil(forKey: key)) == true {
+            return nil
+        }
+        return try decodeIntFlexible(forKey: key)
+    }
+}
+
+private extension String {
+    func toISO8601Date() -> Date {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let parsed = formatter.date(from: self) {
+            return parsed
+        }
+
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: self) ?? Date()
+    }
+}

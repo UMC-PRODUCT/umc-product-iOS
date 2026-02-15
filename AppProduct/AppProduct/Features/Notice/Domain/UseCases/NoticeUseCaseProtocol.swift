@@ -169,4 +169,3 @@ protocol NoticeUseCaseProtocol {
     /// - Parameter noticeId: 삭제할 공지 ID
     func deleteNotice(noticeId: Int) async throws
 }
-
