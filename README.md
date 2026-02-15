@@ -2,9 +2,10 @@
 
 > UMC Product Team이 제작하는 iOS 애플리케이션입니다. (1st)
 
-[![Swift](https://img.shields.io/badge/Swift-6.2-orange.svg)]()
+[![Swift](https://img.shields.io/badge/Swift-6.3-orange.svg)]()
 [![Xcode](https://img.shields.io/badge/Xcode-26.2-blue.svg)]()
 [![iOS](https://img.shields.io/badge/iOS-18.0+-blue.svg)]()
+[![Architecture](https://img.shields.io/badge/Architecture-Clean+MVVM-green.svg)]()
 
 ---
 
@@ -46,7 +47,7 @@ For building and running the application you need:
 
 iOS 26.0+ <br>
 Xcode 26.2 <br>
-Swift 6.2
+Swift 6.3
 
 <br>
 
@@ -70,7 +71,7 @@ Swift 6.2
 ### Development
 <div align="left">
 <img src="https://img.shields.io/badge/Xcode_26.2-007ACC?style=for-the-badge&logo=Xcode&logoColor=white" />
-<img src="https://img.shields.io/badge/Swift_6.2-FA7343?style=for-the-badge&logo=swift&logoColor=white" />
+<img src="https://img.shields.io/badge/Swift_6.3-FA7343?style=for-the-badge&logo=swift&logoColor=white" />
 <img src="https://img.shields.io/badge/SwiftUI-42A5F5?style=for-the-badge&logo=swift&logoColor=white" />
 <img src="https://img.shields.io/badge/Alamofire-FF5722?style=for-the-badge&logo=swift&logoColor=white" />
 <img src="https://img.shields.io/badge/Moya-8A4182?style=for-the-badge&logo=swift&logoColor=white" />
@@ -87,6 +88,77 @@ Swift 6.2
 
 <br>
 
+## 🏗️ 아키텍처
+
+**Feature-Based Modular + Clean Architecture + Observation**
+
+### 데이터 흐름
+
+```
+View ←→ ViewModel(@Observable) → UseCase(Protocol) → Repository → DataSource
+                                    ↑
+                   DIContainer가 Protocol 구현체 주입
+```
+
+### 계층 원칙
+
+| 계층 | 역할 | 의존 방향 |
+|------|------|-----------|
+| **Presentation** | View(UI 렌더링), ViewModel(상태 관리) | → Domain |
+| **Domain** | UseCase(비즈니스 로직), Model(Entity) | ← Data (역전) |
+| **Data** | Repository 구현체, DataSource(API/Local) | Domain Protocol 구현 |
+
+- **Protocol 기반 주입**: DIContainer가 런타임에 구현체 결정
+- **SOLID 원칙** 준수: SRP, OCP, LSP, ISP, DIP 모두 적용
+
+### Feature 폴더 구조
+
+```
+Features/{Feature}/
+├── Presentation/
+│   ├── Views/           # SwiftUI View
+│   ├── ViewModels/      # @Observable ViewModel
+│   ├── Components/      # Feature 전용 컴포넌트
+│   └── Enum/            # Presentation 전용 Enum
+├── Domain/
+│   ├── UseCases/        # Protocol + Implementations/
+│   ├── Models/          # Entity
+│   └── Interfaces/      # Repository Protocol
+└── Data/
+    ├── Repositories/    # Repository 구현체
+    ├── Router/          # Moya API Router
+    └── DTOs/            # Data Transfer Objects
+```
+
+### 핵심 패턴
+
+| 패턴 | 설명 |
+|------|------|
+| **@Observable ViewModel** | `@StateObject`/`@Published` 대신 `@Observable` 매크로 사용 |
+| **Loadable** | `idle → loading → loaded(T) / failed(AppError)` 비동기 상태 관리 |
+| **ErrorHandler** | 세션 만료, 네트워크 오류 등 전역 Alert 에러 처리 |
+| **AlertPrompt** | 파괴적 작업(삭제 등) 전 확인 다이얼로그 |
+| **DIContainer** | Protocol 기반 의존성 주입, `resolve()` 시 캐싱 |
+| **Hierarchical Router** | AppRouter(모듈 간) + Feature Router(내부 화면) |
+
+<br>
+
+## 🎨 디자인 시스템
+
+- **Liquid Glass** (iOS 26) 지원: `GlassEffectContainer` 그룹화, `glassEffectID` 최소 사용
+- **토큰 정의**: `DefaultConstant.swift`, `DefaultSpacing.swift`
+- **Shape**: `ConcentricRectangle` 기반 (디바이스별 일관성)
+
+| Glass Variant | 용도 |
+|---------------|------|
+| `.regular` | 일반 카드, 폼 |
+| `.regular.interactive()` | 탭 가능 요소 |
+| `.clear` | 미디어/색상 배경 위 |
+| `.glassProminent` (ButtonStyle) | Primary 버튼 |
+| `.glass` (ButtonStyle) | Secondary 버튼 |
+
+<br>
+
 ## 📱 화면 구성
 <table>
   <tr>
@@ -96,7 +168,7 @@ Swift 6.2
     <td>
       사진 넣어주세요
     </td>
-   
+
   </tr>
 </table>
 
@@ -130,12 +202,51 @@ xcodebuild -project AppProduct/AppProduct.xcodeproj \
 
 <br>
 
+## 📂 프로젝트 구조
+
+```
+AppProduct/AppProduct/
+├── App/                       # AppDelegate, App Entry Point
+├── Core/
+│   ├── Alert/                 # AlertPrompt 확인 다이얼로그
+│   ├── Common/
+│   │   ├── DesignSystem/      # 디자인 토큰, 스타일
+│   │   ├── Error/             # Loadable, ErrorHandler, AppError
+│   │   └── UIComponents/      # 공용 UI 컴포넌트
+│   ├── DIContainer/           # 의존성 주입 컨테이너
+│   ├── Manager/               # 인증, 위치 등 시스템 매니저
+│   ├── Navigation/            # AppRouter, NavigationDestination
+│   ├── NetworkAdapter/        # Moya 기반 네트워크 클라이언트
+│   └── Services/              # 공용 서비스
+└── Features/
+    ├── Activity/              # 출석, 스터디 관리
+    ├── Auth/                  # 로그인, 회원가입, OAuth 연동
+    ├── Community/             # 커뮤니티, 명예의전당
+    ├── Home/                  # 홈 대시보드, 일정 관리
+    ├── MyPage/                # 마이페이지, 프로필
+    ├── Notice/                # 공지사항
+    ├── Splash/                # 스플래시 화면
+    └── Tab/                   # 탭 네비게이션
+```
+
+<br>
+
 ## 🧾 Git / PR 규칙
 
 ### 커밋 메시지
 
-- 형식: `feat: 작업 내용`
+- 형식: `TYPE 작업 내용`
 - 본문: 상세 설명 2줄 이상 필수
+
+| Type | 용도 |
+|------|------|
+| `feat` | 새 기능 |
+| `fix` | 버그 수정 |
+| `refactor` | 리팩토링 |
+| `docs` | 문서 |
+| `chore` | 기타 |
+| `test` | 테스트 |
+| `design` | UI/디자인 시스템 |
 
 예시:
 
@@ -145,6 +256,14 @@ feat: 일정 상세 수정 API 연동
 - 수정 모드에서 확인 버튼 액션을 updateSchedule 호출로 연결했습니다.
 - API 완료 전 화면이 닫히지 않도록 처리하고 로딩 상태를 분리했습니다.
 ```
+
+### 브랜치 전략
+
+Git Flow + **연속 브랜치 파생** 지원
+
+- **연속 브랜치**: feature에서 다음 feature 파생 가능 (티켓 단위 분리)
+- **PR 대기 중 작업**: 승인 대기 중 이전 브랜치에서 다음 브랜치 생성 가능
+- **동기화**: develop에서 merge 대신 `fetch + rebase` 사용
 
 ### PR
 
