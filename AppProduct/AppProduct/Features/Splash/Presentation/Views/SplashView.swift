@@ -21,10 +21,14 @@ struct SplashView: View {
     // MARK: - Init
 
     init(
-        networkClient: NetworkClient
+        networkClient: NetworkClient,
+        fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol
     ) {
         self._viewModel = .init(
-            wrappedValue: SplashViewModel(networkClient: networkClient)
+            wrappedValue: SplashViewModel(
+                networkClient: networkClient,
+                fetchMyProfileUseCase: fetchMyProfileUseCase
+            )
         )
     }
 
@@ -37,9 +41,12 @@ struct SplashView: View {
             }
             .onChange(of: viewModel.isCheckComplete) { _, isComplete in
                 if isComplete {
-                    if viewModel.isLoggedIn {
+                    switch viewModel.authStatus {
+                    case .approved:
                         appFlow.showMain()
-                    } else {
+                    case .pendingApproval:
+                        appFlow.showPendingApproval()
+                    case .notLoggedIn:
                         appFlow.showLogin()
                     }
                 }
