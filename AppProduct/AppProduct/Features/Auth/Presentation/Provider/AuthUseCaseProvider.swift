@@ -21,6 +21,8 @@ protocol AuthUseCaseProviding {
     var verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol { get }
     /// 회원가입 UseCase
     var registerUseCase: RegisterUseCaseProtocol { get }
+    /// 기존 챌린저 인증 코드 등록 UseCase
+    var registerExistingChallengerUseCase: RegisterExistingChallengerUseCaseProtocol { get }
     /// 회원가입 데이터 조회 UseCase
     var fetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol { get }
 }
@@ -38,6 +40,7 @@ final class AuthUseCaseProvider: AuthUseCaseProviding {
     let sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol
     let verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol
     let registerUseCase: RegisterUseCaseProtocol
+    let registerExistingChallengerUseCase: RegisterExistingChallengerUseCaseProtocol
     let fetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol
 
     // MARK: - Init
@@ -65,6 +68,9 @@ final class AuthUseCaseProvider: AuthUseCaseProviding {
             repository: repository
         )
         self.registerUseCase = RegisterUseCase(
+            repository: repository
+        )
+        self.registerExistingChallengerUseCase = RegisterExistingChallengerUseCase(
             repository: repository
         )
         self.fetchSignUpDataUseCase = FetchSignUpDataUseCase(

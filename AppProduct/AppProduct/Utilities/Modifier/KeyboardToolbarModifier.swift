@@ -25,8 +25,8 @@ struct KeyboardToolbarModifier<Field: Hashable & CaseIterable>: ViewModifier {
     }
     
     private var bottomToolbar: some View {
-        GlassEffectContainer(spacing: 10, content: {
-            HStack(spacing: .zero, content: {
+        GlassEffectContainer(content: {
+            HStack(content: {
                 toolBarButton(action: {
                     moveToPreviousField()
                 }, image: "chevron.up")

@@ -58,6 +58,9 @@ struct FormEmailField: View {
 
     /// 키보드 완료 시 실행될 클로저
     var onSubmit: (() -> Void)?
+    
+    /// 이메일 텍스트가 변경될 때 실행될 클로저
+    var onEmailChanged: (() -> Void)? = nil
 
     /// 이메일 형식 오류 표시 여부
     @State private var showError: Bool = false
@@ -170,6 +173,8 @@ struct FormEmailField: View {
                     if showError {
                         showError = false
                     }
+                    resetVerificationStateForEmailChange()
+                    onEmailChanged?()
                 }
 
             Spacer()
@@ -316,5 +321,15 @@ extension FormEmailField {
             // 처리 중이거나 실패 상태
             break
         }
+    }
+
+    /// 이메일 변경 시 인증 상태를 초기화합니다.
+    ///
+    /// 인증 요청 이후 이메일이 수정되면 이전 인증번호/성공 상태는 더 이상 유효하지 않으므로
+    /// 초기 상태로 되돌려 재인증을 유도합니다.
+    private func resetVerificationStateForEmailChange() {
+        guard verificationState != .initial else { return }
+        verificationCode = ""
+        verificationState = .initial
     }
 }
