@@ -124,6 +124,10 @@ final class NoticeViewModel {
     }
     
     /// 기수 목록 조회
+    /// - Note: **[문제 1: 기수 목록 메뉴 안 열림]**
+    ///   - genRepository.fetchGenGisuIdPairs()가 실패하면 generations가 빈 배열이 됨
+    ///   - 빈 배열이면 기수 선택 메뉴가 표시되지 않을 수 있음
+    ///   - catch 블록에서 에러를 로깅하거나 errorHandler로 전달 필요
     func fetchGisuList() {
         do {
             gisuPairs = try genRepository.fetchGenGisuIdPairs()
@@ -140,11 +144,17 @@ final class NoticeViewModel {
                 if generationStates[latestGen.value] == nil {
                     generationStates[latestGen.value] = GenerationFilterState()
                 }
+
+                // ✅ [해결방법] 여기서 fetchNotices() 호출 필요
+                // Task {
+                //     await fetchNotices()
+                // }
             }
         } catch {
-            // 오류 발생 시 빈 배열
+            // ⚠️ [문제 1] 오류 발생 시 빈 배열 - 사용자에게 알림 필요
             gisuPairs = []
             generations = []
+            // errorHandler?.handle(error, context: ...) 추가 권장
         }
     }
     
@@ -200,19 +210,27 @@ final class NoticeViewModel {
     // MARK: - API Methods
     
     /// 공지사항 목록 조회
+    /// - Note: **[문제 2: 무한로딩]**
+    ///   - NoticeView의 .task에서 이 메서드가 호출되지 않음!
+    ///   - fetchGisuList()만 호출되고 fetchNotices()는 호출 안 됨
+    ///   - 결과: noticeItems가 .idle 또는 .loading 상태로 유지되어 무한 로딩
+    ///
+    /// - Note: **[문제 4: 이미지 API]**
+    ///   - NoticeDTO.toItemModel()에서 이미지 URL 변환 확인 필요
+    ///   - response.content의 이미지 데이터가 올바른지 확인
     @MainActor
     func fetchNotices(page: Int = 0) async {
         noticeItems = .loading
         currentPage = page
-        
+
         do {
             let request = buildNoticeListRequest(page: page)
             let response = try await noticeUseCase.getAllNotices(request: request)
             let items = response.content.map { $0.toItemModel() }
-            
+
             hasNextPage = response.hasNext
             noticeItems = .loaded(items)
-            
+
         } catch let error as DomainError {
             noticeItems = .failed(.domain(error))
         } catch let error as NetworkError {

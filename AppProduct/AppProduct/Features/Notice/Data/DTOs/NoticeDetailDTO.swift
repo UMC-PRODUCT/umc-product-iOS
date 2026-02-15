@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// 공지 상세화면 DTO
 struct NoticeDetailDTO: Codable {
     let id: Int
     let title: String

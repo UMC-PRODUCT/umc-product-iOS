@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// 공지 리스트카드 DTO
 struct NoticeDTO: Codable {
     let id: Int
     let title: String

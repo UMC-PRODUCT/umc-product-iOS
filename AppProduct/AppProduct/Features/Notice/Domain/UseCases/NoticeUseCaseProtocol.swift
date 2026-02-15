@@ -113,17 +113,38 @@ protocol NoticeUseCaseProtocol {
     ) async throws -> NoticeDetail
     
     // MARK: - 공지 조회 (GET)
-    
-    /// 공지사항 전체 조회
+
+    /// 공지사항 전체 조회 (페이징)
+    /// - Parameter request: 조회 조건 (기수ID, 지부/학교/파트 필터, 페이지 정보)
+    ///   - `gisuId`: 조회할 기수 ID
+    ///   - `chapterId`: 지부 ID (선택)
+    ///   - `schoolId`: 학교 ID (선택)
+    ///   - `part`: 파트 타입 (선택)
+    ///   - `page`: 페이지 번호 (0부터 시작)
+    ///   - `size`: 페이지 크기
+    ///   - `sort`: 정렬 조건 (예: ["createdAt,DESC"])
+    /// - Returns: 공지사항 목록 페이지 (content: 공지 배열, hasNext: 다음 페이지 존재 여부)
+    /// - Note: **[문제 2: 무한로딩]** 이 메서드가 실패하면 NoticeViewModel에서 무한 로딩 발생 가능
     func getAllNotices(request: NoticeListRequestDTO) async throws -> PageDTO<NoticeDTO>
-    
+
     /// 공지사항 상세 조회
+    /// - Parameter noticeId: 조회할 공지 ID
+    /// - Returns: 공지 상세 정보 (제목, 내용, 작성자, 링크, 이미지, 투표 정보 포함)
     func getDetailNotice(noticeId: Int) async throws -> NoticeDetail
-    
+
     /// 공지 열람 통계 조회
+    /// - Parameter noticeId: 통계를 조회할 공지 ID
+    /// - Returns: 열람 통계 정보 (총 대상자 수, 읽음/안읽음 수)
     func getReadStatics(noticeId: Int) async throws -> NoticeReadStaticsDTO
-    
-    /// 공지 열람 현황 상세 조회
+
+    /// 공지 열람 현황 상세 조회 (커서 기반 페이징)
+    /// - Parameters:
+    ///   - noticeId: 조회할 공지 ID
+    ///   - cursorId: 커서 ID (다음 페이지 조회 시 사용, 첫 조회는 0)
+    ///   - filterType: 필터 타입 ("ORGANIZATION", "SCHOOL" 등)
+    ///   - organizationIds: 필터링할 지부 ID 목록
+    ///   - status: 읽음 상태 ("READ", "UNREAD", "ALL")
+    /// - Returns: 열람 현황 목록 (사용자별 읽음 상태, 다음 커서 ID)
     func getReadStatusList(
         noticeId: Int,
         cursorId: Int,

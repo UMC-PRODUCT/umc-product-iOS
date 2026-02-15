@@ -52,7 +52,6 @@ final class StorageRepository: StorageRepositoryProtocol {
         request.httpMethod = method
         request.httpBody = data
 
-        // 헤더 추가
         headers?.forEach { key, value in
             request.setValue(value, forHTTPHeaderField: key)
         }
