@@ -19,6 +19,7 @@ struct UmcTab: View {
     @State var isShowMyPage: Bool = false
     @Environment(\.di) var di
     @Environment(ErrorHandler.self) var errorHandler
+    @AppStorage(AppStorageKey.memberRole) private var memberRole: ManagementTeam = .challenger
 
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
@@ -78,6 +79,11 @@ struct UmcTab: View {
     ///
     /// Activity 탭에서는 Admin 권한이 있는 경우에만 Accessory를 표시합니다.
     private func shouldShowAccessory() -> Bool {
+        // 챌린저는 공지 탭에서만 Bottom Accessory를 노출하지 않음
+        if tabCase == .notice && memberRole == .challenger {
+            return false
+        }
+
         // MyPage 탭에서는 항상 Accessory 숨김
         if tabCase == .mypage {
             return false
