@@ -1,17 +1,13 @@
 //
-//  NoticeStorageRepositoryProtocol.swift
+//  StorageRepositoryProtocol.swift
 //  AppProduct
 //
-//  Created by 이예지 on 2/15/26.
+//  Created by Codex on 2/16/26.
 //
 
 import Foundation
 
-/// 공지사항 파일 저장소 Repository 인터페이스
-///
-/// Presigned URL 기반 파일 업로드/삭제 기능을 정의합니다.
-protocol NoticeStorageRepositoryProtocol {
-    /// 파일 업로드 준비
+protocol StorageRepositoryProtocol: Sendable {
     func prepareUpload(
         fileName: String,
         contentType: String,
@@ -19,7 +15,6 @@ protocol NoticeStorageRepositoryProtocol {
         category: StorageFileCategory
     ) async throws -> StoragePrepareUploadResponseDTO
 
-    /// Presigned URL로 파일 업로드
     func uploadFile(
         to url: String,
         data: Data,
@@ -28,9 +23,7 @@ protocol NoticeStorageRepositoryProtocol {
         contentType: String?
     ) async throws
 
-    /// 파일 업로드 완료 확인
     func confirmUpload(fileId: String) async throws
 
-    /// 파일 삭제
     func deleteFile(fileId: String) async throws
 }
