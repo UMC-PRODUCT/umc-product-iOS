@@ -176,14 +176,19 @@ private extension CommunityViewModel {
         
         do {
             let (newItems, nextPageExists) = try await useCaseProvider.fetchCommunityItemsUseCase.execute(query: query)
-            
-            guard case .loaded(var existingItems) = items else { return }
+
+            guard case .loaded(var existingItems) = items else {
+                isLoadingMore = false
+                return
+            }
             existingItems.append(contentsOf: newItems)
             items = .loaded(existingItems)
             currentPage = nextPage
             hasNext = nextPageExists
+            isLoadingMore = false
         } catch {
-            
+            isLoadingMore = false
+            print("[Community] pagination failed: \(error)")
         }
     }
 }
