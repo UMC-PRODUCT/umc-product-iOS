@@ -25,7 +25,7 @@ enum FollowType: String, CaseIterable {
         case .instagram:
             return "https://www.instagram.com/uni_makeus_challenge/"
         case .webSite:
-            return "https://umc.makeus.in"
+            return "https://umc.it.kr"
         }
     }
 

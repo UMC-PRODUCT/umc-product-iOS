@@ -106,11 +106,13 @@ private extension NavigationRoutingView {
         switch route {
         case .myInfo(let profileData):
             MyPageProfileView(container: di, profileData: profileData)
+        case .myActivePosts(let type):
+            MyActivePostsView(container: di, logType: type)
         }
     }
 
-    @ViewBuilder
     /// 활동(Activity) 관련 피처의 화면들을 생성합니다.
+    @ViewBuilder
     func activityView(
         _ route: NavigationDestination.Activity
     ) -> some View {

@@ -26,6 +26,14 @@ class MyPageViewModel {
     /// 애플 소셜 로그인 매니저 (연동 시 authorization code 발급용)
     private let appleLoginManager = AppleLoginManager()
 
+    // MARK: - Init
+
+    init() {}
+
+    init(previewProfileData: ProfileData) {
+        self.profileData = .loaded(previewProfileData)
+    }
+
     // MARK: - Function
 
     /// 내 프로필을 조회합니다.
@@ -117,6 +125,13 @@ class MyPageViewModel {
             profile.socialConnected = connected
             profileData = .loaded(profile)
         }
+    }
+
+    /// 회원 탈퇴를 수행합니다.
+    @MainActor
+    func deleteMember(container: DIContainer) async throws {
+        let provider = container.resolve(MyPageUseCaseProviding.self)
+        try await provider.deleteMemberUseCase.execute()
     }
 
     // MARK: - Private Function
