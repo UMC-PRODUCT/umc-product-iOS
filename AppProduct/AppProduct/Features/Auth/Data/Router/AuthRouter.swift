@@ -10,7 +10,7 @@ import Moya
 internal import Alamofire
 
 /// Auth 관련 API 엔드포인트 정의
-enum AuthAPI: BaseTargetType {
+enum AuthRouter: BaseTargetType {
 
     // MARK: - Cases
 

@@ -57,6 +57,15 @@ final class SplashViewModel {
             return .notLoggedIn
         }
 
+        // 앱 시작 시 토큰을 선행 갱신하여 이후 API 실패 가능성을 줄입니다.
+        do {
+            _ = try await networkClient.forceRefreshToken()
+        } catch {
+            // 리프레시 만료/실패 시 인증 상태를 정리하고 로그인 화면으로 보냅니다.
+            try? await networkClient.logout()
+            return .notLoggedIn
+        }
+
         do {
             let profile = try await fetchMyProfileUseCase.execute()
             return profile.generations.isEmpty ? .pendingApproval : .approved

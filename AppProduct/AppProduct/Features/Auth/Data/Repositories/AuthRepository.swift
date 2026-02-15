@@ -36,7 +36,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         email: String
     ) async throws -> OAuthLoginResult {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.loginKakao(accessToken: accessToken, email: email)
+            AuthRouter.loginKakao(accessToken: accessToken, email: email)
         )
         #if DEBUG
         if let json = String(data: response.data, encoding: .utf8) {
@@ -54,7 +54,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         authorizationCode: String
     ) async throws -> OAuthLoginResult {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.loginApple(authorizationCode: authorizationCode)
+            AuthRouter.loginApple(authorizationCode: authorizationCode)
         )
         #if DEBUG
         if let json = String(data: response.data, encoding: .utf8) {
@@ -72,7 +72,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         refreshToken: String
     ) async throws -> TokenPair {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.renewToken(refreshToken: refreshToken)
+            AuthRouter.renewToken(refreshToken: refreshToken)
         )
         let apiResponse = try decoder.decode(
             APIResponse<TokenRenewResponseDTO>.self,
@@ -82,7 +82,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
     }
 
     func getMyOAuth() async throws -> [MemberOAuth] {
-        let response = try await adapter.request(AuthAPI.getMyOAuth)
+        let response = try await adapter.request(AuthRouter.getMyOAuth)
         let apiResponse = try decoder.decode(
             APIResponse<[MemberOAuthDTO]>.self,
             from: response.data
@@ -98,7 +98,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         oAuthVerificationToken: String
     ) async throws -> [MemberOAuth] {
         let response = try await adapter.request(
-            AuthAPI.addMemberOAuth(
+            AuthRouter.addMemberOAuth(
                 oAuthVerificationToken: oAuthVerificationToken
             )
         )
@@ -113,7 +113,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         email: String
     ) async throws -> String {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.sendEmailVerification(email: email)
+            AuthRouter.sendEmailVerification(email: email)
         )
         let apiResponse = try decoder.decode(
             APIResponse<EmailVerificationResponseDTO>.self,
@@ -127,7 +127,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         verificationCode: String
     ) async throws -> String {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.verifyEmailCode(
+            AuthRouter.verifyEmailCode(
                 emailVerificationId: emailVerificationId,
                 verificationCode: verificationCode
             )
@@ -144,7 +144,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
     ) async throws -> Int {
         do {
             let response = try await adapter.requestWithoutAuth(
-                AuthAPI.register(body: request)
+                AuthRouter.register(body: request)
             )
             let apiResponse = try decoder.decode(
                 APIResponse<RegisterResponseDTO>.self,
@@ -174,7 +174,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
 
     func getSchools() async throws -> [School] {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.getSchools
+            AuthRouter.getSchools
         )
         let apiResponse = try decoder.decode(
             APIResponse<SchoolListResponseDTO>.self,
@@ -187,7 +187,7 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         termsType: String
     ) async throws -> Terms {
         let response = try await adapter.requestWithoutAuth(
-            AuthAPI.getTerms(termsType: termsType)
+            AuthRouter.getTerms(termsType: termsType)
         )
         let apiResponse = try decoder.decode(
             APIResponse<TermsDTO>.self,

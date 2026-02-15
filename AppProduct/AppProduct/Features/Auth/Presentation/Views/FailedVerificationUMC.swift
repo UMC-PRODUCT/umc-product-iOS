@@ -20,7 +20,6 @@ struct FailedVerificationUMC: View {
 
     /// URL을 외부 브라우저로 여는 환경 값
     @Environment(\.openURL) private var openURL
-    @Environment(\.appFlow) private var appFlow
 
     /// 카카오톡 채널 연동 매니저
     let kakaoPlusManager: KakaoPlusManager = .init()
@@ -71,12 +70,6 @@ struct FailedVerificationUMC: View {
             })
             .buttonStyle(.glassProminent)
             .tint(.indigo500)
-
-            Button("다시 로그인") {
-                appFlow.showLogin()
-            }
-            .appFont(.callout, color: .grey700)
-            .padding(.top, DefaultSpacing.spacing12)
         }
         .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .safeAreaInset(edge: .bottom, content: {
