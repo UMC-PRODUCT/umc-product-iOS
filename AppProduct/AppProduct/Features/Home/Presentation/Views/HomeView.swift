@@ -29,16 +29,32 @@ struct HomeView: View {
     /// 캘린더의 현재 표시 중인 월 (기본값: 현재 월)
     @State var currentMonth: Date = .init()
 
+    /// 섹션별 재시도 로딩 상태
+    @State private var isRetryingProfileSection: Bool = false
+    @State private var isRetryingRecentNoticeSection: Bool = false
+
     /// Path Store
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
+
+    /// 화면 진입 시 초기 데이터 로딩 수행 여부
+    private let shouldFetchOnTask: Bool
     
     // MARK: - Init
-    init(container: DIContainer) {
+    init(
+        container: DIContainer,
+        viewModel: HomeViewModel? = nil,
+        selectedDate: Date = .init(),
+        currentMonth: Date = .init(),
+        shouldFetchOnTask: Bool = true
+    ) {
         _viewModel = State(
-            initialValue: HomeViewModel(container: container)
+            initialValue: viewModel ?? HomeViewModel(container: container)
         )
+        _selectedDate = State(initialValue: selectedDate)
+        _currentMonth = State(initialValue: currentMonth)
+        self.shouldFetchOnTask = shouldFetchOnTask
     }
     
     // MARK: - Constants
@@ -53,6 +69,7 @@ struct HomeView: View {
         
         /// 스크롤 위치 식별자 ID
         static let scrollId: String = "scroll"
+
     }
     
     // MARK: - Body
@@ -84,6 +101,13 @@ struct HomeView: View {
             }
             // 화면 진입 시 홈 화면에 필요한 모든 데이터를 한 번에 로드합니다.
             .task {
+                #if DEBUG
+                if let debugState = HomeDebugState.fromLaunchArgument() {
+                    debugState.apply(to: viewModel, selectedDate: selectedDate)
+                    return
+                }
+                #endif
+                guard shouldFetchOnTask else { return }
                 await viewModel.fetchAll()
             }
         }
@@ -95,12 +119,18 @@ struct HomeView: View {
     @ViewBuilder
     private var seasonCard: some View {
         switch viewModel.seasonData {
+        case .loading where isRetryingProfileSection:
+            SectionErrorCard(content: .seasonInfo, isLoading: true) {
+                Task { await retryProfileSection() }
+            }
         case .idle, .loading:
             LoadingView(.home(.seasonLoading))
         case .loaded(let seasonData):
             seasonLoaded(seasonData)
         case .failed:
-            Color.clear
+            SectionErrorCard(content: .seasonInfo, isLoading: isRetryingProfileSection) {
+                Task { await retryProfileSection() }
+            }
         }
     }
     
@@ -119,12 +149,18 @@ struct HomeView: View {
     @ViewBuilder
     private var generations: some View {
         switch viewModel.generationData {
+        case .loading where isRetryingProfileSection:
+            SectionErrorCard(content: .penaltyInfo, isLoading: true) {
+                Task { await retryProfileSection() }
+            }
         case .idle, .loading:
             LoadingView(.home(.penaltyLoading))
         case .loaded(let generation):
             generationLoaded(generation)
         case .failed:
-            Color.clear
+            SectionErrorCard(content: .penaltyInfo, isLoading: isRetryingProfileSection) {
+                Task { await retryProfileSection() }
+            }
         }
     }
     
@@ -218,13 +254,40 @@ struct HomeView: View {
     @ViewBuilder
     private var sectionContent: some View {
         switch viewModel.recentNoticeData {
+        case .loading where isRetryingRecentNoticeSection:
+            SectionErrorCard(content: .recentNotice, isLoading: true) {
+                Task { await retryRecentNoticeSection() }
+            }
         case .idle, .loading:
             LoadingView(.home(.recentNoticeLoading))
         case .loaded(let recentNoticeData):
             recentView(recentNoticeData)
         case .failed:
-            Color.clear
+            SectionErrorCard(content: .recentNotice, isLoading: isRetryingRecentNoticeSection) {
+                Task { await retryRecentNoticeSection() }
+            }
         }
+    }
+
+    /// 프로필 섹션(기수 카드 + 패널티) 재시도
+    @MainActor
+    private func retryProfileSection() async {
+        guard !isRetryingProfileSection else { return }
+        isRetryingProfileSection = true
+        defer { isRetryingProfileSection = false }
+        await viewModel.fetchProfile()
+    }
+
+    /// 최근 공지 섹션 재시도 (역할 정보 없으면 프로필부터 재조회)
+    @MainActor
+    private func retryRecentNoticeSection() async {
+        guard !isRetryingRecentNoticeSection else { return }
+        isRetryingRecentNoticeSection = true
+        defer { isRetryingRecentNoticeSection = false }
+        if viewModel.roles.isEmpty {
+            await viewModel.fetchProfile()
+        }
+        await viewModel.fetchRecentNotices()
     }
     
     /// 로드된 최근 공지 데이터를 표시하는 리스트 뷰
@@ -256,13 +319,4 @@ private struct ScheduleCardPressStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.92 : 1.0)
             .animation(.spring(response: 0.22, dampingFraction: 0.8), value: configuration.isPressed)
     }
-}
-
-#Preview {
-    @Previewable @Environment(\.di) var di
-    NavigationStack {
-        HomeView(container: di)
-    }
-    .environment(DIContainer())
-    .environment(ErrorHandler())
 }

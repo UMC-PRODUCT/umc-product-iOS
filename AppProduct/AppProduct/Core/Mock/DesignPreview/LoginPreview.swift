@@ -104,10 +104,24 @@ private struct PreviewFetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol {
 }
 
 #Preview("홈") {
-    @Previewable @Environment(\.di) var di
-    NavigationStack {
-        HomeView(container: di)
+    LoginHomePreviewView()
+}
+
+/// 홈 화면 Preview용 래퍼 뷰 (PathStore 포함 DIContainer 구성)
+private struct LoginHomePreviewView: View {
+    private let di: DIContainer
+
+    init() {
+        let container = DIContainer()
+        container.register(PathStore.self) { PathStore() }
+        self.di = container
     }
-    .environment(DIContainer())
-    .environment(ErrorHandler())
+
+    var body: some View {
+        NavigationStack {
+            HomeView(container: di, shouldFetchOnTask: false)
+        }
+        .environment(di)
+        .environment(ErrorHandler())
+    }
 }
