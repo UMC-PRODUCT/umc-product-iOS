@@ -11,13 +11,31 @@ import Foundation
 ///
 /// 세션별 출석 현황과 승인 대기 멤버 목록을 관리합니다.
 struct OperatorSessionAttendance: Identifiable, Equatable {
-    let id: UUID = .init()
+    let id: UUID
     let serverID: String?
     let session: Session
     let attendanceRate: Double
     let attendedCount: Int
     let totalCount: Int
     let pendingMembers: [OperatorPendingMember]
+
+    init(
+        id: UUID = UUID(),
+        serverID: String? = nil,
+        session: Session,
+        attendanceRate: Double,
+        attendedCount: Int,
+        totalCount: Int,
+        pendingMembers: [OperatorPendingMember]
+    ) {
+        self.id = id
+        self.serverID = serverID
+        self.session = session
+        self.attendanceRate = attendanceRate
+        self.attendedCount = attendedCount
+        self.totalCount = totalCount
+        self.pendingMembers = pendingMembers
+    }
 
     var pendingCount: Int {
         pendingMembers.count
@@ -50,6 +68,7 @@ extension OperatorSessionAttendance {
             : 0.0
 
         return OperatorSessionAttendance(
+            id: self.id,
             serverID: self.serverID,
             session: self.session,
             attendanceRate: newAttendanceRate,

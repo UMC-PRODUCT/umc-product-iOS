@@ -202,6 +202,20 @@ final class OperatorAttendanceViewModel {
         )
     }
 
+    /// 확인 없이 즉시 출석 승인 (사유 확인 AlertPrompt에서 호출)
+    func approveDirectly(member: OperatorPendingMember, sessionId: UUID) {
+        Task {
+            await approveAttendance(memberId: member.id, sessionId: sessionId)
+        }
+    }
+
+    /// 확인 없이 즉시 출석 반려 (사유 확인 AlertPrompt에서 호출)
+    func rejectDirectly(member: OperatorPendingMember, sessionId: UUID) {
+        Task {
+            await rejectAttendance(memberId: member.id, sessionId: sessionId)
+        }
+    }
+
     // MARK: - Private Action
 
     @MainActor
@@ -212,7 +226,11 @@ final class OperatorAttendanceViewModel {
         // try await useCase.approveAttendance(attendanceId: AttendanceID(value: memberId))
 
         // Mock: 해당 멤버 제거
-        updateSessionByRemovingMember(memberId: memberId, sessionId: sessionId)
+        updateSessionByRemovingMember(
+            memberId: memberId,
+            sessionId: sessionId,
+            isApproval: true
+        )
     }
 
     @MainActor
@@ -223,7 +241,11 @@ final class OperatorAttendanceViewModel {
         // try await useCase.rejectAttendance(attendanceId: AttendanceID(value: memberId), reason: "")
 
         // Mock: 해당 멤버 제거
-        updateSessionByRemovingMember(memberId: memberId, sessionId: sessionId)
+        updateSessionByRemovingMember(
+            memberId: memberId,
+            sessionId: sessionId,
+            isApproval: false
+        )
     }
 
     @MainActor
@@ -288,13 +310,19 @@ final class OperatorAttendanceViewModel {
 
     // MARK: - Helper
 
-    private func updateSessionByRemovingMember(memberId: UUID, sessionId: UUID) {
+    private func updateSessionByRemovingMember(
+        memberId: UUID,
+        sessionId: UUID,
+        isApproval: Bool
+    ) {
         guard case .loaded(var sessions) = sessionsState else { return }
 
         if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
             let updatedMembers = sessions[index].pendingMembers.filter { $0.id != memberId }
             sessions[index] = sessions[index].copyWith(
-                attendedCount: sessions[index].attendedCount + 1,
+                attendedCount: isApproval
+                    ? sessions[index].attendedCount + 1
+                    : sessions[index].attendedCount,
                 pendingMembers: updatedMembers
             )
             sessionsState = .loaded(sessions)
