@@ -25,6 +25,9 @@ struct MemberManagementItem: Identifiable, Equatable {
     /// 멤버 이름
     let name: String
     
+    /// 멤버 닉네임
+    let nickname: String
+    
     /// 기수 정보 (예: "9기")
     let generation: String
     
@@ -32,7 +35,7 @@ struct MemberManagementItem: Identifiable, Equatable {
     let position: String
     
     /// 파트 정보 (iOS, Web 등)
-    let part: String
+    let part: UMCPartType
     
     /// 현재 누적 패널티 점수
     let penalty: Double
@@ -44,4 +47,9 @@ struct MemberManagementItem: Identifiable, Equatable {
     
     /// 운영진 직책 정보 (회장, 부회장 등)
     let managementTeam: ManagementTeam
+    
+    // 상세 시트 사용
+    
+    /// 출석/활동 기록 목록
+    let attendanceRecords: [MemberAttendanceRecord]
 }
