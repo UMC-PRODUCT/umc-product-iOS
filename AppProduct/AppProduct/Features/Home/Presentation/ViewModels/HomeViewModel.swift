@@ -17,8 +17,12 @@ final class HomeViewModel {
     // MARK: - Property
 
     private let container: DIContainer
-    private let useCaseProvider: HomeUseCaseProviding
-    private let genRepository: ChallengerGenRepositoryProtocol
+    private var useCaseProvider: HomeUseCaseProviding {
+        container.resolve(HomeUseCaseProviding.self)
+    }
+    private var genRepository: ChallengerGenRepositoryProtocol {
+        container.resolve(ChallengerGenRepositoryProtocol.self)
+    }
 
     /// 프로필에서 받은 역할 정보 (공지 API 호출 시 사용)
     private(set) var roles: [ChallengerRole] = []
@@ -46,8 +50,6 @@ final class HomeViewModel {
 
     init(container: DIContainer) {
         self.container = container
-        self.useCaseProvider = container.resolve(HomeUseCaseProviding.self)
-        self.genRepository = container.resolve(ChallengerGenRepositoryProtocol.self)
     }
 
     // MARK: - Function
@@ -189,4 +191,21 @@ final class HomeViewModel {
         let normalizedDate = calendar.startOfDay(for: date)
         return scheduleByDates[normalizedDate] ?? []
     }
+
+#if DEBUG
+    /// Preview/테스트 환경에서 ViewModel 상태를 직접 주입합니다.
+    func seedForDebugState(
+        seasonData: Loadable<[SeasonType]>,
+        generationData: Loadable<[GenerationData]>,
+        recentNoticeData: Loadable<[RecentNoticeData]>,
+        scheduleByDates: [Date: [ScheduleData]],
+        roles: [ChallengerRole] = []
+    ) {
+        self.seasonData = seasonData
+        self.generationData = generationData
+        self.recentNoticeData = recentNoticeData
+        self.scheduleByDates = scheduleByDates
+        self.roles = roles
+    }
+#endif
 }
