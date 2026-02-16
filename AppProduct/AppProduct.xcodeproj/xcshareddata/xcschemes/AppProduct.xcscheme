@@ -102,7 +102,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-noticeDebugState loadedCentral"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-noticeDebugState loadedBranch"
@@ -130,7 +130,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-appstorage-dummy-central"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-appstorage-dummy-chapter"
