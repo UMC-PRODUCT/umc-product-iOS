@@ -25,11 +25,6 @@ class CommunityViewModel {
     private var hasNext: Bool = true
     private let pageSize: Int = 10
     
-    /// 페이지네이션
-    private(set) var currentPage: Int = 0
-    private(set) var hasNext: Bool = true
-    private(set) var isLoadingMore: Bool = false
-    
     // MARK: - Computed Properties
     
     var filteredItems: [CommunityItemModel] {
@@ -152,43 +147,6 @@ private extension CommunityViewModel {
             items = .failed(error)
         } catch {
             items = .failed(.unknown(message: error.localizedDescription))
-        }
-    }
-    
-    @MainActor
-    func loadMoreIfNeeded(currentItem: CommunityItemModel) async {
-        guard case .loaded(let allItems) = items else { return }
-        
-        let thresholdIndex = allItems.index(allItems.endIndex, offsetBy: -5)
-        guard let itemIndex = allItems.firstIndex(where: { $0.id == currentItem.id }),
-              itemIndex >= thresholdIndex,
-              !isLoadingMore,
-              hasNext else { return }
-        
-        isLoadingMore = true
-        
-        let nextPage = currentPage + 1
-        let query = PostListQuery(
-            category: selectedMenu.toCategoryType(),
-            page: nextPage,
-            size: 10
-        )
-        
-        do {
-            let (newItems, nextPageExists) = try await useCaseProvider.fetchCommunityItemsUseCase.execute(query: query)
-
-            guard case .loaded(var existingItems) = items else {
-                isLoadingMore = false
-                return
-            }
-            existingItems.append(contentsOf: newItems)
-            items = .loaded(existingItems)
-            currentPage = nextPage
-            hasNext = nextPageExists
-            isLoadingMore = false
-        } catch {
-            isLoadingMore = false
-            print("[Community] pagination failed: \(error)")
         }
     }
 }
