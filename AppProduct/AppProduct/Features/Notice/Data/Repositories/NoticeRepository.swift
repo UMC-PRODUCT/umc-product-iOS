@@ -33,13 +33,10 @@ struct NoticeRepository: NoticeRepositoryProtocol {
         let response = try await adapter.request(NoticeRouter.postNotice(body: body))
         
         let apiResponse = try JSONDecoder().decode(
-            APIResponse<NoticeDTO>.self,
+            APIResponse<NoticeCreateResponseDTO>.self,
             from: response.data
         )
-        let noticeDTO = try apiResponse.unwrap()
-        guard let noticeId = Int(noticeDTO.id) else {
-            throw RepositoryError.decodingError(detail: "Invalid notice id: \(noticeDTO.id)")
-        }
+        let noticeId = try apiResponse.unwrap().noticeId
         
         if !links.isEmpty {
             _ = try await adapter.request(
@@ -48,9 +45,14 @@ struct NoticeRepository: NoticeRepositoryProtocol {
         }
         
         if !imageIds.isEmpty {
-            _ = try await adapter.request(
+            let imageResponse = try await adapter.request(
                 NoticeRouter.addImage(noticeId: noticeId, imageIds: imageIds)
             )
+            let imageApiResponse = try JSONDecoder().decode(
+                APIResponse<NoticeAddImagesResponseDTO>.self,
+                from: imageResponse.data
+            )
+            _ = try imageApiResponse.unwrap()
         }
         
         return try await getDetailNotice(noticeId: noticeId)
@@ -61,12 +63,12 @@ struct NoticeRepository: NoticeRepositoryProtocol {
         let response = try await adapter.request(NoticeRouter.postNotice(body: body))
         
         let apiResponse = try JSONDecoder().decode(
-            APIResponse<NoticeDTO>.self,
+            APIResponse<NoticeCreateResponseDTO>.self,
             from: response.data
         )
-        let noticeDTO = try apiResponse.unwrap()
-        
-        return noticeDTO.toItemModel()
+        let noticeId = try apiResponse.unwrap().noticeId
+        let detail = try await getDetailNotice(noticeId: noticeId)
+        return detail.toItemModel()
     }
     
     /// 공지사항 투표 추가
@@ -107,12 +109,12 @@ struct NoticeRepository: NoticeRepositoryProtocol {
         )
         
         let apiResponse = try JSONDecoder().decode(
-            APIResponse<NoticeDTO>.self,
+            APIResponse<NoticeAddImagesResponseDTO>.self,
             from: response.data
         )
-        let noticeDTO = try apiResponse.unwrap()
-        
-        return noticeDTO.toItemModel()
+        _ = try apiResponse.unwrap()
+        let detail = try await getDetailNotice(noticeId: noticeId)
+        return detail.toItemModel()
     }
     
     /// 공지사항 리마인더 발송
@@ -290,5 +292,26 @@ struct NoticeRepository: NoticeRepositoryProtocol {
             from: response.data
         )
         _ = try apiResponse.unwrap()
+    }
+}
+
+private extension NoticeDetail {
+    func toItemModel() -> NoticeItemModel {
+        NoticeItemModel(
+            noticeId: id,
+            generation: generation,
+            scope: scope,
+            category: category,
+            mustRead: isMustRead,
+            isAlert: false,
+            date: createdAt,
+            title: title,
+            content: content,
+            writer: authorName,
+            links: links,
+            images: images,
+            vote: vote,
+            viewCount: 0
+        )
     }
 }

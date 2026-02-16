@@ -10,6 +10,13 @@ import Foundation
 /// Notice 관련 모든 UseCase를 정의하는 Protocol
 protocol NoticeUseCaseProtocol {
     
+    // MARK: - 파일 업로드
+    
+    /// 공지 첨부 이미지를 업로드하고 파일 ID를 반환합니다.
+    /// - Parameter imageData: 업로드할 JPEG 바이너리 데이터
+    /// - Returns: 저장된 파일 ID
+    func uploadNoticeAttachmentImage(imageData: Data) async throws -> String
+    
     // MARK: - 공지 생성 (POST)
     
     /// 공지사항 완전 생성 (links, images 포함)
@@ -25,7 +32,7 @@ protocol NoticeUseCaseProtocol {
         title: String,
         content: String,
         shouldNotify: Bool,
-        targetInfo: [TargetInfoDTO],
+        targetInfo: TargetInfoDTO,
         links: [String],
         imageIds: [String]
     ) async throws -> NoticeDetail

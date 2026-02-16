@@ -34,6 +34,11 @@ final class NoticeViewModel {
     
     /// 선택된 기수
     private(set) var selectedGeneration: Generation = Generation(value: 9)
+
+    /// 공지 생성 진입 시 사용할 현재 선택 기수 ID
+    var selectedGisuIdForEditor: Int? {
+        currentSelectedGisuId()
+    }
     
     /// 기수별 필터 상태 저장소
     private var generationStates: [Int: GenerationFilterState] = [:]

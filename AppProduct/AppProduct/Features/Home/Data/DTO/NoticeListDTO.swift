@@ -153,6 +153,18 @@ struct TargetInfoDTO: Codable {
         self.targetParts = targetParts.map { [$0] }
     }
 
+    init(
+        targetGisuId: Int,
+        targetChapterId: Int?,
+        targetSchoolId: Int?,
+        targetParts: [UMCPartType]?
+    ) {
+        self.targetGisuId = targetGisuId
+        self.targetChapterId = targetChapterId
+        self.targetSchoolId = targetSchoolId
+        self.targetParts = targetParts
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.targetGisuId = try container.decodeIntFlexible(forKey: .targetGisuId)
