@@ -20,6 +20,8 @@ struct CommunityPostCard: View {
         static let contentPadding: EdgeInsets = .init(top: 8, leading: 0, bottom: 12, trailing: 0)
         static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
         static let tagPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
+        static let kakaoSize: CGSize = .init(width: 40, height: 40)
+        static let kakaoRadius: CGFloat = 8
     }
 
     // MARK: - Init
@@ -49,6 +51,10 @@ struct CommunityPostCard: View {
                 .appFont(.callout, color: .grey700)
                 .padding(Constant.contentPadding)
 
+            if model.category == .lighting {
+                openChatSection
+            }
+            
             buttonSection
         }
         .padding(Constant.mainPadding)
@@ -76,15 +82,7 @@ struct CommunityPostCard: View {
     private var profileSection: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             // 프로필 이미지
-            if model.profileImage != nil {
-                // !!! - url 이미지 처리
-                Image(systemName: "heart")
-            } else {
-                Text(model.userName.prefix(1))
-                    .appFont(.body, color: .grey500)
-                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
-                    .background(.grey100, in: Circle())
-            }
+            RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileSize)
 
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                 Text(model.userName)
@@ -93,6 +91,30 @@ struct CommunityPostCard: View {
                     .appFont(.footnote, color: .grey500)
             }
         }
+    }
+    
+    private var openChatSection: some View {
+        Button(action: {
+            // TODO: 오픈채팅 이동
+        }) {
+            HStack(spacing: DefaultSpacing.spacing16) {
+                Image(.kakaoIcon)
+                    .resizable()
+                    .frame(width: Constant.kakaoSize.width, height: Constant.kakaoSize.height)
+                    .clipShape(RoundedRectangle(cornerRadius: Constant.kakaoRadius))
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                    Text("오픈채팅방으로 이동")
+                        .appFont(.subheadlineEmphasis, color: .black)
+                    Text("참여 전 소통하기")
+                        .appFont(.footnote, color: .grey500)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.grey500)
+            }
+            .padding(Constant.buttonPadding)
+        }
+        .buttonStyle(.glass)
     }
 
     private var buttonSection: some View {
@@ -128,4 +150,8 @@ struct CommunityPostCard: View {
         .appFont(.subheadline, color: type.foregroundColor)
         .glassEffect(.clear.tint(type.backgroundColor).interactive())
     }
+}
+
+#Preview {
+    CommunityPostCard(model: .init(postId: 1, userId: 1, category: .free, title: "제목", content: "내용", profileImage: nil, userName: "이름", part: .front(type: .ios), createdAt: Date(), likeCount: 0, commentCount: 0, scrapCount: 0, lightningInfo: .init(meetAt: Date(), location: "강남역 2번 출구", maxParticipants: 5, openChatUrl: "https://open.kakao.com/o/sxxxxxx")))
 }

@@ -286,7 +286,8 @@ private let previewPosts: [CommunityItemModel] = [
         likeCount: 42,
         commentCount: 5,
         scrapCount: 0,
-        isLiked: true
+        isLiked: true,
+        lightningInfo: nil
     ),
     .init(
         postId: 1,
@@ -301,6 +302,7 @@ private let previewPosts: [CommunityItemModel] = [
         likeCount: 8,
         commentCount: 3,
         scrapCount: 0,
-        isLiked: false
+        isLiked: false,
+        lightningInfo: nil
     )
 ]

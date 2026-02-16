@@ -1,0 +1,100 @@
+//
+//  CommunityLightningCard.swift
+//  AppProduct
+//
+//  Created by 김미주 on 2/16/26.
+//
+
+import SwiftUI
+
+struct CommunityLightningCard: View {
+    // MARK: - Properties
+
+    private let model: CommunityItemModel
+    
+    private enum Constant {
+        static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
+        static let profileSize: CGSize = .init(width: 40, height: 40)
+        static let contentPadding: EdgeInsets = .init(top: 8, leading: 0, bottom: 12, trailing: 0)
+        static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
+        static let tagPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
+        static let kakaoSize: CGSize = .init(width: 40, height: 40)
+        static let kakaoRadius: CGFloat = 8
+    }
+    
+    private enum SectionType {
+        case meetAt
+        case participant
+        case location
+        
+        var title: String {
+            switch self {
+            case .meetAt: return "일정"
+            case .participant: return "최대 인원"
+            case .location: return "장소"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .meetAt: return "calendar"
+            case .participant: return "person.2"
+            case .location: return "map"
+            }
+        }
+        
+        func content(from model: CommunityItemModel) -> String {
+            guard let info = model.lightningInfo else { return "" }
+            switch self {
+            case .meetAt: return info.meetAt.toMonthDayWeekDayWithTime()
+            case .participant: return "\(info.maxParticipants)명"
+            case .location: return info.location
+            }
+        }
+    }
+    
+    // MARK: - Init
+    
+    init(model: CommunityItemModel) {
+        self.model = model
+    }
+    
+    // MARK: - Body
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
+            HStack {
+                makeSection(type: .meetAt)
+                makeSection(type: .participant)
+            }
+            makeSection(type: .location)
+        }
+        .padding(Constant.mainPadding)
+        .background(
+            RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+                .fill(.white)
+        )
+        .glass()
+    }
+    
+    @ViewBuilder
+    private func makeSection(type: SectionType) -> some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+            Text(type.title)
+                .appFont(.footnote, color: .grey500)
+            
+            Label {
+                Text(type.content(from: model))
+                    .appFont(.subheadlineEmphasis, color: .black)
+            } icon: {
+                Image(systemName: type.icon)
+                    .foregroundStyle(.indigo500)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+#Preview {
+    CommunityLightningCard(model: .init(postId: 1, userId: 1, category: .free, title: "제목", content: "내용", profileImage: nil, userName: "이름", part: .front(type: .ios), createdAt: Date(), likeCount: 0, commentCount: 0, scrapCount: 0, lightningInfo: .init(meetAt: Date(), location: "강남역 2번 출구", maxParticipants: 5, openChatUrl: "https://open.kakao.com/o/sxxxxxx")))
+}

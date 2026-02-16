@@ -84,7 +84,8 @@ extension PostListItemDTO {
             likeCount: likeCount,
             commentCount: commentCount,
             scrapCount: 0,
-            isLiked: isLiked
+            isLiked: isLiked,
+            lightningInfo: nil
         )
     }
 }
@@ -105,7 +106,8 @@ extension PostDetailDTO {
             likeCount: likeCount,
             commentCount: commentCount,
             scrapCount: scrapCount ?? 0,
-            isLiked: isLiked
+            isLiked: isLiked,
+            lightningInfo: nil
         )
     }
 }

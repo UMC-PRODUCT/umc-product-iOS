@@ -23,4 +23,5 @@ struct CommunityItemModel: Equatable, Identifiable, Hashable {
     var scrapCount: Int
     var isLiked: Bool = false
     var isScrapped: Bool = false
+    let lightningInfo: CommunityLightningInfo?
 }

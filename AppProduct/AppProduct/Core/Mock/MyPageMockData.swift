@@ -59,7 +59,8 @@ enum MyPageMockData {
             likeCount: 42,
             commentCount: 5,
             scrapCount: 0,
-            isLiked: true
+            isLiked: true,
+            lightningInfo: nil
         ),
         .init(
             postId: 1,
@@ -74,7 +75,8 @@ enum MyPageMockData {
             likeCount: 13,
             commentCount: 4,
             scrapCount: 0,
-            isLiked: false
+            isLiked: false,
+            lightningInfo: nil
         ),
         .init(
             postId: 1,
@@ -89,7 +91,13 @@ enum MyPageMockData {
             likeCount: 7,
             commentCount: 1,
             scrapCount: 0,
-            isLiked: true
+            isLiked: true,
+            lightningInfo: .init(
+                meetAt: Date(),
+                location: "강남역 2번 출구",
+                maxParticipants: 5,
+                openChatUrl: "https://open.kakao.com/o/sxxxxxx"
+            )
         )
     ]
 

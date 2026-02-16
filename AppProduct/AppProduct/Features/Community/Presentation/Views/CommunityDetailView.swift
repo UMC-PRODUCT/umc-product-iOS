@@ -50,6 +50,10 @@ struct CommunityDetailView: View {
                         await vm.toggleScrap()
                     }
                 )
+                
+                if vm.postItem.category == .lighting {
+                    CommunityLightningCard(model: vm.postItem)
+                }
 
                 Group {
                     switch vm.comments {
