@@ -12,8 +12,9 @@ import Moya
 ///
 /// `MoyaNetworkAdapter`를 통해 출석 관련 API를 호출하고
 /// DTO → Domain 변환을 수행합니다.
-final class AttendanceRepository: AttendanceRepositoryProtocol,
-    @unchecked Sendable {
+final class AttendanceRepository: ChallengerAttendanceRepositoryProtocol,
+                                   OperatorAttendanceRepositoryProtocol,
+                                   @unchecked Sendable {
 
     // MARK: - Property
 

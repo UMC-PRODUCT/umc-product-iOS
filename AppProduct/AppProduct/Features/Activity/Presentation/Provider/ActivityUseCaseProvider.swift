@@ -70,10 +70,10 @@ final class ActivityUseCaseProvider: ActivityUseCaseProviding {
             repository: repositoryProvider.activityRepository
         )
         self.challengerAttendanceUseCase = ChallengerAttendanceUseCase(
-            repository: repositoryProvider.attendanceRepository
+            repository: repositoryProvider.challengerAttendanceRepository
         )
         self.operatorAttendanceUseCase = OperatorAttendanceUseCase(
-            repository: repositoryProvider.attendanceRepository
+            repository: repositoryProvider.operatorAttendanceRepository
         )
         self.classifyScheduleUseCase = ClassifyScheduleUseCaseImpl(
             repository: classifierRepository

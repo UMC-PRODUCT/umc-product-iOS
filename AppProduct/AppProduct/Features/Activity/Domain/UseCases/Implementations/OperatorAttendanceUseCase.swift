@@ -13,11 +13,11 @@ final class OperatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol {
 
     // MARK: - Property
 
-    private let repository: AttendanceRepositoryProtocol
+    private let repository: OperatorAttendanceRepositoryProtocol
 
     // MARK: - Init
 
-    init(repository: AttendanceRepositoryProtocol) {
+    init(repository: OperatorAttendanceRepositoryProtocol) {
         self.repository = repository
     }
 

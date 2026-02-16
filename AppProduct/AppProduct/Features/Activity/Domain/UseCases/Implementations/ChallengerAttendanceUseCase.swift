@@ -13,7 +13,7 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
 
     // MARK: - Property
 
-    private let repository: AttendanceRepositoryProtocol
+    private let repository: ChallengerAttendanceRepositoryProtocol
     private let locationManager: LocationManager = .shared
 
     // MARK: - Computed Property
@@ -28,7 +28,7 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
 
     // MARK: - Init
 
-    init(repository: AttendanceRepositoryProtocol) {
+    init(repository: ChallengerAttendanceRepositoryProtocol) {
         self.repository = repository
     }
 
