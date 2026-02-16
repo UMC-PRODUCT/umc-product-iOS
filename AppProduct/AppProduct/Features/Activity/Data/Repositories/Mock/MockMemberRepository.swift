@@ -17,12 +17,14 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 name: "이예지",
                 nickname: "소피",
                 generation: "9기",
+                school: "가천대학교",
                 position: "Part Leader",
                 part: .front(type: .ios),
                 penalty: 0,
                 badge: false,
                 managementTeam: .schoolPartLeader,
-                attendanceRecords: MockAttendanceRecords.perfect
+                attendanceRecords: MockAttendanceRecords.perfect,
+                penaltyHistory: MockPenaltyHistory.none
             ),
             
             // 이예지 (President) - 완벽한 출석
@@ -31,12 +33,14 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 name: "이예지",
                 nickname: "소피",
                 generation: "9기",
+                school: "가천대학교",
                 position: "Part Leader",
                 part: .front(type: .ios),
                 penalty: 0,
                 badge: false,
                 managementTeam: .schoolPartLeader,
-                attendanceRecords: MockAttendanceRecords.perfect
+                attendanceRecords: MockAttendanceRecords.perfect,
+                penaltyHistory: MockPenaltyHistory.oneOut
             ),
             
             // 김철수 - 보통 출석 (몇 번 지각)
@@ -45,12 +49,14 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 name: "김철수",
                 nickname: "철수",
                 generation: "9기",
+                school: "한국대학교",
                 position: "Member",
                 part: .front(type: .android),
                 penalty: 1,
                 badge: false,
                 managementTeam: .challenger,
-                attendanceRecords: MockAttendanceRecords.average
+                attendanceRecords: MockAttendanceRecords.average,
+                penaltyHistory: MockPenaltyHistory.twoOut
             ),
             
             // 박영희 - 좋은 출석
@@ -59,12 +65,14 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 name: "박영희",
                 nickname: "영희",
                 generation: "9기",
+                school: "대한대학교",
                 position: "Member",
                 part: .server(type: .spring),
                 penalty: 0,
                 badge: false,
                 managementTeam: .challenger,
-                attendanceRecords: MockAttendanceRecords.good
+                attendanceRecords: MockAttendanceRecords.good,
+                penaltyHistory: MockPenaltyHistory.oneOut
             ),
             
             // 최민수 - 불성실한 출석 (결석 많음)
@@ -73,12 +81,14 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 name: "최민수",
                 nickname: "민수",
                 generation: "9기",
+                school: "한국대학교",
                 position: "Member",
                 part: .front(type: .web),
                 penalty: 2,
                 badge: false,
                 managementTeam: .challenger,
-                attendanceRecords: MockAttendanceRecords.poor
+                attendanceRecords: MockAttendanceRecords.poor,
+                penaltyHistory: MockPenaltyHistory.threeOut
             ),
             
             // 정다은 - 좋은 출석
@@ -87,12 +97,14 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 name: "정다은",
                 nickname: "다은",
                 generation: "9기",
+                school: "민국대학교",
                 position: "Member",
                 part: .design,
                 penalty: 0,
                 badge: false,
                 managementTeam: .challenger,
-                attendanceRecords: MockAttendanceRecords.good
+                attendanceRecords: MockAttendanceRecords.good,
+                penaltyHistory: MockPenaltyHistory.none
             ),
             
             // 강호진 - 보통 출석
@@ -101,12 +113,14 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 name: "강호진",
                 nickname: "호진",
                 generation: "9기",
+                school: "한국대학교",
                 position: "Member",
                 part: .pm,
                 penalty: 1,
                 badge: false,
                 managementTeam: .challenger,
-                attendanceRecords: MockAttendanceRecords.average
+                attendanceRecords: MockAttendanceRecords.average,
+                penaltyHistory: MockPenaltyHistory.oneOut
             ),
             
             // 신입생 - 출석 기록 없음
@@ -115,12 +129,14 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 name: "이신입",
                 nickname: "신입",
                 generation: "9기",
+                school: "민국대학교",
                 position: "Member",
                 part: .front(type: .ios),
                 penalty: 0,
                 badge: false,
                 managementTeam: .challenger,
-                attendanceRecords: []
+                attendanceRecords: [],
+                penaltyHistory: MockPenaltyHistory.oneOut
             ),
         ]
     }
@@ -283,5 +299,54 @@ private enum MockAttendanceRecords {
             week: 7,
             status: .present
         ),
+    ]
+}
+
+// MARK: - Mock Penalty History
+
+private enum MockPenaltyHistory {
+    /// 페널티 없음
+    static let none: [OperatorMemberPenaltyHistory] = []
+    
+    /// 1아웃 (지각 1회)
+    static let oneOut: [OperatorMemberPenaltyHistory] = [
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1주 전
+            reason: "세션 지각",
+            penaltyScore: 1.0
+        )
+    ]
+    
+    /// 2아웃 (지각 1회 + 결석 1회)
+    static let twoOut: [OperatorMemberPenaltyHistory] = [
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-14 * 24 * 60 * 60), // 2주 전
+            reason: "세션 지각",
+            penaltyScore: 1.0
+        ),
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1주 전
+            reason: "세션 결석 (사유 없음)",
+            penaltyScore: 1.0
+        )
+    ]
+    
+    /// 3아웃 이상 (지각 + 결석 + 과제 미제출)
+    static let threeOut: [OperatorMemberPenaltyHistory] = [
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-21 * 24 * 60 * 60), // 3주 전
+            reason: "세션 지각 (교통 체증)",
+            penaltyScore: 1.0
+        ),
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-14 * 24 * 60 * 60), // 2주 전
+            reason: "워크북 미제출",
+            penaltyScore: 0.5
+        ),
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1주 전
+            reason: "세션 결석 (사유 없음)",
+            penaltyScore: 1.0
+        )
     ]
 }
