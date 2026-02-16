@@ -42,7 +42,7 @@ struct NoticeLinkCard: View {
                     .foregroundStyle(Color(.systemGroupedBackground))
             }
         }
-        .glassEffect(.clear, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
+        .glassEffect(.clear.interactive(), in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
     }
 }
 
