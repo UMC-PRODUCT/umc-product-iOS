@@ -17,18 +17,18 @@ enum CommunityMenu: String, Identifiable, CaseIterable {
     
     var icon: String {
         switch self {
-        case .all: return ""
+        case .all: return "square.grid.2x2"
         case .question: return "flame.fill"
         case .party: return "bolt.fill"
         case .fame: return "trophy.fill"
         }
     }
     
-    func toCategoryType() -> CommunityItemCategory? {
+    func toCategoryType() -> String? {
         switch self {
         case .all, .fame: return nil
-        case .question: return .question
-        case .party: return .lighting
+        case .question: return "QUESTION"
+        case .party: return "LIGHTNING"
         }
     }
 }
