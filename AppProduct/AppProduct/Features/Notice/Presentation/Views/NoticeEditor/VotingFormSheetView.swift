@@ -21,6 +21,12 @@ struct VotingFormSheetView: View, Equatable {
     var onConfirm: () -> Void
     /// 시트 모드(생성/수정)
     var mode: VoteEditorMode = .create
+    
+    /// 확인 버튼 로컬 로딩 상태
+    @State private var isSubmitting: Bool = false
+    
+    /// DEBUG 런치 인자로 강제 로딩 상태를 표시합니다.
+    @State private var isDebugLoading: Bool = false
 
     /// 투표 에디터 모드
     enum VoteEditorMode {
@@ -53,6 +59,7 @@ struct VotingFormSheetView: View, Equatable {
         static let toggleTopMargin: CGFloat = 16
         static let dateTopMargin: CGFloat = 4
         static let contentBottomPadding: CGFloat = DefaultSpacing.spacing24
+        static let debugLoadingArgument: String = "--debug-vote-editor-loading"
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -68,6 +75,7 @@ struct VotingFormSheetView: View, Equatable {
             .scrollDismissesKeyboard(.immediately)
             .navigation(naviTitle: navigationTitle, displayMode: .inline)
             .toolbar { toolbarContent }
+            .task { applyDebugLoadingStateIfNeeded() }
         }
     }
 
@@ -97,7 +105,22 @@ struct VotingFormSheetView: View, Equatable {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolBarCollection.CancelBtn(action: onCancel)
-        ToolBarCollection.ConfirmBtn(action: onConfirm, disable: !formData.canConfirm)
+        
+        if mode == .create {
+            ToolBarCollection.AddBtn(
+                action: handleConfirmTap,
+                disable: !formData.canConfirm,
+                isLoading: isConfirmButtonLoading,
+                dismissOnTap: false
+            )
+        } else {
+            ToolBarCollection.ConfirmBtn(
+                action: handleConfirmTap,
+                disable: !formData.canConfirm,
+                isLoading: isConfirmButtonLoading,
+                dismissOnTap: false
+            )
+        }
     }
 
     /// 모드에 따른 네비게이션 타이틀
@@ -302,6 +325,31 @@ struct VotingFormSheetView: View, Equatable {
     /// 마감일 최소 허용값(시작일 + 1일)
     private var endDateLowerBound: Date {
         Calendar.current.date(byAdding: .day, value: 1, to: formData.startDate) ?? formData.startDate
+    }
+    
+    /// 확인 버튼 로딩 상태(실제 제출 + DEBUG 강제 상태)
+    private var isConfirmButtonLoading: Bool {
+        isSubmitting || isDebugLoading
+    }
+    
+    /// 확인 버튼 탭 처리
+    private func handleConfirmTap() {
+        guard !isConfirmButtonLoading else { return }
+        isSubmitting = true
+        onConfirm()
+        
+        Task { @MainActor in
+            // 시트가 즉시 닫히지 않는 경우를 대비해 다음 프레임에 로딩 상태 복구
+            await Task.yield()
+            isSubmitting = false
+        }
+    }
+    
+    /// DEBUG 런치 인자로 투표 시트 툴바 로딩 상태를 강제 표시합니다.
+    private func applyDebugLoadingStateIfNeeded() {
+        #if DEBUG
+        isDebugLoading = ProcessInfo.processInfo.arguments.contains(Constants.debugLoadingArgument)
+        #endif
     }
 }
 

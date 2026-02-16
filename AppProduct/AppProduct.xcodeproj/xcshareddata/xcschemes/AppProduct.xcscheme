@@ -134,7 +134,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--debug-notice-editor-loading"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "NoticeDummy(no Select)"
@@ -162,6 +162,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--notice-dummy-toolbar-items"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "Activity(no Select)"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument

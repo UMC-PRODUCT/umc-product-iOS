@@ -76,7 +76,7 @@ struct NoticeEditorView: View {
         static let contentBottomInset: CGFloat = 30
 
         /// 링크 카드와 하단 액세서리 사이 추가 간격
-        static let linkSectionBottomPadding: CGFloat = DefaultSpacing.spacing24
+        static let linkSectionBottomPadding: CGFloat = DefaultSpacing.spacing8
 
         /// 링크 추가 후 스크롤/포커스 안정화 대기 시간
         static let linkScrollDelayNanos: UInt64 = 120_000_000
@@ -84,6 +84,9 @@ struct NoticeEditorView: View {
         /// 이미지/투표 섹션 스크롤 앵커 ID
         static let imageSectionScrollID: String = "notice_editor_image_section"
         static let voteSectionScrollID: String = "notice_editor_vote_section"
+        
+        /// DEBUG: 공지 에디터 진입 시 저장 버튼 로딩 상태 강제 표시
+        static let debugLoadingArgument: String = "--debug-notice-editor-loading"
     }
 
     // MARK: - Body
@@ -112,6 +115,7 @@ struct NoticeEditorView: View {
             viewModel.updateErrorHandler(errorHandler)
             applyInitialOrganizationType()
             applyInitialUserContext()
+            applyDebugLoadingStateIfNeeded()
         }
         .onChange(of: viewModel.createState) { _, newValue in
             handleCreateStateChanged(newValue)
@@ -383,14 +387,20 @@ struct NoticeEditorView: View {
                 itemLabel: { $0.labelText },
                 itemIcon: { $0.labelIcon }
             )
+            ToolBarCollection.AddBtn(
+                action: saveNotice,
+                disable: !viewModel.canSubmit,
+                isLoading: viewModel.createState.isLoading,
+                dismissOnTap: false
+            )
+        } else {
+            ToolBarCollection.ConfirmBtn(
+                action: saveNotice,
+                disable: !viewModel.canSubmit,
+                isLoading: viewModel.createState.isLoading,
+                dismissOnTap: false
+            )
         }
-
-        ToolBarCollection.ConfirmBtn(
-            action: saveNotice,
-            disable: !viewModel.canSubmit,
-            isLoading: viewModel.createState.isLoading,
-            dismissOnTap: false
-        )
     }
 
     // MARK: - Navigation
@@ -576,6 +586,14 @@ struct NoticeEditorView: View {
     /// 공지 리스트에서 선택한 기수 ID가 있으면 우선 사용합니다.
     private func resolvedEditorGisuId(fallback: Int) -> Int {
         pathStore.noticeEditorSelectedGisuId ?? fallback
+    }
+    
+    /// DEBUG 런치 인자로 공지 에디터 저장 버튼 로딩 상태를 강제 표시합니다.
+    private func applyDebugLoadingStateIfNeeded() {
+        #if DEBUG
+        guard ProcessInfo.processInfo.arguments.contains(Constants.debugLoadingArgument) else { return }
+        viewModel.setCreateStateLoadingForDebug()
+        #endif
     }
 
 }

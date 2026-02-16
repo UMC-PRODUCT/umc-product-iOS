@@ -12,37 +12,46 @@ import SwiftUI
 
 /// 공지사항 상세정보 엔티티
 struct NoticeDetail: Equatable, Identifiable, Hashable {
-    // 기본 정보
+    /// 공지 고유 ID
     let id: String
+    /// 기수
     let generation: Int
+    /// 공지 범위 (중앙/지부/교내)
     let scope: NoticeScope
+    /// 공지 카테고리
     let category: NoticeCategory
-    
-    // 태그
+
+    /// 필독 여부
     let isMustRead: Bool
-    
-    // 내용
+
+    /// 공지 제목
     let title: String
+    /// 공지 본문
     let content: String
-    
-    // 작성자
+
+    /// 작성자 ID
     let authorID: String
+    /// 작성자 이름
     let authorName: String
+    /// 작성자 프로필 이미지 URL
     let authorImageURL: String?
-    
-    // 날짜
+
+    /// 생성일
     let createdAt: Date
+    /// 수정일
     let updatedAt: Date?
-    
-    // 수신 대상
+
+    /// 수신 대상
     let targetAudience: TargetAudience
-    
-    // 권한
+
+    /// 수정/삭제 권한 보유 여부
     let hasPermission: Bool
-    
-    // 추가 콘텐츠
+
+    /// 첨부 이미지 URL 목록
     let images: [String]
+    /// 첨부 링크 목록
     let links: [String]
+    /// 첨부 투표
     let vote: NoticeVote?
 
     
@@ -76,7 +85,7 @@ struct TargetAudience: Equatable, Hashable {
     let branches: [String]
     let schools: [String]
     
-    // 수신 대상 표시 텍스트
+    /// 수신 대상 표시 텍스트 (예: "12기 / 전체")
     var displayText: String {
         var components: [String] = ["\(generation)기"]
         
@@ -139,11 +148,11 @@ struct NoticeVote: Equatable, Identifiable, Hashable {
     let options: [VoteOption]
     let startDate: Date
     let endDate: Date
-    // 단일/복수 선택
+    /// 복수 선택 허용 여부
     let allowMultipleChoices: Bool
-    // 익명/실명
+    /// 익명 투표 여부
     let isAnonymous: Bool
-    // 사용자가 투표한 옵션 ID들
+    /// 현재 사용자가 투표한 옵션 ID 목록
     let userVotedOptionIds: [String]
     
     /// 전체 투표 수
@@ -266,4 +275,16 @@ enum ReadStatusFilterType: String, CaseIterable, Identifiable {
     case school = "학교별 보기"
     
     var id: String { rawValue }
+
+    /// 열람 현황 필터 메뉴 아이콘
+    var iconName: String {
+        switch self {
+        case .all:
+            return "line.3.horizontal.decrease"
+        case .branch:
+            return "mappin.and.ellipse"
+        case .school:
+            return "graduationcap"
+        }
+    }
 }

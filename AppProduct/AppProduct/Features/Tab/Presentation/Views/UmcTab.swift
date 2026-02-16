@@ -32,6 +32,15 @@ struct UmcTab: View {
         }
         return di.resolve(UserSessionManager.self).currentRole
     }
+    
+    /// AppStorage/세션 역할이 모두 challenger일 때만 일반 챌린저로 판단합니다.
+    private var isGeneralChallenger: Bool {
+        let sessionRole = di.resolve(UserSessionManager.self).currentRole
+        guard let appStorageRole = ManagementTeam(rawValue: memberRoleRaw) else {
+            return sessionRole == .challenger
+        }
+        return appStorageRole == .challenger && sessionRole == .challenger
+    }
 
     // MARK: - Body
 
@@ -91,7 +100,7 @@ struct UmcTab: View {
     /// Activity 탭에서는 Admin 권한이 있는 경우에만 Accessory를 표시합니다.
     private func shouldShowAccessory() -> Bool {
         // 챌린저는 공지 탭에서만 Bottom Accessory를 노출하지 않음
-        if tabCase == .notice && effectiveMemberRole == .challenger {
+        if tabCase == .notice && isGeneralChallenger {
             return false
         }
 

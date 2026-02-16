@@ -9,6 +9,7 @@ import SwiftUI
 import Kingfisher
 
 // MARK: - NoticeImageCard
+/// 공지 상세에서 첨부 이미지 썸네일 목록과 전체화면 뷰어를 제공하는 카드 컴포넌트
 struct NoticeImageCard: View {
     
     // MARK: - Property
@@ -18,45 +19,58 @@ struct NoticeImageCard: View {
     // MARK: - Constants
     fileprivate enum Constants {
         static let imageSize: CGFloat = 120
+        static let bottomPadding: CGFloat = 20
+        static let thumbnailSpacing: CGFloat = DefaultSpacing.spacing8
     }
     
     // MARK: - Body
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DefaultSpacing.spacing8) {
-                    ForEach(Array(imageURLs.enumerated()), id: \.offset) { index, url in
-                        KFImage(URL(string: url))
-                            .placeholder {
-                                Progress(size: .small)
-                                    .frame(width: Constants.imageSize, height: Constants.imageSize)
-                                    .background(Color(.systemGroupedBackground))
-                            }
-                            .retry(maxCount: 3, interval: .seconds(3))
-                            .fade(duration: 0.3)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: Constants.imageSize, height: Constants.imageSize)
-                            .clipped()
-                            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
-                            .onTapGesture {
-                                selectedImageIndex = index
-                            }
-                    }
-                }
-                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            }
-        }
-        .fullScreenCover(item: Binding(
-            get: { selectedImageIndex.map { ImageViewerItem(index: $0) } },
-            set: { selectedImageIndex = $0?.index }
-        )) { item in
+        thumbnailSection
+            .fullScreenCover(item: imageViewerBinding) { item in
             ImageViewerScreen(
                 imageURLs: imageURLs,
                 selectedIndex: item.index,
                 onDismiss: { selectedImageIndex = nil }
             )
         }
+    }
+
+    // MARK: - Thumbnail Section
+
+    private var thumbnailSection: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: Constants.thumbnailSpacing) {
+                ForEach(Array(imageURLs.enumerated()), id: \.offset) { index, url in
+                    thumbnailImage(url: url, index: index)
+                }
+            }
+            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        }
+        .contentMargins(.bottom, Constants.bottomPadding, for: .scrollContent)
+    }
+
+    private func thumbnailImage(url: String, index: Int) -> some View {
+        KFImage(URL(string: url))
+            .placeholder {
+                Progress(size: .regular)
+                    .frame(width: Constants.imageSize, height: Constants.imageSize)
+                    .background(Color(.systemGroupedBackground))
+            }
+            .noticeImageCommonStyle()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: Constants.imageSize, height: Constants.imageSize)
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
+            .onTapGesture {
+                selectedImageIndex = index
+            }
+    }
+
+    private var imageViewerBinding: Binding<ImageViewerItem?> {
+        Binding(
+            get: { selectedImageIndex.map { ImageViewerItem(index: $0) } },
+            set: { selectedImageIndex = $0?.index }
+        )
     }
 }
 
@@ -67,47 +81,138 @@ struct ImageViewerScreen: View {
     // MARK: - Property
     let imageURLs: [String]
     @State var selectedIndex: Int
+    @State private var prefetcher: ImagePrefetcher?
     let onDismiss: () -> Void
     
     // MARK: - Constant
     fileprivate enum Constants {
-        static let bgOpacity: Double = 0.7
+        static let closeButtonPadding: CGFloat = DefaultSpacing.spacing8
+        static let backgroundBlurRadius: CGFloat = 18
+        static let backgroundDimOpacity: Double = 0.25
+        static let foregroundHorizontalCount: Int = 10
+        static let foregroundHorizontalSpan: Int = 9
+        static let foregroundVerticalCount: Int = 10
+        static let foregroundVerticalSpan: Int = 5
+        static let viewerDownsampleSize: CGSize = .init(width: 1440, height: 1440)
     }
     
     // MARK: - Body
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-                .opacity(Constants.bgOpacity)
-            
+        ZStack(alignment: .topTrailing) {
             TabView(selection: $selectedIndex) {
                 ForEach(Array(imageURLs.enumerated()), id: \.offset) { index, url in
-                    KFImage(URL(string: url))
-                        .placeholder {
-                            Progress(progressColor: .grey200, message: "이미지 로딩중", messageColor: .grey400, size: .large)
-                        }
-                        .retry(maxCount: 3, interval: .seconds(3))
-                        .fade(duration: 0.3)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
+                    pageImage(url: url)
                         .tag(index)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
-            
-            VStack {
-                HStack {
-                    Spacer()
-                    Button(action: onDismiss) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title)
-                            .foregroundStyle(.grey400)
-                            .padding()
-                    }
-                }
-                Spacer()
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea()
+
+            closeButton
         }
+        .onAppear(perform: startPrefetching)
+        .onDisappear(perform: stopPrefetching)
+    }
+
+    private func pageImage(url: String) -> some View {
+        ZStack {
+            blurredBackgroundImage(url: url)
+            foregroundImage(url: url)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private func blurredBackgroundImage(url: String) -> some View {
+        let image = KFImage(URL(string: url))
+            .placeholder {
+                Color.black
+            }
+            .noticeImageViewerStyle()
+            .aspectRatio(contentMode: .fill)
+            .ignoresSafeArea()
+            .blur(radius: Constants.backgroundBlurRadius)
+            .overlay {
+                Color.black.opacity(Constants.backgroundDimOpacity)
+            }
+            .clipped()
+            .backgroundExtensionEffect()
+
+        image
+    }
+
+    private func foregroundImage(url: String) -> some View {
+        KFImage(URL(string: url))
+            .placeholder {
+                Progress(
+                    progressColor: .grey200,
+                    message: "이미지 로딩중",
+                    messageColor: .grey400,
+                    size: .large
+                )
+            }
+            .noticeImageViewerStyle()
+            .aspectRatio(contentMode: .fit)
+            .containerRelativeFrame(
+                .horizontal,
+                count: Constants.foregroundHorizontalCount,
+                span: Constants.foregroundHorizontalSpan,
+                spacing: 0
+            )
+            .containerRelativeFrame(
+                .vertical,
+                count: Constants.foregroundVerticalCount,
+                span: Constants.foregroundVerticalSpan,
+                spacing: 0
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+
+    private var closeButton: some View {
+        Button(action: onDismiss) {
+            Image(systemName: "xmark.circle.fill")
+                .font(.title)
+                .foregroundStyle(.white)
+                .padding(Constants.closeButtonPadding)
+        }
+    }
+
+    // MARK: - Prefetch
+
+    private func startPrefetching() {
+        let urls = imageURLs.compactMap(URL.init(string:))
+        guard !urls.isEmpty else { return }
+
+        let prefetcher = ImagePrefetcher(urls: urls)
+        self.prefetcher = prefetcher
+        prefetcher.start()
+    }
+
+    private func stopPrefetching() {
+        prefetcher?.stop()
+        prefetcher = nil
+    }
+}
+
+// MARK: - KFImage Styling
+private extension KFImage {
+    /// 공지 이미지 썸네일/뷰어에서 공통으로 사용하는 네트워크 이미지 로딩 스타일입니다.
+    func noticeImageCommonStyle() -> some View {
+        self
+            .retry(maxCount: 3, interval: .seconds(3))
+            .fade(duration: 0.3)
+            .resizable()
+    }
+
+    /// 이미지 뷰어 전용 스타일 (스와이프 중 끊김 최소화를 위해 페이드 없이 캐시 우선)
+    func noticeImageViewerStyle() -> some View {
+        self
+            .retry(maxCount: 2, interval: .seconds(1))
+            .downsampling(size: .init(width: 1440, height: 1440))
+            .cacheOriginalImage()
+            .cancelOnDisappear(true)
+            .resizable()
     }
 }
 
