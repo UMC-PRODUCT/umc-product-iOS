@@ -12,6 +12,8 @@ import Foundation
 enum NoticeDetailMockData {
 
     // MARK: - Samples
+
+    /// 기본 공지 샘플 (투표 포함, 권한 없음)
     static let sampleNotice = NoticeDetail(
         id: "1",
         generation: 12,
@@ -59,6 +61,7 @@ enum NoticeDetailMockData {
         )
     )
     
+    /// 수정/삭제 권한이 있는 공지 샘플
     static let sampleNoticeWithPermission = NoticeDetail(
         id: "2",
         generation: 9,
@@ -90,6 +93,7 @@ enum NoticeDetailMockData {
         vote: nil
     )
     
+    /// 이미지 첨부 공지 샘플
     static let sampleNoticeWithImages = NoticeDetail(
         id: "3",
         generation: 12,
@@ -126,6 +130,7 @@ enum NoticeDetailMockData {
         vote: nil
     )
     
+    /// 링크 첨부 공지 샘플
     static let sampleNoticeWithLinks = NoticeDetail(
         id: "4",
         generation: 12,
@@ -160,6 +165,7 @@ enum NoticeDetailMockData {
         vote: nil
     )
     
+    /// 이미지 + 링크 + 투표 전부 포함된 공지 샘플
     static let sampleNoticeWithAll = NoticeDetail(
         id: "5",
         generation: 12,
@@ -193,10 +199,24 @@ enum NoticeDetailMockData {
         links: [
             "https://www.notion.so/umc-12th-ot"
         ],
-        vote: nil
+        vote: NoticeVote(
+            id: "poll-all-1",
+            question: "OT 자료 중 가장 유용했던 세션은 무엇인가요?",
+            options: [
+                VoteOption(id: "1", title: "앱 아키텍처", voteCount: 18),
+                VoteOption(id: "2", title: "협업/깃 전략", voteCount: 22),
+                VoteOption(id: "3", title: "배포 프로세스", voteCount: 11),
+                VoteOption(id: "4", title: "Q&A", voteCount: 7)
+            ],
+            startDate: Date(timeIntervalSinceNow: -86400),
+            endDate: Date(timeIntervalSinceNow: 86400 * 4),
+            allowMultipleChoices: false,
+            isAnonymous: true,
+            userVotedOptionIds: []
+        )
     )
     
-    // 투표 완료되지않은 샘플
+    /// 투표 미완료 상태 공지 샘플 (복수선택, 실명 투표)
     static let sampleNoticeWithVote = NoticeDetail(
         id: "6",
         generation: 12,
@@ -241,7 +261,7 @@ enum NoticeDetailMockData {
         )
     )
     
-    // 투표 완료된 샘플
+    /// 투표 완료 상태 공지 샘플 (마감 + 사용자 투표 기록 포함)
     static let sampleNoticeWithVoteDone = NoticeDetail(
         id: "6",
         generation: 12,
@@ -286,6 +306,7 @@ enum NoticeDetailMockData {
         )
     )
     
+    /// 전체 샘플 목록 (Preview, 디버그 용도)
     static let items: [NoticeDetail] = [
         sampleNotice,
         sampleNoticeWithPermission,
@@ -296,6 +317,9 @@ enum NoticeDetailMockData {
         sampleNoticeWithVoteDone
     ]
     
+    // MARK: - Read Status Mock
+
+    /// 열람 현황 테스트용 사용자 목록
     static let sampleReadStatusUsers: [ReadStatusUser] = [
         ReadStatusUser(id: "user1", name: "정의찬", nickName: "제옹", part: "PM", branch: "Leo", campus: "중앙대", profileImageURL: nil, isRead: true),
         ReadStatusUser(id: "user2", name: "이재원", nickName: "리버", part: "iOS", branch: "Cassiopeia", campus: "한성대", profileImageURL: nil, isRead: true),
@@ -313,6 +337,7 @@ enum NoticeDetailMockData {
         ReadStatusUser(id: "user14", name: "김도연", nickName: "도리", part: "Android", branch: "Scorpio", campus: "서울여대", profileImageURL: nil, isRead: false)
     ]
     
+    /// 열람 현황 통합 샘플 (확인/미확인 사용자 자동 분류)
     static let sampleReadStatus = NoticeReadStatus(
         noticeId: "1",
         confirmedUsers: sampleReadStatusUsers.filter { $0.isRead },

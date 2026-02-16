@@ -18,8 +18,13 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
 
     // MARK: - Dependency
 
-    private let noticeUseCase: NoticeUseCaseProtocol
-    private let targetUseCase: NoticeEditorTargetUseCaseProtocol
+    private let container: DIContainer
+    private var noticeUseCase: NoticeUseCaseProtocol {
+        container.resolve(NoticeUseCaseProtocol.self)
+    }
+    private var targetUseCase: NoticeEditorTargetUseCaseProtocol {
+        container.resolve(NoticeEditorTargetUseCaseProtocol.self)
+    }
     private var errorHandler: ErrorHandler?
 
     // MARK: - Mode
@@ -182,8 +187,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
         container: DIContainer,
         mode: NoticeEditorMode = .create
     ) {
-        self.noticeUseCase = container.resolve(NoticeUseCaseProtocol.self)
-        self.targetUseCase = container.resolve(NoticeEditorTargetUseCaseProtocol.self)
+        self.container = container
         self.mode = mode
 
         let categories: [EditorMainCategory] = [.branch, .school]
@@ -284,6 +288,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
         }
     }
 
+    /// 서브카테고리 토글 (전체 선택 시 개별 필터 초기화, 개별 해제 시 전체로 복원)
     func toggleSubCategory(_ subCategory: EditorSubCategory) {
         if subCategory == .all {
             if subCategorySelection.selectedSubCategories.contains(.all) {

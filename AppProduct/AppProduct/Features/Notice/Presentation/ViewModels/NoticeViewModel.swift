@@ -14,11 +14,18 @@ final class NoticeViewModel {
     
     // MARK: - Property
     
+    /// DI Container
+    private let container: DIContainer
+
     /// UseCase
-    private let noticeUseCase: NoticeUseCaseProtocol
+    private var noticeUseCase: NoticeUseCaseProtocol {
+        container.resolve(NoticeUseCaseProtocol.self)
+    }
     
-    /// 기수 Repository 추가
-    private let genRepository: ChallengerGenRepositoryProtocol
+    /// 기수 Repository
+    private var genRepository: ChallengerGenRepositoryProtocol {
+        container.resolve(ChallengerGenRepositoryProtocol.self)
+    }
     private var organizationType: OrganizationType?
     private var chapterId: Int = 0
     private var schoolId: Int = 0
@@ -64,11 +71,7 @@ final class NoticeViewModel {
     
     /// 의존성을 주입받아 공지 탭 상태를 초기화합니다.
     init(container: DIContainer) {
-        let noticeUseCase = container.resolve(NoticeUseCaseProtocol.self)
-        self.noticeUseCase = noticeUseCase
-
-        let genRepository = container.resolve(ChallengerGenRepositoryProtocol.self)
-        self.genRepository = genRepository
+        self.container = container
     }
     
     // MARK: - Helper
@@ -320,6 +323,7 @@ final class NoticeViewModel {
         gisuPairs.first(where: { $0.gen == selectedGeneration.value })?.gisuId
     }
 
+    /// 페이징 조회 공통 로직 (기수 검증 → 요청 → 응답 반영)
     @MainActor
     private func performPagedFetch(
         page: Int,

@@ -93,12 +93,16 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--open-notice-detail-central"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-noticeDebugState loading"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-noticeDebugState loadedCentral"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-noticeDebugState loadedBranch"
