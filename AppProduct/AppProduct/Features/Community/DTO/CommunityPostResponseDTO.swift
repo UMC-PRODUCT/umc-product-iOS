@@ -24,7 +24,7 @@ struct PostDetailDTO: Codable {
     let isLiked: Bool
     let isScrapped: Bool?
     let isAuthor: Bool
-    let lightningInfo: LightningInfo
+    let lightningInfo: LightningInfoDTO
 
     enum CodingKeys: String, CodingKey {
             case postId, title, content, category, authorId, authorName, authorProfileImage, authorPart
@@ -48,11 +48,11 @@ struct PostListItemDTO: Codable {
     let likeCount: Int
     let isLiked: Bool
     let isAuthor: Bool
-    let lightningInfo: LightningInfo
+    let lightningInfo: LightningInfoDTO
 }
 
 // MARK: - 3. 공통 번개 정보
-struct LightningInfo: Codable {
+struct LightningInfoDTO: Codable {
     let meetAt: String
     let location: String
     let maxParticipants: Int

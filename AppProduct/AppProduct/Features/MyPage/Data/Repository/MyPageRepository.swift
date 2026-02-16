@@ -167,14 +167,14 @@ private extension MyPagePostResponseDTO {
             content: content,
             profileImage: authorProfileImage,
             userName: authorName,
-            part: .pm, // 임시
+            part: authorPart,
             createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
             likeCount: likeCount,
             commentCount: commentCount,
             scrapCount: 0,
             isLiked: isLiked,
-            isAuthor: true,
-            lightningInfo: nil
+            isAuthor: isAuthor,
+            lightningInfo: lightningInfo?.toModel()
         )
     }
 
