@@ -24,6 +24,10 @@ struct CommunityDetailView: View {
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
+        static let textFieldHeight: CGFloat = 50
+        static let textFieldPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
+        static let sendButtonSize: CGSize = .init(width: 50, height: 50)
+        static let bottomPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
     }
     
     // MARK: - Init
@@ -43,18 +47,20 @@ struct CommunityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
-                CommunityPostCard(
-                    model: vm.postItem,
-                    onLikeTapped: {
-                        await vm.toggleLike()
-                    },
-                    onScrapTapped: {
-                        await vm.toggleScrap()
+                VStack(spacing: DefaultSpacing.spacing12) {
+                    CommunityPostCard(
+                        model: vm.postItem,
+                        onLikeTapped: {
+                            await vm.toggleLike()
+                        },
+                        onScrapTapped: {
+                            await vm.toggleScrap()
+                        }
+                    )
+                    
+                    if vm.postItem.category == .lighting {
+                        CommunityLightningCard(model: vm.postItem)
                     }
-                )
-                
-                if vm.postItem.category == .lighting {
-                    CommunityLightningCard(model: vm.postItem)
                 }
 
                 Group {
@@ -86,6 +92,9 @@ struct CommunityDetailView: View {
             ToolBarCollection.ToolbarTrailingMenu(actions: toolbarActions)
         }
         .alertPrompt(item: $alertPrompt)
+        .safeAreaInset(edge: .bottom) {
+            commentInputSection
+        }
     }
 
     // MARK: - Toolbar Actions
@@ -165,5 +174,49 @@ struct CommunityDetailView: View {
                 .equatable()
             }
         }
+    }
+
+    // MARK: - Comment Input
+
+    private var commentInputSection: some View {
+        HStack(spacing: DefaultSpacing.spacing12) {
+            TextField(
+                "",
+                text: $vm.commentText,
+                prompt: Text("댓글을 입력해 주세요."),
+                axis: .horizontal
+            )
+            .appFont(.body)
+            .scrollIndicators(.hidden)
+            .padding(Constant.textFieldPadding)
+            .frame(height: Constant.textFieldHeight)
+            .glassEffect()
+            
+            Button {
+                Task {
+                    await sendComment()
+                }
+            } label: {
+                Image(systemName: "paperplane.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(vm.commentText.isEmpty ? .grey400 : .white)
+            }
+            .padding(.zero)
+            .frame(width: Constant.sendButtonSize.width, height: Constant.sendButtonSize.height)
+            .disabled(vm.commentText.isEmpty || vm.isPostingComment)
+            .buttonBorderShape(.circle)
+            .glassEffect(.regular.tint(vm.commentText.isEmpty ? .clear : .indigo500))
+        }
+        .padding(Constant.bottomPadding)
+    }
+
+    // MARK: - Actions
+
+    private func sendComment() async {
+        let content = vm.commentText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !content.isEmpty else { return }
+
+        vm.commentText = ""
+        await vm.postComment(content: content, parentId: 0)
     }
 }

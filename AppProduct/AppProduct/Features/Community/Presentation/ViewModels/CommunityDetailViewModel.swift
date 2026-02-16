@@ -22,6 +22,8 @@ class CommunityDetailViewModel {
     private(set) var isScrapToggling: Bool = false
     private(set) var isLikeToggling: Bool = false
     private(set) var isPostingComment: Bool = false
+    
+    var commentText: String = ""
 
     // MARK: - Init
 
