@@ -130,7 +130,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-appstorage-dummy-central"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-appstorage-dummy-chapter"

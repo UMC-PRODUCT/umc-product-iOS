@@ -9,7 +9,7 @@ import SwiftUI
 
 /// 공지 수신 대상 선택 시트 (지부/학교/파트)
 struct TargetSheetView: View {
-
+    
     // MARK: - Property
 
     @State var viewModel: NoticeEditorViewModel
@@ -109,6 +109,7 @@ struct TargetSheetView: View {
                     }
                     .buttonSize(.medium)
                 }
+                .buttonSize(.medium)
             }
         }
     }
@@ -123,6 +124,7 @@ struct TargetSheetView: View {
                     }
                     .buttonSize(.medium)
                 }
+                .buttonSize(.medium)
             }
         }
     }
@@ -140,6 +142,7 @@ struct TargetSheetView: View {
                     }
                     .buttonSize(.medium)
                 }
+                .buttonSize(.medium)
             }
         }
     }
@@ -156,4 +159,17 @@ struct TargetSheetView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+// MARK: - Shared Section
+/// 타겟 선택 칩 레이아웃을 공통화합니다.
+@ViewBuilder
+private func selectionSection<Content: View>(
+    @ViewBuilder content: () -> Content
+) -> some View {
+    VStack(alignment: .leading, spacing: Constants.sectionSpacing) {
+        content()
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+}
 }

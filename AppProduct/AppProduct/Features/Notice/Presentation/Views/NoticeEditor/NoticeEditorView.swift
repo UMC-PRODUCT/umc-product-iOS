@@ -34,6 +34,9 @@ struct NoticeEditorView: View {
     @AppStorage(AppStorageKey.chapterId) private var chapterId: Int = 0
 
     @State private var viewModel: NoticeEditorViewModel
+    @State private var newlyAddedLinkID: UUID?
+    @FocusState private var isTitleFieldFocused: Bool
+    @FocusState private var isContentFieldFocused: Bool
 
     /// 링크 추가 직후 자동 스크롤/포커스에 사용할 링크 ID
     @State private var newlyAddedLinkID: UUID?
