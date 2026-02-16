@@ -7,20 +7,6 @@
 
 import Foundation
 
-// MARK: - Post Search
-
-/// 게시글 검색 응답 DTO
-/// `GET /api/v1/posts/search`
-struct PostSearchResponse: Codable {
-    let postId: Int
-    let title: String
-    let contentPreview: String
-    let category: String
-    let likeCount: Int
-    let createdAt: String
-    let matchType: String
-}
-
 // MARK: - 1. 공통 게시글 DTO (상세 조회용)
 struct PostDetailDTO: Codable {
     let postId: Int
@@ -29,20 +15,22 @@ struct PostDetailDTO: Codable {
     let category: CommunityItemCategory
     let authorId: Int
     let authorName: String
-    let authorPart: UMCPartType?
+    let authorProfileImage: String?
+    let authorPart: UMCPartType
     let createdAt: String
     let commentCount: Int
     let likeCount: Int
     let scrapCount: Int?
     let isLiked: Bool
     let isScrapped: Bool?
-    let lightningInfo: LightningInfo?
+    let isAuthor: Bool
+    let lightningInfo: LightningInfo
 
     enum CodingKeys: String, CodingKey {
-        case postId, title, content, category, authorId, authorName, commentCount, likeCount, scrapCount, isLiked, isScrapped, lightningInfo
-        case authorPart = "userPart"
-        case createdAt = "writeTime"
-    }
+            case postId, title, content, category, authorId, authorName, authorProfileImage, authorPart
+            case commentCount, likeCount, scrapCount, isLiked, isScrapped, isAuthor, lightningInfo
+            case createdAt = "writeTime"
+        }
 }
 
 // MARK: - 2. 리스트 내 개별 항목 DTO
@@ -53,11 +41,14 @@ struct PostListItemDTO: Codable {
     let category: CommunityItemCategory
     let authorId: Int
     let authorName: String
+    let authorProfileImage: String?
+    let authorPart: UMCPartType
     let createdAt: String
     let commentCount: Int
     let likeCount: Int
     let isLiked: Bool
-    let lightningInfo: LightningInfo?
+    let isAuthor: Bool
+    let lightningInfo: LightningInfo
 }
 
 // MARK: - 3. 공통 번개 정보
@@ -66,6 +57,15 @@ struct LightningInfo: Codable {
     let location: String
     let maxParticipants: Int
     let openChatUrl: String
+    
+    func toModel() -> CommunityLightningInfo {
+        return CommunityLightningInfo(
+            meetAt: ISO8601DateFormatter().date(from: meetAt) ?? Date(),
+            location: location,
+            maxParticipants: maxParticipants,
+            openChatUrl: openChatUrl
+        )
+    }
 }
 
 // 리스트 항목 변환
@@ -77,15 +77,15 @@ extension PostListItemDTO {
             category: category,
             title: title,
             content: content,
-            profileImage: nil,
+            profileImage: authorProfileImage,
             userName: authorName,
-            part: .pm, // 임시
+            part: authorPart,
             createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
             likeCount: likeCount,
             commentCount: commentCount,
             scrapCount: 0,
             isLiked: isLiked,
-            lightningInfo: nil
+            lightningInfo: lightningInfo.toModel()
         )
     }
 }
@@ -99,15 +99,15 @@ extension PostDetailDTO {
             category: category,
             title: title,
             content: content,
-            profileImage: nil,
+            profileImage: authorProfileImage,
             userName: authorName,
-            part: authorPart ?? .pm, // 임시
+            part: authorPart,
             createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
             likeCount: likeCount,
             commentCount: commentCount,
             scrapCount: scrapCount ?? 0,
             isLiked: isLiked,
-            lightningInfo: nil
+            lightningInfo: lightningInfo.toModel()
         )
     }
 }
