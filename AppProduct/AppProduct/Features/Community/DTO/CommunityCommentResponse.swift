@@ -8,22 +8,27 @@
 import Foundation
 
 struct CommentDTO: Codable {
-    let id: Int
+    let commentId: Int
     let postId: Int
     let challengerId: Int
     let challengerName: String
+    let challengerProfileImage: String?
+    let challengerPart: UMCPartType
     let content: String
     let createdAt: String
+    let isAuthor: Bool
 }
 
 extension CommentDTO {
     func toCommentModel() -> CommunityCommentModel {
         return CommunityCommentModel(
+            commentId: commentId,
             userId: challengerId,
-            profileImage: nil,
+            profileImage: challengerProfileImage,
             userName: challengerName,
             content: content,
-            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date()
+            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
+            isAuthor: isAuthor
         )
     }
 }

@@ -102,8 +102,17 @@ struct CommunityDetailView: View {
                 .appFont(.subheadline, color: .grey600)
 
             ForEach(comments) { comment in
-                CommunityCommentItem(model: comment)
-                    .equatable()
+                CommunityCommentItem(
+                    model: comment,
+                    onDeleteTapped: {
+                        await vm.deleteComment(commentId: comment.commentId)
+                    },
+                    onReportTapped: {
+                        // TODO: 신고 API 연결
+                        print("[Community] Report comment: \(comment.commentId)")
+                    }
+                )
+                .equatable()
             }
         }
     }
