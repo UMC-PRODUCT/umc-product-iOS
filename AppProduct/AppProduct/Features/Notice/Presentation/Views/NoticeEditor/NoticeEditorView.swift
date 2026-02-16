@@ -42,13 +42,6 @@ struct NoticeEditorView: View {
     @FocusState private var isTitleFieldFocused: Bool
     @FocusState private var isContentFieldFocused: Bool
 
-    /// 링크 추가 직후 자동 스크롤/포커스에 사용할 링크 ID
-    @State private var newlyAddedLinkID: UUID?
-
-    /// 제목/내용 입력 포커스 제어
-    @FocusState private var isTitleFieldFocused: Bool
-    @FocusState private var isContentFieldFocused: Bool
-
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
