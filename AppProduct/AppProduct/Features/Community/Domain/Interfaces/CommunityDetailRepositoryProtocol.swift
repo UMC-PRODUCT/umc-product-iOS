@@ -23,4 +23,8 @@ protocol CommunityDetailRepositoryProtocol {
     func postLike(postId: Int) async throws
     /// 댓글 작성
     func postComment(postId: Int, request: PostCommentRequest) async throws
+    /// 게시글 신고
+    func postPostReport(postId: Int) async throws
+    /// 댓글 신고
+    func postCommentReport(commentId: Int) async throws
 }

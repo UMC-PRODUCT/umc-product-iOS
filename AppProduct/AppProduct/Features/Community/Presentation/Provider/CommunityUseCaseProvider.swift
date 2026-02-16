@@ -35,6 +35,10 @@ protocol CommunityUseCaseProviding {
     var postLikeUseCase: PostLikeUseCaseProtocol { get }
     /// 댓글 작성
     var postCommentUseCase: PostCommentUseCaseProtocol { get }
+    /// 게시글 신고
+    var reportPostUseCase: ReportPostUseCaseProtocol { get }
+    /// 댓글 신고
+    var reportCommentUseCase: ReportCommentUseCaseProtocol { get }
 }
 
 /// Community UseCase Provider 구현
@@ -56,6 +60,8 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
     let postScrapUseCase: PostScrapUseCaseProtocol
     let postLikeUseCase: PostLikeUseCaseProtocol
     let postCommentUseCase: PostCommentUseCaseProtocol
+    let reportPostUseCase: ReportPostUseCaseProtocol
+    let reportCommentUseCase: ReportCommentUseCaseProtocol
 
     // MARK: - Init
 
@@ -101,6 +107,12 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
             repository: communityDetailRepository
         )
         self.postCommentUseCase = PostCommentUseCase(
+            repository: communityDetailRepository
+        )
+        self.reportPostUseCase = ReportPostUseCase(
+            repository: communityDetailRepository
+        )
+        self.reportCommentUseCase = ReportCommentUseCase(
             repository: communityDetailRepository
         )
     }

@@ -173,6 +173,7 @@ private extension MyPagePostResponseDTO {
             commentCount: commentCount,
             scrapCount: 0,
             isLiked: isLiked,
+            isAuthor: true,
             lightningInfo: nil
         )
     }

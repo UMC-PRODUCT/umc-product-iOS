@@ -200,4 +200,52 @@ class CommunityDetailViewModel {
             postDetailState = .failed(.unknown(message: error.localizedDescription))
         }
     }
+
+    /// 게시글 신고
+    @MainActor
+    func reportPost() async {
+        do {
+            try await useCaseProvider.reportPostUseCase.execute(postId: postItem.postId)
+            // 신고 성공 시 사용자에게 알림 (ErrorHandler 사용)
+            errorHandler.handle(
+                AppError.domain(.custom(message: "게시글이 신고되었습니다.")),
+                context: ErrorContext(
+                    feature: "Community",
+                    action: "reportPost"
+                )
+            )
+        } catch {
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Community",
+                action: "reportPost",
+                retryAction: { [weak self] in
+                    await self?.reportPost()
+                }
+            ))
+        }
+    }
+
+    /// 댓글 신고
+    @MainActor
+    func reportComment(commentId: Int) async {
+        do {
+            try await useCaseProvider.reportCommentUseCase.execute(commentId: commentId)
+            // 신고 성공 시 사용자에게 알림 (ErrorHandler 사용)
+            errorHandler.handle(
+                AppError.domain(.custom(message: "댓글이 신고되었습니다.")),
+                context: ErrorContext(
+                    feature: "Community",
+                    action: "reportComment"
+                )
+            )
+        } catch {
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Community",
+                action: "reportComment",
+                retryAction: { [weak self] in
+                    await self?.reportComment(commentId: commentId)
+                }
+            ))
+        }
+    }
 }

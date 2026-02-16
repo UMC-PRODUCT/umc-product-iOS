@@ -131,7 +131,3 @@ struct CommunityLightningCard: View {
         }
     }
 }
-
-#Preview {
-    CommunityLightningCard(model: .init(postId: 1, userId: 1, category: .free, title: "제목", content: "내용", profileImage: nil, userName: "이름", part: .front(type: .ios), createdAt: Date(), likeCount: 0, commentCount: 0, scrapCount: 0, lightningInfo: .init(meetAt: Date(), location: "강남역 2번 출구", maxParticipants: 5, openChatUrl: "https://open.kakao.com/o/sxxxxxx")))
-}

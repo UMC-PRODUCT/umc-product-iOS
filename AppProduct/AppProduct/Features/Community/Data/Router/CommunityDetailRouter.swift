@@ -19,6 +19,8 @@ enum CommunityDetailRouter {
     case postScrap(postId: Int) // 스크랩 토글
     case postLike(postId: Int) // 좋아요 토글
     case postComments(postId: Int, request: PostCommentRequest) // 댓글 작성
+    case postPostReports(postId: Int) // 게시글 신고
+    case postCommentReports(commentId: Int) // 댓글 신고
 }
 
 extension CommunityDetailRouter: BaseTargetType {
@@ -39,6 +41,10 @@ extension CommunityDetailRouter: BaseTargetType {
             return "/api/v1/posts/\(postId)/like"
         case .postComments(let postId, _):
             return "/api/v1/posts/\(postId)/comments"
+        case .postPostReports(let postId):
+            return "/api/v1/posts/\(postId)/reports"
+        case .postCommentReports(let commentId):
+            return "/api/v1/comments/\(commentId)/reports"
         }
     }
     
@@ -49,7 +55,7 @@ extension CommunityDetailRouter: BaseTargetType {
             return .delete
         case .getComments, .getPostDetail:
             return .get
-        case .postComments, .postLike, .postScrap:
+        case .postComments, .postLike, .postScrap, .postPostReports, .postCommentReports:
             return .post
         }
     }
@@ -57,7 +63,7 @@ extension CommunityDetailRouter: BaseTargetType {
     // MARK: - Task
     var task: Moya.Task {
         switch self {
-        case .deletePosts, .deleteComments, .getComments, .getPostDetail, .postLike, .postScrap:
+        case .deletePosts, .deleteComments, .getComments, .getPostDetail, .postLike, .postScrap, .postPostReports, .postCommentReports:
             return .requestPlain
         case .postComments(_, let request):
             return .requestJSONEncodable(request)

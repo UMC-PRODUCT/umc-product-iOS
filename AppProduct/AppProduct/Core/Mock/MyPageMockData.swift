@@ -60,6 +60,7 @@ enum MyPageMockData {
             commentCount: 5,
             scrapCount: 0,
             isLiked: true,
+            isAuthor: true,
             lightningInfo: nil
         ),
         .init(
@@ -76,6 +77,7 @@ enum MyPageMockData {
             commentCount: 4,
             scrapCount: 0,
             isLiked: false,
+            isAuthor: true,
             lightningInfo: nil
         ),
         .init(
@@ -92,6 +94,7 @@ enum MyPageMockData {
             commentCount: 1,
             scrapCount: 0,
             isLiked: true,
+            isAuthor: true,
             lightningInfo: .init(
                 meetAt: Date(),
                 location: "서울 서초구 강남대로69길 8",

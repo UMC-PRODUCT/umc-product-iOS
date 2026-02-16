@@ -102,4 +102,26 @@ final class CommunityDetailRepository: CommunityDetailRepositoryProtocol {
         )
         _ = try apiResponse.unwrap()
     }
+    
+    func postPostReport(postId: Int) async throws {
+        let response = try await adapter.request(
+            CommunityDetailRouter.postPostReports(postId: postId)
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        )
+        _ = try apiResponse.unwrap()
+    }
+    
+    func postCommentReport(commentId: Int) async throws {
+        let response = try await adapter.request(
+            CommunityDetailRouter.postCommentReports(commentId: commentId)
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        )
+        _ = try apiResponse.unwrap()
+    }
 }

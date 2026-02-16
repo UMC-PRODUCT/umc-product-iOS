@@ -9,16 +9,18 @@ import SwiftUI
 
 struct CommunityDetailView: View {
     // MARK: - Properties
-    
+
     @State private var vm: CommunityDetailViewModel
+    @State private var alertPrompt: AlertPrompt?
     @Environment(\.di) private var di
     @Environment(ErrorHandler.self) var errorHandler
+
     let postItem: CommunityItemModel
-    
+
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
-    
+
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
@@ -81,17 +83,66 @@ struct CommunityDetailView: View {
             await vm.fetchComments()
         }
         .toolbar {
-            ToolBarCollection.ToolbarTrailingMenu(actions: [
+            ToolBarCollection.ToolbarTrailingMenu(actions: toolbarActions)
+        }
+        .alertPrompt(item: $alertPrompt)
+    }
+
+    // MARK: - Toolbar Actions
+
+    private var toolbarActions: [ToolBarCollection.ToolbarTrailingMenu.ActionItem] {
+        if postItem.isAuthor {
+            // 본인 게시글: 수정/삭제
+            return [
                 .init(title: "수정하기", icon: "pencil") {
                     pathStore.communityPath.append(.community(.post(editItem: vm.postItem)))
                 },
                 .init(title: "삭제하기", icon: "trash", role: .destructive) {
-                    Task {
-                        await vm.deletePost()
-                    }
+                    showDeletePostAlert()
                 }
-            ])
+            ]
+        } else {
+            // 타인 게시글: 신고
+            return [
+                .init(title: "신고하기", icon: "light.beacon.max.fill", role: .destructive) {
+                    showReportPostAlert()
+                }
+            ]
         }
+    }
+
+    // MARK: - Alert Functions
+
+    /// 게시글 삭제 확인 Alert
+    private func showDeletePostAlert() {
+        alertPrompt = AlertPrompt(
+            title: "게시글 삭제",
+            message: "게시글을 삭제하시겠습니까?",
+            positiveBtnTitle: "삭제",
+            positiveBtnAction: {
+                Task {
+                    await vm.deletePost()
+                }
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
+    }
+
+    /// 게시글 신고 확인 Alert
+    private func showReportPostAlert() {
+        alertPrompt = AlertPrompt(
+            title: "게시글 신고",
+            message: "이 게시글을 신고하시겠습니까?",
+            positiveBtnTitle: "신고",
+            positiveBtnAction: {
+                Task {
+                    await vm.reportPost()
+                }
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
     }
 
     // MARK: - Comment
@@ -108,8 +159,7 @@ struct CommunityDetailView: View {
                         await vm.deleteComment(commentId: comment.commentId)
                     },
                     onReportTapped: {
-                        // TODO: 신고 API 연결
-                        print("[Community] Report comment: \(comment.commentId)")
+                        await vm.reportComment(commentId: comment.commentId)
                     }
                 )
                 .equatable()

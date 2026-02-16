@@ -85,6 +85,7 @@ extension PostListItemDTO {
             commentCount: commentCount,
             scrapCount: 0,
             isLiked: isLiked,
+            isAuthor: isAuthor,
             lightningInfo: lightningInfo.toModel()
         )
     }
@@ -107,6 +108,7 @@ extension PostDetailDTO {
             commentCount: commentCount,
             scrapCount: scrapCount ?? 0,
             isLiked: isLiked,
+            isAuthor: isAuthor,
             lightningInfo: lightningInfo.toModel()
         )
     }
