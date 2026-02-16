@@ -40,7 +40,7 @@ struct CommunityDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DefaultSpacing.spacing32) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
                 CommunityPostCard(
                     model: vm.postItem,
                     onLikeTapped: {

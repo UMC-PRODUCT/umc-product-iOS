@@ -64,15 +64,7 @@ struct CommunityFameItem: View {
 
     private var profileSection: some View {
         HStack(spacing: DefaultSpacing.spacing16) {
-            if model.profileImage != nil {
-                // !!! - url 이미지 처리
-                Image(systemName: "heart")
-            } else {
-                Text(model.userName.prefix(1))
-                    .appFont(.callout, color: .grey900)
-                    .frame(width: Constant.profileCircleSize.width, height: Constant.profileCircleSize.height)
-                    .background(.grey100, in: Circle())
-            }
+            RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileCircleSize)
 
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
                 // 이름 + 파트

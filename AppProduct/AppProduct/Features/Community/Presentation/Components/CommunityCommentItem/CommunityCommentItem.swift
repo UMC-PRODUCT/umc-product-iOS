@@ -32,14 +32,7 @@ struct CommunityCommentItem: View, Equatable {
 
     var body: some View {
         HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
-            if model.profileImage != nil {
-                model.profileImage
-            } else {
-                Text(model.userName.prefix(1))
-                    .appFont(.body, color: .grey500)
-                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
-                    .background(.grey100, in: Circle())
-            }
+            RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileSize)
 
             bubbleSection
         }

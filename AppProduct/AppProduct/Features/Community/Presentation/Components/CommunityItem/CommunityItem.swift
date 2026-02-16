@@ -91,15 +91,8 @@ struct CommunityItem: View, Equatable {
     private var bottomSection: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             // 프로필 이미지
-            if model.profileImage != nil {
-                // !!! - url 이미지 처리
-                Image(systemName: "heart")
-            } else {
-                Text(model.userName.prefix(1))
-                    .appFont(.caption1Emphasis, color: .grey500)
-                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
-                    .background(.grey100, in: Circle())
-            }
+            RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileSize)
+            
             // 이름 + 파트
             Text("\(model.userName) • \(model.part.name)")
 
