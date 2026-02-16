@@ -20,7 +20,7 @@ struct CommunityDetailView: View {
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
-    
+
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
@@ -36,18 +36,6 @@ struct CommunityDetailView: View {
         static let retryTitle: String = "다시 시도"
         static let retryMinimumWidth: CGFloat = 72
         static let retryMinimumHeight: CGFloat = 20
-    }
-    
-    // MARK: - Init
-    init(container: DIContainer,
-         errorHandler: ErrorHandler,
-         postItem: CommunityItemModel
-    ) {
-        self.postItem = postItem
-        let viewModel = CommunityDetailViewModel(
-            container: container, errorHandler: errorHandler, postItem: postItem
-        )
-        self._vm = .init(wrappedValue: viewModel)
     }
     
     // MARK: - Init
