@@ -66,12 +66,20 @@ extension ActivityRepositoryProvider {
         )
     }
 
-    // TODO: 서버 연결 시 실제 구현체로 변경 예정 - [25.1.27] 이재원
-    // static func real() -> ActivityRepositoryProvider {
-    //     ActivityRepositoryProvider(
-    //         attendanceRepository: AttendanceRepository(),
-    //         sessionRepository: SessionRepository(),
-    //         activityRepository: ActivityRepository()
-    //     )
-    // }
+    /// 실제 API 연결 Provider 생성
+    ///
+    /// 출석 Repository만 실제 구현체, 나머지는 Mock 유지
+    static func real(
+        adapter: MoyaNetworkAdapter
+    ) -> ActivityRepositoryProvider {
+        ActivityRepositoryProvider(
+            attendanceRepository: AttendanceRepository(
+                adapter: adapter
+            ),
+            sessionRepository: MockSessionRepository(),
+            activityRepository: MockActivityRepository(),
+            studyRepository: MockStudyRepository(),
+            memberRepository: MockMemberRepository()
+        )
+    }
 }

@@ -216,7 +216,13 @@ extension DIContainer {
         
         // MARK: - Activity Feature
         container.register(ActivityRepositoryProviding.self) {
+            #if DEBUG && targetEnvironment(simulator)
             ActivityRepositoryProvider.mock()
+            #else
+            ActivityRepositoryProvider.real(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+            #endif
         }
         container.register(ActivityUseCaseProviding.self) {
             ActivityUseCaseProvider(

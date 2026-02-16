@@ -13,82 +13,93 @@ import Foundation
 /// 실제 네트워크 요청 없이 더미 데이터를 반환합니다.
 final class MockAttendanceRepository: AttendanceRepositoryProtocol {
 
-    // MARK: - Mock Data
+    // MARK: - 조회
 
-    private let mockAttendance: Attendance
-
-    init(mockAttendance: Attendance? = nil) {
-        self.mockAttendance = mockAttendance ?? Self.defaultMockAttendance
-    }
-
-    // MARK: - Protocol Methods
-
-    func createAttendance(request: CreateAttendanceRequest) async throws -> Attendance {
-        // 사유 기반 출석은 승인 대기 상태로 반환
-        let status: AttendanceStatus = request.type == .reason
-            ? .pendingApproval
-            : .beforeAttendance
-
-        return Attendance(
-            sessionId: request.sessionId,
-            userId: request.userId,
-            type: request.type,
-            status: status,
-            locationVerification: request.coordinate.map {
-                LocationVerification(
-                    isVerified: true,
-                    coordinate: $0,
-                    address: .init(fullAddress: "Mock 주소", city: "서울시", district: "성북구"),
-                    verifiedAt: .now
-                )
-            },
-            reason: request.reason
+    func getAttendanceDetail(
+        recordId: Int
+    ) async throws -> AttendanceRecord {
+        AttendanceRecord(
+            id: recordId,
+            attendanceSheetId: 1,
+            memberId: 1,
+            status: .present,
+            memo: nil
         )
     }
 
-    func updateAttendanceStatus(
-        attendanceId: AttendanceID,
-        status: AttendanceStatus,
-        verification: LocationVerification?
-    ) async throws -> Attendance {
-        return Attendance(
-            sessionId: mockAttendance.sessionId,
-            userId: mockAttendance.userId,
-            type: mockAttendance.type,
-            status: status,
-            locationVerification: verification ?? mockAttendance.locationVerification,
-            reason: mockAttendance.reason
-        )
+    func getPendingAttendances(
+        scheduleId: Int
+    ) async throws -> [PendingAttendanceRecord] {
+        [
+            PendingAttendanceRecord(
+                attendanceId: 1,
+                memberId: 1,
+                memberName: "일일일",
+                nickname: "길동이",
+                profileImageLink: nil,
+                schoolName: "중앙대학교",
+                status: .pendingApproval,
+                reason: "병원 방문으로 인한 지각",
+                requestedAt: .now
+            )
+        ]
     }
 
-    func fetchPendingAttendances(sessionId: SessionID) async throws -> [Attendance] {
-        return [mockAttendance]
+    func getMyHistory() async throws -> [AttendanceHistoryItem] {
+        [
+            AttendanceHistoryItem(
+                attendanceId: 1,
+                scheduleId: 1,
+                scheduleName: "9기 OT",
+                tags: ["SEMINAR", "ALL"],
+                scheduledDate: "2024-01-15",
+                startTime: "14:30",
+                endTime: "16:00",
+                status: .present
+            )
+        ]
     }
 
-    func fetchAttendances(sessionId: SessionID) async throws -> [Attendance] {
-        return [mockAttendance]
+    func getChallengerHistory(
+        challengerId: Int
+    ) async throws -> [AttendanceHistoryItem] {
+        try await getMyHistory()
     }
 
-    func fetchUserAttendanceHistory(userId: UserID) async throws -> [Attendance] {
-        return [mockAttendance]
+    func getAvailableSchedules(
+    ) async throws -> [AvailableAttendanceSchedule] {
+        [
+            AvailableAttendanceSchedule(
+                scheduleId: 1,
+                scheduleName: "9기 OT",
+                tags: ["STUDY", "PROJECT"],
+                startTime: "10:00:00",
+                endTime: "12:00:00",
+                sheetId: 1,
+                recordId: 1,
+                status: .beforeAttendance,
+                statusDisplay: "출석 전",
+                locationVerified: true
+            )
+        ]
     }
-}
 
-// MARK: - Default Mock Data
+    // MARK: - 액션
 
-extension MockAttendanceRepository {
-    static let defaultMockAttendance = Attendance(
-        sessionId: SessionID(value: "mock_session"),
-        userId: UserID(value: "mock_user"),
-        type: .gps,
-        status: .beforeAttendance,
-        locationVerification: .init(
-            isVerified: true,
-            coordinate: .init(latitude: 37.582967, longitude: 127.010527),
-            address: .init(fullAddress: "한성대학교", city: "서울시", district: "성북구"),
-            verifiedAt: .now
-        ),
-        reason: nil
-    )
+    func approveAttendance(recordId: Int) async throws {}
+
+    func rejectAttendance(recordId: Int) async throws {}
+
+    func checkAttendance(
+        request: AttendanceCheckRequestDTO
+    ) async throws -> Int {
+        1
+    }
+
+    func submitReason(
+        request: AttendanceReasonRequestDTO
+    ) async throws -> Int {
+        1
+    }
 }
 #endif

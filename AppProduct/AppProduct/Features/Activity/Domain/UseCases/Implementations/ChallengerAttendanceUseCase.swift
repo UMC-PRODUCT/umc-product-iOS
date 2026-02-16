@@ -52,16 +52,33 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
             throw DomainError.attendanceOutOfRange
         }
 
-        // 서버에 출석 요청 (pending 상태)
-        let request = CreateAttendanceRequest(
+        // 서버에 GPS 출석 요청
+        let recordId = try await repository.checkAttendance(
+            request: AttendanceCheckRequestDTO(
+                attendanceSheetId: 0, // TODO: 다음 단계에서 실제 sheetId 전달
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude,
+                locationVerified: true
+            )
+        )
+
+        return Attendance(
             sessionId: sessionId,
             userId: userId,
             type: .gps,
-            coordinate: coordinate,
+            status: .beforeAttendance,
+            locationVerification: LocationVerification(
+                isVerified: true,
+                coordinate: coordinate,
+                address: .init(
+                    fullAddress: "",
+                    city: "",
+                    district: ""
+                ),
+                verifiedAt: .now
+            ),
             reason: nil
         )
-
-        return try await repository.createAttendance(request: request)
     }
 
     /// 지각 사유 제출
@@ -77,15 +94,21 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
         }
 
         // 서버에 지각 사유 제출
-        let request = CreateAttendanceRequest(
+        let recordId = try await repository.submitReason(
+            request: AttendanceReasonRequestDTO(
+                attendanceSheetId: 0, // TODO: 다음 단계에서 실제 sheetId 전달
+                reason: reason
+            )
+        )
+
+        return Attendance(
             sessionId: sessionId,
             userId: userId,
             type: .reason,
-            coordinate: nil,
+            status: .pendingApproval,
+            locationVerification: nil,
             reason: reason
         )
-
-        return try await repository.createAttendance(request: request)
     }
 
     /// 불참 사유 제출
@@ -99,15 +122,21 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
             throw DomainError.attendanceReasonRequired
         }
 
-        let request = CreateAttendanceRequest(
+        let recordId = try await repository.submitReason(
+            request: AttendanceReasonRequestDTO(
+                attendanceSheetId: 0, // TODO: 다음 단계에서 실제 sheetId 전달
+                reason: reason
+            )
+        )
+
+        return Attendance(
             sessionId: sessionId,
             userId: userId,
             type: .reason,
-            coordinate: nil,
+            status: .pendingApproval,
+            locationVerification: nil,
             reason: reason
         )
-
-        return try await repository.createAttendance(request: request)
     }
 
     /// 현재 시간이 어느 출석 시간대에 속하는지 확인

@@ -54,3 +54,32 @@ enum AttendanceStatus: String, CaseIterable {
         }
     }
 }
+
+// MARK: - Server Status Mapping
+
+extension AttendanceStatus {
+
+    /// 서버 API 상태 문자열 → Domain enum 변환
+    ///
+    /// - Parameter serverStatus: 서버 응답 status 필드
+    ///   (e.g., "PRESENT", "LATE", "ABSENT", "PENDING",
+    ///    "PRESENT_PENDING", "LATE_PENDING")
+    init(serverStatus: String) {
+        switch serverStatus {
+        case "PRESENT":
+            self = .present
+        case "LATE":
+            self = .late
+        case "ABSENT":
+            self = .absent
+        case "PENDING":
+            self = .beforeAttendance
+        default:
+            if serverStatus.hasSuffix("_PENDING") {
+                self = .pendingApproval
+            } else {
+                self = .beforeAttendance
+            }
+        }
+    }
+}

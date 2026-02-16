@@ -24,47 +24,42 @@ final class OperatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol {
     // MARK: - Function
 
     /// 승인 대기 명단 조회
+    ///
+    /// - Note: 다음 단계에서 OperatorAttendanceUseCaseProtocol 리팩토링 시
+    ///   반환 타입을 `[PendingAttendanceRecord]`로 변경 예정
     func fetchPendingAttendances(sessionId: SessionID) async throws -> [Attendance] {
-        try await repository.fetchPendingAttendances(sessionId: sessionId)
+        // TODO: 다음 단계에서 Protocol 리팩토링 시 구현
+        return []
     }
 
     /// 개별 출석 승인
     func approveAttendance(attendanceId: AttendanceID) async throws -> Attendance {
-        try await repository.updateAttendanceStatus(
-            attendanceId: attendanceId,
-            status: .present,
-            verification: nil
+        // TODO: 다음 단계에서 Protocol 리팩토링 시 구현
+        // try await repository.approveAttendance(recordId: Int(attendanceId.value) ?? 0)
+        throw RepositoryError.serverError(
+            code: "NOT_IMPLEMENTED",
+            message: "다음 단계에서 구현 예정"
         )
     }
 
     /// 전체 일괄 승인
     func approveAllAttendances(sessionId: SessionID) async throws -> [Attendance] {
-        let pendingAttendances = try await fetchPendingAttendances(sessionId: sessionId)
-
-        var approvedAttendances: [Attendance] = []
-        for attendance in pendingAttendances {
-            let approved = try await repository.updateAttendanceStatus(
-                attendanceId: AttendanceID(value: attendance.id.uuidString),
-                status: .present,
-                verification: nil
-            )
-            approvedAttendances.append(approved)
-        }
-
-        return approvedAttendances
+        // TODO: 다음 단계에서 Protocol 리팩토링 시 구현
+        return []
     }
 
     /// 출석 거부
     func rejectAttendance(attendanceId: AttendanceID, reason: String) async throws -> Attendance {
-        try await repository.updateAttendanceStatus(
-            attendanceId: attendanceId,
-            status: .absent,
-            verification: nil
+        // TODO: 다음 단계에서 Protocol 리팩토링 시 구현
+        throw RepositoryError.serverError(
+            code: "NOT_IMPLEMENTED",
+            message: "다음 단계에서 구현 예정"
         )
     }
 
     /// 세션별 전체 출석 현황 조회
     func fetchSessionAttendances(sessionId: SessionID) async throws -> [Attendance] {
-        try await repository.fetchAttendances(sessionId: sessionId)
+        // TODO: 다음 단계에서 Protocol 리팩토링 시 구현
+        return []
     }
 }
