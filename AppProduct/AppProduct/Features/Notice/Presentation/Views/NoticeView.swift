@@ -167,14 +167,6 @@ struct NoticeView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
-    /// 현재 탭의 Notice NavigationPath 바인딩입니다.
-    private var noticePathBinding: Binding<[NavigationDestination]> {
-        Binding(
-            get: { pathStore.noticePath },
-            set: { pathStore.noticePath = $0 }
-        )
-    }
-
     // MARK: - Retry
     @MainActor
     private func retryNotices() async {

@@ -134,7 +134,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--debug-notice-editor-loading"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "NoticeDummy(no Select)"
