@@ -44,7 +44,7 @@ struct CommunityView: View {
             .task {
                 switch vm.selectedMenu {
                 case .all, .question, .party:
-                    await vm.fetchCommunityItems(query: .init(category: vm.selectedMenu.toCategoryType(), page: 0, size: 10))
+                    await vm.fetchInitialIfNeeded()
                 case .fame:
                     break
                 }
@@ -80,9 +80,10 @@ struct CommunityView: View {
                 } actions: {
                     Button("다시 시도") {
                         Task {
-                            await vm.fetchCommunityItems(query: .init(category: vm.selectedMenu.toCategoryType(), page: 0, size: 10))
+                            await vm.refresh()
                         }
                     }
+                    .buttonStyle(.glassProminent)
                 }
             }
         }
@@ -95,21 +96,45 @@ struct CommunityView: View {
             if vm.filteredItems.isEmpty {
                 unableContent
             } else {
-                List(vm.filteredItems, rowContent: { item in
-                    CommunityItem(model: item) {
-                        pathStore.communityPath.append(.community(.detail(postItem: item)))
-                    }
-                    .equatable()
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .task {
-                        await vm.loadMoreIfNeeded(currentItem: item)
-                    }
-                })
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
+                postsList
             }
         }
+    }
+
+    private var postsList: some View {
+        List {
+            ForEach(vm.filteredItems) { item in
+                postRow(item)
+            }
+
+            if vm.isLoadingMore {
+                loadingMoreRow
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+    }
+
+    private func postRow(_ item: CommunityItemModel) -> some View {
+        CommunityItem(model: item) {
+            pathStore.communityPath.append(.community(.detail(postItem: item)))
+        }
+        .equatable()
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .task {
+            await vm.loadMoreIfNeeded(currentItem: item)
+        }
+    }
+
+    private var loadingMoreRow: some View {
+        HStack {
+            Spacer()
+            ProgressView()
+            Spacer()
+        }
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 
     private var unableContent: some View {
