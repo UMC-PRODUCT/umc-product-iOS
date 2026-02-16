@@ -31,6 +31,9 @@ struct MemberManagementItem: Identifiable, Equatable {
     /// 기수 정보 (예: "9기")
     let generation: String
     
+    /// 소속 학교
+    let school: String
+    
     /// 포지션 정보 (Deprecated 가능성 있음, part와 중복?)
     let position: String
     
@@ -52,4 +55,7 @@ struct MemberManagementItem: Identifiable, Equatable {
     
     /// 출석/활동 기록 목록
     let attendanceRecords: [MemberAttendanceRecord]
+    
+    /// 경고 히스토리
+    let penaltyHistory: [OperatorMemberPenaltyHistory]
 }

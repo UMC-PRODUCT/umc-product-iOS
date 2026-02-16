@@ -211,6 +211,7 @@ struct ChallengerMemberDetailSheetView: View {
                     name: "김미주",
                     nickname: "마티",
                     generation: "9기",
+                    school: "덕성여자대학교",
                     position: "Challenger",
                     part: .front(type: .ios),
                     penalty: 2,
@@ -252,7 +253,8 @@ struct ChallengerMemberDetailSheetView: View {
                             week: 7,
                             status: .present
                         ),
-                    ]
+                    ],
+                    penaltyHistory: []
                 ))
             })
 }
