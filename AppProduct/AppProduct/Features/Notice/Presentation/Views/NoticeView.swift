@@ -66,6 +66,7 @@ struct NoticeView: View {
             content
             .searchable(text: $search, prompt: Constants.searchPlaceholder)
             .searchToolbarBehavior(.minimize)
+            .navigationTitle(viewModel.selectedMainFilter.labelText)
             .onChange(of: search) { _, newValue in
                 handleSearchChanged(newValue)
             }
@@ -239,19 +240,16 @@ struct NoticeView: View {
         )
     }
 
-    /// 메인필터 선택 바인딩
-    private var mainFilterBinding: Binding<NoticeMainFilterType> {
-        Binding(
-            get: { viewModel.selectedMainFilter },
-            set: { viewModel.selectMainFilter($0) }
-        )
-    }
-
     /// 현재 탭의 Notice NavigationPath 바인딩입니다.
     private var noticePathBinding: Binding<[NavigationDestination]> {
         Binding(
             get: { pathStore.noticePath },
-            set: { pathStore.noticePath = $0 }
+            set: { newValue in
+                // NavigationStack이 동일 경로를 다시 쓰는 경우를 무시해
+                // "tried to update multiple times per frame" 경고를 줄입니다.
+                guard pathStore.noticePath != newValue else { return }
+                pathStore.noticePath = newValue
+            }
         )
     }
 
@@ -259,11 +257,6 @@ struct NoticeView: View {
     /// 상단 툴바(기수 + 메인 필터)를 구성합니다.
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolBarCollection.GenerationFilter(
-            title: viewModel.selectedGeneration.title,
-            generations: viewModel.generations,
-            selection: generationBinding
-        )
         ToolBarCollection.ToolBarCenterMenu(
             items: viewModel.mainFilterItems,
             selection: mainFilterBinding,
@@ -274,6 +267,20 @@ struct NoticeView: View {
                 print("[Notice][MainFilter] tapped: \(selected.labelText)")
                 #endif
             }
+        )
+
+        ToolBarCollection.GenerationFilter(
+            title: viewModel.selectedGeneration.title,
+            generations: viewModel.generations,
+            selection: generationBinding
+        )
+    }
+
+    /// 메인필터 선택 바인딩
+    private var mainFilterBinding: Binding<NoticeMainFilterType> {
+        Binding(
+            get: { viewModel.selectedMainFilter },
+            set: { viewModel.selectMainFilter($0) }
         )
     }
 

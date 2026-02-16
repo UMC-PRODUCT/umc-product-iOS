@@ -15,7 +15,13 @@ struct NoticeEditorView: View {
 
     // MARK: - Property
     private let container: DIContainer
+    @AppStorage(AppStorageKey.organizationType) private var organizationType: String = ""
+    @AppStorage(AppStorageKey.chapterName) private var chapterName: String = ""
+    @AppStorage(AppStorageKey.schoolName) private var schoolName: String = ""
     @State private var viewModel: NoticeEditorViewModel
+    @State private var newlyAddedLinkID: UUID?
+    @FocusState private var isTitleFieldFocused: Bool
+    @FocusState private var isContentFieldFocused: Bool
 
     // MARK: - Initializer
     init(container: DIContainer, userPart: UMCPartType?, mode: NoticeEditorMode = .create) {
@@ -40,42 +46,48 @@ struct NoticeEditorView: View {
         static let alarmSize: CGFloat = 16
         static let alarmPadding: EdgeInsets = .init(top: 9, leading: .zero, bottom: 9, trailing: .zero)
         static let alarmWidth: CGFloat = 110
+        static let targetSheetLargeDetentFraction: CGFloat = 0.85
+        static let targetSheetSmallDetentFraction: CGFloat = 0.38
+        static let contentBottomInset: CGFloat = 140
+        static let linkScrollDelayNanos: UInt64 = 120_000_000
     }
 
     // MARK: - Body
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: DefaultSpacing.spacing16) {
-                textfieldSection
-                    
-                if !viewModel.noticeImages.isEmpty {
-                    imageSection
+        ScrollViewReader { proxy in
+            ScrollView(.vertical) {
+                VStack(spacing: DefaultSpacing.spacing16) {
+                    textfieldSection
+                        
+                    if !viewModel.noticeImages.isEmpty {
+                        imageSection
+                    }
+                    if !viewModel.noticeLinks.isEmpty {
+                        linkSection
+                    }
+                    if viewModel.isVoteConfirmed {
+                        voteSection
+                    }
                 }
-                if !viewModel.noticeLinks.isEmpty {
-                    linkSection
+                .padding(.bottom, Constants.contentBottomInset)
+            }
+            .onChange(of: viewModel.noticeLinks.count) { oldValue, newValue in
+                guard newValue > oldValue, let targetID = newlyAddedLinkID else { return }
+                withAnimation(.easeOut(duration: 0.2)) {
+                    proxy.scrollTo(targetID, anchor: .bottom)
                 }
-                if viewModel.isVoteConfirmed {
-                    voteSection
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: Constants.linkScrollDelayNanos)
+                    newlyAddedLinkID = nil
                 }
             }
         }
+        .navigationTitle(navigationTitle)
+        .navigationSubtitle(navigationSubtitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            // 수정 모드에서는 카테고리 변경 불가
-            if !viewModel.isEditMode {
-                ToolBarCollection.ToolBarCenterMenu(
-                    items: viewModel.availableCategories,
-                    selection: categoryBinding,
-                    itemLabel: { $0.labelText },
-                    itemIcon: { $0.labelIcon }
-                )
-            }
-            
-            ToolBarCollection.ConfirmBtn(action: {
-                Task {
-                    await viewModel.saveNotice()
-                }
-            }, disable: !viewModel.canSubmit)
+        .toolbar { toolbarContent }
+        .task {
+            viewModel.applyOrganizationType(organizationType)
         }
         .safeAreaBar(edge: .top) {
             if viewModel.selectedCategory.hasSubCategories && !viewModel.isEditMode {
@@ -84,7 +96,7 @@ struct NoticeEditorView: View {
         }
         .sheet(item: $viewModel.activeSheetType) { sheetType in
             TargetSheetView(viewModel: viewModel, sheetType: sheetType)
-                .presentationDetents([.fraction(0.3)])
+                .presentationDetents(targetSheetDetents(for: sheetType))
                 .presentationDragIndicator(.visible)
         }
         .safeAreaBar(edge: .bottom, alignment: .leading) {
@@ -104,7 +116,9 @@ struct NoticeEditorView: View {
                         }
                         
                         ToolBtn(icon: "link", action: {
-                            viewModel.noticeLinks.append(NoticeLinkItem())
+                            let newItem = NoticeLinkItem()
+                            viewModel.noticeLinks.append(newItem)
+                            newlyAddedLinkID = newItem.id
                         })
                         
                         if !viewModel.isEditMode {
@@ -129,6 +143,9 @@ struct NoticeEditorView: View {
             Task {
                 await viewModel.loadSelectedImages()
             }
+        }
+        .onChange(of: organizationType) { _, newValue in
+            viewModel.applyOrganizationType(newValue)
         }
         .fullScreenCover(isPresented: $viewModel.showVoting) {
             VotingFormSheetView(
@@ -158,12 +175,14 @@ struct NoticeEditorView: View {
                 ForEach(viewModel.selectedCategory.subCategories) { subCategory in
                     ChipButton(
                         subCategory.labelText,
-                        isSelected: viewModel.isSubCategorySelected(subCategory),
+                        isSelected: viewModel.isSubCategoryHighlighted(subCategory),
                         trailingIcon: subCategory.hasFilter ? true : nil
                     ) {
-                        viewModel.toggleSubCategory(subCategory)
-                        if subCategory.hasFilter && viewModel.isSubCategorySelected(subCategory) {
+                        if subCategory.hasFilter {
+                            viewModel.selectSubCategoryIfNeeded(subCategory)
                             viewModel.openSheet(for: subCategory)
+                        } else {
+                            viewModel.toggleSubCategory(subCategory)
                         }
                     }
                     .buttonSize(.medium)
@@ -190,11 +209,23 @@ struct NoticeEditorView: View {
     // MARK: - textfieldSection
     private var textfieldSection: some View {
         VStack(spacing: DefaultSpacing.spacing16) {
-            ArticleTextField(placeholder: .title, text: $viewModel.title)
+            ArticleTextField(
+                placeholder: .title,
+                text: $viewModel.title,
+                focused: $isTitleFieldFocused,
+                submitLabel: .next,
+                onSubmit: {
+                    isContentFieldFocused = true
+                }
+            )
             
             Divider()
             
-            ArticleTextField(placeholder: .content, text: $viewModel.content)
+            ArticleTextField(
+                placeholder: .content,
+                text: $viewModel.content,
+                focused: $isContentFieldFocused
+            )
                 .frame(minHeight: 200, alignment: .top)
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
@@ -228,10 +259,12 @@ struct NoticeEditorView: View {
             ForEach($viewModel.noticeLinks, id: \.id) { $item in
                 LinkAttachmentCard(
                     link: $item.link,
+                    shouldAutoFocus: $item.wrappedValue.id == newlyAddedLinkID,
                     onDismiss: {
-                        viewModel.removeLink(item)
+                        viewModel.removeLink($item.wrappedValue)
                     }
                 )
+                .id($item.wrappedValue.id)
             }
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
@@ -287,24 +320,60 @@ struct NoticeEditorView: View {
         .tint(.indigo500)
     }
     
-    // MARK: - Computed Property
+    // MARK: - Toolbar
+    /// 공지 생성 화면 상단 툴바 (ToolbarTitleMenu 기반 카테고리 메뉴)
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if !viewModel.isEditMode {
+            ToolBarCollection.ToolBarCenterMenu(
+                items: viewModel.availableCategories,
+                selection: categoryBinding,
+                itemLabel: { $0.labelText },
+                itemIcon: { $0.labelIcon }
+            )
+        }
+
+        ToolBarCollection.ConfirmBtn(action: {
+            Task {
+                await viewModel.saveNotice()
+            }
+        }, disable: !viewModel.canSubmit)
+    }
+
+    private var navigationTitle: String {
+        if viewModel.isEditMode {
+            return "공지 수정"
+        }
+        return viewModel.selectedCategory.labelText
+    }
+
+    /// 메인 카테고리가 지부/학교일 때 본인 소속명을 서브타이틀로 노출합니다.
+    private var navigationSubtitle: String {
+        switch viewModel.selectedCategory {
+        case .branch:
+            let trimmedChapter = chapterName.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmedChapter.isEmpty ? "지부" : trimmedChapter
+        case .school:
+            let trimmedSchool = schoolName.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmedSchool.isEmpty ? "학교" : trimmedSchool
+        case .central, .part:
+            return ""
+        }
+    }
+
     private var categoryBinding: Binding<EditorMainCategory> {
         Binding(
             get: { viewModel.selectedCategory },
             set: { viewModel.selectCategory($0) }
         )
     }
-}
 
-//// MARK: - Preview
-//#Preview("iOS 파트장의 화면") {
-//    NavigationStack {
-//        NoticeEditorView(userPart: .ios)
-//    }
-//}
-//
-//#Preview("파트장이 아닌 운영진의 화면") {
-//    NavigationStack {
-//        NoticeEditorView(userPart: nil)
-//    }
-//}
+    private func targetSheetDetents(for sheetType: TargetSheetType) -> Set<PresentationDetent> {
+        switch sheetType {
+        case .part, .branch:
+            return [.fraction(Constants.targetSheetSmallDetentFraction)]
+        case .school:
+            return [.fraction(Constants.targetSheetLargeDetentFraction)]
+        }
+    }
+}

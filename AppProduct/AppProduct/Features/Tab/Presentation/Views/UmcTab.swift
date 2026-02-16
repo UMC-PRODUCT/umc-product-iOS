@@ -20,6 +20,7 @@ struct UmcTab: View {
     @Environment(\.di) var di
     @Environment(ErrorHandler.self) var errorHandler
     @AppStorage(AppStorageKey.memberRole) private var memberRoleRaw: String = ""
+    @State private var didApplyDebugLaunchRoute: Bool = false
 
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
@@ -47,6 +48,9 @@ struct UmcTab: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory(isEnabled: shouldShowAccessory()) {
             UmcBottonAccessoryView(tabCase: $tabCase)
+        }
+        .task {
+            applyDebugLaunchRouteIfNeeded()
         }
     }
 
@@ -116,6 +120,23 @@ struct UmcTab: View {
         }
 
         return true
+    }
+
+    /// DEBUG 스킴 런치 인자에 따라 초기 탭/경로를 세팅합니다.
+    private func applyDebugLaunchRouteIfNeeded() {
+        #if DEBUG
+        guard !didApplyDebugLaunchRoute else { return }
+        didApplyDebugLaunchRoute = true
+
+        let arguments = ProcessInfo.processInfo.arguments
+        guard arguments.contains("--open-notice-editor") else { return }
+
+        tabCase = .notice
+        let destination = NavigationDestination.notice(.editor(mode: .create))
+        Task { @MainActor in
+            pathStore.appendNoticePathIfNeeded(destination)
+        }
+        #endif
     }
 }
 

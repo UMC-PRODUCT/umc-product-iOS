@@ -65,7 +65,7 @@ fileprivate struct NoticeAccessoryView: View {
 
     var body: some View {
         Button(action: {
-            pathStore.noticePath.append(.notice(.editor(mode: .create)))
+            openNoticeEditorIfNeeded()
         }) {
             HStack(spacing: DefaultSpacing.spacing8) {
                 Spacer()
@@ -78,6 +78,15 @@ fileprivate struct NoticeAccessoryView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .foregroundStyle(.grey900)
+        }
+    }
+
+    /// NavigationStack의 경로 변경이 같은 프레임에 중복되지 않도록
+    /// 다음 런루프로 미루고, 동일 목적지가 이미 top이면 push를 생략합니다.
+    private func openNoticeEditorIfNeeded() {
+        let destination = NavigationDestination.notice(.editor(mode: .create))
+        Task { @MainActor in
+            pathStore.appendNoticePathIfNeeded(destination)
         }
     }
 }

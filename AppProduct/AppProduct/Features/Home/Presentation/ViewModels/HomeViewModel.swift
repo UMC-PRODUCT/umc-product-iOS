@@ -93,6 +93,8 @@ final class HomeViewModel {
     /// 다른 Feature에서 `@AppStorage(AppStorageKey.xxx)`로 즉시 접근 가능합니다.
     private func saveProfileToStorage(_ result: HomeProfileResult) {
         let defaults = UserDefaults.standard
+        let latestRole = result.roles.max(by: { $0.gisu < $1.gisu })
+
         defaults.set(result.memberId, forKey: AppStorageKey.memberId)
         defaults.set(result.schoolId, forKey: AppStorageKey.schoolId)
         defaults.set(result.schoolName, forKey: AppStorageKey.schoolName)
@@ -101,11 +103,15 @@ final class HomeViewModel {
         defaults.set(result.chapterId ?? 0, forKey: AppStorageKey.chapterId)
         defaults.set(result.chapterName, forKey: AppStorageKey.chapterName)
         defaults.set(result.part?.apiValue ?? "", forKey: AppStorageKey.responsiblePart)
-        defaults.set(OrganizationType.chapter.rawValue, forKey: AppStorageKey.organizationType)
-        defaults.set(result.chapterId ?? 0, forKey: AppStorageKey.organizationId)
-
-        let latestRole = result.roles.max(by: { $0.gisu < $1.gisu })?.roleType ?? .challenger
-        defaults.set(latestRole.rawValue, forKey: AppStorageKey.memberRole)
+        defaults.set(
+            latestRole?.organizationType.rawValue ?? OrganizationType.chapter.rawValue,
+            forKey: AppStorageKey.organizationType
+        )
+        defaults.set(
+            latestRole?.organizationId ?? (result.chapterId ?? 0),
+            forKey: AppStorageKey.organizationId
+        )
+        defaults.set((latestRole?.roleType ?? .challenger).rawValue, forKey: AppStorageKey.memberRole)
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
     }
 

@@ -311,7 +311,9 @@ struct ToolBarCollection {
     }
     
     
-    /// 상단 중앙 섹션 메뉴 툴바 (ToolbarTitleMenu 기반)
+    /// 상단 중앙 섹션 메뉴 툴바 (시스템 ToolbarTitleMenu 기반)
+    ///
+    /// - Note: 타이틀 텍스트는 각 화면에서 `.navigationTitle(...)`로 지정해야 합니다.
     struct ToolBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
 
         // MARK: - Property
@@ -338,9 +340,6 @@ struct ToolBarCollection {
         
         // MARK: - Body
         var body: some ToolbarContent {
-            ToolbarItem(placement: .principal) {
-                menuLabel
-            }
             ToolbarTitleMenu {
                 ForEach(items) { item in
                     Button {
@@ -358,19 +357,6 @@ struct ToolBarCollection {
                     }
                 }
             }
-        }
-        
-        // MARK: - Private Helper
-        /// 현재 선택 항목을 toolbar title 형태로 표시합니다.
-        private var menuLabel: some View {
-            HStack(spacing: DefaultSpacing.spacing4) {
-                Text(itemLabel(selection))
-                    .appFont(.subheadline, weight: .medium)
-                Image(systemName: "chevron.down.circle.fill")
-                    .imageScale(.small)
-            }
-            .padding(DefaultConstant.defaultToolBarTitlePadding)
-            .glassEffect(.regular)
         }
     }
     

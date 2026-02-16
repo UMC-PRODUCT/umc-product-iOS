@@ -46,9 +46,9 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     var subCategories: [EditorSubCategory] {
         switch self {
         case .central:
-            return [.all, .part, .branch]
+            return [.all, .branch, .school, .part]
         case .branch:
-            return [.all, .part, .school]
+            return [.all, .school, .part]
         case .school:
             return [.all, .part]
         case .part:
@@ -259,7 +259,46 @@ struct VoteFormData: Equatable {
 // MARK: - EditorMockData
 enum EditorMockData {
     static let branches: [String] = ["Nova", "Leo", "Cetus", "Aquarius", "Cassiopeia", "Scorpio", "Pegasus"]
-    static let schools: [String] = ["가천대", "강릉원주대", "숭실대"]
+    static let chapterSchools: [Int: [String]] = [
+        1: ["가천대", "강릉원주대", "건국대", "경기대", "경북대", "경희대", "고려대"],
+        2: ["광운대", "국민대", "단국대", "동국대", "명지대", "부산대", "서울과기대"],
+        3: ["서울대", "서울시립대", "서강대", "성균관대", "세종대", "숙명여대"],
+        4: ["숭실대", "아주대", "연세대", "이화여대", "인하대", "전남대", "전북대"],
+        5: ["중앙대", "충남대", "한양대"]
+    ]
+    static let schools: [String] = [
+        "가천대", "강릉원주대", "건국대", "경기대", "경북대",
+        "경희대", "고려대", "광운대", "국민대", "단국대",
+        "동국대", "명지대", "부산대", "서울과기대", "서울대",
+        "서울시립대", "서강대", "성균관대", "세종대", "숙명여대",
+        "숭실대", "아주대", "연세대", "이화여대", "인하대",
+        "전남대", "전북대", "중앙대", "충남대", "한양대"
+    ]
+}
+
+// MARK: - NoticeEditorTargetDataSource
+/// 공지 에디터 타겟(지부/학교) 목록 조회 추상화
+///
+/// 현재는 Mock 구현을 기본으로 사용하며, 추후 API 구현체로 교체합니다.
+protocol NoticeEditorTargetDataSource {
+    func fetchAllBranches() async throws -> [String]
+    func fetchAllSchools() async throws -> [String]
+    func fetchSchools(inChapterId chapterId: Int) async throws -> [String]
+}
+
+/// 기본 Mock 타겟 데이터 소스
+struct NoticeEditorMockTargetDataSource: NoticeEditorTargetDataSource {
+    func fetchAllBranches() async throws -> [String] {
+        EditorMockData.branches
+    }
+
+    func fetchAllSchools() async throws -> [String] {
+        EditorMockData.schools
+    }
+
+    func fetchSchools(inChapterId chapterId: Int) async throws -> [String] {
+        EditorMockData.chapterSchools[chapterId] ?? EditorMockData.schools
+    }
 }
 
 // MARK: - NoticeEditorMode

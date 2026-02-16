@@ -21,6 +21,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     /// UseCase
     private let noticeUseCase: NoticeUseCaseProtocol
     private let storageUseCase: NoticeStorageUseCaseProtocol
+    private let targetDataSource: NoticeEditorTargetDataSource
     
     /// 편집 모드 (생성 or 수정)
     private let mode: NoticeEditorMode
@@ -37,7 +38,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     private var schoolId: Int {
         UserDefaults.standard.integer(forKey: AppStorageKey.schoolId)
     }
-    
+
     /// 공지 생성 상태
     private(set) var createState: Loadable<NoticeDetail> = .idle
     
@@ -57,13 +58,13 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     var activeSheetType: TargetSheetType? = nil
     
     /// 사용 가능한 카테고리 목록
-    let availableCategories: [EditorMainCategory]
+    var availableCategories: [EditorMainCategory]
     
-    /// 지부 목록
-    let branches: [String]
-    
-    /// 학교 목록
-    let schools: [String]
+    /// 지부 선택 시트 목록 (중앙 선택 시만 사용)
+    var branchOptions: [String] = []
+
+    /// 학교 선택 시트 목록 (중앙: 전체 학교, 지부: 해당 지부 학교)
+    var schoolOptions: [String] = []
     
     /// 공지사항 제목
     var title: String = ""
@@ -103,8 +104,9 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     
     /// 작성 완료 가능 여부
     var canSubmit: Bool {
-        !title.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !content.trimmingCharacters(in: .whitespaces).isEmpty
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmedTitle.isEmpty && !trimmedContent.isEmpty
     }
     
     /// 수정 모드 여부
@@ -122,23 +124,18 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
         storageUseCase: NoticeStorageUseCaseProtocol,
         userPart: UMCPartType?,
         mode: NoticeEditorMode = .create,
-        branches: [String] = EditorMockData.branches,
-        schools: [String] = EditorMockData.schools
+        targetDataSource: NoticeEditorTargetDataSource = NoticeEditorMockTargetDataSource()
     ) {
         self.noticeUseCase = noticeUseCase
         self.storageUseCase = storageUseCase
+        self.targetDataSource = targetDataSource
         self.mode = mode
-        self.branches = branches
-        self.schools = schools
+        _ = userPart
 
-        var categories: [EditorMainCategory] = [.central, .branch, .school]
-
-        if let part = userPart {
-            categories.append(.part(part))
-        }
+        let categories: [EditorMainCategory] = [.branch, .school]
 
         self.availableCategories = categories
-        self.selectedCategory = categories.first ?? .central
+        self.selectedCategory = categories.first ?? .branch
 
         if case .edit(_, let notice) = mode {
             loadNoticeForEdit(notice)
@@ -172,6 +169,69 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
                 endDate: vote.endDate
             )
             isVoteConfirmed = true
+        }
+    }
+
+    private static func availableCategories(for organizationType: OrganizationType?) -> [EditorMainCategory] {
+        switch organizationType {
+        case .central:
+            return [.central, .branch, .school]
+        case .chapter, .school, .none:
+            return [.branch, .school]
+        }
+    }
+
+    func applyOrganizationType(_ organizationTypeRawValue: String) {
+        let organizationType = OrganizationType(rawValue: organizationTypeRawValue)
+        let categories = Self.availableCategories(for: organizationType)
+
+        if categories != availableCategories {
+            availableCategories = categories
+        }
+
+        if !availableCategories.contains(selectedCategory) {
+            selectedCategory = availableCategories.first ?? .branch
+        }
+
+        Task {
+            await loadTargetOptions()
+        }
+    }
+
+    /// 현재 메인 카테고리에 맞는 타겟 목록을 조회합니다.
+    ///
+    /// - 중앙: 지부 전체 + 학교 전체
+    /// - 지부: 학교(본인 지부 소속)만
+    /// - 학교: 별도 조회 없음
+    @MainActor
+    func loadTargetOptions() async {
+        do {
+            switch selectedCategory {
+            case .central:
+                async let branches = targetDataSource.fetchAllBranches()
+                async let schools = targetDataSource.fetchAllSchools()
+                branchOptions = try await branches
+                schoolOptions = try await schools
+            case .branch:
+                branchOptions = []
+                schoolOptions = try await targetDataSource.fetchSchools(inChapterId: organizationId)
+            case .school, .part:
+                branchOptions = []
+                schoolOptions = []
+            }
+        } catch {
+            // 조회 실패 시 선택 시트가 비어 보이지 않도록 기본 Mock 값으로 폴백
+            switch selectedCategory {
+            case .central:
+                branchOptions = EditorMockData.branches
+                schoolOptions = EditorMockData.schools
+            case .branch:
+                branchOptions = []
+                schoolOptions = EditorMockData.chapterSchools[organizationId] ?? EditorMockData.schools
+            case .school, .part:
+                branchOptions = []
+                schoolOptions = []
+            }
         }
     }
     
@@ -398,6 +458,9 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     }
     func selectCategory(_ category: EditorMainCategory) {
         selectedCategory = category
+        Task {
+            await loadTargetOptions()
+        }
     }
     
     func toggleSubCategory(_ subCategory: EditorSubCategory) {
@@ -453,6 +516,21 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     func isSubCategorySelected(_ subCategory: EditorSubCategory) -> Bool {
         subCategorySelection.selectedSubCategories.contains(subCategory)
     }
+
+    /// 게시판 분류 칩의 시각적 선택 상태를 반환합니다.
+    /// 필터형 칩(지부/학교/파트)은 실제 선택값이 있을 때만 선택으로 표시합니다.
+    func isSubCategoryHighlighted(_ subCategory: EditorSubCategory) -> Bool {
+        switch subCategory {
+        case .all:
+            return subCategorySelection.selectedSubCategories.contains(.all)
+        case .branch:
+            return !subCategorySelection.selectedBranches.isEmpty
+        case .school:
+            return !subCategorySelection.selectedSchools.isEmpty
+        case .part:
+            return !subCategorySelection.selectedParts.isEmpty
+        }
+    }
     
     func isBranchSelected(_ branch: String) -> Bool {
         subCategorySelection.selectedBranches.contains(branch)
@@ -464,6 +542,17 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     
     func isPartSelected(_ part: UMCPartType) -> Bool {
         subCategorySelection.selectedParts.contains(part)
+    }
+
+    /// 필터형 서브카테고리(지부/학교/파트)를 탭했을 때
+    /// 선택 상태를 보장합니다. (이미 선택되어 있으면 유지)
+    func selectSubCategoryIfNeeded(_ subCategory: EditorSubCategory) {
+        guard subCategory.hasFilter else { return }
+
+        if !subCategorySelection.selectedSubCategories.contains(subCategory) {
+            subCategorySelection.selectedSubCategories.remove(.all)
+            subCategorySelection.selectedSubCategories.insert(subCategory)
+        }
     }
     
     func openSheet(for subCategory: EditorSubCategory) {

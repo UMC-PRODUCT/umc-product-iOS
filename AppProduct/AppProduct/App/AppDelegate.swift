@@ -237,10 +237,12 @@ private extension AppDelegate {
         else { return }
         let defaults = UserDefaults.standard
 
+        let isCentralSeed = args.contains("--seed-appstorage-dummy-central")
         let isChapterSeed = args.contains("--seed-appstorage-dummy-chapter")
         let isSchoolSeed = args.contains("--seed-appstorage-dummy-school")
         let isChallengerSeed = args.contains("--seed-appstorage-dummy-challenger")
         let seededRole: ManagementTeam = {
+            if isCentralSeed { return .centralOperatingTeamMember }
             if isChallengerSeed { return .challenger }
             if isSchoolSeed { return .schoolPresident }
             if isChapterSeed { return .chapterPresident }
@@ -255,19 +257,21 @@ private extension AppDelegate {
         defaults.set("Product", forKey: AppStorageKey.chapterName)
         defaults.set("ANDROID", forKey: AppStorageKey.responsiblePart)
         defaults.set(
-            isSchoolSeed
-                ? OrganizationType.school.rawValue
-                : ((isChapterSeed || isChallengerSeed)
-                    ? OrganizationType.chapter.rawValue
-                    : OrganizationType.central.rawValue),
+            isCentralSeed
+                ? OrganizationType.central.rawValue
+                : (isSchoolSeed
+                    ? OrganizationType.school.rawValue
+                    : ((isChapterSeed || isChallengerSeed)
+                        ? OrganizationType.chapter.rawValue
+                        : OrganizationType.central.rawValue)),
             forKey: AppStorageKey.organizationType
         )
         defaults.set(11, forKey: AppStorageKey.organizationId)
         defaults.set(seededRole.rawValue, forKey: AppStorageKey.memberRole)
 
-        let seededType = isSchoolSeed
-            ? "SCHOOL"
-            : (isChapterSeed ? "CHAPTER" : (isChallengerSeed ? "CHALLENGER" : "CENTRAL"))
+        let seededType = isCentralSeed
+            ? "CENTRAL"
+            : (isSchoolSeed ? "SCHOOL" : (isChapterSeed ? "CHAPTER" : (isChallengerSeed ? "CHALLENGER" : "CENTRAL")))
         print("[AppStorage] seeded dummy profile for scheme (\(seededType), role=\(seededRole.rawValue))")
         #endif
     }
