@@ -80,7 +80,12 @@ import SwiftData
 final class DIContainer {
     
     // MARK: - Storage
+    /// @ObservationIgnored: resolve() 시 cachedInstances 쓰기가 @Observable 변경 알림을 발생시켜
+    /// NavigationStack push 중 연쇄 뷰 무효화 → "tried to update multiple times per frame" 경고를 유발하므로
+    /// 관찰 대상에서 제외합니다.
+    @ObservationIgnored
     private var factories: [ObjectIdentifier: Any] = [:]
+    @ObservationIgnored
     private var cachedInstances: [ObjectIdentifier: Any] = [:]
     
     // MARK: - Registration
@@ -267,28 +272,18 @@ extension DIContainer {
         }
         container.register(NoticeUseCaseProtocol.self) {
             NoticeUseCase(
-                repository: container.resolve(NoticeRepositoryProtocol.self)
-            )
-        }
-        
-        // MARK: - Storage Feature
-        container.register(NoticeStorageRepositoryProtocol.self) {
-            NoticeStorageRepository(
+                repository: container.resolve(NoticeRepositoryProtocol.self),
                 storageRepository: container.resolve(StorageRepositoryProtocol.self)
             )
         }
-        container.register(NoticeStorageUseCaseProtocol.self) {
-            NoticeStorageUseCase(
-                repository: container.resolve(NoticeStorageRepositoryProtocol.self)
+        container.register(NoticeEditorTargetRepositoryProtocol.self) {
+            NoticeEditorTargetRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
             )
         }
-        
-        // MARK: - UsecaseProviding (통합)
-        container.register(UsecaseProviding.self) {
-            UseCaseProvider(
-                activity: container.resolve(ActivityUseCaseProviding.self),
-                auth: container.resolve(AuthUseCaseProviding.self),
-                home: container.resolve(HomeUseCaseProviding.self)
+        container.register(NoticeEditorTargetUseCaseProtocol.self) {
+            NoticeEditorTargetUseCase(
+                repository: container.resolve(NoticeEditorTargetRepositoryProtocol.self)
             )
         }
         

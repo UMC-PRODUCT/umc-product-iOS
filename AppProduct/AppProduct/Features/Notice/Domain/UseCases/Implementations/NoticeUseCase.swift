@@ -7,17 +7,62 @@
 
 import Foundation
 
+/// 공지사항 비즈니스 로직 구현체
+///
+/// 입력 검증, 이미지 업로드(Presigned URL 3단계), 공지 CRUD를 처리합니다.
 final class NoticeUseCase: NoticeUseCaseProtocol {
     
     // MARK: - Property
     private let repository: NoticeRepositoryProtocol
+    private let storageRepository: StorageRepositoryProtocol
     
     // MARK: - Initializer
-    init(repository: NoticeRepositoryProtocol) {
+    init(
+        repository: NoticeRepositoryProtocol,
+        storageRepository: StorageRepositoryProtocol
+    ) {
         self.repository = repository
+        self.storageRepository = storageRepository
     }
     
     // MARK: - NoticeUseCaseProtocol
+    
+    // MARK: 파일 업로드
+    
+    /// Presigned URL 방식으로 공지 첨부 이미지를 업로드합니다.
+    ///
+    /// 1. `prepareUpload`로 업로드 URL 발급
+    /// 2. `uploadFile`로 S3에 바이너리 전송
+    /// 3. `confirmUpload`로 서버에 완료 통보
+    ///
+    /// - Parameter imageData: 업로드할 JPEG 바이너리 데이터
+    /// - Returns: 저장된 파일 ID
+    func uploadNoticeAttachmentImage(imageData: Data) async throws -> String {
+        guard !imageData.isEmpty else {
+            throw DomainError.custom(message: "이미지 데이터가 비어있습니다")
+        }
+        
+        let fileName = "notice_\(UUID().uuidString).jpg"
+        let contentType = "image/jpeg"
+        
+        let prepared = try await storageRepository.prepareUpload(
+            fileName: fileName,
+            contentType: contentType,
+            fileSize: imageData.count,
+            category: .noticeAttachment
+        )
+        
+        try await storageRepository.uploadFile(
+            to: prepared.uploadUrl,
+            data: imageData,
+            method: prepared.uploadMethod,
+            headers: prepared.headers,
+            contentType: contentType
+        )
+        
+        try await storageRepository.confirmUpload(fileId: prepared.fileId)
+        return prepared.fileId
+    }
     
     // MARK: 공지 생성 (PATCH)
     /// 공지 생성
@@ -25,7 +70,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
         title: String,
         content: String,
         shouldNotify: Bool,
-        targetInfo: [TargetInfoDTO],
+        targetInfo: TargetInfoDTO,
         links: [String] = [],
         imageIds: [String] = []
     ) async throws -> NoticeDetail {
@@ -37,7 +82,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
             throw DomainError.custom(message: "내용을 입력해주세요")
         }
         
-        guard !targetInfo.isEmpty else {
+        guard targetInfo.targetGisuId > 0 else {
             throw DomainError.custom(message: "수신 대상을 선택해주세요")
         }
         
@@ -183,7 +228,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
     /// 공지사항 전체 조회
     func getAllNotices(
         request: NoticeListRequestDTO
-    ) async throws -> PageDTO<NoticeDTO> {
+    ) async throws -> NoticePageDTO<NoticeDTO> {
         guard request.gisuId > 0 else {
             throw DomainError.custom(message: "기수를 선택해주세요")
         }
@@ -222,7 +267,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
     func searchNotice(
         keyword: String,
         request: NoticeListRequestDTO
-    ) async throws -> PageDTO<NoticeDTO> {
+    ) async throws -> NoticePageDTO<NoticeDTO> {
         guard !keyword.isEmpty else {
             throw DomainError.custom(message: "검색어를 입력해주세요")
         }

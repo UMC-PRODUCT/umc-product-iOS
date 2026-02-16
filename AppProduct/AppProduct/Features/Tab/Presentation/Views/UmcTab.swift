@@ -19,9 +19,18 @@ struct UmcTab: View {
     @State var isShowMyPage: Bool = false
     @Environment(\.di) var di
     @Environment(ErrorHandler.self) var errorHandler
+    @AppStorage(AppStorageKey.memberRole) private var memberRoleRaw: String = ""
+    @State private var didApplyDebugLaunchRoute: Bool = false
 
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
+    }
+
+    private var effectiveMemberRole: ManagementTeam {
+        if let role = ManagementTeam(rawValue: memberRoleRaw) {
+            return role
+        }
+        return di.resolve(UserSessionManager.self).currentRole
     }
 
     // MARK: - Body
@@ -39,6 +48,9 @@ struct UmcTab: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory(isEnabled: shouldShowAccessory()) {
             UmcBottonAccessoryView(tabCase: $tabCase)
+        }
+        .task {
+            applyDebugLaunchRouteIfNeeded()
         }
     }
 
@@ -78,6 +90,11 @@ struct UmcTab: View {
     ///
     /// Activity 탭에서는 Admin 권한이 있는 경우에만 Accessory를 표시합니다.
     private func shouldShowAccessory() -> Bool {
+        // 챌린저는 공지 탭에서만 Bottom Accessory를 노출하지 않음
+        if tabCase == .notice && effectiveMemberRole == .challenger {
+            return false
+        }
+
         // MyPage 탭에서는 항상 Accessory 숨김
         if tabCase == .mypage {
             return false
@@ -103,6 +120,34 @@ struct UmcTab: View {
         }
 
         return true
+    }
+
+    /// DEBUG 스킴 런치 인자에 따라 초기 탭/경로를 세팅합니다.
+    private func applyDebugLaunchRouteIfNeeded() {
+        #if DEBUG
+        guard !didApplyDebugLaunchRoute else { return }
+        didApplyDebugLaunchRoute = true
+
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--open-notice-detail-central") {
+            tabCase = .notice
+            let destination = NavigationDestination.notice(
+                .detail(detailItem: NoticeDetailMockData.sampleNoticeWithAll)
+            )
+            Task { @MainActor in
+                pathStore.appendNoticePathIfNeeded(destination)
+            }
+            return
+        }
+
+        guard arguments.contains("--open-notice-editor") else { return }
+
+        tabCase = .notice
+        let destination = NavigationDestination.notice(.editor(mode: .create))
+        Task { @MainActor in
+            pathStore.appendNoticePathIfNeeded(destination)
+        }
+        #endif
     }
 }
 

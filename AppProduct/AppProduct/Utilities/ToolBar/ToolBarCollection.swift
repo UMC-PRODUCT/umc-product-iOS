@@ -32,17 +32,20 @@ struct ToolBarCollection {
         @Environment(\.dismiss) var dismiss
         let action: () -> Void
         let disable: Bool
+        let isLoading: Bool
         let dismissOnTap: Bool
         let tintColor: Color
         
         init(
             action: @escaping () -> Void,
             disable: Bool = false,
+            isLoading: Bool = false,
             dismissOnTap: Bool = true,
             tintColor: Color = .indigo500
         ) {
             self.action = action
             self.disable = disable
+            self.isLoading = isLoading
             self.dismissOnTap = dismissOnTap
             self.tintColor = tintColor
         }
@@ -50,13 +53,26 @@ struct ToolBarCollection {
         var body: some ToolbarContent {
             ToolbarItem(placement: .confirmationAction, content: {
                 Button(role: .confirm, action: {
+                    guard !isLoading, !disable else { return }
                     action()
                     if dismissOnTap {
                         dismiss()
                     }
+                }, label: {
+                    ZStack {
+                        Image(systemName: "checkmark")
+                            .opacity(isLoading ? 0 : 1)
+                            .foregroundStyle(disable ? .grey400 : .white)
+
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(.blue)
+                        }
+                    }
                 })
-                .tint(disable ? .grey300 : tintColor)
-                .disabled(disable)
+                .tint((disable || isLoading) ? .white : tintColor)
+                .disabled(disable || isLoading)
             })
         }
     }
@@ -311,57 +327,52 @@ struct ToolBarCollection {
     }
     
     
-    /// 상단 중앙 섹션 메뉴 툴바 (Button 기반, 애니메이션 지원)
+    /// 상단 중앙 섹션 메뉴 툴바 (시스템 ToolbarTitleMenu 기반)
+    ///
+    /// - Note: 타이틀 텍스트는 각 화면에서 `.navigationTitle(...)`로 지정해야 합니다.
     struct ToolBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
+
+        // MARK: - Property
         let items: [Item]
         @Binding var selection: Item
         let itemLabel: (Item) -> String
         let itemIcon: ((Item) -> String)?
+        let onSelect: ((Item) -> Void)?
         
+        // MARK: - Initializer
         init(
             items: [Item],
             selection: Binding<Item>,
             itemLabel: @escaping (Item) -> String,
-            itemIcon: ((Item) -> String)? = nil
+            itemIcon: ((Item) -> String)? = nil,
+            onSelect: ((Item) -> Void)? = nil
         ) {
             self.items = items
             self._selection = selection
             self.itemLabel = itemLabel
             self.itemIcon = itemIcon
+            self.onSelect = onSelect
         }
         
+        // MARK: - Body
         var body: some ToolbarContent {
-            ToolbarItem(placement: .principal) {
-                Menu {
-                    ForEach(items) { item in
-                        Button {
-                            withAnimation(.snappy) {
-                                selection = item
-                            }
-                        } label: {
-                            if let itemIcon = itemIcon {
-                                Label(itemLabel(item), systemImage: itemIcon(item))
-                            } else {
-                                Text(itemLabel(item))
-                            }
+            ToolbarTitleMenu {
+                ForEach(items) { item in
+                    Button {
+                        selection = item
+                        onSelect?(item)
+                    } label: {
+                        if let itemIcon = itemIcon {
+                            Label(itemLabel(item), systemImage: itemIcon(item))
+                                .imageScale(.small)
+                                .font(.subheadline)
+                        } else {
+                            Text(itemLabel(item))
+                                .font(.subheadline)
                         }
                     }
-                } label: {
-                    menuLabel
                 }
             }
-        }
-        
-        private var menuLabel: some View {
-            HStack(spacing: DefaultSpacing.spacing4) {
-                Text(itemLabel(selection))
-                    .appFont(.subheadline, weight: .medium)
-                Image(systemName: "chevron.down.circle.fill")
-                    .foregroundStyle(.gray.opacity(0.5))
-                    .font(.caption)
-            }
-            .padding(DefaultConstant.defaultToolBarTitlePadding)
-            .glassEffect(.regular)
         }
     }
     

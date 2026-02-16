@@ -10,6 +10,13 @@ import Foundation
 /// Notice 관련 모든 UseCase를 정의하는 Protocol
 protocol NoticeUseCaseProtocol {
     
+    // MARK: - 파일 업로드
+    
+    /// 공지 첨부 이미지를 업로드하고 파일 ID를 반환합니다.
+    /// - Parameter imageData: 업로드할 JPEG 바이너리 데이터
+    /// - Returns: 저장된 파일 ID
+    func uploadNoticeAttachmentImage(imageData: Data) async throws -> String
+    
     // MARK: - 공지 생성 (POST)
     
     /// 공지사항 완전 생성 (links, images 포함)
@@ -25,7 +32,7 @@ protocol NoticeUseCaseProtocol {
         title: String,
         content: String,
         shouldNotify: Bool,
-        targetInfo: [TargetInfoDTO],
+        targetInfo: TargetInfoDTO,
         links: [String],
         imageIds: [String]
     ) async throws -> NoticeDetail
@@ -125,7 +132,7 @@ protocol NoticeUseCaseProtocol {
     ///   - `sort`: 정렬 조건 (예: ["createdAt,DESC"])
     /// - Returns: 공지사항 목록 페이지 (content: 공지 배열, hasNext: 다음 페이지 존재 여부)
     /// - Note: **[문제 2: 무한로딩]** 이 메서드가 실패하면 NoticeViewModel에서 무한 로딩 발생 가능
-    func getAllNotices(request: NoticeListRequestDTO) async throws -> PageDTO<NoticeDTO>
+    func getAllNotices(request: NoticeListRequestDTO) async throws -> NoticePageDTO<NoticeDTO>
 
     /// 공지사항 상세 조회
     /// - Parameter noticeId: 조회할 공지 ID
@@ -161,7 +168,7 @@ protocol NoticeUseCaseProtocol {
     func searchNotice(
         keyword: String,
         request: NoticeListRequestDTO
-    ) async throws -> PageDTO<NoticeDTO>
+    ) async throws -> NoticePageDTO<NoticeDTO>
     
     // MARK: - 공지 삭제 (DELETE)
     
@@ -169,4 +176,3 @@ protocol NoticeUseCaseProtocol {
     /// - Parameter noticeId: 삭제할 공지 ID
     func deleteNotice(noticeId: Int) async throws
 }
-

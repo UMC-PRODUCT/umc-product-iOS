@@ -36,6 +36,12 @@ enum AppStorageKey {
     static let challengerId: String = "challengerId"
     /// 학교 ID
     static let schoolId: String = "schoolId"
+    /// 학교 이름
+    static let schoolName: String = "schoolName"
+    /// 지부 ID
+    static let chapterId: String = "chapterId"
+    /// 지부 이름
+    static let chapterName: String = "chapterName"
     /// 담당 파트 (`UMCPartType.apiValue` 문자열, 예: "IOS")
     static let responsiblePart: String = "responsiblePart"
     /// 멤버 역할 (`ManagementTeam.rawValue` 문자열)

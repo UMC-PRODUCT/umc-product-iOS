@@ -9,96 +9,99 @@ import Foundation
 
 /// 공지 상세화면 DTO
 struct NoticeDetailDTO: Codable {
-    let id: Int
+    let id: String
     let title: String
     let content: String
-    let shouldSendNotification: Bool
-    let viewCount: Int
+    let shouldSendNotification: Bool?
+    let viewCount: String
     let createdAt: String
     let updatedAt: String?
-    let targetInfo: [TargetInfoDTO]
-    let authorChallengerId: Int
-    let authorNickname: String
+    let targetInfo: NoticeTargetInfoDTO
+    let authorChallengerId: String
+    let authorNickname: String?
     let authorName: String
     let authorProfileImageUrl: String?
-    
-    // 추가 필드
-    let images: [String]
-    let links: [String]
-    let scope: String  // "CENTRAL", "BRANCH", "CAMPUS"
-    let category: String  // "GENERAL", "PART"
-    let isMustRead: Bool
-    let hasPermission: Bool
+
+    // 상세 추가 필드
+    let vote: NoticeDetailVoteDTO?
+    let images: [NoticeDetailImageDTO]
+    let links: [NoticeDetailLinkDTO]
+    let scope: String?
+    let category: String?
+    let isMustRead: Bool?
+    let hasPermission: Bool?
 }
 
 extension NoticeDetailDTO {
     /// NoticeDetailDTO → NoticeDetail 변환
     func toDomain() -> NoticeDetail {
-        let firstTarget = targetInfo.first
-        let generation = firstTarget.flatMap { Int($0.targetGisuId) } ?? 0
-        
-        // scope 문자열 → NoticeScope 변환
-        let noticeScope: NoticeScope = {
+        let generation = targetInfo.generationValue
+
+        // scope 문자열이 없으면 targetInfo 기반으로 추론
+        let noticeScope: NoticeScope
+        if let scope {
             switch scope.uppercased() {
-            case "CENTRAL":
-                return .central
-            case "BRANCH":
-                return .branch
-            case "CAMPUS":
-                return .campus
-            default:
-                return .central
+            case "CENTRAL": noticeScope = .central
+            case "BRANCH": noticeScope = .branch
+            case "CAMPUS": noticeScope = .campus
+            default: noticeScope = .central
             }
-        }()
-        
-        // category 결정 - targetInfo에서 직접 추출 ✅
+        } else {
+            noticeScope = targetInfo.resolvedScope
+        }
+
+        // category 문자열이 없으면 targetInfo 기반으로 추론
         let noticeCategory: NoticeCategory = {
-            switch category.uppercased() {
-            case "PART":
-                // targetInfo에서 targetParts 사용
-                if let partType = firstTarget?.targetParts {
-                    return .part(partType.toPart())
+            if let category {
+                switch category.uppercased() {
+                case "PART":
+                    return targetInfo.resolvedCategory
+                case "GENERAL":
+                    return .general
+                default:
+                    return .general
                 }
-                return .part(.all)
-            case "GENERAL":
-                return .general
-            default:
-                return .general
+            } else {
+                return targetInfo.resolvedCategory
             }
         }()
-        
-        // parts 배열 구성
-        let parts: [Part] = targetInfo.compactMap { $0.targetParts?.toPart() }
-        
-        // TargetAudience 구성
-        let targetAudience = TargetAudience(
-            generation: generation,
-            scope: noticeScope,
-            parts: parts,
-            branches: [],
-            schools: []
-        )
-        
-        let dateFormatter = ISO8601DateFormatter()
-        
+
+        let targetAudience = targetInfo.toTargetAudience(scope: noticeScope)
+
+        let mappedVote = vote?.toDomain()
+        let imageURLs = images.map(\.url)
+        let linkURLs = links.map(\.url)
+
         return NoticeDetail(
-            id: String(id),
+            id: id,
             generation: generation,
             scope: noticeScope,
             category: noticeCategory,
-            isMustRead: isMustRead,
+            isMustRead: isMustRead ?? false,
             title: title,
             content: content,
-            authorID: String(authorChallengerId),
+            authorID: authorChallengerId,
             authorName: authorName,
             authorImageURL: authorProfileImageUrl,
-            createdAt: dateFormatter.date(from: createdAt) ?? Date(),
-            updatedAt: updatedAt.flatMap { dateFormatter.date(from: $0) },
+            createdAt: createdAt.toISO8601Date(),
+            updatedAt: updatedAt?.toISO8601Date(),
             targetAudience: targetAudience,
-            hasPermission: hasPermission,
-            images: images,
-            links: links,
-            vote: nil
+            hasPermission: hasPermission ?? false,
+            images: imageURLs,
+            links: linkURLs,
+            vote: mappedVote
         )
+    }
+}
+
+private extension String {
+    func toISO8601Date() -> Date {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let parsed = formatter.date(from: self) {
+            return parsed
+        }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: self) ?? Date()
     }
 }

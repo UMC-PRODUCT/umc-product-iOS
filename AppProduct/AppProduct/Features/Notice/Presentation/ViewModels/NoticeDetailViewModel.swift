@@ -7,13 +7,21 @@
 
 import SwiftUI
 
+/// 공지사항 상세 화면 ViewModel
+///
+/// 공지 조회/수정/삭제, 투표 처리, 열람 현황(The Ping) 관리를 담당합니다.
 @Observable
 final class NoticeDetailViewModel {
     
     // MARK: - Property
     
+    /// DI Container
+    private let container: DIContainer
+
     /// UseCase
-    private let noticeUseCase: NoticeUseCaseProtocol
+    private var noticeUseCase: NoticeUseCaseProtocol {
+        container.resolve(NoticeUseCaseProtocol.self)
+    }
     
     /// 공지 상세 상태
     var noticeState: Loadable<NoticeDetail>
@@ -100,20 +108,14 @@ final class NoticeDetailViewModel {
     // MARK: - Initialization
     
     init(
-        noticeUseCase: NoticeUseCaseProtocol,
-        noticeID: Int,
+        container: DIContainer,
         errorHandler: ErrorHandler,
-        initialNotice: NoticeDetail? = nil
+        model: NoticeDetail
     ) {
-        self.noticeUseCase = noticeUseCase
-        self.noticeID = noticeID
+        self.container = container
+        self.noticeID = Int(model.id) ?? 0
         self.errorHandler = errorHandler
-
-        if let initialNotice = initialNotice {
-            self.noticeState = .loaded(initialNotice)
-        } else {
-            self.noticeState = .loaded(NoticeDetailMockData.sampleNoticeWithPermission)
-        }
+        self.noticeState = .loaded(model)
 
         // 공지 진입 시 자동으로 읽음 처리
         Task {
@@ -523,7 +525,7 @@ final class NoticeDetailViewModel {
         }
     }
     
-    /// 읽음률 포맷팅 (0.85 → "85%")
+    /// 읽음률을 백분율 문자열로 변환합니다. (0.85 → "85%")
     private func formattedReadRate(_ rate: Double) -> String {
         let percentage = Int(rate * 100)
         return "\(percentage)%"

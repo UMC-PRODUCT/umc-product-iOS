@@ -76,7 +76,7 @@ final class HomeViewModel {
             roles = result.roles
             seasonData = .loaded(result.seasonTypes)
             saveProfileToStorage(result)
-            syncGenerationMappings(result.roles)
+            syncGenerationMappings(result.generations)
             applyGenerationsFromProfile(result.generations)
         } catch let error as AppError {
             seasonData = .failed(error)
@@ -92,32 +92,26 @@ final class HomeViewModel {
     /// 최신 기수(max gisu) 기준으로 역할 정보를 저장합니다.
     /// 다른 Feature에서 `@AppStorage(AppStorageKey.xxx)`로 즉시 접근 가능합니다.
     private func saveProfileToStorage(_ result: HomeProfileResult) {
-        guard let latestRole = result.roles
-            .max(by: { $0.gisu < $1.gisu }) else { return }
         let defaults = UserDefaults.standard
-        defaults.set(latestRole.gisuId, forKey: AppStorageKey.gisuId)
+        let latestRole = result.roles.max(by: { $0.gisu < $1.gisu })
+
         defaults.set(result.memberId, forKey: AppStorageKey.memberId)
-        defaults.set(
-            latestRole.challengerId,
-            forKey: AppStorageKey.challengerId
-        )
         defaults.set(result.schoolId, forKey: AppStorageKey.schoolId)
+        defaults.set(result.schoolName, forKey: AppStorageKey.schoolName)
+        defaults.set(result.latestGisuId ?? 0, forKey: AppStorageKey.gisuId)
+        defaults.set(result.latestChallengerId ?? 0, forKey: AppStorageKey.challengerId)
+        defaults.set(result.chapterId ?? 0, forKey: AppStorageKey.chapterId)
+        defaults.set(result.chapterName, forKey: AppStorageKey.chapterName)
+        defaults.set(result.part?.apiValue ?? "", forKey: AppStorageKey.responsiblePart)
         defaults.set(
-            latestRole.responsiblePart?.apiValue ?? "",
-            forKey: AppStorageKey.responsiblePart
-        )
-        defaults.set(
-            latestRole.roleType.rawValue,
-            forKey: AppStorageKey.memberRole
-        )
-        defaults.set(
-            latestRole.organizationType.rawValue,
+            latestRole?.organizationType.rawValue ?? OrganizationType.chapter.rawValue,
             forKey: AppStorageKey.organizationType
         )
         defaults.set(
-            latestRole.organizationId,
+            latestRole?.organizationId ?? (result.chapterId ?? 0),
             forKey: AppStorageKey.organizationId
         )
+        defaults.set((latestRole?.roleType ?? .challenger).rawValue, forKey: AppStorageKey.memberRole)
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
     }
 
@@ -128,10 +122,10 @@ final class HomeViewModel {
         generationData = .loaded(generations.sorted { $0.gen < $1.gen })
     }
 
-    /// 역할 정보로 (gen, gisuId) 매핑을 SwiftData(CloudKit)에 동기화합니다.
+    /// 챌린저 이력 기반 (gen, gisuId) 매핑을 SwiftData(CloudKit)에 동기화합니다.
     @MainActor
-    private func syncGenerationMappings(_ roles: [ChallengerRole]) {
-        let pairs = roles.map { (gen: $0.gisu, gisuId: $0.gisuId) }
+    private func syncGenerationMappings(_ generations: [GenerationData]) {
+        let pairs = generations.map { (gen: $0.gen, gisuId: $0.gisuId) }
         do {
             try genRepository.replaceMappings(pairs)
         } catch {

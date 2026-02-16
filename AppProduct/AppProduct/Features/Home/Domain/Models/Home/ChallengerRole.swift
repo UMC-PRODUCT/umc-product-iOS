@@ -33,6 +33,18 @@ struct HomeProfileResult: Equatable {
     let memberId: Int
     /// 학교 ID
     let schoolId: Int
+    /// 학교 이름
+    let schoolName: String
+    /// 최신 기수 챌린저 ID (`roles`가 비었을 때 fallback으로 사용)
+    let latestChallengerId: Int?
+    /// 최신 기수 서버 기수 식별 ID (`roles`가 비었을 때 fallback으로 사용)
+    let latestGisuId: Int?
+    /// 최신 기수 지부 ID
+    let chapterId: Int?
+    /// 최신 기수 지부 이름
+    let chapterName: String
+    /// 최신 기수 파트
+    let part: UMCPartType?
     /// 홈 화면 상단 기수 카드용 데이터 (누적 활동일, 참여 기수)
     let seasonTypes: [SeasonType]
     /// 역할별 상세 정보 매핑

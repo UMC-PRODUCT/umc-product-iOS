@@ -2,15 +2,23 @@
 //  StorageRepository.swift
 //  AppProduct
 //
-//  Created by Codex on 2/16/26.
+//  Created by euijjang97 on 2/16/26.
 //
 
 import Foundation
 import Moya
 
+/// 파일 저장소 Repository 구현체
+///
+/// Presigned URL 발급 → 외부 URL 업로드 → 완료 확인 3단계 플로우를 처리합니다.
 final class StorageRepository: StorageRepositoryProtocol, @unchecked Sendable {
+
+    // MARK: - Property
+
     private let adapter: MoyaNetworkAdapter
     private let decoder: JSONDecoder
+
+    // MARK: - Init
 
     init(
         adapter: MoyaNetworkAdapter,
@@ -20,6 +28,9 @@ final class StorageRepository: StorageRepositoryProtocol, @unchecked Sendable {
         self.decoder = decoder
     }
 
+    // MARK: - Function
+
+    /// 파일 업로드를 준비하고 Presigned URL을 발급받습니다.
     func prepareUpload(
         fileName: String,
         contentType: String,
@@ -43,6 +54,9 @@ final class StorageRepository: StorageRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap()
     }
 
+    /// Presigned URL로 파일 바이너리를 직접 업로드합니다.
+    ///
+    /// - Note: 서버 API가 아닌 외부 스토리지(S3 등)에 직접 업로드하므로 URLSession을 사용합니다.
     func uploadFile(
         to url: String,
         data: Data,

@@ -41,6 +41,13 @@ struct ActivityView: View {
         selectedSection ?? ActivitySection.defaultSection(for: userSession.currentActivityMode)
     }
 
+    private var sectionBinding: Binding<ActivitySection> {
+        Binding(
+            get: { currentSection },
+            set: { selectedSection = $0 }
+        )
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -52,14 +59,12 @@ struct ActivityView: View {
                 for: currentSection,
                 mode: userSession.currentActivityMode
             )
+            .navigationTitle(currentSection.rawValue)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolBarCollection.ToolBarCenterMenu(
                     items: availableSections,
-                    selection: Binding(
-                        get: { currentSection },
-                        set: { selectedSection = $0 }
-                    ),
+                    selection: sectionBinding,
                     itemLabel: { $0.rawValue },
                     itemIcon: { $0.icon }
                 )

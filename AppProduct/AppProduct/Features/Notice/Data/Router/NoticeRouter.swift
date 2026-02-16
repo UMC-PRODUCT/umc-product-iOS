@@ -15,7 +15,7 @@ enum NoticeRouter: BaseTargetType {
     
     // MARK: - Cases
     
-    // GET Method
+    
     /// 공지사항 전체 조회
     case getAllNotices(request: NoticeListRequestDTO)
     /// 공지사항 상세 조회

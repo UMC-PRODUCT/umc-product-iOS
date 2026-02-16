@@ -12,37 +12,40 @@ import SwiftUI
 @Observable
 final class NoticeViewModel {
     
-    // MARK: - Properties
+    // MARK: - Property
     
-    /// UseCase
-    private let noticeUseCase: NoticeUseCaseProtocol
-    
-    /// 기수 Repository 추가
-    private let genRepository: ChallengerGenRepositoryProtocol
-    
-    /// UserDefaults 접근 - 사용자 조직 정보 (computed properties)
-    private var organizationId: Int {
-        UserDefaults.standard.integer(forKey: AppStorageKey.organizationId)
-    }
+    /// DI Container
+    private let container: DIContainer
 
-    private var schoolId: Int {
-        UserDefaults.standard.integer(forKey: AppStorageKey.schoolId)
+    /// UseCase
+    private var noticeUseCase: NoticeUseCaseProtocol {
+        container.resolve(NoticeUseCaseProtocol.self)
     }
+    
+    /// 기수 Repository
+    private var genRepository: ChallengerGenRepositoryProtocol {
+        container.resolve(ChallengerGenRepositoryProtocol.self)
+    }
+    private var organizationType: OrganizationType?
+    private var chapterId: Int = 0
+    private var schoolId: Int = 0
 
     /// 기수-기수ID 쌍 목록
     private(set) var gisuPairs: [(gen: Int, gisuId: Int)] = []
     
-    /// ErrorHandler
-    private var errorHandler: ErrorHandler?
+    private var pagingState = NoticePagingState()
+    private var userContext: NoticeUserContext = .empty
     
     /// 기수 목록
     var generations: [Generation] = []
     
-    /// 현재 기수
-    var currentGeneration: Generation = Generation(value: 9)
-    
     /// 선택된 기수
     private(set) var selectedGeneration: Generation = Generation(value: 9)
+
+    /// 공지 생성 진입 시 사용할 현재 선택 기수 ID
+    var selectedGisuIdForEditor: Int? {
+        currentSelectedGisuId()
+    }
     
     /// 기수별 필터 상태 저장소
     private var generationStates: [Int: GenerationFilterState] = [:]
@@ -50,30 +53,28 @@ final class NoticeViewModel {
     /// 공지 데이터 (Loadable)
     var noticeItems: Loadable<[NoticeItemModel]> = .idle
     
-    /// 사용자 정보
-    var userSchool: String = "가천대학교"
-    var userBranch: String = "Nova"
-    var userPart: Part = .ios
-    
-    /// 페이징 정보
-    private var currentPage: Int = 0
-    private var hasNextPage: Bool = false
+    /// 페이징 진행 상태 (무한 스크롤 인디케이터 노출용)
+    var isLoadingMore: Bool {
+        pagingState.isLoadingMore
+    }
 
     /// 검색 관련
     var searchQuery: String = ""
     var isSearchMode: Bool = false
-    
-    // MARK: - Initialization
-    
-    init(container: DIContainer) {
-        let noticeUseCase = container.resolve(NoticeUseCaseProtocol.self)
-        self.noticeUseCase = noticeUseCase
 
-        let genRepository = container.resolve(ChallengerGenRepositoryProtocol.self)
-        self.genRepository = genRepository
+    private enum Pagination {
+        static let pageSize: Int = 20
+        static let sort: [String] = ["createdAt,DESC"]
     }
     
-    // MARK: - Computed Properties (현재 기수 상태)
+    // MARK: - Lifecycle
+    
+    /// 의존성을 주입받아 공지 탭 상태를 초기화합니다.
+    init(container: DIContainer) {
+        self.container = container
+    }
+    
+    // MARK: - Helper
     
     /// 현재 기수의 필터 상태
     private var currentState: GenerationFilterState {
@@ -97,13 +98,22 @@ final class NoticeViewModel {
     }
     
     /// 현재 선택된 파트
-    var selectedPart: Part {
+    var selectedPart: NoticePart? {
         currentMainFilterState.selectedPart
     }
     
     /// 메인필터 항목 목록
     var mainFilterItems: [NoticeMainFilterType] {
-        [.all, .central, .branch(userBranch), .school(userSchool), .part(userPart)]
+        var items: [NoticeMainFilterType] = [.all]
+        if organizationType == .central {
+            items.append(.central)
+        }
+        items.append(.branch(userContext.branchName))
+        items.append(.school(userContext.schoolName))
+        if let userPart = userContext.part {
+            items.append(.part(userPart))
+        }
+        return items
     }
     
     /// 서브필터 표시 여부 (중앙/지부/학교만)
@@ -116,49 +126,70 @@ final class NoticeViewModel {
         }
     }
     
-    // MARK: - Actions
+    // MARK: - Function
     
-    /// ErrorHandler 업데이트
-    func updateErrorHandler(_ handler: ErrorHandler) {
-        self.errorHandler = handler
+    /// 공지 탭 메뉴에 쓰이는 사용자 컨텍스트를 반영합니다.
+    ///
+    /// - Parameters:
+    ///   - schoolName: 사용자 학교명
+    ///   - chapterName: 사용자 지부명
+    ///   - responsiblePart: 사용자 파트 API 값
+    ///   - organizationTypeRawValue: 사용자 조직 타입 raw value
+    ///   - chapterId: 사용자 지부 ID
+    ///   - schoolId: 사용자 학교 ID
+    func applyUserContext(
+        schoolName: String,
+        chapterName: String,
+        responsiblePart: String,
+        organizationTypeRawValue: String,
+        chapterId: Int,
+        schoolId: Int
+    ) {
+        self.userContext = NoticeUserContext(
+            schoolName: schoolName,
+            chapterName: chapterName,
+            responsiblePart: responsiblePart
+        )
+        self.organizationType = OrganizationType(rawValue: organizationTypeRawValue)
+        self.chapterId = chapterId
+        self.schoolId = schoolId
+
+        if organizationType != .central, case .central = selectedMainFilter {
+            var state = currentState
+            state.mainFilter = .all
+            currentState = state
+        }
     }
     
     /// 기수 목록 조회
-    /// - Note: **[문제 1: 기수 목록 메뉴 안 열림]**
-    ///   - genRepository.fetchGenGisuIdPairs()가 실패하면 generations가 빈 배열이 됨
-    ///   - 빈 배열이면 기수 선택 메뉴가 표시되지 않을 수 있음
-    ///   - catch 블록에서 에러를 로깅하거나 errorHandler로 전달 필요
     func fetchGisuList() {
         do {
             gisuPairs = try genRepository.fetchGenGisuIdPairs()
 
-            // Generation 객체로 변환
             generations = gisuPairs.map { Generation(value: $0.gen) }
 
-            // 현재 기수 설정 (가장 최신 기수)
             if let latestGen = generations.max(by: { $0.value < $1.value }) {
-                currentGeneration = latestGen
                 selectedGeneration = latestGen
 
-                // 선택된 기수의 상태 초기화
                 if generationStates[latestGen.value] == nil {
                     generationStates[latestGen.value] = GenerationFilterState()
                 }
 
-                // ✅ [해결방법] 여기서 fetchNotices() 호출 필요
-                // Task {
-                //     await fetchNotices()
-                // }
+                Task {
+                    await fetchNotices()
+                }
+            } else {
+                noticeItems = .failed(.domain(.custom(message: "기수 정보를 불러오지 못했습니다.")))
             }
         } catch {
-            // ⚠️ [문제 1] 오류 발생 시 빈 배열 - 사용자에게 알림 필요
             gisuPairs = []
             generations = []
-            // errorHandler?.handle(error, context: ...) 추가 권장
+            noticeItems = .failed(.domain(.custom(message: "기수 정보를 불러오지 못했습니다.")))
         }
     }
     
     /// 기수 선택
+    /// - Parameter generation: 선택된 기수
     func selectGeneration(_ generation: Generation) {
         selectedGeneration = generation
         if generationStates[generation.value] == nil {
@@ -170,16 +201,20 @@ final class NoticeViewModel {
     }
     
     /// 메인필터 선택
+    /// - Parameter filter: 선택된 메인 필터
     func selectMainFilter(_ filter: NoticeMainFilterType) {
         var state = currentState
         state.mainFilter = filter
         currentState = state
+        isSearchMode = false
+        searchQuery = ""
         Task {
             await fetchNotices()
         }
     }
     
     /// 서브필터 선택
+    /// - Parameter subFilter: 선택된 서브 필터
     func selectSubFilter(_ subFilter: NoticeSubFilterType) {
         let key = MainFilterKey(from: selectedMainFilter)
         var mainState = currentState.state(for: key)
@@ -194,7 +229,8 @@ final class NoticeViewModel {
     }
     
     /// 파트 선택
-    func selectPart(_ part: Part) {
+    /// - Parameter part: 선택 파트. `nil`이면 파트 전체 의미
+    func selectPart(_ part: NoticePart?) {
         let key = MainFilterKey(from: selectedMainFilter)
         var mainState = currentState.state(for: key)
         mainState.selectedPart = part
@@ -207,71 +243,32 @@ final class NoticeViewModel {
         }
     }
     
-    // MARK: - API Methods
-    
     /// 공지사항 목록 조회
-    /// - Note: **[문제 2: 무한로딩]**
-    ///   - NoticeView의 .task에서 이 메서드가 호출되지 않음!
-    ///   - fetchGisuList()만 호출되고 fetchNotices()는 호출 안 됨
-    ///   - 결과: noticeItems가 .idle 또는 .loading 상태로 유지되어 무한 로딩
-    ///
-    /// - Note: **[문제 4: 이미지 API]**
-    ///   - NoticeDTO.toItemModel()에서 이미지 URL 변환 확인 필요
-    ///   - response.content의 이미지 데이터가 올바른지 확인
+    /// - Parameter page: 조회할 페이지 인덱스
     @MainActor
     func fetchNotices(page: Int = 0) async {
-        noticeItems = .loading
-        currentPage = page
-
-        do {
-            let request = buildNoticeListRequest(page: page)
-            let response = try await noticeUseCase.getAllNotices(request: request)
-            let items = response.content.map { $0.toItemModel() }
-
-            hasNextPage = response.hasNext
-            noticeItems = .loaded(items)
-
-        } catch let error as DomainError {
-            noticeItems = .failed(.domain(error))
-        } catch let error as NetworkError {
-            noticeItems = .failed(.network(error))
-        } catch {
-            noticeItems = .failed(.unknown(message: error.localizedDescription))
+        await performPagedFetch(page: page) { request in
+            try await self.noticeUseCase.getAllNotices(request: request)
         }
     }
     
     /// 공지사항 검색
+    ///
+    /// - Parameters:
+    ///   - keyword: 검색어
+    ///   - page: 조회할 페이지 인덱스
     @MainActor
     func searchNotices(keyword: String, page: Int = 0) async {
         guard !keyword.trimmingCharacters(in: .whitespaces).isEmpty else {
-            // 빈 검색어면 일반 목록으로 전환
             isSearchMode = false
             await fetchNotices()
             return
         }
 
-        noticeItems = .loading
-        currentPage = page
         isSearchMode = true
         searchQuery = keyword
-
-        do {
-            let request = buildNoticeListRequest(page: page)
-            let response = try await noticeUseCase.searchNotice(
-                keyword: keyword,
-                request: request
-            )
-            let items = response.content.map { $0.toItemModel() }
-
-            hasNextPage = response.hasNext
-            noticeItems = .loaded(items)
-
-        } catch let error as DomainError {
-            noticeItems = .failed(.domain(error))
-        } catch let error as NetworkError {
-            noticeItems = .failed(.network(error))
-        } catch {
-            noticeItems = .failed(.unknown(message: error.localizedDescription))
+        await performPagedFetch(page: page) { request in
+            try await self.noticeUseCase.searchNotice(keyword: keyword, request: request)
         }
     }
     
@@ -282,36 +279,157 @@ final class NoticeViewModel {
         isSearchMode = false
         await fetchNotices()
     }
+
+    /// 현재 상태 기준으로 공지 조회를 재시도합니다.
+    /// - Note: 기수 매핑이 비어 있으면 기수 목록부터 다시 로드합니다.
+    @MainActor
+    func retryCurrentRequest() async {
+        if gisuPairs.isEmpty {
+            fetchGisuList()
+            return
+        }
+
+        if isSearchMode, !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            await searchNotices(keyword: searchQuery)
+        } else {
+            await fetchNotices()
+        }
+    }
+
+    /// 리스트 마지막 셀 진입 시 다음 페이지 로드
+    /// - Parameter currentItem: 화면에 노출된 현재 항목
+    @MainActor
+    func loadNextPageIfNeeded(currentItem: NoticeItemModel) async {
+        guard case .loaded(let items) = noticeItems,
+              let last = items.last,
+              currentItem.id == last.id,
+              pagingState.hasNextPage,
+              !pagingState.isLoadingMore else {
+            return
+        }
+
+        let nextPage = pagingState.nextPage
+        if isSearchMode {
+            await searchNotices(keyword: searchQuery, page: nextPage)
+        } else {
+            await fetchNotices(page: nextPage)
+        }
+    }
     
-    // MARK: - Private Helpers
-    
+    // MARK: - Private Function
+
+    /// 현재 선택된 gen에 매핑된 gisuId를 반환
+    private func currentSelectedGisuId() -> Int? {
+        gisuPairs.first(where: { $0.gen == selectedGeneration.value })?.gisuId
+    }
+
+    /// 페이징 조회 공통 로직 (기수 검증 → 요청 → 응답 반영)
+    @MainActor
+    private func performPagedFetch(
+        page: Int,
+        requestAction: (NoticeListRequestDTO) async throws -> NoticePageDTO<NoticeDTO>
+    ) async {
+        guard let gisuId = preparePagingAndResolveGisuId(page: page) else { return }
+
+        do {
+            let request = buildNoticeListRequest(gisuId: gisuId, page: page)
+            let response = try await requestAction(request)
+            applyPagedResponse(response, page: page)
+        } catch let error as DomainError {
+            handleFetchError(.domain(error), page: page)
+        } catch let error as NetworkError {
+            handleFetchError(.network(error), page: page)
+        } catch {
+            handleFetchError(.unknown(message: error.localizedDescription), page: page)
+        }
+    }
+
+    /// 페이지 상태를 준비하고 현재 선택된 기수의 gisuId를 반환합니다.
+    /// - Parameter page: 요청 페이지
+    /// - Returns: 조회 가능한 gisuId. 없으면 `nil`
+    @MainActor
+    private func preparePagingAndResolveGisuId(page: Int) -> Int? {
+        if page == 0 {
+            noticeItems = .loading
+        }
+        guard pagingState.begin(page: page) else { return nil }
+
+        guard let gisuId = currentSelectedGisuId() else {
+            handleFetchError(.domain(.custom(message: "기수 정보를 불러오지 못했습니다.")), page: page)
+            return nil
+        }
+        return gisuId
+    }
+
+    /// 페이지 응답을 목록 상태에 반영합니다.
+    /// - Parameters:
+    ///   - response: 공지 페이징 응답 DTO
+    ///   - page: 조회한 페이지 인덱스
+    @MainActor
+    private func applyPagedResponse(_ response: NoticePageDTO<NoticeDTO>, page: Int) {
+        let items = response.content.map { $0.toItemModel() }
+        pagingState.applySuccess(page: page, hasNextPage: response.hasNext)
+
+        if page == 0 {
+            noticeItems = .loaded(items)
+        } else {
+            let mergedItems = (noticeItems.value ?? []) + items
+            noticeItems = .loaded(mergedItems)
+        }
+    }
+
+    /// 조회 실패 상태를 반영합니다.
+    /// - Parameters:
+    ///   - error: 화면에 표시할 앱 에러
+    ///   - page: 실패한 페이지 인덱스
+    @MainActor
+    private func handleFetchError(_ error: AppError, page: Int) {
+        if page == 0 {
+            noticeItems = .failed(error)
+        }
+        pagingState.applyFailure()
+    }
+
     /// NoticeListRequestDTO 생성
-    private func buildNoticeListRequest(page: Int) -> NoticeListRequestDTO {
-        let requestChapterId: Int? = organizationId > 0 ? organizationId : nil
-        let requestSchoolId: Int? = schoolId > 0 ? schoolId : nil
-        
-        // 메인 필터에 따른 파트 결정
-        let part: UMCPartType? = {
-            switch selectedMainFilter {
-            case .part(let filterPart):
-                return filterPart.toUMCPartType()
-            default:
-                // 서브필터에서 파트 선택된 경우
-                if selectedPart != .all {
-                    return selectedPart.toUMCPartType()
-                }
-                return nil
-            }
-        }()
-        
-        return NoticeListRequestDTO(
-            gisuId: selectedGeneration.value,
-            chapterId: requestChapterId,
-            schoolId: requestSchoolId,
-            part: part,
+    private func buildNoticeListRequest(gisuId: Int, page: Int) -> NoticeListRequestDTO {
+        NoticeRequestFactory.make(
+            gisuId: gisuId,
             page: page,
-            size: 20,
-            sort: ["createdAt,DESC"]
+            selectedMainFilter: selectedMainFilter,
+            selectedPart: selectedPart,
+            organizationType: organizationType,
+            chapterId: chapterId,
+            schoolId: schoolId,
+            pageSize: Pagination.pageSize,
+            sort: Pagination.sort
         )
     }
+
+#if DEBUG
+    /// 디버그 스킴 상태를 빠르게 재현하기 위한 시드 데이터 주입 함수입니다.
+    func seedForDebugState(
+        noticeItems: Loadable<[NoticeItemModel]>,
+        mainFilter: NoticeMainFilterType,
+        generations: [Generation] = [Generation(value: 9)],
+        selectedGeneration: Generation = Generation(value: 9),
+        subFilter: NoticeSubFilterType = .all,
+        selectedPart: NoticePart? = nil
+    ) {
+        self.generations = generations
+        self.selectedGeneration = selectedGeneration
+        self.noticeItems = noticeItems
+        self.searchQuery = ""
+        self.isSearchMode = false
+        pagingState.reset()
+
+        let key = MainFilterKey(from: mainFilter)
+        var state = GenerationFilterState()
+        state.mainFilter = mainFilter
+        state.updateState(
+            for: key,
+            state: MainFilterState(subFilter: subFilter, selectedPart: selectedPart)
+        )
+        generationStates[selectedGeneration.value] = state
+    }
+#endif
 }

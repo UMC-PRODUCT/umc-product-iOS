@@ -1,56 +1,69 @@
 //
 //  FlowLayout.swift
-//  AppProduct
+//  Catchy
 //
-//  Created by 이예지 on 1/26/26.
+//  Created by euijjang97 on 12/4/25.
 //
 
 import SwiftUI
-                                                                                                                                                    
+
 struct FlowLayout: Layout {
-    var spacing: CGFloat = DefaultSpacing.spacing8
-    
+    var alignment: Alignment
+    var spacing: CGFloat
+
+    // MARK: - Init
+    init(
+        alignment: Alignment = .leading,
+        spacing: CGFloat = 10
+    ) {
+        self.alignment = alignment
+        self.spacing = spacing
+    }
+
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = arrangeSubviews(proposal: proposal, subviews: subviews)
-        return result.size
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = arrangeSubviews(proposal: proposal, subviews: subviews)
-        
-        for (index, position) in result.positions.enumerated() {
-            subviews[index].place(
-                at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
-                proposal: .unspecified
-            )
-        }
-    }
-    
-    private func arrangeSubviews(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
-        let maxWidth = proposal.width ?? .infinity
-        var positions: [CGPoint] = []
-        var currentX: CGFloat = .zero
-        var currentY: CGFloat = .zero
-        var lineHeight: CGFloat = .zero
-        var totalHeight: CGFloat = .zero
-        var totalWidth: CGFloat = .zero
-        
+        let maxWidth = proposal.width ?? 0
+        var height: CGFloat = 0
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
-            
-            if currentX + size.width > maxWidth && currentX > .zero {
-                currentX = .zero
-                currentY += lineHeight + spacing
-                lineHeight = .zero
+
+            if x + size.width > maxWidth {
+                x = 0
+                y += rowHeight + spacing
+                rowHeight = 0
             }
-            
-            positions.append(CGPoint(x: currentX, y: currentY))
-            lineHeight = max(lineHeight, size.height)
-            currentX += size.width + spacing
-            totalWidth = max(totalWidth, currentX - spacing)
+
+            rowHeight = max(rowHeight, size.height)
+            x += size.width + spacing
         }
-        
-        totalHeight = currentY + lineHeight
-        return (CGSize(width: totalWidth, height: totalHeight), positions)
+
+        height = y + rowHeight
+
+        return CGSize(width: maxWidth, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let maxWidth = bounds.width
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+
+            if x + size.width > maxWidth {
+                x = 0
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+
+            subview.place(at: CGPoint(x: bounds.minX + x, y: bounds.minY + y), proposal: .init(size))
+
+            rowHeight = max(rowHeight, size.height)
+            x += size.width + spacing
+        }
     }
 }

@@ -8,6 +8,7 @@
 import SwiftUI
 
 // MARK: - NoticeLinkCard
+/// 공지 상세에서 첨부 링크를 표시하는 카드 컴포넌트
 struct NoticeLinkCard: View {
     
     // MARK: - Property
@@ -16,7 +17,6 @@ struct NoticeLinkCard: View {
     
     // MARK: - Constants
     fileprivate enum Constants {
-        static let chevronSize: CGSize = .init(width: 4, height: 8)
         static let innerPadding: CGFloat = 12
     }
     
@@ -33,8 +33,7 @@ struct NoticeLinkCard: View {
                 Spacer()
                 
                 Image(systemName: "chevron.right")
-                    .resizable()
-                    .frame(width: Constants.chevronSize.width, height: Constants.chevronSize.height)
+                    .font(.system(size: 12))
                     .foregroundStyle(Color.grey400)
             }
             .padding(Constants.innerPadding)
@@ -43,7 +42,7 @@ struct NoticeLinkCard: View {
                     .foregroundStyle(Color(.systemGroupedBackground))
             }
         }
-        .glassEffect(in: .containerRelative)
+        .glassEffect(.clear, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
     }
 }
 

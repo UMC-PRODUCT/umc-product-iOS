@@ -11,7 +11,9 @@ struct LinkAttachmentCard: View, Equatable {
     
     // MARK: - Property
     @Binding var link: String
+    var shouldAutoFocus: Bool = false
     var onDismiss: () -> Void
+    @FocusState private var isLinkFieldFocused: Bool
     
     // MARK: - Constant
     fileprivate enum Constants {
@@ -24,7 +26,7 @@ struct LinkAttachmentCard: View, Equatable {
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.link == rhs.link
+        lhs.link == rhs.link && lhs.shouldAutoFocus == rhs.shouldAutoFocus
     }
     
     // MARK: - Body
@@ -69,10 +71,23 @@ struct LinkAttachmentCard: View, Equatable {
             .keyboardType(.URL)
             .autocorrectionDisabled()
             .appFont(.subheadline)
+            .focused($isLinkFieldFocused)
             .padding(Constants.textfieldPadding)
             .background {
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                     .fill(.grey000)
+            }
+            .onAppear {
+                guard shouldAutoFocus else { return }
+                Task { @MainActor in
+                    isLinkFieldFocused = true
+                }
+            }
+            .onChange(of: shouldAutoFocus) { _, newValue in
+                guard newValue else { return }
+                Task { @MainActor in
+                    isLinkFieldFocused = true
+                }
             }
     }
 }

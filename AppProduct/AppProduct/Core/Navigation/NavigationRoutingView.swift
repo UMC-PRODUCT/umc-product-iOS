@@ -89,7 +89,7 @@ private extension NavigationRoutingView {
                 model: detailItem
             )
         case .editor(let mode):
-              NoticeEditorView(container: di, userPart: nil, mode: mode)
+              NoticeEditorView(container: di, mode: mode)
         }
     }
     
