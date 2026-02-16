@@ -43,6 +43,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         Messaging.messaging().delegate = self
         UNUserNotificationCenter.current().delegate = self
         logDeviceIdentifiers()
+        seedAppStorageProfileIfNeeded()
         registerRemoteNotificationsIfAuthorized()
         NotificationCenter.default.addObserver(
             self,
@@ -222,6 +223,52 @@ private extension AppDelegate {
         print("[Device] simulatorUDID=\(simulatorUDID), identifierForVendor=\(vendorId)")
         #else
         print("[Device] identifierForVendor=\(vendorId)")
+        #endif
+    }
+
+    func seedAppStorageProfileIfNeeded() {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        guard args.contains("--seed-appstorage-dummy")
+                || args.contains("--seed-appstorage-dummy-central")
+                || args.contains("--seed-appstorage-dummy-chapter")
+                || args.contains("--seed-appstorage-dummy-school")
+                || args.contains("--seed-appstorage-dummy-challenger")
+        else { return }
+        let defaults = UserDefaults.standard
+
+        let isChapterSeed = args.contains("--seed-appstorage-dummy-chapter")
+        let isSchoolSeed = args.contains("--seed-appstorage-dummy-school")
+        let isChallengerSeed = args.contains("--seed-appstorage-dummy-challenger")
+        let seededRole: ManagementTeam = {
+            if isChallengerSeed { return .challenger }
+            if isSchoolSeed { return .schoolPresident }
+            if isChapterSeed { return .chapterPresident }
+            return .centralOperatingTeamMember
+        }()
+        defaults.set(123, forKey: AppStorageKey.memberId)
+        defaults.set(9, forKey: AppStorageKey.gisuId)
+        defaults.set(5318, forKey: AppStorageKey.challengerId)
+        defaults.set(9, forKey: AppStorageKey.schoolId)
+        defaults.set("중앙대학교", forKey: AppStorageKey.schoolName)
+        defaults.set(11, forKey: AppStorageKey.chapterId)
+        defaults.set("Product", forKey: AppStorageKey.chapterName)
+        defaults.set("ANDROID", forKey: AppStorageKey.responsiblePart)
+        defaults.set(
+            isSchoolSeed
+                ? OrganizationType.school.rawValue
+                : ((isChapterSeed || isChallengerSeed)
+                    ? OrganizationType.chapter.rawValue
+                    : OrganizationType.central.rawValue),
+            forKey: AppStorageKey.organizationType
+        )
+        defaults.set(11, forKey: AppStorageKey.organizationId)
+        defaults.set(seededRole.rawValue, forKey: AppStorageKey.memberRole)
+
+        let seededType = isSchoolSeed
+            ? "SCHOOL"
+            : (isChapterSeed ? "CHAPTER" : (isChallengerSeed ? "CHALLENGER" : "CENTRAL"))
+        print("[AppStorage] seeded dummy profile for scheme (\(seededType), role=\(seededRole.rawValue))")
         #endif
     }
 

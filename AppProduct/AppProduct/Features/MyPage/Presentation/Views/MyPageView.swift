@@ -18,7 +18,6 @@ struct MyPageView: View {
     /// MyPage의 상태 및 로직을 관리하는 ViewModel
     @State var viewModel: MyPageViewModel
     @Environment(\.di) var di
-    @Environment(\.appFlow) private var appFlow
     @Environment(ErrorHandler.self) var errorHandler
     private let shouldFetchOnAppear: Bool
     @State private var isRetryingProfile: Bool = false
@@ -87,31 +86,15 @@ struct MyPageView: View {
     /// 프로필 로딩 실패 시 에러 메시지와 재시도 버튼을 표시하는 뷰
     /// - Parameter error: 표시할 AppError
     private func errorView(error: AppError) -> some View {
-        ContentUnavailableView {
-            Label("로딩 실패", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text("마이페이지 데이터를 불러오지 못했습니다.")
-                .multilineTextAlignment(.center)
-        } actions: {
-            Button {
-                Task {
-                    await retryProfile()
-                }
-            } label: {
-                ZStack {
-                    Text("다시 시도")
-                        .opacity(isRetryingProfile ? 0 : 1)
-                    if isRetryingProfile {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
-                }
-                .frame(minWidth: 72, minHeight: 20)
-            }
-            .buttonStyle(.glassProminent)
-            .disabled(isRetryingProfile)
+        RetryContentUnavailableView(
+            title: "로딩 실패",
+            systemImage: "exclamationmark.triangle",
+            description: "마이페이지 데이터를 불러오지 못했습니다.",
+            isRetrying: isRetryingProfile,
+            topPadding: DefaultSpacing.spacing32
+        ) {
+            await retryProfile()
         }
-        .padding(.top, DefaultSpacing.spacing32)
     }
 
     /// 프로필 재시도 (중복 호출 방지 포함)
@@ -121,6 +104,23 @@ struct MyPageView: View {
         isRetryingProfile = true
         defer { isRetryingProfile = false }
         await viewModel.fetchProfile(container: di)
+    }
+
+    /// 소셜 계정 연동 처리
+    private func connectSocial(_ social: SocialType) {
+        Task {
+            do {
+                try await viewModel.connectSocial(social, container: di)
+            } catch {
+                errorHandler.handle(
+                    error,
+                    context: .init(
+                        feature: "MyPage",
+                        action: "connectSocial"
+                    )
+                )
+            }
+        }
     }
 
     /// MyPageSectionType 전체에 대해 Section을 생성하는 ForEach (현재 미사용)
@@ -154,45 +154,13 @@ struct MyPageView: View {
         case .socialConnect:
             SocialSection(
                 sectionType: section,
-                socialType: profileData.socialConnected
-            ) { social in
-                Task {
-                    do {
-                        try await viewModel.connectSocial(social, container: di)
-                    } catch {
-                        errorHandler.handle(
-                            error,
-                            context: .init(
-                                feature: "MyPage",
-                                action: "connectSocial"
-                            )
-                        )
-                    }
-                }
-            }
+                socialType: profileData.socialConnected,
+                onConnect: connectSocial
+            )
         case .auth:
             AuthSection(
                 sectionType: section,
-                alertPrompt: $viewModel.alertPrompt,
-                onLogout: {
-                    appFlow.logout()
-                },
-                onDeleteAccount: {
-                    Task {
-                        do {
-                            try await viewModel.deleteMember(container: di)
-                            appFlow.logout()
-                        } catch {
-                            errorHandler.handle(
-                                error,
-                                context: .init(
-                                    feature: "MyPage",
-                                    action: "deleteMember"
-                                )
-                            )
-                        }
-                    }
-                }
+                alertPrompt: $viewModel.alertPrompt
             )
         }
     }

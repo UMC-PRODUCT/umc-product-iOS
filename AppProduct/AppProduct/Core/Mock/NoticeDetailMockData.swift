@@ -7,7 +7,11 @@
 
 import Foundation
 
+// MARK: - NoticeDetail Mock
+/// 공지 상세 화면 미리보기/디버그 상태에서 사용하는 샘플 데이터 모음입니다.
 enum NoticeDetailMockData {
+
+    // MARK: - Samples
     static let sampleNotice = NoticeDetail(
         id: "1",
         generation: 12,
@@ -59,7 +63,7 @@ enum NoticeDetailMockData {
         id: "2",
         generation: 9,
         scope: .branch,
-        category: .part(.ios),
+        category: .part(.front(type: .ios)),
         isMustRead: true,
         title: "iOS 파트 스터디 일정 안내",
         content: """
@@ -76,7 +80,7 @@ enum NoticeDetailMockData {
         targetAudience: TargetAudience(
             generation: 9,
             scope: .campus,
-            parts: [.ios],
+            parts: [.front(type: .ios)],
             branches: [],
             schools: []
         ),

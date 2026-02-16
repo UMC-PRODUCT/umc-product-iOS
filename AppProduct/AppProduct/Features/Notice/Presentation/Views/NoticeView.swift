@@ -13,10 +13,16 @@ struct NoticeView: View {
     
     // MARK: - Properties
     @Environment(\.di) var di
-    @Environment(ErrorHandler.self) var errorHandler
+    @AppStorage(AppStorageKey.schoolName) private var schoolName: String = ""
+    @AppStorage(AppStorageKey.chapterName) private var chapterName: String = ""
+    @AppStorage(AppStorageKey.responsiblePart) private var responsiblePart: String = ""
+    @AppStorage(AppStorageKey.organizationType) private var organizationType: String = ""
+    @AppStorage(AppStorageKey.chapterId) private var chapterId: Int = 0
+    @AppStorage(AppStorageKey.schoolId) private var schoolId: Int = 0
     @State private var viewModel: NoticeViewModel
     @State private var search: String = ""
     @State private var searchTask: Task<Void, Never>?
+    @State private var isRetryingNotices: Bool = false
     
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
@@ -30,83 +36,76 @@ struct NoticeView: View {
     }
     
     // MARK: - Constants
+    /// 화면 내 반복되는 문구/수치를 한 곳에서 관리합니다.
     private enum Constants {
-        static let listTopPadding: CGFloat = 10
+        /// 검색창 placeholder
         static let searchPlaceholder: String = "제목, 내용 검색"
-        static let tintOpacity: Double = 0.5
+        /// 초기/재로딩 상태 안내 문구
+        static let loadingMessage: String = "공지를 불러오고 있어요"
+        /// 빈 공지 상태 문구
+        static let emptyTitle: String = "아직 등록된 공지사항이 없어요"
+        static let emptySystemImage: String = "exclamationmark.triangle.text.page"
+        static let emptyDescription: String = "운영진이 공지사항을 등록하면 이곳에 표시됩니다"
+        /// 실패 상태 문구
+        static let failedTitle: String = "불러오지 못했어요"
+        static let failedSystemImage: String = "exclamationmark.triangle"
+        static let failedDescription: String = "공지사항을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+        /// 재시도 버튼 문구/크기
+        static let retryTitle: String = "다시 시도"
+        static let retryMinimumWidth: CGFloat = 72
+        static let retryMinimumHeight: CGFloat = 20
+        /// 무한 스크롤 추가 로딩 인디케이터 하단 여백
+        static let loadingMoreBottomPadding: CGFloat = DefaultSpacing.spacing16
+        /// 사용자 컨텍스트 변경 감지용 signature 구분자
+        static let userContextSeparator: String = "|"
     }
     
     // MARK: - Body
     var body: some View {
-        NavigationStack(path: Binding(
-            get: { pathStore.noticePath },
-            set: { pathStore.noticePath = $0 }
-        )) {
-            Group {
-                switch viewModel.noticeItems {
-                case .idle, .loading:
-                          progressView
-                case .loaded(let noticeItem):
-                    noticeContent(noticeItem)
-                case .failed(_):
-                    Color.clear
-                }
-            }
+        NavigationStack(path: noticePathBinding) {
+            content
             .searchable(text: $search, prompt: Constants.searchPlaceholder)
             .searchToolbarBehavior(.minimize)
-            .onChange(of: search) { oldValue, newValue in
-                searchTask?.cancel()
-                searchTask = Task {
-                    guard !Task.isCancelled else { return }
-                    if newValue.isEmpty {
-                        await viewModel.clearSearch()
-                    } else {
-                        await viewModel.searchNotices(keyword: newValue)
-                    }
-                }
+            .onChange(of: search) { _, newValue in
+                handleSearchChanged(newValue)
             }
-            .toolbar {
-                ToolBarCollection.GenerationFilter(
-                    title: viewModel.selectedGeneration.title,
-                    generations: viewModel.generations,
-                    selection: generationBinding
-                )
-                ToolBarCollection.ToolBarCenterMenu(
-                    items: viewModel.mainFilterItems,
-                    selection: mainFilterBinding,
-                    itemLabel: { $0.labelText },
-                    itemIcon: { $0.labelIcon }
-                )
-            }
-            .safeAreaBar(edge: .top) {
-                if viewModel.showSubFilter {
-                    NoticeSubFilter(viewModel: viewModel)
-                        .equatable()
-                }
-            }
+            .onSubmit(of: .search, submitSearch)
+            .toolbar { toolbarContent }
+            .safeAreaBar(edge: .top) { topSafeAreaContent }
             .navigationBarTitleDisplayMode(.inline)
-            .navigationDestination(for: NavigationDestination.self) { destination in
-                NavigationRoutingView(destination: destination)
-            }
+            .navigationDestination(for: NavigationDestination.self, destination: navigationDestinationView)
             .task {
-                viewModel.updateErrorHandler(errorHandler)
+                applyUserContext()
+                #if DEBUG
+                if let debugState = NoticeDebugState.fromLaunchArgument() {
+                    debugState.apply(to: viewModel)
+                    return
+                }
+                #endif
                 viewModel.fetchGisuList()
+            }
+            .onChange(of: userContextSignature) { _, _ in
+                applyUserContext()
             }
             .onDisappear {
                 searchTask?.cancel()
             }
+            .background(.white)
         }
     }
-    
-    /// loading
-    private var progressView: some View {
-        ProgressView(label: {
-            Text("공지를 불러오고 있어요")
-                .appFont(.callout)
-        })
-        .controlSize(.large)
-        .tint(.indigo500)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+    // MARK: - Content Rendering
+    /// Loadable 상태에 따라 본문을 분기 렌더링합니다.
+    @ViewBuilder
+    private var content: some View {
+        switch viewModel.noticeItems {
+        case .idle, .loading:
+            Progress(message: Constants.loadingMessage)
+        case .loaded(let noticeItem):
+            noticeContent(noticeItem)
+        case .failed:
+            failedContent()
+        }
     }
     
     @ViewBuilder
@@ -121,15 +120,7 @@ struct NoticeView: View {
     /// Loaded - 데이터가 있을 때
     private func availableContent(_ data: [NoticeItemModel]) -> some View {
         List(data) { item in
-            NoticeItem(model: item) {
-                let noticeDetail = item.toNoticeDetail()
-                pathStore.noticePath.append(.notice(.detail(detailItem: noticeDetail)))
-            }
-            .onAppear {
-                Task {
-                    await viewModel.loadNextPageIfNeeded(currentItem: item)
-                }
-            }
+            noticeRow(item)
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
             .listRowInsets(DefaultConstant.defaultListPadding)
@@ -137,24 +128,109 @@ struct NoticeView: View {
         .overlay(alignment: .bottom) {
             if viewModel.isLoadingMore {
                 ProgressView()
-                    .padding(.bottom, DefaultSpacing.spacing16)
+                    .padding(.bottom, Constants.loadingMoreBottomPadding)
             }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
     }
     
+    
+    /// Failed - 데이터 로드 실패
+    private func failedContent() -> some View {
+        RetryContentUnavailableView(
+            title: Constants.failedTitle,
+            systemImage: Constants.failedSystemImage,
+            description: Constants.failedDescription,
+            retryTitle: Constants.retryTitle,
+            isRetrying: isRetryingNotices,
+            minRetryButtonWidth: Constants.retryMinimumWidth,
+            minRetryButtonHeight: Constants.retryMinimumHeight
+        ) {
+            await retryNotices()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+    
     /// Loaded - 데이터가 없을 때
     private var unavailableContent: some View {
         ContentUnavailableView(
-            "아직 등록된 공지사항이 없어요",
-            systemImage: "exclamationmark.triangle.text.page",
-            description: Text("운영진이 공지사항을 등록하면 이곳에 표시됩니다")
+            Constants.emptyTitle,
+            systemImage: Constants.emptySystemImage,
+            description: Text(Constants.emptyDescription)
         )
-        .tint(.indigo200.opacity(Constants.tintOpacity))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+
+
+    // MARK: - Retry
+    @MainActor
+    private func retryNotices() async {
+        guard !isRetryingNotices else { return }
+        isRetryingNotices = true
+        defer { isRetryingNotices = false }
+        await viewModel.retryCurrentRequest()
+    }
+
+    // MARK: - Search
+    /// 검색어를 비웠을 때만 검색 모드를 해제합니다.
+    private func handleSearchChanged(_ newValue: String) {
+        // 실시간 검색 비활성화:
+        // 검색 API는 onSubmit(.search)에서만 호출합니다.
+        guard newValue.isEmpty else { return }
+        searchTask?.cancel()
+        searchTask = Task {
+            guard !Task.isCancelled else { return }
+            await viewModel.clearSearch()
+        }
+    }
+
+    /// 검색 submit 시에만 API를 호출합니다.
+    private func submitSearch() {
+        searchTask?.cancel()
+        let keyword = search.trimmingCharacters(in: .whitespacesAndNewlines)
+        searchTask = Task {
+            guard !Task.isCancelled else { return }
+            if keyword.isEmpty {
+                await viewModel.clearSearch()
+            } else {
+                await viewModel.searchNotices(keyword: keyword)
+            }
+        }
+    }
+
+    // MARK: - Row
+    /// 공지 셀 탭/무한스크롤 트리거를 묶은 row 구성입니다.
+    private func noticeRow(_ item: NoticeItemModel) -> some View {
+        NoticeItem(model: item) {
+            let noticeDetail = item.toNoticeDetail()
+            pathStore.noticePath.append(.notice(.detail(detailItem: noticeDetail)))
+        }
+        .task(id: item.id) {
+            await viewModel.loadNextPageIfNeeded(currentItem: item)
+        }
+    }
+
+    // MARK: - User Context
+    /// AppStorage 사용자 컨텍스트를 ViewModel 필터 라벨에 반영합니다.
+    private func applyUserContext() {
+        viewModel.applyUserContext(
+            schoolName: schoolName,
+            chapterName: chapterName,
+            responsiblePart: responsiblePart,
+            organizationTypeRawValue: organizationType,
+            chapterId: chapterId,
+            schoolId: schoolId
+        )
+    }
+
+    /// 사용자 컨텍스트 변경 감지를 위한 서명 문자열입니다.
+    private var userContextSignature: String {
+        [schoolName, chapterName, responsiblePart, organizationType, String(chapterId), String(schoolId)]
+            .joined(separator: Constants.userContextSeparator)
     }
     
-    // MARK: - Computed Properties
+    // MARK: - Bindings
     /// 기수 선택 바인딩
     private var generationBinding: Binding<Generation> {
         Binding(
@@ -162,7 +238,7 @@ struct NoticeView: View {
             set: { viewModel.selectGeneration($0) }
         )
     }
-    
+
     /// 메인필터 선택 바인딩
     private var mainFilterBinding: Binding<NoticeMainFilterType> {
         Binding(
@@ -170,117 +246,48 @@ struct NoticeView: View {
             set: { viewModel.selectMainFilter($0) }
         )
     }
-}
 
-
-  // MARK: - NoticeSubFilter
-  /// 서브필터 영역 (전체, 운영진 공지 칩 + 파트 메뉴)
-private struct NoticeSubFilter: View, Equatable {
-    
-    @Bindable var viewModel: NoticeViewModel  // = 제거
-    
-    static func == (lhs: NoticeSubFilter, rhs: NoticeSubFilter) -> Bool {
-        lhs.viewModel.selectedSubFilter == rhs.viewModel.selectedSubFilter &&
-        lhs.viewModel.selectedPart == rhs.viewModel.selectedPart
-    }
-    
-    private enum Constants {
-        static let hstackSpacing: CGFloat = 8
-    }
-    
-    private var subFilterItems: [NoticeSubFilterType] {
-        [.all, .staff]
-    }
-    
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Constants.hstackSpacing) {
-                ForEach(subFilterItems) { filter in
-                    filterChip(for: filter)
-                }
-                PartFilterMenu(viewModel: viewModel)
-                    .equatable()
-            }
-            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        }
-    }
-    
-    /// 칩버튼 생성
-    @ViewBuilder
-    private func filterChip(for filter: NoticeSubFilterType) -> some View {
-        ChipButton(
-            filter.labelText,
-            isSelected: viewModel.selectedSubFilter == filter
-        ) {
-            viewModel.selectSubFilter(filter)
-        }
-        .buttonSize(.medium)
-    }
-}
-
-  // MARK: - PartFilterMenu
-  /// 파트 선택 메뉴
-private struct PartFilterMenu: View, Equatable {
-    
-    @Bindable var viewModel: NoticeViewModel  // = 제거
-    
-    static func == (lhs: PartFilterMenu, rhs: PartFilterMenu) -> Bool {
-        lhs.viewModel.selectedPart == rhs.viewModel.selectedPart
-    }
-    
-    private enum Constants {
-        static let hstackSpacing: CGFloat = 4
-        static let chevronSize: CGFloat = 10
-        static let chipPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
-    }
-    
-    /// 파트 선택 바인딩
-    private var partBinding: Binding<Part> {
+    /// 현재 탭의 Notice NavigationPath 바인딩입니다.
+    private var noticePathBinding: Binding<[NavigationDestination]> {
         Binding(
-            get: { viewModel.selectedPart },
-            set: { viewModel.selectPart($0) }
+            get: { pathStore.noticePath },
+            set: { pathStore.noticePath = $0 }
         )
     }
-    
-    var body: some View {
-        Menu {
-            partPicker
-        } label: {
-            menuLabel
-        }
-    }
-    
-    /// 파트 Picker
-    private var partPicker: some View {
-        Picker("파트 선택", selection: partBinding) {
-            ForEach(Part.allCases) { part in
-                Text(part.name)
-                    .tag(part)
+
+    // MARK: - Toolbar / Navigation Builders
+    /// 상단 툴바(기수 + 메인 필터)를 구성합니다.
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolBarCollection.GenerationFilter(
+            title: viewModel.selectedGeneration.title,
+            generations: viewModel.generations,
+            selection: generationBinding
+        )
+        ToolBarCollection.ToolBarCenterMenu(
+            items: viewModel.mainFilterItems,
+            selection: mainFilterBinding,
+            itemLabel: { $0.labelText },
+            itemIcon: { $0.labelIcon },
+            onSelect: { selected in
+                #if DEBUG
+                print("[Notice][MainFilter] tapped: \(selected.labelText)")
+                #endif
             }
-        }
-        .pickerStyle(.inline)
+        )
     }
-    
-    /// 파트가 실제로 선택되었는지 (기본값 "파트"가 아닌 경우)
-    private var isPartSelected: Bool {
-        viewModel.selectedPart != .all
-    }
-    
-    /// 메뉴 라벨
-    private var menuLabel: some View {
-        HStack(spacing: Constants.hstackSpacing) {
-            Text(viewModel.selectedPart.name)
-                .appFont(.subheadlineEmphasis)
-            Image(systemName: "chevron.down")
-                .font(.system(size: Constants.chevronSize))
+
+    /// 메인 필터 타입에 따라 노출되는 서브필터 영역입니다.
+    @ViewBuilder
+    private var topSafeAreaContent: some View {
+        if viewModel.showSubFilter {
+            NoticeSubFilter(viewModel: viewModel)
         }
-        .foregroundStyle(isPartSelected ? .grey000 : .grey600)
-        .padding(Constants.chipPadding)
-        .clipShape(Capsule())
-        .background {
-            Capsule()
-                .fill(isPartSelected ? .indigo500 : .grey200)
-        }
-        .glassEffect(.clear.interactive(), in: Capsule())
     }
+
+    /// Notice 탭 내 destination 라우팅 뷰입니다.
+    private func navigationDestinationView(_ destination: NavigationDestination) -> some View {
+        NavigationRoutingView(destination: destination)
+    }
+
 }

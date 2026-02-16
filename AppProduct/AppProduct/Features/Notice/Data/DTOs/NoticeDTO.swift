@@ -7,6 +7,7 @@
 
 import Foundation
 
+// MARK: - Notice DTO
 /// 공지 리스트카드 DTO
 struct NoticeDTO: Codable {
     let id: String
@@ -21,6 +22,7 @@ struct NoticeDTO: Codable {
     let authorName: String
 }
 
+// MARK: - Mapping
 extension NoticeDTO {
     /// NoticeDTO → NoticeItemModel 변환 (공지 목록용)
     func toItemModel() -> NoticeItemModel {
@@ -47,6 +49,7 @@ extension NoticeDTO {
     }
 }
 
+// MARK: - TargetInfo DTO
 /// 공지 목록/검색 응답용 targetInfo DTO
 ///
 /// 숫자 필드는 서버 스펙에 맞춰 String으로 처리합니다.
@@ -57,7 +60,10 @@ struct NoticeTargetInfoDTO: Codable {
     let targetParts: [UMCPartType]?
 }
 
+// MARK: - Helper
 private extension String {
+    /// ISO8601 문자열을 Date로 변환합니다.
+    /// - Note: 소수점 초 포함/미포함 포맷을 모두 지원합니다.
     func toISO8601Date() -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -67,33 +73,5 @@ private extension String {
 
         formatter.formatOptions = [.withInternetDateTime]
         return formatter.date(from: self) ?? Date()
-    }
-}
-
-extension UMCPartType {
-    /// UMCPartType → Part 도메인 모델 변환
-    func toPart() -> Part {
-        switch self {
-        case .pm:
-            return .plan
-        case .design:
-            return .design
-        case .server(let type):
-            switch type {
-            case .spring:
-                return .springboot
-            case .node:
-                return .nodejs
-            }
-        case .front(let type):
-            switch type {
-            case .web:
-                return .web
-            case .android:
-                return .android
-            case .ios:
-                return .ios
-            }
-        }
     }
 }

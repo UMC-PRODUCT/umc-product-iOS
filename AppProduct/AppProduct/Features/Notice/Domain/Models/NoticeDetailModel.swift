@@ -72,7 +72,7 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
 struct TargetAudience: Equatable, Hashable {
     let generation: Int
     let scope: NoticeScope
-    let parts: [Part]
+    let parts: [UMCPartType]
     let branches: [String]
     let schools: [String]
     
@@ -85,7 +85,10 @@ struct TargetAudience: Equatable, Hashable {
             if parts.isEmpty {
                 components.append("전체")
             } else {
-                components.append(parts.map { $0.name }.joined(separator: ", "))
+                components.append(
+                    parts.map { NoticePart(umcPartType: $0)?.displayName ?? $0.name }
+                        .joined(separator: ", ")
+                )
             }
         case .branch:
             if branches.isEmpty {

@@ -311,54 +311,63 @@ struct ToolBarCollection {
     }
     
     
-    /// 상단 중앙 섹션 메뉴 툴바 (Button 기반, 애니메이션 지원)
+    /// 상단 중앙 섹션 메뉴 툴바 (ToolbarTitleMenu 기반)
     struct ToolBarCenterMenu<Item: Identifiable & Hashable>: ToolbarContent {
+
+        // MARK: - Property
         let items: [Item]
         @Binding var selection: Item
         let itemLabel: (Item) -> String
         let itemIcon: ((Item) -> String)?
+        let onSelect: ((Item) -> Void)?
         
+        // MARK: - Initializer
         init(
             items: [Item],
             selection: Binding<Item>,
             itemLabel: @escaping (Item) -> String,
-            itemIcon: ((Item) -> String)? = nil
+            itemIcon: ((Item) -> String)? = nil,
+            onSelect: ((Item) -> Void)? = nil
         ) {
             self.items = items
             self._selection = selection
             self.itemLabel = itemLabel
             self.itemIcon = itemIcon
+            self.onSelect = onSelect
         }
         
+        // MARK: - Body
         var body: some ToolbarContent {
             ToolbarItem(placement: .principal) {
-                Menu {
-                    ForEach(items) { item in
-                        Button {
-                            withAnimation(.snappy) {
-                                selection = item
-                            }
-                        } label: {
-                            if let itemIcon = itemIcon {
-                                Label(itemLabel(item), systemImage: itemIcon(item))
-                            } else {
-                                Text(itemLabel(item))
-                            }
+                menuLabel
+            }
+            ToolbarTitleMenu {
+                ForEach(items) { item in
+                    Button {
+                        selection = item
+                        onSelect?(item)
+                    } label: {
+                        if let itemIcon = itemIcon {
+                            Label(itemLabel(item), systemImage: itemIcon(item))
+                                .imageScale(.small)
+                                .font(.subheadline)
+                        } else {
+                            Text(itemLabel(item))
+                                .font(.subheadline)
                         }
                     }
-                } label: {
-                    menuLabel
                 }
             }
         }
         
+        // MARK: - Private Helper
+        /// 현재 선택 항목을 toolbar title 형태로 표시합니다.
         private var menuLabel: some View {
             HStack(spacing: DefaultSpacing.spacing4) {
                 Text(itemLabel(selection))
                     .appFont(.subheadline, weight: .medium)
                 Image(systemName: "chevron.down.circle.fill")
-                    .foregroundStyle(.gray.opacity(0.5))
-                    .font(.caption)
+                    .imageScale(.small)
             }
             .padding(DefaultConstant.defaultToolBarTitlePadding)
             .glassEffect(.regular)

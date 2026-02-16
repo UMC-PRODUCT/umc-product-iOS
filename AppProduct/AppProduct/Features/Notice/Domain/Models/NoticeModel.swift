@@ -16,24 +16,6 @@ struct Generation: Identifiable, Equatable, Hashable {
     var title: String { "\(value)기" }
 }
 
-// MARK: - Part
-/// 파트 모델
-struct Part: Identifiable, Equatable, Hashable {
-    var name: String
-    var id: String { name }
-
-    static let all = Part(name: "파트")
-    static let web = Part(name: "Web")
-    static let ios = Part(name: "iOS")
-    static let android = Part(name: "Android")
-    static let design = Part(name: "Design")
-    static let plan = Part(name: "Plan")
-    static let nodejs = Part(name: "Node.js")
-    static let springboot = Part(name: "SpringBoot")
-
-    static let allCases: [Part] = [.all, .web, .ios, .android, .design, .plan, .nodejs, .springboot]
-}
-
 // MARK: - NoticeScope
 /// 공지 출처 (어디서 온 공지인지)
 enum NoticeScope: Equatable, Hashable {
@@ -51,7 +33,7 @@ enum NoticeCategory: Equatable, Hashable {
     // 일반 공지
     case general
     // 파트별 공지
-    case part(Part)
+    case part(UMCPartType)
 }
 
 // MARK: - NoticeSubFilterType
@@ -93,7 +75,7 @@ enum NoticeMainFilterType: Identifiable, Equatable, Hashable {
     // 학교
     case school(String)
     // 파트
-    case part(Part)
+    case part(NoticePart)
 
     var id: String {
         switch self {
@@ -101,7 +83,7 @@ enum NoticeMainFilterType: Identifiable, Equatable, Hashable {
         case .central: return "central"
         case .branch(let name): return "\(name)"
         case .school(let name): return "\(name)"
-        case .part(let part): return "\(part.name)"
+        case .part(let part): return part.id
         }
     }
 
@@ -112,7 +94,7 @@ enum NoticeMainFilterType: Identifiable, Equatable, Hashable {
         case .central: return "중앙운영사무국"
         case .branch(let name): return name
         case .school(let name): return name
-        case .part(let part): return part.name
+        case .part(let part): return part.displayName
         }
     }
 
@@ -124,6 +106,39 @@ enum NoticeMainFilterType: Identifiable, Equatable, Hashable {
         case .branch: return "mappin.and.ellipse"
         case .school: return "graduationcap"
         case .part: return "person.3.fill"
+        }
+    }
+
+    static func == (lhs: NoticeMainFilterType, rhs: NoticeMainFilterType) -> Bool {
+        switch (lhs, rhs) {
+        case (.all, .all), (.central, .central):
+            return true
+        case let (.branch(l), .branch(r)):
+            return l == r
+        case let (.school(l), .school(r)):
+            return l == r
+        case let (.part(l), .part(r)):
+            return l == r
+        default:
+            return false
+        }
+    }
+
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case .all:
+            hasher.combine("all")
+        case .central:
+            hasher.combine("central")
+        case .branch(let name):
+            hasher.combine("branch")
+            hasher.combine(name)
+        case .school(let name):
+            hasher.combine("school")
+            hasher.combine(name)
+        case .part(let part):
+            hasher.combine("part")
+            hasher.combine(part)
         }
     }
 }
@@ -153,7 +168,7 @@ enum MainFilterKey: Hashable {
 /// 메인필터별 서브필터 상태
 struct MainFilterState: Equatable {
     var subFilter: NoticeSubFilterType = .all
-    var selectedPart: Part = .all
+    var selectedPart: NoticePart?
 }
 
 // MARK: - GenerationFilterState

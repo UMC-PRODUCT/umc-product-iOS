@@ -8,6 +8,9 @@
 import SwiftUI
 import PhotosUI
 
+/// 공지사항 작성/수정 에디터 화면
+///
+/// 카테고리 선택, 제목/본문 입력, 이미지/링크/투표 첨부 기능을 제공합니다.
 struct NoticeEditorView: View {
 
     // MARK: - Property
@@ -15,7 +18,7 @@ struct NoticeEditorView: View {
     @State private var viewModel: NoticeEditorViewModel
 
     // MARK: - Initializer
-    init(container: DIContainer, userPart: Part?, mode: NoticeEditorMode = .create) {
+    init(container: DIContainer, userPart: UMCPartType?, mode: NoticeEditorMode = .create) {
         self.container = container
 
         let noticeUseCase = container.resolve(NoticeUseCaseProtocol.self)

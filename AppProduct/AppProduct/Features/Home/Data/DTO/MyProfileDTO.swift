@@ -29,13 +29,40 @@ struct MyProfileResponseDTO: Codable {
     /// 학교 이름
     let schoolName: String
     /// 프로필 이미지 URL
-    let profileImageLink: String
+    let profileImageLink: String?
     /// 멤버 상태 (ACTIVE / INACTIVE / WITHDRAWN)
     let status: MemberStatus
     /// 기수별 역할 목록
     let roles: [RoleDTO]
     /// 챌린저 이력 목록 (기수별 포인트 포함)
     let challengerRecords: [ChallengerMemberDTO]?
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case nickname
+        case email
+        case schoolId
+        case schoolName
+        case profileImageLink
+        case status
+        case roles
+        case challengerRecords
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIntFlexible(forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        nickname = try container.decode(String.self, forKey: .nickname)
+        email = try container.decode(String.self, forKey: .email)
+        schoolId = try container.decodeIntFlexible(forKey: .schoolId)
+        schoolName = try container.decode(String.self, forKey: .schoolName)
+        profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
+        status = try container.decode(MemberStatus.self, forKey: .status)
+        roles = try container.decode([RoleDTO].self, forKey: .roles)
+        challengerRecords = try container.decodeIfPresent([ChallengerMemberDTO].self, forKey: .challengerRecords)
+    }
 }
 
 // MARK: - RoleDTO
@@ -58,6 +85,29 @@ struct RoleDTO: Codable {
     let gisu: Int
     /// 서버 기수 식별 ID
     let gisuId: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case challengerId
+        case roleType
+        case organizationType
+        case organizationId
+        case responsiblePart
+        case gisu
+        case gisuId
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIntFlexible(forKey: .id)
+        challengerId = try container.decodeIntFlexible(forKey: .challengerId)
+        roleType = try container.decode(ManagementTeam.self, forKey: .roleType)
+        organizationType = try container.decode(OrganizationType.self, forKey: .organizationType)
+        organizationId = try container.decodeIntFlexible(forKey: .organizationId)
+        responsiblePart = try container.decodeIfPresent(String.self, forKey: .responsiblePart)
+        gisu = try container.decodeIntFlexible(forKey: .gisu)
+        gisuId = try container.decodeIntFlexible(forKey: .gisuId)
+    }
 }
 
 // MARK: - MemberStatus
@@ -123,16 +173,47 @@ extension MyProfileResponseDTO {
             uniqueKeysWithValues: roles.map { ($0.gisu, $0.gisuId) }
         )
         let generations: [GenerationData] = (challengerRecords ?? []).compactMap { record in
-            guard let gisuId = gisuIdByGisu[record.gisu] else { return nil }
+            let gisuId = gisuIdByGisu[record.gisu] ?? record.gisuId
             return record.toGenerationData(gisuId: gisuId)
         }
+
+        let latestRecord = (challengerRecords ?? [])
+            .max(by: { $0.gisu < $1.gisu })
 
         return HomeProfileResult(
             memberId: id,
             schoolId: schoolId,
+            schoolName: schoolName,
+            latestChallengerId: latestRecord?.challengerId,
+            latestGisuId: latestRecord?.gisuId,
+            chapterId: latestRecord?.chapterId,
+            chapterName: latestRecord?.chapterName ?? "",
+            part: latestRecord.flatMap { UMCPartType(apiValue: $0.part) },
             seasonTypes: toSeasonTypes(),
             roles: challengerRoles,
             generations: generations
+        )
+    }
+}
+
+private extension KeyedDecodingContainer {
+    func decodeIntFlexible(forKey key: Key) throws -> Int {
+        if let value = try? decode(Int.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(String.self, forKey: key),
+           let intValue = Int(value) {
+            return intValue
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return Int(value)
+        }
+        throw DecodingError.typeMismatch(
+            Int.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected Int/String-number/Double for key '\(key.stringValue)'"
+            )
         )
     }
 }

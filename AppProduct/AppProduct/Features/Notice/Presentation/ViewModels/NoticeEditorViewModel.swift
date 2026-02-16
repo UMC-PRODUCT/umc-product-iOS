@@ -10,6 +10,9 @@ import SwiftUI
 import PhotosUI
 import UIKit
 
+/// 공지사항 에디터 ViewModel
+///
+/// 공지 생성/수정, 카테고리 선택, 투표/링크/이미지 첨부를 관리합니다.
 @Observable
 final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     
@@ -117,7 +120,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     init(
         noticeUseCase: NoticeUseCaseProtocol,
         storageUseCase: NoticeStorageUseCaseProtocol,
-        userPart: Part?,
+        userPart: UMCPartType?,
         mode: NoticeEditorMode = .create,
         branches: [String] = EditorMockData.branches,
         schools: [String] = EditorMockData.schools
@@ -316,12 +319,11 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
             } else {
                 // 파트별
                 for part in subCategorySelection.selectedParts {
-                    let umcPartType = part.toUMCPartType()
                     targetInfoList.append(TargetInfoDTO(
                         targetGisuId: currentGeneration,
                         targetChapterId: nil,
                         targetSchoolId: nil,
-                        targetParts: umcPartType
+                        targetParts: part
                     ))
                 }
             }
@@ -373,12 +375,11 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
             
         case .part(let part):
             // 파트 공지
-            let umcPartType = part.toUMCPartType()
             targetInfoList.append(TargetInfoDTO(
                 targetGisuId: currentGeneration,
                 targetChapterId: nil,
                 targetSchoolId: nil,
-                targetParts: umcPartType
+                targetParts: part
             ))
         }
         
@@ -441,7 +442,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
         }
     }
     
-    func togglePart(_ part: Part) {
+    func togglePart(_ part: UMCPartType) {
         if subCategorySelection.selectedParts.contains(part) {
             subCategorySelection.selectedParts.remove(part)
         } else {
@@ -461,7 +462,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
         subCategorySelection.selectedSchools.contains(school)
     }
     
-    func isPartSelected(_ part: Part) -> Bool {
+    func isPartSelected(_ part: UMCPartType) -> Bool {
         subCategorySelection.selectedParts.contains(part)
     }
     
@@ -608,31 +609,6 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
             subCategorySelection.selectedParts = []
         default:
             break
-        }
-    }
-}
-
-// MARK: - Part Extension
-
-extension Part {
-    func toUMCPartType() -> UMCPartType {
-        switch self {
-        case .plan:
-            return .pm
-        case .design:
-            return .design
-        case .springboot:
-            return .server(type: .spring)
-        case .nodejs:
-            return .server(type: .node)
-        case .web:
-            return .front(type: .web)
-        case .android:
-            return .front(type: .android)
-        case .ios:
-            return .front(type: .ios)
-        default:
-            return .pm
         }
     }
 }

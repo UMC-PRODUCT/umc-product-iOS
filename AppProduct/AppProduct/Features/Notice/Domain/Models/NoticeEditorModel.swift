@@ -13,14 +13,14 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     case central
     case branch
     case school
-    case part(Part)
+    case part(UMCPartType)
 
     var id: String {
         switch self {
         case .central: return "central"
         case .branch: return "branch"
         case .school: return "school"
-        case .part(let part): return "part_\(part.id)"
+        case .part(let part): return "part_\(part.apiValue)"
         }
     }
 
@@ -29,7 +29,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
         case .central: return "중앙"
         case .branch: return "지부"
         case .school: return "학교"
-        case .part(let part): return part.name
+        case .part(let part): return NoticePart(umcPartType: part)?.displayName ?? part.name
         }
     }
 
@@ -106,7 +106,7 @@ enum EditorSubCategory: Identifiable, Equatable, Hashable {
 /// 서브카테고리 선택 상태
 struct EditorSubCategorySelection: Equatable {
     var selectedSubCategories: Set<EditorSubCategory> = [.all]
-    var selectedParts: Set<Part> = []
+    var selectedParts: Set<UMCPartType> = []
     var selectedBranches: Set<String> = []
     var selectedSchools: Set<String> = []
 
@@ -136,7 +136,11 @@ struct EditorSubCategorySelection: Equatable {
                 if selectedParts.isEmpty {
                     items.append("파트")
                 } else {
-                    items.append(contentsOf: selectedParts.map { $0.name })
+                    items.append(
+                        contentsOf: selectedParts.map {
+                            NoticePart(umcPartType: $0)?.displayName ?? $0.name
+                        }
+                    )
                 }
             }
         }

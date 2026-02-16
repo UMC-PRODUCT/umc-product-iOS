@@ -7,7 +7,10 @@
 
 import SwiftUI
 
+/// 공지 수신 대상 선택 시트 (지부/학교/파트)
 struct TargetSheetView: View {
+
+    // MARK: - Property
     @State var viewModel: NoticeEditorViewModel
     let sheetType: TargetSheetType
     @Environment(\.dismiss) private var dismiss
@@ -16,6 +19,7 @@ struct TargetSheetView: View {
         static let chipSpacing: CGFloat = 8
     }
     
+    // MARK: - Helper
     private var navigationTitle: NavigationModifier.Navititle {
         switch sheetType {
         case .branch: return .branchSelection
@@ -24,6 +28,7 @@ struct TargetSheetView: View {
         }
     }
     
+    // MARK: - Body
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -46,6 +51,8 @@ struct TargetSheetView: View {
         }
     }
     
+    // MARK: - Private Function
+    /// 선택된 시트 타입에 맞는 필터 섹션을 반환합니다.
     @ViewBuilder
     private var sheetContent: some View {
         switch sheetType {
@@ -58,6 +65,7 @@ struct TargetSheetView: View {
         }
     }
     
+    /// 지부 대상 선택 섹션입니다.
     private var branchFilterSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             FlowLayout(spacing: Constants.chipSpacing) {
@@ -74,6 +82,7 @@ struct TargetSheetView: View {
         }
     }
     
+    /// 학교 대상 선택 섹션입니다.
     private var schoolFilterSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             FlowLayout(spacing: Constants.chipSpacing) {
@@ -90,12 +99,16 @@ struct TargetSheetView: View {
         }
     }
     
+    /// 파트 대상 선택 섹션입니다.
     private var partFilterSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             FlowLayout(spacing: Constants.chipSpacing) {
-                ForEach(Part.allCases.filter { $0 != .all }) { part in
-                    ChipButton(part.name, isSelected: viewModel.isPartSelected(part)) {
-                        viewModel.togglePart(part)
+                ForEach(NoticePart.allCases) { part in
+                    ChipButton(
+                        part.displayName,
+                        isSelected: viewModel.isPartSelected(part.umcPartType)
+                    ) {
+                        viewModel.togglePart(part.umcPartType)
                     }
                     .buttonSize(.medium)
                 }

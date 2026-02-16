@@ -15,20 +15,9 @@ struct AuthSection: View {
 
     let sectionType: MyPageSectionType
     @Binding var alertPrompt: AlertPrompt?
-    private let onLogout: () -> Void
-    private let onDeleteAccount: () -> Void
-
-    init(
-        sectionType: MyPageSectionType,
-        alertPrompt: Binding<AlertPrompt?>,
-        onLogout: @escaping () -> Void,
-        onDeleteAccount: @escaping () -> Void
-    ) {
-        self.sectionType = sectionType
-        self._alertPrompt = alertPrompt
-        self.onLogout = onLogout
-        self.onDeleteAccount = onDeleteAccount
-    }
+    @Environment(\.di) private var di
+    @Environment(\.appFlow) private var appFlow
+    @Environment(ErrorHandler.self) private var errorHandler
 
     // MARK: - Body
 
@@ -66,7 +55,7 @@ struct AuthSection: View {
                 message: "정말 로그아웃 하시겠습니까?",
                 positiveBtnTitle: "로그아웃",
                 positiveBtnAction: {
-                    onLogout()
+                    appFlow.logout()
                 },
                 negativeBtnTitle: "취소",
                 isPositiveBtnDestructive: true
@@ -77,12 +66,30 @@ struct AuthSection: View {
                 message: "계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까",
                 positiveBtnTitle: "삭제",
                 positiveBtnAction: {
-                    onDeleteAccount()
+                    Task {
+                        await deleteAccount()
+                    }
                 },
                 negativeBtnTitle: "취소",
                 isPositiveBtnDestructive: true
             )
         }
     }
-    
+
+    @MainActor
+    private func deleteAccount() async {
+        do {
+            let provider = di.resolve(MyPageUseCaseProviding.self)
+            try await provider.deleteMemberUseCase.execute()
+            appFlow.logout()
+        } catch {
+            errorHandler.handle(
+                error,
+                context: .init(
+                    feature: "MyPage",
+                    action: "deleteMember"
+                )
+            )
+        }
+    }
 }

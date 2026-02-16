@@ -127,13 +127,6 @@ class MyPageViewModel {
         }
     }
 
-    /// 회원 탈퇴를 수행합니다.
-    @MainActor
-    func deleteMember(container: DIContainer) async throws {
-        let provider = container.resolve(MyPageUseCaseProviding.self)
-        try await provider.deleteMemberUseCase.execute()
-    }
-
 #if DEBUG
     @MainActor
     func seedForDebugState(profileData: Loadable<ProfileData>) {
