@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct CommunityLightningCard: View {
     // MARK: - Properties
@@ -67,7 +68,7 @@ struct CommunityLightningCard: View {
                 makeSection(type: .meetAt)
                 makeSection(type: .participant)
             }
-            makeSection(type: .location)
+            makeLocationSection()
         }
         .padding(Constant.mainPadding)
         .background(
@@ -82,7 +83,7 @@ struct CommunityLightningCard: View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             Text(type.title)
                 .appFont(.footnote, color: .grey500)
-            
+
             Label {
                 Text(type.content(from: model))
                     .appFont(.subheadlineEmphasis, color: .black)
@@ -92,6 +93,42 @@ struct CommunityLightningCard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// 장소 섹션 (지도 링크 포함)
+    @ViewBuilder
+    private func makeLocationSection() -> some View {
+        Button(action: {
+            openMap()
+        }) {
+            makeSection(type: .location)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Function
+
+    /// 주소로 애플 지도 열기
+    private func openMap() {
+        guard let location = model.lightningInfo?.location else { return }
+
+        // MKLocalSearch를 사용하여 주소 검색 후 지도 열기
+        let searchRequest = MKLocalSearch.Request()
+        searchRequest.naturalLanguageQuery = location
+
+        let search = MKLocalSearch(request: searchRequest)
+        search.start { response, error in
+            guard let mapItem = response?.mapItems.first else {
+                // 검색 실패 시: 지도 앱을 주소 검색 모드로 열기
+                if let encodedQuery = location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                   let url = URL(string: "maps://?q=\(encodedQuery)") {
+                    UIApplication.shared.open(url)
+                }
+                return
+            }
+            // 검색 성공 시 해당 위치로 지도 열기
+            mapItem.openInMaps()
+        }
     }
 }
 

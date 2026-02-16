@@ -94,7 +94,7 @@ enum MyPageMockData {
             isLiked: true,
             lightningInfo: .init(
                 meetAt: Date(),
-                location: "강남역 2번 출구",
+                location: "서울 서초구 강남대로69길 8",
                 maxParticipants: 5,
                 openChatUrl: "https://open.kakao.com/o/sxxxxxx"
             )
