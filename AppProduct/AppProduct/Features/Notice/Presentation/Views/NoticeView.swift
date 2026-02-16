@@ -167,7 +167,6 @@ struct NoticeView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
-
     // MARK: - Retry
     @MainActor
     private func retryNotices() async {

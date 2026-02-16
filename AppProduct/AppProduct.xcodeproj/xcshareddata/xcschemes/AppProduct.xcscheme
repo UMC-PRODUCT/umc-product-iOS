@@ -81,11 +81,7 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "Notice List(no Select)"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "Notice Editor(no Select)"
+            argument = "Notice(no Select)"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -94,7 +90,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--open-notice-detail-central"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-noticeDebugState loading"
@@ -102,7 +98,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-noticeDebugState loadedCentral"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-noticeDebugState loadedBranch"
@@ -119,6 +115,26 @@
          <CommandLineArgument
             argument = "-noticeDebugState failed"
             isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "NoticeDetail(noSelect)"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-noticeReadStatusDebugState loading"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-noticeReadStatusDebugState loaded"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-noticeReadStatusDebugState failed "
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--debug-notice-editor-loading"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "NoticeDummy(no Select)"
@@ -146,6 +162,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--notice-dummy-toolbar-items"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "Activity(no Select)"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument

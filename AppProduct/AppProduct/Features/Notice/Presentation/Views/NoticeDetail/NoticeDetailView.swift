@@ -17,6 +17,7 @@ struct NoticeDetailView: View {
     @Environment(\.di) var di
     @State private var viewModel: NoticeDetailViewModel
     @State private var isReadStatusBarCollapsed: Bool = false
+    @State private var isRetryingNoticeDetail: Bool = false
     private let errorHandler: ErrorHandler
 
     // MARK: - Initializer
@@ -30,15 +31,17 @@ struct NoticeDetailView: View {
         static let profileSize: CGSize = .init(width: 20, height: 20)
         static let horizontalPadding: CGFloat = DefaultConstant.defaultSafeHorizon
         static let topSectionSpacing: CGFloat = DefaultSpacing.spacing16
-        static let subInfoSpacing: CGFloat = DefaultSpacing.spacing12
+        static let subInfoSpacing: CGFloat = DefaultSpacing.spacing8
         static let bottomSectionSpacing: CGFloat = DefaultSpacing.spacing24
         static let bottomButtonPadding: CGFloat = DefaultSpacing.spacing16
-        static let detailSheetDetents: Set<PresentationDetent> = [.medium]
+        static let detailSheetDetents: Set<PresentationDetent> = [.fraction(0.72)]
         static let defaultProfileImageName: String = "defaultProfile"
         static let noticeEditTitle: String = "수정하기"
         static let noticeDeleteTitle: String = "삭제하기"
+        static let noticeReportTitle: String = "신고하기"
         static let editIcon: String = "pencil"
         static let deleteIcon: String = "trash"
+        static let reportIcon: String = "exclamationmark.bubble"
         static let audienceLabelPrefix: String = "수신대상:"
         static let audienceSystemImage: String = "paperplane"
         static let debugDetailArgument: String = "--open-notice-detail-central"
@@ -48,20 +51,22 @@ struct NoticeDetailView: View {
         static let collapsedVerticalOffset: CGFloat = 22
         static let collapsedTrailingPadding: CGFloat = 22
         static let collapseAnimation: Animation = .spring(response: 0.36, dampingFraction: 0.88)
+        static let failedTitleText: String = "공지사항을 불러오지 못했습니다."
+        static let failedIconName: String = "exclamationmark.triangle"
     }
 
     // MARK: - Body
 
     var body: some View {
         content
-        .navigation(naviTitle: .noticeDetail, displayMode: .inline)
-        .navigationSubtitle(noticeTypeSubtitle)
-        .toolbar { toolbarContent }
-        .safeAreaInset(edge: .bottom, alignment: .center, content: expandedReadStatusInset)
-        .safeAreaInset(edge: .bottom, alignment: .trailing, content: collapsedReadStatusInset)
-        .sheet(isPresented: $viewModel.showReadStatusSheet, content: readStatusSheet)
-        .alertPrompt(item: $viewModel.alertPrompt)
-        .task { await onTask() }
+            .navigation(naviTitle: .noticeDetail, displayMode: .inline)
+            .navigationSubtitle(noticeTypeSubtitle)
+            .toolbar { toolbarContent }
+            .safeAreaBar(edge: .bottom, alignment: .center, content: expandedReadStatusInset)
+            .safeAreaBar(edge: .bottom, alignment: .trailing, content: collapsedReadStatusInset)
+            .sheet(isPresented: $viewModel.showReadStatusSheet, content: readStatusSheet)
+            .alertPrompt(item: $viewModel.alertPrompt)
+            .task { await onTask() }
     }
 
     // MARK: - Content
@@ -73,9 +78,30 @@ struct NoticeDetailView: View {
             Progress()
         case .loaded(let noticeDetail):
             detailContent(noticeDetail)
-        case .failed:
-            Color.clear
+        case .failed(let error):
+            failedSection(error: error)
         }
+    }
+
+    /// 공지 상세 로드 실패 상태 UI
+    private func failedSection(error: AppError) -> some View {
+        RetryContentUnavailableView(
+            title: Constants.failedTitleText,
+            systemImage: Constants.failedIconName,
+            description: error.userMessage,
+            isRetrying: isRetryingNoticeDetail
+        ) {
+            await retryNoticeDetail()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+
+    @MainActor
+    private func retryNoticeDetail() async {
+        guard !isRetryingNoticeDetail else { return }
+        isRetryingNoticeDetail = true
+        defer { isRetryingNoticeDetail = false }
+        await viewModel.fetchNoticeDetail()
     }
 
     private func detailContent(_ data: NoticeDetail) -> some View {
@@ -172,15 +198,16 @@ struct NoticeDetailView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        if let notice = currentNotice, notice.hasPermission {
+        if currentNotice != nil {
             ToolBarCollection.ToolbarTrailingMenu(actions: toolbarActions)
         }
     }
 
     private var toolbarActions: [ToolBarCollection.ToolbarTrailingMenu.ActionItem] {
         [
+            .init(title: Constants.noticeDeleteTitle, icon: Constants.deleteIcon, role: .destructive, action: handleDeleteNotice),
             .init(title: Constants.noticeEditTitle, icon: Constants.editIcon, action: handleEditNotice),
-            .init(title: Constants.noticeDeleteTitle, icon: Constants.deleteIcon, role: .destructive, action: handleDeleteNotice)
+            .init(title: Constants.noticeReportTitle, icon: Constants.reportIcon, action: handleReportNotice)
         ]
     }
 
@@ -241,6 +268,7 @@ struct NoticeDetailView: View {
     private func readStatusSheet() -> some View {
         NoticeReadStatusSheet(viewModel: viewModel)
             .presentationDetents(Constants.detailSheetDetents)
+            .interactiveDismissDisabled()
     }
 
     // MARK: - Task
@@ -258,6 +286,10 @@ struct NoticeDetailView: View {
     /// 공지 수정 처리
     private func handleEditNotice() {
         guard let notice = currentNotice else { return }
+        guard notice.hasPermission else {
+            showNoPermissionAlert()
+            return
+        }
         let noticeID = Int(notice.id) ?? 0
         let editMode = NoticeEditorMode.edit(noticeId: noticeID, notice: notice)
         pathStore.noticePath.append(.notice(.editor(mode: editMode)))
@@ -265,10 +297,38 @@ struct NoticeDetailView: View {
 
     /// 공지 삭제 처리
     private func handleDeleteNotice() {
+        guard let notice = currentNotice else { return }
+        guard notice.hasPermission else {
+            showNoPermissionAlert()
+            return
+        }
+
         viewModel.showDeleteConfirmation {
             guard !pathStore.noticePath.isEmpty else { return }
             pathStore.noticePath.removeLast()
         }
+    }
+
+    /// 공지 신고 처리
+    private func handleReportNotice() {
+        viewModel.alertPrompt = AlertPrompt(
+            id: .init(),
+            title: Constants.noticeReportTitle,
+            message: "해당 공지 사항을 신고하겠습니까?",
+            positiveBtnTitle: "예",
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
+    }
+
+    /// 수정/삭제 권한 없음 안내
+    private func showNoPermissionAlert() {
+        viewModel.alertPrompt = AlertPrompt(
+            id: .init(),
+            title: "권한 없음",
+            message: "해당 공지를 수정하거나 삭제할 권한이 없습니다.",
+            positiveBtnTitle: "확인"
+        )
     }
 
     /// PathStore 접근

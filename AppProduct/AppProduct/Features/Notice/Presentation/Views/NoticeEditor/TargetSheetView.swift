@@ -9,15 +9,15 @@ import SwiftUI
 
 /// 공지 수신 대상 선택 시트 (지부/학교/파트)
 struct TargetSheetView: View {
-
+    
     // MARK: - Property
-
+    
     @State var viewModel: NoticeEditorViewModel
     let sheetType: TargetSheetType
     @Environment(\.dismiss) private var dismiss
-
+    
     // MARK: - Constants
-
+    
     /// 타겟 선택 시트의 레이아웃/문구 상수 모음
     private enum Constants {
         static let rootContentSpacing: CGFloat = DefaultSpacing.spacing24
@@ -26,14 +26,14 @@ struct TargetSheetView: View {
         static let horizontalPadding: CGFloat = 12
         static let topPadding: CGFloat = DefaultSpacing.spacing16
         static let bottomPadding: CGFloat = DefaultSpacing.spacing24
-
+        
         static let branchGuideMessage: String = "선택하지 않으면 전체 지부에게 전송됩니다."
         static let schoolGuideMessage: String = "선택하지 않으면 전체 학교에게 전송됩니다."
         static let partGuideMessage: String = "선택하지 않으면 전체 파트원에게 전송됩니다."
     }
-
+    
     // MARK: - Helper
-
+    
     private var navigationTitle: NavigationModifier.Navititle {
         switch sheetType {
         case .branch:
@@ -44,7 +44,7 @@ struct TargetSheetView: View {
             return .partSelection
         }
     }
-
+    
     private var navigationSubtitle: String {
         switch sheetType {
         case .branch:
@@ -55,9 +55,9 @@ struct TargetSheetView: View {
             return Constants.partGuideMessage
         }
     }
-
+    
     // MARK: - Body
-
+    
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: Constants.rootContentSpacing) {
@@ -71,9 +71,9 @@ struct TargetSheetView: View {
             .navigationSubtitle(navigationSubtitle)
         }
     }
-
+    
     // MARK: - Toolbar
-
+    
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolBarCollection.ConfirmBtn(
@@ -81,9 +81,9 @@ struct TargetSheetView: View {
             dismissOnTap: false
         )
     }
-
+    
     // MARK: - Content
-
+    
     /// 선택된 시트 타입에 맞는 필터 섹션을 반환합니다.
     @ViewBuilder
     private var sheetContent: some View {
@@ -96,9 +96,9 @@ struct TargetSheetView: View {
             schoolFilterSection
         }
     }
-
+    
     // MARK: - Section Builders
-
+    
     /// 지부 대상 선택 섹션
     private var branchFilterSection: some View {
         selectionSection {
@@ -112,7 +112,7 @@ struct TargetSheetView: View {
             }
         }
     }
-
+    
     /// 학교 대상 선택 섹션
     private var schoolFilterSection: some View {
         selectionSection {
@@ -126,7 +126,7 @@ struct TargetSheetView: View {
             }
         }
     }
-
+    
     /// 파트 대상 선택 섹션
     private var partFilterSection: some View {
         selectionSection {
@@ -143,9 +143,9 @@ struct TargetSheetView: View {
             }
         }
     }
-
+    
     // MARK: - Shared Section
-
+    
     /// 타겟 선택 칩 레이아웃을 공통화합니다.
     @ViewBuilder
     private func selectionSection<Content: View>(

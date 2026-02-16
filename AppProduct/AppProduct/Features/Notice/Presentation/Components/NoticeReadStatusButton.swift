@@ -34,6 +34,19 @@ struct NoticeReadStatusButton: View {
         let percentage = Int(progress * 100)
         return "\(confirmedCount)/\(totalCount)명 (\(percentage)%)"
     }
+
+    /// 진행 게이지에 입체감을 주는 그라디언트
+    private var progressGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                .blue.opacity(0.85),
+                .indigo,
+                .blue.opacity(0.95)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
     
     // MARK: - Body
     
@@ -61,7 +74,7 @@ struct NoticeReadStatusButton: View {
                 // 중간: Gauge
                 Gauge(value: progress, in: 0...1) {}
                     .gaugeStyle(.linearCapacity)
-                    .tint(.indigo500)
+                    .tint(progressGradient)
                 
                 // 하단: 안내 텍스트
                 Text("터치하여 미확인 인원 관리하기")

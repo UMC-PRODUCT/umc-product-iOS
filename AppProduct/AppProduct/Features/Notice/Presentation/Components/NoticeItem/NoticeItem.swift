@@ -12,7 +12,7 @@ import SwiftUI
 private enum Constant {
     static let mainVSpacing: CGFloat = 12
     static let mainBoxHeight: CGFloat = 128
-    static let mainPadding: CGFloat = 24
+    static let mainPadding: EdgeInsets = .init(top: 12, leading: 24, bottom: 12, trailing: 24)
     static let mainBoxRadius: CGFloat = 24
     // top
     static let topHSpacing: CGFloat = 8
@@ -79,7 +79,7 @@ private struct NoticeItemPresenter: View, Equatable {
     }
 }
 
-// 태그 + 필독 + 알림 + 날짜
+/// 태그 + 필독 + 알림 + 날짜
 private struct TopSection: View, Equatable {
     let model: NoticeItemModel
 
@@ -116,7 +116,7 @@ private struct TopSection: View, Equatable {
     }
 }
 
-// 제목 + 내용
+/// 제목 + 내용
 private struct ContentSection: View, Equatable {
     let model: NoticeItemModel
 
@@ -134,7 +134,7 @@ private struct ContentSection: View, Equatable {
     }
 }
 
-// 작성자 + 링크/투표 여부 + 조회수
+/// 작성자 + 링크/투표 여부 + 조회수
 private struct BottomSection: View, Equatable {
     let model: NoticeItemModel
 

@@ -49,6 +49,9 @@ final class NoticeDetailViewModel {
     /// 공지 열람 현황 데이터 상태
     var readStatusState: Loadable<NoticeReadStatus> = .idle
     
+    /// 열람 현황 재시도 진행 상태 (실패 화면의 버튼 내부 로딩 표시용)
+    var isRetryingReadStatus: Bool = false
+    
     /// 선택된 탭 (확인/미확인)
     var selectedReadTab: ReadStatusTab = .confirmed
     
@@ -167,7 +170,8 @@ final class NoticeDetailViewModel {
                     await self?.deleteNotice(onSuccess: onDeleteSuccess)
                 }
             },
-            negativeBtnTitle: "취소"
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
         )
     }
     
@@ -476,8 +480,31 @@ final class NoticeDetailViewModel {
     
     /// 공지 열람 현황 데이터 로드 (통계 + 상세)
     @MainActor
-    func fetchReadStatus() async {
-        readStatusState = .loading
+    func fetchReadStatus(showLoadingState: Bool = true) async {
+        #if DEBUG
+        if let debugState = readStatusDebugState {
+            switch debugState {
+            case .loading:
+                if showLoadingState {
+                    readStatusState = .loading
+                }
+            case .loaded:
+                readStatusState = .loaded(NoticeDetailMockData.sampleReadStatus)
+            case .failed:
+                readStatusState = .failed(.unknown(message: "공지 열람 현황 디버그 실패 상태"))
+            }
+            return
+        }
+
+        if isReadStatusMockEnabled {
+            readStatusState = .loaded(NoticeDetailMockData.sampleReadStatus)
+            return
+        }
+        #endif
+
+        if showLoadingState {
+            readStatusState = .loading
+        }
 
         do {
             // 1. 확인한 사람 목록 조회 (READ)
@@ -525,6 +552,15 @@ final class NoticeDetailViewModel {
         }
     }
     
+    /// 실패 화면에서 재시도 버튼을 눌렀을 때 호출됩니다.
+    @MainActor
+    func retryFetchReadStatus() async {
+        guard !isRetryingReadStatus else { return }
+        isRetryingReadStatus = true
+        defer { isRetryingReadStatus = false }
+        await fetchReadStatus(showLoadingState: false)
+    }
+    
     /// 읽음률을 백분율 문자열로 변환합니다. (0.85 → "85%")
     private func formattedReadRate(_ rate: Double) -> String {
         let percentage = Int(rate * 100)
@@ -535,4 +571,38 @@ final class NoticeDetailViewModel {
     func switchReadTab(to tab: ReadStatusTab) {
         selectedReadTab = tab
     }
+
+    #if DEBUG
+    private enum NoticeReadStatusDebugState: String {
+        case loading
+        case loaded
+        case failed
+    }
+
+    /// 스킴 인자 기반 공지 열람 현황 디버그 상태
+    ///
+    /// 사용 예:
+    /// - `-noticeReadStatusDebugState loading`
+    /// - `-noticeReadStatusDebugState loaded`
+    /// - `-noticeReadStatusDebugState failed`
+    private var readStatusDebugState: NoticeReadStatusDebugState? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let stateKeyIndex = arguments.firstIndex(of: "-noticeReadStatusDebugState") else {
+            return nil
+        }
+
+        let valueIndex = arguments.index(after: stateKeyIndex)
+        guard arguments.indices.contains(valueIndex) else {
+            return nil
+        }
+
+        return NoticeReadStatusDebugState(rawValue: arguments[valueIndex])
+    }
+
+    /// 디버그 스킴에서 공지 열람 현황 목 데이터 강제 여부
+    private var isReadStatusMockEnabled: Bool {
+        let arguments = ProcessInfo.processInfo.arguments
+        return arguments.contains("--open-notice-detail-central")
+    }
+    #endif
 }

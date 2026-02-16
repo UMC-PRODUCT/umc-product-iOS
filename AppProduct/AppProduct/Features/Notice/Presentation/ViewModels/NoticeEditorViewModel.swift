@@ -229,6 +229,14 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
         }
     }
     
+    /// DEBUG 전용: 생성/수정 저장 상태를 강제로 로딩으로 전환합니다.
+    @MainActor
+    func setCreateStateLoadingForDebug() {
+        #if DEBUG
+        createState = .loading
+        #endif
+    }
+    
     /// View 계층의 ErrorHandler를 바인딩합니다.
     func updateErrorHandler(_ handler: ErrorHandler) {
         errorHandler = handler

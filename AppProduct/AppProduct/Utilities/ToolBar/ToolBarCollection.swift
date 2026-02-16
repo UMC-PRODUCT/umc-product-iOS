@@ -62,7 +62,6 @@ struct ToolBarCollection {
                     ZStack {
                         Image(systemName: "checkmark")
                             .opacity(isLoading ? 0 : 1)
-                            .foregroundStyle(disable ? .grey400 : .white)
 
                         if isLoading {
                             ProgressView()
@@ -71,7 +70,7 @@ struct ToolBarCollection {
                         }
                     }
                 })
-                .tint((disable || isLoading) ? .white : tintColor)
+                .tint((disable || isLoading) ? .grey300 : tintColor)
                 .disabled(disable || isLoading)
             })
         }
@@ -104,8 +103,11 @@ struct ToolBarCollection {
     
     /// 추가 버튼
     struct AddBtn: ToolbarContent {
+        @Environment(\.dismiss) private var dismiss
         let action: () -> Void
         let disable: Bool
+        let isLoading: Bool
+        let dismissOnTap: Bool
         let title: String?
         let imageSystemName: String
         let tintColor: Color
@@ -115,24 +117,42 @@ struct ToolBarCollection {
             imageSystemName: String = "plus",
             action: @escaping () -> Void,
             disable: Bool = false,
+            isLoading: Bool = false,
+            dismissOnTap: Bool = false,
             tintColor: Color = .indigo500
         ) {
             self.title = title
             self.imageSystemName = imageSystemName
             self.action = action
             self.disable = disable
+            self.isLoading = isLoading
+            self.dismissOnTap = dismissOnTap
             self.tintColor = tintColor
         }
         
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarTrailing, content: {
                 Button(action: {
+                    guard !disable, !isLoading else { return }
                     action()
+                    if dismissOnTap {
+                        dismiss()
+                    }
                 }, label: {
-                    if let title {
-                        Text(title)
-                    } else {
-                        Image(systemName: imageSystemName)
+                    ZStack {
+                        if let title {
+                            Text(title)
+                                .opacity(isLoading ? 0 : 1)
+                        } else {
+                            Image(systemName: imageSystemName)
+                                .opacity(isLoading ? 0 : 1)
+                        }
+
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(.indigo500)
+                        }
                     }
                 })
                 .tint(disable ? .grey300 : tintColor)
@@ -586,16 +606,14 @@ struct ToolBarCollection {
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    ForEach(items) { item in
-                        Button {
-                            withAnimation(.snappy) {
-                                selection = item
-                            }
-                        } label: {
-                            if let itemIcon = itemIcon {
+                    Picker("열람 현황 필터", selection: $selection) {
+                        ForEach(items) { item in
+                            if let itemIcon {
                                 Label(itemLabel(item), systemImage: itemIcon(item))
+                                    .tag(item)
                             } else {
                                 Text(itemLabel(item))
+                                    .tag(item)
                             }
                         }
                     }
