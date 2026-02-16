@@ -32,17 +32,20 @@ struct ToolBarCollection {
         @Environment(\.dismiss) var dismiss
         let action: () -> Void
         let disable: Bool
+        let isLoading: Bool
         let dismissOnTap: Bool
         let tintColor: Color
         
         init(
             action: @escaping () -> Void,
             disable: Bool = false,
+            isLoading: Bool = false,
             dismissOnTap: Bool = true,
             tintColor: Color = .indigo500
         ) {
             self.action = action
             self.disable = disable
+            self.isLoading = isLoading
             self.dismissOnTap = dismissOnTap
             self.tintColor = tintColor
         }
@@ -50,13 +53,26 @@ struct ToolBarCollection {
         var body: some ToolbarContent {
             ToolbarItem(placement: .confirmationAction, content: {
                 Button(role: .confirm, action: {
+                    guard !isLoading, !disable else { return }
                     action()
                     if dismissOnTap {
                         dismiss()
                     }
+                }, label: {
+                    ZStack {
+                        Image(systemName: "checkmark")
+                            .opacity(isLoading ? 0 : 1)
+                            .foregroundStyle(disable ? .grey400 : .white)
+
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(.blue)
+                        }
+                    }
                 })
-                .tint(disable ? .grey300 : tintColor)
-                .disabled(disable)
+                .tint((disable || isLoading) ? .white : tintColor)
+                .disabled(disable || isLoading)
             })
         }
     }

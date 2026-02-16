@@ -10,14 +10,28 @@ import Foundation
 /// 각 탭별 네비게이션 경로를 중앙에서 관리하는 Store
 @Observable
 final class PathStore {
+
+    // MARK: - Property
+
+    /// 홈 탭 네비게이션 경로
     var homePath: [NavigationDestination] = []
+    /// 공지 탭 네비게이션 경로
     var noticePath: [NavigationDestination] = []
+    /// 활동 탭 네비게이션 경로
     var activityPath: [NavigationDestination] = []
+    /// 커뮤니티 탭 네비게이션 경로
     var communityPath: [NavigationDestination] = []
+    /// 마이페이지 탭 네비게이션 경로
     var mypagePath: [NavigationDestination] = []
+    /// 공지 작성 진입 시 사용할 공지 탭 선택 기수 ID
+    var noticeEditorSelectedGisuId: Int?
+    /// 공지 path 중복 append 보호 플래그
     private var isUpdatingNoticePath: Bool = false
 
+    // MARK: - Function
+
     /// 공지 탭 path를 같은 프레임에 중복 갱신하지 않도록 보호합니다.
+    /// - Parameter destination: 공지 탭에 push할 목적지
     @MainActor
     func appendNoticePathIfNeeded(_ destination: NavigationDestination) {
         guard noticePath.last != destination else { return }

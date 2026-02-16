@@ -77,6 +77,7 @@ struct NoticeView: View {
             .navigationDestination(for: NavigationDestination.self, destination: navigationDestinationView)
             .task {
                 applyUserContext()
+                syncNoticeEditorGisuId()
                 #if DEBUG
                 if let debugState = NoticeDebugState.fromLaunchArgument() {
                     debugState.apply(to: viewModel)
@@ -84,6 +85,9 @@ struct NoticeView: View {
                 }
                 #endif
                 viewModel.fetchGisuList()
+            }
+            .onChange(of: viewModel.selectedGeneration) { _, _ in
+                syncNoticeEditorGisuId()
             }
             .onChange(of: userContextSignature) { _, _ in
                 applyUserContext()
@@ -223,6 +227,11 @@ struct NoticeView: View {
             chapterId: chapterId,
             schoolId: schoolId
         )
+    }
+
+    /// 공지 생성 진입에 사용할 현재 선택 기수 ID를 PathStore에 동기화합니다.
+    private func syncNoticeEditorGisuId() {
+        pathStore.noticeEditorSelectedGisuId = viewModel.selectedGisuIdForEditor
     }
 
     /// 사용자 컨텍스트 변경 감지를 위한 서명 문자열입니다.

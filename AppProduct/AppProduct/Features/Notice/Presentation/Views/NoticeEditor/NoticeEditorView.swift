@@ -10,167 +10,169 @@ import PhotosUI
 
 /// 공지사항 작성/수정 에디터 화면
 ///
-/// 카테고리 선택, 제목/본문 입력, 이미지/링크/투표 첨부 기능을 제공합니다.
+/// 카테고리 선택, 제목/본문 입력, 이미지/링크/투표 첨부를 지원합니다.
 struct NoticeEditorView: View {
 
     // MARK: - Property
-    private let container: DIContainer
+    @Environment(\.di) private var di
+    @Environment(\.dismiss) private var dismiss
+    @Environment(ErrorHandler.self) private var errorHandler
+
+    /// 사용자 조직 타입 (중앙/지부/학교)
     @AppStorage(AppStorageKey.organizationType) private var organizationType: String = ""
+
+    /// 사용자 지부명
     @AppStorage(AppStorageKey.chapterName) private var chapterName: String = ""
+
+    /// 사용자 학교명
     @AppStorage(AppStorageKey.schoolName) private var schoolName: String = ""
+
+    /// 사용자 기수 ID
+    @AppStorage(AppStorageKey.gisuId) private var gisuId: Int = 0
+
+    /// 사용자 지부 ID
+    @AppStorage(AppStorageKey.chapterId) private var chapterId: Int = 0
+
     @State private var viewModel: NoticeEditorViewModel
+
+    /// 링크 추가 직후 자동 스크롤/포커스에 사용할 링크 ID
     @State private var newlyAddedLinkID: UUID?
+
+    /// 제목/내용 입력 포커스 제어
     @FocusState private var isTitleFieldFocused: Bool
     @FocusState private var isContentFieldFocused: Bool
 
-    // MARK: - Initializer
-    init(container: DIContainer, userPart: UMCPartType?, mode: NoticeEditorMode = .create) {
-        self.container = container
-
-        let noticeUseCase = container.resolve(NoticeUseCaseProtocol.self)
-        let storageUseCase = container.resolve(NoticeStorageUseCaseProtocol.self)
-
-        _viewModel = State(initialValue: NoticeEditorViewModel(
-            noticeUseCase: noticeUseCase,
-            storageUseCase: storageUseCase,
-            userPart: userPart,
-            mode: mode
-        ))
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
     }
-    
-    // MARK: - Constant
-    fileprivate enum Constants {
+
+    // MARK: - Initializer
+
+    init(container: DIContainer, mode: NoticeEditorMode = .create) {
+        self._viewModel = .init(wrappedValue: .init(container: container, mode: mode))
+    }
+
+    // MARK: - Constants
+
+    private enum Constants {
         static let chipSpacing: CGFloat = 8
-        static let toolBtnIconSize: CGFloat = 20
-        static let toolBtnFrame: CGSize = .init(width: 30, height: 30)
-        static let alarmSize: CGFloat = 16
+        static let toolButtonIconSize: CGFloat = 20
+        static let toolButtonFrame: CGSize = .init(width: 30, height: 30)
+
         static let alarmPadding: EdgeInsets = .init(top: 9, leading: .zero, bottom: 9, trailing: .zero)
         static let alarmWidth: CGFloat = 110
-        static let targetSheetLargeDetentFraction: CGFloat = 0.85
+
+        static let targetSheetLargeDetentFraction: CGFloat = 0.86
         static let targetSheetSmallDetentFraction: CGFloat = 0.38
-        static let contentBottomInset: CGFloat = 140
+
+        /// 하단 액세서리와 본문이 겹치지 않도록 확보하는 여백
+        static let contentBottomInset: CGFloat = 30
+
+        /// 링크 카드와 하단 액세서리 사이 추가 간격
+        static let linkSectionBottomPadding: CGFloat = DefaultSpacing.spacing24
+
+        /// 링크 추가 후 스크롤/포커스 안정화 대기 시간
         static let linkScrollDelayNanos: UInt64 = 120_000_000
+
+        /// 이미지/투표 섹션 스크롤 앵커 ID
+        static let imageSectionScrollID: String = "notice_editor_image_section"
+        static let voteSectionScrollID: String = "notice_editor_vote_section"
     }
 
     // MARK: - Body
+
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical) {
-                VStack(spacing: DefaultSpacing.spacing16) {
-                    textfieldSection
-                        
-                    if !viewModel.noticeImages.isEmpty {
-                        imageSection
-                    }
-                    if !viewModel.noticeLinks.isEmpty {
-                        linkSection
-                    }
-                    if viewModel.isVoteConfirmed {
-                        voteSection
-                    }
-                }
-                .padding(.bottom, Constants.contentBottomInset)
+                editorMainContent
             }
             .onChange(of: viewModel.noticeLinks.count) { oldValue, newValue in
-                guard newValue > oldValue, let targetID = newlyAddedLinkID else { return }
-                withAnimation(.easeOut(duration: 0.2)) {
-                    proxy.scrollTo(targetID, anchor: .bottom)
-                }
-                Task { @MainActor in
-                    try? await Task.sleep(nanoseconds: Constants.linkScrollDelayNanos)
-                    newlyAddedLinkID = nil
-                }
+                handleNoticeLinksCountChanged(oldValue: oldValue, newValue: newValue, proxy: proxy)
+            }
+            .onChange(of: viewModel.noticeImages.count) { oldValue, newValue in
+                handleNoticeImagesCountChanged(oldValue: oldValue, newValue: newValue, proxy: proxy)
+            }
+            .onChange(of: viewModel.isVoteConfirmed) { oldValue, newValue in
+                handleVoteConfirmStateChanged(oldValue: oldValue, newValue: newValue, proxy: proxy)
             }
         }
+        .scrollDismissesKeyboard(.immediately)
         .navigationTitle(navigationTitle)
         .navigationSubtitle(navigationSubtitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbarContent }
         .task {
-            viewModel.applyOrganizationType(organizationType)
+            viewModel.updateErrorHandler(errorHandler)
+            applyInitialOrganizationType()
+            applyInitialUserContext()
         }
-        .safeAreaBar(edge: .top) {
-            if viewModel.selectedCategory.hasSubCategories && !viewModel.isEditMode {
-                subCategorySection
-            }
+        .onChange(of: viewModel.createState) { _, newValue in
+            handleCreateStateChanged(newValue)
         }
-        .sheet(item: $viewModel.activeSheetType) { sheetType in
-            TargetSheetView(viewModel: viewModel, sheetType: sheetType)
-                .presentationDetents(targetSheetDetents(for: sheetType))
-                .presentationDragIndicator(.visible)
-        }
-        .safeAreaBar(edge: .bottom, alignment: .leading) {
-            HStack {
-                GlassEffectContainer {
-                    HStack {
-                        PhotosPicker(
-                            selection: $viewModel.selectedPhotoItems,
-                            maxSelectionCount: 10,
-                            matching: .images
-                        ) {
-                            Image(systemName: "photo.fill")
-                                .font(.system(size: Constants.toolBtnIconSize))
-                                .foregroundStyle(.black)
-                                .frame(width: Constants.toolBtnFrame.width, height: Constants.toolBtnFrame.height)
-                                .padding(DefaultConstant.defaultBtnPadding)
-                        }
-                        
-                        ToolBtn(icon: "link", action: {
-                            let newItem = NoticeLinkItem()
-                            viewModel.noticeLinks.append(newItem)
-                            newlyAddedLinkID = newItem.id
-                        })
-                        
-                        if !viewModel.isEditMode {
-                            ToolBtn(icon: "chart.bar.fill", action: {
-                                viewModel.showVotingFormSheet()
-                            })
-                        }
-                    }
-                }
-                .glassEffect()
-                Spacer()
-                if !viewModel.isEditMode {
-                    alarmToggle
-                        .glassEffect()
-                }
-            }
-            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            .padding(.bottom, DefaultSpacing.spacing16)
-        }
+        .safeAreaBar(edge: .top, content: topSafeAreaContent)
+        .sheet(item: $viewModel.activeSheetType, content: targetSheet)
+        .safeAreaBar(edge: .bottom, alignment: .leading, content: bottomSafeAreaContent)
         .onChange(of: viewModel.selectedPhotoItems) { _, newItems in
-            guard !newItems.isEmpty else { return }
-            Task {
-                await viewModel.loadSelectedImages()
-            }
+            handleSelectedPhotoItemsChanged(newItems)
         }
         .onChange(of: organizationType) { _, newValue in
-            viewModel.applyOrganizationType(newValue)
+            handleOrganizationTypeChanged(newValue)
         }
-        .fullScreenCover(isPresented: $viewModel.showVoting) {
-            VotingFormSheetView(
-                formData: $viewModel.voteFormData,
-                onCancel: {
-                    viewModel.cancelVotingEdit()
-                },
-                onConfirm: {
-                    viewModel.confirmVote()
-                },
-                mode: viewModel.isVoteConfirmed ? .edit : .create
-            )
+        .onChange(of: gisuId) { _, newValue in
+            handleUserContextChanged(gisuId: newValue, chapterId: chapterId)
         }
+        .onChange(of: chapterId) { _, newValue in
+            handleUserContextChanged(gisuId: gisuId, chapterId: newValue)
+        }
+        .fullScreenCover(isPresented: $viewModel.showVoting, content: votingSheet)
         .alertPrompt(item: $viewModel.alertPrompt)
     }
 
+    // MARK: - Content
+
+    /// 본문 콘텐츠 영역
+    private var editorMainContent: some View {
+        VStack(spacing: DefaultSpacing.spacing16) {
+            textfieldSection
+
+            if !viewModel.noticeImages.isEmpty {
+                imageSection
+                    .id(Constants.imageSectionScrollID)
+            }
+
+            if !viewModel.noticeLinks.isEmpty {
+                linkSection
+            }
+
+            if viewModel.isVoteConfirmed {
+                voteSection
+                    .id(Constants.voteSectionScrollID)
+            }
+        }
+        .padding(.bottom, Constants.contentBottomInset)
+    }
+
+    // MARK: - Top Safe Area
+
+    /// 상단 안전 영역: 게시판 분류 칩
+    @ViewBuilder
+    private func topSafeAreaContent() -> some View {
+        if viewModel.selectedCategory.hasSubCategories && !viewModel.isEditMode {
+            subCategorySection
+        }
+    }
+
+    /// 게시판 분류 칩 섹션
     private var subCategorySection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             HStack(alignment: .center) {
                 Text("게시판 분류")
                     .appFont(.calloutEmphasis)
+
                 Text("중복 선택 가능")
                     .appFont(.footnote, color: .grey400)
             }
-            
+
             HStack(spacing: Constants.chipSpacing) {
                 ForEach(viewModel.selectedCategory.subCategories) { subCategory in
                     ChipButton(
@@ -178,35 +180,79 @@ struct NoticeEditorView: View {
                         isSelected: viewModel.isSubCategoryHighlighted(subCategory),
                         trailingIcon: subCategory.hasFilter ? true : nil
                     ) {
-                        if subCategory.hasFilter {
-                            viewModel.selectSubCategoryIfNeeded(subCategory)
-                            viewModel.openSheet(for: subCategory)
-                        } else {
-                            viewModel.toggleSubCategory(subCategory)
-                        }
+                        handleSubCategoryTap(subCategory)
                     }
                     .buttonSize(.medium)
                 }
+
                 Spacer()
             }
             .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
-    
-    // MARK: - safeAreaBar ToolBtn
-    /// 링크, 투표 추가
-    private func ToolBtn(icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: Constants.toolBtnIconSize))
+
+    // MARK: - Bottom Safe Area
+
+    /// 하단 안전 영역: 첨부 도구 + 알림 토글
+    private func bottomSafeAreaContent() -> some View {
+        HStack {
+            attachmentToolbar
+            Spacer()
+
+            if !viewModel.isEditMode {
+                alarmToggle
+                    .glassEffect()
+            }
+        }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        .padding(.bottom, DefaultSpacing.spacing16)
+    }
+
+    /// 첨부 도구(사진/링크/투표) 영역
+    private var attachmentToolbar: some View {
+        GlassEffectContainer {
+            HStack {
+                photoPickerButton
+                toolButton(icon: "link", action: addLinkAttachment)
+
+                if !viewModel.isEditMode {
+                    toolButton(icon: "chart.bar.fill", action: viewModel.showVotingFormSheet)
+                }
+            }
+        }
+        .glassEffect()
+    }
+
+    /// 사진 첨부 버튼
+    private var photoPickerButton: some View {
+        PhotosPicker(
+            selection: $viewModel.selectedPhotoItems,
+            maxSelectionCount: 10,
+            matching: .images
+        ) {
+            Image(systemName: "photo.fill")
+                .font(.system(size: Constants.toolButtonIconSize))
                 .foregroundStyle(.black)
-                .frame(width: Constants.toolBtnFrame.width, height: Constants.toolBtnFrame.height)
+                .frame(width: Constants.toolButtonFrame.width, height: Constants.toolButtonFrame.height)
                 .padding(DefaultConstant.defaultBtnPadding)
         }
     }
-    
-    // MARK: - textfieldSection
+
+    /// 툴바 아이콘 버튼 공통 구성
+    private func toolButton(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: Constants.toolButtonIconSize))
+                .foregroundStyle(.black)
+                .frame(width: Constants.toolButtonFrame.width, height: Constants.toolButtonFrame.height)
+                .padding(DefaultConstant.defaultBtnPadding)
+        }
+    }
+
+    // MARK: - Sections
+
+    /// 제목/내용 입력 섹션
     private var textfieldSection: some View {
         VStack(spacing: DefaultSpacing.spacing16) {
             ArticleTextField(
@@ -214,26 +260,24 @@ struct NoticeEditorView: View {
                 text: $viewModel.title,
                 focused: $isTitleFieldFocused,
                 submitLabel: .next,
-                onSubmit: {
-                    isContentFieldFocused = true
-                }
+                onSubmit: moveFocusToContentField
             )
-            
+
             Divider()
-            
+
             ArticleTextField(
                 placeholder: .content,
                 text: $viewModel.content,
                 focused: $isContentFieldFocused
             )
-                .frame(minHeight: 200, alignment: .top)
+            .frame(minHeight: 200, alignment: .top)
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .padding(.top, DefaultSpacing.spacing24)
         .padding(.bottom, DefaultSpacing.spacing32)
     }
-    
-    // MARK: - imageSection
+
+    /// 이미지 첨부 섹션
     private var imageSection: some View {
         ScrollView(.horizontal) {
             HStack {
@@ -243,7 +287,9 @@ struct NoticeEditorView: View {
                         imageData: item.imageData,
                         isLoading: item.isLoading,
                         onDismiss: {
-                            viewModel.removeImage(item)
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                viewModel.removeImage(item)
+                            }
                         }
                     )
                 }
@@ -252,8 +298,8 @@ struct NoticeEditorView: View {
         }
         .scrollIndicators(.hidden)
     }
-    
-    // MARK: - linkSection
+
+    /// 링크 첨부 섹션
     private var linkSection: some View {
         VStack(spacing: DefaultSpacing.spacing12) {
             ForEach($viewModel.noticeLinks, id: \.id) { $item in
@@ -268,60 +314,59 @@ struct NoticeEditorView: View {
             }
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        .padding(.bottom, Constants.linkSectionBottomPadding)
     }
-    
-    // MARK: - voteSection
+
+    /// 투표 첨부 섹션
     private var voteSection: some View {
         VStack(spacing: DefaultSpacing.spacing8) {
-            Group {
-                if viewModel.isEditMode {
-                    // 수정 모드: 읽기 전용 (삭제만 가능)
-                    VoteAttachmentCard(
-                        formData: $viewModel.voteFormData,
-                        mode: .readonly,
-                        onDelete: {
-                            viewModel.deleteVote()
-                        }
-                    )
-                    .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-                } else {
-                    VoteAttachmentCard(
-                        formData: $viewModel.voteFormData,
-                        mode: .editable,
-                        onDelete: {
-                            viewModel.deleteVote()
-                        },
-                        onEdit: {
-                            viewModel.editVote()
-                        }
-                    )
-                    .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-                }
-            }
-            
+            voteAttachmentCard
+
             Label("글 게시 후 투표는 수정이 불가능해요.", systemImage: "exclamationmark.circle")
                 .foregroundStyle(.grey500)
                 .appFont(.footnote)
         }
     }
-    
-    // MARK: - alarmToggle
+
+    /// 편집 모드에 맞는 투표 카드
+    private var voteAttachmentCard: some View {
+        Group {
+            if viewModel.isEditMode {
+                VoteAttachmentCard(
+                    formData: $viewModel.voteFormData,
+                    mode: .readonly,
+                    onDelete: viewModel.deleteVote
+                )
+            } else {
+                VoteAttachmentCard(
+                    formData: $viewModel.voteFormData,
+                    mode: .editable,
+                    onDelete: viewModel.deleteVote,
+                    onEdit: viewModel.editVote
+                )
+            }
+        }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+    }
+
+    /// 알림 발송 토글
     private var alarmToggle: some View {
-        Toggle(isOn: $viewModel.allowAlert, label: {
+        Toggle(isOn: $viewModel.allowAlert) {
             Label(
                 viewModel.allowAlert ? "알림 발송" : "알림 미발송",
                 systemImage: viewModel.allowAlert ? "bell.fill" : "bell.slash.fill"
             )
             .frame(width: Constants.alarmWidth)
             .padding(Constants.alarmPadding)
-        })
+        }
         .appFont(.body, weight: .medium)
         .toggleStyle(.button)
         .tint(.indigo500)
     }
-    
+
     // MARK: - Toolbar
-    /// 공지 생성 화면 상단 툴바 (ToolbarTitleMenu 기반 카테고리 메뉴)
+
+    /// 공지 생성/수정 화면 상단 툴바
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         if !viewModel.isEditMode {
@@ -333,34 +378,34 @@ struct NoticeEditorView: View {
             )
         }
 
-        ToolBarCollection.ConfirmBtn(action: {
-            Task {
-                await viewModel.saveNotice()
-            }
-        }, disable: !viewModel.canSubmit)
+        ToolBarCollection.ConfirmBtn(
+            action: saveNotice,
+            disable: !viewModel.canSubmit,
+            isLoading: viewModel.createState.isLoading,
+            dismissOnTap: false
+        )
     }
 
+    // MARK: - Navigation
+
+    /// 화면 타이틀
     private var navigationTitle: String {
-        if viewModel.isEditMode {
-            return "공지 수정"
-        }
-        return viewModel.selectedCategory.labelText
+        viewModel.isEditMode ? "공지 수정" : viewModel.selectedCategory.labelText
     }
 
     /// 메인 카테고리가 지부/학교일 때 본인 소속명을 서브타이틀로 노출합니다.
     private var navigationSubtitle: String {
         switch viewModel.selectedCategory {
         case .branch:
-            let trimmedChapter = chapterName.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmedChapter.isEmpty ? "지부" : trimmedChapter
+            return normalizedName(from: chapterName, fallback: "지부")
         case .school:
-            let trimmedSchool = schoolName.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmedSchool.isEmpty ? "학교" : trimmedSchool
+            return normalizedName(from: schoolName, fallback: "학교")
         case .central, .part:
             return ""
         }
     }
 
+    /// 메인 카테고리 선택 바인딩
     private var categoryBinding: Binding<EditorMainCategory> {
         Binding(
             get: { viewModel.selectedCategory },
@@ -368,6 +413,7 @@ struct NoticeEditorView: View {
         )
     }
 
+    /// 타겟 선택 시트 높이 설정
     private func targetSheetDetents(for sheetType: TargetSheetType) -> Set<PresentationDetent> {
         switch sheetType {
         case .part, .branch:
@@ -376,4 +422,153 @@ struct NoticeEditorView: View {
             return [.fraction(Constants.targetSheetLargeDetentFraction)]
         }
     }
+
+    // MARK: - View Builders
+
+    /// 타겟 선택 시트를 표시합니다.
+    private func targetSheet(_ sheetType: TargetSheetType) -> some View {
+        TargetSheetView(viewModel: viewModel, sheetType: sheetType)
+            .presentationDetents(targetSheetDetents(for: sheetType))
+            .presentationDragIndicator(.visible)
+    }
+
+    /// 투표 폼 시트를 표시합니다.
+    private func votingSheet() -> some View {
+        VotingFormSheetView(
+            formData: $viewModel.voteFormData,
+            onCancel: viewModel.cancelVotingEdit,
+            onConfirm: viewModel.confirmVote,
+            mode: viewModel.isVoteConfirmed ? .edit : .create
+        )
+    }
+
+    // MARK: - Function
+
+    /// 초기 진입 시 조직 타입을 ViewModel에 반영합니다.
+    private func applyInitialOrganizationType() {
+        viewModel.applyOrganizationType(organizationType)
+    }
+
+    /// 초기 진입 시 사용자 컨텍스트를 ViewModel에 반영합니다.
+    private func applyInitialUserContext() {
+        let editorGisuId = resolvedEditorGisuId(fallback: gisuId)
+        viewModel.updateUserContext(gisuId: editorGisuId, chapterId: chapterId)
+    }
+
+    /// 제목 필드 제출 시 내용 필드로 포커스를 이동합니다.
+    private func moveFocusToContentField() {
+        isTitleFieldFocused = false
+        isContentFieldFocused = true
+    }
+
+    /// 링크 첨부를 추가하고 자동 포커스 대상을 갱신합니다.
+    private func addLinkAttachment() {
+        let newItem = NoticeLinkItem()
+        viewModel.noticeLinks.append(newItem)
+        newlyAddedLinkID = newItem.id
+    }
+
+    /// 공지 저장을 실행합니다.
+    private func saveNotice() {
+        Task {
+            await viewModel.saveNotice()
+        }
+    }
+
+    /// 저장 상태 변화에 따라 화면 동작을 제어합니다.
+    private func handleCreateStateChanged(_ state: Loadable<NoticeDetail>) {
+        switch state {
+        case .loaded:
+            dismiss()
+        case .idle, .loading, .failed:
+            break
+        }
+    }
+
+    /// 서브카테고리 칩 탭 이벤트를 처리합니다.
+    private func handleSubCategoryTap(_ subCategory: EditorSubCategory) {
+        if subCategory.hasFilter {
+            viewModel.selectSubCategoryIfNeeded(subCategory)
+            viewModel.openSheet(for: subCategory)
+            return
+        }
+
+        viewModel.toggleSubCategory(subCategory)
+    }
+
+    /// 링크 아이템이 추가되면 신규 카드로 스크롤하고 포커스 안정화를 대기합니다.
+    private func handleNoticeLinksCountChanged(
+        oldValue: Int,
+        newValue: Int,
+        proxy: ScrollViewProxy
+    ) {
+        guard newValue > oldValue, let targetID = newlyAddedLinkID else { return }
+
+        withAnimation(.easeOut(duration: 0.2)) {
+            proxy.scrollTo(targetID, anchor: .center)
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: Constants.linkScrollDelayNanos)
+            newlyAddedLinkID = nil
+        }
+    }
+
+    /// 이미지 아이템이 추가되면 이미지 섹션으로 자동 스크롤합니다.
+    private func handleNoticeImagesCountChanged(
+        oldValue: Int,
+        newValue: Int,
+        proxy: ScrollViewProxy
+    ) {
+        guard newValue > oldValue else { return }
+        withAnimation(.easeOut(duration: 0.2)) {
+            proxy.scrollTo(Constants.imageSectionScrollID, anchor: .center)
+        }
+    }
+
+    /// 투표가 생성되면 투표 섹션으로 자동 스크롤합니다.
+    private func handleVoteConfirmStateChanged(
+        oldValue: Bool,
+        newValue: Bool,
+        proxy: ScrollViewProxy
+    ) {
+        guard !oldValue, newValue else { return }
+        withAnimation(.easeOut(duration: 0.2)) {
+            proxy.scrollTo(Constants.voteSectionScrollID, anchor: .center)
+        }
+    }
+
+    /// 선택된 사진 아이템 변경 시 이미지를 로드합니다.
+    private func handleSelectedPhotoItemsChanged(_ newItems: [PhotosPickerItem]) {
+        guard !newItems.isEmpty else { return }
+
+        Task {
+            await viewModel.loadSelectedImages()
+        }
+    }
+
+    /// AppStorage 조직 타입 변경을 ViewModel에 반영합니다.
+    private func handleOrganizationTypeChanged(_ newValue: String) {
+        viewModel.applyOrganizationType(newValue)
+    }
+
+    /// AppStorage 사용자 컨텍스트 변경을 ViewModel에 반영합니다.
+    private func handleUserContextChanged(gisuId: Int, chapterId: Int) {
+        let editorGisuId = resolvedEditorGisuId(fallback: gisuId)
+        viewModel.updateUserContext(gisuId: editorGisuId, chapterId: chapterId)
+    }
+
+    // MARK: - Helper
+
+    /// 앞뒤 공백/개행 제거 후 비어있으면 fallback을 반환합니다.
+    private func normalizedName(from rawValue: String, fallback: String) -> String {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? fallback : trimmed
+    }
+
+    /// 공지 리스트에서 선택한 기수 ID가 있으면 우선 사용합니다.
+    private func resolvedEditorGisuId(fallback: Int) -> Int {
+        pathStore.noticeEditorSelectedGisuId ?? fallback
+    }
+
 }

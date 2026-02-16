@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+/// 탭별 하단 바텀 액세서리 뷰
+///
+/// 각 탭(Home, Notice, Activity, Community, MyPage)에 대응하는 액세서리를 분기합니다.
+/// NavigationStack에 화면이 쌓여있으면 해당 탭의 액세서리를 숨깁니다.
 struct UmcBottonAccessoryView: View {
     @Binding var tabCase: TabCase
     @Environment(\.di) var di
@@ -37,21 +41,27 @@ fileprivate struct HomeBottonAccessoryView: View {
     }
 
     var body: some View {
-        Button(action: {
-            pathStore.homePath.append(.home(.registrationSchedule))
-        }, label: {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                Spacer()
-                Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(.indigo500)
+        Group {
+            if pathStore.homePath.isEmpty {
+                Button(action: {
+                    pathStore.homePath.append(.home(.registrationSchedule))
+                }, label: {
+                    HStack(spacing: DefaultSpacing.spacing8) {
+                        Spacer()
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundStyle(.indigo500)
 
-                Text("일정 생성")
-                    .fontWeight(.semibold)
-                Spacer()
+                        Text("일정 생성")
+                            .fontWeight(.semibold)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .foregroundStyle(.grey900)
+                })
+            } else {
+                EmptyView()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .foregroundStyle(.grey900)
-        })
+        }
     }
 }
 
@@ -64,29 +74,26 @@ fileprivate struct NoticeAccessoryView: View {
     }
 
     var body: some View {
-        Button(action: {
-            openNoticeEditorIfNeeded()
-        }) {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                Spacer()
-                Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(.indigo500)
-
-                Text("공지글 작성")
-                    .fontWeight(.semibold)
-                Spacer()
+        Group {
+            if pathStore.noticePath.isEmpty {
+                Button(action: {
+                    pathStore.noticePath.append(.notice(.editor(mode: .create)))
+                }) {
+                    HStack(spacing: DefaultSpacing.spacing8) {
+                        Spacer()
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundStyle(.indigo500)
+                        
+                        Text("공지글 작성")
+                            .fontWeight(.semibold)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .foregroundStyle(.grey900)
+                }
+            } else {
+                EmptyView()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .foregroundStyle(.grey900)
-        }
-    }
-
-    /// NavigationStack의 경로 변경이 같은 프레임에 중복되지 않도록
-    /// 다음 런루프로 미루고, 동일 목적지가 이미 top이면 push를 생략합니다.
-    private func openNoticeEditorIfNeeded() {
-        let destination = NavigationDestination.notice(.editor(mode: .create))
-        Task { @MainActor in
-            pathStore.appendNoticePathIfNeeded(destination)
         }
     }
 }
@@ -96,12 +103,16 @@ fileprivate struct ActivityAccessoryView: View {
     @Environment(\.di) private var di
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
+    }
+
     private var userSession: UserSessionManager {
         di.resolve(UserSessionManager.self)
     }
 
     var body: some View {
-        if userSession.canToggleAdminMode {
+        if userSession.canToggleAdminMode && pathStore.activityPath.isEmpty {
             adminToggleButton
         } else {
             EmptyView()
@@ -146,20 +157,26 @@ fileprivate struct CommunityAccessoryView: View {
     }
 
     var body: some View {
-        Button(action: {
-            pathStore.communityPath.append(.community(.post))
-        }) {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                Spacer()
-                Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(.indigo500)
+        Group {
+            if pathStore.communityPath.isEmpty {
+                Button(action: {
+                    pathStore.communityPath.append(.community(.post))
+                }) {
+                    HStack(spacing: DefaultSpacing.spacing8) {
+                        Spacer()
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundStyle(.indigo500)
 
-                Text("게시글 작성")
-                    .fontWeight(.semibold)
-                Spacer()
+                        Text("게시글 작성")
+                            .fontWeight(.semibold)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .foregroundStyle(.grey900)
+                }
+            } else {
+                EmptyView()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .foregroundStyle(.grey900)
         }
     }
 }
