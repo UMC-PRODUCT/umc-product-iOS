@@ -91,7 +91,7 @@ struct ChallengerMemberListView: View {
                             showSheet.toggle()
                             viewModel.selectedMember = item
                         }) {
-                            CoreMemberManagementList(memberManagementItem: item)
+                            CoreMemberManagementList(memberManagementItem: item, mode: .challenger)
                         }
                     }
                 } header: {

@@ -218,9 +218,9 @@ private struct MemberBadgePresenter: View, Equatable {
 // MARK: - Preview
 #Preview(traits: .sizeThatFitsLayout) {
     VStack {
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", nickname: "소피", generation: "8기", position: "Challenger", part: .front(type: .ios), penalty: 0, badge: true, managementTeam: .challenger, attendanceRecords: []))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", nickname: "소피", generation: "8기", school: "가천대학교", position: "Challenger", part: .front(type: .ios), penalty: 0, badge: true, managementTeam: .challenger, attendanceRecords: [], penaltyHistory: []))
         
-        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", nickname: "소피", generation: "8기", position: "Challenger", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .challenger, attendanceRecords: []))
+        MemberManagementCard(memberManagementItem: MemberManagementItem(profile: nil, name: "이예지", nickname: "소피", generation: "8기", school: "가천대학교", position: "Challenger", part: .front(type: .ios), penalty: 0, badge: false, managementTeam: .challenger, attendanceRecords: [], penaltyHistory: []))
         
     }
 }
