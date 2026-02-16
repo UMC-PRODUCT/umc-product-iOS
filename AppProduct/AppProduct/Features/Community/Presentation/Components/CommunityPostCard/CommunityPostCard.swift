@@ -95,7 +95,7 @@ struct CommunityPostCard: View {
     
     private var openChatSection: some View {
         Button(action: {
-            // TODO: 오픈채팅 이동
+            openChatLink()
         }) {
             HStack(spacing: DefaultSpacing.spacing16) {
                 Image(.kakaoIcon)
@@ -133,6 +133,14 @@ struct CommunityPostCard: View {
     }
 
     // MARK: - Function
+
+    /// 오픈채팅 링크 열기
+    private func openChatLink() {
+        guard let urlString = model.lightningInfo?.openChatUrl,
+              let url = URL(string: urlString) else { return }
+
+        UIApplication.shared.open(url)
+    }
 
     private func makeButton(type: CommunityButtonType, isSelected: Bool, action: @escaping () -> Void) -> some View {
         let count: Int = {
