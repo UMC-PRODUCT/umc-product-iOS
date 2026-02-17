@@ -51,15 +51,69 @@ struct LightningInfoDTO: Codable {
     let location: String
     let maxParticipants: String
     let openChatUrl: String
+
+    private enum CodingKeys: String, CodingKey {
+        case meetAt
+        case location
+        case maxParticipants
+        case openChatUrl
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        meetAt = try container.decode(String.self, forKey: .meetAt)
+        location = try container.decode(String.self, forKey: .location)
+        openChatUrl = try container.decode(String.self, forKey: .openChatUrl)
+
+        if let intValue = try container.decodeIfPresent(Int.self, forKey: .maxParticipants) {
+            maxParticipants = intValue
+        } else if let stringValue = try container.decodeIfPresent(String.self, forKey: .maxParticipants),
+                  let intValue = Int(stringValue) {
+            maxParticipants = intValue
+        } else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .maxParticipants,
+                in: container,
+                debugDescription: "Expected Int or String-convertible Int"
+            )
+        }
+    }
     
     func toModel() -> CommunityLightningInfo {
+        let parsedMeetAt = DateParser.iso8601WithFractional.date(from: meetAt)
+            ?? DateParser.iso8601.date(from: meetAt)
+            ?? DateParser.iso8601WithoutTimezone.date(from: meetAt)
+            ?? Date()
+
         return CommunityLightningInfo(
-            meetAt: ISO8601DateFormatter().date(from: meetAt) ?? Date(),
+            meetAt: parsedMeetAt,
             location: location,
             maxParticipants: Int(maxParticipants) ?? 0,
             openChatUrl: openChatUrl
         )
     }
+}
+
+private enum DateParser {
+    static let iso8601WithFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    static let iso8601: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    static let iso8601WithoutTimezone: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        return formatter
+    }()
 }
 
 // 리스트 항목 변환
