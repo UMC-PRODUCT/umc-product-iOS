@@ -67,7 +67,8 @@ struct CommunityView: View {
                     break
                 }
             }
-            .navigation(naviTitle: .community, displayMode: .inline)
+            .navigationTitle(vm.selectedMenu.rawValue)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolBarCollection.ToolBarCenterMenu(
                     items: CommunityMenu.allCases,
@@ -102,7 +103,12 @@ struct CommunityView: View {
     private var listSection: some View {
         Group {
             if vm.filteredItems.isEmpty {
-                unableContent
+                // 검색어가 있으면 검색 결과 없음, 없으면 글이 없음
+                if !vm.searchText.isEmpty {
+                    searchEmptyContent
+                } else {
+                    emptyContent
+                }
             } else {
                 postsList
             }
@@ -145,7 +151,7 @@ struct CommunityView: View {
         .listRowSeparator(.hidden)
     }
 
-    private var unableContent: some View {
+    private var emptyContent: some View {
         ContentUnavailableView {
             Label(
                 "아직 작성된 글이 없습니다.",
@@ -153,6 +159,17 @@ struct CommunityView: View {
             )
         } description: {
             Text("가장 먼저 글을 작성해 보세요!")
+        }
+    }
+
+    private var searchEmptyContent: some View {
+        ContentUnavailableView {
+            Label(
+                "검색 결과가 없습니다.",
+                systemImage: "exclamationmark.magnifyingglass"
+            )
+        } description: {
+            Text("다른 검색어로 다시 시도해보세요.")
         }
     }
 

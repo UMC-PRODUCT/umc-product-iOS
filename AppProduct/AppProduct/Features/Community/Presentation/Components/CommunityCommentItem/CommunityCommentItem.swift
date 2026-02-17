@@ -61,13 +61,13 @@ struct CommunityCommentItem: View, Equatable {
                 Spacer()
                 Menu {
                     if model.isAuthor {
-                        Button(action: {
+                        Button(role: .destructive, action: {
                             showDeleteAlert()
                         }) {
                             Label("삭제", systemImage: "trash")
                         }
                     } else {
-                        Button(action: {
+                        Button(role: .destructive, action: {
                             showReportAlert()
                         }) {
                             Label("신고", systemImage: "light.beacon.max.fill")

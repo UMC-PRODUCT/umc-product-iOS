@@ -33,7 +33,8 @@ extension TrophyListResponse {
             userName: challengerName,
             part: UMCPartType(apiValue: part) ?? .pm,
             workbookTitle: title,
-            content: content
+            content: content,
+            url: url
         )
     }
 }

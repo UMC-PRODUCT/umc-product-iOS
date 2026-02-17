@@ -18,7 +18,6 @@ struct NavigationModifier: ViewModifier {
     /// 앱 전체에서 사용되는 네비게이션 타이틀 목록 정의
     enum Navititle: String {
         case signUp = "회원가입"
-        case community = "커뮤니티"
         case noticeAlarmType = "알림 보관"
         case communityDetail = "게시글"
         case placeSearch = "어느 위치를 찾고 있나요?"
@@ -32,7 +31,7 @@ struct NavigationModifier: ViewModifier {
         case myWrittenPosts = "내가 쓴 글"
         case myCommentedPosts = "댓글 단 글"
         case myScrappedPosts = "스크랩"
-        case communityPost = "새로운 게시글"
+        case communityPost = "게시글 생성"
         case voteCreate = "투표 만들기"
         case voteEdit = "투표 수정하기"
         case participant = "초대할 챌린저"

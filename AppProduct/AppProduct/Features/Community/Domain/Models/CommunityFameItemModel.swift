@@ -16,4 +16,5 @@ struct CommunityFameItemModel: Equatable, Identifiable {
     let part: UMCPartType
     let workbookTitle: String
     let content: String
+    let url: String
 }

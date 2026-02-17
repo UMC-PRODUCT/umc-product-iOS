@@ -122,7 +122,6 @@ struct CommunityLightningCard: View {
         }) {
             makeSection(type: .location)
         }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Function

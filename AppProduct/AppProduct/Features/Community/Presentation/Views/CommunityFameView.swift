@@ -60,21 +60,15 @@ struct CommunityFameView: View {
         .toolbar {
             ToolBarCollection.CommunityWeekFilter(
                 weeks: vm.availableWeeks,
-                selection: Binding(
-                    get: { vm.selectedWeek }, set: { vm.selectedWeek = $0 }
-                )
+                selection: $vm.selectedWeek
             )
             
             ToolBarCollection.CommunityUnivFilter(
-                selectedUniversity: Binding(
-                    get: { vm.selectedUniversity }, set: { vm.selectedUniversity = $0 }
-                ),
+                selectedUniversity: $vm.selectedUniversity,
                 universities: vm.availableUniversities
             )
             ToolBarCollection.CommunityPartFilter(
-                selectedPart: Binding(
-                    get: { vm.selectedPart }, set: { vm.selectedPart = $0 }
-                ),
+                selectedPart: $vm.selectedPart,
                 parts: vm.availableParts
             )
         }
@@ -100,7 +94,9 @@ struct CommunityFameView: View {
 
                     ForEach(group.items) { item in
                         CommunityFameItem(model: item) {
-                            // TODO: 보기 버튼 액션
+                            if let url = URL(string: item.url) {
+                                UIApplication.shared.open(url)
+                            }
                         }
                         .equatable()
                         .padding(.vertical, 4)
