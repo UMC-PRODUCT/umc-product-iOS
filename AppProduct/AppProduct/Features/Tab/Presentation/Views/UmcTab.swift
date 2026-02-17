@@ -144,6 +144,8 @@ struct UmcTab: View {
         switch debugRoute {
         case .openNoticeTab:
             tabCase = .notice
+        case .openCommunityTab:
+            tabCase = .community
         }
         #endif
     }

@@ -65,47 +65,23 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "NoticeRole(no Select)"
+            argument = "CommunityState(no Select)"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--seed-appstorage-dummy-central"
+            argument = "-communityDebugState loading"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-communityDebugState loaded"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--seed-appstorage-dummy-chapter"
+            argument = "-communityDebugState failed"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--seed-appstorage-dummy-school"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--seed-appstorage-dummy-challenger"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "NoticeState(no Select)"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-noticeDebugState loading"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-noticeDebugState loaded"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-noticeDebugState failed"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--open-notice-tab"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--notice-force-permission"
+            argument = "--open-community-tab"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
