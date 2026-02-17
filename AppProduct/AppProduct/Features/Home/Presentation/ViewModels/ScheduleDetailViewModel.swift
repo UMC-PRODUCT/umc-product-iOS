@@ -32,6 +32,10 @@ class ScheduleDetailViewModel {
     var alertPromprt: AlertPrompt?
     /// 수정 화면 표시 여부
     var isShowModify: Bool = false
+    /// 일정 수정 가능 여부 (WRITE/MANAGE)
+    var canEditSchedule: Bool = false
+    /// 일정 삭제 가능 여부 (DELETE/MANAGE)
+    var canDeleteSchedule: Bool = false
 
     // MARK: - Init
     init(scheduleId: Int, selectedDate: Date = .now) {
@@ -89,5 +93,31 @@ class ScheduleDetailViewModel {
             negativeBtnAction: {},
             isPositiveBtnDestructive: true
         )
+    }
+
+    /// 일정 리소스 권한을 조회합니다.
+    @MainActor
+    func fetchSchedulePermission(
+        authorizationUseCase: AuthorizationUseCaseProtocol
+    ) async {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--schedule-force-permission") {
+            canEditSchedule = true
+            canDeleteSchedule = true
+            return
+        }
+        #endif
+
+        do {
+            let permission = try await authorizationUseCase.getResourcePermission(
+                resourceType: .schedule,
+                resourceId: scheduleId
+            )
+            canEditSchedule = permission.hasAny([.write, .manage])
+            canDeleteSchedule = permission.hasAny([.delete, .manage])
+        } catch {
+            canEditSchedule = false
+            canDeleteSchedule = false
+        }
     }
 }

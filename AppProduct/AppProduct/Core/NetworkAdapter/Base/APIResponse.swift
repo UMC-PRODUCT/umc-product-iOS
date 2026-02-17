@@ -77,6 +77,16 @@ extension APIResponse {
         return result
     }
 
+    /// 성공 여부만 검증합니다.
+    ///
+    /// `result`가 없는 성공 응답(PATCH/DELETE 등)을 처리할 때 사용합니다.
+    /// - Throws: `RepositoryError.serverError` (실패 시)
+    func validateSuccess() throws {
+        guard isSuccess else {
+            throw RepositoryError.serverError(code: code, message: message)
+        }
+    }
+
     /// 에러 메시지 (실패 시 사용)
     var errorMessage: String {
         message ?? "알 수 없는 오류가 발생했습니다"

@@ -41,6 +41,12 @@ struct ScheduleDetailView: View {
         .toolbar { toolbarContent }
         .alertPrompt(item: $viewModel.alertPromprt)
         .fullScreenCover(isPresented: $viewModel.isShowModify, content: editCoverContent)
+        .task {
+            let authorizationUseCase = di.resolve(AuthorizationUseCaseProtocol.self)
+            await viewModel.fetchSchedulePermission(
+                authorizationUseCase: authorizationUseCase
+            )
+        }
     }
 
     // MARK: - Content
@@ -68,24 +74,28 @@ struct ScheduleDetailView: View {
     private var toolbarContent: some ToolbarContent {
         if let loadedData {
             ToolbarItemGroup(placement: .topBarTrailing) {
-                Button(action: {
-                    Task { @MainActor in
-                        await openModifySheetIfPossible(with: loadedData)
+                if viewModel.canEditSchedule {
+                    Button(action: {
+                        Task { @MainActor in
+                            await openModifySheetIfPossible(with: loadedData)
+                        }
+                    }) {
+                        Image(systemName: "pencil")
                     }
-                }) {
-                    Image(systemName: "pencil")
                 }
 
-                Button(role: .destructive, action: {
-                    viewModel.deleteAlertAction {
-                        dismiss()
-                        Task { @MainActor in
-                            await deleteSchedule(scheduleId: loadedData.scheduleId)
+                if viewModel.canDeleteSchedule {
+                    Button(role: .destructive, action: {
+                        viewModel.deleteAlertAction {
+                            dismiss()
+                            Task { @MainActor in
+                                await deleteSchedule(scheduleId: loadedData.scheduleId)
+                            }
                         }
+                    }) {
+                        Image(systemName: "trash")
+                            .foregroundStyle(.red)
                     }
-                }) {
-                    Image(systemName: "trash")
-                        .foregroundStyle(.red)
                 }
             }
         }

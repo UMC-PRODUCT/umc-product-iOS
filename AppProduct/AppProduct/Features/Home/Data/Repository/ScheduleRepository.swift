@@ -50,10 +50,10 @@ final class ScheduleRepository: ScheduleRepositoryProtocol, @unchecked Sendable 
             ScheduleRouter.postGenerateSchedule(schedule: schedule)
         )
         let apiResponse = try decoder.decode(
-            APIResponse<EmptyResult>.self,
+            APIResponse<String>.self,
             from: response.data
         )
-        _ = try apiResponse.unwrap()
+        try apiResponse.validateSuccess()
     }
 
     /// 일정 정보를 부분 수정합니다.
@@ -76,7 +76,7 @@ final class ScheduleRepository: ScheduleRepositoryProtocol, @unchecked Sendable 
             APIResponse<EmptyResult>.self,
             from: response.data
         )
-        _ = try apiResponse.unwrap()
+        try apiResponse.validateSuccess()
     }
 
     /// 일정과 연결된 출석부를 함께 삭제합니다.
@@ -95,6 +95,6 @@ final class ScheduleRepository: ScheduleRepositoryProtocol, @unchecked Sendable 
             APIResponse<EmptyResult>.self,
             from: response.data
         )
-        _ = try apiResponse.unwrap()
+        try apiResponse.validateSuccess()
     }
 }

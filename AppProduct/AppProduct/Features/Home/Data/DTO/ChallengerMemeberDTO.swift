@@ -8,8 +8,6 @@
 import Foundation
 
 /// 현재 기수 패널티 조회 Response DTO
-///
-/// `GET /api/v1/challenger/{id}`
 struct ChallengerMemberDTO: Codable {
 
     // MARK: - Property
