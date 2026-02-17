@@ -76,6 +76,12 @@ protocol NoticeUseCaseProtocol {
     /// 공지사항 읽음 처리
     /// - Parameter noticeId: 공지 ID
     func readNotice(noticeId: Int) async throws
+
+    /// 투표 응답(사용자 선택 전송)
+    /// - Parameters:
+    ///   - voteId: 투표 ID
+    ///   - optionIds: 선택한 옵션 ID 목록
+    func submitVoteResponse(voteId: Int, optionIds: [Int]) async throws
     
     // MARK: - 리마인더 (POST)
     

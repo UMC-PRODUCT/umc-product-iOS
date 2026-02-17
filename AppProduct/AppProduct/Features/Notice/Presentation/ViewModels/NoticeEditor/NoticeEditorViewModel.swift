@@ -139,6 +139,8 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
 
     /// 수정 화면 원본 이미지 ID 목록 (순서 유지)
     var originalImageIds: [String] = []
+    /// 수정 화면 원본 이미지 URL 목록 (ID 미포함 응답 대비)
+    var originalImageURLs: [String] = []
 
     /// 수정 화면 원본 투표 폼
     var originalVoteFormData: VoteFormData?

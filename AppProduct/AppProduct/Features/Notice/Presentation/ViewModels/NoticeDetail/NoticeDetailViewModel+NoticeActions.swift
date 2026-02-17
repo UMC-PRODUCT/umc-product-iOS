@@ -21,6 +21,7 @@ extension NoticeDetailViewModel {
         do {
             let noticeDetail = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
             noticeState = .loaded(noticeDetail)
+            isDetailPreparedForEdit = true
 
         } catch let error as DomainError {
             noticeState = .failed(.domain(error))
@@ -57,15 +58,18 @@ extension NoticeDetailViewModel {
     }
 
     /// 삭제 확인 다이얼로그 표시
-    func showDeleteConfirmation(onDeleteSuccess: @escaping () -> Void) {
+    ///
+    /// 확인 버튼 탭 시 화면은 즉시 닫고, 삭제 API는 백그라운드로 전송합니다.
+    func showDeleteConfirmation(onDeleteRequested: @escaping () -> Void) {
         alertPrompt = AlertPrompt(
             id: .init(),
             title: "공지 삭제",
             message: "정말 삭제하시겠습니까?",
             positiveBtnTitle: "삭제",
             positiveBtnAction: { [weak self] in
+                onDeleteRequested()
                 Task {
-                    await self?.deleteNotice(onSuccess: onDeleteSuccess)
+                    await self?.deleteNotice()
                 }
             },
             negativeBtnTitle: "취소",
@@ -91,15 +95,26 @@ extension NoticeDetailViewModel {
     @MainActor
     func sendReminder(targetIds: [Int]) async {
         do {
+            #if DEBUG
+            print("[NoticeReminder] request targetIds: \(targetIds)")
+            #endif
+
             try await noticeUseCase.sendReminder(
                 noticeId: noticeID,
                 targetIds: targetIds
             )
 
+            let successMessage: String
+            if targetIds.count == 1, let singleTargetId = targetIds.first {
+                successMessage = "1명에게 리마인더를 발송했습니다. (ID: \(singleTargetId))"
+            } else {
+                successMessage = "\(targetIds.count)명에게 리마인더를 발송했습니다."
+            }
+
             alertPrompt = AlertPrompt(
                 id: .init(),
                 title: "리마인더 발송 완료",
-                message: "\(targetIds.count)명에게 리마인더를 발송했습니다.",
+                message: successMessage,
                 positiveBtnTitle: "확인"
             )
 
@@ -269,64 +284,39 @@ extension NoticeDetailViewModel {
         }
     }
 
-    /// 투표 처리 (로컬 Optimistic Update)
+    /// 투표 응답 처리
     ///
-    /// 선택한 옵션의 투표 수를 로컬에서 즉시 반영합니다.
+    /// 선택 옵션을 서버로 전송한 뒤 공지 상세를 재조회하여 최신 투표 상태를 반영합니다.
     @MainActor
     func handleVote(voteId: String, optionIds: [String]) async {
-        guard case .loaded(let currentNotice) = noticeState,
-              let currentVote = currentNotice.vote else {
+        guard case .loaded = noticeState else {
             return
         }
+        guard !isSubmittingVote else { return }
 
         do {
-            try await Task.sleep(nanoseconds: 500_000_000)
+            isSubmittingVote = true
+            defer { isSubmittingVote = false }
 
-            // 선택된 옵션의 투표 수를 +1 하여 새 옵션 배열 생성
-            let updatedOptions = currentVote.options.map { option in
-                if optionIds.contains(option.id) {
-                    return VoteOption(
-                        id: option.id,
-                        title: option.title,
-                        voteCount: option.voteCount + 1
-                    )
-                }
-                return option
+            guard let resolvedVoteId = Int(voteId) else {
+                throw DomainError.custom(message: "유효하지 않은 투표 ID입니다.")
             }
 
-            let updatedVote = NoticeVote(
-                id: currentVote.id,
-                question: currentVote.question,
-                options: updatedOptions,
-                startDate: currentVote.startDate,
-                endDate: currentVote.endDate,
-                allowMultipleChoices: currentVote.allowMultipleChoices,
-                isAnonymous: currentVote.isAnonymous,
-                userVotedOptionIds: optionIds
+            let resolvedOptionIds = optionIds.compactMap(Int.init)
+            guard !resolvedOptionIds.isEmpty else {
+                throw DomainError.custom(message: "유효한 투표 항목이 없습니다.")
+            }
+
+            try await noticeUseCase.submitVoteResponse(
+                voteId: resolvedVoteId,
+                optionIds: resolvedOptionIds
             )
 
-            let updatedNotice = NoticeDetail(
-                id: currentNotice.id,
-                generation: currentNotice.generation,
-                scope: currentNotice.scope,
-                category: currentNotice.category,
-                isMustRead: currentNotice.isMustRead,
-                title: currentNotice.title,
-                content: currentNotice.content,
-                authorID: currentNotice.authorID,
-                authorName: currentNotice.authorName,
-                authorImageURL: currentNotice.authorImageURL,
-                createdAt: currentNotice.createdAt,
-                updatedAt: currentNotice.updatedAt,
-                targetAudience: currentNotice.targetAudience,
-                hasPermission: currentNotice.hasPermission,
-                images: currentNotice.images,
-                links: currentNotice.links,
-                vote: updatedVote
-            )
-
-            noticeState = .loaded(updatedNotice)
+            // 서버 반영 결과(득표수/내 선택 상태)를 최신값으로 반영
+            let refreshedNotice = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
+            noticeState = .loaded(refreshedNotice)
         } catch {
+            isSubmittingVote = false
             errorHandler.handle(
                 error,
                 context: ErrorContext(
@@ -347,29 +337,20 @@ extension NoticeDetailViewModel {
 
     /// 공지 삭제
     @MainActor
-    private func deleteNotice(onSuccess: @escaping () -> Void) async {
+    private func deleteNotice() async {
         do {
             try await noticeUseCase.deleteNotice(noticeId: noticeID)
-
-            alertPrompt = AlertPrompt(
-                id: .init(),
-                title: "삭제 완료",
-                message: "공지사항이 삭제되었습니다.",
-                positiveBtnTitle: "확인",
-                positiveBtnAction: onSuccess
-            )
-
         } catch let error as DomainError {
-            handleDeleteError(error, onSuccess: onSuccess)
+            handleDeleteError(error)
         } catch let error as NetworkError {
-            handleDeleteError(error, onSuccess: onSuccess)
+            handleDeleteError(error)
         } catch {
-            handleDeleteError(error, onSuccess: onSuccess)
+            handleDeleteError(error)
         }
     }
 
     /// 삭제 실패 시 ErrorHandler로 에러를 전달하고 재시도 액션을 바인딩합니다.
-    private func handleDeleteError(_ error: Error, onSuccess: @escaping () -> Void) {
+    private func handleDeleteError(_ error: Error) {
         errorHandler.handle(
             error,
             context: ErrorContext(
@@ -378,7 +359,7 @@ extension NoticeDetailViewModel {
                 retryAction: { [weak self] in
                     guard let self = self else { return }
                     Task {
-                        await self.deleteNotice(onSuccess: onSuccess)
+                        await self.deleteNotice()
                     }
                 }
             )

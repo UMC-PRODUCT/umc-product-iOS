@@ -88,7 +88,7 @@ private struct TopSection: View, Equatable {
             tag(model.tag.text, color: model.tag.backColor)
             
             if model.mustRead {
-                tag("필독", color: .orange)
+                tag("필독", color: .red)
             }
 
             Spacer()
@@ -113,6 +113,7 @@ private struct TopSection: View, Equatable {
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                     .fill(color)
             }
+            .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
 }
 

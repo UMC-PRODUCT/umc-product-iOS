@@ -7,10 +7,14 @@
 
 import SwiftUI
 
+/// 공지 상세에서 투표를 표시하는 카드 컴포넌트
+///
+/// 투표 전/후 UI를 분기하며, 단일선택/복수선택 모드를 지원합니다.
 struct NoticeVoteCard: View {
 
     // MARK: - Property
     let vote: NoticeVote
+    let isSubmitting: Bool
     @State private var selectedOptionIds: Set<String> = []
     let onVote: ([String]) -> Void
 
@@ -125,6 +129,7 @@ struct NoticeVoteCard: View {
                             allowMultiple: vote.allowMultipleChoices
                         )
                     }
+                    .disabled(isSubmitting)
                 }
             }
         }
@@ -138,14 +143,21 @@ struct NoticeVoteCard: View {
                 Button(action: {
                     onVote(Array(selectedOptionIds))
                 }) {
-                    Text("투표하기")
-                        .appFont(.subheadlineEmphasis, color: .white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Constants.voteBtnVPadding)
+                    Group {
+                        if isSubmitting {
+                            ProgressView()
+                                .tint(.indigo500)
+                        } else {
+                            Text("투표하기")
+                                .appFont(.subheadlineEmphasis, color: .white)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Constants.voteBtnVPadding)
                 }
                 .buttonStyle(.glassProminent)
                 .tint(.indigo500)
-                .disabled(selectedOptionIds.isEmpty)
+                .disabled(selectedOptionIds.isEmpty || isSubmitting)
             }
             
             Text("총 \(vote.totalVotes)명 참여")
@@ -154,6 +166,8 @@ struct NoticeVoteCard: View {
     }
 
     // MARK: - Function
+
+    /// 투표 옵션 선택 토글 (복수선택: 개별 추가/제거, 단일선택: 배타적 교체)
     private func toggleOption(_ optionId: String) {
         if vote.allowMultipleChoices {
             if selectedOptionIds.contains(optionId) {
@@ -284,6 +298,7 @@ struct VoteResultRow: View {
             isAnonymous: true,
             userVotedOptionIds: []
         ),
+        isSubmitting: false,
         onVote: { _ in }
     )
     .padding()
@@ -306,6 +321,7 @@ struct VoteResultRow: View {
             isAnonymous: false,
             userVotedOptionIds: ["1"]
         ),
+        isSubmitting: false,
         onVote: { _ in }
     )
     .padding()
@@ -328,6 +344,7 @@ struct VoteResultRow: View {
             isAnonymous: true,
             userVotedOptionIds: ["1"]
         ),
+        isSubmitting: false,
         onVote: { _ in }
     )
     .padding()
@@ -350,6 +367,7 @@ struct VoteResultRow: View {
             isAnonymous: true,
             userVotedOptionIds: []
         ),
+        isSubmitting: false,
         onVote: { _ in }
     )
     .padding()
@@ -372,6 +390,7 @@ struct VoteResultRow: View {
             isAnonymous: false,
             userVotedOptionIds: ["1", "2"]
         ),
+        isSubmitting: false,
         onVote: { _ in }
     )
     .padding()

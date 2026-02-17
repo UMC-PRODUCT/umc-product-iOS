@@ -210,7 +210,7 @@ extension NoticeEditorViewModel {
 
         noticeLinks = notice.links.map { NoticeLinkItem(link: $0) }
         originalLinks = notice.links
-        let existingImages = notice.imageItems
+        let imagesFromMeta = notice.imageItems
             .filter { !$0.id.isEmpty }
             .map {
                 NoticeImageItem(
@@ -220,8 +220,18 @@ extension NoticeEditorViewModel {
                     fileId: $0.id
                 )
             }
-        noticeImages = existingImages
-        originalImageIds = existingImages.compactMap(\.fileId)
+        let imagesFromURLs = notice.images.map {
+            NoticeImageItem(
+                imageData: nil,
+                imageURL: $0,
+                isLoading: false,
+                fileId: nil
+            )
+        }
+
+        noticeImages = imagesFromMeta.isEmpty ? imagesFromURLs : imagesFromMeta
+        originalImageIds = imagesFromMeta.compactMap(\.fileId)
+        originalImageURLs = notice.images
 
         if let vote = notice.vote {
             let loadedVoteForm = VoteFormData(

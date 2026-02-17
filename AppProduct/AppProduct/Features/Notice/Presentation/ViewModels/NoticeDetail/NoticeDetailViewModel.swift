@@ -38,6 +38,9 @@ final class NoticeDetailViewModel {
     /// Alert 프롬프트
     var alertPrompt: AlertPrompt?
 
+    /// 투표 응답 전송 진행 상태
+    var isSubmittingVote: Bool = false
+
     /// 공지 ID
     let noticeID: Int
 
@@ -93,6 +96,9 @@ final class NoticeDetailViewModel {
 
     /// 공지 삭제 가능 여부 (DELETE/MANAGE)
     var canDeleteNotice: Bool = false
+
+    /// 수정 화면 진입에 필요한 상세 데이터 준비 완료 여부
+    var isDetailPreparedForEdit: Bool = false
 
     // MARK: - Read Status Computed
 

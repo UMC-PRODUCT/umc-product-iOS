@@ -77,9 +77,9 @@ struct LinkAttachmentCard: View, Equatable {
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                     .fill(.grey000)
             }
-            .onAppear {
+            .task {
                 guard shouldAutoFocus else { return }
-                Task { @MainActor in
+                await MainActor.run {
                     isLinkFieldFocused = true
                 }
             }

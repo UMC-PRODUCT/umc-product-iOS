@@ -32,16 +32,19 @@ struct NoticeDetailView: View {
         static let horizontalPadding: CGFloat = DefaultConstant.defaultSafeHorizon
         static let topSectionSpacing: CGFloat = DefaultSpacing.spacing16
         static let subInfoSpacing: CGFloat = DefaultSpacing.spacing8
-        static let bottomSectionSpacing: CGFloat = DefaultSpacing.spacing24
+        static let contentToImageSpacing: CGFloat = 20
+        static let contentToLinkSpacing: CGFloat = 20
+        static let imageToLinkSpacing: CGFloat = 10
+        static let attachmentToVoteSpacing: CGFloat = 20
+        static let contentToVoteSpacing: CGFloat = 20
+        static let linkItemSpacing: CGFloat = DefaultSpacing.spacing12
         static let bottomButtonPadding: CGFloat = DefaultSpacing.spacing16
         static let detailSheetDetents: Set<PresentationDetent> = [.fraction(0.72)]
         static let defaultProfileImageName: String = "defaultProfile"
         static let noticeEditTitle: String = "수정하기"
         static let noticeDeleteTitle: String = "삭제하기"
-        static let noticeReportTitle: String = "신고하기"
         static let editIcon: String = "pencil"
         static let deleteIcon: String = "trash"
-        static let reportIcon: String = "exclamationmark.bubble"
         static let audienceLabelPrefix: String = "수신대상:"
         static let audienceSystemImage: String = "paperplane"
         static let collapsedButtonSize: CGFloat = 60
@@ -137,9 +140,6 @@ struct NoticeDetailView: View {
     /// 필독 칩 + 공지 제목 영역
     private func mainInfo(_ data: NoticeDetail) -> some View {
         VStack(alignment: .leading, spacing: Constants.topSectionSpacing) {
-            if data.isMustRead {
-                NoticeChip(noticeType: .essential)
-            }
             Text(data.title)
                 .appFont(.title2Emphasis)
         }
@@ -168,37 +168,48 @@ struct NoticeDetailView: View {
 
     /// 공지 본문/투표/이미지/링크를 순서대로 구성합니다.
     private func bottomSection(_ data: NoticeDetail) -> some View {
-        VStack(spacing: Constants.bottomSectionSpacing) {
+        VStack(alignment: .leading, spacing: 0) {
             Text(data.content)
                 .appFont(.body)
                 .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Constants.horizontalPadding)
 
             if !data.images.isEmpty {
                 NoticeImageCard(imageURLs: data.images)
-            }
-
-            if !data.links.isEmpty {
-                ForEach(Array(data.links.enumerated()), id: \.offset) { _, link in
-                    NoticeLinkCard(url: link)
-                        .padding(.horizontal, Constants.horizontalPadding)
-                }
+                    .padding(.top, Constants.contentToImageSpacing)
             }
 
             if let vote = data.vote {
-                NoticeVoteCard(vote: vote) { optionIds in
+                NoticeVoteCard(vote: vote, isSubmitting: viewModel.isSubmittingVote) { optionIds in
                     Task {
                         await viewModel.handleVote(voteId: vote.id, optionIds: optionIds)
                     }
                 }
+                .padding(
+                    .top,
+                    (data.images.isEmpty && data.links.isEmpty)
+                    ? Constants.contentToVoteSpacing
+                    : Constants.attachmentToVoteSpacing
+                )
                 .padding(.horizontal, Constants.horizontalPadding)
+            }
+
+            if !data.links.isEmpty {
+                VStack(spacing: Constants.linkItemSpacing) {
+                    ForEach(Array(data.links.enumerated()), id: \.offset) { _, link in
+                        NoticeLinkCard(url: link)
+                            .padding(.horizontal, Constants.horizontalPadding)
+                    }
+                }
+                .padding(.top, (data.images.isEmpty && data.vote == nil) ? Constants.contentToLinkSpacing : Constants.imageToLinkSpacing)
             }
         }
     }
 
     // MARK: - Toolbar
 
-    /// 수정/삭제/신고 메뉴를 포함하는 네비게이션 툴바
+    /// 수정/삭제 메뉴를 포함하는 네비게이션 툴바
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         if currentNotice != nil {
@@ -210,17 +221,6 @@ struct NoticeDetailView: View {
     private var toolbarActions: [ToolBarCollection.ToolbarTrailingMenu.ActionItem] {
         var actions: [ToolBarCollection.ToolbarTrailingMenu.ActionItem] = []
 
-        if viewModel.canDeleteNotice {
-            actions.append(
-                .init(
-                    title: Constants.noticeDeleteTitle,
-                    icon: Constants.deleteIcon,
-                    role: .destructive,
-                    action: handleDeleteNotice
-                )
-            )
-        }
-
         if viewModel.canEditNotice {
             actions.append(
                 .init(
@@ -231,13 +231,16 @@ struct NoticeDetailView: View {
             )
         }
 
-        actions.append(
-            .init(
-                title: Constants.noticeReportTitle,
-                icon: Constants.reportIcon,
-                action: handleReportNotice
+        if viewModel.canDeleteNotice {
+            actions.append(
+                .init(
+                    title: Constants.noticeDeleteTitle,
+                    icon: Constants.deleteIcon,
+                    role: .destructive,
+                    action: handleDeleteNotice
+                )
             )
-        )
+        }
 
         return actions
     }
@@ -313,6 +316,14 @@ struct NoticeDetailView: View {
         await viewModel.markAsReadIfNeeded()
         await viewModel.fetchReadStatus()
         await viewModel.fetchNoticePermission()
+        guard !shouldForceDetailFailedInDebug else {
+            viewModel.noticeState = .failed(.unknown(message: "공지 상세 데이터를 불러오지 못했습니다."))
+            return
+        }
+        guard !shouldSkipDetailFetchInDebug else {
+            viewModel.isDetailPreparedForEdit = true
+            return
+        }
         await viewModel.fetchNoticeDetail()
         await viewModel.fetchNoticePermission()
     }
@@ -321,12 +332,48 @@ struct NoticeDetailView: View {
 
     /// 공지 수정 처리
     private func handleEditNotice() {
-        guard let notice = currentNotice else { return }
+        guard viewModel.isDetailPreparedForEdit else {
+            viewModel.alertPrompt = AlertPrompt(
+                id: .init(),
+                title: "잠시 후 다시 시도해주세요",
+                message: "공지 상세 정보를 불러오는 중입니다.",
+                positiveBtnTitle: "확인"
+            )
+            return
+        }
         guard viewModel.canEditNotice else {
             showNoPermissionAlert()
             return
         }
+
+        Task {
+            await openEditorUsingCurrentOrHydratedDetail()
+        }
+    }
+
+    /// 현재 상세 모델을 우선 사용하고, 이미지 메타데이터가 비어있을 때만 1회 보강 조회 후 수정 화면으로 진입합니다.
+    @MainActor
+    private func openEditorUsingCurrentOrHydratedDetail() async {
+        guard var notice = currentNotice else { return }
+
+        // 디버그/요약 모델 경로에서 이미지 메타데이터(id)가 비어있으면
+        // 에디터에서 기존 이미지를 복원할 수 없으므로 보강 조회를 수행합니다.
+        let needsImageHydration = !notice.images.isEmpty &&
+            (notice.imageItems.isEmpty || notice.imageItems.contains(where: { $0.id.isEmpty }))
+
+        if needsImageHydration {
+            do {
+                let hydrated = try await viewModel.noticeUseCase.getDetailNotice(noticeId: viewModel.noticeID)
+                notice = hydrated
+                viewModel.noticeState = .loaded(hydrated)
+            } catch {
+                // 보강 조회 실패 시 현재 모델로 계속 진행
+            }
+        }
+
         let noticeID = Int(notice.id) ?? 0
+        guard noticeID > 0 else { return }
+
         let editMode = NoticeEditorMode.edit(noticeId: noticeID, notice: notice)
         pathStore.noticePath.append(.notice(.editor(mode: editMode, selectedGisuId: nil)))
     }
@@ -339,22 +386,13 @@ struct NoticeDetailView: View {
             return
         }
 
-        viewModel.showDeleteConfirmation {
-            guard !pathStore.noticePath.isEmpty else { return }
-            pathStore.noticePath.removeLast()
-        }
+        viewModel.showDeleteConfirmation(onDeleteRequested: closeDetailScreenImmediately)
     }
 
-    /// 공지 신고 처리
-    private func handleReportNotice() {
-        viewModel.alertPrompt = AlertPrompt(
-            id: .init(),
-            title: Constants.noticeReportTitle,
-            message: "해당 공지 사항을 신고하겠습니까?",
-            positiveBtnTitle: "예",
-            negativeBtnTitle: "취소",
-            isPositiveBtnDestructive: true
-        )
+    /// 삭제 확인 시 상세 화면을 즉시 닫습니다.
+    private func closeDetailScreenImmediately() {
+        guard !pathStore.noticePath.isEmpty else { return }
+        pathStore.noticePath.removeLast()
     }
 
     /// 수정/삭제 권한 없음 안내
@@ -370,6 +408,30 @@ struct NoticeDetailView: View {
     /// PathStore 접근
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
+    }
+
+    /// NoticeDebug의 loaded 계열 상태에서는 전달된 더미 상세를 유지합니다.
+    private var shouldSkipDetailFetchInDebug: Bool {
+        #if DEBUG
+        guard let debugState = NoticeDebugState.fromLaunchArgument() else { return false }
+        switch debugState {
+        case .loaded, .loadedCentral, .loadedBranch, .loadedSchool, .loadedPart:
+            return true
+        case .loading, .failed, .detailFailed:
+            return false
+        }
+        #else
+        false
+        #endif
+    }
+
+    /// NoticeDebug의 detailFailed 상태에서는 상세 화면을 실패 UI로 강제합니다.
+    private var shouldForceDetailFailedInDebug: Bool {
+        #if DEBUG
+        NoticeDebugState.fromLaunchArgument() == .detailFailed
+        #else
+        false
+        #endif
     }
 
     /// 공지 상세의 타입(중앙/지부/교내/파트)을 내비게이션 서브타이틀로 노출합니다.

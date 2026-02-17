@@ -61,6 +61,11 @@ enum NoticeRouter: BaseTargetType {
     )
     /// 공지사항 읽음 처리
     case readNotice(noticeId: Int)
+    /// 투표 응답(사용자 선택 전송)
+    case submitVoteResponse(
+        voteId: Int,
+        optionIds: [Int]
+    )
     
     // PATCH Method
     /// 공지사항 수정
@@ -112,6 +117,8 @@ enum NoticeRouter: BaseTargetType {
             return "/api/v1/notices/\(noticeId)/reminders"
         case .readNotice(let noticeId):
             return "/api/v1/notices/\(noticeId)/read"
+        case .submitVoteResponse(let voteId, _):
+            return "/api/v1/surveys/votes/\(voteId)/responses"
         case .updateNotice(let noticeId, _):
             return "/api/v1/notices/\(noticeId)"
         case .updateLink(let noticeId, _):
@@ -132,7 +139,7 @@ enum NoticeRouter: BaseTargetType {
         switch self {
         case .getAllNotices, .getDetailNotice, .getNoticeReadStatusCount, .getNoticeReadStatusList, .searchNotice:
             return .get
-        case .postNotice, .addVote, .addLink, .addImage, .sendReminder, .readNotice:
+        case .postNotice, .addVote, .addLink, .addImage, .sendReminder, .readNotice, .submitVoteResponse:
             return .post
         case .updateNotice, .updateLink, .updateImage:
             return .patch
@@ -199,6 +206,11 @@ enum NoticeRouter: BaseTargetType {
             )
         case .readNotice:
             return .requestPlain
+        case .submitVoteResponse(_, let optionIds):
+            return .requestParameters(
+                parameters: ["optionIds": optionIds],
+                encoding: JSONEncoding.default
+            )
         case .updateNotice(_, let body):
             return .requestJSONEncodable(body)
         case .updateLink(_, let links):

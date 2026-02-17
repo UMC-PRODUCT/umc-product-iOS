@@ -98,7 +98,7 @@ extension NoticeEditorViewModel {
 
             if hasImageChanges {
                 _ = try await uploadPendingImagesIfNeeded()
-                let imageIds = noticeImages.compactMap(\.fileId)
+                let imageIds = try await resolveImageIdsForUpdate(noticeId: noticeId)
                 latestNotice = try await noticeUseCase.updateImages(
                     noticeId: noticeId,
                     imageIds: imageIds
@@ -248,8 +248,14 @@ extension NoticeEditorViewModel {
 
     /// 이미지 전체 교체 변경 여부
     var hasImageChanges: Bool {
-        let hasPendingNewImages = noticeImages.contains { $0.fileId == nil }
+        let hasPendingNewImages = noticeImages.contains { $0.fileId == nil && $0.imageData != nil }
         if hasPendingNewImages { return true }
+
+        // imageId가 없는 응답 케이스는 URL 기준으로 변경 감지
+        if originalImageIds.isEmpty {
+            let currentImageURLs = noticeImages.compactMap(\.imageURL)
+            return currentImageURLs != originalImageURLs
+        }
 
         let currentImageIds = noticeImages.compactMap(\.fileId)
         return currentImageIds != originalImageIds
@@ -323,6 +329,35 @@ extension NoticeEditorViewModel {
         }
 
         return noticeImages.compactMap { $0.fileId }
+    }
+
+    /// 수정 이미지 교체 API에 전달할 imageId 목록을 구성합니다.
+    ///
+    /// - fileId가 있는 항목은 그대로 사용
+    /// - fileId가 없는 기존 원격 이미지(URL)는 상세 재조회 후 URL→ID 매핑으로 보완
+    @MainActor
+    func resolveImageIdsForUpdate(noticeId: Int) async throws -> [String] {
+        let hasUnresolvedRemoteImage = noticeImages.contains {
+            $0.fileId == nil && $0.imageData == nil && ($0.imageURL?.isEmpty == false)
+        }
+
+        var urlToId: [String: String] = [:]
+        if hasUnresolvedRemoteImage {
+            let latestDetail = try await noticeUseCase.getDetailNotice(noticeId: noticeId)
+            urlToId = Dictionary(
+                uniqueKeysWithValues: latestDetail.imageItems.map { ($0.url, $0.id) }
+            )
+        }
+
+        return noticeImages.compactMap { item in
+            if let fileId = item.fileId, !fileId.isEmpty {
+                return fileId
+            }
+            if let imageURL = item.imageURL {
+                return urlToId[imageURL]
+            }
+            return nil
+        }
     }
 }
 

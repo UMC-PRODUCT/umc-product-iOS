@@ -168,6 +168,17 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
     func readNotice(noticeId: Int) async throws {
         try await repository.readNotice(noticeId: noticeId)
     }
+
+    /// 투표 응답(사용자 선택 전송)
+    func submitVoteResponse(voteId: Int, optionIds: [Int]) async throws {
+        guard voteId > 0 else {
+            throw DomainError.custom(message: "유효하지 않은 투표입니다")
+        }
+        guard !optionIds.isEmpty else {
+            throw DomainError.custom(message: "선택한 항목이 없습니다")
+        }
+        try await repository.submitVoteResponse(voteId: voteId, optionIds: optionIds)
+    }
     
     /// 미확인 대상에게 공지 리마인더 발송
     func sendReminder(noticeId: Int, targetIds: [Int]) async throws {

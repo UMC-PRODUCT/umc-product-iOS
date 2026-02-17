@@ -70,7 +70,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-appstorage-dummy-central"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-appstorage-dummy-chapter"
@@ -94,11 +94,15 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-noticeDebugState loaded"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-noticeDebugState failed"
             isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--notice-detail-failed"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--open-notice-tab"
