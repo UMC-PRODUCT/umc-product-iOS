@@ -124,26 +124,101 @@ final class AttendanceRepository: ChallengerAttendanceRepositoryProtocol,
     func checkAttendance(
         request: AttendanceCheckRequestDTO
     ) async throws -> Int {
-        let response = try await adapter.request(
-            AttendanceRouter.check(body: request)
-        )
-        let apiResponse = try decoder.decode(
-            APIResponse<Int>.self,
-            from: response.data
-        )
-        return try apiResponse.unwrap()
+        do {
+            let response = try await adapter.request(
+                AttendanceRouter.check(body: request)
+            )
+            // 성공 응답 디코딩 시도
+            do {
+                let apiResponse = try decoder.decode(
+                    APIResponse<Int>.self,
+                    from: response.data
+                )
+                return try apiResponse.unwrap()
+            } catch {
+                // result가 String인 에러 응답 (e.g. "이미 출석 체크가 완료되었습니다")
+                throw Self.parseErrorResponse(
+                    from: response.data
+                ) ?? error
+            }
+        } catch let error as NetworkError {
+            throw Self.parseServerError(from: error) ?? error
+        }
     }
 
     func submitReason(
         request: AttendanceReasonRequestDTO
     ) async throws -> Int {
-        let response = try await adapter.request(
-            AttendanceRouter.submitReason(body: request)
+        do {
+            let response = try await adapter.request(
+                AttendanceRouter.submitReason(body: request)
+            )
+            do {
+                let apiResponse = try decoder.decode(
+                    APIResponse<Int>.self,
+                    from: response.data
+                )
+                return try apiResponse.unwrap()
+            } catch {
+                throw Self.parseErrorResponse(
+                    from: response.data
+                ) ?? error
+            }
+        } catch let error as NetworkError {
+            throw Self.parseServerError(from: error) ?? error
+        }
+    }
+
+    // MARK: - Private Helper
+
+    /// success: false + result: String 형태의 에러 응답 파싱
+    ///
+    /// 서버가 `APIResponse<Int>` 대신 `result: "이미 출석 체크가 완료되었습니다"`
+    /// 같은 String을 반환하는 경우 DomainError로 매핑합니다.
+    private static func parseErrorResponse(
+        from data: Data
+    ) -> Error? {
+        guard let json = try? JSONSerialization.jsonObject(
+                  with: data
+              ) as? [String: Any],
+              json["success"] as? Bool == false
+        else { return nil }
+
+        let result = json["result"] as? String ?? ""
+        let message = json["message"] as? String
+
+        // 서버 에러 메시지 → DomainError 매핑
+        if result.contains("이미 출석") {
+            return DomainError.attendanceAlreadySubmitted
+        }
+
+        return RepositoryError.serverError(
+            code: json["code"] as? String,
+            message: result.isEmpty ? message : result
         )
-        let apiResponse = try decoder.decode(
-            APIResponse<Int>.self,
-            from: response.data
+    }
+
+    /// NetworkError 응답 body에서 서버 에러 메시지 추출
+    private static func parseServerError(
+        from error: NetworkError
+    ) -> Error? {
+        guard case .requestFailed(_, let data) = error,
+              let data
+        else { return nil }
+
+        // DomainError 매핑 먼저 시도
+        if let domainError = parseErrorResponse(from: data) {
+            return domainError
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(
+                  with: data
+              ) as? [String: Any],
+              let message = json["message"] as? String
+        else { return nil }
+        let code = json["code"] as? String
+        return RepositoryError.serverError(
+            code: code, message: message
         )
-        return try apiResponse.unwrap()
     }
 }

@@ -61,7 +61,9 @@ final class ActivityRepository: ActivityRepositoryProtocol, @unchecked Sendable 
 
     // MARK: - Private Helper
 
-    /// "HH:mm" 또는 ISO 시간 문자열 → Date 변환
+    /// 시간 문자열 → 오늘 날짜 기준 Date 변환
+    ///
+    /// 지원 형식: ISO 8601, "HH:mm:ss", "HH:mm"
     private static func parseTime(_ timeString: String) -> Date {
         // ISO 8601 형식 시도
         let isoFormatter = ISO8601DateFormatter()
@@ -73,23 +75,26 @@ final class ActivityRepository: ActivityRepositoryProtocol, @unchecked Sendable 
             return date
         }
 
-        // "HH:mm" 형식 시도
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm"
-        timeFormatter.locale = Locale(identifier: "ko_KR")
-        if let time = timeFormatter.date(from: timeString) {
-            let calendar = Calendar.current
-            let now = Date()
-            var components = calendar.dateComponents(
-                [.year, .month, .day], from: now
-            )
-            let timeComponents = calendar.dateComponents(
-                [.hour, .minute], from: time
-            )
-            components.hour = timeComponents.hour
-            components.minute = timeComponents.minute
-            if let date = calendar.date(from: components) {
-                return date
+        // "HH:mm:ss" 또는 "HH:mm" 형식 시도
+        let calendar = Calendar.current
+        let now = Date()
+        for format in ["HH:mm:ss", "HH:mm"] {
+            let formatter = DateFormatter()
+            formatter.dateFormat = format
+            formatter.locale = Locale(identifier: "ko_KR")
+            if let time = formatter.date(from: timeString) {
+                var components = calendar.dateComponents(
+                    [.year, .month, .day], from: now
+                )
+                let timeComponents = calendar.dateComponents(
+                    [.hour, .minute, .second], from: time
+                )
+                components.hour = timeComponents.hour
+                components.minute = timeComponents.minute
+                components.second = timeComponents.second
+                if let date = calendar.date(from: components) {
+                    return date
+                }
             }
         }
 
