@@ -49,7 +49,7 @@ struct PostListItemDTO: Codable {
 struct LightningInfoDTO: Codable {
     let meetAt: String
     let location: String
-    let maxParticipants: String
+    let maxParticipants: Int
     let openChatUrl: String
 
     private enum CodingKeys: String, CodingKey {
@@ -88,7 +88,7 @@ struct LightningInfoDTO: Codable {
         return CommunityLightningInfo(
             meetAt: parsedMeetAt,
             location: location,
-            maxParticipants: Int(maxParticipants) ?? 0,
+            maxParticipants: maxParticipants,
             openChatUrl: openChatUrl
         )
     }

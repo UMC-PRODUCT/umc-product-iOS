@@ -11,19 +11,30 @@ import SwiftUI
 struct DatePickerRow: View, Equatable {
     /// 선택된 날짜와 연동되는 바인딩 변수
     @Binding var date: Date
+    /// 선택 가능한 날짜 범위
+    var range: ClosedRange<Date>?
     
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.date == rhs.date
+        && lhs.range?.lowerBound == rhs.range?.lowerBound
+        && lhs.range?.upperBound == rhs.range?.upperBound
     }
     
     var body: some View {
-        DatePicker("", selection:  $date, displayedComponents: .date)
-            .datePickerStyle(.graphical)
-            .labelsHidden()
-            .tint(.indigo500)
+        if let range {
+            DatePicker("", selection: $date, in: range, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .labelsHidden()
+                .tint(.indigo500)
+        } else {
+            DatePicker("", selection: $date, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .labelsHidden()
+                .tint(.indigo500)
+        }
     }
 }
 
 #Preview {
-    DatePickerRow(date: .constant(.now))
+    DatePickerRow(date: .constant(.now), range: nil)
 }

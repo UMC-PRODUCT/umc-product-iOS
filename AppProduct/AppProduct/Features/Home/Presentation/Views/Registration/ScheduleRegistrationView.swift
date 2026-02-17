@@ -282,8 +282,26 @@ fileprivate struct DateTimeSection: View {
             generateDatePicker(condition: showStartDatePicker, date: $startDate)
             generateTimePicker(condition: showStartTimePicker, date: $startDate)
             endDateRow
-            generateDatePicker(condition: showEndDatePicker, date: $endDate)
-            generateTimePicker(condition: showEndTimePicker, date: $endDate)
+            generateDatePicker(
+                condition: showEndDatePicker,
+                date: $endDate,
+                minimumDate: startDate
+            )
+            generateTimePicker(
+                condition: showEndTimePicker,
+                date: $endDate,
+                minimumDate: startDate
+            )
+        }
+        .onChange(of: startDate) { _, newValue in
+            if endDate < newValue {
+                endDate = newValue
+            }
+        }
+        .onChange(of: endDate) { _, newValue in
+            if newValue < startDate {
+                endDate = startDate
+            }
         }
     }
     
@@ -345,17 +363,39 @@ fileprivate struct DateTimeSection: View {
     
     /// 날짜 선택 피커 생성
     @ViewBuilder
-    private func generateDatePicker(condition: Bool, date: Binding<Date>) -> some View {
+    private func generateDatePicker(
+        condition: Bool,
+        date: Binding<Date>,
+        minimumDate: Date? = nil
+    ) -> some View {
         if condition {
-            DatePickerRow(date: date)
+            if let minimumDate {
+                DatePickerRow(
+                    date: date,
+                    range: minimumDate...Date.distantFuture
+                )
+            } else {
+                DatePickerRow(date: date, range: nil)
+            }
         }
     }
     
     /// 시간 선택 피커 생성
     @ViewBuilder
-    private func generateTimePicker(condition: Bool, date: Binding<Date>) -> some View {
+    private func generateTimePicker(
+        condition: Bool,
+        date: Binding<Date>,
+        minimumDate: Date? = nil
+    ) -> some View {
         if condition {
-            TimePickerRow(date: date)
+            if let minimumDate {
+                TimePickerRow(
+                    date: date,
+                    range: minimumDate...Date.distantFuture
+                )
+            } else {
+                TimePickerRow(date: date, range: nil)
+            }
         }
     }
 }
