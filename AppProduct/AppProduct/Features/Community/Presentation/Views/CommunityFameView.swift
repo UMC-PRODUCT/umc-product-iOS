@@ -20,11 +20,13 @@ struct CommunityFameView: View {
         /// 실패 상태 문구
         static let failedTitle: String = "불러오지 못했어요"
         static let failedSystemImage: String = "exclamationmark.triangle"
-        static let failedDescription: String = "목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+        static let failedDescription: String = "목록을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요."
         /// 재시도 버튼 문구/크기
         static let retryTitle: String = "다시 시도"
         static let retryMinimumWidth: CGFloat = 72
         static let retryMinimumHeight: CGFloat = 20
+        /// 로딩중 문구
+        static let loadingMessage: String = "명예의 전당 목록을 불러오는 중입니다."
     }
     
     // MARK: - Init
@@ -39,7 +41,7 @@ struct CommunityFameView: View {
         Group {
             switch vm.fameItems {
             case .idle, .loading:
-                ProgressView("명예의전당 로딩 중...")
+                Progress(message: Constants.loadingMessage, size: .regular)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
                 listSection(vm: vm)

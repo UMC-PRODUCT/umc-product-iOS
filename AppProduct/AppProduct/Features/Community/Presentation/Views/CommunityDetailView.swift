@@ -31,11 +31,13 @@ struct CommunityDetailView: View {
         /// 실패 상태 문구
         static let failedTitle: String = "불러오지 못했어요"
         static let failedSystemImage: String = "exclamationmark.triangle"
-        static let failedDescription: String = "댓글을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+        static let failedDescription: String = "댓글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요."
         /// 재시도 버튼 문구/크기
         static let retryTitle: String = "다시 시도"
         static let retryMinimumWidth: CGFloat = 72
         static let retryMinimumHeight: CGFloat = 20
+        /// 댓글 로딩 문구
+        static let loadingMessage: String = "댓글을 불러오는 중입니다."
     }
     
     // MARK: - Init
@@ -74,7 +76,7 @@ struct CommunityDetailView: View {
                 Group {
                     switch vm.comments {
                     case .idle, .loading:
-                        ProgressView("댓글 로딩 중...")
+                        Progress(message: Constant.loadingMessage, size: .regular)
                     case .loaded(let comments):
                         commentSection(comments)
                     case .failed:
