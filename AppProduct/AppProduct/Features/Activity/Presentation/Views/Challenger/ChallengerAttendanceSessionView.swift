@@ -107,6 +107,7 @@ struct ChallengerAttendanceSessionView: View {
             for: .scrollContent)
         .task {
             await attendanceViewModel.fetchAvailableSchedules()
+            await attendanceViewModel.fetchMyHistory()
         }
         .onDisappear {
             Task {
@@ -165,15 +166,58 @@ struct ChallengerAttendanceSessionView: View {
             .padding(.leading, DefaultConstant.sectionLeadingHeader)
     }
     
+    @ViewBuilder
     private var myAttendanceStatusView: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             sectionHeader
 
-            ChallengerMyAttendanceStatusView(
-                sessions: sessions,
-                categoryFor: categoryFor
-            )
+            switch attendanceViewModel.myHistory {
+            case .idle:
+                Color.clear
+            case .loading:
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DefaultSpacing.spacing32)
+            case .loaded(let items):
+                if items.isEmpty {
+                    emptyHistoryView
+                } else {
+                    ChallengerMyAttendanceStatusView(
+                        historyItems: items
+                    )
+                }
+            case .failed(let error):
+                ContentUnavailableView {
+                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(error.localizedDescription)
+                } actions: {
+                    Button("다시 시도") {
+                        Task { await attendanceViewModel.fetchMyHistory() }
+                    }
+                }
+            }
         }
+    }
+
+    private var emptyHistoryView: some View {
+        VStack(spacing: DefaultSpacing.spacing12) {
+            Image(systemName: "clock.badge.checkmark")
+                .font(.system(size: 40))
+                .foregroundStyle(.grey400)
+
+            Text("출석 이력이 없습니다")
+                .appFont(.body, color: .grey600)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DefaultSpacing.spacing32)
+        .background(
+            .white,
+            in: RoundedRectangle(
+                cornerRadius: DefaultConstant.defaultCornerRadius
+            )
+        )
+        .glass()
     }
     
     private var sectionHeader: some View {

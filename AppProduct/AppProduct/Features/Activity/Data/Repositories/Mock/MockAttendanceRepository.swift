@@ -56,7 +56,8 @@ final class MockAttendanceRepository: ChallengerAttendanceRepositoryProtocol,
                 scheduledDate: "2024-01-15",
                 startTime: "14:30",
                 endTime: "16:00",
-                status: .present
+                status: .present,
+                statusDisplay: "출석"
             )
         ]
     }

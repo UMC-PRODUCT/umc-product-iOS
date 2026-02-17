@@ -21,4 +21,5 @@ struct AttendanceHistoryItem: Equatable, Identifiable {
     let startTime: String
     let endTime: String
     let status: AttendanceStatus
+    let statusDisplay: String
 }

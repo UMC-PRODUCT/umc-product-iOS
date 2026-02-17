@@ -56,6 +56,54 @@ extension MyAttendanceItemModel {
     }
 }
 
+// MARK: - AttendanceHistoryItem Conversion
+
+extension MyAttendanceItemModel {
+    /// AttendanceHistoryItem에서 변환
+    /// - Note: beforeAttendance 상태는 nil 반환
+    init?(from item: AttendanceHistoryItem) {
+        guard let itemStatus = MyAttendanceItemStatus(
+            from: item.status
+        ) else {
+            return nil
+        }
+
+        self.id = item.id
+        self.week = 0
+        self.title = item.scheduleName
+        self.startTime = Self.parseTimeString(item.startTime)
+        self.endTime = Self.parseTimeString(item.endTime)
+        self.status = itemStatus
+        self.category = .general
+    }
+
+    /// "HH:mm:ss" 또는 "HH:mm" → 오늘 Date 변환
+    private static func parseTimeString(_ timeString: String) -> Date {
+        let calendar = Calendar.current
+        let now = Date()
+        for format in ["HH:mm:ss", "HH:mm"] {
+            let formatter = DateFormatter()
+            formatter.dateFormat = format
+            formatter.locale = Locale(identifier: "ko_KR")
+            if let time = formatter.date(from: timeString) {
+                var components = calendar.dateComponents(
+                    [.year, .month, .day], from: now
+                )
+                let timeComponents = calendar.dateComponents(
+                    [.hour, .minute, .second], from: time
+                )
+                components.hour = timeComponents.hour
+                components.minute = timeComponents.minute
+                components.second = timeComponents.second
+                if let date = calendar.date(from: components) {
+                    return date
+                }
+            }
+        }
+        return now
+    }
+}
+
 // MARK: - Preview Support
 
 #if DEBUG
