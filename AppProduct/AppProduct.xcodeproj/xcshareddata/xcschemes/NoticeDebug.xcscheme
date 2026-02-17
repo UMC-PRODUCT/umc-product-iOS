@@ -136,6 +136,11 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
+            key = "UMC_API_TEST_ACCESS_TOKEN"
+            value = "$(UMC_API_TEST_ACCESS_TOKEN)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
             key = "FIREBASE_API_KEY"
             value = ""
             isEnabled = "YES">
