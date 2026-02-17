@@ -84,6 +84,22 @@
             argument = "--open-community-tab"
             isEnabled = "YES">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "FameState(no Select)"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-fameDebugState loading"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-fameDebugState loaded"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-fameDebugState failed"
+            isEnabled = "NO">
+         </CommandLineArgument>
       </CommandLineArguments>
       <EnvironmentVariables>
          <EnvironmentVariable
