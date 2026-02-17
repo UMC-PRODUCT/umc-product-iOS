@@ -53,7 +53,7 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
         }
 
         // 서버에 GPS 출석 요청
-        let recordId = try await repository.checkAttendance(
+        _ = try await repository.checkAttendance(
             request: AttendanceCheckRequestDTO(
                 attendanceSheetId: 0, // TODO: 다음 단계에서 실제 sheetId 전달
                 latitude: coordinate.latitude,
@@ -94,7 +94,7 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
         }
 
         // 서버에 지각 사유 제출
-        let recordId = try await repository.submitReason(
+        _ = try await repository.submitReason(
             request: AttendanceReasonRequestDTO(
                 attendanceSheetId: 0, // TODO: 다음 단계에서 실제 sheetId 전달
                 reason: reason
@@ -122,7 +122,7 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
             throw DomainError.attendanceReasonRequired
         }
 
-        let recordId = try await repository.submitReason(
+        _ = try await repository.submitReason(
             request: AttendanceReasonRequestDTO(
                 attendanceSheetId: 0, // TODO: 다음 단계에서 실제 sheetId 전달
                 reason: reason
