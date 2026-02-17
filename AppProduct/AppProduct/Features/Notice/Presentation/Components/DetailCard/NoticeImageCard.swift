@@ -46,7 +46,7 @@ struct NoticeImageCard: View {
             }
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
-        .contentMargins(.bottom, Constants.bottomPadding, for: .scrollContent)
+        .scrollIndicators(.hidden)
     }
 
     private func thumbnailImage(url: String, index: Int) -> some View {
@@ -111,7 +111,9 @@ struct ImageViewerScreen: View {
 
             closeButton
         }
-        .onAppear(perform: startPrefetching)
+        .task {
+            startPrefetching()
+        }
         .onDisappear(perform: stopPrefetching)
     }
 

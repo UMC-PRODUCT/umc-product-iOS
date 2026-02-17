@@ -61,6 +61,11 @@ enum NoticeRouter: BaseTargetType {
     )
     /// 공지사항 읽음 처리
     case readNotice(noticeId: Int)
+    /// 투표 응답(사용자 선택 전송)
+    case submitVoteResponse(
+        voteId: Int,
+        optionIds: [Int]
+    )
     
     // PATCH Method
     /// 공지사항 수정
@@ -82,9 +87,12 @@ enum NoticeRouter: BaseTargetType {
     // DELETE Method
     /// 공지사항 삭제
     case deleteNotice(noticeId: Int)
+    /// 공지사항 연결 투표 삭제
+    case deleteVote(noticeId: Int)
     
     // MARK: - Path
-    
+
+    /// 각 케이스에 대응하는 API 엔드포인트 경로
     var path: String {
         switch self {
         case .getAllNotices:
@@ -109,6 +117,8 @@ enum NoticeRouter: BaseTargetType {
             return "/api/v1/notices/\(noticeId)/reminders"
         case .readNotice(let noticeId):
             return "/api/v1/notices/\(noticeId)/read"
+        case .submitVoteResponse(let voteId, _):
+            return "/api/v1/surveys/votes/\(voteId)/responses"
         case .updateNotice(let noticeId, _):
             return "/api/v1/notices/\(noticeId)"
         case .updateLink(let noticeId, _):
@@ -117,26 +127,30 @@ enum NoticeRouter: BaseTargetType {
             return "/api/v1/notices/\(noticeId)/images"
         case .deleteNotice(let noticeId):
             return "/api/v1/notices/\(noticeId)"
+        case .deleteVote(let noticeId):
+            return "/api/v1/notices/\(noticeId)/vote"
         }
     }
     
     // MARK: - Method
-    
+
+    /// 각 케이스에 대응하는 HTTP 메서드
     var method: Moya.Method {
         switch self {
         case .getAllNotices, .getDetailNotice, .getNoticeReadStatusCount, .getNoticeReadStatusList, .searchNotice:
             return .get
-        case .postNotice, .addVote, .addLink, .addImage, .sendReminder, .readNotice:
+        case .postNotice, .addVote, .addLink, .addImage, .sendReminder, .readNotice, .submitVoteResponse:
             return .post
         case .updateNotice, .updateLink, .updateImage:
             return .patch
-        case .deleteNotice:
+        case .deleteNotice, .deleteVote:
             return .delete
         }
     }
     
     // MARK: - Task
-    
+
+    /// 각 케이스에 대응하는 요청 파라미터 및 인코딩 방식
     var task: Moya.Task {
         switch self {
         case .getAllNotices(let request):
@@ -192,6 +206,11 @@ enum NoticeRouter: BaseTargetType {
             )
         case .readNotice:
             return .requestPlain
+        case .submitVoteResponse(_, let optionIds):
+            return .requestParameters(
+                parameters: ["optionIds": optionIds],
+                encoding: JSONEncoding.default
+            )
         case .updateNotice(_, let body):
             return .requestJSONEncodable(body)
         case .updateLink(_, let links):
@@ -204,7 +223,7 @@ enum NoticeRouter: BaseTargetType {
                 parameters: ["imageIds": imageIds],
                 encoding: JSONEncoding.default
             )
-        case .deleteNotice:
+        case .deleteNotice, .deleteVote:
             return .requestPlain
         }
     }

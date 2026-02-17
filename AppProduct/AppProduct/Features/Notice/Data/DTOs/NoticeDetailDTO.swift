@@ -7,8 +7,13 @@
 
 import Foundation
 
+// MARK: - NoticeDetailDTO
+
 /// 공지 상세화면 DTO
 struct NoticeDetailDTO: Codable {
+
+    // MARK: - Property
+
     let id: String
     let title: String
     let content: String
@@ -32,8 +37,12 @@ struct NoticeDetailDTO: Codable {
     let hasPermission: Bool?
 }
 
+// MARK: - toDomain 변환
+
 extension NoticeDetailDTO {
-    /// NoticeDetailDTO → NoticeDetail 변환
+    /// NoticeDetailDTO → NoticeDetail 도메인 모델 변환
+    ///
+    /// scope/category가 nil인 경우 targetInfo 기반으로 추론합니다.
     func toDomain() -> NoticeDetail {
         let generation = targetInfo.generationValue
 
@@ -69,7 +78,8 @@ extension NoticeDetailDTO {
         let targetAudience = targetInfo.toTargetAudience(scope: noticeScope)
 
         let mappedVote = vote?.toDomain()
-        let imageURLs = images.map(\.url)
+        let mappedImages = images.map { NoticeAttachmentImage(id: $0.id, url: $0.url) }
+        let imageURLs = mappedImages.map(\.url)
         let linkURLs = links.map(\.url)
 
         return NoticeDetail(
@@ -88,13 +98,19 @@ extension NoticeDetailDTO {
             targetAudience: targetAudience,
             hasPermission: hasPermission ?? false,
             images: imageURLs,
+            imageItems: mappedImages,
             links: linkURLs,
             vote: mappedVote
         )
     }
 }
 
+// MARK: - String ISO8601 변환
+
 private extension String {
+    /// ISO8601 문자열을 Date로 변환
+    ///
+    /// fractionalSeconds 포함 포맷을 우선 시도하고, 실패 시 기본 포맷으로 재시도합니다.
     func toISO8601Date() -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

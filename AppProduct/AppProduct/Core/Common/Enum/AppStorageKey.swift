@@ -50,4 +50,6 @@ enum AppStorageKey {
     static let organizationType: String = "organizationType"
     /// 소속 조직 ID (`organizationType`에 따라 지부/학교 ID)
     static let organizationId: String = "organizationId"
+    /// 공지 탭에서 현재 선택한 기수 ID (공지 작성 진입 시 사용)
+    static let noticeSelectedGisuId: String = "noticeSelectedGisuId"
 }

@@ -19,11 +19,13 @@ struct NoticeView: View {
     @AppStorage(AppStorageKey.organizationType) private var organizationType: String = ""
     @AppStorage(AppStorageKey.chapterId) private var chapterId: Int = 0
     @AppStorage(AppStorageKey.schoolId) private var schoolId: Int = 0
+    @AppStorage(AppStorageKey.noticeSelectedGisuId) private var noticeSelectedGisuId: Int = 0
     @State private var viewModel: NoticeViewModel
     @State private var search: String = ""
     @State private var searchTask: Task<Void, Never>?
     @State private var isRetryingNotices: Bool = false
     
+    /// PathStore 접근
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
@@ -77,7 +79,7 @@ struct NoticeView: View {
             .navigationDestination(for: NavigationDestination.self, destination: navigationDestinationView)
             .task {
                 applyUserContext()
-                syncNoticeEditorGisuId()
+                syncSelectedGisuIdForNoticeEditor()
                 #if DEBUG
                 if let debugState = NoticeDebugState.fromLaunchArgument() {
                     debugState.apply(to: viewModel)
@@ -87,7 +89,7 @@ struct NoticeView: View {
                 viewModel.fetchGisuList()
             }
             .onChange(of: viewModel.selectedGeneration) { _, _ in
-                syncNoticeEditorGisuId()
+                syncSelectedGisuIdForNoticeEditor()
             }
             .onChange(of: userContextSignature) { _, _ in
                 applyUserContext()
@@ -228,9 +230,9 @@ struct NoticeView: View {
         )
     }
 
-    /// 공지 생성 진입에 사용할 현재 선택 기수 ID를 PathStore에 동기화합니다.
-    private func syncNoticeEditorGisuId() {
-        pathStore.noticeEditorSelectedGisuId = viewModel.selectedGisuIdForEditor
+    /// 공지 생성 진입에 사용할 현재 선택 기수 ID를 AppStorage에 동기화합니다.
+    private func syncSelectedGisuIdForNoticeEditor() {
+        noticeSelectedGisuId = viewModel.selectedGisuIdForEditor ?? 0
     }
 
     /// 사용자 컨텍스트 변경 감지를 위한 서명 문자열입니다.

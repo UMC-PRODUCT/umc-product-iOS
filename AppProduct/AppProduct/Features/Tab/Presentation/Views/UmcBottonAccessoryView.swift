@@ -12,10 +12,15 @@ import SwiftUI
 /// 각 탭(Home, Notice, Activity, Community, MyPage)에 대응하는 액세서리를 분기합니다.
 /// NavigationStack에 화면이 쌓여있으면 해당 탭의 액세서리를 숨깁니다.
 struct UmcBottonAccessoryView: View {
+
+    // MARK: - Property
+
     @Binding var tabCase: TabCase
     @Environment(\.di) var di
     @Environment(ErrorHandler.self) var errorHandler
-    
+
+    // MARK: - Body
+
     var body: some View {
         switch tabCase {
         case .home:
@@ -33,6 +38,8 @@ struct UmcBottonAccessoryView: View {
 }
 
 // MARK: - Home
+
+/// 홈 탭 하단 액세서리 - 일정 생성 버튼
 fileprivate struct HomeBottonAccessoryView: View {
     @Environment(\.di) var di
 
@@ -66,18 +73,28 @@ fileprivate struct HomeBottonAccessoryView: View {
 }
 
 // MARK: - Notice
+
+/// 공지 탭 하단 액세서리 - 공지글 작성 버튼
 fileprivate struct NoticeAccessoryView: View {
     @Environment(\.di) private var di
+    @AppStorage(AppStorageKey.noticeSelectedGisuId) private var noticeSelectedGisuId: Int = 0
 
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
+    }
+
+    /// 에디터에 전달할 기수 ID (0이면 nil로 변환)
+    private var selectedGisuId: Int? {
+        noticeSelectedGisuId > 0 ? noticeSelectedGisuId : nil
     }
 
     var body: some View {
         Group {
             if pathStore.noticePath.isEmpty {
                 Button(action: {
-                    pathStore.noticePath.append(.notice(.editor(mode: .create)))
+                    pathStore.noticePath.append(
+                        .notice(.editor(mode: .create, selectedGisuId: selectedGisuId))
+                    )
                 }) {
                     HStack(spacing: DefaultSpacing.spacing8) {
                         Spacer()
@@ -99,6 +116,8 @@ fileprivate struct NoticeAccessoryView: View {
 }
 
 // MARK: - Activity
+
+/// 활동 탭 하단 액세서리 - 운영진/챌린저 모드 전환 토글
 fileprivate struct ActivityAccessoryView: View {
     @Environment(\.di) private var di
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
@@ -119,6 +138,7 @@ fileprivate struct ActivityAccessoryView: View {
         }
     }
 
+    /// 운영진/챌린저 모드 전환 버튼
     private var adminToggleButton: some View {
         Button {
             withAnimation(.snappy) {
@@ -149,6 +169,8 @@ fileprivate struct ActivityAccessoryView: View {
 }
 
 // MARK: - Community
+
+/// 커뮤니티 탭 하단 액세서리 - 게시글 작성 버튼
 fileprivate struct CommunityAccessoryView: View {
     @Environment(\.di) private var di
 
@@ -181,6 +203,8 @@ fileprivate struct CommunityAccessoryView: View {
     }
 }
 // MARK: - MyPage
+
+/// 마이페이지 탭 하단 액세서리 (미구현)
 fileprivate struct MyPageAccessoryView: View {
     var body: some View {
         Text("11")

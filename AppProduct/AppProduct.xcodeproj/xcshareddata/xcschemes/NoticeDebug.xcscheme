@@ -65,40 +65,52 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "Home(no Select)"
+            argument = "NoticeRole(no Select)"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-homeDebugState failed"
+            argument = "--seed-appstorage-dummy-central"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-homeDebugState loaded"
+            argument = "--seed-appstorage-dummy-chapter"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-homeDebugState loading"
+            argument = "--seed-appstorage-dummy-school"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "Activity(no Select)"
+            argument = "--seed-appstorage-dummy-challenger"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "MyPage(no Select)"
+            argument = "NoticeState(no Select)"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-myPageDebugState failed "
+            argument = "-noticeDebugState loading"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-myPageDebugState loaded"
+            argument = "-noticeDebugState loaded"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-myPageDebugState loading"
+            argument = "-noticeDebugState failed"
             isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--notice-detail-failed"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--open-notice-tab"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--notice-force-permission"
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
       <EnvironmentVariables>

@@ -24,7 +24,23 @@ struct PostNoticeRequestDTO: Codable {
 /// 공지 생성 응답 DTO
 struct NoticeCreateResponseDTO: Codable {
     /// 생성된 공지 ID
-    let noticeId: Int
+    let noticeId: String
+
+    private enum CodingKeys: String, CodingKey {
+        case noticeId
+    }
+
+    /// noticeId가 String 또는 Int로 올 수 있어 유연하게 디코딩
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let id = try? container.decode(String.self, forKey: .noticeId) {
+            self.noticeId = id
+        } else if let id = try? container.decode(Int.self, forKey: .noticeId) {
+            self.noticeId = String(id)
+        } else {
+            self.noticeId = ""
+        }
+    }
 }
 
 // MARK: - Add Images Response
@@ -37,6 +53,7 @@ struct NoticeAddImagesResponseDTO: Codable {
         case imageIds
     }
 
+    /// imageIds가 [String] 또는 [Int]로 올 수 있어 유연하게 디코딩
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if let ids = try? container.decode([String].self, forKey: .imageIds) {

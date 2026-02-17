@@ -7,6 +7,9 @@
 
 import Foundation
 
+/// 공지사항 데이터 접근 계층 인터페이스
+///
+/// 공지사항 CRUD, 열람 현황, 투표, 리마인더 등 데이터 소스 접근을 추상화합니다.
 protocol NoticeRepositoryProtocol {
     
     // MARK: - 공지 생성
@@ -38,6 +41,9 @@ protocol NoticeRepositoryProtocol {
     
     /// 공지사항 읽음 처리
     func readNotice(noticeId: Int) async throws
+
+    /// 투표 응답(사용자 선택 전송)
+    func submitVoteResponse(voteId: Int, optionIds: [Int]) async throws
     
     // MARK: - 공지 수정
     /// 공지사항 수정 (제목, 본문)
@@ -86,4 +92,7 @@ protocol NoticeRepositoryProtocol {
     // MARK: - 공지 삭제
     /// 공지사항 삭제
     func deleteNotice(noticeId: Int) async throws
+
+    /// 공지사항에 연결된 투표 삭제
+    func deleteVote(noticeId: Int) async throws
 }
