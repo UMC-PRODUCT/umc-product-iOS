@@ -362,10 +362,6 @@ extension NetworkClient {
             }
         }
 
-        #if DEBUG
-        print("[\(urlRequest.httpMethod ?? "GET")] \(urlRequest.url?.path ?? "")")
-        #endif
-
         // 2. 네트워크 요청 실행
         let (data, response) = try await session.data(for: authenticatedRequest)
 
@@ -374,20 +370,12 @@ extension NetworkClient {
             throw NetworkError.invalidResponse
         }
 
-        #if DEBUG
-        print("Status: \(httpResponse.statusCode)")
-        #endif
-
         // 4. 인증 실패(401) 응답 처리
         if authPolicy.isUnauthorizedResponse(httpResponse) {
             // 최대 재시도 횟수 확인
             guard retryCount < maxRetryCount else {
                 throw NetworkError.maxRetryExceeded
             }
-
-            #if DEBUG
-            print("401 감지 → 토큰 갱신 시작")
-            #endif
 
             // 토큰 갱신 (여러 요청이 동시에 401을 받아도 1회만 갱신)
             _ = try await refreshTokenIssue(force: true)
@@ -440,9 +428,6 @@ extension NetworkClient {
     private func refreshTokenIssue(force: Bool = false) async throws -> TokenPair {
         // 이미 토큰 갱신 중인지 확인
         if let existingTask = refreshTask {
-            #if DEBUG
-            print("⏳ 기존 갱신 Task 대기 중... (중복 갱신 방지)")
-            #endif
             // 기존 Task의 결과를 대기하여 반환 (중복 갱신 방지)
             return try await existingTask.value
         }
@@ -467,15 +452,8 @@ extension NetworkClient {
                     refreshToken: tokenPair.refreshToken
                 )
 
-                #if DEBUG
-                print("토큰 갱신 성공")
-                #endif
-
                 return tokenPair
             } catch {
-                #if DEBUG
-                print("토큰 갱신 실패: \(error)")
-                #endif
                 throw NetworkError.tokenRefreshFailed(reason: error.localizedDescription)
             }
         }
