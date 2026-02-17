@@ -70,10 +70,14 @@ struct NoticeReadStatusSheet: View {
         }
     }
 
+    // MARK: - Private Property
+
+    /// 열람 현황이 정상 로드된 상태인지 여부
     private var isLoadedState: Bool {
         viewModel.readStatusState.value != nil
     }
 
+    /// 로딩 상태 섹션
     private var loadingSection: some View {
         VStack {
             Spacer()
@@ -111,6 +115,8 @@ struct NoticeReadStatusSheet: View {
     }
     
     // MARK: - User List Section
+
+    /// 필터(전체/지부/학교)에 따라 유저 리스트를 분기 렌더링합니다.
     private var userListSection: some View {
         List {
             switch viewModel.selectedFilter {
@@ -120,6 +126,17 @@ struct NoticeReadStatusSheet: View {
                 groupedView(groupedData: viewModel.groupedUsersByBranch)
             case .school:
                 groupedView(groupedData: viewModel.groupedUsersBySchool)
+            }
+
+            if viewModel.isLoadingMoreReadStatus {
+                HStack {
+                    Spacer()
+                    Progress(size: .small)
+                    Spacer()
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(Constants.listRowPadding)
             }
         }
         .listStyle(.plain)
@@ -159,6 +176,9 @@ struct NoticeReadStatusSheet: View {
     @ViewBuilder
     private func userRow(_ user: ReadStatusUser) -> some View {
         NoticeReadStatusItem(model: user.toItemModel())
+            .task {
+                await viewModel.loadMoreReadStatusIfNeeded(currentItem: user)
+            }
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 if viewModel.selectedReadTab == .unconfirmed {
                     Button {
@@ -175,14 +195,9 @@ struct NoticeReadStatusSheet: View {
     private var reAlarmSection: some View {
         Button(action: {
             rotationTrigger += 1
-            
-            // 미확인 사용자들의 ID 추출 (String → Int 변환)
-            let targetIds = viewModel.filteredReadStatusUsers
-                .compactMap { Int($0.id) }
-            
-            // 리마인더 발송
+
             Task {
-                await viewModel.sendReminder(targetIds: targetIds)
+                await viewModel.sendReminderToAllUnreadUsers()
             }
         }) {
             Label {
@@ -201,6 +216,8 @@ struct NoticeReadStatusSheet: View {
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
+
+    // MARK: - Private Function
 
     /// 특정 유저 1명에게 재알림 전송
     private func sendSingleReminder(to user: ReadStatusUser) {

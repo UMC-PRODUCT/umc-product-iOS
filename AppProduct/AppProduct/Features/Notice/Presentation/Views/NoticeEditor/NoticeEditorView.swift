@@ -14,7 +14,6 @@ import PhotosUI
 struct NoticeEditorView: View {
 
     // MARK: - Property
-    @Environment(\.di) private var di
     @Environment(\.dismiss) private var dismiss
     @Environment(ErrorHandler.self) private var errorHandler
 
@@ -34,6 +33,7 @@ struct NoticeEditorView: View {
     @AppStorage(AppStorageKey.chapterId) private var chapterId: Int = 0
 
     @State private var viewModel: NoticeEditorViewModel
+    private let selectedGisuId: Int?
 
     /// 링크 추가 직후 자동 스크롤/포커스에 사용할 링크 ID
     @State private var newlyAddedLinkID: UUID?
@@ -42,14 +42,17 @@ struct NoticeEditorView: View {
     @FocusState private var isTitleFieldFocused: Bool
     @FocusState private var isContentFieldFocused: Bool
 
-    private var pathStore: PathStore {
-        di.resolve(PathStore.self)
-    }
-
     // MARK: - Initializer
 
-    init(container: DIContainer, mode: NoticeEditorMode = .create) {
-        self._viewModel = .init(wrappedValue: .init(container: container, mode: mode))
+    init(container: DIContainer, mode: NoticeEditorMode = .create, selectedGisuId: Int? = nil) {
+        self.selectedGisuId = selectedGisuId
+        self._viewModel = .init(
+            wrappedValue: .init(
+                container: container,
+                mode: mode,
+                selectedGisuId: selectedGisuId
+            )
+        )
     }
 
     // MARK: - Constants
@@ -77,9 +80,6 @@ struct NoticeEditorView: View {
         /// 이미지/투표 섹션 스크롤 앵커 ID
         static let imageSectionScrollID: String = "notice_editor_image_section"
         static let voteSectionScrollID: String = "notice_editor_vote_section"
-        
-        /// DEBUG: 공지 에디터 진입 시 저장 버튼 로딩 상태 강제 표시
-        static let debugLoadingArgument: String = "--debug-notice-editor-loading"
     }
 
     // MARK: - Body
@@ -108,7 +108,6 @@ struct NoticeEditorView: View {
             viewModel.updateErrorHandler(errorHandler)
             applyInitialOrganizationType()
             applyInitialUserContext()
-            applyDebugLoadingStateIfNeeded()
         }
         .onChange(of: viewModel.createState) { _, newValue in
             handleCreateStateChanged(newValue)
@@ -289,6 +288,7 @@ struct NoticeEditorView: View {
                     ImageAttachmentCard(
                         id: item.id,
                         imageData: item.imageData,
+                        imageURL: item.imageURL,
                         isLoading: item.isLoading,
                         onDismiss: {
                             withAnimation(.easeOut(duration: 0.2)) {
@@ -461,7 +461,7 @@ struct NoticeEditorView: View {
 
     /// 초기 진입 시 사용자 컨텍스트를 ViewModel에 반영합니다.
     private func applyInitialUserContext() {
-        let editorGisuId = resolvedEditorGisuId(fallback: gisuId)
+        let editorGisuId = selectedGisuId ?? gisuId
         viewModel.updateUserContext(gisuId: editorGisuId, chapterId: chapterId)
     }
 
@@ -564,7 +564,7 @@ struct NoticeEditorView: View {
 
     /// AppStorage 사용자 컨텍스트 변경을 ViewModel에 반영합니다.
     private func handleUserContextChanged(gisuId: Int, chapterId: Int) {
-        let editorGisuId = resolvedEditorGisuId(fallback: gisuId)
+        let editorGisuId = selectedGisuId ?? gisuId
         viewModel.updateUserContext(gisuId: editorGisuId, chapterId: chapterId)
     }
 
@@ -574,19 +574,6 @@ struct NoticeEditorView: View {
     private func normalizedName(from rawValue: String, fallback: String) -> String {
         let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? fallback : trimmed
-    }
-
-    /// 공지 리스트에서 선택한 기수 ID가 있으면 우선 사용합니다.
-    private func resolvedEditorGisuId(fallback: Int) -> Int {
-        pathStore.noticeEditorSelectedGisuId ?? fallback
-    }
-    
-    /// DEBUG 런치 인자로 공지 에디터 저장 버튼 로딩 상태를 강제 표시합니다.
-    private func applyDebugLoadingStateIfNeeded() {
-        #if DEBUG
-        guard ProcessInfo.processInfo.arguments.contains(Constants.debugLoadingArgument) else { return }
-        viewModel.setCreateStateLoadingForDebug()
-        #endif
     }
 
 }

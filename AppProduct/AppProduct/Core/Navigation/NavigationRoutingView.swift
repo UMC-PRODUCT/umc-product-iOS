@@ -88,8 +88,8 @@ private extension NavigationRoutingView {
                 errorHandler: errorHandler,
                 model: detailItem
             )
-        case .editor(let mode):
-              NoticeEditorView(container: di, mode: mode)
+        case .editor(let mode, let selectedGisuId):
+            NoticeEditorView(container: di, mode: mode, selectedGisuId: selectedGisuId)
         }
     }
     

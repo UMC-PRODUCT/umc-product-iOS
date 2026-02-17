@@ -175,4 +175,8 @@ protocol NoticeUseCaseProtocol {
     /// 공지사항 삭제
     /// - Parameter noticeId: 삭제할 공지 ID
     func deleteNotice(noticeId: Int) async throws
+
+    /// 공지사항에 연결된 투표 삭제
+    /// - Parameter noticeId: 공지 ID
+    func deleteVote(noticeId: Int) async throws
 }

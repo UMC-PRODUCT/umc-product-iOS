@@ -23,8 +23,6 @@ final class PathStore {
     var communityPath: [NavigationDestination] = []
     /// 마이페이지 탭 네비게이션 경로
     var mypagePath: [NavigationDestination] = []
-    /// 공지 작성 진입 시 사용할 공지 탭 선택 기수 ID
-    var noticeEditorSelectedGisuId: Int?
     /// 공지 path 중복 append 보호 플래그
     private var isUpdatingNoticePath: Bool = false
 
@@ -40,6 +38,7 @@ final class PathStore {
         isUpdatingNoticePath = true
         noticePath.append(destination)
 
+        // 현재 RunLoop 사이클이 끝난 뒤 플래그를 해제하여 같은 프레임 내 중복 append 방지
         Task { @MainActor in
             await Task.yield()
             isUpdatingNoticePath = false

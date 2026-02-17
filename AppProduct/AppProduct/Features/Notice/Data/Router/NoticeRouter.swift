@@ -82,9 +82,12 @@ enum NoticeRouter: BaseTargetType {
     // DELETE Method
     /// 공지사항 삭제
     case deleteNotice(noticeId: Int)
+    /// 공지사항 연결 투표 삭제
+    case deleteVote(noticeId: Int)
     
     // MARK: - Path
-    
+
+    /// 각 케이스에 대응하는 API 엔드포인트 경로
     var path: String {
         switch self {
         case .getAllNotices:
@@ -117,11 +120,14 @@ enum NoticeRouter: BaseTargetType {
             return "/api/v1/notices/\(noticeId)/images"
         case .deleteNotice(let noticeId):
             return "/api/v1/notices/\(noticeId)"
+        case .deleteVote(let noticeId):
+            return "/api/v1/notices/\(noticeId)/vote"
         }
     }
     
     // MARK: - Method
-    
+
+    /// 각 케이스에 대응하는 HTTP 메서드
     var method: Moya.Method {
         switch self {
         case .getAllNotices, .getDetailNotice, .getNoticeReadStatusCount, .getNoticeReadStatusList, .searchNotice:
@@ -130,13 +136,14 @@ enum NoticeRouter: BaseTargetType {
             return .post
         case .updateNotice, .updateLink, .updateImage:
             return .patch
-        case .deleteNotice:
+        case .deleteNotice, .deleteVote:
             return .delete
         }
     }
     
     // MARK: - Task
-    
+
+    /// 각 케이스에 대응하는 요청 파라미터 및 인코딩 방식
     var task: Moya.Task {
         switch self {
         case .getAllNotices(let request):
@@ -204,7 +211,7 @@ enum NoticeRouter: BaseTargetType {
                 parameters: ["imageIds": imageIds],
                 encoding: JSONEncoding.default
             )
-        case .deleteNotice:
+        case .deleteNotice, .deleteVote:
             return .requestPlain
         }
     }

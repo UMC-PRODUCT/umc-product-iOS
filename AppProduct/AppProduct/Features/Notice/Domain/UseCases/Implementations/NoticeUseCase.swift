@@ -122,7 +122,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
             throw DomainError.custom(message: "종료 시간은 시작 시간보다 늦어야 합니다")
         }
 
-        // 2. Date → ISO8601 String 변환
+        // 2. Date → ISO8601 String 변환 (서버 API가 fractionalSeconds 포함 형식을 요구)
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
@@ -169,7 +169,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
         try await repository.readNotice(noticeId: noticeId)
     }
     
-    /// 리마인더
+    /// 미확인 대상에게 공지 리마인더 발송
     func sendReminder(noticeId: Int, targetIds: [Int]) async throws {
         guard !targetIds.isEmpty else {
             throw DomainError.custom(message: "리마인더를 받을 대상을 선택해주세요")
@@ -200,7 +200,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
         return try await repository.updateNotice(noticeId: noticeId, body: requestDTO)
     }
     
-    /// 공지사항 링크 수정
+    /// 공지사항 링크 수정 (빈 배열 전달 시 전체 삭제)
     func updateLinks(
         noticeId: Int,
         links: [String]
@@ -214,7 +214,7 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
         return try await repository.updateLinks(noticeId: noticeId, links: links)
     }
     
-    /// 공지사항 이미지 수정
+    /// 공지사항 이미지 수정 (빈 배열 전달 시 전체 삭제)
     func updateImages(
         noticeId: Int,
         imageIds: [String]
@@ -284,5 +284,10 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
     /// 공지사항 삭제
     func deleteNotice(noticeId: Int) async throws {
         try await repository.deleteNotice(noticeId: noticeId)
+    }
+
+    /// 공지사항에 연결된 투표 삭제
+    func deleteVote(noticeId: Int) async throws {
+        try await repository.deleteVote(noticeId: noticeId)
     }
 }

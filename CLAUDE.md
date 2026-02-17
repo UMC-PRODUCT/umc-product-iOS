@@ -334,6 +334,8 @@ Git Flow + **연속 브랜치 파생** 지원
 | `test` | 테스트 |
 | `design` | UI/디자인 시스템 |
 
+**커밋 메시지에 `Co-Authored-By` 라인을 절대 추가하지 마세요.**
+
 ### PR 규칙
 
 - 최소 1인 Approve 필수

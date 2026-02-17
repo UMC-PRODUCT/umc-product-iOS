@@ -15,6 +15,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     case school
     case part(UMCPartType)
 
+    /// 고유 식별자
     var id: String {
         switch self {
         case .central: return "central"
@@ -24,6 +25,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
         }
     }
 
+    /// 카테고리 표시 텍스트
     var labelText: String {
         switch self {
         case .central: return "중앙"
@@ -33,6 +35,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
         }
     }
 
+    /// 카테고리 아이콘 SF Symbol 이름
     var labelIcon: String {
         switch self {
         case .central: return "building.columns"
@@ -71,6 +74,7 @@ enum EditorSubCategory: Identifiable, Equatable, Hashable {
     case school
     case part
 
+    /// 고유 식별자
     var id: String {
         switch self {
         case .all: return "all"
@@ -81,6 +85,7 @@ enum EditorSubCategory: Identifiable, Equatable, Hashable {
         }
     }
 
+    /// 서브카테고리 표시 텍스트
     var labelText: String {
         switch self {
         case .all: return "전체"
@@ -105,9 +110,13 @@ enum EditorSubCategory: Identifiable, Equatable, Hashable {
 // MARK: - EditorSubCategorySelection
 /// 서브카테고리 선택 상태
 struct EditorSubCategorySelection: Equatable {
+    /// 선택된 서브카테고리 목록
     var selectedSubCategories: Set<EditorSubCategory> = [.all]
+    /// 선택된 파트 목록
     var selectedParts: Set<UMCPartType> = []
+    /// 선택된 지부
     var selectedBranch: NoticeTargetOption?
+    /// 선택된 학교
     var selectedSchool: NoticeTargetOption?
 
     /// 선택 요약 텍스트
@@ -164,6 +173,7 @@ enum TargetSheetType: Identifiable {
     
     var id: String { String(describing: self) }
     
+    /// Sheet 헤더 표시 텍스트
     var title: String {
         switch self {
         case .branch: return "지부 선택"
@@ -184,8 +194,13 @@ struct NoticeLinkItem: Identifiable, Equatable {
 /// 이미지 첨부 카드
 struct NoticeImageItem: Identifiable {
     let id = UUID()
+    /// 로컬에서 선택한 이미지 바이너리
     var imageData: Data?
+    /// 서버에 업로드된 이미지 URL (수정 모드에서 기존 이미지)
+    var imageURL: String? = nil
+    /// Presigned URL 업로드 진행 중 여부
     var isLoading: Bool = false
+    /// 서버에 저장된 파일 ID (업로드 완료 후 할당)
     var fileId: String? = nil
     
     static func == (lhs: NoticeImageItem, rhs: NoticeImageItem) -> Bool {
@@ -204,12 +219,16 @@ struct VoteOptionItem: Identifiable, Equatable {
 // MARK: - VoteFormData
 /// 투표 폼 데이터
 struct VoteFormData: Equatable {
+    /// 투표 제목
     var title: String = ""
+    /// 투표 선택지 (기본 2개)
     var options: [VoteOptionItem] = [
         VoteOptionItem(),
         VoteOptionItem()
     ]
+    /// 익명 투표 여부
     var isAnonymous: Bool = false
+    /// 복수 선택 허용 여부
     var allowMultipleSelection: Bool = false
     
     // 시작일: 00:00:00부터
@@ -225,11 +244,13 @@ struct VoteFormData: Equatable {
     
     static let minOptionCount = 2
     static let maxOptionCount = 5
-    
+
+    /// 옵션 추가 가능 여부
     var canAddOption: Bool {
         options.count < Self.maxOptionCount
     }
     
+    /// 옵션 삭제 가능 여부
     var canRemoveOption: Bool {
         options.count > Self.minOptionCount
     }
@@ -264,6 +285,7 @@ struct VoteFormData: Equatable {
 
 
 // MARK: - EditorMockData
+/// 공지 에디터 프리뷰/디버그용 목 데이터
 enum EditorMockData {
     static let branches: [NoticeTargetOption] = [
         .init(id: 1, name: "Nova"),

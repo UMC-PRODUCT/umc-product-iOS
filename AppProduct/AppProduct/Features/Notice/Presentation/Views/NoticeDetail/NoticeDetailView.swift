@@ -44,7 +44,6 @@ struct NoticeDetailView: View {
         static let reportIcon: String = "exclamationmark.bubble"
         static let audienceLabelPrefix: String = "수신대상:"
         static let audienceSystemImage: String = "paperplane"
-        static let debugDetailArgument: String = "--open-notice-detail-central"
         static let collapsedButtonSize: CGFloat = 60
         static let collapsedButtonIcon: String = "chart.bar.xaxis"
         static let collapsedButtonIconSize: CGFloat = 22
@@ -104,6 +103,7 @@ struct NoticeDetailView: View {
         await viewModel.fetchNoticeDetail()
     }
 
+    /// 공지 상세 데이터가 로드된 상태의 스크롤 본문
     private func detailContent(_ data: NoticeDetail) -> some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: Constants.topSectionSpacing) {
@@ -134,6 +134,7 @@ struct NoticeDetailView: View {
         .padding(.horizontal, Constants.horizontalPadding)
     }
 
+    /// 필독 칩 + 공지 제목 영역
     private func mainInfo(_ data: NoticeDetail) -> some View {
         VStack(alignment: .leading, spacing: Constants.topSectionSpacing) {
             if data.isMustRead {
@@ -144,6 +145,7 @@ struct NoticeDetailView: View {
         }
     }
 
+    /// 작성자 프로필, 작성일, 수신 대상 영역
     private func subInfo(_ data: NoticeDetail) -> some View {
         VStack(alignment: .leading, spacing: Constants.subInfoSpacing) {
             HStack {
@@ -196,6 +198,7 @@ struct NoticeDetailView: View {
 
     // MARK: - Toolbar
 
+    /// 수정/삭제/신고 메뉴를 포함하는 네비게이션 툴바
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         if currentNotice != nil {
@@ -203,12 +206,40 @@ struct NoticeDetailView: View {
         }
     }
 
+    /// 권한에 따라 동적으로 구성되는 툴바 액션 목록
     private var toolbarActions: [ToolBarCollection.ToolbarTrailingMenu.ActionItem] {
-        [
-            .init(title: Constants.noticeDeleteTitle, icon: Constants.deleteIcon, role: .destructive, action: handleDeleteNotice),
-            .init(title: Constants.noticeEditTitle, icon: Constants.editIcon, action: handleEditNotice),
-            .init(title: Constants.noticeReportTitle, icon: Constants.reportIcon, action: handleReportNotice)
-        ]
+        var actions: [ToolBarCollection.ToolbarTrailingMenu.ActionItem] = []
+
+        if viewModel.canDeleteNotice {
+            actions.append(
+                .init(
+                    title: Constants.noticeDeleteTitle,
+                    icon: Constants.deleteIcon,
+                    role: .destructive,
+                    action: handleDeleteNotice
+                )
+            )
+        }
+
+        if viewModel.canEditNotice {
+            actions.append(
+                .init(
+                    title: Constants.noticeEditTitle,
+                    icon: Constants.editIcon,
+                    action: handleEditNotice
+                )
+            )
+        }
+
+        actions.append(
+            .init(
+                title: Constants.noticeReportTitle,
+                icon: Constants.reportIcon,
+                action: handleReportNotice
+            )
+        )
+
+        return actions
     }
 
     // MARK: - Bottom Bar
@@ -219,7 +250,8 @@ struct NoticeDetailView: View {
         if !isReadStatusBarCollapsed {
             NoticeReadStatusButton(
                 confirmedCount: viewModel.confirmedCount,
-                totalCount: viewModel.totalCount
+                totalCount: viewModel.totalCount,
+                readRate: viewModel.readRate
             ) {
                 viewModel.openReadStatusSheet()
             }
@@ -265,6 +297,7 @@ struct NoticeDetailView: View {
         }
     }
 
+    /// 수신 확인 현황 시트를 구성합니다.
     private func readStatusSheet() -> some View {
         NoticeReadStatusSheet(viewModel: viewModel)
             .presentationDetents(Constants.detailSheetDetents)
@@ -273,12 +306,15 @@ struct NoticeDetailView: View {
 
     // MARK: - Task
 
+    /// 화면 진입 시 읽음 처리, 열람 현황, 권한, 상세 데이터를 순차 로드합니다.
     @MainActor
     private func onTask() async {
         viewModel.updateErrorHandler(errorHandler)
+        await viewModel.markAsReadIfNeeded()
         await viewModel.fetchReadStatus()
-        guard !isDebugSeededNoticeDetailRoute else { return }
+        await viewModel.fetchNoticePermission()
         await viewModel.fetchNoticeDetail()
+        await viewModel.fetchNoticePermission()
     }
 
     // MARK: - Private Methods
@@ -286,19 +322,19 @@ struct NoticeDetailView: View {
     /// 공지 수정 처리
     private func handleEditNotice() {
         guard let notice = currentNotice else { return }
-        guard notice.hasPermission else {
+        guard viewModel.canEditNotice else {
             showNoPermissionAlert()
             return
         }
         let noticeID = Int(notice.id) ?? 0
         let editMode = NoticeEditorMode.edit(noticeId: noticeID, notice: notice)
-        pathStore.noticePath.append(.notice(.editor(mode: editMode)))
+        pathStore.noticePath.append(.notice(.editor(mode: editMode, selectedGisuId: nil)))
     }
 
     /// 공지 삭제 처리
     private func handleDeleteNotice() {
-        guard let notice = currentNotice else { return }
-        guard notice.hasPermission else {
+        guard currentNotice != nil else { return }
+        guard viewModel.canDeleteNotice else {
             showNoPermissionAlert()
             return
         }
@@ -326,7 +362,7 @@ struct NoticeDetailView: View {
         viewModel.alertPrompt = AlertPrompt(
             id: .init(),
             title: "권한 없음",
-            message: "해당 공지를 수정하거나 삭제할 권한이 없습니다.",
+            message: "해당 공지에 대한 권한이 없습니다.",
             positiveBtnTitle: "확인"
         )
     }
@@ -336,20 +372,12 @@ struct NoticeDetailView: View {
         di.resolve(PathStore.self)
     }
 
-    /// 디버그 스킴에서 목 상세 진입 시 API 재조회로 화면이 비워지는 현상을 방지합니다.
-    private var isDebugSeededNoticeDetailRoute: Bool {
-        #if DEBUG
-        ProcessInfo.processInfo.arguments.contains(Constants.debugDetailArgument)
-        #else
-        false
-        #endif
-    }
-
     /// 공지 상세의 타입(중앙/지부/교내/파트)을 내비게이션 서브타이틀로 노출합니다.
     private var noticeTypeSubtitle: String {
         currentNotice?.noticeType.rawValue ?? ""
     }
 
+    /// 현재 로드된 공지 상세 데이터 (loaded 상태일 때만 존재)
     private var currentNotice: NoticeDetail? {
         viewModel.noticeState.value
     }

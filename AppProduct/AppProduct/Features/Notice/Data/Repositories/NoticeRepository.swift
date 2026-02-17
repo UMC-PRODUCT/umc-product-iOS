@@ -23,7 +23,7 @@ struct NoticeRepository: NoticeRepositoryProtocol {
     
     // MARK: - NoticeRepositoryProtocol
     
-    // MARK: 공지 생성
+    // MARK: - 공지 생성
     /// 공지사항 완전 생성 (links, images 포함) → 상세 조회 반환
     func createNotice(
         body: PostNoticeRequestDTO,
@@ -36,7 +36,10 @@ struct NoticeRepository: NoticeRepositoryProtocol {
             APIResponse<NoticeCreateResponseDTO>.self,
             from: response.data
         )
-        let noticeId = try apiResponse.unwrap().noticeId
+        let noticeIdString = try apiResponse.unwrap().noticeId
+        guard let noticeId = Int(noticeIdString) else {
+            throw RepositoryError.decodingError(detail: "invalid noticeId: \(noticeIdString)")
+        }
         
         if !links.isEmpty {
             _ = try await adapter.request(
@@ -66,7 +69,10 @@ struct NoticeRepository: NoticeRepositoryProtocol {
             APIResponse<NoticeCreateResponseDTO>.self,
             from: response.data
         )
-        let noticeId = try apiResponse.unwrap().noticeId
+        let noticeIdString = try apiResponse.unwrap().noticeId
+        guard let noticeId = Int(noticeIdString) else {
+            throw RepositoryError.decodingError(detail: "invalid noticeId: \(noticeIdString)")
+        }
         let detail = try await getDetailNotice(noticeId: noticeId)
         return detail.toItemModel()
     }
@@ -143,7 +149,7 @@ struct NoticeRepository: NoticeRepositoryProtocol {
         _ = try apiResponse.unwrap()
     }
     
-    // MARK: 공지 수정
+    // MARK: - 공지 수정
     
     /// 공지사항 수정 (제목, 본문) → NoticeDetail 반환
     func updateNotice(noticeId: Int, body: UpdateNoticeRequestDTO) async throws -> NoticeDetail {
@@ -293,9 +299,25 @@ struct NoticeRepository: NoticeRepositoryProtocol {
         )
         _ = try apiResponse.unwrap()
     }
+
+    /// 공지사항에 연결된 투표 삭제
+    func deleteVote(noticeId: Int) async throws {
+        let response = try await adapter.request(
+            NoticeRouter.deleteVote(noticeId: noticeId)
+        )
+
+        let apiResponse = try JSONDecoder().decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        )
+        _ = try apiResponse.unwrap()
+    }
 }
 
+// MARK: - NoticeDetail → NoticeItemModel 변환
+
 private extension NoticeDetail {
+    /// NoticeDetail 도메인 모델을 리스트 표시용 NoticeItemModel로 변환
     func toItemModel() -> NoticeItemModel {
         NoticeItemModel(
             noticeId: id,
