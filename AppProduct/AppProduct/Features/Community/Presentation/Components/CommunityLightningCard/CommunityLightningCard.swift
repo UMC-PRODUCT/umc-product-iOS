@@ -19,8 +19,7 @@ struct CommunityLightningCard: View {
         static let contentPadding: EdgeInsets = .init(top: 8, leading: 0, bottom: 12, trailing: 0)
         static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
         static let tagPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
-        static let kakaoSize: CGSize = .init(width: 40, height: 40)
-        static let kakaoRadius: CGFloat = 8
+        static let iconSize: CGSize = .init(width: 30, height: 30)
     }
     
     private enum SectionType {
@@ -41,6 +40,14 @@ struct CommunityLightningCard: View {
             case .meetAt: return "calendar"
             case .participant: return "person.2"
             case .location: return "map"
+            }
+        }
+        
+        var iconColor: Color {
+            switch self {
+            case .meetAt: return .indigo500
+            case .participant: return .green500
+            case .location: return .orange500
             }
         }
         
@@ -84,12 +91,24 @@ struct CommunityLightningCard: View {
             Text(type.title)
                 .appFont(.footnote, color: .grey500)
 
-            Label {
-                Text(type.content(from: model))
-                    .appFont(.subheadlineEmphasis, color: .black)
-            } icon: {
-                Image(systemName: type.icon)
-                    .foregroundStyle(.indigo500)
+            HStack {
+                Label {
+                    Text(type.content(from: model))
+                        .appFont(.subheadlineEmphasis, color: .black)
+                } icon: {
+                    Image(systemName: type.icon)
+                        .appFont(.subheadline)
+                        .frame(width: Constant.iconSize.width, height: Constant.iconSize.height)
+                        .foregroundStyle(type.iconColor)
+                        .glassEffect(.clear.tint(type.iconColor.opacity(0.2)))
+                }
+                
+                Spacer()
+                
+                if type == .location {
+                    Image(systemName: "arrow.up.right.square")
+                        .foregroundStyle(.grey500)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

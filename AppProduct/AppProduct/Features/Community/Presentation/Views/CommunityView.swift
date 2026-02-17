@@ -17,7 +17,18 @@ struct CommunityView: View {
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
-    
+
+    private enum Constants {
+        /// 실패 상태 문구
+        static let failedTitle: String = "불러오지 못했어요"
+        static let failedSystemImage: String = "exclamationmark.triangle"
+        static let failedDescription: String = "게시글을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+        /// 재시도 버튼 문구/크기
+        static let retryTitle: String = "다시 시도"
+        static let retryMinimumWidth: CGFloat = 72
+        static let retryMinimumHeight: CGFloat = 20
+    }
+
     init(container: DIContainer) {
         _vm = State(
             initialValue: CommunityViewModel(container: container)
@@ -73,18 +84,7 @@ struct CommunityView: View {
             case .loaded:
                 listSection
             case .failed(let error):
-                ContentUnavailableView {
-                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(error.localizedDescription)
-                } actions: {
-                    Button("다시 시도") {
-                        Task {
-                            await vm.refresh()
-                        }
-                    }
-                    .buttonStyle(.glassProminent)
-                }
+                failedContent()
             }
         }
     }
@@ -146,5 +146,21 @@ struct CommunityView: View {
         } description: {
             Text("가장 먼저 글을 작성해 보세요!")
         }
+    }
+
+    /// Failed - 데이터 로드 실패
+    private func failedContent() -> some View {
+        RetryContentUnavailableView(
+            title: Constants.failedTitle,
+            systemImage: Constants.failedSystemImage,
+            description: Constants.failedDescription,
+            retryTitle: Constants.retryTitle,
+            isRetrying: vm.items.isLoading,
+            minRetryButtonWidth: Constants.retryMinimumWidth,
+            minRetryButtonHeight: Constants.retryMinimumHeight
+        ) {
+            await vm.refresh()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 }

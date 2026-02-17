@@ -21,7 +21,8 @@ struct CommunityPostCard: View {
         static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
         static let tagPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
         static let kakaoSize: CGSize = .init(width: 40, height: 40)
-        static let kakaoRadius: CGFloat = 8
+        static let kakaoRadius: CGFloat = 12
+        static let kakaoPadding: EdgeInsets = .init(top: 12, leading: 16, bottom: 12, trailing: 16)
     }
 
     // MARK: - Init
@@ -113,9 +114,9 @@ struct CommunityPostCard: View {
                 Image(systemName: "chevron.right")
                     .foregroundStyle(.grey500)
             }
-            .padding(Constant.buttonPadding)
+            .padding(Constant.kakaoPadding)
         }
-        .buttonStyle(.glass)
+        .glassEffect(.clear.interactive())
     }
 
     private var buttonSection: some View {

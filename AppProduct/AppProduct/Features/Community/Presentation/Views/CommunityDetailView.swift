@@ -28,6 +28,14 @@ struct CommunityDetailView: View {
         static let textFieldPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
         static let sendButtonSize: CGSize = .init(width: 50, height: 50)
         static let bottomPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
+        /// 실패 상태 문구
+        static let failedTitle: String = "불러오지 못했어요"
+        static let failedSystemImage: String = "exclamationmark.triangle"
+        static let failedDescription: String = "댓글을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+        /// 재시도 버튼 문구/크기
+        static let retryTitle: String = "다시 시도"
+        static let retryMinimumWidth: CGFloat = 72
+        static let retryMinimumHeight: CGFloat = 20
     }
     
     // MARK: - Init
@@ -70,15 +78,7 @@ struct CommunityDetailView: View {
                     case .loaded(let comments):
                         commentSection(comments)
                     case .failed(let error):
-                        ContentUnavailableView {
-                            Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                        } description: {
-                            Text(error.localizedDescription)
-                        } actions: {
-                            Button("다시 시도") {
-                                Task { await vm.fetchComments() }
-                            }
-                        }
+                        failedContent()
                     }
                 }
             }
@@ -174,6 +174,22 @@ struct CommunityDetailView: View {
                 .equatable()
             }
         }
+    }
+    
+    /// Failed - 데이터 로드 실패
+    private func failedContent() -> some View {
+        RetryContentUnavailableView(
+            title: Constant.failedTitle,
+            systemImage: Constant.failedSystemImage,
+            description: Constant.failedDescription,
+            retryTitle: Constant.retryTitle,
+            isRetrying: vm.comments.isLoading,
+            minRetryButtonWidth: Constant.retryMinimumWidth,
+            minRetryButtonHeight: Constant.retryMinimumHeight
+        ) {
+            await vm.fetchComments()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
     // MARK: - Comment Input
