@@ -20,12 +20,14 @@ struct OperatorAttendanceSectionView: View {
 
     private let container: DIContainer
     private let errorHandler: ErrorHandler
+    private let sessions: [Session]
 
     // MARK: - Init
 
-    init(container: DIContainer, errorHandler: ErrorHandler) {
+    init(container: DIContainer, errorHandler: ErrorHandler, sessions: [Session]) {
         self.container = container
         self.errorHandler = errorHandler
+        self.sessions = sessions
 
         let useCase = container.resolve(ActivityUseCaseProviding.self)
         _viewModel = State(initialValue: OperatorAttendanceViewModel(
@@ -54,7 +56,7 @@ struct OperatorAttendanceSectionView: View {
         .task {
             // 상위 컨테이너에서 한 번만 호출 (View 교체로 인한 Task 취소 방지)
             if viewModel.sessionsState.isIdle {
-                await viewModel.fetchSessions()
+                await viewModel.fetchSessions(from: sessions)
             }
         }
         .alertPrompt(item: $viewModel.alertPrompt)
@@ -230,7 +232,7 @@ struct OperatorAttendanceSectionView: View {
         } actions: {
             Button {
                 Task {
-                    await viewModel.fetchSessions()
+                    await viewModel.fetchSessions(from: sessions)
                 }
             } label: {
                 Image(systemName: "arrow.trianglehead.clockwise")
@@ -249,6 +251,7 @@ struct OperatorAttendanceSectionView: View {
 #Preview {
     OperatorAttendanceSectionView(
         container: AttendancePreviewData.container,
-        errorHandler: AttendancePreviewData.errorHandler
+        errorHandler: AttendancePreviewData.errorHandler,
+        sessions: AttendancePreviewData.sessions
     )
 }

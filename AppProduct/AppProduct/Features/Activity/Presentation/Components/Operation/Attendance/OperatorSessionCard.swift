@@ -68,8 +68,10 @@ struct OperatorSessionCard: View, Equatable {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             headerSection
 
-            OperatorAttendanceStatsRow(sessionAttendance: sessionAttendance)
-                .equatable()
+            if sessionAttendance.totalCount > 0 {
+                OperatorAttendanceStatsRow(sessionAttendance: sessionAttendance)
+                    .equatable()
+            }
 
             statusSection
         }

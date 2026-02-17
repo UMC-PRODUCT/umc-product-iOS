@@ -48,38 +48,38 @@ final class OperatorAttendanceViewModel {
 
     // MARK: - Action
 
-    /// 세션 목록 조회
+    /// 세션 목록에서 pending 출석 조회
     @MainActor
-    func fetchSessions() async {
+    func fetchSessions(from sessions: [Session]) async {
         sessionsState = .loading
-
-        // TODO: 세션 목록도 API 연동 시 교체 - [25.02.17] 이재원
-        // 현재는 Mock 세션 구조 유지 + 실제 pending API 호출
-        let mockSessions = OperatorAttendancePreviewData.createMockSessions()
         var updatedSessions: [OperatorSessionAttendance] = []
 
-        for session in mockSessions {
-            if let serverID = session.serverID,
-               let scheduleId = Int(serverID) {
-                // 실제 API로 pending 멤버 조회 시도
+        for session in sessions {
+            let scheduleIdString = session.id.value
+            var pendingMembers: [OperatorPendingMember] = []
+
+            if let scheduleId = Int(scheduleIdString) {
                 do {
                     let records = try await useCase
                         .fetchPendingAttendances(
                             scheduleId: scheduleId
                         )
-                    let members = records.map {
+                    pendingMembers = records.map {
                         OperatorPendingMember(from: $0)
                     }
-                    updatedSessions.append(session.copyWith(
-                        pendingMembers: members
-                    ))
                 } catch {
-                    // API 실패 시 Mock 데이터 유지
-                    updatedSessions.append(session)
+                    // API 실패 시 빈 목록으로 진행
                 }
-            } else {
-                updatedSessions.append(session)
             }
+
+            updatedSessions.append(OperatorSessionAttendance(
+                serverID: scheduleIdString,
+                session: session,
+                attendanceRate: 0.0,
+                attendedCount: 0,
+                totalCount: 0,
+                pendingMembers: pendingMembers
+            ))
         }
 
         sessionsState = .loaded(updatedSessions)

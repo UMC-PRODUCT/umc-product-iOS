@@ -35,6 +35,7 @@ final class ActivityRepository: ActivityRepositoryProtocol, @unchecked Sendable 
                     sessionId: SessionID(
                         value: String(schedule.scheduleId)
                     ),
+                    // TODO: 서버 API에 icon/week/location 필드 추가 후 하드코딩 제거 예정
                     icon: .Activity.profile,
                     title: schedule.scheduleName,
                     week: 0,
