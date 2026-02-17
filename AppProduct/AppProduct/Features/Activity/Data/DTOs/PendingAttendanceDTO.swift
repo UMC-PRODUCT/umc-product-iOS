@@ -10,9 +10,10 @@ import Foundation
 /// 승인 대기 출석 목록 Response DTO
 ///
 /// `GET /api/v1/attendances/pending/{scheduleId}`
+/// - Note: 서버는 모든 숫자를 String으로 반환
 struct PendingAttendanceDTO: Codable, Sendable, Equatable {
-    let attendanceId: Int
-    let memberId: Int
+    let attendanceId: String
+    let memberId: String
     let memberName: String
     let nickname: String
     let profileImageLink: String?
@@ -29,8 +30,8 @@ extension PendingAttendanceDTO {
     /// DTO → PendingAttendanceRecord Domain 모델 변환
     func toDomain() -> PendingAttendanceRecord {
         PendingAttendanceRecord(
-            attendanceId: attendanceId,
-            memberId: memberId,
+            attendanceId: Int(attendanceId) ?? 0,
+            memberId: Int(memberId) ?? 0,
             memberName: memberName,
             nickname: nickname,
             profileImageLink: profileImageLink.flatMap {

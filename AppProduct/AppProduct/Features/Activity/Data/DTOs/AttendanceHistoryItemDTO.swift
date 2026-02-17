@@ -11,15 +11,17 @@ import Foundation
 ///
 /// `GET /api/v1/attendances/history` 및
 /// `GET /api/v1/attendances/challenger/{challengerId}/history`
+/// - Note: 서버는 모든 숫자를 String으로 반환
 struct AttendanceHistoryItemDTO: Codable, Sendable, Equatable {
-    let attendanceId: Int
-    let scheduleId: Int
+    let attendanceId: String
+    let scheduleId: String
     let scheduleName: String
     let tag: [String]
     let scheduledDate: String
     let startTime: String
     let endTime: String
     let status: String
+    let statusDisplay: String
 }
 
 // MARK: - toDomain
@@ -29,14 +31,15 @@ extension AttendanceHistoryItemDTO {
     /// DTO → AttendanceHistoryItem Domain 모델 변환
     func toDomain() -> AttendanceHistoryItem {
         AttendanceHistoryItem(
-            attendanceId: attendanceId,
-            scheduleId: scheduleId,
+            attendanceId: Int(attendanceId) ?? 0,
+            scheduleId: Int(scheduleId) ?? 0,
             scheduleName: scheduleName,
             tags: tag,
             scheduledDate: scheduledDate,
             startTime: startTime,
             endTime: endTime,
-            status: AttendanceStatus(serverStatus: status)
+            status: AttendanceStatus(serverStatus: status),
+            statusDisplay: statusDisplay
         )
     }
 }
