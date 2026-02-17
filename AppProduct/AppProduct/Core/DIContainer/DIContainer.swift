@@ -347,19 +347,6 @@ extension DIContainer {
                 )
             )
         }
-        container.register(CommunityUseCaseProviding.self) {
-            CommunityUseCaseProvider(
-                communityRepository: container.resolve(
-                    CommunityRepositoryProtocol.self
-                ),
-                communityPostRepository: container.resolve(
-                    CommunityPostRepositoryProtocol.self
-                ),
-                communityDetailRepository: container.resolve(
-                    CommunityDetailRepositoryProtocol.self
-                )
-            )
-        }
 
         return container
     }

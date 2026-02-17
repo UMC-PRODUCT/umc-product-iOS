@@ -71,12 +71,13 @@ struct CommunityView: View {
             .toolbar {
                 ToolBarCollection.ToolBarCenterMenu(
                     items: CommunityMenu.allCases,
-                    selection: Binding(
-                        get: { vm.selectedMenu }, set: { vm.selectedMenu = $0 }
-                    ),
+                    selection: $vm.selectedMenu,
                     itemLabel: { $0.rawValue },
                     itemIcon: { $0.icon }
                 )
+            }
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                NavigationRoutingView(destination: destination)
             }
         }
     }
