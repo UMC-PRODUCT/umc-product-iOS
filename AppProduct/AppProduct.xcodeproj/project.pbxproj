@@ -20,7 +20,6 @@
 		1F3173D82F127A5000601344 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3173D72F127A5000601344 /* FirebaseMessaging */; };
 		1F953CD92F31D2BB0067FE73 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1F953CD82F31D2BB0067FE73 /* AppIcon.icon */; };
 		1FEF7EC82F2C9D3200AB3DBB /* Documentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF7EC72F2C9D3200AB3DBB /* Documentation.docc */; };
-		23A650DE2F41548A00A2A8D7 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 23A650DD2F41548A00A2A8D7 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,7 +37,6 @@
 		1F75B9912F123E6500B97089 /* AppProductTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppProductTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F953CD82F31D2BB0067FE73 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		1FEF7EC72F2C9D3200AB3DBB /* Documentation.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = Documentation.docc; sourceTree = "<group>"; };
-		23A650DD2F41548A00A2A8D7 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -87,7 +85,6 @@
 		0E6380A02F02F1020060E4D9 = {
 			isa = PBXGroup;
 			children = (
-				23A650DD2F41548A00A2A8D7 /* GoogleService-Info.plist */,
 				1F953CD82F31D2BB0067FE73 /* AppIcon.icon */,
 				1FEF7EC72F2C9D3200AB3DBB /* Documentation.docc */,
 				1FE63EEA2F20BDEF00D92F6A /* AppleCreateML */,
@@ -213,7 +210,6 @@
 			isa = PBXResourcesBuildPhase;
 			files = (
 				1F953CD92F31D2BB0067FE73 /* AppIcon.icon in Resources */,
-				23A650DE2F41548A00A2A8D7 /* GoogleService-Info.plist in Resources */,
 			);
 		};
 		1F75B98F2F123E6500B97089 /* Resources */ = {
