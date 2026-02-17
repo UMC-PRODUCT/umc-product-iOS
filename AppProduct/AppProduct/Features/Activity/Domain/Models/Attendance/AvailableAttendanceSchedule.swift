@@ -18,7 +18,7 @@ struct AvailableAttendanceSchedule: Equatable, Identifiable {
     let startTime: String
     let endTime: String
     let sheetId: Int
-    let recordId: Int
+    let recordId: Int?
     let status: AttendanceStatus
     let statusDisplay: String
     let locationVerified: Bool

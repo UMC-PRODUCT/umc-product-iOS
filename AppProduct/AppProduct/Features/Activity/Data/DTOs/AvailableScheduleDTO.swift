@@ -17,10 +17,42 @@ struct AvailableScheduleDTO: Codable, Sendable, Equatable {
     let startTime: String
     let endTime: String
     let sheetId: Int
-    let recordId: Int
+    let recordId: Int?
     let status: String
     let statusDisplay: String
-    let locationVerified: Bool
+    let locationVerified: Bool?
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        scheduleName = try container.decode(String.self, forKey: .scheduleName)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        startTime = try container.decode(String.self, forKey: .startTime)
+        endTime = try container.decode(String.self, forKey: .endTime)
+        status = try container.decode(String.self, forKey: .status)
+        statusDisplay = try container.decode(String.self, forKey: .statusDisplay)
+        locationVerified = try container.decodeIfPresent(Bool.self, forKey: .locationVerified)
+
+        // 서버가 ID를 String으로 반환하는 경우 대응
+        if let intId = try? container.decode(Int.self, forKey: .scheduleId) {
+            scheduleId = intId
+        } else {
+            let strId = try container.decode(String.self, forKey: .scheduleId)
+            scheduleId = Int(strId) ?? 0
+        }
+        if let intId = try? container.decode(Int.self, forKey: .sheetId) {
+            sheetId = intId
+        } else {
+            let strId = try container.decode(String.self, forKey: .sheetId)
+            sheetId = Int(strId) ?? 0
+        }
+        if let intId = try? container.decode(Int.self, forKey: .recordId) {
+            recordId = intId
+        } else if let strId = try? container.decode(String.self, forKey: .recordId) {
+            recordId = Int(strId)
+        } else {
+            recordId = nil
+        }
+    }
 }
 
 // MARK: - toDomain
@@ -39,7 +71,7 @@ extension AvailableScheduleDTO {
             recordId: recordId,
             status: AttendanceStatus(serverStatus: status),
             statusDisplay: statusDisplay,
-            locationVerified: locationVerified
+            locationVerified: locationVerified ?? false
         )
     }
 }
