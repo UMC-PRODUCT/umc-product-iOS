@@ -53,6 +53,13 @@ struct CommunityView: View {
                 }
             }
             .task {
+                #if DEBUG
+                if let debugState = CommunityDebugState.fromLaunchArgument() {
+                    debugState.apply(to: vm)
+                    return
+                }
+                #endif
+
                 switch vm.selectedMenu {
                 case .all, .question, .party:
                     await vm.fetchInitialIfNeeded()
@@ -83,7 +90,7 @@ struct CommunityView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
                 listSection
-            case .failed(let error):
+            case .failed:
                 failedContent()
             }
         }

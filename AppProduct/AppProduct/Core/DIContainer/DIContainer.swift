@@ -170,6 +170,7 @@ extension DIContainer {
         container.register(NavigationRouter.self) { NavigationRouter() }
         container.register(UserSessionManager.self) { UserSessionManager() }
         
+        print("URL 확인: \(Config.baseURL)")
         // MARK: - Network Infrastructure
         container.register(NetworkClient.self) {
             AuthSystemFactory.makeNetworkClient(

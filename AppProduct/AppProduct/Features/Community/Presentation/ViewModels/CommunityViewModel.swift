@@ -109,6 +109,17 @@ class CommunityViewModel {
             print("[Community] pagination failed: \(error)")
         }
     }
+
+    #if DEBUG
+    /// 디버그 모드에서 UI 상태를 시드하기 위한 메서드
+    func seedForDebugState(
+        items: Loadable<[CommunityItemModel]>,
+        selectedMenu: CommunityMenu
+    ) {
+        self.items = items
+        self.selectedMenu = selectedMenu
+    }
+    #endif
 }
 
 // MARK: - Private Function

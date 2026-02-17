@@ -43,11 +43,18 @@ struct CommunityFameView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
                 listSection(vm: vm)
-            case .failed(let error):
+            case .failed:
                 failedContent()
             }
         }
         .task {
+            #if DEBUG
+            if let debugState = CommunityFameDebugState.fromLaunchArgument() {
+                debugState.apply(to: vm)
+                return
+            }
+            #endif
+
             await vm.fetchFameItems(query: .init(week: 1, school: nil, part: nil))
         }
         .toolbar {

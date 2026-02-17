@@ -481,6 +481,8 @@
 		};
 		1F75B9982F123E6500B97089 /* Debug configuration for PBXNativeTarget "AppProductTests" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 0E6380AB2F02F1020060E4D9 /* AppProduct */;
+			baseConfigurationReferenceRelativePath = Core/Secret/Secrets.xcconfig;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -502,6 +504,8 @@
 		};
 		1F75B9992F123E6500B97089 /* Release configuration for PBXNativeTarget "AppProductTests" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 0E6380AB2F02F1020060E4D9 /* AppProduct */;
+			baseConfigurationReferenceRelativePath = Core/Secret/Secrets.xcconfig;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;

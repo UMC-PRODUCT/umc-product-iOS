@@ -77,7 +77,7 @@ struct CommunityDetailView: View {
                         ProgressView("댓글 로딩 중...")
                     case .loaded(let comments):
                         commentSection(comments)
-                    case .failed(let error):
+                    case .failed:
                         failedContent()
                     }
                 }
@@ -224,6 +224,7 @@ struct CommunityDetailView: View {
             .glassEffect(.regular.tint(vm.commentText.isEmpty ? .clear : .indigo500))
         }
         .padding(Constant.bottomPadding)
+        .scrollDismissesKeyboard(.immediately)
     }
 
     // MARK: - Actions
