@@ -52,16 +52,16 @@ struct MyProfileResponseDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decodeIntFlexible(forKey: .id)
-        name = try container.decode(String.self, forKey: .name)
-        nickname = try container.decode(String.self, forKey: .nickname)
-        email = try container.decode(String.self, forKey: .email)
-        schoolId = try container.decodeIntFlexible(forKey: .schoolId)
-        schoolName = try container.decode(String.self, forKey: .schoolName)
+        id = try container.decodeIntFlexibleIfPresent(forKey: .id) ?? 0
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        nickname = try container.decodeIfPresent(String.self, forKey: .nickname) ?? ""
+        email = try container.decodeIfPresent(String.self, forKey: .email) ?? ""
+        schoolId = try container.decodeIntFlexibleIfPresent(forKey: .schoolId) ?? 0
+        schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
         profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
-        status = try container.decode(MemberStatus.self, forKey: .status)
-        roles = try container.decode([RoleDTO].self, forKey: .roles)
-        challengerRecords = try container.decodeIfPresent([ChallengerMemberDTO].self, forKey: .challengerRecords)
+        status = try container.decodeIfPresent(MemberStatus.self, forKey: .status) ?? .inactive
+        roles = try container.decodeIfPresent([RoleDTO].self, forKey: .roles) ?? []
+        challengerRecords = try container.decodeIfPresent([ChallengerMemberDTO].self, forKey: .challengerRecords) ?? []
     }
 }
 
@@ -99,14 +99,14 @@ struct RoleDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decodeIntFlexible(forKey: .id)
-        challengerId = try container.decodeIntFlexible(forKey: .challengerId)
-        roleType = try container.decode(ManagementTeam.self, forKey: .roleType)
-        organizationType = try container.decode(OrganizationType.self, forKey: .organizationType)
-        organizationId = try container.decodeIntFlexible(forKey: .organizationId)
+        id = try container.decodeIntFlexibleIfPresent(forKey: .id) ?? 0
+        challengerId = try container.decodeIntFlexibleIfPresent(forKey: .challengerId) ?? 0
+        roleType = try container.decodeIfPresent(ManagementTeam.self, forKey: .roleType) ?? .challenger
+        organizationType = try container.decodeIfPresent(OrganizationType.self, forKey: .organizationType) ?? .central
+        organizationId = try container.decodeIntFlexibleIfPresent(forKey: .organizationId) ?? 0
         responsiblePart = try container.decodeIfPresent(String.self, forKey: .responsiblePart)
-        gisu = try container.decodeIntFlexible(forKey: .gisu)
-        gisuId = try container.decodeIntFlexible(forKey: .gisuId)
+        gisu = try container.decodeIntFlexibleIfPresent(forKey: .gisu) ?? 0
+        gisuId = try container.decodeIntFlexibleIfPresent(forKey: .gisuId) ?? 0
     }
 }
 
@@ -215,5 +215,12 @@ private extension KeyedDecodingContainer {
                 debugDescription: "Expected Int/String-number/Double for key '\(key.stringValue)'"
             )
         )
+    }
+
+    func decodeIntFlexibleIfPresent(forKey key: Key) throws -> Int? {
+        if (try? decodeNil(forKey: key)) == true {
+            return nil
+        }
+        return try? decodeIntFlexible(forKey: key)
     }
 }

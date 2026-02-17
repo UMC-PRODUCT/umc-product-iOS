@@ -40,6 +40,39 @@ struct ScheduleDetailDTO: Codable, Sendable, Equatable {
     let dDay: Int
     /// 출석 승인 필요 여부
     let requiresAttendanceApproval: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case scheduleId
+        case name
+        case description
+        case tags
+        case startsAt
+        case endsAt
+        case isAllDay
+        case locationName
+        case latitude
+        case longitude
+        case status
+        case dDay
+        case requiresAttendanceApproval
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        scheduleId = try container.decodeIntFlexibleIfPresent(forKey: .scheduleId) ?? 0
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        startsAt = try container.decodeIfPresent(String.self, forKey: .startsAt) ?? ""
+        endsAt = try container.decodeIfPresent(String.self, forKey: .endsAt) ?? ""
+        isAllDay = try container.decodeBoolFlexibleIfPresent(forKey: .isAllDay) ?? false
+        locationName = try container.decodeIfPresent(String.self, forKey: .locationName) ?? ""
+        latitude = try container.decodeDoubleFlexibleIfPresent(forKey: .latitude) ?? 0
+        longitude = try container.decodeDoubleFlexibleIfPresent(forKey: .longitude) ?? 0
+        status = try container.decodeIfPresent(String.self, forKey: .status) ?? ""
+        dDay = try container.decodeIntFlexibleIfPresent(forKey: .dDay) ?? 0
+        requiresAttendanceApproval = try container.decodeBoolFlexibleIfPresent(forKey: .requiresAttendanceApproval) ?? false
+    }
 }
 
 // MARK: - toDomain
@@ -79,5 +112,67 @@ extension ScheduleDetailDTO {
         return formatterWithFraction.date(from: string)
             ?? formatter.date(from: string)
             ?? .now
+    }
+}
+
+private extension KeyedDecodingContainer {
+    func decodeIntFlexible(forKey key: Key) throws -> Int {
+        if let value = try? decode(Int.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(String.self, forKey: key),
+           let intValue = Int(value) {
+            return intValue
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return Int(value)
+        }
+        throw DecodingError.typeMismatch(
+            Int.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected Int/String-number/Double for key '\(key.stringValue)'"
+            )
+        )
+    }
+
+    func decodeIntFlexibleIfPresent(forKey key: Key) throws -> Int? {
+        if (try? decodeNil(forKey: key)) == true {
+            return nil
+        }
+        return try? decodeIntFlexible(forKey: key)
+    }
+
+    func decodeDoubleFlexibleIfPresent(forKey key: Key) throws -> Double? {
+        if let value = try? decode(Double.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return Double(value)
+        }
+        if let value = try? decode(String.self, forKey: key) {
+            return Double(value)
+        }
+        return nil
+    }
+
+    func decodeBoolFlexibleIfPresent(forKey key: Key) throws -> Bool? {
+        if let value = try? decode(Bool.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return value != 0
+        }
+        if let value = try? decode(String.self, forKey: key) {
+            switch value.lowercased() {
+            case "true", "1", "y", "yes":
+                return true
+            case "false", "0", "n", "no":
+                return false
+            default:
+                return nil
+            }
+        }
+        return nil
     }
 }

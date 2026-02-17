@@ -69,23 +69,50 @@ struct ChallengerMemberDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        challengerId = try container.decodeIntFlexible(forKey: .challengerId)
-        memberId = try container.decodeIntFlexible(forKey: .memberId)
-        gisu = try container.decodeIntFlexible(forKey: .gisu)
-        gisuId = try container.decodeIntFlexible(forKey: .gisuId)
+        challengerId = try container.decodeIntFlexibleIfPresent(forKey: .challengerId) ?? 0
+        memberId = try container.decodeIntFlexibleIfPresent(forKey: .memberId) ?? 0
+        gisu = try container.decodeIntFlexibleIfPresent(forKey: .gisu) ?? 0
+        gisuId = try container.decodeIntFlexibleIfPresent(forKey: .gisuId) ?? 0
         chapterId = try container.decodeIntFlexibleIfPresent(forKey: .chapterId)
         chapterName = try container.decodeIfPresent(String.self, forKey: .chapterName)
-        part = try container.decode(String.self, forKey: .part)
-        challengerPoints = try container.decode([ChallengerPointDTO].self, forKey: .challengerPoints)
-        name = try container.decode(String.self, forKey: .name)
-        nickname = try container.decode(String.self, forKey: .nickname)
+        part = try container.decodeIfPresent(String.self, forKey: .part) ?? ""
+        challengerPoints = try container.decodeIfPresent([ChallengerPointDTO].self, forKey: .challengerPoints)
+            ?? decoder.decodePointsArrayFallback()
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        nickname = try container.decodeIfPresent(String.self, forKey: .nickname) ?? ""
         email = try container.decodeIfPresent(String.self, forKey: .email)
-        schoolId = try container.decodeIntFlexible(forKey: .schoolId)
-        schoolName = try container.decode(String.self, forKey: .schoolName)
+        schoolId = try container.decodeIntFlexibleIfPresent(forKey: .schoolId) ?? 0
+        schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
         profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
         let fallbackContainer = try decoder.container(keyedBy: FallbackCodingKeys.self)
         status = try container.decodeIfPresent(MemberStatus.self, forKey: .status)
-            ?? fallbackContainer.decode(MemberStatus.self, forKey: .memberStatus)
+            ?? (try fallbackContainer.decodeIfPresent(MemberStatus.self, forKey: .memberStatus))
+            ?? .inactive
+    }
+}
+
+private struct DynamicCodingKey: CodingKey {
+    let stringValue: String
+    let intValue: Int?
+
+    init?(stringValue: String) {
+        self.stringValue = stringValue
+        self.intValue = nil
+    }
+
+    init?(intValue: Int) {
+        self.stringValue = "\(intValue)"
+        self.intValue = intValue
+    }
+}
+
+private extension Decoder {
+    func decodePointsArrayFallback() throws -> [ChallengerPointDTO] {
+        let container = try self.container(keyedBy: DynamicCodingKey.self)
+        guard let key = DynamicCodingKey(stringValue: "points") else {
+            return []
+        }
+        return try container.decodeIfPresent([ChallengerPointDTO].self, forKey: key) ?? []
     }
 }
 
@@ -114,12 +141,14 @@ struct ChallengerPointDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decodeIntFlexible(forKey: .id)
-        pointType = try container.decode(PointType.self, forKey: .pointType)
+        id = try container.decodeIntFlexibleIfPresent(forKey: .id) ?? 0
+        pointType = try container.decodeIfPresent(PointType.self, forKey: .pointType) ?? .warning
         if let pointValue = try? container.decode(Double.self, forKey: .point) {
             point = pointValue
+        } else if let intValue = try? container.decode(Int.self, forKey: .point) {
+            point = Double(intValue)
         } else {
-            let stringValue = try container.decode(String.self, forKey: .point)
+            let stringValue = try container.decodeIfPresent(String.self, forKey: .point) ?? "0"
             guard let parsed = Double(stringValue) else {
                 throw DecodingError.typeMismatch(
                     Double.self,
@@ -131,8 +160,8 @@ struct ChallengerPointDTO: Codable {
             }
             point = parsed
         }
-        description = try container.decode(String.self, forKey: .description)
-        createdAt = try container.decode(String.self, forKey: .createdAt)
+        description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt) ?? ""
     }
 }
 
@@ -173,7 +202,7 @@ private extension KeyedDecodingContainer {
         if (try? decodeNil(forKey: key)) == true {
             return nil
         }
-        return try decodeIntFlexible(forKey: key)
+        return try? decodeIntFlexible(forKey: key)
     }
 }
 

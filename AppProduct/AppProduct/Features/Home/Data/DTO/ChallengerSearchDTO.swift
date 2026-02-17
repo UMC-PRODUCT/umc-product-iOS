@@ -51,6 +51,16 @@ struct ChallengerSearchRequestDTO {
 /// 챌린저 검색 응답 DTO (Cursor 기반 페이지네이션)
 struct ChallengerSearchResponseDTO: Codable {
     let cursor: CursorDTO<ChallengerSearchItemDTO>
+
+    private enum CodingKeys: String, CodingKey {
+        case cursor
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        cursor = try container.decodeIfPresent(CursorDTO<ChallengerSearchItemDTO>.self, forKey: .cursor)
+            ?? CursorDTO(content: [], nextCursor: nil, hasNext: false)
+    }
 }
 
 /// 챌린저 검색 결과 항목 DTO
@@ -62,6 +72,45 @@ struct ChallengerSearchItemDTO: Codable {
     let schoolName: String
     let gisu: String
     let profileImageUrl: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case memberId
+        case nickname
+        case name
+        case part
+        case schoolName
+        case gisu
+        case profileImageUrl
+    }
+
+    init(
+        memberId: Int,
+        nickname: String,
+        name: String,
+        part: UMCPartType,
+        schoolName: String,
+        gisu: String,
+        profileImageUrl: String?
+    ) {
+        self.memberId = memberId
+        self.nickname = nickname
+        self.name = name
+        self.part = part
+        self.schoolName = schoolName
+        self.gisu = gisu
+        self.profileImageUrl = profileImageUrl
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        memberId = try container.decodeIntFlexibleIfPresent(forKey: .memberId) ?? 0
+        nickname = try container.decodeIfPresent(String.self, forKey: .nickname) ?? ""
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        part = try container.decodeIfPresent(UMCPartType.self, forKey: .part) ?? .pm
+        schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
+        gisu = try container.decodeStringFlexibleIfPresent(forKey: .gisu) ?? "0"
+        profileImageUrl = try container.decodeIfPresent(String.self, forKey: .profileImageUrl)
+    }
 }
 
 // MARK: - CursorDTO
@@ -76,6 +125,25 @@ struct CursorDTO<T: Codable>: Codable {
     let nextCursor: Int?
     /// 다음 페이지 존재 여부
     let hasNext: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case content
+        case nextCursor
+        case hasNext
+    }
+
+    init(content: [T], nextCursor: Int?, hasNext: Bool) {
+        self.content = content
+        self.nextCursor = nextCursor
+        self.hasNext = hasNext
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        content = try container.decodeIfPresent([T].self, forKey: .content) ?? []
+        nextCursor = try container.decodeIntFlexibleIfPresent(forKey: .nextCursor)
+        hasNext = try container.decodeIfPresent(Bool.self, forKey: .hasNext) ?? false
+    }
 }
 
 // MARK: - toDomain
@@ -97,5 +165,47 @@ extension ChallengerSearchItemDTO {
 extension ChallengerSearchResponseDTO {
     func toChallengerInfoList() -> [ChallengerInfo] {
         cursor.content.map { $0.toChallengerInfo() }
+    }
+}
+
+private extension KeyedDecodingContainer {
+    func decodeIntFlexible(forKey key: Key) throws -> Int {
+        if let value = try? decode(Int.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(String.self, forKey: key),
+           let intValue = Int(value) {
+            return intValue
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return Int(value)
+        }
+        throw DecodingError.typeMismatch(
+            Int.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected Int/String-number/Double for key '\(key.stringValue)'"
+            )
+        )
+    }
+
+    func decodeIntFlexibleIfPresent(forKey key: Key) throws -> Int? {
+        if (try? decodeNil(forKey: key)) == true {
+            return nil
+        }
+        return try? decodeIntFlexible(forKey: key)
+    }
+
+    func decodeStringFlexibleIfPresent(forKey key: Key) throws -> String? {
+        if let value = try? decode(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return String(Int(value))
+        }
+        return nil
     }
 }

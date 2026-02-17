@@ -23,6 +23,25 @@ struct HomeScheduleResponseDTO: Codable {
     let status: String
     /// D-Day 값 (음수: 지남, 양수: 남음)
     let dDay: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case scheduleId
+        case name
+        case startsAt
+        case endsAt
+        case status
+        case dDay
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        scheduleId = try container.decodeIntFlexibleIfPresent(forKey: .scheduleId) ?? 0
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        startsAt = try container.decodeIfPresent(String.self, forKey: .startsAt) ?? ""
+        endsAt = try container.decodeIfPresent(String.self, forKey: .endsAt) ?? ""
+        status = try container.decodeIfPresent(String.self, forKey: .status) ?? ""
+        dDay = try container.decodeIntFlexibleIfPresent(forKey: .dDay) ?? 0
+    }
 }
 
 // MARK: - toDomain
@@ -55,5 +74,34 @@ extension HomeScheduleResponseDTO {
         return formatterWithFraction.date(from: string)
             ?? formatter.date(from: string)
             ?? .now
+    }
+}
+
+private extension KeyedDecodingContainer {
+    func decodeIntFlexible(forKey key: Key) throws -> Int {
+        if let value = try? decode(Int.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(String.self, forKey: key),
+           let intValue = Int(value) {
+            return intValue
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return Int(value)
+        }
+        throw DecodingError.typeMismatch(
+            Int.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected Int/String-number/Double for key '\(key.stringValue)'"
+            )
+        )
+    }
+
+    func decodeIntFlexibleIfPresent(forKey key: Key) throws -> Int? {
+        if (try? decodeNil(forKey: key)) == true {
+            return nil
+        }
+        return try? decodeIntFlexible(forKey: key)
     }
 }

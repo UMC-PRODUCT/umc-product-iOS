@@ -89,16 +89,17 @@ struct NoticeListResponseDTO: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        self.id = try container.decodeStringFlexible(forKey: .id)
-        self.title = try container.decode(String.self, forKey: .title)
-        self.content = try container.decode(String.self, forKey: .content)
-        self.shouldSendNotification = try container.decode(Bool.self, forKey: .shouldSendNotification)
-        self.viewCount = try container.decodeStringFlexible(forKey: .viewCount)
-        self.createdAt = try container.decode(String.self, forKey: .createdAt)
-        self.targetInfo = try container.decode(TargetInfoDTO.self, forKey: .targetInfo)
-        self.authorChallengerId = try container.decodeStringFlexible(forKey: .authorChallengerId)
-        self.authorNickname = try container.decode(String.self, forKey: .authorNickname)
-        self.authorName = try container.decode(String.self, forKey: .authorName)
+        self.id = try container.decodeStringFlexibleIfPresent(forKey: .id) ?? "0"
+        self.title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+        self.content = try container.decodeIfPresent(String.self, forKey: .content) ?? ""
+        self.shouldSendNotification = try container.decodeBoolFlexibleIfPresent(forKey: .shouldSendNotification) ?? false
+        self.viewCount = try container.decodeStringFlexibleIfPresent(forKey: .viewCount) ?? "0"
+        self.createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt) ?? ""
+        self.targetInfo = try container.decodeIfPresent(TargetInfoDTO.self, forKey: .targetInfo)
+            ?? TargetInfoDTO(targetGisuId: 0, targetChapterId: nil, targetSchoolId: nil, targetParts: nil as [UMCPartType]?)
+        self.authorChallengerId = try container.decodeStringFlexibleIfPresent(forKey: .authorChallengerId) ?? "0"
+        self.authorNickname = try container.decodeIfPresent(String.self, forKey: .authorNickname) ?? ""
+        self.authorName = try container.decodeIfPresent(String.self, forKey: .authorName) ?? ""
     }
 }
 
@@ -167,7 +168,7 @@ struct TargetInfoDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.targetGisuId = try container.decodeIntFlexible(forKey: .targetGisuId)
+        self.targetGisuId = try container.decodeIntFlexibleIfPresent(forKey: .targetGisuId) ?? 0
         self.targetChapterId = try container.decodeIntFlexibleIfPresent(forKey: .targetChapterId)
         self.targetSchoolId = try container.decodeIntFlexibleIfPresent(forKey: .targetSchoolId)
         self.targetParts = try container.decodeIfPresent([UMCPartType].self, forKey: .targetParts)
@@ -192,10 +193,31 @@ struct PageDTO<T: Codable>: Codable {
     let hasNext: Bool
     /// 이전 페이지 존재 여부
     let hasPrevious: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case content
+        case page
+        case size
+        case totalElements
+        case totalPages
+        case hasNext
+        case hasPrevious
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        content = try container.decodeIfPresent([T].self, forKey: .content) ?? []
+        page = try container.decodeIntFlexibleIfPresent(forKey: .page) ?? 0
+        size = try container.decodeIntFlexibleIfPresent(forKey: .size) ?? 0
+        totalElements = try container.decodeIntFlexibleIfPresent(forKey: .totalElements) ?? 0
+        totalPages = try container.decodeIntFlexibleIfPresent(forKey: .totalPages) ?? 0
+        hasNext = try container.decodeBoolFlexibleIfPresent(forKey: .hasNext) ?? false
+        hasPrevious = try container.decodeBoolFlexibleIfPresent(forKey: .hasPrevious) ?? false
+    }
 }
 
 private extension KeyedDecodingContainer {
-    func decodeStringFlexible(forKey key: Key) throws -> String {
+    func decodeStringFlexibleIfPresent(forKey key: Key) throws -> String? {
         if let value = try? decode(String.self, forKey: key) {
             return value
         }
@@ -205,13 +227,10 @@ private extension KeyedDecodingContainer {
         if let value = try? decode(Double.self, forKey: key) {
             return String(Int(value))
         }
-        throw DecodingError.typeMismatch(
-            String.self,
-            DecodingError.Context(
-                codingPath: codingPath + [key],
-                debugDescription: "Expected String/Int/Double for key '\(key.stringValue)'"
-            )
-        )
+        if let value = try? decode(Bool.self, forKey: key) {
+            return String(value)
+        }
+        return nil
     }
 
     func decodeIntFlexible(forKey key: Key) throws -> Int {
@@ -238,7 +257,27 @@ private extension KeyedDecodingContainer {
         if (try? decodeNil(forKey: key)) == true {
             return nil
         }
-        return try decodeIntFlexible(forKey: key)
+        return try? decodeIntFlexible(forKey: key)
+    }
+
+    func decodeBoolFlexibleIfPresent(forKey key: Key) throws -> Bool? {
+        if let value = try? decode(Bool.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return value != 0
+        }
+        if let value = try? decode(String.self, forKey: key) {
+            switch value.lowercased() {
+            case "true", "1", "y", "yes":
+                return true
+            case "false", "0", "n", "no":
+                return false
+            default:
+                return nil
+            }
+        }
+        return nil
     }
 }
 

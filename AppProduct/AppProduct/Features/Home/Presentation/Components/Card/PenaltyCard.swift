@@ -66,6 +66,12 @@ struct PenaltyCard: View, Equatable {
         .clipped()
         .clipShape(.rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
         .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .onAppear {
+            clampCurrentIndex()
+        }
+        .onChange(of: generations.count) { _, _ in
+            clampCurrentIndex()
+        }
     }
 
     // MARK: - Function
@@ -132,6 +138,14 @@ struct PenaltyCard: View, Equatable {
                 }
             }
     }
+
+    private func clampCurrentIndex() {
+        guard !generations.isEmpty else {
+            currentIndex = 0
+            return
+        }
+        currentIndex = min(max(currentIndex, 0), generations.count - 1)
+    }
 }
 
 /// 기수 선택 탭 바
@@ -154,8 +168,12 @@ fileprivate struct GenTabBar: View {
     
     // MARK: - Body
     var body: some View {
+        let titleText = generations.indices.contains(currentIndex)
+            ? "\(generations[currentIndex])th 활동 상태"
+            : "활동 상태"
+
         HStack(spacing: DefaultSpacing.spacing16) {
-            Text("\(generations[currentIndex])th 활동 상태")
+            Text(titleText)
                 .appFont(.footnoteEmphasis, color: .indigo600)
                 .padding(Constants.textPadding)
                 .background(.indigo100, in: .capsule)
