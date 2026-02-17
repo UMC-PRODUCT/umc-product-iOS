@@ -47,43 +47,60 @@ enum MyPageMockData {
 
     static let posts: [CommunityItemModel] = [
         .init(
+            postId: 1,
             userId: 1001,
-            category: .hobby,
+            category: .free,
             title: "스터디원 모집합니다",
             content: "Spring Boot 스터디원 모집합니다.",
             profileImage: nil,
             userName: "홍길동",
-            part: "iOS",
-            createdAt: "2시간 전",
+            part: .front(type: .ios),
+            createdAt: Date(),
             likeCount: 42,
             commentCount: 5,
-            isLiked: true
+            scrapCount: 0,
+            isLiked: true,
+            isAuthor: true,
+            lightningInfo: nil
         ),
         .init(
+            postId: 1,
             userId: 1001,
             category: .question,
             title: "SwiftUI 네비게이션 질문",
             content: "NavigationStack 경로 분리 패턴을 어떻게 관리하시나요?",
             profileImage: nil,
             userName: "홍길동",
-            part: "iOS",
-            createdAt: "1일 전",
+            part: .front(type: .ios),
+            createdAt: Date(),
             likeCount: 13,
             commentCount: 4,
-            isLiked: false
+            scrapCount: 0,
+            isLiked: false,
+            isAuthor: true,
+            lightningInfo: nil
         ),
         .init(
+            postId: 1,
             userId: 1001,
-            category: .impromptu,
+            category: .lighting,
             title: "번개: 강남역 커피챗",
             content: "iOS 아키텍처 얘기하실 분 모집합니다.",
             profileImage: nil,
             userName: "홍길동",
-            part: "iOS",
-            createdAt: "3일 전",
+            part: .front(type: .ios),
+            createdAt: Date(),
             likeCount: 7,
             commentCount: 1,
-            isLiked: true
+            scrapCount: 0,
+            isLiked: true,
+            isAuthor: true,
+            lightningInfo: .init(
+                meetAt: Date(),
+                location: "서울 서초구 강남대로69길 8",
+                maxParticipants: 5,
+                openChatUrl: "https://open.kakao.com/o/sxxxxxx"
+            )
         )
     ]
 

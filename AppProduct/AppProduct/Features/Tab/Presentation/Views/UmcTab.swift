@@ -89,7 +89,7 @@ struct UmcTab: View {
         case .activity:
             ActivityView()
         case .community:
-            CommunityView()
+            CommunityView(container: di)
         case .mypage:
             MyPageView()
         }

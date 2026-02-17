@@ -21,3 +21,12 @@ struct DeleteCommentQuery: Encodable {
         ["challengerId": challengerId]
     }
 }
+
+// MARK: - Post Comment
+
+/// 댓글 작성 DTO
+/// `POST /api/v1/posts/{postId}/comments`
+struct PostCommentRequest: Encodable {
+    let content: String
+    let parentId: Int
+}

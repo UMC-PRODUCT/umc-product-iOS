@@ -11,20 +11,30 @@ struct CommunityPostCard: View {
     // MARK: - Properties
 
     private let model: CommunityItemModel
-    @State private var isLiked: Bool
+    private let onLikeTapped: () async -> Void
+    private let onScrapTapped: () async -> Void
 
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
         static let profileSize: CGSize = .init(width: 40, height: 40)
         static let contentPadding: EdgeInsets = .init(top: 8, leading: 0, bottom: 12, trailing: 0)
         static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
+        static let tagPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
+        static let kakaoSize: CGSize = .init(width: 40, height: 40)
+        static let kakaoRadius: CGFloat = 12
+        static let kakaoPadding: EdgeInsets = .init(top: 12, leading: 16, bottom: 12, trailing: 16)
     }
 
     // MARK: - Init
 
-    init(model: CommunityItemModel) {
+    init(
+        model: CommunityItemModel,
+        onLikeTapped: @escaping () async -> Void = {},
+        onScrapTapped: @escaping () async -> Void = {}
+    ) {
         self.model = model
-        self._isLiked = State(initialValue: model.isLiked)
+        self.onLikeTapped = onLikeTapped
+        self.onScrapTapped = onScrapTapped
     }
 
     // MARK: - Body
@@ -42,6 +52,10 @@ struct CommunityPostCard: View {
                 .appFont(.callout, color: .grey700)
                 .padding(Constant.contentPadding)
 
+            if model.category == .lighting {
+                openChatSection
+            }
+            
             buttonSection
         }
         .padding(Constant.mainPadding)
@@ -56,9 +70,12 @@ struct CommunityPostCard: View {
 
     private var topSection: some View {
         HStack {
-            CommunityTagItem(title: model.category.text)
+            Text(model.category.text)
+                .appFont(.subheadline, color: .grey900)
+                .padding(Constant.tagPadding)
+                .glassEffect(.clear.tint(model.category.color))
             Spacer()
-            Text(model.createdAt)
+            Text(model.createdAt.timeAgoText)
                 .appFont(.footnote, color: .grey500)
         }
     }
@@ -66,44 +83,72 @@ struct CommunityPostCard: View {
     private var profileSection: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             // 프로필 이미지
-            if model.profileImage != nil {
-                // !!! - url 이미지 처리
-                Image(systemName: "heart")
-            } else {
-                Text(model.userName.prefix(1))
-                    .appFont(.body, color: .grey500)
-                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
-                    .background(.grey100, in: Circle())
-            }
+            RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileSize)
 
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                 Text(model.userName)
                     .appFont(.subheadlineEmphasis, color: .black)
-                Text(model.part)
+                Text(model.part.name)
                     .appFont(.footnote, color: .grey500)
             }
         }
     }
+    
+    private var openChatSection: some View {
+        Button(action: {
+            openChatLink()
+        }) {
+            HStack(spacing: DefaultSpacing.spacing16) {
+                Image(.kakaoIcon)
+                    .resizable()
+                    .frame(width: Constant.kakaoSize.width, height: Constant.kakaoSize.height)
+                    .clipShape(RoundedRectangle(cornerRadius: Constant.kakaoRadius))
+                    .shadow1()
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                    Text("오픈채팅방으로 이동")
+                        .appFont(.subheadlineEmphasis, color: .black)
+                    Text("참여 전 소통하기")
+                        .appFont(.footnote, color: .grey500)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.grey500)
+            }
+            .padding(Constant.kakaoPadding)
+        }
+        .glassEffect(.clear.interactive())
+    }
 
     private var buttonSection: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
-            makeButton(type: .like, isSelected: isLiked) {
-                isLiked.toggle()
-                // TODO: 좋아요 API
+            makeButton(type: .like, isSelected: model.isLiked) {
+                Task {
+                    await onLikeTapped()
+                }
             }
-            makeButton(type: .comment, isSelected: false) {
-                // TODO: 댓글
+            makeButton(type: .scrap, isSelected: model.isScrapped) {
+                Task {
+                    await onScrapTapped()
+                }
             }
         }
     }
 
     // MARK: - Function
 
+    /// 오픈채팅 링크 열기
+    private func openChatLink() {
+        guard let urlString = model.lightningInfo?.openChatUrl,
+              let url = URL(string: urlString) else { return }
+
+        UIApplication.shared.open(url)
+    }
+
     private func makeButton(type: CommunityButtonType, isSelected: Bool, action: @escaping () -> Void) -> some View {
         let count: Int = {
             switch type {
             case .like: return model.likeCount
-            case .comment: return model.commentCount
+            case .scrap: return model.scrapCount
             }
         }()
 

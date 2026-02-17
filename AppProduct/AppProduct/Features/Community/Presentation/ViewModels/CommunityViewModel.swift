@@ -10,16 +10,143 @@ import Foundation
 @Observable
 class CommunityViewModel {
     // MARK: - Property
+    
+    private let container: DIContainer
+    private let useCaseProvider: CommunityUseCaseProviding
 
     var searchText: String = ""
-    var isRecruiting: Bool = false
     var selectedMenu: CommunityMenu = .all
 
-    var items: Loadable<[CommunityItemModel]> = .loaded(mockItems)
+    private(set) var items: Loadable<[CommunityItemModel]> = .idle
+    private(set) var isLoadingMore: Bool = false
+
+    /// 페이지네이션
+    private var currentPage: Int = 0
+    private var hasNext: Bool = true
+    private let pageSize: Int = 10
+    
+    // MARK: - Computed Properties
+    
+    var filteredItems: [CommunityItemModel] {
+        guard case .loaded(let allItems) = items else { return [] }
+        
+        var filtered = allItems
+        
+        // 메뉴
+        if selectedMenu != .all {
+            switch selectedMenu {
+            case .all: break
+            case .question:
+                filtered = filtered.filter { $0.category == .question }
+            case .party:
+                filtered = filtered.filter { $0.category == .lighting }
+            case .fame: break
+            }
+        }
+        
+        // 검색
+        if !searchText.isEmpty {
+            filtered = filtered.filter { item in
+                item.title.localizedCaseInsensitiveContains(searchText) ||
+                item.content.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+        
+        return filtered
+    }
+    
+    // MARK: - Init
+    
+    init(container: DIContainer) {
+        self.container = container
+        self.useCaseProvider = container.resolve(CommunityUseCaseProviding.self)
+    }
+    
+    // MARK: - Function
+
+    /// 초기 데이터 로드
+    @MainActor
+    func fetchInitialIfNeeded() async {
+        if case .loaded = items {
+            return
+        }
+        await fetchFirstPage()
+    }
+
+    /// 새로고침
+    @MainActor
+    func refresh() async {
+        await fetchFirstPage()
+    }
+
+    /// 무한 스크롤 트리거
+    @MainActor
+    func loadMoreIfNeeded(currentItem: CommunityItemModel) async {
+        guard case .loaded(let allItems) = items,
+              hasNext,
+              !isLoadingMore,
+              allItems.last?.id == currentItem.id else {
+            return
+        }
+
+        isLoadingMore = true
+        defer { isLoadingMore = false }
+
+        do {
+            let nextPage = currentPage + 1
+            let query = PostListQuery(
+                category: selectedMenu.toCategoryType(),
+                page: nextPage,
+                size: pageSize
+            )
+
+            let (newItems, nextPageExists) = try await useCaseProvider.fetchCommunityItemsUseCase.execute(query: query)
+
+            currentPage = nextPage
+            hasNext = nextPageExists
+            items = .loaded(allItems + newItems)
+        } catch {
+            print("[Community] pagination failed: \(error)")
+        }
+    }
+
+    #if DEBUG
+    /// 디버그 모드에서 UI 상태를 시드하기 위한 메서드
+    func seedForDebugState(
+        items: Loadable<[CommunityItemModel]>,
+        selectedMenu: CommunityMenu
+    ) {
+        self.items = items
+        self.selectedMenu = selectedMenu
+    }
+    #endif
 }
 
-// MARK: - Mock
-private let mockItems: [CommunityItemModel] = [
-    .init(userId: 1, category: .hobby, title: "질문 있습니다", content: "질문 있어요!", profileImage: nil, userName: "김서버", part: "Server", createdAt: "방금 전", likeCount: 5, commentCount: 3),
-    .init(userId: 1, category: .question, title: "질문 있습니다", content: "질문 있어요!", profileImage: nil, userName: "김서버", part: "Server", createdAt: "방금 전", likeCount: 5, commentCount: 3),
-]
+// MARK: - Private Function
+
+private extension CommunityViewModel {
+    @MainActor
+    func fetchFirstPage() async {
+        items = .loading
+        currentPage = 0
+        hasNext = true
+
+        do {
+            let query = PostListQuery(
+                category: selectedMenu.toCategoryType(),
+                page: 0,
+                size: pageSize
+            )
+
+            let (fetchedItems, nextPageExists) = try await useCaseProvider.fetchCommunityItemsUseCase.execute(query: query)
+
+            currentPage = 0
+            hasNext = nextPageExists
+            items = .loaded(fetchedItems)
+        } catch let error as AppError {
+            items = .failed(error)
+        } catch {
+            items = .failed(.unknown(message: error.localizedDescription))
+        }
+    }
+}

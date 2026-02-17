@@ -13,7 +13,7 @@ struct CommunityFameItemModel: Equatable, Identifiable {
     let university: String
     let profileImage: String?
     let userName: String
-    let part: String
+    let part: UMCPartType
     let workbookTitle: String
     let content: String
 }

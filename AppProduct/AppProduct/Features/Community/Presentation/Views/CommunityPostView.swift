@@ -10,12 +10,39 @@ import SwiftUI
 struct CommunityPostView: View {
     // MARK: - Properties
     
+    @State var vm: CommunityPostViewModel
+
     @Environment(ErrorHandler.self) var errorHandler
-    @State var vm = CommunityPostViewModel()
-    
+    @Environment(\.dismiss) var dismiss
+    private let mode: PostMode
+
+    enum PostMode {
+        case create
+        case edit
+    }
+
     private enum Constants {
         static let contentMinHeight: CGFloat = 200
         static let participantsRange: ClosedRange<Int> = 2...20
+        static let createLoadingMessage: String = "게시글 생성 중입니다."
+        static let editLoadingMessage: String = "게시글 수정 중입니다."
+    }
+
+    // MARK: - Init
+    init(
+        container: DIContainer,
+        errorHandler: ErrorHandler,
+        mode: PostMode = .create,
+        prefill: CommunityItemModel? = nil
+    ) {
+        self.mode = mode
+        let viewModel = CommunityPostViewModel(
+            container: container, errorHandler: errorHandler
+        )
+        if let prefill {
+            viewModel.applyPrefill(from: prefill)
+        }
+        self._vm = .init(wrappedValue: viewModel)
     }
     
     // MARK: - Body
@@ -23,96 +50,141 @@ struct CommunityPostView: View {
         Form {
             // 1. 카테고리
             Section {
-                categorySection
+                categorySection(vm: vm)
             }
             
             // 2. 번개폼
-            if vm.selectedCategory == .impromptu {
+            if vm.selectedCategory == .lighting {
                 // 2-1. 날짜 및 시간
                 Section {
-                    dateSection
-                    timeSection
+                    dateSection(vm: vm)
+                    timeSection(vm: vm)
                 }
                 
                 // 2-2. 최대 인원
                 Section {
-                    maxParticipantsSection
+                    maxParticipantsSection(vm: vm)
                 }
                 
                 // 2-3. 장소
                 Section {
-                    PlaceSelectView(place: $vm.selectedPlace)
+                    PlaceSelectView(place: Binding(
+                        get: { vm.selectedPlace }, set: { vm.selectedPlace = $0 }
+                    ))
                 }
                 
                 // 2-4. 오픈채팅 링크
                 Section {
-                    linkSection
+                    linkSection(vm: vm)
                 }
             }
             
             // 3. 제목 및 내용
             Section {
-                ArticleTextField(placeholder: .title, text: $vm.titleText)
-                ArticleTextField(placeholder: .content, text: $vm.contentText)
+                ArticleTextField(placeholder: .title, text: Binding(
+                    get: { vm.titleText }, set: { vm.titleText = $0 }
+                ))
+                ArticleTextField(placeholder: .content, text: Binding(
+                    get: { vm.contentText }, set: { vm.contentText = $0 }
+                ))
                     .frame(minHeight: Constants.contentMinHeight, alignment: .top)
             }
         }
         .scrollDismissesKeyboard(.immediately)
-        .navigation(naviTitle: .communityPost, displayMode: .inline)
+        .navigation(
+            naviTitle: vm.isEditMode ? .communityPostEdit : .communityPost,
+            displayMode: .inline
+        )
         .toolbar {
-            ToolBarCollection.CommunityPostDoneBtn(
-                isEnabled: vm.isValid,
-                action: {
-                    // TODO: 글 작성 API 연결
+            ToolBarCollection.ConfirmBtn(action: {
+                Task {
+                    await vm.submit()
                 }
-            )
+            }, disable: !vm.isValid)
+        }
+        .overlay { submittingOverlay }
+        // 생성 성공 시 화면 자동 닫기
+        .onChange(of: vm.submitState) {
+            if case .loaded = vm.submitState {
+                dismiss()
+            }
         }
     }
     
     // MARK: - Subviews
     
-    private var categorySection: some View {
-        Picker("카테고리", selection: $vm.selectedCategory) {
+    private func categorySection(vm: CommunityPostViewModel) -> some View {
+        Picker("카테고리", selection: Binding(
+            get: { vm.selectedCategory }, set: { vm.selectedCategory = $0 }
+        )) {
             ForEach(CommunityItemCategory.allCases, id: \.self) { category in
                 Text(category.text)
             }
         }
     }
     
-    private var dateSection: some View {
+    private func dateSection(vm: CommunityPostViewModel) -> some View {
         DatePicker("날짜",
-                   selection: $vm.selectedDate,
+                   selection: Binding(
+                    get: { vm.selectedDate }, set: { vm.selectedDate = $0 }
+                   ),
                    displayedComponents: [.date])
             .datePickerStyle(.compact)
             .tint(.indigo500)
     }
     
-    private var timeSection: some View {
+    private func timeSection(vm: CommunityPostViewModel) -> some View {
         DatePicker("시간",
-                   selection: $vm.selectedDate,
+                   selection: Binding(
+                    get: { vm.selectedDate }, set: { vm.selectedDate = $0 }
+                   ),
                    displayedComponents: [.hourAndMinute])
             .tint(.indigo500)
     }
 
-    private var maxParticipantsSection: some View {
-        Stepper(value: $vm.maxParticipants, in: Constants.participantsRange) {
+    private func maxParticipantsSection(vm: CommunityPostViewModel) -> some View {
+        Stepper(value: Binding(
+            get: { vm.maxParticipants }, set: { vm.maxParticipants = $0 }
+        ), in: Constants.participantsRange) {
             Text("\(vm.maxParticipants)명")
                 .appFont(.body, color: .black)
         }
     }
 
-    private var linkSection: some View {
-        TextField("오픈채팅 링크를 입력하세요.", text: $vm.linkText)
+    private func linkSection(vm: CommunityPostViewModel) -> some View {
+        TextField("오픈채팅 링크를 입력하세요.", text: Binding(
+            get: { vm.linkText }, set: { vm.linkText = $0 }
+        ))
             .appFont(.callout)
             .keyboardType(.URL)
             .autocapitalization(.none)
             .autocorrectionDisabled()
     }
-}
-
-#Preview {
-    NavigationStack {
-        CommunityPostView()
+    
+    @ViewBuilder
+    private var submittingOverlay: some View {
+        if isSubmitting {
+            ZStack {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                Progress(
+                    progressColor: .white,
+                    message: mode == .edit ? Constants.editLoadingMessage : Constants.createLoadingMessage,
+                    messageColor: .white,
+                    size: .regular
+                )
+                .padding(24)
+            }
+            .allowsHitTesting(true)
+        }
     }
-    .environment(ErrorHandler())
+    
+    // MARK: - Helper
+    
+    private var isSubmitting: Bool {
+        if case .loading = vm.submitState {
+            return true
+        }
+        return false
+    }
 }

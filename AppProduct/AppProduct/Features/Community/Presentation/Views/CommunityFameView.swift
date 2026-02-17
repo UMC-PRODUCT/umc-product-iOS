@@ -9,17 +9,28 @@ import SwiftUI
 
 struct CommunityFameView: View {
     // MARK: - Properties
-
-    @State var vm: CommunityFameViewModel
+    
+    @Environment(\.di) private var di
+    @Environment(ErrorHandler.self) var errorHandler
+    
+    @State private var vm: CommunityFameViewModel
 
     private enum Constants {
         static let weekPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
+        /// 실패 상태 문구
+        static let failedTitle: String = "불러오지 못했어요"
+        static let failedSystemImage: String = "exclamationmark.triangle"
+        static let failedDescription: String = "목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+        /// 재시도 버튼 문구/크기
+        static let retryTitle: String = "다시 시도"
+        static let retryMinimumWidth: CGFloat = 72
+        static let retryMinimumHeight: CGFloat = 20
     }
-
+    
     // MARK: - Init
-
-    init() {
-        self._vm = .init(wrappedValue: .init())
+    
+    init(container: DIContainer) {
+        _vm = State(initialValue: CommunityFameViewModel(container: container))
     }
 
     // MARK: - Body
@@ -27,53 +38,51 @@ struct CommunityFameView: View {
     var body: some View {
         Group {
             switch vm.fameItems {
-            case .idle:
-                Color.clear.task {
-                    print("hello")
-                }
-            case .loading:
-                ProgressView()
+            case .idle, .loading:
+                ProgressView("명예의전당 로딩 중...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
-                listSection
+                listSection(vm: vm)
             case .failed:
-                Color.clear
+                failedContent()
             }
+        }
+        .task {
+            #if DEBUG
+            if let debugState = CommunityFameDebugState.fromLaunchArgument() {
+                debugState.apply(to: vm)
+                return
+            }
+            #endif
+
+            await vm.fetchFameItems(query: .init(week: 1, school: nil, part: nil))
         }
         .toolbar {
             ToolBarCollection.CommunityWeekFilter(
                 weeks: vm.availableWeeks,
-                selection: $vm.selectedWeek
+                selection: Binding(
+                    get: { vm.selectedWeek }, set: { vm.selectedWeek = $0 }
+                )
             )
             
             ToolBarCollection.CommunityUnivFilter(
-                selectedUniversity: $vm.selectedUniversity,
+                selectedUniversity: Binding(
+                    get: { vm.selectedUniversity }, set: { vm.selectedUniversity = $0 }
+                ),
                 universities: vm.availableUniversities
             )
             ToolBarCollection.CommunityPartFilter(
-                selectedPart: $vm.selectedPart,
+                selectedPart: Binding(
+                    get: { vm.selectedPart }, set: { vm.selectedPart = $0 }
+                ),
                 parts: vm.availableParts
             )
         }
     }
 
-    // MARK: - Section
+    // MARK: - SubViews
 
-    private var weekSection: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                ForEach(vm.availableWeeks, id: \.self) { week in
-                    ChipButton("\(week)주차", isSelected: vm.selectedWeek == week) {
-                        vm.selectWeek(week)
-                    }
-                    .buttonStyle(.fame)
-                }
-            }
-            .padding(Constants.weekPadding)
-        }
-        .scrollIndicators(.hidden)
-    }
-
-    private var listSection: some View {
+    private func listSection(vm: CommunityFameViewModel) -> some View {
         Group {
             if vm.groupedByUniversity.isEmpty {
                 emptyList
@@ -107,8 +116,20 @@ struct CommunityFameView: View {
             Text("매 주차가 종료되면 베스트 워크북이 선정됩니다.")
         }
     }
-}
-
-#Preview {
-    CommunityFameView()
+    
+    /// Failed - 데이터 로드 실패
+    private func failedContent() -> some View {
+        RetryContentUnavailableView(
+            title: Constants.failedTitle,
+            systemImage: Constants.failedSystemImage,
+            description: Constants.failedDescription,
+            retryTitle: Constants.retryTitle,
+            isRetrying: vm.fameItems.isLoading,
+            minRetryButtonWidth: Constants.retryMinimumWidth,
+            minRetryButtonHeight: Constants.retryMinimumHeight
+        ) {
+            await vm.fetchFameItems(query: .init(week: 1, school: nil, part: nil))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
 }

@@ -9,14 +9,14 @@ import SwiftUI
 
 enum CommunityButtonType {
     case like
-    case comment
+    case scrap
 
     var icon: String {
         switch self {
         case .like:
             return "heart"
-        case .comment:
-            return "bubble"
+        case .scrap:
+            return "bookmark"
         }
     }
 
@@ -24,8 +24,8 @@ enum CommunityButtonType {
         switch self {
         case .like:
             return "heart.fill"
-        case .comment:
-            return "bubble.fill"
+        case .scrap:
+            return "bookmark.fill"
         }
     }
 
@@ -33,8 +33,8 @@ enum CommunityButtonType {
         switch self {
         case .like:
             return .red.opacity(0.1)
-        case .comment:
-            return .blue.opacity(0.1)
+        case .scrap:
+            return .yellow500.opacity(0.1)
         }
     }
 
@@ -42,8 +42,8 @@ enum CommunityButtonType {
         switch self {
         case .like:
             return .red
-        case .comment:
-            return .indigo600
+        case .scrap:
+            return .yellow500
         }
     }
 }

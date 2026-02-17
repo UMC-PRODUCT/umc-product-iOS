@@ -7,31 +7,30 @@
 
 import SwiftUI
 
-enum CommunityItemCategory: Hashable, CaseIterable {
-    case question
-    case hobby
-    case impromptu
-    // TODO: 태그 추가 - [김미주] 26.01.08
+enum CommunityItemCategory: String, Hashable, CaseIterable, Codable {
+    case lighting = "LIGHTNING"
+    case question = "QUESTION"
+    case free = "FREE"
 
     var text: String {
         switch self {
+        case .lighting:
+            return "⚡️ 번개"
         case .question:
             return "🔥 질문"
-        case .hobby:
-            return "⚽️ 취미"
-        case .impromptu:
-            return "⚡️ 번개"
+        case .free:
+            return "💌 자유"
         }
     }
     
     var color: Color {
         switch self {
+        case .lighting:
+            return .yellow100
         case .question:
             return .red100
-        case .hobby:
+        case .free:
             return .indigo200
-        case .impromptu:
-            return .yellow100
         }
     }
 }

@@ -11,6 +11,10 @@ struct CommunityCommentItem: View, Equatable {
     // MARK: - Properties
 
     private let model: CommunityCommentModel
+    private let onDeleteTapped: () async -> Void
+    private let onReportTapped: () async -> Void
+
+    @State private var alertPrompt: AlertPrompt?
 
     private enum Constant {
         static let profileSize: CGSize = .init(width: 32, height: 32)
@@ -20,8 +24,14 @@ struct CommunityCommentItem: View, Equatable {
 
     // MARK: - Init
 
-    init(model: CommunityCommentModel) {
+    init(
+        model: CommunityCommentModel,
+        onDeleteTapped: @escaping () async -> Void = {},
+        onReportTapped: @escaping () async -> Void = {}
+    ) {
         self.model = model
+        self.onDeleteTapped = onDeleteTapped
+        self.onReportTapped = onReportTapped
     }
 
     static func == (lhs: CommunityCommentItem, rhs: CommunityCommentItem) -> Bool {
@@ -32,29 +42,41 @@ struct CommunityCommentItem: View, Equatable {
 
     var body: some View {
         HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
-            if model.profileImage != nil {
-                model.profileImage
-            } else {
-                Text(model.userName.prefix(1))
-                    .appFont(.body, color: .grey500)
-                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
-                    .background(.grey100, in: Circle())
-            }
+            RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileSize)
 
             bubbleSection
         }
+        .alertPrompt(item: $alertPrompt)
     }
 
     // MARK: - Section
 
     private var bubbleSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-            HStack {
+            HStack(spacing: DefaultSpacing.spacing8) {
                 Text(model.userName)
                     .appFont(.subheadlineEmphasis, color: .black)
-                Spacer()
-                Text(model.createdAt)
+                Text(model.createdAt.timeAgoText)
                     .appFont(.footnote, color: .grey500)
+                Spacer()
+                Menu {
+                    if model.isAuthor {
+                        Button(action: {
+                            showDeleteAlert()
+                        }) {
+                            Label("삭제", systemImage: "trash")
+                        }
+                    } else {
+                        Button(action: {
+                            showReportAlert()
+                        }) {
+                            Label("신고", systemImage: "light.beacon.max.fill")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .foregroundStyle(.grey500)
+                }
             }
             Text(model.content)
                 .appFont(.subheadline, color: .grey700)
@@ -62,4 +84,42 @@ struct CommunityCommentItem: View, Equatable {
         .padding(Constant.bubblePadding)
         .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.bubbleRadius))
     }
+
+    // MARK: - Function
+
+    /// 삭제 확인 Alert 표시
+    private func showDeleteAlert() {
+        alertPrompt = AlertPrompt(
+            title: "댓글 삭제",
+            message: "댓글을 삭제하시겠습니까?",
+            positiveBtnTitle: "삭제",
+            positiveBtnAction: {
+                Task {
+                    await onDeleteTapped()
+                }
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
+    }
+
+    /// 신고 확인 Alert 표시
+    private func showReportAlert() {
+        alertPrompt = AlertPrompt(
+            title: "댓글 신고",
+            message: "이 댓글을 신고하시겠습니까?",
+            positiveBtnTitle: "신고",
+            positiveBtnAction: {
+                Task {
+                    await onReportTapped()
+                }
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
+    }
+}
+
+#Preview {
+    CommunityCommentItem(model: .init(commentId: 1, userId: 1, profileImage: nil, userName: "김미주", content: "안녕하세요", createdAt: Date(), isAuthor: true))
 }

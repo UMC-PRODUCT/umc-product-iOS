@@ -65,7 +65,7 @@ struct CommunityItem: View, Equatable {
                 .glassEffect(.clear.tint(model.category.color))
 
             Spacer()
-            Text(model.createdAt)
+            Text(model.createdAt.timeAgoText)
                 .appFont(.footnote, color: .grey500)
         }
     }
@@ -91,17 +91,10 @@ struct CommunityItem: View, Equatable {
     private var bottomSection: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             // 프로필 이미지
-            if model.profileImage != nil {
-                // !!! - url 이미지 처리
-                Image(systemName: "heart")
-            } else {
-                Text(model.userName.prefix(1))
-                    .appFont(.caption1Emphasis, color: .grey500)
-                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
-                    .background(.grey100, in: Circle())
-            }
+            RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileSize)
+            
             // 이름 + 파트
-            Text("\(model.userName) • \(model.part)")
+            Text("\(model.userName) • \(model.part.name)")
 
             Spacer()
 
@@ -119,8 +112,4 @@ struct CommunityItem: View, Equatable {
         }
         .appFont(.footnote, color: .grey500)
     }
-}
-
-#Preview {
-    CommunityItem(model: .init(userId: 0, category: .hobby, title: "안녕하세요", content: "안녕하세요요용", profileImage: nil, userName: "제옹", part: "iOS", createdAt: "12123", likeCount: 1, commentCount: 1), action: {})
 }

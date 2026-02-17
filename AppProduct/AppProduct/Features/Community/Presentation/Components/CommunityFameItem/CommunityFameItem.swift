@@ -64,22 +64,14 @@ struct CommunityFameItem: View {
 
     private var profileSection: some View {
         HStack(spacing: DefaultSpacing.spacing16) {
-            if model.profileImage != nil {
-                // !!! - url 이미지 처리
-                Image(systemName: "heart")
-            } else {
-                Text(model.userName.prefix(1))
-                    .appFont(.callout, color: .grey900)
-                    .frame(width: Constant.profileCircleSize.width, height: Constant.profileCircleSize.height)
-                    .background(.grey100, in: Circle())
-            }
+            RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileCircleSize)
 
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
                 // 이름 + 파트
                 HStack(spacing: DefaultSpacing.spacing8) {
                     Text(model.userName)
                         .appFont(.calloutEmphasis, color: .grey900)
-                    Text(model.part)
+                    Text(model.part.name)
                         .appFont(.footnote, color: .grey600)
                         .padding(Constant.partTagPadding)
                         .background(.white, in: RoundedRectangle(cornerRadius: Constant.partTagRadius))
@@ -124,7 +116,7 @@ struct CommunityFameItem: View {
             university: "서울대학교",
             profileImage: nil,
             userName: "김멋사",
-            part: "Web",
+            part: .front(type: .web),
             workbookTitle: "React Todo List 만들기",
             content: "컴포넌트 분리가 매우 잘 되어있고, 상태 관리가 깔끔합니다."
         ),

@@ -42,18 +42,13 @@ struct MyPagePostResponseDTO: Codable {
     let authorId: Int
     let authorName: String
     let authorProfileImage: String?
+    let authorPart: UMCPartType
     let createdAt: String
     let commentCount: Int
     let likeCount: Int
     let isLiked: Bool
-    let lightningInfo: MyPageLightningInfoDTO?
-}
-
-struct MyPageLightningInfoDTO: Codable {
-    let meetAt: String
-    let location: String
-    let maxParticipants: Int
-    let openChatUrl: String
+    let isAuthor: Bool
+    let lightningInfo: LightningInfoDTO?
 }
 
 struct MyPagePostPageDTO<T: Codable>: Codable {

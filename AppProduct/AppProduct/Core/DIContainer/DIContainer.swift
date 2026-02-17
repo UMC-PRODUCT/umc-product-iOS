@@ -170,6 +170,7 @@ extension DIContainer {
         container.register(NavigationRouter.self) { NavigationRouter() }
         container.register(UserSessionManager.self) { UserSessionManager() }
         
+        print("URL 확인: \(Config.baseURL)")
         // MARK: - Network Infrastructure
         container.register(NetworkClient.self) {
             AuthSystemFactory.makeNetworkClient(
@@ -299,7 +300,6 @@ extension DIContainer {
             )
         }
         
-
         // MARK: - MyPage Feature
         container.register(MyPageRepositoryProtocol.self) {
             #if DEBUG && targetEnvironment(simulator)
@@ -315,6 +315,36 @@ extension DIContainer {
         container.register(MyPageUseCaseProviding.self) {
             MyPageUseCaseProvider(
                 repository: container.resolve(MyPageRepositoryProtocol.self)
+            )
+        }
+        
+        // MARK: - Community Feature
+        container.register(CommunityRepositoryProtocol.self) {
+            CommunityRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(CommunityPostRepositoryProtocol.self) {
+            CommunityPostRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(CommunityDetailRepositoryProtocol.self) {
+            CommunityDetailRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(CommunityUseCaseProviding.self) {
+            CommunityUseCaseProvider(
+                communityRepository: container.resolve(
+                    CommunityRepositoryProtocol.self
+                ),
+                communityPostRepository: container.resolve(
+                    CommunityPostRepositoryProtocol.self
+                ),
+                communityDetailRepository: container.resolve(
+                    CommunityDetailRepositoryProtocol.self
+                )
             )
         }
 

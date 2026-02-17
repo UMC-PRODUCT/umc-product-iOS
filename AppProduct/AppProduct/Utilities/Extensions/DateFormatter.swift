@@ -68,6 +68,17 @@ extension Date {
         formatted(.dateTime.year().month(.twoDigits).day(.twoDigits).weekday(.abbreviated))
             .replacingOccurrences(of: "/", with: ".")
     }
+    
+    /// "MM.dd (E)" 형식으로 변환 (예: "01.01 (토)")
+    func toMonthDayWithWeekDay() -> String {
+        formatted(.dateTime.month(.twoDigits).day(.twoDigits).weekday(.abbreviated))
+            .replacingOccurrences(of: "/", with: ".")
+    }
+    
+    /// "MM.dd (E) HH:mm" 형식으로 변환 (예: "01.01 (토) 19:00")
+    func toMonthDayWeekDayWithTime() -> String {
+        "\(self.toMonthDayWithWeekDay()) \(self.toHourMinutes())"
+    }
 
     // MARK: - Helper
 }
