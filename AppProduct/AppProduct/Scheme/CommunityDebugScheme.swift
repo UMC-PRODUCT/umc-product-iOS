@@ -278,21 +278,21 @@ enum CommunityFameDebugState: String {
                 fameItems: .loading,
                 selectedWeek: 1,
                 selectedUniversity: "전체",
-                selectedPart: "전체"
+                selectedPart: nil
             )
         case .loaded:
             viewModel.seedForDebugState(
                 fameItems: .loaded(Self.fameItems),
                 selectedWeek: 1,
                 selectedUniversity: "전체",
-                selectedPart: "전체"
+                selectedPart: nil
             )
         case .failed:
             viewModel.seedForDebugState(
                 fameItems: .failed(.unknown(message: "명예의전당 목록을 불러오지 못했습니다.")),
                 selectedWeek: 1,
                 selectedUniversity: "전체",
-                selectedPart: "전체"
+                selectedPart: nil
             )
         }
     }

@@ -69,7 +69,7 @@ struct CommunityFameView: View {
             )
             ToolBarCollection.CommunityPartFilter(
                 selectedPart: $vm.selectedPart,
-                parts: vm.availableParts
+                parts: UMCPartType.allCases
             )
         }
     }
