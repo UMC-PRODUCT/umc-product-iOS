@@ -192,6 +192,18 @@ extension DIContainer {
             )
         }
         
+        // MARK: - Common Authorization
+        container.register(AuthorizationRepositoryProtocol.self) {
+            AuthorizationRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        container.register(AuthorizationUseCaseProtocol.self) {
+            AuthorizationUseCase(
+                repository: container.resolve(AuthorizationRepositoryProtocol.self)
+            )
+        }
+        
         // MARK: - Token Store
         container.register(TokenStore.self) {
             KeychainTokenStore()

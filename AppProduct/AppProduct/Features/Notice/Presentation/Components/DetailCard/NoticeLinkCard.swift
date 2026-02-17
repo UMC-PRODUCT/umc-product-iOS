@@ -55,6 +55,8 @@ struct LinkIconPresenter: View {
     fileprivate enum Constants {
         static let linkIconSize: CGSize = .init(width: 20, height: 20)
         static let iconPadding: CGFloat = 10
+        static let iconTintColor: Color = .indigo500
+        static let iconBackgroundColor: Color = .indigo100
     }
     
     // MARK: - Body
@@ -62,11 +64,11 @@ struct LinkIconPresenter: View {
         Image(systemName: "link")
             .resizable()
             .frame(width: Constants.linkIconSize.width, height: Constants.linkIconSize.height)
-            .foregroundStyle(Color.grey100)
+            .foregroundStyle(Constants.iconTintColor)
             .padding(Constants.iconPadding)
             .background {
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                    .foregroundStyle(Color(.systemGray2))
+                    .foregroundStyle(Constants.iconBackgroundColor)
             }
     }
 }

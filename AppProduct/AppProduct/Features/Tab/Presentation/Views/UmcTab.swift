@@ -137,24 +137,13 @@ struct UmcTab: View {
         guard !didApplyDebugLaunchRoute else { return }
         didApplyDebugLaunchRoute = true
 
-        let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("--open-notice-detail-central") {
-            tabCase = .notice
-            let destination = NavigationDestination.notice(
-                .detail(detailItem: NoticeDetailMockData.sampleNoticeWithAll)
-            )
-            Task { @MainActor in
-                pathStore.appendNoticePathIfNeeded(destination)
-            }
+        guard let debugRoute = TabDebugLaunchRoute.fromLaunchArguments() else {
             return
         }
 
-        guard arguments.contains("--open-notice-editor") else { return }
-
-        tabCase = .notice
-        let destination = NavigationDestination.notice(.editor(mode: .create))
-        Task { @MainActor in
-            pathStore.appendNoticePathIfNeeded(destination)
+        switch debugRoute {
+        case .openNoticeTab:
+            tabCase = .notice
         }
         #endif
     }

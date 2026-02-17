@@ -49,6 +49,8 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
 
     /// 첨부 이미지 URL 목록
     let images: [String]
+    /// 첨부 이미지 원본 메타데이터 (수정 화면의 교체 API 구성에 사용)
+    var imageItems: [NoticeAttachmentImage] = []
     /// 첨부 링크 목록
     let links: [String]
     /// 첨부 투표
@@ -72,6 +74,12 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
             return .campus
         }
     }
+}
+
+/// 공지 첨부 이미지 메타데이터
+struct NoticeAttachmentImage: Equatable, Hashable, Identifiable {
+    let id: String
+    let url: String
 }
 
 

@@ -15,7 +15,20 @@ struct NoticeReadStatusButton: View {
     
     let confirmedCount: Int
     let totalCount: Int
+    let readRate: Double?
     let action: () -> Void
+
+    init(
+        confirmedCount: Int,
+        totalCount: Int,
+        readRate: Double? = nil,
+        action: @escaping () -> Void
+    ) {
+        self.confirmedCount = confirmedCount
+        self.totalCount = totalCount
+        self.readRate = readRate
+        self.action = action
+    }
     
     // MARK: - Constants
     
@@ -26,6 +39,9 @@ struct NoticeReadStatusButton: View {
     // MARK: - Computed Properties
     
     private var progress: Double {
+        if let readRate {
+            return min(max(readRate, 0), 1)
+        }
         guard totalCount > 0 else { return 0 }
         return Double(confirmedCount) / Double(totalCount)
     }
