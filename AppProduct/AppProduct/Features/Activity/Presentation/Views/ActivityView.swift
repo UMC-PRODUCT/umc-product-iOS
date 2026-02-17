@@ -83,6 +83,7 @@ struct ActivityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            .umcDefaultBackground()
             .onChange(of: userSession.currentActivityMode) { _, _ in
                 selectedSection = nil
             }

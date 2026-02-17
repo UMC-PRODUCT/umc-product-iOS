@@ -79,6 +79,7 @@ struct CommunityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            .umcDefaultBackground()
         }
     }
 

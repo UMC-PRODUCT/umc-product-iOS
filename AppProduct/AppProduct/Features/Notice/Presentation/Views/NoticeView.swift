@@ -97,7 +97,7 @@ struct NoticeView: View {
             .onDisappear {
                 searchTask?.cancel()
             }
-            .background(.white)
+            .umcDefaultBackground()
         }
     }
 

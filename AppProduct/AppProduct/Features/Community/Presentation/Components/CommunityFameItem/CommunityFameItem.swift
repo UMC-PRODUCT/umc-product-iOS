@@ -7,24 +7,11 @@
 
 import SwiftUI
 
-// MARK: - Constant
-
-private enum Constant {
-    static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
-    // profile
-    static let profileCircleSize: CGSize = .init(width: 40, height: 40)
-    static let partTagPadding: EdgeInsets = .init(top: 2, leading: 8, bottom: 2, trailing: 8)
-    static let partTagRadius: CGFloat = 8
-    // feedback
-    static let feedbackPadding: EdgeInsets = .init(top: 8, leading: 8, bottom: 8, trailing: 8)
-    static let feedbackRadius: CGFloat = 10
-}
-
 // MARK: - CommunityFameItem
 
 /// 커뮤니티탭 - 명예의전당 리스트
 
-struct CommunityFameItem: View {
+struct CommunityFameItem: View, Equatable {
     // MARK: - Properties
 
     private let model: CommunityFameItemModel
@@ -32,6 +19,38 @@ struct CommunityFameItem: View {
 
     static func == (lhs: CommunityFameItem, rhs: CommunityFameItem) -> Bool {
         lhs.model == rhs.model
+    }
+    
+    
+    // MARK: - Constant
+
+    private enum Constant {
+        static let profileCircleSize: CGSize = .init(width: 44, height: 44)
+        static let cardBorderRadius: CGFloat = 40
+        static let cardBorderWidth: CGFloat = 1
+        static let cardBorderOpacity: Double = 0.85
+
+        static let partTagPadding: EdgeInsets = .init(top: 4, leading: 10, bottom: 4, trailing: 10)
+        static let partTagConcentricRadius: Edge.Corner.Style = 20
+        static let partTagBackgroundOpacity: Double = 0.14
+
+        static let buttonPadding: EdgeInsets = .init(top: 12, leading: 8, bottom: 12, trailing: 8)
+        static let buttonLabelSpacing: CGFloat = 2
+
+        static let feedbackPadding: EdgeInsets = .init(top: 14, leading: 12, bottom: 14, trailing: 12)
+        static let feedbackConcentricRadius: Edge.Corner.Style = 20
+        static let feedbackLineSpacing: CGFloat = 2
+        static let feedbackGlassTintOpacity: Double = 0.12
+        static let feedbackBorderOpacity: Double = 0.85
+        static let feedbackBorderWidth: CGFloat = 1
+        static let feedbackShadowOpacity: Double = 0.05
+        static let feedbackShadowRadius: CGFloat = 6
+        static let feedbackShadowY: CGFloat = 2
+        static let feedbackGradientColors: [Color] = [
+            .white.opacity(0.96),
+            .indigo500.opacity(0.035),
+            .grey100.opacity(0.92)
+        ]
     }
 
     // MARK: - Init
@@ -53,17 +72,20 @@ struct CommunityFameItem: View {
             feedbackSection
         }
         .padding(DefaultConstant.defaultCardPadding)
-        .background {
-            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
-                .fill(.white)
-                .glass()
+        .background(cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: Constant.cardBorderRadius)
+                .strokeBorder(
+                    Color.white.opacity(Constant.cardBorderOpacity),
+                    lineWidth: Constant.cardBorderWidth
+                )
         }
     }
 
     // MARK: - Section
 
     private var profileSection: some View {
-        HStack(spacing: DefaultSpacing.spacing16) {
+        HStack(alignment: .center, spacing: DefaultSpacing.spacing16) {
             RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileCircleSize)
 
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
@@ -71,16 +93,13 @@ struct CommunityFameItem: View {
                 HStack(spacing: DefaultSpacing.spacing8) {
                     Text(model.userName)
                         .appFont(.calloutEmphasis, color: .grey900)
-                    Text(model.part.name)
-                        .appFont(.footnote, color: .grey600)
-                        .padding(Constant.partTagPadding)
-                        .background(.white, in: RoundedRectangle(cornerRadius: Constant.partTagRadius))
-                        .overlay(RoundedRectangle(cornerRadius: Constant.partTagRadius).strokeBorder(.gray))
+                    partTag
                 }
 
                 // 워크북
                 Text(model.workbookTitle)
                     .appFont(.subheadline, color: .gray)
+                    .lineLimit(1)
             }
         }
     }
@@ -88,24 +107,70 @@ struct CommunityFameItem: View {
     // 보기 버튼
     private var btnSection: some View {
         Button(action: action) {
-            HStack {
-                Image(systemName: "square.and.arrow.up")
-                Text("보기")
-            }
+            Label("보기", systemImage: "square.and.arrow.up")
+                .appFont(.subheadline, color: .indigo500)
+                .padding(Constant.buttonPadding)
+                .labelIconToTitleSpacing(Constant.buttonLabelSpacing)
         }
-        .appFont(.subheadline, color: .grey900)
-        .padding(Constant.buttonPadding)
-        .glassEffect(.clear.interactive())
+        .buttonBorderShape(.capsule)
+        .glassEffect(.regular.tint(.grey100).interactive())
     }
 
     // 피드백 내용
     private var feedbackSection: some View {
         Text(model.content.forceCharWrapping)
-            .appFont(.subheadline, color: .grey700)
-            .lineLimit(2)
+            .appFont(.body, color: .grey900)
+            .lineSpacing(Constant.feedbackLineSpacing)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Constant.feedbackPadding)
-            .background(.grey100, in: RoundedRectangle(cornerRadius: Constant.feedbackRadius))
+            .background(feedbackBackground)
+            .glassEffect(
+                .clear.tint(.white.opacity(Constant.feedbackGlassTintOpacity)),
+                in: .rect(corners: .concentric(minimum: Constant.feedbackConcentricRadius), isUniform: true)
+            )
+            .overlay(
+                ConcentricRectangle(corners: .concentric(minimum: Constant.feedbackConcentricRadius), isUniform: true)
+                    .stroke(
+                        Color.white.opacity(Constant.feedbackBorderOpacity),
+                        lineWidth: Constant.feedbackBorderWidth
+                    )
+            )
+            .shadow(
+                color: .black.opacity(Constant.feedbackShadowOpacity),
+                radius: Constant.feedbackShadowRadius,
+                y: Constant.feedbackShadowY
+            )
+    }
+
+    private var partTag: some View {
+        Text(model.part.name)
+            .appFont(.footnoteEmphasis, color: model.part.color)
+            .padding(Constant.partTagPadding)
+            .background(
+                model.part.color.opacity(Constant.partTagBackgroundOpacity),
+                in: ConcentricRectangle(
+                    corners: .concentric(minimum: Constant.partTagConcentricRadius),
+                    isUniform: true
+                )
+            )
+            .glassEffect(
+                .clear,
+                in: .rect(corners: .concentric(minimum: Constant.partTagConcentricRadius), isUniform: true)
+            )
+    }
+
+    private var cardBackground: some View {
+        ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
+            .fill(.white)
+            .glass()
+    }
+
+    private var feedbackBackground: some View {
+        LinearGradient(
+            colors: Constant.feedbackGradientColors,
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 }
 

@@ -82,31 +82,45 @@ struct CommunityFameView: View {
 
     // MARK: - SubViews
 
+    @ViewBuilder
     private func listSection(vm: CommunityFameViewModel) -> some View {
-        Group {
-            if vm.groupedByUniversity.isEmpty {
-                emptyList
-            } else {
-                List {
-                    ForEach(vm.groupedByUniversity, id: \.university) { group in
-                        Section {
-                            ForEach(group.items) { item in
-                                CommunityFameItem(model: item) {
-                                    // TODO: 보기 버튼 액션
-                                }
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                            }
-                        } header: {
-                            Text(group.university)
-                                .appFont(.title3Emphasis, color: .black)
+        if vm.groupedByUniversity.isEmpty {
+            emptyList
+        } else {
+            fameList(vm)
+        }
+    }
+
+    private func fameList(_ vm: CommunityFameViewModel) -> some View {
+        List {
+            ForEach(vm.groupedByUniversity, id: \.university) { group in
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+                    sectionHeader(group.university)
+                        .padding(.horizontal, 4)
+
+                    ForEach(group.items) { item in
+                        CommunityFameItem(model: item) {
+                            // TODO: 보기 버튼 액션
                         }
+                        .equatable()
+                        .padding(.vertical, 4)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
+                .listRowInsets(.init(top: 6, leading: 16, bottom: 6, trailing: 16))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             }
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .umcDefaultBackground()
+    }
+
+    private func sectionHeader(_ university: String) -> some View {
+        Text(university)
+            .appFont(.title3Emphasis, color: .black)
     }
 
     private var emptyList: some View {

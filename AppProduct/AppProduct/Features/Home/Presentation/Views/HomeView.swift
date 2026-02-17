@@ -99,6 +99,7 @@ struct HomeView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            .umcDefaultBackground()
             // 화면 진입 시 홈 화면에 필요한 모든 데이터를 한 번에 로드합니다.
             .task {
                 #if DEBUG

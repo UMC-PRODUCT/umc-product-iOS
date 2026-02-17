@@ -85,6 +85,14 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "CommunityPermission(no Select)"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--community-force-permission"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "FameState(no Select)"
             isEnabled = "NO">
          </CommandLineArgument>

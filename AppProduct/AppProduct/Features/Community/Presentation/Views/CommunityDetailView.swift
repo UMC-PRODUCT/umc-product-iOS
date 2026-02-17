@@ -101,7 +101,7 @@ struct CommunityDetailView: View {
     // MARK: - Toolbar Actions
 
     private var toolbarActions: [ToolBarCollection.ToolbarTrailingMenu.ActionItem] {
-        if postItem.isAuthor {
+        if canEditOrDeletePost {
             // 본인 게시글: 수정/삭제
             return [
                 .init(title: "수정하기", icon: "pencil") {
@@ -119,6 +119,16 @@ struct CommunityDetailView: View {
                 }
             ]
         }
+    }
+
+    private var canEditOrDeletePost: Bool {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--community-force-permission") {
+            return true
+        }
+        #endif
+        return postItem.isAuthor
     }
 
     // MARK: - Alert Functions
