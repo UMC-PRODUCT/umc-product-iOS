@@ -42,7 +42,7 @@ struct CommunityView: View {
             get: { pathStore.communityPath },
             set: { pathStore.communityPath = $0 }
         )) {
-            if let vm = viewModel {
+            Group {
                 switch vm.selectedMenu {
                 case .all, .question, .party:
                     contentSection
