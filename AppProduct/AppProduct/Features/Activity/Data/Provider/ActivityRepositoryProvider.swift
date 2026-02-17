@@ -83,7 +83,9 @@ extension ActivityRepositoryProvider {
             challengerAttendanceRepository: attendanceRepo,
             operatorAttendanceRepository: attendanceRepo,
             sessionRepository: MockSessionRepository(),
-            activityRepository: MockActivityRepository(),
+            activityRepository: ActivityRepository(
+                attendanceRepository: attendanceRepo
+            ),
             studyRepository: MockStudyRepository(),
             memberRepository: MockMemberRepository()
         )

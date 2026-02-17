@@ -14,6 +14,15 @@ final class ChallengerAttendanceViewModel {
     private var errorHandler: ErrorHandler
     private var challengeAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
 
+    /// 출석 가능 일정 목록
+    private(set) var availableSchedules: Loadable<[AvailableAttendanceSchedule]> = .idle
+
+    /// 내 출석 이력
+    private(set) var myHistory: Loadable<[AttendanceHistoryItem]> = .idle
+
+    /// 재시도 중 여부 (RetryContentUnavailableView용)
+    private(set) var isRetrying: Bool = false
+
     // MARK: - Init
 
     init(
@@ -28,9 +37,37 @@ final class ChallengerAttendanceViewModel {
 
     // MARK: - Action
 
+    /// 출석 가능 일정 조회
+    @MainActor
+    func fetchAvailableSchedules() async {
+        availableSchedules = .loading
+        do {
+            let schedules = try await challengeAttendanceUseCase.fetchAvailableSchedules()
+            availableSchedules = .loaded(schedules)
+        } catch {
+            availableSchedules = .failed(.unknown(
+                message: error.localizedDescription
+            ))
+        }
+    }
+
+    /// 내 출석 이력 조회
+    @MainActor
+    func fetchMyHistory() async {
+        myHistory = .loading
+        do {
+            let history = try await challengeAttendanceUseCase.fetchMyHistory()
+            myHistory = .loaded(history)
+        } catch {
+            myHistory = .failed(.unknown(
+                message: error.localizedDescription
+            ))
+        }
+    }
+
     /// GPS 기반 출석 버튼 탭 처리
     @MainActor
-    func attendanceBtnTapped(userId: UserID, session: Session) async {
+    func attendanceBtnTapped(userId: UserID, session: Session, sheetId: Int) async {
         let info = session.info
         let timeWindow = currentTimeWindow(for: info)
 
@@ -53,7 +90,7 @@ final class ChallengerAttendanceViewModel {
 
         do {
             let result = try await challengeAttendanceUseCase.requestGPSAttendance(
-                sessionId: info.sessionId, userId: userId)
+                sessionId: info.sessionId, userId: userId, sheetId: sheetId)
             session.updateState(.loaded(result))
             session.markSubmitted()
 
@@ -68,7 +105,7 @@ final class ChallengerAttendanceViewModel {
                 feature: "Activity",
                 action: "attendanceBtnTapped",
                 retryAction: { [weak self] in
-                    await self?.attendanceBtnTapped(userId: userId, session: session)
+                    await self?.attendanceBtnTapped(userId: userId, session: session, sheetId: sheetId)
                 }
             ))
         }
@@ -79,7 +116,8 @@ final class ChallengerAttendanceViewModel {
     func attendanceReasonBtnTapped(
         userId: UserID,
         session: Session,
-        reason: String
+        reason: String,
+        sheetId: Int
     ) async {
         let info = session.info
         let timeWindow = currentTimeWindow(for: info)
@@ -89,7 +127,7 @@ final class ChallengerAttendanceViewModel {
 
         do {
             let result = try await challengeAttendanceUseCase.submitLateReason(
-                sessionId: info.sessionId, userId: userId, reason: reason)
+                sessionId: info.sessionId, userId: userId, reason: reason, sheetId: sheetId)
             session.updateState(.loaded(result))
 
         } catch let error as DomainError {
@@ -106,7 +144,8 @@ final class ChallengerAttendanceViewModel {
                     await self?.attendanceReasonBtnTapped(
                         userId: userId,
                         session: session,
-                        reason: reason
+                        reason: reason,
+                        sheetId: sheetId
                     )
                 }
             ))
@@ -120,8 +159,9 @@ final class ChallengerAttendanceViewModel {
     ///   - userId: 사용자 ID
     ///   - session: 출석 대상 세션
     ///   - reason: 출석 사유
+    ///   - sheetId: 구글 시트 ID
     @MainActor
-    func submitAttendanceReason(userId: UserID, session: Session, reason: String) async {
+    func submitAttendanceReason(userId: UserID, session: Session, reason: String, sheetId: Int) async {
         let info = session.info
         session.updateState(.loading)
 
@@ -129,7 +169,8 @@ final class ChallengerAttendanceViewModel {
             let result = try await challengeAttendanceUseCase.submitLateReason(
                 sessionId: info.sessionId,
                 userId: userId,
-                reason: reason
+                reason: reason,
+                sheetId: sheetId
             )
             session.updateState(.loaded(result))
             session.markSubmitted()
@@ -147,11 +188,22 @@ final class ChallengerAttendanceViewModel {
                     await self?.submitAttendanceReason(
                         userId: userId,
                         session: session,
-                        reason: reason
+                        reason: reason,
+                        sheetId: sheetId
                     )
                 }
             ))
         }
+    }
+
+    /// SessionID → sheetId 매핑 (available schedules 기반)
+    func sheetId(for sessionId: SessionID) -> Int? {
+        guard case .loaded(let schedules) = availableSchedules else {
+            return nil
+        }
+        return schedules.first(where: {
+            String($0.scheduleId) == sessionId.value
+        })?.sheetId
     }
 
     func isAttendanceAvailable(for session: Session) -> Bool {

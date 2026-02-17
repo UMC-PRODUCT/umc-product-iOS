@@ -105,6 +105,9 @@ struct ChallengerAttendanceSessionView: View {
             .bottom,
             DefaultConstant.defaultContentBottomMargins,
             for: .scrollContent)
+        .task {
+            await attendanceViewModel.fetchAvailableSchedules()
+        }
         .onDisappear {
             Task {
                 await attendanceViewModel.geofenceCleanup()

@@ -170,11 +170,16 @@ extension DIContainer {
         container.register(NavigationRouter.self) { NavigationRouter() }
         container.register(UserSessionManager.self) { UserSessionManager() }
         
-        print("URL 확인: \(Config.baseURL)")
+        // MARK: - Token Store (NetworkClient보다 먼저 등록)
+        container.register(TokenStore.self) {
+            KeychainTokenStore()
+        }
+
         // MARK: - Network Infrastructure
         container.register(NetworkClient.self) {
             AuthSystemFactory.makeNetworkClient(
-                baseURL: URL(string: Config.baseURL)!
+                baseURL: URL(string: Config.baseURL)!,
+                tokenStore: container.resolve(TokenStore.self)
             )
         }
         

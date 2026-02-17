@@ -10,9 +10,10 @@ import Foundation
 // MARK: - Protocol
 
 protocol OperatorAttendanceUseCaseProtocol {
-    func fetchPendingAttendances(sessionId: SessionID) async throws -> [Attendance]
-    func approveAttendance(attendanceId: AttendanceID) async throws -> Attendance
-    func approveAllAttendances(sessionId: SessionID) async throws -> [Attendance]
-    func rejectAttendance(attendanceId: AttendanceID, reason: String) async throws -> Attendance
-    func fetchSessionAttendances(sessionId: SessionID) async throws -> [Attendance]
+    /// 승인 대기 멤버 목록 조회
+    func fetchPendingAttendances(scheduleId: Int) async throws -> [PendingAttendanceRecord]
+    /// 개별 출석 승인
+    func approveAttendance(recordId: Int) async throws
+    /// 개별 출석 반려
+    func rejectAttendance(recordId: Int) async throws
 }

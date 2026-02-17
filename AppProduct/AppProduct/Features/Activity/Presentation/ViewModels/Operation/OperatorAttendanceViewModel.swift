@@ -31,6 +31,9 @@ final class OperatorAttendanceViewModel {
     /// 현재 선택된 세션 (위치 변경용)
     var selectedSession: Session?
 
+    /// 현재 처리 중인 멤버 ID (해당 버튼만 ProgressView 표시)
+    private(set) var processingMemberIds: Set<UUID> = []
+
     // MARK: - Init
 
     init(
@@ -50,21 +53,36 @@ final class OperatorAttendanceViewModel {
     func fetchSessions() async {
         sessionsState = .loading
 
-        // TODO: 실제 API 연동 시 구현 - [25.02.05] 이재원
-        // Mock 데이터로 임시 구현
-        #if DEBUG
-        do {
-            try await Task.sleep(for: .milliseconds(500))
-            let mockData = OperatorAttendancePreviewData.createMockSessions()
-            sessionsState = .loaded(mockData)
-        } catch is CancellationError {
-            // Task 취소 시 idle로 복구하여 재시도 가능하게 함
-            sessionsState = .idle
-            return
-        } catch {
-            sessionsState = .failed(.unknown(message: "데이터 로딩 실패"))
+        // TODO: 세션 목록도 API 연동 시 교체 - [25.02.17] 이재원
+        // 현재는 Mock 세션 구조 유지 + 실제 pending API 호출
+        let mockSessions = OperatorAttendancePreviewData.createMockSessions()
+        var updatedSessions: [OperatorSessionAttendance] = []
+
+        for session in mockSessions {
+            if let serverID = session.serverID,
+               let scheduleId = Int(serverID) {
+                // 실제 API로 pending 멤버 조회 시도
+                do {
+                    let records = try await useCase
+                        .fetchPendingAttendances(
+                            scheduleId: scheduleId
+                        )
+                    let members = records.map {
+                        OperatorPendingMember(from: $0)
+                    }
+                    updatedSessions.append(session.copyWith(
+                        pendingMembers: members
+                    ))
+                } catch {
+                    // API 실패 시 Mock 데이터 유지
+                    updatedSessions.append(session)
+                }
+            } else {
+                updatedSessions.append(session)
+            }
         }
-        #endif
+
+        sessionsState = .loaded(updatedSessions)
     }
 
     /// 위치 변경 버튼 탭
@@ -219,55 +237,119 @@ final class OperatorAttendanceViewModel {
     // MARK: - Private Action
 
     @MainActor
-    private func approveAttendance(memberId: UUID, sessionId: UUID) async {
+    private func approveAttendance(
+        memberId: UUID,
+        sessionId: UUID
+    ) async {
         alertPrompt = nil
+        guard case .loaded(let sessions) = sessionsState,
+              let session = sessions.first(where: {
+                  $0.id == sessionId
+              }),
+              let member = session.pendingMembers.first(where: {
+                  $0.id == memberId
+              }),
+              let recordId = Int(member.serverID ?? "")
+        else { return }
 
-        // TODO: 실제 API 연동 - [25.02.05] 이재원
-        // try await useCase.approveAttendance(attendanceId: AttendanceID(value: memberId))
+        processingMemberIds.insert(memberId)
+        defer { processingMemberIds.remove(memberId) }
 
-        // Mock: 해당 멤버 제거
-        updateSessionByRemovingMember(
-            memberId: memberId,
+        do {
+            try await useCase.approveAttendance(
+                recordId: recordId
+            )
+            updateSessionByRemovingMember(
+                memberId: memberId,
+                sessionId: sessionId,
+                isApproval: true
+            )
+        } catch {
+            errorHandler.handle(error, context: .init(
+                feature: "Activity",
+                action: "approveAttendance"
+            ))
+        }
+    }
+
+    @MainActor
+    private func rejectAttendance(
+        memberId: UUID,
+        sessionId: UUID
+    ) async {
+        alertPrompt = nil
+        guard case .loaded(let sessions) = sessionsState,
+              let session = sessions.first(where: {
+                  $0.id == sessionId
+              }),
+              let member = session.pendingMembers.first(where: {
+                  $0.id == memberId
+              }),
+              let recordId = Int(member.serverID ?? "")
+        else { return }
+
+        processingMemberIds.insert(memberId)
+        defer { processingMemberIds.remove(memberId) }
+
+        do {
+            try await useCase.rejectAttendance(
+                recordId: recordId
+            )
+            updateSessionByRemovingMember(
+                memberId: memberId,
+                sessionId: sessionId,
+                isApproval: false
+            )
+        } catch {
+            errorHandler.handle(error, context: .init(
+                feature: "Activity",
+                action: "rejectAttendance"
+            ))
+        }
+    }
+
+    @MainActor
+    private func approveAllAttendances(sessionId: UUID) async {
+        alertPrompt = nil
+        guard case .loaded(let sessions) = sessionsState,
+              let session = sessions.first(where: {
+                  $0.id == sessionId
+              })
+        else { return }
+
+        for member in session.pendingMembers {
+            guard let recordId = Int(member.serverID ?? "")
+            else { continue }
+            try? await useCase.approveAttendance(
+                recordId: recordId
+            )
+        }
+        updateSessionByRemovingAllMembers(
             sessionId: sessionId,
             isApproval: true
         )
     }
 
     @MainActor
-    private func rejectAttendance(memberId: UUID, sessionId: UUID) async {
+    private func rejectAllAttendances(sessionId: UUID) async {
         alertPrompt = nil
+        guard case .loaded(let sessions) = sessionsState,
+              let session = sessions.first(where: {
+                  $0.id == sessionId
+              })
+        else { return }
 
-        // TODO: 실제 API 연동 - [25.02.05] 이재원
-        // try await useCase.rejectAttendance(attendanceId: AttendanceID(value: memberId), reason: "")
-
-        // Mock: 해당 멤버 제거
-        updateSessionByRemovingMember(
-            memberId: memberId,
+        for member in session.pendingMembers {
+            guard let recordId = Int(member.serverID ?? "")
+            else { continue }
+            try? await useCase.rejectAttendance(
+                recordId: recordId
+            )
+        }
+        updateSessionByRemovingAllMembers(
             sessionId: sessionId,
             isApproval: false
         )
-    }
-
-    @MainActor
-    private func approveAllAttendances(sessionId: UUID) async {
-        alertPrompt = nil
-
-        // TODO: 실제 API 연동 - [25.02.05] 이재원
-        // try await useCase.approveAllAttendances(sessionId: SessionID(value: sessionId))
-
-        // Mock: 모든 멤버 제거 (출석 처리)
-        updateSessionByRemovingAllMembers(sessionId: sessionId, isApproval: true)
-    }
-
-    @MainActor
-    private func rejectAllAttendances(sessionId: UUID) async {
-        alertPrompt = nil
-
-        // TODO: 실제 API 연동 - [25.02.05] 이재원
-        // try await useCase.rejectAllAttendances(sessionId: SessionID(value: sessionId))
-
-        // Mock: 모든 멤버 제거 (거절 처리 - 출석 수 증가 없음)
-        updateSessionByRemovingAllMembers(sessionId: sessionId, isApproval: false)
     }
 
     @MainActor
@@ -277,11 +359,13 @@ final class OperatorAttendanceViewModel {
     ) async {
         alertPrompt = nil
 
-        // TODO: 실제 API 연동 - [25.02.07] 이재원
-        // let memberIds = members.map { AttendanceID(value: $0.id) }
-        // try await useCase.approveSelectedAttendances(attendanceIds: memberIds)
-
-        // Mock: 선택된 멤버들 제거 (출석 처리)
+        for member in members {
+            guard let recordId = Int(member.serverID ?? "")
+            else { continue }
+            try? await useCase.approveAttendance(
+                recordId: recordId
+            )
+        }
         updateSessionByRemovingSelectedMembers(
             memberIds: members.map(\.id),
             sessionId: sessionId,
@@ -296,11 +380,13 @@ final class OperatorAttendanceViewModel {
     ) async {
         alertPrompt = nil
 
-        // TODO: 실제 API 연동 - [25.02.07] 이재원
-        // let memberIds = members.map { AttendanceID(value: $0.id) }
-        // try await useCase.rejectSelectedAttendances(attendanceIds: memberIds)
-
-        // Mock: 선택된 멤버들 제거 (거절 처리 - 출석 수 증가 없음)
+        for member in members {
+            guard let recordId = Int(member.serverID ?? "")
+            else { continue }
+            try? await useCase.rejectAttendance(
+                recordId: recordId
+            )
+        }
         updateSessionByRemovingSelectedMembers(
             memberIds: members.map(\.id),
             sessionId: sessionId,
