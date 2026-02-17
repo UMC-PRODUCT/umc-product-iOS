@@ -10,6 +10,7 @@ import Foundation
 #if DEBUG
 enum CommunityDebugState: String {
     case loading
+    case loaded
     case loadedAll
     case loadedQuestion
     case loadedLightning
@@ -30,10 +31,16 @@ enum CommunityDebugState: String {
 
         if let index = arguments.firstIndex(of: "-communityDebugState"),
            arguments.indices.contains(index + 1) {
+            if arguments[index + 1] == CommunityDebugState.loaded.rawValue {
+                return .loadedAll
+            }
             return CommunityDebugState(rawValue: arguments[index + 1])
         }
 
         if let environmentValue = ProcessInfo.processInfo.environment["COMMUNITY_DEBUG_STATE"] {
+            if environmentValue == CommunityDebugState.loaded.rawValue {
+                return .loadedAll
+            }
             return CommunityDebugState(rawValue: environmentValue)
         }
 
@@ -45,6 +52,11 @@ enum CommunityDebugState: String {
         case .loading:
             viewModel.seedForDebugState(
                 items: .loading,
+                selectedMenu: .all
+            )
+        case .loaded:
+            viewModel.seedForDebugState(
+                items: .loaded(Self.allItems),
                 selectedMenu: .all
             )
         case .loadedAll:
