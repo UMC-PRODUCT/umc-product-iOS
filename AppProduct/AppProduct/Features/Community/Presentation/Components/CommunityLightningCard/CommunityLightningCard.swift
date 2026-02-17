@@ -50,7 +50,7 @@ struct CommunityLightningCard: View {
             case .location: return .orange500
             }
         }
-        
+    
         func content(from model: CommunityItemModel) -> String {
             guard let info = model.lightningInfo else { return "" }
             switch self {

@@ -8,12 +8,12 @@
 import Foundation
 
 struct CommentDTO: Codable {
-    let commentId: Int
-    let postId: Int
-    let challengerId: Int
+    let commentId: String
+    let postId: String
+    let challengerId: String
     let challengerName: String
     let challengerProfileImage: String?
-    let challengerPart: UMCPartType
+    let challengerPart: String
     let content: String
     let createdAt: String
     let isAuthor: Bool
@@ -22,8 +22,8 @@ struct CommentDTO: Codable {
 extension CommentDTO {
     func toCommentModel() -> CommunityCommentModel {
         return CommunityCommentModel(
-            commentId: commentId,
-            userId: challengerId,
+            commentId: Int(commentId) ?? 0,
+            userId: Int(challengerId) ?? 0,
             profileImage: challengerProfileImage,
             userName: challengerName,
             content: content,

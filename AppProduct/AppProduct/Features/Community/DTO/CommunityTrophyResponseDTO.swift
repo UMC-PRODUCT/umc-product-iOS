@@ -12,12 +12,13 @@ import Foundation
 /// 상장 목록 조회 응답 DTO
 /// `GET /api/v1/trophies`
 struct TrophyListResponse: Codable {
-    let trophyId: Int
-    let week: Int
+    let trophyId: String
+    let challengerId: String
+    let week: String
     let challengerName: String
-    let challengerProfileImage: String? // 요청
+    let challengerProfileImage: String
     let school: String
-    let part: UMCPartType
+    let part: String
     let title: String
     let content: String
     let url: String
@@ -26,11 +27,11 @@ struct TrophyListResponse: Codable {
 extension TrophyListResponse {
     func toFameItem() -> CommunityFameItemModel {
         CommunityFameItemModel(
-            week: week,
+            week: Int(week) ?? 0,
             university: school,
             profileImage: challengerProfileImage,
             userName: challengerName,
-            part: part,
+            part: UMCPartType(apiValue: part) ?? .pm,
             workbookTitle: title,
             content: content
         )

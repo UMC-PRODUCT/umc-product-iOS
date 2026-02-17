@@ -9,60 +9,54 @@ import Foundation
 
 // MARK: - 1. 공통 게시글 DTO (상세 조회용)
 struct PostDetailDTO: Codable {
-    let postId: Int
+    let postId: String
     let title: String
     let content: String
-    let category: CommunityItemCategory
-    let authorId: Int
+    let category: String
+    let authorId: String
     let authorName: String
     let authorProfileImage: String?
-    let authorPart: UMCPartType
-    let createdAt: String
-    let commentCount: Int
-    let likeCount: Int
-    let scrapCount: Int?
+    let authorPart: String
+    let lightningInfo: LightningInfoDTO?
+    let commentCount: String
+    let writeTime: String
+    let likeCount: String
     let isLiked: Bool
-    let isScrapped: Bool?
     let isAuthor: Bool
-    let lightningInfo: LightningInfoDTO
-
-    enum CodingKeys: String, CodingKey {
-            case postId, title, content, category, authorId, authorName, authorProfileImage, authorPart
-            case commentCount, likeCount, scrapCount, isLiked, isScrapped, isAuthor, lightningInfo
-            case createdAt = "writeTime"
-        }
+    let scrapCount: String
+    let isScrapped: Bool
 }
 
 // MARK: - 2. 리스트 내 개별 항목 DTO
 struct PostListItemDTO: Codable {
-    let postId: Int
+    let postId: String
     let title: String
     let content: String
-    let category: CommunityItemCategory
-    let authorId: Int
+    let category: String
+    let authorId: String
     let authorName: String
     let authorProfileImage: String?
-    let authorPart: UMCPartType
+    let authorPart: String
     let createdAt: String
-    let commentCount: Int
-    let likeCount: Int
+    let commentCount: String
+    let likeCount: String
     let isLiked: Bool
     let isAuthor: Bool
-    let lightningInfo: LightningInfoDTO
+    let lightningInfo: LightningInfoDTO?
 }
 
 // MARK: - 3. 공통 번개 정보
 struct LightningInfoDTO: Codable {
     let meetAt: String
     let location: String
-    let maxParticipants: Int
+    let maxParticipants: String
     let openChatUrl: String
     
     func toModel() -> CommunityLightningInfo {
         return CommunityLightningInfo(
             meetAt: ISO8601DateFormatter().date(from: meetAt) ?? Date(),
             location: location,
-            maxParticipants: maxParticipants,
+            maxParticipants: Int(maxParticipants) ?? 0,
             openChatUrl: openChatUrl
         )
     }
@@ -72,21 +66,21 @@ struct LightningInfoDTO: Codable {
 extension PostListItemDTO {
     func toCommunityItemModel() -> CommunityItemModel {
         return CommunityItemModel(
-            postId: postId,
-            userId: authorId,
-            category: category,
+            postId: Int(postId) ?? 0,
+            userId: Int(authorId) ?? 0,
+            category: CommunityItemCategory(apiValue: category) ?? .free,
             title: title,
             content: content,
             profileImage: authorProfileImage,
             userName: authorName,
-            part: authorPart,
+            part: UMCPartType(apiValue: authorPart) ?? .pm,
             createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
-            likeCount: likeCount,
-            commentCount: commentCount,
+            likeCount: Int(likeCount) ?? 0,
+            commentCount: Int(commentCount) ?? 0,
             scrapCount: 0,
             isLiked: isLiked,
             isAuthor: isAuthor,
-            lightningInfo: lightningInfo.toModel()
+            lightningInfo: lightningInfo?.toModel()
         )
     }
 }
@@ -95,21 +89,21 @@ extension PostListItemDTO {
 extension PostDetailDTO {
     func toCommunityItemModel() -> CommunityItemModel {
         return CommunityItemModel(
-            postId: postId,
-            userId: authorId,
-            category: category,
+            postId: Int(postId) ?? 0,
+            userId: Int(authorId) ?? 0,
+            category: CommunityItemCategory(apiValue: category) ?? .free,
             title: title,
             content: content,
             profileImage: authorProfileImage,
             userName: authorName,
-            part: authorPart,
-            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
-            likeCount: likeCount,
-            commentCount: commentCount,
-            scrapCount: scrapCount ?? 0,
+            part: UMCPartType(apiValue: authorPart) ?? .pm,
+            createdAt: ISO8601DateFormatter().date(from: writeTime) ?? Date(),
+            likeCount: Int(likeCount) ?? 0,
+            commentCount: Int(commentCount) ?? 0,
+            scrapCount: Int(scrapCount) ?? 0,
             isLiked: isLiked,
             isAuthor: isAuthor,
-            lightningInfo: lightningInfo.toModel()
+            lightningInfo: lightningInfo?.toModel()
         )
     }
 }

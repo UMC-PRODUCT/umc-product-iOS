@@ -33,4 +33,14 @@ enum CommunityItemCategory: String, Hashable, CaseIterable, Codable {
             return .indigo200
         }
     }
+    
+    /// 서버 API 문자열로부터 생성
+    init?(apiValue: String) {
+        switch apiValue {
+        case "LIGHTNING":        self = .lighting
+        case "QUESTION":      self = .question
+        case "FREE":  self = .free
+        default:            return nil
+        }
+    }
 }

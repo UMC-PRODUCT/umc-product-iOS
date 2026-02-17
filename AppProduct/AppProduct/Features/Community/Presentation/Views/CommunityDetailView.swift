@@ -84,6 +84,7 @@ struct CommunityDetailView: View {
             }
             .padding(Constant.mainPadding)
         }
+        .scrollDismissesKeyboard(.immediately)
         .navigation(naviTitle: .communityDetail, displayMode: .inline)
         .task {
             await vm.fetchComments()
@@ -224,7 +225,6 @@ struct CommunityDetailView: View {
             .glassEffect(.regular.tint(vm.commentText.isEmpty ? .clear : .indigo500))
         }
         .padding(Constant.bottomPadding)
-        .scrollDismissesKeyboard(.immediately)
     }
 
     // MARK: - Actions
