@@ -160,10 +160,10 @@ extension PostDetailDTO {
 // MARK: - 좋아요/스크랩
 struct CommunityLikeDTO: Codable {
     let liked: Bool
-    let likeCount: Int
+    let likeCount: String
 }
 
 struct CommunityScrapDTO: Codable {
     let scrapped: Bool
-    let scrapCount: Int
+    let scrapCount: String
 }

@@ -180,22 +180,25 @@ class CommunityDetailViewModel {
     /// 게시글 스크랩
     @MainActor
     func toggleScrap() async {
-        guard !isScrapToggling else { return }
+        guard !isScrapToggling, var item = postItem else { return }
         isScrapToggling = true
 
         // 낙관적 업데이트
-        let previousScrapState = postItem?.isScrapped ?? false
-        let previousScrapCount = postItem?.scrapCount ?? 0
-        postItem?.isScrapped.toggle()
-        postItem?.scrapCount += postItem?.isScrapped ?? false ? 1 : -1
+        let previousScrapState = item.isScrapped
+        let previousScrapCount = item.scrapCount
+        item.isScrapped.toggle()
+        item.scrapCount += item.isScrapped ? 1 : -1
+        postItem = item
 
         do {
-            try await useCaseProvider.postScrapUseCase.execute(postId: postItem?.postId ?? 0)
+            try await useCaseProvider.postScrapUseCase.execute(postId: item.postId)
             isScrapToggling = false
         } catch {
             // 실패 시 이전 상태로 롤백
-            postItem?.isScrapped = previousScrapState
-            postItem?.scrapCount = previousScrapCount
+            var rollbackItem = item
+            rollbackItem.isScrapped = previousScrapState
+            rollbackItem.scrapCount = previousScrapCount
+            postItem = rollbackItem
             isScrapToggling = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
@@ -210,22 +213,25 @@ class CommunityDetailViewModel {
     /// 게시글 좋아요
     @MainActor
     func toggleLike() async {
-        guard !isLikeToggling else { return }
+        guard !isLikeToggling, var item = postItem else { return }
         isLikeToggling = true
 
         // 낙관적 업데이트
-        let previousLikeState = postItem?.isLiked ?? false
-        let previousLikeCount = postItem?.likeCount ?? 0
-        postItem?.isLiked.toggle()
-        postItem?.likeCount += postItem?.isLiked ?? false ? 1 : -1
+        let previousLikeState = item.isLiked
+        let previousLikeCount = item.likeCount
+        item.isLiked.toggle()
+        item.likeCount += item.isLiked ? 1 : -1
+        postItem = item
 
         do {
-            try await useCaseProvider.postLikeUseCase.execute(postId: postItem?.postId ?? 0)
+            try await useCaseProvider.postLikeUseCase.execute(postId: item.postId)
             isLikeToggling = false
         } catch {
             // 실패 시 이전 상태로 롤백
-            postItem?.isLiked = previousLikeState
-            postItem?.likeCount = previousLikeCount
+            var rollbackItem = item
+            rollbackItem.isLiked = previousLikeState
+            rollbackItem.likeCount = previousLikeCount
+            postItem = rollbackItem
             isLikeToggling = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
