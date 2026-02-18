@@ -107,7 +107,7 @@ struct NoticeView: View {
     private var content: some View {
         switch viewModel.noticeItems {
         case .idle, .loading:
-            Progress(message: Constants.loadingMessage)
+            progressContent
         case .loaded(let noticeItem):
             noticeContent(noticeItem)
         case .failed:
@@ -123,6 +123,16 @@ struct NoticeView: View {
             availableContent(data)
         }
     }
+    
+    /// idle, loading
+    private var progressContent: some View {
+        VStack {
+            Spacer()
+            Progress(message: Constants.loadingMessage)
+            Spacer()
+        }
+    }
+    
     
     /// Loaded - 데이터가 있을 때
     private func availableContent(_ data: [NoticeItemModel]) -> some View {

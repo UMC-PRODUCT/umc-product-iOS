@@ -51,7 +51,7 @@ extension HomeRouter: BaseTargetType {
 
     var method: Moya.Method {
         switch self {
-        case .getGen, .getSchedules, .getScheduleDetail, .getNoticeRecent, .getGisuDetail:
+        case .getGen, .getSchedules, .getScheduleDetail, .getNoticeRecent:
             return .get
         case .putFCMToken:
             return .put
