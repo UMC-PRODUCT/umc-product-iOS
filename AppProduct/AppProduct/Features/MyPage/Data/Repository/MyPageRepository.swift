@@ -130,7 +130,7 @@ private extension MyPageRepository {
 
         return MyActivePostPage(
             items: result.content.map { $0.toCommunityItemModel() },
-            page: result.page,
+            page: Int(result.page) ?? 0,
             hasNext: result.hasNext
         )
     }
@@ -165,8 +165,8 @@ private extension MyPagePostResponseDTO {
             ?? Date()
 
         return CommunityItemModel(
-            postId: postId,
-            userId: authorId,
+            postId: Int(postId) ?? 0,
+            userId: Int(authorId) ?? 0,
             category: toCommunityCategory(),
             title: title,
             content: content,
@@ -174,8 +174,8 @@ private extension MyPagePostResponseDTO {
             userName: authorName,
             part: authorPart,
             createdAt: parsedCreatedAt,
-            likeCount: likeCount,
-            commentCount: commentCount,
+            likeCount: Int(likeCount) ?? 0,
+            commentCount: Int(commentCount) ?? 0,
             scrapCount: 0,
             isLiked: isLiked,
             isAuthor: isAuthor,

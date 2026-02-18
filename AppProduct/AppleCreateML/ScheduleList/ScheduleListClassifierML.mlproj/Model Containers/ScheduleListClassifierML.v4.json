@@ -39,6 +39,26 @@
         "subtitle" : "ScheduleTrainingData.json",
         "title" : "Training Data Added"
       }
+    ],
+    "trainingStarted",
+    [
+      {
+        "createdDate" : "2026-02-18T04:17:32Z",
+        "event" : "trainingStarted",
+        "id" : "89640A4A-4317-4D91-82F5-C33798784841",
+        "subtitle" : "50 iterations",
+        "title" : "Training Started"
+      }
+    ],
+    "trainingDataAdded",
+    [
+      {
+        "createdDate" : "2026-02-18T05:31:39Z",
+        "event" : "trainingDataAdded",
+        "id" : "A6BB4EF4-27AF-4491-954D-2D12967A05F3",
+        "subtitle" : "ScheduleTrainingData.json",
+        "title" : "Training Data Added"
+      }
     ]
   ],
   "contentDataResult" : {

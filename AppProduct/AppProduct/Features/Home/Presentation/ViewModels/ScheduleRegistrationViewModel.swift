@@ -139,7 +139,7 @@ class ScheduleRegistrationViewModel {
     @MainActor
     func submitSchedule(gisuId: Int, requiresApproval: Bool) async {
         submitState = .loading
-        var memberIds = participatn.map(\.memberId)
+        var memberIds = Array(Set(participatn.map(\.memberId))).sorted()
         let myMemberId = UserDefaults.standard.integer(forKey: AppStorageKey.memberId)
         if myMemberId != 0, !memberIds.contains(myMemberId) {
             memberIds.append(myMemberId)
@@ -193,7 +193,7 @@ class ScheduleRegistrationViewModel {
             startDate: dataRange.startDate,
             endDate: dataRange.endDate,
             memo: memo,
-            participantMemberIds: participatn.map(\.memberId).sorted(),
+            participantMemberIds: Array(Set(participatn.map(\.memberId))).sorted(),
             tags: tag.map(\.rawValue).sorted()
         )
     }
@@ -223,7 +223,7 @@ class ScheduleRegistrationViewModel {
         submitState = .loading
         var participantMemberIds: [Int]? = nil
         if !participatn.isEmpty {
-            participantMemberIds = participatn.map(\.memberId)
+            participantMemberIds = Array(Set(participatn.map(\.memberId))).sorted()
         }
         let dto = UpdateScheduleRequestDTO(
             name: title,

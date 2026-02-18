@@ -9,11 +9,11 @@ import Foundation
 
 /// 마이페이지 내 프로필 조회/수정 응답 DTO
 struct MyPageProfileResponseDTO: Codable {
-    let id: Int
+    let id: String
     let name: String
     let nickname: String
     let email: String
-    let schoolId: Int
+    let schoolId: String
     let schoolName: String
     let profileImageLink: String?
     let status: MemberStatus
@@ -35,11 +35,11 @@ struct MyPageProfileResponseDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decodeFlexibleInt(forKey: .id)
+        id = try container.decodeMyPageFlexibleString(forKey: .id)
         name = try container.decode(String.self, forKey: .name)
         nickname = try container.decode(String.self, forKey: .nickname)
-        email = try container.decode(String.self, forKey: .email)
-        schoolId = try container.decodeFlexibleInt(forKey: .schoolId)
+        email = try container.decodeMyPageFlexibleString(forKey: .email)
+        schoolId = try container.decodeMyPageFlexibleString(forKey: .schoolId)
         schoolName = try container.decode(String.self, forKey: .schoolName)
         profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
         status = try container.decode(MemberStatus.self, forKey: .status)
@@ -52,14 +52,14 @@ struct MyPageProfileResponseDTO: Codable {
 }
 
 struct MyPageRoleDTO: Codable {
-    let id: Int
-    let challengerId: Int
+    let id: String
+    let challengerId: String
     let roleType: ManagementTeam
     let organizationType: OrganizationType
-    let organizationId: Int
+    let organizationId: String
     let responsiblePart: String?
-    let gisu: Int?
-    let gisuId: Int
+    let gisu: String?
+    let gisuId: String
 
     private enum CodingKeys: String, CodingKey {
         case id
@@ -74,27 +74,27 @@ struct MyPageRoleDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decodeFlexibleInt(forKey: .id)
-        challengerId = try container.decodeFlexibleInt(forKey: .challengerId)
+        id = try container.decodeMyPageFlexibleString(forKey: .id)
+        challengerId = try container.decodeMyPageFlexibleString(forKey: .challengerId)
         roleType = try container.decode(ManagementTeam.self, forKey: .roleType)
         organizationType = try container.decode(OrganizationType.self, forKey: .organizationType)
-        organizationId = try container.decodeFlexibleInt(forKey: .organizationId)
+        organizationId = try container.decodeMyPageFlexibleString(forKey: .organizationId)
         responsiblePart = try container.decodeIfPresent(String.self, forKey: .responsiblePart)
-        gisu = try container.decodeFlexibleIntIfPresent(forKey: .gisu)
-        gisuId = try container.decodeFlexibleInt(forKey: .gisuId)
+        gisu = try container.decodeMyPageFlexibleStringIfPresent(forKey: .gisu)
+        gisuId = try container.decodeMyPageFlexibleString(forKey: .gisuId)
     }
 }
 
 struct MyPageChallengerRecordDTO: Codable {
-    let challengerId: Int
-    let memberId: Int
-    let gisu: Int
+    let challengerId: String
+    let memberId: String
+    let gisu: String
     let part: String
     let challengerPoints: [MyPageChallengerPointDTO]
     let name: String
     let nickname: String
-    let email: String
-    let schoolId: Int
+    let email: String?
+    let schoolId: String
     let schoolName: String
     let profileImageLink: String?
     let status: MemberStatus
@@ -120,17 +120,17 @@ struct MyPageChallengerRecordDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        challengerId = try container.decodeFlexibleInt(forKey: .challengerId)
-        memberId = try container.decodeFlexibleInt(forKey: .memberId)
-        gisu = try container.decodeFlexibleInt(forKey: .gisu)
+        challengerId = try container.decodeMyPageFlexibleString(forKey: .challengerId)
+        memberId = try container.decodeMyPageFlexibleString(forKey: .memberId)
+        gisu = try container.decodeMyPageFlexibleString(forKey: .gisu)
         part = try container.decode(String.self, forKey: .part)
         challengerPoints = try container.decodeIfPresent([MyPageChallengerPointDTO].self, forKey: .challengerPoints)
             ?? decoder.decodeMyPagePointsArrayFallback()
             ?? []
         name = try container.decode(String.self, forKey: .name)
         nickname = try container.decode(String.self, forKey: .nickname)
-        email = try container.decode(String.self, forKey: .email)
-        schoolId = try container.decodeFlexibleInt(forKey: .schoolId)
+        email = try container.decodeMyPageFlexibleStringIfPresent(forKey: .email)
+        schoolId = try container.decodeMyPageFlexibleString(forKey: .schoolId)
         schoolName = try container.decode(String.self, forKey: .schoolName)
         profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
         let fallbackContainer = try decoder.container(keyedBy: FallbackCodingKeys.self)
@@ -165,7 +165,7 @@ private extension Decoder {
 }
 
 struct MyPageChallengerPointDTO: Codable {
-    let id: Int
+    let id: String
     let pointType: String
     let point: Double
     let description: String
@@ -181,7 +181,7 @@ struct MyPageChallengerPointDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decodeFlexibleInt(forKey: .id)
+        id = try container.decodeMyPageFlexibleString(forKey: .id)
         pointType = try container.decode(String.self, forKey: .pointType)
         point = try container.decodeFlexibleDouble(forKey: .point)
         description = try container.decode(String.self, forKey: .description)
@@ -192,36 +192,45 @@ struct MyPageChallengerPointDTO: Codable {
 extension MyPageProfileResponseDTO {
     func toProfileData() -> ProfileData {
         let records = challengerRecords ?? []
-        let latestRecord = records.max { $0.gisu < $1.gisu }
-        let latestRole = roles.max { ($0.gisu ?? 0) < ($1.gisu ?? 0) }
+        let latestRecord = records.max { $0.gisu.intValue < $1.gisu.intValue }
+        let latestRole = roles.max { ($0.gisu?.intValue ?? 0) < ($1.gisu?.intValue ?? 0) }
 
         let fallbackPart = latestRole?.responsiblePart
             .flatMap { UMCPartType(apiValue: $0) } ?? .pm
 
         let challengerInfo = ChallengerInfo(
-            memberId: id,
-            gen: latestRecord?.gisu ?? latestRole?.gisu ?? 0,
+            memberId: id.intValue,
+            gen: latestRecord?.gisu.intValue ?? latestRole?.gisu?.intValue ?? 0,
             name: latestRecord?.name ?? name,
             nickname: latestRecord?.nickname ?? nickname,
             schoolName: latestRecord?.schoolName ?? schoolName,
-            profileImage: latestRecord?.profileImageLink ?? profileImageLink,
+            profileImage: latestRecord?.profileImageLink?.nonEmpty ?? profileImageLink?.nonEmpty,
             part: UMCPartType(apiValue: latestRecord?.part ?? "") ?? fallbackPart
         )
 
         let logs = records.map { record in
             ActivityLog(
                 part: UMCPartType(apiValue: record.part) ?? .pm,
-                generation: record.gisu,
+                generation: record.gisu.intValue,
                 role: .challenger
             )
         }
 
         return ProfileData(
-            challengeId: latestRecord?.challengerId ?? latestRole?.challengerId ?? 0,
+            challengeId: latestRecord?.challengerId.intValue ?? latestRole?.challengerId.intValue ?? 0,
             challangerInfo: challengerInfo,
             socialConnected: [],
             activityLogs: logs,
             profileLink: []
         )
+    }
+}
+
+private extension String {
+    var intValue: Int { Int(self) ?? 0 }
+
+    var nonEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

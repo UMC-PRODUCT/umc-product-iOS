@@ -28,6 +28,8 @@ struct RemoteImage: View {
     
     /// 이미지 로드 실패 상태 (true일 경우 실패)
     @State private var isError: Bool = false
+    /// 이미지 로드 진행 상태
+    @State private var isLoading: Bool = false
     
     /// 로드할 이미지 URL 문자열
     let urlString: String
@@ -79,12 +81,19 @@ struct RemoteImage: View {
         Group {
             if let url = URL(string: urlString), !isError {
                 KFImage(url)
-                    .resizable()
-                    .onFailure { _ in
-                        isError = true // 실패 시 상태 변경
-                    }
                     .setProcessor(DownsamplingImageProcessor(size: size))
                     .fade(duration: 0.25)
+                    .onSuccess { _ in
+                        isLoading = false
+                    }
+                    .onFailure { _ in
+                        isLoading = false
+                        isError = true // 실패 시 상태 변경
+                    }
+                    .resizable()
+                    .onAppear {
+                        isLoading = true
+                    }
             } else {
                 // 실패 시 SwiftUI가 직접 벡터 이미지를 그리도록 함
                 Image(.defaultProfile)
@@ -96,5 +105,11 @@ struct RemoteImage: View {
         .aspectRatio(ratio, contentMode: contentMode)
         .frame(width: size.width, height: size.height)
         .clipShape(.circle)
+        .overlay {
+            if isLoading {
+                ProgressView()
+                    .tint(.gray)
+            }
+        }
     }
 }
