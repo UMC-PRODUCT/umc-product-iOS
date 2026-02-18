@@ -111,6 +111,19 @@ enum UMCPartType: Codable, Equatable, Hashable {
             }
         }
     }
+    
+    /// 파트별 아이콘
+    var icon: String {
+        switch self {
+        case .pm: return "doc.text.fill"
+        case .design: return "paintpalette.fill"
+        case .server(type: .spring): return "leaf.fill"
+        case .server(type: .node): return "hexagon.fill"
+        case .front(type: .web): return "globe"
+        case .front(type: .android): return "inset.filled.applewatch.case"
+        case .front(type: .ios): return "apple.logo"
+        }
+    }
 
     /// 모든 파트 조합 (Associated Value로 CaseIterable 불가하여 직접 정의)
     static let allCases: [UMCPartType] = [

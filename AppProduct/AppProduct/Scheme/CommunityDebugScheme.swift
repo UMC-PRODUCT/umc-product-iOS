@@ -278,21 +278,21 @@ enum CommunityFameDebugState: String {
                 fameItems: .loading,
                 selectedWeek: 1,
                 selectedUniversity: "전체",
-                selectedPart: "전체"
+                selectedPart: nil
             )
         case .loaded:
             viewModel.seedForDebugState(
                 fameItems: .loaded(Self.fameItems),
                 selectedWeek: 1,
                 selectedUniversity: "전체",
-                selectedPart: "전체"
+                selectedPart: nil
             )
         case .failed:
             viewModel.seedForDebugState(
                 fameItems: .failed(.unknown(message: "명예의전당 목록을 불러오지 못했습니다.")),
                 selectedWeek: 1,
                 selectedUniversity: "전체",
-                selectedPart: "전체"
+                selectedPart: nil
             )
         }
     }
@@ -306,7 +306,8 @@ enum CommunityFameDebugState: String {
                 userName: "김민수",
                 part: .front(type: .ios),
                 workbookTitle: "SwiftUI 완벽 가이드",
-                content: "SwiftUI의 기본 개념부터 고급 기술까지 상세히 정리했습니다."
+                content: "SwiftUI의 기본 개념부터 고급 기술까지 상세히 정리했습니다.",
+                url: "https://www.notion.so/trophy-week1-challenger10"
             ),
             CommunityFameItemModel(
                 week: 1,
@@ -315,7 +316,8 @@ enum CommunityFameDebugState: String {
                 userName: "박서연",
                 part: .front(type: .android),
                 workbookTitle: "Kotlin Coroutine 마스터하기",
-                content: "비동기 처리의 모든 것을 담았습니다."
+                content: "비동기 처리의 모든 것을 담았습니다.",
+                url: "https://www.notion.so/trophy-week1-challenger10"
             ),
             CommunityFameItemModel(
                 week: 1,
@@ -324,7 +326,8 @@ enum CommunityFameDebugState: String {
                 userName: "이지훈",
                 part: .server(type: .spring),
                 workbookTitle: "Spring Boot 실전 프로젝트",
-                content: "RESTful API 설계와 구현 노하우를 공유합니다."
+                content: "RESTful API 설계와 구현 노하우를 공유합니다.",
+                url: "https://www.notion.so/trophy-week1-challenger10"
             ),
             CommunityFameItemModel(
                 week: 1,
@@ -333,7 +336,8 @@ enum CommunityFameDebugState: String {
                 userName: "최유진",
                 part: .front(type: .web),
                 workbookTitle: "React 최적화 전략",
-                content: "성능 최적화 기법들을 정리했습니다."
+                content: "성능 최적화 기법들을 정리했습니다.",
+                url: "https://www.notion.so/trophy-week1-challenger10"
             ),
             CommunityFameItemModel(
                 week: 1,
@@ -342,7 +346,8 @@ enum CommunityFameDebugState: String {
                 userName: "정다은",
                 part: .design,
                 workbookTitle: "UX/UI 디자인 원칙",
-                content: "사용자 중심의 디자인 방법론을 다룹니다."
+                content: "사용자 중심의 디자인 방법론을 다룹니다.",
+                url: "https://www.notion.so/trophy-week1-challenger10"
             ),
             CommunityFameItemModel(
                 week: 2,
@@ -351,7 +356,8 @@ enum CommunityFameDebugState: String {
                 userName: "강서준",
                 part: .server(type: .node),
                 workbookTitle: "Node.js 백엔드 아키텍처",
-                content: "확장 가능한 서버 구조 설계 방법입니다."
+                content: "확장 가능한 서버 구조 설계 방법입니다.",
+                url: "https://www.notion.so/trophy-week2-challenger10"
             )
         ]
     }

@@ -103,7 +103,6 @@ struct CommunityPostCard: View {
                     .resizable()
                     .frame(width: Constant.kakaoSize.width, height: Constant.kakaoSize.height)
                     .clipShape(RoundedRectangle(cornerRadius: Constant.kakaoRadius))
-                    .shadow1()
                 VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                     Text("오픈채팅방으로 이동")
                         .appFont(.subheadlineEmphasis, color: .black)

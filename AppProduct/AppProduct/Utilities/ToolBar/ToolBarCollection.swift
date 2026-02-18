@@ -271,53 +271,63 @@ struct ToolBarCollection {
         }
     }
     
-    /// 커뮤니티 학교/파트 필터
+    /// 커뮤니티 학교 필터
     struct CommunityUnivFilter: ToolbarContent {
         @Binding var selectedUniversity: String
         let universities: [String]
-        
+
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    ForEach(universities, id: \.self) { university in
-                        Toggle(university, isOn: Binding(
-                            get: { selectedUniversity == university },
-                            set: { isOn in
-                                selectedUniversity = isOn ? university : "전체"
-                            })
-                        )
-                    }
+                    universityPicker
                 } label: {
                     Image(systemName: "graduationcap.fill")
                         .appFont(.subheadline)
                 }
-                .menuActionDismissBehavior(.disabled)
             }
+        }
+
+        private var universityPicker: some View {
+            Picker("학교 선택", selection: $selectedUniversity) {
+                Text("전체")
+                    .tag("전체")
+
+                ForEach(universities.filter { $0 != "전체" }, id: \.self) { university in
+                    Text(university)
+                        .tag(university)
+                }
+            }
+            .pickerStyle(.inline)
         }
     }
     
-    /// 커뮤니티 파트별 필터
+    /// 커뮤니티 파트 필터
     struct CommunityPartFilter: ToolbarContent {
-        @Binding var selectedPart: String
-        let parts: [String]
-        
+        @Binding var selectedPart: UMCPartType?
+        let parts: [UMCPartType]
+
         var body: some ToolbarContent {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    ForEach(parts, id: \.self) { part in
-                        Toggle(part, isOn: Binding(
-                            get: { selectedPart == part },
-                            set: { isOn in
-                                selectedPart = isOn ? part : "전체"
-                            })
-                        )
-                    }
+                    partPicker
                 } label: {
                     Image(systemName: "building.columns.fill")
                         .appFont(.subheadline)
                 }
-                .menuActionDismissBehavior(.disabled)
             }
+        }
+
+        private var partPicker: some View {
+            Picker("파트 선택", selection: $selectedPart) {
+                Label("전체", systemImage: "person.2.fill")
+                    .tag(nil as UMCPartType?)
+
+                ForEach(parts, id: \.self) { part in
+                    Label(part.name, systemImage: part.icon)
+                        .tag(part)
+                }
+            }
+            .pickerStyle(.inline)
         }
     }
     

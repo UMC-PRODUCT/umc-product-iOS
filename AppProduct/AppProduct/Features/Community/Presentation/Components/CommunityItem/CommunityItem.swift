@@ -19,7 +19,7 @@ struct CommunityItem: View, Equatable {
 
     private enum Constant {
         // tag + status
-        static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
+        static let tagPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
         // profile
         static let profileSize: CGSize = .init(width: 30, height: 30)
     }
@@ -60,7 +60,7 @@ struct CommunityItem: View, Equatable {
     private var topSection: some View {
         HStack {
             Text(model.category.text)
-                .appFont(.footnoteEmphasis, color: .grey700)
+                .appFont(.subheadline, color: .grey900)
                 .padding(Constant.tagPadding)
                 .glassEffect(.clear.tint(model.category.color))
 
