@@ -67,6 +67,14 @@ struct CommunityDetailView: View {
         .task {
             await vm.fetchPostDetail()
         }
+        .onChange(of: pathStore.communityPath.count) { oldCount, newCount in
+            if newCount < oldCount {
+                Task {
+                    try? await Task.sleep(nanoseconds: 300_000_000) // 0.3초
+                    await vm.fetchPostDetail()
+                }
+            }
+        }
         .toolbar {
             if let postItem = vm.postItem {
                 ToolBarCollection.ToolbarTrailingMenu(actions: toolbarActions(for: postItem))
