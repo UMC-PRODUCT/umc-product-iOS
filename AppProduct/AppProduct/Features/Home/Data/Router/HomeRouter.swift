@@ -21,6 +21,8 @@ enum HomeRouter {
     case getScheduleDetail(scheduleId: Int)
     /// 최근 공지사항 조회
     case getNoticeRecent(query: NoticeListRequestDTO)
+    /// 기수 상세 조회
+    case getGisuDetail(gisuId: Int)
     /// FCM 토큰 등록/갱신
     case putFCMToken(request: RegisterFCMTokenRequestDTO)
 }
@@ -38,6 +40,8 @@ extension HomeRouter: BaseTargetType {
             return "/api/v1/schedules/\(scheduleId)"
         case .getNoticeRecent:
             return "/api/v1/notices"
+        case .getGisuDetail(let gisuId):
+            return "/api/v1/gisu/\(gisuId)"
         case .putFCMToken:
             return "/api/v1/notification/fcm/token"
         }
@@ -47,7 +51,7 @@ extension HomeRouter: BaseTargetType {
 
     var method: Moya.Method {
         switch self {
-        case .getGen, .getSchedules, .getScheduleDetail, .getNoticeRecent:
+        case .getGen, .getSchedules, .getScheduleDetail, .getNoticeRecent, .getGisuDetail:
             return .get
         case .putFCMToken:
             return .put
@@ -72,6 +76,8 @@ extension HomeRouter: BaseTargetType {
                 parameters: query.queryItems,
                 encoding: URLEncoding.queryString
             )
+        case .getGisuDetail:
+            return .requestPlain
         case .putFCMToken(let request):
             return .requestJSONEncodable(request)
         }
