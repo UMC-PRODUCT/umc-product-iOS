@@ -90,9 +90,15 @@ struct ChallengerMissionCardHeader: View, Equatable {
     }
 
     private var chevronIcon: some View {
-        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-            .font(.system(size: Constants.chevronIconSize))
-            .foregroundStyle(.grey400)
+        Group {
+            if case .locked = model.status {
+                Image(systemName: "lock.fill")
+            } else {
+                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+            }
+        }
+        .font(.system(size: Constants.chevronIconSize))
+        .foregroundStyle(.grey400)
     }
 }
 

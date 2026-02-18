@@ -25,11 +25,6 @@ final class FetchCurriculumUseCase: FetchCurriculumUseCaseProtocol {
     // MARK: - Function
 
     func execute() async throws -> CurriculumData {
-        async let progress = repository.fetchCurriculumProgress()
-        async let missions = repository.fetchMissions()
-        return CurriculumData(
-            progress: try await progress,
-            missions: try await missions
-        )
+        try await repository.fetchCurriculumData()
     }
 }

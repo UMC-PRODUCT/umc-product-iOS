@@ -79,6 +79,7 @@ extension ActivityRepositoryProvider {
         adapter: MoyaNetworkAdapter
     ) -> ActivityRepositoryProvider {
         let attendanceRepo = AttendanceRepository(adapter: adapter)
+        let studyRepository = StudyRepository(adapter: adapter)
         return ActivityRepositoryProvider(
             challengerAttendanceRepository: attendanceRepo,
             operatorAttendanceRepository: attendanceRepo,
@@ -86,7 +87,7 @@ extension ActivityRepositoryProvider {
             activityRepository: ActivityRepository(
                 attendanceRepository: attendanceRepo
             ),
-            studyRepository: MockStudyRepository(),
+            studyRepository: studyRepository,
             memberRepository: MockMemberRepository()
         )
     }

@@ -69,6 +69,7 @@ struct ActivityView: View {
                     itemIcon: { $0.icon }
                 )
             }
+            .umcDefaultBackground()
             .task {
                 // ViewModel 초기화 및 데이터 로드(Computed Property를 위해 init 대신 task에서 초기화)
                 if viewModel == nil {
@@ -90,7 +91,6 @@ struct ActivityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
-            .umcDefaultBackground()
             .onChange(of: userSession.currentActivityMode) { _, _ in
                 selectedSection = nil
             }

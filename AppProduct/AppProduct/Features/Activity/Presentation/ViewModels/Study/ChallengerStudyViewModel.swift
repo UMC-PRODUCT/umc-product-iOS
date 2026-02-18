@@ -82,8 +82,12 @@ final class ChallengerStudyViewModel {
         link: String?
     ) async {
         do {
-            let updatedMission = try await submitMissionUseCase.execute(
-                missionId: mission.id,
+            guard let challengerWorkbookId = mission.challengerWorkbookId else {
+                throw DomainError.missionNotFound
+            }
+
+            try await submitMissionUseCase.execute(
+                missionId: challengerWorkbookId,
                 type: type,
                 link: link
             )
@@ -91,7 +95,7 @@ final class ChallengerStudyViewModel {
             // 로컬 상태 업데이트
             if case .loaded(var data) = curriculumState {
                 if let index = data.missions.firstIndex(where: { $0.id == mission.id }) {
-                    data.missions[index] = updatedMission
+                    data.missions[index].status = .pendingApproval
                     withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
                         curriculumState = .loaded(data)
                     }
