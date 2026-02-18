@@ -145,7 +145,7 @@ class CommunityDetailViewModel {
                 feature: "Community",
                 action: "deletePost",
                 retryAction: { [weak self] in
-                    await self?.deletePost()
+                    _ = await self?.deletePost()
                 }
             ))
             return false
