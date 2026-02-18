@@ -22,7 +22,7 @@ enum HomeRouter {
     /// 최근 공지사항 조회
     case getNoticeRecent(query: NoticeListRequestDTO)
     /// FCM 토큰 등록/갱신
-    case postFCMToken(memberId: Int, request: RegisterFCMTokenRequestDTO)
+    case putFCMToken(request: RegisterFCMTokenRequestDTO)
 }
 
 extension HomeRouter: BaseTargetType {
@@ -38,8 +38,8 @@ extension HomeRouter: BaseTargetType {
             return "/api/v1/schedules/\(scheduleId)"
         case .getNoticeRecent:
             return "/api/v1/notices"
-        case .postFCMToken(let memberId, _):
-            return "/api/v1/notification/fcm/\(memberId)"
+        case .putFCMToken:
+            return "/api/v1/notification/fcm/token"
         }
     }
 
@@ -49,8 +49,8 @@ extension HomeRouter: BaseTargetType {
         switch self {
         case .getGen, .getSchedules, .getScheduleDetail, .getNoticeRecent:
             return .get
-        case .postFCMToken:
-            return .post
+        case .putFCMToken:
+            return .put
         }
     }
 
@@ -72,7 +72,7 @@ extension HomeRouter: BaseTargetType {
                 parameters: query.queryItems,
                 encoding: URLEncoding.queryString
             )
-        case .postFCMToken(_, let request):
+        case .putFCMToken(let request):
             return .requestJSONEncodable(request)
         }
     }
