@@ -22,7 +22,7 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
     /// 인메모리 캐시 저장소
     private var cache: [String: ScheduleIconCategory] = [:]
     /// 캐시 저장용 UserDefaults 키
-    private let userDefaultKey = "ScheduleClassifierCache.v3"
+    private let userDefaultKey = "ScheduleClassifierCache.v4"
     
     /// 생성자 - 캐시 및 모델 로드
     init() {
@@ -112,6 +112,8 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
             return .celebration
         case "orientation":
             return .orientation
+        case "testing", "test", "qa":
+            return .testing
         case "general":
             return .general
         default:
@@ -205,6 +207,12 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
         if lowercased.contains("ot") || lowercased.contains("오리엔테이션") ||
             lowercased.contains("환영") || lowercased.contains("온보딩") {
             return .orientation
+        }
+
+        // Testing: 테스트/검증/QA
+        if lowercased.contains("테스트") || lowercased.contains("test") ||
+            lowercased.contains("qa") || lowercased.contains("검증") {
+            return .testing
         }
         
         // General (기본값)

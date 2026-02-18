@@ -75,7 +75,7 @@ enum ManagementTeam: String, CaseIterable, Codable, Comparable {
         case .superAdmin:                   return "시스템 관리자"
         case .centralPresident:             return "총괄"
         case .centralVicePresident:         return "부총괄"
-        case .centralOperatingTeamMember:   return "중앙 운영 사무국"
+        case .centralOperatingTeamMember:   return "중앙 운영 운영국"
         case .centralEducationTeamMember:   return "중앙 운영 교육국"
         case .chapterPresident:             return "지부장"
         case .schoolPresident:              return "교내 회장"

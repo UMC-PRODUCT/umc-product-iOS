@@ -69,8 +69,56 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--seed-appstorage-dummy-central"
+            argument = "NoticeWriteRole(all)"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-super-admin"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-central-president"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-central-vice-president"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-central-operating-team-member"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-central-education-team-member"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-chapter-president"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-school-president"
             isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-school-vice-president"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-school-part-leader"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-school-etc-admin"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-challenger"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-dummy-central"
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--seed-appstorage-dummy-chapter"

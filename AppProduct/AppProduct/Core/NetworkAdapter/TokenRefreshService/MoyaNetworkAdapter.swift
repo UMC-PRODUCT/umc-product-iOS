@@ -432,7 +432,7 @@ private enum NetworkVerboseLogger {
         printSection("headers", formatHeaders(request.allHTTPHeaderFields))
 
         if let body = request.httpBody, !body.isEmpty {
-            printSection("body", truncated(formattedBody(from: body, shortenLongStrings: true)))
+            printSection("body", formattedBody(from: body, shortenLongStrings: false))
         } else {
             printSection("body", "(empty)")
         }
@@ -585,7 +585,7 @@ private enum NetworkVerboseLogger {
         if let body = request.httpBody, !body.isEmpty {
             if let bodyString = String(data: body, encoding: .utf8) {
                 let escaped = bodyString.replacingOccurrences(of: "'", with: "'\"'\"'")
-                lines.append("  --data '\(abbreviateLongToken(in: escaped))' \\")
+                lines.append("  --data '\(escaped)' \\")
             } else {
                 lines.append("  --data-binary '<binary \(body.count) bytes>' \\")
             }

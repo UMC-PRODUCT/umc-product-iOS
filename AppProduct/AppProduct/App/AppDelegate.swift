@@ -22,6 +22,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
     private(set) var container: DIContainer!
     private(set) var modelContext: ModelContext?
+    private var lastFailedFCMUpload: (memberId: Int, token: String)?
 
     // MARK: - Function
 
@@ -160,6 +161,15 @@ private extension AppDelegate {
             return
         }
 
+        if let lastFailed = lastFailedFCMUpload,
+           lastFailed.memberId == memberId,
+           lastFailed.token == fcmToken {
+            #if DEBUG
+            print("[FCM] skip upload (\(trigger)) last attempt failed for same member/token")
+            #endif
+            return
+        }
+
         let uploadedToken = UserDefaults.standard.string(forKey: AppStorageKey.uploadedFCMToken) ?? ""
         let uploadedMemberId = UserDefaults.standard.integer(forKey: AppStorageKey.uploadedFCMMemberId)
         guard uploadedToken != fcmToken || uploadedMemberId != memberId else {
@@ -175,12 +185,14 @@ private extension AppDelegate {
                 memberId: memberId,
                 fcmToken: fcmToken
             )
+            lastFailedFCMUpload = nil
             UserDefaults.standard.set(fcmToken, forKey: AppStorageKey.uploadedFCMToken)
             UserDefaults.standard.set(memberId, forKey: AppStorageKey.uploadedFCMMemberId)
             #if DEBUG
             print("[FCM] upload success memberId=\(memberId)")
             #endif
         } catch {
+            lastFailedFCMUpload = (memberId: memberId, token: fcmToken)
             #if DEBUG
             print("[FCM] upload failed: \(error)")
             #endif
@@ -253,11 +265,13 @@ private extension AppDelegate {
     func seedAppStorageProfileIfNeeded() {
         #if DEBUG
         let args = ProcessInfo.processInfo.arguments
-        guard args.contains("--seed-appstorage-dummy")
-                || args.contains("--seed-appstorage-dummy-central")
-                || args.contains("--seed-appstorage-dummy-chapter")
-                || args.contains("--seed-appstorage-dummy-school")
-                || args.contains("--seed-appstorage-dummy-challenger")
+        let hasLegacySeedFlag = args.contains("--seed-appstorage-dummy")
+            || args.contains("--seed-appstorage-dummy-central")
+            || args.contains("--seed-appstorage-dummy-chapter")
+            || args.contains("--seed-appstorage-dummy-school")
+            || args.contains("--seed-appstorage-dummy-challenger")
+        let seededRoleFromArgument = parseSeededMemberRole(from: args)
+        guard hasLegacySeedFlag || seededRoleFromArgument != nil
         else { return }
         let defaults = UserDefaults.standard
 
@@ -265,7 +279,7 @@ private extension AppDelegate {
         let isChapterSeed = args.contains("--seed-appstorage-dummy-chapter")
         let isSchoolSeed = args.contains("--seed-appstorage-dummy-school")
         let isChallengerSeed = args.contains("--seed-appstorage-dummy-challenger")
-        let seededRole: ManagementTeam = {
+        let seededRole: ManagementTeam = seededRoleFromArgument ?? {
             if isCentralSeed { return .centralOperatingTeamMember }
             if isChallengerSeed { return .challenger }
             if isSchoolSeed { return .schoolPresident }
@@ -280,25 +294,69 @@ private extension AppDelegate {
         defaults.set(11, forKey: AppStorageKey.chapterId)
         defaults.set("Product", forKey: AppStorageKey.chapterName)
         defaults.set("ANDROID", forKey: AppStorageKey.responsiblePart)
-        defaults.set(
-            isCentralSeed
-                ? OrganizationType.central.rawValue
-                : (isSchoolSeed
-                    ? OrganizationType.school.rawValue
-                    : ((isChapterSeed || isChallengerSeed)
-                        ? OrganizationType.chapter.rawValue
-                        : OrganizationType.central.rawValue)),
-            forKey: AppStorageKey.organizationType
-        )
+        let seededOrganizationType = organizationType(for: seededRole)
+        defaults.set(seededOrganizationType.rawValue, forKey: AppStorageKey.organizationType)
         defaults.set(11, forKey: AppStorageKey.organizationId)
         defaults.set(seededRole.rawValue, forKey: AppStorageKey.memberRole)
 
-        let seededType = isCentralSeed
-            ? "CENTRAL"
-            : (isSchoolSeed ? "SCHOOL" : (isChapterSeed ? "CHAPTER" : (isChallengerSeed ? "CHALLENGER" : "CENTRAL")))
+        let seededType = seededOrganizationType.rawValue
         print("[AppStorage] seeded dummy profile for scheme (\(seededType), role=\(seededRole.rawValue))")
         #endif
     }
+
+    #if DEBUG
+    /// 스킴 인자에서 공지 권한 검증용 `memberRole` 값을 파싱합니다.
+    ///
+    /// 지원 형식:
+    /// - `-seed-member-role <ManagementTeam.rawValue>`
+    /// - `--seed-appstorage-role-<kebab-case-role>`
+    private func parseSeededMemberRole(from args: [String]) -> ManagementTeam? {
+        if let index = args.firstIndex(of: "-seed-member-role"),
+           args.indices.contains(index + 1),
+           let role = ManagementTeam(rawValue: args[index + 1]) {
+            return role
+        }
+
+        let roleFlags: [(flag: String, role: ManagementTeam)] = [
+            ("--seed-appstorage-role-super-admin", .superAdmin),
+            ("--seed-appstorage-role-central-president", .centralPresident),
+            ("--seed-appstorage-role-central-vice-president", .centralVicePresident),
+            ("--seed-appstorage-role-central-operating-team-member", .centralOperatingTeamMember),
+            ("--seed-appstorage-role-central-education-team-member", .centralEducationTeamMember),
+            ("--seed-appstorage-role-chapter-president", .chapterPresident),
+            ("--seed-appstorage-role-school-president", .schoolPresident),
+            ("--seed-appstorage-role-school-vice-president", .schoolVicePresident),
+            ("--seed-appstorage-role-school-part-leader", .schoolPartLeader),
+            ("--seed-appstorage-role-school-etc-admin", .schoolEtcAdmin),
+            ("--seed-appstorage-role-challenger", .challenger)
+        ]
+
+        for roleFlag in roleFlags where args.contains(roleFlag.flag) {
+            return roleFlag.role
+        }
+        return nil
+    }
+
+    /// 디버그 시드 역할에 대응하는 조직 타입을 반환합니다.
+    private func organizationType(for role: ManagementTeam) -> OrganizationType {
+        switch role {
+        case .superAdmin,
+                .centralPresident,
+                .centralVicePresident,
+                .centralOperatingTeamMember,
+                .centralEducationTeamMember:
+            return .central
+        case .chapterPresident:
+            return .chapter
+        case .schoolPresident,
+                .schoolVicePresident,
+                .schoolPartLeader,
+                .schoolEtcAdmin,
+                .challenger:
+            return .school
+        }
+    }
+    #endif
 
     func seedAuthTokenFromEnvironmentIfNeeded() {
         #if DEBUG

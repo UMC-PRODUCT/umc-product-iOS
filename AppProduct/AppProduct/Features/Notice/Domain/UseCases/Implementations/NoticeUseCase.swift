@@ -35,18 +35,26 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
     /// 2. `uploadFile`로 S3에 바이너리 전송
     /// 3. `confirmUpload`로 서버에 완료 통보
     ///
-    /// - Parameter imageData: 업로드할 JPEG 바이너리 데이터
+    /// - Parameters:
+    ///   - imageData: 업로드할 JPEG 바이너리 데이터
+    ///   - fileName: 업로드 파일명 (앨범 원본 이름 기반)
     /// - Returns: 저장된 파일 ID
-    func uploadNoticeAttachmentImage(imageData: Data) async throws -> String {
+    func uploadNoticeAttachmentImage(imageData: Data, fileName: String?) async throws -> String {
         guard !imageData.isEmpty else {
             throw DomainError.custom(message: "이미지 데이터가 비어있습니다")
         }
         
-        let fileName = "notice_\(UUID().uuidString).jpg"
+        let resolvedFileName = {
+            guard let fileName,
+                  !fileName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                return "notice_\(UUID().uuidString).jpg"
+            }
+            return fileName
+        }()
         let contentType = "image/jpeg"
         
         let prepared = try await storageRepository.prepareUpload(
-            fileName: fileName,
+            fileName: resolvedFileName,
             contentType: contentType,
             fileSize: imageData.count,
             category: .noticeAttachment
@@ -80,10 +88,6 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
         
         guard !content.isEmpty else {
             throw DomainError.custom(message: "내용을 입력해주세요")
-        }
-        
-        guard targetInfo.targetGisuId > 0 else {
-            throw DomainError.custom(message: "수신 대상을 선택해주세요")
         }
         
         let requestDTO = PostNoticeRequestDTO(

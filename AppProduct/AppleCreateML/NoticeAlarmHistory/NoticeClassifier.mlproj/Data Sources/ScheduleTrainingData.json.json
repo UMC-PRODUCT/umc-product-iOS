@@ -1,0 +1,81 @@
+{
+  "activityEntities" : [
+    "dataSourceCreated",
+    [
+      {
+        "createdDate" : "2026-02-18T05:37:16Z",
+        "event" : "dataSourceCreated",
+        "id" : "08984D9B-2298-4386-A90D-67AED185D47D",
+        "subtitle" : "ScheduleTrainingData.json",
+        "title" : "Data Source Created"
+      }
+    ]
+  ],
+  "createdDate" : "2026-02-18T05:37:16Z",
+  "dataPathRelativeToProjectURL" : "../../ScheduleList/ScheduleTrainingData.json/",
+  "dataResult" : {
+    "classesCount" : 14,
+    "createdDate" : "2026-02-18T05:37:16Z",
+    "dataAnalysis" : {
+      "classifierAnalysis" : {
+        "labelStats" : {
+          "celebration" : 782,
+          "fee" : 790,
+          "general" : 782,
+          "hackathon" : 781,
+          "leadership" : 785,
+          "meeting" : 785,
+          "networking" : 788,
+          "orientation" : 1651,
+          "presentation" : 788,
+          "project" : 798,
+          "review" : 785,
+          "study" : 800,
+          "testing" : 1800,
+          "workshop" : 777
+        }
+      },
+      "issues" : [
+        {
+          "description" : "14 classes found, including testing, orientation, study",
+          "severity" : "debug"
+        },
+        {
+          "description" : "12892 texts found, automatically creating validation set",
+          "severity" : "good"
+        },
+        {
+          "description" : "Smallest class is \"workshop\" with 777 texts",
+          "severity" : "debug"
+        },
+        {
+          "description" : "Largest class is \"testing\" with 1800 text",
+          "severity" : "debug"
+        }
+      ],
+      "objectDetectorAnalysis" : {
+        "details" : {
+
+        }
+      },
+      "summary" : {
+        "canUseValidation" : 1,
+        "classCount" : 14,
+        "sampleCount" : 12892
+      }
+    },
+    "dataSourceID" : "986AD1CA-067B-477D-98C7-732B352AC60A",
+    "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
+    "itemsCount" : 12892
+  },
+  "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
+  "experimentIDs" : [
+
+  ],
+  "id" : "986AD1CA-067B-477D-98C7-732B352AC60A",
+  "modifiedDate" : "2026-02-18T05:37:52Z",
+  "pathType" : 0,
+  "preferredFilename" : "ScheduleTrainingData.json",
+  "title" : "ScheduleTrainingData.json",
+  "version" : "1.0"
+}

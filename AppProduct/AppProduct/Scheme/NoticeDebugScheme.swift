@@ -13,6 +13,7 @@ import Foundation
 ///
 /// Xcode 런치 인자(`-noticeDebugRole`) 또는 시드 플래그를 통해 역할을 지정합니다.
 enum NoticeDebugRole: String {
+    case superAdmin
     case central
     case branch
     case chapter
@@ -29,6 +30,45 @@ enum NoticeDebugRole: String {
         if let index = arguments.firstIndex(of: "-noticeDebugRole"),
            arguments.indices.contains(index + 1) {
             return NoticeDebugRole(rawValue: arguments[index + 1])
+        }
+
+        if let index = arguments.firstIndex(of: "-seed-member-role"),
+           arguments.indices.contains(index + 1),
+           let managementRole = ManagementTeam(rawValue: arguments[index + 1]) {
+            switch managementRole {
+            case .superAdmin:
+                return .superAdmin
+            case .centralPresident, .centralVicePresident, .centralOperatingTeamMember, .centralEducationTeamMember:
+                return .central
+            case .chapterPresident:
+                return .chapter
+            case .schoolPresident, .schoolVicePresident, .schoolPartLeader, .schoolEtcAdmin:
+                return .school
+            case .challenger:
+                return .challenger
+            }
+        }
+
+        if arguments.contains("--seed-appstorage-role-super-admin") {
+            return .superAdmin
+        }
+        if arguments.contains("--seed-appstorage-role-central-president")
+            || arguments.contains("--seed-appstorage-role-central-vice-president")
+            || arguments.contains("--seed-appstorage-role-central-operating-team-member")
+            || arguments.contains("--seed-appstorage-role-central-education-team-member") {
+            return .central
+        }
+        if arguments.contains("--seed-appstorage-role-chapter-president") {
+            return .chapter
+        }
+        if arguments.contains("--seed-appstorage-role-school-president")
+            || arguments.contains("--seed-appstorage-role-school-vice-president")
+            || arguments.contains("--seed-appstorage-role-school-part-leader")
+            || arguments.contains("--seed-appstorage-role-school-etc-admin") {
+            return .school
+        }
+        if arguments.contains("--seed-appstorage-role-challenger") {
+            return .challenger
         }
 
         // --seed-appstorage-dummy-* 플래그 기반 폴백 매핑
@@ -167,7 +207,7 @@ enum NoticeDebugState: String {
             return .loadedSchool
         case .challenger:
             return .loadedPart
-        case .central, .none:
+        case .superAdmin, .central, .none:
             return .loadedCentral
         }
     }

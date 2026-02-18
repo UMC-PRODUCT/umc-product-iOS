@@ -18,6 +18,13 @@
         "id" : "80DA27BA-A092-4AD8-A18C-F7731EDC6D66",
         "subtitle" : "NoticeClassifier 1",
         "title" : "Used By"
+      },
+      {
+        "createdDate" : "2026-02-18T05:38:29Z",
+        "event" : "dataSourceTrainingStarted",
+        "id" : "A4F07E8F-F0F1-4698-9DEB-C76A3788712D",
+        "subtitle" : "NoticeClassifier.v1",
+        "title" : "Used By"
       }
     ],
     "dataSourceMetrics",
@@ -28,22 +35,69 @@
         "id" : "DF4B1ACA-D77A-412A-9085-40CDC9F1839B",
         "subtitle" : "4 Classes, 200 Items",
         "title" : "Data Summary"
+      },
+      {
+        "createdDate" : "2026-02-18T05:38:29Z",
+        "event" : "dataSourceMetrics",
+        "id" : "46178D5E-82BE-44A4-A6B6-5BDC40EDDFB5",
+        "subtitle" : "4 Classes, 1,800 Items",
+        "title" : "Data Summary"
       }
     ]
   ],
   "createdDate" : "2026-01-21T07:56:52Z",
   "dataPathRelativeToProjectURL" : "../NoticeTrainingData.json/",
   "dataResult" : {
+    "classesCount" : 4,
     "createdDate" : "2026-01-21T07:56:52Z",
+    "dataAnalysis" : {
+      "classifierAnalysis" : {
+        "labelStats" : {
+          "error" : 450,
+          "info" : 450,
+          "success" : 450,
+          "warning" : 450
+        }
+      },
+      "issues" : [
+        {
+          "description" : "4 classes found, including warning, success, error",
+          "severity" : "debug"
+        },
+        {
+          "description" : "1800 texts found, automatically creating validation set",
+          "severity" : "good"
+        },
+        {
+          "description" : "Smallest class is \"info\" with 450 texts",
+          "severity" : "debug"
+        },
+        {
+          "description" : "Largest class is \"warning\" with 450 text",
+          "severity" : "debug"
+        }
+      ],
+      "objectDetectorAnalysis" : {
+        "details" : {
+
+        }
+      },
+      "summary" : {
+        "canUseValidation" : 1,
+        "classCount" : 4,
+        "sampleCount" : 1800
+      }
+    },
     "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
-    "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/NoticeAlarmHistory/NoticeTrainingData.json"
+    "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/NoticeAlarmHistory/NoticeTrainingData.json",
+    "itemsCount" : 1800
   },
   "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/NoticeAlarmHistory/NoticeTrainingData.json",
   "experimentIDs" : [
-    "E5263897-3103-4934-8F7F-FB59054829EE"
+    "DD33B82A-0AD3-4E29-8D55-E73146AAFACD"
   ],
   "id" : "2D66200E-AD08-47E7-9525-603C352478EB",
-  "modifiedDate" : "2026-01-21T07:56:54Z",
+  "modifiedDate" : "2026-02-18T05:38:29Z",
   "pathType" : 0,
   "preferredFilename" : "NoticeTrainingData.json",
   "title" : "NoticeTrainingData.json",

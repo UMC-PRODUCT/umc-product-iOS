@@ -10,6 +10,7 @@ import Foundation
 // MARK: - EditorMainCategory
 /// 공지 에디터 메인 카테고리
 enum EditorMainCategory: Identifiable, Equatable, Hashable {
+    case all
     case central
     case branch
     case school
@@ -18,6 +19,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     /// 고유 식별자
     var id: String {
         switch self {
+        case .all: return "all"
         case .central: return "central"
         case .branch: return "branch"
         case .school: return "school"
@@ -28,6 +30,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     /// 카테고리 표시 텍스트
     var labelText: String {
         switch self {
+        case .all: return "전체 기수"
         case .central: return "중앙"
         case .branch: return "지부"
         case .school: return "학교"
@@ -38,6 +41,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     /// 카테고리 아이콘 SF Symbol 이름
     var labelIcon: String {
         switch self {
+        case .all: return "line.3.horizontal.decrease"
         case .central: return "building.columns"
         case .branch: return "mappin.and.ellipse"
         case .school: return "graduationcap"
@@ -48,6 +52,8 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     /// 서브카테고리 목록
     var subCategories: [EditorSubCategory] {
         switch self {
+        case .all:
+            return [.all, .school]
         case .central:
             return [.all, .branch, .school, .part]
         case .branch:
@@ -198,6 +204,8 @@ struct NoticeImageItem: Identifiable {
     var imageData: Data?
     /// 서버에 업로드된 이미지 URL (수정 모드에서 기존 이미지)
     var imageURL: String? = nil
+    /// 업로드 시 사용할 원본 기반 파일명 (예: IMG_1234.jpg)
+    var uploadFileName: String? = nil
     /// Presigned URL 업로드 진행 중 여부
     var isLoading: Bool = false
     /// 서버에 저장된 파일 ID (업로드 완료 후 할당)

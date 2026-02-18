@@ -1,103 +1,103 @@
 {
   "activityEntities" : [
-    "trainingStarted",
+    "trainingFinished",
     [
       {
-        "createdDate" : "2026-01-21T07:56:54Z",
-        "event" : "trainingStarted",
-        "id" : "4AEA903F-B430-49E0-90D6-33F83D3AADAC",
-        "subtitle" : "10 iterationNoticeClassifierML",
-        "title" : "Training Started"
+        "createdDate" : "2026-02-18T05:38:29Z",
+        "event" : "trainingFinished",
+        "id" : "2647DA4E-2FAA-4593-9C98-BE0C9447CCE5",
+        "subtitle" : "Model converged at 2 iterations",
+        "title" : "Training Completed"
       }
     ],
     "trainingDataAdded",
     [
       {
-        "createdDate" : "2026-01-21T07:56:52Z",
+        "createdDate" : "2026-02-18T05:38:25Z",
         "event" : "trainingDataAdded",
-        "id" : "7C2E6F21-865B-4684-B889-DF38BA2BC0BA",
-        "subtitle" : "NoticeTrainingData.jNoticeClassifierMLon",
+        "id" : "61CFE9E9-D5A2-4A77-8F90-B0830E97B7DF",
+        "subtitle" : "NoticeTrainingData.json",
         "title" : "Training Data Added"
-      }
-    ],
-    "trainingFinished",
-    [
-      {
-        "createdDate" : "2026-01-21T07:56:55Z",
-        "event" : "trainingFinished",
-        "id" : "08C4A3D8-C5C8-4E1A-B15A-36FC6FDF2C60",
-        "subtitle" : "Model converged at 2 iterationNoticeClassifierML",
-        "title" : "Training Completed"
       }
     ],
     "experimentCreated",
     [
       {
-        "createdDate" : "2026-01-21T07:56:42Z",
+        "createdDate" : "2026-02-18T05:37:53Z",
         "event" : "experimentCreated",
-        "id" : "958A6AB5-FBAF-49D6-976F-CC2F711B0F1C",
-        "subtitle" : "NoticeClassifierML",
+        "id" : "8E2C824D-9854-4D5E-94F7-F20565208A9D",
+        "subtitle" : "NoticeClassifier.v1",
         "title" : "Model Source Created"
+      }
+    ],
+    "trainingStarted",
+    [
+      {
+        "createdDate" : "2026-02-18T05:38:29Z",
+        "event" : "trainingStarted",
+        "id" : "564AA99C-0CD9-4104-A57B-3BAA890CE3C4",
+        "subtitle" : "100 iterations",
+        "title" : "Training Started"
       }
     ]
   ],
   "contentDataResult" : {
-    "createdDate" : "2026-01-21T07:56:52Z"
+    "createdDate" : "2026-02-18T05:38:04Z"
   },
-  "createdDate" : "2026-01-21T07:56:42Z",
+  "createdDate" : "2026-02-18T05:37:53Z",
   "evaluationContainerEntity" : {
-    "createdDate" : "2026-01-21T08:00:56Z",
+    "createdDate" : "2026-02-18T05:38:29Z",
     "evaluationEntities" : [
       {
         "analysedDataType" : "none",
-        "createdDate" : "2026-01-21T07:56:55Z",
+        "createdDate" : "2026-02-18T05:38:29Z",
         "dataResult" : {
 
         },
-        "id" : "57a2cdfb-308f-43c1-8065-d091a557ad63"
+        "id" : "50068df3-7c2a-48ff-93a7-965441b65aa6"
       }
     ],
-    "id" : "d4e4b544-a964-4d0e-9957-631fff934b64",
-    "modifiedDate" : "2026-01-21T08:00:56Z",
+    "id" : "8b0fdb39-e0e1-4031-b16a-8e0a0bad727c",
+    "modifiedDate" : "2026-02-18T05:38:29Z",
     "previewType" : "textClassifier",
     "testingEvaluationEntity" : {
       "analysedDataType" : "none",
-      "createdDate" : "2026-01-21T07:56:42Z",
+      "createdDate" : "2026-02-18T05:37:53Z",
       "dataResult" : {
-        "createdDate" : "2026-01-21T07:56:52Z"
+        "createdDate" : "2026-02-18T05:38:04Z"
       },
-      "id" : "e7e3164c-2ae9-4277-a4bd-87b633c154e2"
+      "id" : "7b154959-d6e2-4669-96fc-6bd5abffe04b"
     },
     "trainingEvaluationEntity" : {
       "analysedDataType" : "none",
-      "createdDate" : "2026-01-21T07:56:42Z",
+      "createdDate" : "2026-02-18T05:37:53Z",
       "dataResult" : {
         "classesCount" : 4,
-        "createdDate" : "2026-01-21T07:56:52Z",
+        "createdDate" : "2026-02-18T05:38:04Z",
         "dataAnalysis" : {
           "classifierAnalysis" : {
             "labelStats" : {
-              "error" : 50,
-              "info" : 50,
-              "success" : 50,
-              "warning" : 50
+              "error" : 450,
+              "info" : 450,
+              "success" : 450,
+              "warning" : 450
             }
           },
           "issues" : [
             {
-              "description" : "4 classes found, including error, info, warning",
+              "description" : "4 classes found, including error, success, warning",
               "severity" : "debug"
             },
             {
-              "description" : "200 texts found, automatically creating validation set",
+              "description" : "1800 texts found, automatically creating validation set",
               "severity" : "good"
             },
             {
-              "description" : "Smallest class is \"success\" with 50 texts",
+              "description" : "Smallest class is \"info\" with 450 texts",
               "severity" : "debug"
             },
             {
-              "description" : "Largest class is \"error\" with 50 text",
+              "description" : "Largest class is \"error\" with 450 text",
               "severity" : "debug"
             }
           ],
@@ -109,12 +109,12 @@
           "summary" : {
             "canUseValidation" : 1,
             "classCount" : 4,
-            "sampleCount" : 200
+            "sampleCount" : 1800
           }
         },
         "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
         "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/NoticeAlarmHistory/NoticeTrainingData.json",
-        "itemsCount" : 200
+        "itemsCount" : 1800
       },
       "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
       "evaluationResult" : {
@@ -123,28 +123,28 @@
           "confusionMatrix" : [
             {
               "actual" : "error",
-              "count" : 49,
+              "count" : 430,
               "expected" : "error"
             },
             {
               "actual" : "info",
-              "count" : 45,
+              "count" : 425,
               "expected" : "info"
             },
             {
               "actual" : "success",
-              "count" : 47,
+              "count" : 433,
               "expected" : "success"
             },
             {
               "actual" : "warning",
-              "count" : 49,
+              "count" : 422,
               "expected" : "warning"
             }
           ],
           "statsByLabel" : {
             "error" : {
-              "count" : 49,
+              "count" : 430,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -153,7 +153,7 @@
               }
             },
             "info" : {
-              "count" : 45,
+              "count" : 425,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -162,7 +162,7 @@
               }
             },
             "success" : {
-              "count" : 47,
+              "count" : 433,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -171,7 +171,7 @@
               }
             },
             "warning" : {
-              "count" : 49,
+              "count" : 422,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -182,56 +182,66 @@
           }
         }
       },
-      "id" : "6e1d4025-7814-4667-b5e2-c5d96df8aa43"
+      "id" : "f0760406-0adb-4241-a9c1-9a6bfd702e65"
     },
     "validationEvaluationEntity" : {
       "analysedDataType" : "auto",
-      "createdDate" : "2026-01-21T07:56:42Z",
+      "createdDate" : "2026-02-18T05:37:53Z",
       "dataResult" : {
-        "createdDate" : "2026-01-21T07:56:52Z"
+        "createdDate" : "2026-02-18T05:38:04Z"
       },
       "evaluationResult" : {
         "textClassifier" : {
-          "accuracy" : 0.9,
+          "accuracy" : 0.7111111111111111,
           "confusionMatrix" : [
             {
               "actual" : "error",
-              "count" : 1,
+              "count" : 12,
               "expected" : "error"
             },
             {
+              "actual" : "error",
+              "count" : 8,
+              "expected" : "success"
+            },
+            {
               "actual" : "info",
-              "count" : 4,
+              "count" : 20,
               "expected" : "info"
             },
             {
               "actual" : "info",
-              "count" : 1,
+              "count" : 5,
               "expected" : "success"
             },
             {
               "actual" : "success",
-              "count" : 3,
+              "count" : 17,
               "expected" : "success"
             },
             {
               "actual" : "warning",
-              "count" : 1,
+              "count" : 13,
+              "expected" : "success"
+            },
+            {
+              "actual" : "warning",
+              "count" : 15,
               "expected" : "warning"
             }
           ],
           "statsByLabel" : {
             "error" : {
-              "count" : 1,
+              "count" : 20,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 1
+                  "recall" : 0.6
                 }
               }
             },
             "info" : {
-              "count" : 5,
+              "count" : 25,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -240,27 +250,27 @@
               }
             },
             "success" : {
-              "count" : 3,
+              "count" : 17,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.75,
+                  "precision" : 0.3953488372093023,
                   "recall" : 1
                 }
               }
             },
             "warning" : {
-              "count" : 1,
+              "count" : 28,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 1
+                  "recall" : 0.5357142857142857
                 }
               }
             }
           }
         }
       },
-      "id" : "401de41a-304c-459c-b733-a836a3eadd71"
+      "id" : "4931f653-d232-4dc1-9e78-190061de729a"
     }
   },
   "evaluationEntity" : {
@@ -268,21 +278,21 @@
     "dataResult" : {
 
     },
-    "id" : "095f7f2c-fe86-4f2e-a179-687a15df43cc"
+    "id" : "0f7777cb-f8fe-44ea-a8b3-9d7c71778b0b"
   },
   "evaluationState" : "uninitialized",
-  "id" : "E5263897-3103-4934-8F7F-FB59054829EE",
+  "id" : "DD33B82A-0AD3-4E29-8D55-E73146AAFACD",
   "modelEntity" : {
-    "createdDate" : "2026-01-21T07:56:42Z",
-    "experimentID" : "E5263897-3103-4934-8F7F-FB59054829EE",
-    "id" : "150AF3E5-AF15-4140-A7B5-26172DA4F4BC",
-    "modelURL" : "Models/NoticeClassifierML.mlmodel/",
-    "modifiedDate" : "2026-01-21T07:56:42Z",
+    "createdDate" : "2026-02-18T05:37:53Z",
+    "experimentID" : "DD33B82A-0AD3-4E29-8D55-E73146AAFACD",
+    "id" : "B6E48B3C-2919-4FB9-A781-72D91FFF6057",
+    "modelURL" : "Models/NoticeClassifier.v1.mlmodel",
+    "modifiedDate" : "2026-02-18T05:37:53Z",
     "title" : "",
     "version" : "1.0"
   },
-  "modifiedDate" : "2026-01-21T08:00:56Z",
-  "preferredFilename" : "NoticeClassifierML",
+  "modifiedDate" : "2026-02-18T05:38:29Z",
+  "preferredFilename" : "NoticeClassifier.v1",
   "settingEntity" : {
     "algorithmType" : "maxEnt",
     "augmentations" : [
@@ -298,7 +308,7 @@
 
     ],
     "harVideoAugmentations" : 0,
-    "iterationCount" : 10,
+    "iterationCount" : 100,
     "seedType" : "default",
     "styleTransferAlgorithmType" : "image",
     "taskType" : "textClassifier",
@@ -322,31 +332,31 @@
     },
     "dataResult" : {
       "classesCount" : 4,
-      "createdDate" : "2026-01-21T07:56:52Z",
+      "createdDate" : "2026-02-18T05:38:04Z",
       "dataAnalysis" : {
         "classifierAnalysis" : {
           "labelStats" : {
-            "error" : 50,
-            "info" : 50,
-            "success" : 50,
-            "warning" : 50
+            "error" : 450,
+            "info" : 450,
+            "success" : 450,
+            "warning" : 450
           }
         },
         "issues" : [
           {
-            "description" : "4 classes found, including error, info, warning",
+            "description" : "4 classes found, including error, success, warning",
             "severity" : "debug"
           },
           {
-            "description" : "200 texts found, automatically creating validation set",
+            "description" : "1800 texts found, automatically creating validation set",
             "severity" : "good"
           },
           {
-            "description" : "Smallest class is \"success\" with 50 texts",
+            "description" : "Smallest class is \"info\" with 450 texts",
             "severity" : "debug"
           },
           {
-            "description" : "Largest class is \"error\" with 50 text",
+            "description" : "Largest class is \"error\" with 450 text",
             "severity" : "debug"
           }
         ],
@@ -358,16 +368,16 @@
         "summary" : {
           "canUseValidation" : 1,
           "classCount" : 4,
-          "sampleCount" : 200
+          "sampleCount" : 1800
         }
       },
       "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
       "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/NoticeAlarmHistory/NoticeTrainingData.json",
-      "itemsCount" : 200
+      "itemsCount" : 1800
     },
     "dataSourceID" : "2D66200E-AD08-47E7-9525-603C352478EB",
     "featureExtractionCheckpointMayBeAvailable" : false,
-    "finishTime" : "2026-01-21T07:56:55Z",
+    "finishTime" : "2026-02-18T05:38:29Z",
     "progress" : [
       {
         "count" : 1,
@@ -381,7 +391,7 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 10,
-          "trainingAccuracy" : 0.25789472460746765,
+          "trainingAccuracy" : 0.25321638584136963,
           "validationAccuracy" : 0
         }
       },
@@ -397,84 +407,12 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 9,
-          "trainingAccuracy" : 1,
+          "trainingAccuracy" : 0.9964912533760071,
           "validationAccuracy" : 0
         }
       },
       {
         "count" : 10,
-        "currentRowIndex" : 0,
-        "isLast" : false,
-        "percentComplete" : 0,
-        "tableDone" : false,
-        "tableIndex" : 0
-      },
-      {
-        "count" : 20,
-        "currentRowIndex" : 0,
-        "isLast" : false,
-        "percentComplete" : 0,
-        "tableDone" : false,
-        "tableIndex" : 0
-      },
-      {
-        "count" : 30,
-        "currentRowIndex" : 0,
-        "isLast" : false,
-        "percentComplete" : 0,
-        "tableDone" : false,
-        "tableIndex" : 0
-      },
-      {
-        "count" : 40,
-        "currentRowIndex" : 0,
-        "isLast" : false,
-        "percentComplete" : 0,
-        "tableDone" : false,
-        "tableIndex" : 0
-      },
-      {
-        "count" : 50,
-        "currentRowIndex" : 0,
-        "isLast" : false,
-        "percentComplete" : 0,
-        "tableDone" : false,
-        "tableIndex" : 0
-      },
-      {
-        "count" : 60,
-        "currentRowIndex" : 0,
-        "isLast" : false,
-        "percentComplete" : 0,
-        "tableDone" : false,
-        "tableIndex" : 0
-      },
-      {
-        "count" : 70,
-        "currentRowIndex" : 0,
-        "isLast" : false,
-        "percentComplete" : 0,
-        "tableDone" : false,
-        "tableIndex" : 0
-      },
-      {
-        "count" : 80,
-        "currentRowIndex" : 0,
-        "isLast" : false,
-        "percentComplete" : 0,
-        "tableDone" : false,
-        "tableIndex" : 0
-      },
-      {
-        "count" : 90,
-        "currentRowIndex" : 0,
-        "isLast" : false,
-        "percentComplete" : 0,
-        "tableDone" : false,
-        "tableIndex" : 0
-      },
-      {
-        "count" : 100,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -490,7 +428,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 120,
+        "count" : 210,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -498,7 +436,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 130,
+        "count" : 310,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -506,7 +444,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 140,
+        "count" : 410,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -514,7 +452,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 150,
+        "count" : 510,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -522,7 +460,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 160,
+        "count" : 610,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -530,7 +468,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 170,
+        "count" : 710,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -538,7 +476,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 180,
+        "count" : 810,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -546,7 +484,71 @@
         "tableIndex" : 0
       },
       {
-        "count" : 190,
+        "count" : 910,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1010,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1110,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1210,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1310,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1410,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1510,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1610,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1710,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -557,7 +559,7 @@
     "snapshottableCheckpoints" : {
 
     },
-    "startTime" : "2026-01-21T07:56:54Z",
+    "startTime" : "2026-02-18T05:38:29Z",
     "trainingAccuracy" : 1,
     "trainingResults" : {
       "textClassifier" : {
@@ -565,28 +567,28 @@
         "confusionMatrix" : [
           {
             "actual" : "error",
-            "count" : 49,
+            "count" : 430,
             "expected" : "error"
           },
           {
             "actual" : "info",
-            "count" : 45,
+            "count" : 425,
             "expected" : "info"
           },
           {
             "actual" : "success",
-            "count" : 47,
+            "count" : 433,
             "expected" : "success"
           },
           {
             "actual" : "warning",
-            "count" : 49,
+            "count" : 422,
             "expected" : "warning"
           }
         ],
         "statsByLabel" : {
           "error" : {
-            "count" : 49,
+            "count" : 430,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -595,7 +597,7 @@
             }
           },
           "info" : {
-            "count" : 45,
+            "count" : 425,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -604,7 +606,7 @@
             }
           },
           "success" : {
-            "count" : 47,
+            "count" : 433,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -613,7 +615,7 @@
             }
           },
           "warning" : {
-            "count" : 49,
+            "count" : 422,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -624,49 +626,59 @@
         }
       }
     },
-    "validationAccuracy" : 0.9,
+    "validationAccuracy" : 0.7111111111111111,
     "validationResults" : {
       "textClassifier" : {
-        "accuracy" : 0.9,
+        "accuracy" : 0.7111111111111111,
         "confusionMatrix" : [
           {
             "actual" : "error",
-            "count" : 1,
+            "count" : 12,
             "expected" : "error"
           },
           {
+            "actual" : "error",
+            "count" : 8,
+            "expected" : "success"
+          },
+          {
             "actual" : "info",
-            "count" : 4,
+            "count" : 20,
             "expected" : "info"
           },
           {
             "actual" : "info",
-            "count" : 1,
+            "count" : 5,
             "expected" : "success"
           },
           {
             "actual" : "success",
-            "count" : 3,
+            "count" : 17,
             "expected" : "success"
           },
           {
             "actual" : "warning",
-            "count" : 1,
+            "count" : 13,
+            "expected" : "success"
+          },
+          {
+            "actual" : "warning",
+            "count" : 15,
             "expected" : "warning"
           }
         ],
         "statsByLabel" : {
           "error" : {
-            "count" : 1,
+            "count" : 20,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 1
+                "recall" : 0.6
               }
             }
           },
           "info" : {
-            "count" : 5,
+            "count" : 25,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -675,20 +687,20 @@
             }
           },
           "success" : {
-            "count" : 3,
+            "count" : 17,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.75,
+                "precision" : 0.3953488372093023,
                 "recall" : 1
               }
             }
           },
           "warning" : {
-            "count" : 1,
+            "count" : 28,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 1
+                "recall" : 0.5357142857142857
               }
             }
           }
@@ -699,7 +711,7 @@
   "validationEntity" : {
     "analysedDataType" : "auto",
     "dataResult" : {
-      "createdDate" : "2026-01-21T07:56:52Z"
+      "createdDate" : "2026-02-18T05:38:04Z"
     },
     "splitOptions" : {
       "strategy" : {
