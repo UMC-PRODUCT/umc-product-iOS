@@ -16,6 +16,7 @@ struct MyPageProfileResponseDTO: Codable {
     let schoolId: String
     let schoolName: String
     let profileImageLink: String?
+    let profile: MyPageProfileExternalLinksDTO?
     let status: MemberStatus
     let roles: [MyPageRoleDTO]
     let challengerRecords: [MyPageChallengerRecordDTO]?
@@ -28,6 +29,7 @@ struct MyPageProfileResponseDTO: Codable {
         case schoolId
         case schoolName
         case profileImageLink
+        case profile
         case status
         case roles
         case challengerRecords
@@ -42,12 +44,55 @@ struct MyPageProfileResponseDTO: Codable {
         schoolId = try container.decodeMyPageFlexibleString(forKey: .schoolId)
         schoolName = try container.decode(String.self, forKey: .schoolName)
         profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
+        profile = try container.decodeIfPresent(
+            MyPageProfileExternalLinksDTO.self,
+            forKey: .profile
+        )
         status = try container.decode(MemberStatus.self, forKey: .status)
         roles = try container.decodeIfPresent([MyPageRoleDTO].self, forKey: .roles) ?? []
         challengerRecords = try container.decodeIfPresent(
             [MyPageChallengerRecordDTO].self,
             forKey: .challengerRecords
         )
+    }
+}
+
+/// 특정 멤버 프로필 조회 응답에서 작성자 표시용으로 추출할 정보
+struct MemberProfileSummary {
+    let memberId: String
+    let name: String
+    let nickname: String
+    let generation: Int
+    let roleName: String
+    let profileImageURL: String?
+}
+
+/// `/api/v1/member/me` 응답의 `profile` 하위 객체
+struct MyPageProfileExternalLinksDTO: Codable {
+    let id: String
+    let linkedIn: String?
+    let instagram: String?
+    let github: String?
+    let blog: String?
+    let personal: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case linkedIn
+        case instagram
+        case github
+        case blog
+        case personal
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeMyPageFlexibleStringIfPresent(forKey: .id) ?? ""
+        linkedIn = try container.decodeMyPageFlexibleStringIfPresent(forKey: .linkedIn)
+        instagram = try container.decodeMyPageFlexibleStringIfPresent(forKey: .instagram)
+        github = try container.decodeMyPageFlexibleStringIfPresent(forKey: .github)
+        blog = try container.decodeMyPageFlexibleStringIfPresent(forKey: .blog)
+        personal = try container.decodeMyPageFlexibleStringIfPresent(forKey: .personal)
     }
 }
 
@@ -194,6 +239,7 @@ extension MyPageProfileResponseDTO {
         let records = challengerRecords ?? []
         let latestRecord = records.max { $0.gisu.intValue < $1.gisu.intValue }
         let latestRole = roles.max { ($0.gisu?.intValue ?? 0) < ($1.gisu?.intValue ?? 0) }
+        let profileLinks = profileLinks()
 
         let fallbackPart = latestRole?.responsiblePart
             .flatMap { UMCPartType(apiValue: $0) } ?? .pm
@@ -221,8 +267,69 @@ extension MyPageProfileResponseDTO {
             challangerInfo: challengerInfo,
             socialConnected: [],
             activityLogs: logs,
-            profileLink: []
+            profileLink: profileLinks
         )
+    }
+
+    /// 서버 응답의 외부 링크 필드를 `SocialLinkType` 기반 `[ProfileLink]` 배열로 변환합니다.
+    private func profileLinks() -> [ProfileLink] {
+        let mappedLinks: [SocialLinkType: String] = [
+            .github: profile?.github?.nonEmpty ?? "",
+            .linkedin: profile?.linkedIn?.nonEmpty ?? "",
+            .blog: profile?.blog?.nonEmpty ?? ""
+        ]
+
+        return SocialLinkType.allCases.map {
+            ProfileLink(type: $0, url: mappedLinks[$0] ?? "")
+        }
+    }
+
+    /// Notice 상세 작성자 표시용 프로필 요약 모델을 생성합니다.
+    func toMemberProfileSummary() -> MemberProfileSummary {
+        let sortedRoles = roles
+            .compactMap {
+                (
+                    role: $0,
+                    generation: Int($0.gisu ?? $0.gisuId) ?? 0,
+                    level: $0.roleType.level
+                )
+            }
+            .sorted {
+                if $0.level == $1.level {
+                    return $0.generation > $1.generation
+                }
+                return $0.level > $1.level
+            }
+
+        let selectedRole = sortedRoles.first
+        let latestRecordGeneration = challengerRecords?
+            .compactMap { Int($0.gisu) }
+            .max() ?? 0
+        let generation = selectedRole?.generation ?? latestRecordGeneration
+        let roleName = selectedRole?.role.roleType.korean ?? "챌린저"
+
+        return MemberProfileSummary(
+            memberId: id,
+            name: latestRecordName(),
+            nickname: latestRecordNickname(),
+            generation: generation,
+            roleName: roleName,
+            profileImageURL: profileImageLink
+        )
+    }
+
+    /// 기수(generation) 내림차순으로 정렬하여 가장 최신 기수의 이름을 반환합니다.
+    private func latestRecordName() -> String {
+        let sortedRecords = (challengerRecords ?? [])
+            .sorted { Int($0.gisu) ?? 0 > Int($1.gisu) ?? 0 }
+        return sortedRecords.first?.name ?? name
+    }
+
+    /// 기수(generation) 내림차순으로 정렬하여 가장 최신 기수의 닉네임을 반환합니다.
+    private func latestRecordNickname() -> String {
+        let sortedRecords = (challengerRecords ?? [])
+            .sorted { Int($0.gisu) ?? 0 > Int($1.gisu) ?? 0 }
+        return sortedRecords.first?.nickname ?? nickname
     }
 }
 

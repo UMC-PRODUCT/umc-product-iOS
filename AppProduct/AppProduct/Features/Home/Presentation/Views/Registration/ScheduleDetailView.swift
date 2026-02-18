@@ -88,7 +88,7 @@ struct ScheduleDetailView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        if let loadedData {
+        if let loadedData, viewModel.canEditSchedule || viewModel.canDeleteSchedule {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 if viewModel.canEditSchedule {
                     Button(action: {

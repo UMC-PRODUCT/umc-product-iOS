@@ -57,8 +57,48 @@ struct NoticeRepository: NoticeRepositoryProtocol {
             )
             _ = try imageApiResponse.unwrap()
         }
-        
-        return try await getDetailNotice(noticeId: noticeId)
+
+        // 공지 생성 완료 시점에는 추가 상세 조회를 수행하지 않습니다.
+        // 상세 조회는 사용자가 실제 공지 카드를 탭했을 때만 호출합니다.
+        let scope: NoticeScope = {
+            if body.targetInfo.targetSchoolId != nil {
+                return .campus
+            }
+            if body.targetInfo.targetChapterId != nil {
+                return .branch
+            }
+            return .central
+        }()
+
+        let category: NoticeCategory = body.targetInfo.targetParts?.first.map { .part($0) } ?? .general
+        let generation = body.targetInfo.targetGisuId > 0 ? body.targetInfo.targetGisuId : 0
+
+        return NoticeDetail(
+            id: String(noticeId),
+            generation: generation,
+            scope: scope,
+            category: category,
+            isMustRead: false,
+            title: body.title,
+            content: body.content,
+            authorID: "",
+            authorName: "",
+            authorImageURL: nil,
+            createdAt: Date(),
+            updatedAt: nil,
+            targetAudience: TargetAudience(
+                generation: generation,
+                scope: scope,
+                parts: body.targetInfo.targetParts ?? [],
+                branches: [],
+                schools: []
+            ),
+            hasPermission: false,
+            images: [],
+            imageItems: [],
+            links: links,
+            vote: nil
+        )
     }
     
     /// 공지사항 기본 생성 → NoticeItemModel 반환
@@ -221,12 +261,32 @@ struct NoticeRepository: NoticeRepositoryProtocol {
         let response = try await adapter.request(
             NoticeRouter.getAllNotices(request: request)
         )
-        
-        let apiResponse = try JSONDecoder().decode(
-            APIResponse<NoticePageDTO<NoticeDTO>>.self,
-            from: response.data
-        )
-        return try apiResponse.unwrap()
+
+        do {
+            let apiResponse = try JSONDecoder().decode(
+                APIResponse<NoticePageDTO<NoticeDTO>>.self,
+                from: response.data
+            )
+            let pageDTO = try apiResponse.unwrap()
+
+            #if DEBUG
+            print(
+                "[NoticeRepository] getAllNotices success " +
+                "query=\(request.queryItems) " +
+                "contentCount=\(pageDTO.content.count) " +
+                "totalElements=\(pageDTO.totalElements)"
+            )
+            #endif
+
+            return pageDTO
+        } catch let decodingError as DecodingError {
+            #if DEBUG
+            let rawBody = String(data: response.data, encoding: .utf8) ?? "<invalid utf8>"
+            print("[NoticeRepository] getAllNotices decodingError=\(decodingError)")
+            print("[NoticeRepository] getAllNotices rawBody=\(rawBody)")
+            #endif
+            throw RepositoryError.decodingError(detail: "Notice list decoding failed: \(decodingError)")
+        }
     }
     
     /// 공지사항 상세 조회
@@ -234,14 +294,23 @@ struct NoticeRepository: NoticeRepositoryProtocol {
         let response = try await adapter.request(
             NoticeRouter.getDetailNotice(noticeId: noticeId)
         )
-        
-        let apiResponse = try JSONDecoder().decode(
-            APIResponse<NoticeDetailDTO>.self,
-            from: response.data
-        )
-        let detailDTO = try apiResponse.unwrap()
-        
-        return detailDTO.toDomain()
+
+        do {
+            let apiResponse = try JSONDecoder().decode(
+                APIResponse<NoticeDetailDTO>.self,
+                from: response.data
+            )
+            let detailDTO = try apiResponse.unwrap()
+
+            return detailDTO.toDomain()
+        } catch let decodingError as DecodingError {
+            #if DEBUG
+            let rawBody = String(data: response.data, encoding: .utf8) ?? "<invalid utf8>"
+            print("[NoticeRepository] getDetailNotice decodingError=\(decodingError)")
+            print("[NoticeRepository] getDetailNotice rawBody=\(rawBody)")
+            #endif
+            throw RepositoryError.decodingError(detail: "\(decodingError)")
+        }
     }
     
     /// 공지 열람 통계 조회

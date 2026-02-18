@@ -31,11 +31,15 @@ extension NoticeEditorViewModel {
         if memberRole == .superAdmin {
             return "시스템 관리자는 공지 작성 권한이 없습니다."
         }
+        if memberRole == .centralOperatingTeamMember {
+            return "중앙 운영 사무국원은 공지 작성 권한이 없습니다."
+        }
 
         let hasGisu = resolvedGisuId > 0
         let hasBranch = subCategorySelection.selectedBranch != nil
         let hasSchool = subCategorySelection.selectedSchool != nil
         let hasParts = !subCategorySelection.selectedParts.isEmpty
+        let hasPartChipSelected = subCategorySelection.selectedSubCategories.contains(.part)
         let canPickBranch = visibleSubCategories.contains(.branch)
         let canPickSchool = visibleSubCategories.contains(.school)
 
@@ -57,6 +61,15 @@ extension NoticeEditorViewModel {
             return nil
         }
 
+        if memberRole == .centralEducationTeamMember && !hasParts {
+            return "파트를 하나 이상 선택해주세요."
+        }
+
+        // 파트 칩을 활성화했으면 최소 1개는 반드시 선택해야 합니다.
+        if hasPartChipSelected && !hasParts {
+            return "하나 이상의 파트를 선택해주세요."
+        }
+
         if hasBranch && hasSchool {
             return "지부와 학교는 동시에 선택할 수 없습니다."
         }
@@ -66,6 +79,9 @@ extension NoticeEditorViewModel {
                 return "기수를 선택하지 않은 경우 지부 대상 공지는 작성할 수 없습니다."
             }
             if hasSchool && hasParts {
+                return "기수를 선택하지 않은 경우 학교와 파트를 동시에 지정할 수 없습니다."
+            }
+            if (memberRole == .schoolPartLeader || memberRole == .schoolEtcAdmin) && hasParts {
                 return "기수를 선택하지 않은 경우 학교와 파트를 동시에 지정할 수 없습니다."
             }
         }
@@ -106,6 +122,8 @@ extension NoticeEditorViewModel {
     /// 현재 메인 카테고리에 맞는 타겟 목록을 조회합니다.
     @MainActor
     func loadTargetOptions() async {
+        targetOptionsState = .loading
+
         do {
             switch selectedCategory {
             case .all:
@@ -155,26 +173,19 @@ extension NoticeEditorViewModel {
                 branchOptions = []
                 schoolOptions = []
             }
+            targetOptionsState = .loaded(true)
+        } catch let error as DomainError {
+            targetOptionsState = .failed(.domain(error))
+            handleError(error, action: "loadTargetOptions")
+        } catch let error as NetworkError {
+            targetOptionsState = .failed(.network(error))
+            handleError(error, action: "loadTargetOptions")
+        } catch let error as RepositoryError {
+            targetOptionsState = .failed(.repository(error))
+            handleError(error, action: "loadTargetOptions")
         } catch {
-            switch selectedCategory {
-            case .all:
-                branchOptions = []
-                schoolOptions = []
-            case .central:
-                branchOptions = visibleSubCategories.contains(.branch) ? EditorMockData.branches : []
-                schoolOptions = visibleSubCategories.contains(.school) ? EditorMockData.schools : []
-            case .branch:
-                branchOptions = visibleSubCategories.contains(.branch) ? EditorMockData.branches : []
-                schoolOptions = visibleSubCategories.contains(.school)
-                    ? (EditorMockData.chapterSchools[resolvedChapterId] ?? EditorMockData.schools)
-                    : []
-            case .school:
-                branchOptions = []
-                schoolOptions = visibleSubCategories.contains(.school) ? EditorMockData.schools : []
-            case .part:
-                branchOptions = []
-                schoolOptions = []
-            }
+            targetOptionsState = .failed(.unknown(message: error.localizedDescription))
+            handleError(error, action: "loadTargetOptions")
         }
 
         normalizeSelectionForCurrentCategory()
@@ -413,6 +424,19 @@ extension NoticeEditorViewModel {
         for _: OrganizationType?,
         memberRole: ManagementTeam?
     ) -> [EditorMainCategory] {
+        // 중앙 총괄/부총괄은 "전체 기수"와 "선택 기수"만 사용합니다.
+        if memberRole == .centralPresident || memberRole == .centralVicePresident {
+            return [.all, .central]
+        }
+        // 중앙 교육국원은 선택 기수 메뉴만 사용합니다.
+        if memberRole == .centralEducationTeamMember {
+            return [.central]
+        }
+        // 학교 파트장/교내 운영진은 선택 기수 기반 학교 공지만 작성합니다.
+        if memberRole == .schoolPartLeader || memberRole == .schoolEtcAdmin {
+            return [.school]
+        }
+
         switch roleGroup(from: memberRole) {
         case .central:
             // CENTRAL 계열: 상단 메뉴에서 "중앙" 제거
@@ -461,6 +485,7 @@ private extension NoticeEditorViewModel {
         case unknown
     }
 
+    /// 멤버 역할을 에디터 정책 그룹으로 매핑합니다.
     static func roleGroup(from memberRole: ManagementTeam?) -> RoleGroup {
         switch memberRole {
         case .centralPresident, .centralVicePresident, .centralOperatingTeamMember, .centralEducationTeamMember:
@@ -478,20 +503,47 @@ private extension NoticeEditorViewModel {
         }
     }
 
+    /// 메인 카테고리와 역할 조합에 따라 노출 가능한 서브카테고리를 반환합니다.
     static func allowedSubCategories(
         for category: EditorMainCategory,
         memberRole: ManagementTeam?
     ) -> [EditorSubCategory] {
+        // 중앙 총괄/부총괄은 하단 칩에서 학교/파트를 노출하지 않습니다.
+        if memberRole == .centralPresident || memberRole == .centralVicePresident {
+            return []
+        }
+        // 중앙 교육국원은 파트 칩만 노출합니다.
+        if memberRole == .centralEducationTeamMember {
+            return [.part]
+        }
+        // 학교 회장단은 학교가 고정이므로 하단 학교 칩을 노출하지 않습니다.
+        // - 전체 기수: 칩 없음
+        // - 학교: 파트 칩만
+        if isSchoolCoreRole(memberRole) {
+            switch category {
+            case .all:
+                return []
+            case .school:
+                return [.part]
+            default:
+                return []
+            }
+        }
+        // 학교 파트장/교내 운영진은 파트 칩만 노출합니다.
+        if memberRole == .schoolPartLeader || memberRole == .schoolEtcAdmin {
+            return [.part]
+        }
+
         switch roleGroup(from: memberRole) {
         case .central:
             // CENTRAL: 하단 칩은 전체/파트
             return [.all, .part]
         case .school:
-            // SCHOOL: 하단 칩은 학교/파트
+            // SCHOOL(기타): 하단 칩은 학교/파트
             return [.school, .part]
         case .chapter:
-            // CHAPTER: 하단 칩은 지부/학교
-            return [.branch, .school]
+            // CHAPTER: 지부는 본인 지부로 고정, 하단 칩은 파트만 노출
+            return [.part]
         case .noPermission:
             return []
         case .unknown:
@@ -499,6 +551,12 @@ private extension NoticeEditorViewModel {
         }
     }
 
+    /// 학교 회장/부회장 여부를 판단합니다.
+    static func isSchoolCoreRole(_ memberRole: ManagementTeam?) -> Bool {
+        memberRole == .schoolPresident || memberRole == .schoolVicePresident
+    }
+
+    /// 역할 변경 시 에디터 정책(카테고리/서브카테고리)을 재적용하고 타겟 옵션을 다시 로드합니다.
     func applyEditorPolicyAndReloadTargets() {
         let categories = Self.availableCategories(
             for: organizationType,
@@ -520,6 +578,7 @@ private extension NoticeEditorViewModel {
         }
     }
 
+    /// 현재 카테고리에 맞지 않는 서브카테고리 선택을 정리하고 일관된 상태로 보정합니다.
     func normalizeSelectionForCurrentCategory() {
         let allowed = Set(visibleSubCategories)
         subCategorySelection.selectedSubCategories = subCategorySelection

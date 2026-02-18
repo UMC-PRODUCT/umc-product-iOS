@@ -153,7 +153,7 @@ struct NoticeDetailView: View {
                     Image(data.authorImageURL ?? Constants.defaultProfileImageName)
                         .resizable()
                         .frame(width: Constants.profileSize.width, height: Constants.profileSize.height)
-                    Text(data.authorName)
+                    Text(viewModel.authorDisplayName.isEmpty ? data.authorName : viewModel.authorDisplayName)
                 }
                 Spacer()
                 Text(data.createdAt.toYearMonthDay())
@@ -168,7 +168,7 @@ struct NoticeDetailView: View {
 
     /// 공지 본문/투표/이미지/링크를 순서대로 구성합니다.
     private func bottomSection(_ data: NoticeDetail) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             Text(data.content)
                 .appFont(.body)
                 .multilineTextAlignment(.leading)
@@ -212,7 +212,7 @@ struct NoticeDetailView: View {
     /// 수정/삭제 메뉴를 포함하는 네비게이션 툴바
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        if currentNotice != nil {
+        if currentNotice != nil, !toolbarActions.isEmpty {
             ToolBarCollection.ToolbarTrailingMenu(actions: toolbarActions)
         }
     }
@@ -254,7 +254,8 @@ struct NoticeDetailView: View {
             NoticeReadStatusButton(
                 confirmedCount: viewModel.confirmedCount,
                 totalCount: viewModel.totalCount,
-                readRate: viewModel.readRate
+                readRate: viewModel.readRate,
+                isLoading: viewModel.isReadStaticsLoading && viewModel.readStatics == nil
             ) {
                 viewModel.openReadStatusSheet()
             }
@@ -309,23 +310,34 @@ struct NoticeDetailView: View {
 
     // MARK: - Task
 
-    /// 화면 진입 시 읽음 처리, 열람 현황, 권한, 상세 데이터를 순차 로드합니다.
+    /// 화면 진입 시 읽음 처리, 열람 현황, 권한, 상세 데이터를 로드합니다.
     @MainActor
     private func onTask() async {
         viewModel.updateErrorHandler(errorHandler)
-        await viewModel.markAsReadIfNeeded()
-        await viewModel.fetchReadStatus()
-        await viewModel.fetchNoticePermission()
+
         guard !shouldForceDetailFailedInDebug else {
             viewModel.noticeState = .failed(.unknown(message: "공지 상세 데이터를 불러오지 못했습니다."))
             return
         }
-        guard !shouldSkipDetailFetchInDebug else {
+
+        if shouldSkipDetailFetchInDebug {
             viewModel.isDetailPreparedForEdit = true
-            return
+            Task { await viewModel.prefetchReadStaticsIfNeeded(forceReload: true) }
+        } else {
+            async let detailTask: Void = viewModel.fetchNoticeDetail()
+            async let staticsTask: Void = viewModel.prefetchReadStaticsIfNeeded()
+            async let permissionTask: Void = viewModel.fetchNoticePermission()
+            async let markAsReadTask = viewModel.markAsReadIfNeeded()
+
+            let didMarkAsRead = await markAsReadTask
+            await detailTask
+            await staticsTask
+            await permissionTask
+            if didMarkAsRead {
+                viewModel.applyOptimisticReadStatics()
+                Task { await viewModel.prefetchReadStaticsIfNeeded(forceReload: true) }
+            }
         }
-        await viewModel.fetchNoticeDetail()
-        await viewModel.fetchNoticePermission()
     }
 
     // MARK: - Private Methods

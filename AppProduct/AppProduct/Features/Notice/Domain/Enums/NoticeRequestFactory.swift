@@ -65,11 +65,11 @@ enum NoticeRequestFactory {
             requestSchoolId = nil
             requestPart = selectedPart?.umcPartType
         case .school:
-            requestChapterId = myChapterId
+            requestChapterId = nil
             requestSchoolId = mySchoolId
             requestPart = selectedPart?.umcPartType
         case .part(let filterPart):
-            requestChapterId = myChapterId
+            requestChapterId = nil
             requestSchoolId = mySchoolId
             requestPart = filterPart.umcPartType
         }

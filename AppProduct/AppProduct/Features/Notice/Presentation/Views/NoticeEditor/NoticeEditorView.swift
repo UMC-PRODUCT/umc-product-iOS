@@ -166,7 +166,9 @@ struct NoticeEditorView: View {
     /// 상단 안전 영역: 게시판 분류 칩
     @ViewBuilder
     private func topSafeAreaContent() -> some View {
-        if viewModel.selectedCategory.hasSubCategories && !viewModel.isEditMode {
+        if viewModel.selectedCategory.hasSubCategories
+            && !viewModel.isEditMode
+            && !viewModel.visibleSubCategories.isEmpty {
             subCategorySection
         }
     }
@@ -383,7 +385,7 @@ struct NoticeEditorView: View {
             ToolBarCollection.ToolBarCenterMenu(
                 items: viewModel.availableCategories,
                 selection: categoryBinding,
-                itemLabel: { $0.labelText },
+                itemLabel: menuItemLabel,
                 itemIcon: { $0.labelIcon }
             )
             ToolBarCollection.AddBtn(
@@ -406,11 +408,22 @@ struct NoticeEditorView: View {
 
     /// 화면 타이틀
     private var navigationTitle: String {
-        viewModel.isEditMode ? "공지 수정" : viewModel.selectedCategory.labelText
+        if viewModel.isEditMode {
+            return "공지 수정"
+        }
+
+        if isCentralCoreRole, viewModel.selectedCategory == .central {
+            let targetGisu = selectedGisuId ?? gisuId
+            return targetGisu > 0 ? "\(targetGisu)기" : "기수"
+        }
+
+        return viewModel.selectedCategory.labelText
     }
 
     /// 메인 카테고리가 지부/학교일 때 본인 소속명을 서브타이틀로 노출합니다.
     private var navigationSubtitle: String {
+        let currentRole = ManagementTeam(rawValue: memberRoleRaw)
+
         if viewModel.isEditMode {
             switch viewModel.selectedCategory {
             case .branch:
@@ -425,7 +438,24 @@ struct NoticeEditorView: View {
         switch viewModel.selectedCategory {
         case .all:
             return ""
-        case .central, .branch, .school, .part:
+        case .branch:
+            if currentRole == .chapterPresident {
+                return normalizedName(from: chapterName, fallback: "지부")
+            }
+            let targetGisu = selectedGisuId ?? gisuId
+            guard targetGisu > 0 else { return "" }
+            return "\(targetGisu)기"
+        case .school:
+            if currentRole == .schoolPresident
+                || currentRole == .schoolVicePresident
+                || currentRole == .schoolPartLeader
+                || currentRole == .schoolEtcAdmin {
+                return normalizedName(from: schoolName, fallback: "학교")
+            }
+            let targetGisu = selectedGisuId ?? gisuId
+            guard targetGisu > 0 else { return "" }
+            return "\(targetGisu)기"
+        case .central, .part:
             let targetGisu = selectedGisuId ?? gisuId
             guard targetGisu > 0 else { return "" }
             return "\(targetGisu)기"
@@ -438,6 +468,15 @@ struct NoticeEditorView: View {
             get: { viewModel.selectedCategory },
             set: { viewModel.selectCategory($0) }
         )
+    }
+
+    /// 상단 메뉴 항목 라벨 (권한/선택 기수 반영)
+    private func menuItemLabel(_ category: EditorMainCategory) -> String {
+        if isCentralCoreRole, category == .central {
+            let targetGisu = selectedGisuId ?? gisuId
+            return targetGisu > 0 ? "\(targetGisu)기" : "기수"
+        }
+        return category.labelText
     }
 
     /// 타겟 선택 시트 높이 설정
@@ -601,6 +640,14 @@ struct NoticeEditorView: View {
     private func normalizedName(from rawValue: String, fallback: String) -> String {
         let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? fallback : trimmed
+    }
+
+    /// 중앙 총괄/부총괄 여부
+    private var isCentralCoreRole: Bool {
+        guard let role = ManagementTeam(rawValue: memberRoleRaw) else { return false }
+        return role == .centralPresident
+            || role == .centralVicePresident
+            || role == .centralEducationTeamMember
     }
 
 }

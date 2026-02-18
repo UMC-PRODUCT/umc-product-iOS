@@ -12,6 +12,9 @@ protocol MyPageRepositoryProtocol: Sendable {
 
     /// 내 프로필 조회
     func fetchMyProfile() async throws -> ProfileData
+    
+    /// 특정 멤버 프로필 조회
+    func fetchMemberProfile(memberId: Int) async throws -> MemberProfileSummary
 
     /// 프로필 이미지를 업로드하고 회원 프로필에 반영합니다.
     ///
@@ -21,6 +24,11 @@ protocol MyPageRepositoryProtocol: Sendable {
         imageData: Data,
         fileName: String,
         contentType: String
+    ) async throws -> ProfileData
+
+    /// 외부 프로필 링크(GitHub, LinkedIn, Blog) 정보를 서버에 반영합니다.
+    func updateProfileLinks(
+        _ links: [ProfileLink]
     ) async throws -> ProfileData
 
     /// 회원 탈퇴를 수행합니다.

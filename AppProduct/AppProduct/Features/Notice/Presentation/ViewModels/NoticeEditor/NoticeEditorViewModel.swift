@@ -99,6 +99,9 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     /// 학교 선택 시트 목록
     var schoolOptions: [NoticeTargetOption] = []
 
+    /// 타겟(지부/학교/파트) 시트 데이터 로딩 상태
+    var targetOptionsState: Loadable<Bool> = .idle
+
     /// 공지사항 제목
     var title: String = ""
 

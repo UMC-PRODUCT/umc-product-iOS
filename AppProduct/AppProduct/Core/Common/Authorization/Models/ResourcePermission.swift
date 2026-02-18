@@ -21,6 +21,7 @@ enum AuthorizationResourceType: String, CaseIterable, Hashable {
 /// 리소스 권한 타입
 enum AuthorizationPermissionType: String, CaseIterable, Hashable {
     case read = "READ"
+    case edit = "EDIT"
     case write = "WRITE"
     case delete = "DELETE"
     case approve = "APPROVE"
@@ -44,4 +45,3 @@ struct ResourcePermission: Hashable {
         permissions.contains { grantedPermissions.contains($0) }
     }
 }
-

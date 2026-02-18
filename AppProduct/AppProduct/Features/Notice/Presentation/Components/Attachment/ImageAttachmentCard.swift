@@ -62,7 +62,7 @@ struct ImageAttachmentCard: View, Equatable {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-            } else if let imageURL, let url = URL(string: imageURL) {
+            } else if let imageURL, let url = resolveImageURL(from: imageURL) {
                 KFImage(url)
                     .placeholder {
                         RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
@@ -87,6 +87,20 @@ struct ImageAttachmentCard: View, Equatable {
                 .glassEffect()
                 .padding(Constants.xmarkPadding)
         }
+    }
+
+    /// 이미지 문자열을 앱에서 사용할 수 있는 URL 문자열로 정규화합니다.
+    /// 상대 식별값(예: 업로드 파일 ID)도 서버 파일 조회 API 경로로 변환합니다.
+    private func resolveImageURL(from rawURL: String) -> URL? {
+        let trimmed = rawURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let absoluteURL = URL(string: trimmed), absoluteURL.scheme != nil {
+            return absoluteURL
+        }
+
+        guard let baseURL = URL(string: Config.baseURL) else { return nil }
+        return baseURL.appendingPathComponent("api/v1/storage/\(trimmed)")
     }
 }
 

@@ -12,9 +12,10 @@ struct TargetSheetView: View {
     
     // MARK: - Property
     
-    @State var viewModel: NoticeEditorViewModel
+    @Bindable var viewModel: NoticeEditorViewModel
     let sheetType: TargetSheetType
     @Environment(\.dismiss) private var dismiss
+    @State private var isRetryingTargetOptions: Bool = false
     
     // MARK: - Constants
     
@@ -27,9 +28,16 @@ struct TargetSheetView: View {
         static let topPadding: CGFloat = DefaultSpacing.spacing16
         static let bottomPadding: CGFloat = DefaultSpacing.spacing24
         
-        static let branchGuideMessage: String = "선택하지 않으면 전체 지부에게 전송됩니다."
-        static let schoolGuideMessage: String = "선택하지 않으면 전체 학교에게 전송됩니다."
-        static let partGuideMessage: String = "선택하지 않으면 전체 파트원에게 전송됩니다."
+        static let branchGuideMessage: String = "지부를 한 개 선택해주세요."
+        static let schoolGuideMessage: String = "학교를 한 개 선택해주세요."
+        static let partGuideMessage: String = "하나 이상의 파트를 선택해주세요."
+        static let failedTitle: String = "대상 목록을 불러오지 못했습니다."
+        static let failedDescription: String = "일시적인 오류가 발생했습니다. 다시 시도해주세요."
+        static let failedIcon: String = "exclamationmark.triangle"
+        static let retryTitle: String = "다시 시도"
+        static let retryButtonWidth: CGFloat = 72
+        static let retryButtonHeight: CGFloat = 20
+        static let loadingMessage: String = "대상 목록을 불러오고 있어요"
     }
     
     // MARK: - Helper
@@ -61,7 +69,7 @@ struct TargetSheetView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: Constants.rootContentSpacing) {
-                sheetContent
+                statefulSheetContent
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, Constants.horizontalPadding)
@@ -69,22 +77,41 @@ struct TargetSheetView: View {
             .padding(.bottom, Constants.bottomPadding)
             .navigation(naviTitle: navigationTitle, displayMode: .inline)
             .navigationSubtitle(navigationSubtitle)
+            .task {
+                if case .idle = viewModel.targetOptionsState {
+                    await viewModel.loadTargetOptions()
+                }
+            }
         }
-    }
-    
-    // MARK: - Toolbar
-    
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolBarCollection.ConfirmBtn(
-            action: { dismiss() },
-            dismissOnTap: false
-        )
     }
     
     // MARK: - Content
     
     /// 선택된 시트 타입에 맞는 필터 섹션을 반환합니다.
+    @ViewBuilder
+    private var statefulSheetContent: some View {
+        switch viewModel.targetOptionsState {
+        case .idle, .loading:
+            Progress(message: Constants.loadingMessage)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        case .loaded:
+            sheetContent
+        case .failed:
+            RetryContentUnavailableView(
+                title: Constants.failedTitle,
+                systemImage: Constants.failedIcon,
+                description: Constants.failedDescription,
+                retryTitle: Constants.retryTitle,
+                isRetrying: isRetryingTargetOptions,
+                minRetryButtonWidth: Constants.retryButtonWidth,
+                minRetryButtonHeight: Constants.retryButtonHeight
+            ) {
+                await retryTargetOptions()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        }
+    }
+
     @ViewBuilder
     private var sheetContent: some View {
         switch sheetType {
@@ -95,6 +122,17 @@ struct TargetSheetView: View {
         case .school:
             schoolFilterSection
         }
+    }
+
+    // MARK: - Retry
+
+    /// 타겟 옵션 로드 실패 시 재시도합니다. 중복 호출을 방지합니다.
+    @MainActor
+    private func retryTargetOptions() async {
+        guard !isRetryingTargetOptions else { return }
+        isRetryingTargetOptions = true
+        defer { isRetryingTargetOptions = false }
+        await viewModel.loadTargetOptions()
     }
     
     // MARK: - Section Builders

@@ -13,10 +13,12 @@ struct NoticeView: View {
     
     // MARK: - Properties
     @Environment(\.di) var di
+    @Environment(ErrorHandler.self) var errorHandler
     @AppStorage(AppStorageKey.schoolName) private var schoolName: String = ""
     @AppStorage(AppStorageKey.chapterName) private var chapterName: String = ""
     @AppStorage(AppStorageKey.responsiblePart) private var responsiblePart: String = ""
     @AppStorage(AppStorageKey.organizationType) private var organizationType: String = ""
+    @AppStorage(AppStorageKey.memberRole) private var memberRoleRaw: String = ""
     @AppStorage(AppStorageKey.chapterId) private var chapterId: Int = 0
     @AppStorage(AppStorageKey.schoolId) private var schoolId: Int = 0
     @AppStorage(AppStorageKey.noticeSelectedGisuId) private var noticeSelectedGisuId: Int = 0
@@ -80,6 +82,7 @@ struct NoticeView: View {
             .task {
                 applyUserContext()
                 syncSelectedGisuIdForNoticeEditor()
+                viewModel.updateErrorHandler(errorHandler)
                 #if DEBUG
                 if let debugState = NoticeDebugState.fromLaunchArgument() {
                     debugState.apply(to: viewModel)
@@ -131,6 +134,7 @@ struct NoticeView: View {
             Progress(message: Constants.loadingMessage)
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     
@@ -236,7 +240,8 @@ struct NoticeView: View {
             responsiblePart: responsiblePart,
             organizationTypeRawValue: organizationType,
             chapterId: chapterId,
-            schoolId: schoolId
+            schoolId: schoolId,
+            memberRoleRawValue: memberRoleRaw
         )
     }
 
@@ -247,7 +252,7 @@ struct NoticeView: View {
 
     /// 사용자 컨텍스트 변경 감지를 위한 서명 문자열입니다.
     private var userContextSignature: String {
-        [schoolName, chapterName, responsiblePart, organizationType, String(chapterId), String(schoolId)]
+        [schoolName, chapterName, responsiblePart, organizationType, memberRoleRaw, String(chapterId), String(schoolId)]
             .joined(separator: Constants.userContextSeparator)
     }
     
@@ -277,17 +282,19 @@ struct NoticeView: View {
     /// 상단 툴바(기수 + 메인 필터)를 구성합니다.
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolBarCollection.ToolBarCenterMenu(
-            items: viewModel.mainFilterItems,
-            selection: mainFilterBinding,
-            itemLabel: { $0.labelText },
-            itemIcon: { $0.labelIcon },
-            onSelect: { selected in
-                #if DEBUG
-                print("[Notice][MainFilter] tapped: \(selected.labelText)")
-                #endif
-            }
-        )
+        if !viewModel.mainFilterItems.isEmpty {
+            ToolBarCollection.ToolBarCenterMenu(
+                items: viewModel.mainFilterItems,
+                selection: mainFilterBinding,
+                itemLabel: { $0.labelText },
+                itemIcon: { $0.labelIcon },
+                onSelect: { selected in
+                    #if DEBUG
+                    print("[Notice][MainFilter] tapped: \(selected.labelText)")
+                    #endif
+                }
+            )
+        }
 
         ToolBarCollection.GenerationFilter(
             title: viewModel.selectedGeneration.title,
@@ -316,5 +323,4 @@ struct NoticeView: View {
     private func navigationDestinationView(_ destination: NavigationDestination) -> some View {
         NavigationRoutingView(destination: destination)
     }
-
 }

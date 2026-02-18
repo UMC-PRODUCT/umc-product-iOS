@@ -74,14 +74,14 @@ struct MyPageProfileView: View {
     private func submitProfileUpdate() {
         Task {
             do {
-                try await viewModel.submitProfileImageUpdate()
+                try await viewModel.submitProfileUpdate()
                 dismiss()
             } catch {
                 errorHandler.handle(
                     error,
                     context: .init(
                         feature: "MyPage",
-                        action: "submitProfileImageUpdate"
+                        action: "submitProfileUpdate"
                     )
                 )
             }

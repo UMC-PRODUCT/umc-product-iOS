@@ -20,13 +20,15 @@ extension NoticeViewModel {
     ///   - organizationTypeRawValue: 사용자 조직 타입 raw value
     ///   - chapterId: 사용자 지부 ID
     ///   - schoolId: 사용자 학교 ID
+    ///   - memberRoleRawValue: 사용자 역할 raw value
     func applyUserContext(
         schoolName: String,
         chapterName: String,
         responsiblePart: String,
         organizationTypeRawValue: String,
         chapterId: Int,
-        schoolId: Int
+        schoolId: Int,
+        memberRoleRawValue: String
     ) {
         self.userContext = NoticeUserContext(
             schoolName: schoolName,
@@ -34,12 +36,14 @@ extension NoticeViewModel {
             responsiblePart: responsiblePart
         )
         self.organizationType = OrganizationType(rawValue: organizationTypeRawValue)
+        self.memberRole = ManagementTeam(rawValue: memberRoleRawValue)
         self.chapterId = chapterId
         self.schoolId = schoolId
 
-        if organizationType != .central, case .central = selectedMainFilter {
+        let validMainFilters = mainFilterItems
+        if !validMainFilters.contains(selectedMainFilter) {
             var state = currentState
-            state.mainFilter = .all
+            state.mainFilter = validMainFilters.first ?? .all
             currentState = state
         }
     }
@@ -63,11 +67,25 @@ extension NoticeViewModel {
                 }
             } else {
                 noticeItems = .failed(.domain(.custom(message: "기수 정보를 불러오지 못했습니다.")))
+                errorHandler?.handle(
+                    DomainError.custom(message: "기수 정보를 불러오지 못했습니다."),
+                    context: .init(
+                        feature: "Notice",
+                        action: "fetchGisuList"
+                    )
+                )
             }
         } catch {
             gisuPairs = []
             generations = []
             noticeItems = .failed(.domain(.custom(message: "기수 정보를 불러오지 못했습니다.")))
+            errorHandler?.handle(
+                error,
+                context: .init(
+                    feature: "Notice",
+                    action: "fetchGisuList"
+                )
+            )
         }
     }
 

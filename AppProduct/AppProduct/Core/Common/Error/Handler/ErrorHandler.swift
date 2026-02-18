@@ -197,13 +197,16 @@ final class ErrorHandler {
 
     private func describeDecodingError(_ error: DecodingError) -> String {
         switch error {
-        case .keyNotFound(let key, _):
-            return "Missing key: \(key.stringValue)"
+        case .keyNotFound(let key, let context):
+            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            let location = path.isEmpty ? key.stringValue : "\(path).\(key.stringValue)"
+            return "Missing key: \(location)"
         case .typeMismatch(let type, let context):
             let path = context.codingPath.map(\.stringValue).joined(separator: ".")
             return "Type mismatch: expected \(type) at \(path)"
-        case .valueNotFound(let type, _):
-            return "Value not found: \(type)"
+        case .valueNotFound(let type, let context):
+            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            return "Value not found: \(type) at \(path)"
         case .dataCorrupted(let context):
             return "Data corrupted: \(context.debugDescription)"
         @unknown default:
@@ -284,4 +287,3 @@ final class ErrorHandler {
         }
     }
 }
-

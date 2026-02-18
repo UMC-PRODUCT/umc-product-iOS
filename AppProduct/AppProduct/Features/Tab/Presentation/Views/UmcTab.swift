@@ -99,8 +99,12 @@ struct UmcTab: View {
     ///
     /// Activity 탭에서는 Admin 권한이 있는 경우에만 Accessory를 표시합니다.
     private func shouldShowAccessory() -> Bool {
-        // 챌린저는 공지 탭에서만 Bottom Accessory를 노출하지 않음
-        if tabCase == .notice && isGeneralChallenger {
+        // 공지 작성 권한이 없는 역할은 공지 탭 Accessory를 숨깁니다.
+        if tabCase == .notice && (effectiveMemberRole == .challenger || isGeneralChallenger) {
+            return false
+        }
+        // 중앙 운영 사무국원은 공지 작성 권한이 없어 공지 탭 Accessory를 숨깁니다.
+        if tabCase == .notice && effectiveMemberRole == .centralOperatingTeamMember {
             return false
         }
 

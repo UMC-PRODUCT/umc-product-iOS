@@ -23,7 +23,14 @@ struct NoticeLinkCard: View {
     // MARK: - Body
     var body: some View {
         Button(action: {
-            openURL(URL(string: url)!)
+            let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard
+                let linkURL = URL(string: trimmed),
+                linkURL.scheme != nil
+            else {
+                return
+            }
+            openURL(linkURL)
         }) {
             HStack {
                 LinkIconPresenter()

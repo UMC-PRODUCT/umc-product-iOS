@@ -30,6 +30,8 @@ final class NoticeViewModel {
     /// ViewModel 기능을 extension 파일로 분리해 관리하므로,
     /// 동일 타입 extension에서도 상태 변경이 가능하도록 내부 공개합니다.
     var organizationType: OrganizationType?
+    /// 사용자 역할 (역할별 필터/메뉴 가시성 제어에 사용)
+    var memberRole: ManagementTeam?
     var chapterId: Int = 0
     var schoolId: Int = 0
 
@@ -56,6 +58,9 @@ final class NoticeViewModel {
     /// 공지 데이터 (Loadable)
     var noticeItems: Loadable<[NoticeItemModel]> = .idle
 
+    /// Error Handler
+    var errorHandler: ErrorHandler?
+
     /// 페이징 진행 상태 (무한 스크롤 인디케이터 노출용)
     var isLoadingMore: Bool {
         pagingState.isLoadingMore
@@ -75,6 +80,13 @@ final class NoticeViewModel {
     /// 의존성을 주입받아 공지 탭 상태를 초기화합니다.
     init(container: DIContainer) {
         self.container = container
+    }
+
+    // MARK: - Error Handling
+
+    /// ErrorHandler 바인딩
+    func updateErrorHandler(_ handler: ErrorHandler) {
+        self.errorHandler = handler
     }
 
     // MARK: - Helper
@@ -105,28 +117,62 @@ final class NoticeViewModel {
         currentMainFilterState.selectedPart
     }
 
-    /// 메인필터 항목 목록
+    /// 역할(memberRole) 기반으로 노출할 메인필터 항목 목록을 반환합니다.
+    ///
+    /// 중앙 운영진은 전체/중앙/지부/학교/파트, 지부장은 지부 이하,
+    /// 학교 운영진/챌린저는 학교 이하만 노출됩니다.
     var mainFilterItems: [NoticeMainFilterType] {
-        var items: [NoticeMainFilterType] = [.all]
-        if organizationType == .central {
-            items.append(.central)
+        let partItem: [NoticeMainFilterType] = {
+            guard let userPart = userContext.part else { return [] }
+            return [.part(userPart)]
+        }()
+
+        switch memberRole {
+        case .superAdmin:
+            return []
+        case .centralPresident, .centralVicePresident, .centralOperatingTeamMember, .centralEducationTeamMember:
+            return [.all, .central, .branch(userContext.branchName), .school(userContext.schoolName)] + partItem
+        case .chapterPresident:
+            return [.all, .branch(userContext.branchName), .school(userContext.schoolName)] + partItem
+        case .schoolPresident, .schoolVicePresident:
+            return [.all, .branch(userContext.branchName), .school(userContext.schoolName)] + partItem
+        case .schoolPartLeader, .schoolEtcAdmin, .challenger:
+            return [.all, .school(userContext.schoolName)] + partItem
+        case .none:
+            var items: [NoticeMainFilterType] = [.all]
+            if organizationType == .central {
+                items.append(.central)
+            }
+            items.append(.branch(userContext.branchName))
+            items.append(.school(userContext.schoolName))
+            if let userPart = userContext.part {
+                items.append(.part(userPart))
+            }
+            return items
         }
-        items.append(.branch(userContext.branchName))
-        items.append(.school(userContext.schoolName))
-        if let userPart = userContext.part {
-            items.append(.part(userPart))
+    }
+
+    /// 현재 메인필터에 따라 노출할 하단 서브필터 칩 목록을 반환합니다.
+    ///
+    /// - 전체/파트: 칩 없음
+    /// - 중앙/지부: 전체 + 파트
+    /// - 학교: 학교 + 파트
+    var subFilterChips: [NoticeListSubFilterChip] {
+        switch selectedMainFilter {
+        case .all, .part:
+            return []
+        case .central:
+            return [.all, .part]
+        case .branch:
+            return [.all, .part]
+        case .school:
+            return [.school, .part]
         }
-        return items
     }
 
     /// 서브필터 표시 여부 (중앙/지부/학교만)
     var showSubFilter: Bool {
-        switch selectedMainFilter {
-        case .central, .branch, .school:
-            return true
-        default:
-            return false
-        }
+        !subFilterChips.isEmpty
     }
 
     var pageSize: Int {

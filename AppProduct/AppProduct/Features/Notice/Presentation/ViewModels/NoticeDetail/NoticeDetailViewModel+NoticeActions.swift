@@ -21,14 +21,57 @@ extension NoticeDetailViewModel {
         do {
             let noticeDetail = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
             noticeState = .loaded(noticeDetail)
+            refreshAuthorDisplayName(for: noticeDetail)
             isDetailPreparedForEdit = true
+        } catch let error as RepositoryError {
+            noticeState = .failed(.repository(error))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "fetchNoticeDetail",
+                    retryAction: { [weak self] in
+                        Task { await self?.fetchNoticeDetail() }
+                    }
+                )
+            )
 
         } catch let error as DomainError {
             noticeState = .failed(.domain(error))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "fetchNoticeDetail",
+                    retryAction: { [weak self] in
+                        Task { await self?.fetchNoticeDetail() }
+                    }
+                )
+            )
         } catch let error as NetworkError {
             noticeState = .failed(.network(error))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "fetchNoticeDetail",
+                    retryAction: { [weak self] in
+                        Task { await self?.fetchNoticeDetail() }
+                    }
+                )
+            )
         } catch {
             noticeState = .failed(.unknown(message: error.localizedDescription))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "fetchNoticeDetail",
+                    retryAction: { [weak self] in
+                        Task { await self?.fetchNoticeDetail() }
+                    }
+                )
+            )
         }
     }
 
@@ -48,9 +91,37 @@ extension NoticeDetailViewModel {
                 resourceType: .notice,
                 resourceId: noticeID
             )
-            canEditNotice = permission.hasAny([.write, .manage])
+            canEditNotice = permission.hasAny([.write, .edit, .manage])
             canDeleteNotice = permission.hasAny([.delete, .manage])
+        } catch let error as RepositoryError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Notice", action: "fetchNoticePermission")
+            )
+            let fallback = noticeState.value?.hasPermission ?? false
+            canEditNotice = fallback
+            canDeleteNotice = fallback
+        } catch let error as DomainError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Notice", action: "fetchNoticePermission")
+            )
+            let fallback = noticeState.value?.hasPermission ?? false
+            canEditNotice = fallback
+            canDeleteNotice = fallback
+        } catch let error as NetworkError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Notice", action: "fetchNoticePermission")
+            )
+            let fallback = noticeState.value?.hasPermission ?? false
+            canEditNotice = fallback
+            canDeleteNotice = fallback
         } catch {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Notice", action: "fetchNoticePermission")
+            )
             let fallback = noticeState.value?.hasPermission ?? false
             canEditNotice = fallback
             canDeleteNotice = fallback
@@ -79,15 +150,54 @@ extension NoticeDetailViewModel {
 
     /// 공지 상세 진입 시 1회 읽음 처리
     @MainActor
-    func markAsReadIfNeeded() async {
-        guard !hasMarkedAsRead else { return }
-        guard noticeID > 0 else { return }
+    func markAsReadIfNeeded() async -> Bool {
+        guard !hasMarkedAsRead else { return false }
+        guard noticeID > 0 else { return false }
 
         do {
             try await noticeUseCase.readNotice(noticeId: noticeID)
             hasMarkedAsRead = true
-        } catch {
+            return true
+        } catch let error as RepositoryError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "markAsReadIfNeeded"
+                )
+            )
             // 읽음 처리 실패는 상세 진입을 막지 않습니다.
+            return false
+        } catch let error as DomainError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "markAsReadIfNeeded"
+                )
+            )
+            // 읽음 처리 실패는 상세 진입을 막지 않습니다.
+            return false
+        } catch let error as NetworkError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "markAsReadIfNeeded"
+                )
+            )
+            // 읽음 처리 실패는 상세 진입을 막지 않습니다.
+            return false
+        } catch {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "markAsReadIfNeeded"
+                )
+            )
+            // 읽음 처리 실패는 상세 진입을 막지 않습니다.
+            return false
         }
     }
 
@@ -119,6 +229,34 @@ extension NoticeDetailViewModel {
             )
 
         } catch let error as DomainError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "sendReminder",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.sendReminder(targetIds: targetIds)
+                        }
+                    }
+                )
+            )
+        } catch let error as RepositoryError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "sendReminder",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.sendReminder(targetIds: targetIds)
+                        }
+                    }
+                )
+            )
+        } catch let error as NetworkError {
             errorHandler.handle(
                 error,
                 context: ErrorContext(
@@ -186,6 +324,11 @@ extension NoticeDetailViewModel {
                 error,
                 context: ErrorContext(feature: "Notice", action: "sendReminderToAllUnreadUsers")
             )
+        } catch let error as RepositoryError {
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Notice", action: "sendReminderToAllUnreadUsers")
+            )
         } catch let error as NetworkError {
             errorHandler.handle(
                 error,
@@ -213,20 +356,32 @@ extension NoticeDetailViewModel {
                 content: content
             )
             noticeState = .loaded(updatedNotice)
-
-            alertPrompt = AlertPrompt(
-                id: .init(),
-                title: "수정 완료",
-                message: "공지사항이 수정되었습니다.",
-                positiveBtnTitle: "확인"
-            )
+            refreshAuthorDisplayName(for: updatedNotice)
 
         } catch let error as DomainError {
             noticeState = .failed(.domain(error))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Notice", action: "updateNoticeContent")
+            )
+        } catch let error as RepositoryError {
+            noticeState = .failed(.repository(error))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Notice", action: "updateNoticeContent")
+            )
         } catch let error as NetworkError {
             noticeState = .failed(.network(error))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Notice", action: "updateNoticeContent")
+            )
         } catch {
             noticeState = .failed(.unknown(message: error.localizedDescription))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Notice", action: "updateNoticeContent")
+            )
         }
     }
 
@@ -239,6 +394,22 @@ extension NoticeDetailViewModel {
                 links: links
             )
             noticeState = .loaded(updatedNotice)
+            refreshAuthorDisplayName(for: updatedNotice)
+        } catch let error as RepositoryError {
+            noticeState = .failed(.repository(error))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "updateLinks",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.updateNoticeLinks(links: links)
+                        }
+                    }
+                )
+            )
 
         } catch {
             errorHandler.handle(
@@ -266,6 +437,22 @@ extension NoticeDetailViewModel {
                 imageIds: imageIds
             )
             noticeState = .loaded(updatedNotice)
+            refreshAuthorDisplayName(for: updatedNotice)
+        } catch let error as RepositoryError {
+            noticeState = .failed(.repository(error))
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "updateImages",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.updateNoticeImages(imageIds: imageIds)
+                        }
+                    }
+                )
+            )
 
         } catch {
             errorHandler.handle(
@@ -315,6 +502,52 @@ extension NoticeDetailViewModel {
             // 서버 반영 결과(득표수/내 선택 상태)를 최신값으로 반영
             let refreshedNotice = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
             noticeState = .loaded(refreshedNotice)
+            refreshAuthorDisplayName(for: refreshedNotice)
+        } catch let error as DomainError {
+            isSubmittingVote = false
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "handleVote",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.handleVote(voteId: voteId, optionIds: optionIds)
+                        }
+                    }
+                )
+            )
+        } catch let error as RepositoryError {
+            isSubmittingVote = false
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "handleVote",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.handleVote(voteId: voteId, optionIds: optionIds)
+                        }
+                    }
+                )
+            )
+        } catch let error as NetworkError {
+            isSubmittingVote = false
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "handleVote",
+                    retryAction: { [weak self] in
+                        guard let self = self else { return }
+                        Task {
+                            await self.handleVote(voteId: voteId, optionIds: optionIds)
+                        }
+                    }
+                )
+            )
         } catch {
             isSubmittingVote = false
             errorHandler.handle(
@@ -340,6 +573,8 @@ extension NoticeDetailViewModel {
     private func deleteNotice() async {
         do {
             try await noticeUseCase.deleteNotice(noticeId: noticeID)
+        } catch let error as RepositoryError {
+            handleDeleteError(error)
         } catch let error as DomainError {
             handleDeleteError(error)
         } catch let error as NetworkError {

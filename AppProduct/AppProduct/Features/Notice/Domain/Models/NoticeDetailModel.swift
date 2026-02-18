@@ -31,6 +31,8 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
 
     /// 작성자 ID
     let authorID: String
+    /// 작성자 멤버 ID (authorMemberId)
+    let authorMemberId: String?
     /// 작성자 이름
     let authorName: String
     /// 작성자 프로필 이미지 URL
@@ -56,7 +58,9 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
     /// 첨부 투표
     let vote: NoticeVote?
 
-    
+    /// 작성자 표기 기본값 (닉네임/이름-기수TH UMC 직책)
+    var defaultAuthorDisplayName: String { authorName }
+
     /// NoticeChip에 표시할 공지 타입
     var noticeType: NoticeType {
         // 파트 공지인 경우
@@ -73,6 +77,48 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
         case .campus:
             return .campus
         }
+    }
+
+    init(
+        id: String,
+        generation: Int,
+        scope: NoticeScope,
+        category: NoticeCategory,
+        isMustRead: Bool,
+        title: String,
+        content: String,
+        authorID: String,
+        authorMemberId: String? = nil,
+        authorName: String,
+        authorImageURL: String?,
+        createdAt: Date,
+        updatedAt: Date?,
+        targetAudience: TargetAudience,
+        hasPermission: Bool,
+        images: [String],
+        imageItems: [NoticeAttachmentImage] = [],
+        links: [String],
+        vote: NoticeVote?
+    ) {
+        self.id = id
+        self.generation = generation
+        self.scope = scope
+        self.category = category
+        self.isMustRead = isMustRead
+        self.title = title
+        self.content = content
+        self.authorID = authorID
+        self.authorMemberId = authorMemberId
+        self.authorName = authorName
+        self.authorImageURL = authorImageURL
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.targetAudience = targetAudience
+        self.hasPermission = hasPermission
+        self.images = images
+        self.imageItems = imageItems
+        self.links = links
+        self.vote = vote
     }
 }
 

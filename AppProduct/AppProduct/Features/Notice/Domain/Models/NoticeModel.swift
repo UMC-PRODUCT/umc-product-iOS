@@ -188,3 +188,30 @@ struct GenerationFilterState: Equatable {
         mainFilterStates[key] = state
     }
 }
+
+// MARK: - NoticeListSubFilterChip
+/// 공지 리스트 하단 칩 구성 타입
+enum NoticeListSubFilterChip: Identifiable, Equatable {
+    case all
+    case branch
+    case school
+    case part
+
+    var id: String {
+        switch self {
+        case .all: return "all"
+        case .branch: return "branch"
+        case .school: return "school"
+        case .part: return "part"
+        }
+    }
+
+    var labelText: String {
+        switch self {
+        case .all: return "전체"
+        case .branch: return "지부"
+        case .school: return "학교"
+        case .part: return "파트"
+        }
+    }
+}
