@@ -82,6 +82,13 @@ struct CommunityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            .onChange(of: pathStore.communityPath.count) { oldCount, newCount in
+                if newCount < oldCount {
+                    Task {
+                        await vm.refresh()
+                    }
+                }
+            }
             .umcDefaultBackground()
         }
     }
@@ -133,7 +140,7 @@ struct CommunityView: View {
 
     private func postRow(_ item: CommunityItemModel) -> some View {
         CommunityItem(model: item) {
-            pathStore.communityPath.append(.community(.detail(postItem: item)))
+            pathStore.communityPath.append(.community(.detail(postId: item.postId)))
         }
         .equatable()
         .listRowBackground(Color.clear)

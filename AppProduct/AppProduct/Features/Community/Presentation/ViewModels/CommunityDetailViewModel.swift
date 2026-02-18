@@ -10,11 +10,12 @@ import Foundation
 @Observable
 class CommunityDetailViewModel {
     // MARK: - Property
-    
+
     private let useCaseProvider: CommunityUseCaseProviding
     private let errorHandler: ErrorHandler
+    private let postId: Int
 
-    private(set) var postItem: CommunityItemModel
+    private(set) var postItem: CommunityItemModel?
     private(set) var comments: Loadable<[CommunityCommentModel]> = .idle
     private(set) var postDetailState: Loadable<CommunityItemModel> = .idle
     private(set) var isDeleting: Bool = false
@@ -22,7 +23,7 @@ class CommunityDetailViewModel {
     private(set) var isScrapToggling: Bool = false
     private(set) var isLikeToggling: Bool = false
     private(set) var isPostingComment: Bool = false
-    
+
     var commentText: String = ""
 
     // MARK: - Init
@@ -30,18 +31,35 @@ class CommunityDetailViewModel {
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,
-        postItem: CommunityItemModel
+        postId: Int
     ) {
         self.useCaseProvider = container.resolve(CommunityUseCaseProviding.self)
         self.errorHandler = errorHandler
-        self.postItem = postItem
+        self.postId = postId
     }
 
     // MARK: - Function
 
+    /// 게시글 상세 조회
+    @MainActor
+    func fetchPostDetail() async {
+        postDetailState = .loading
+
+        do {
+            let detail = try await useCaseProvider.fetchPostDetailUseCase.execute(postId: postId)
+            postItem = detail
+            postDetailState = .loaded(detail)
+        } catch let error as AppError {
+            postDetailState = .failed(error)
+        } catch {
+            postDetailState = .failed(.unknown(message: error.localizedDescription))
+        }
+    }
+
     /// 댓글 목록 조회
     @MainActor
     func fetchComments() async {
+        guard let postItem = postItem else { return }
         comments = .loading
 
         #if DEBUG
@@ -70,12 +88,13 @@ class CommunityDetailViewModel {
 
     /// 게시글 삭제
     @MainActor
-    func deletePost() async {
+    func deletePost() async -> Bool {
         isDeleting = true
 
         do {
-            try await useCaseProvider.deletePostUseCase.execute(postId: postItem.postId)
+            try await useCaseProvider.deletePostUseCase.execute(postId: postItem?.postId ?? 0)
             isDeleting = false
+            return true
         } catch {
             isDeleting = false
             errorHandler.handle(error, context: ErrorContext(
@@ -85,6 +104,7 @@ class CommunityDetailViewModel {
                     await self?.deletePost()
                 }
             ))
+            return false
         }
     }
 
@@ -95,7 +115,7 @@ class CommunityDetailViewModel {
 
         do {
             try await useCaseProvider.deleteCommentUseCase.execute(
-                postId: postItem.postId,
+                postId: postItem?.postId ?? 0,
                 commentId: commentId
             )
             isDeletingComment = false
@@ -120,18 +140,18 @@ class CommunityDetailViewModel {
         isScrapToggling = true
 
         // 낙관적 업데이트
-        let previousScrapState = postItem.isScrapped
-        let previousScrapCount = postItem.scrapCount
-        postItem.isScrapped.toggle()
-        postItem.scrapCount += postItem.isScrapped ? 1 : -1
+        let previousScrapState = postItem?.isScrapped ?? false
+        let previousScrapCount = postItem?.scrapCount ?? 0
+        postItem?.isScrapped.toggle()
+        postItem?.scrapCount += postItem?.isScrapped ?? false ? 1 : -1
 
         do {
-            try await useCaseProvider.postScrapUseCase.execute(postId: postItem.postId)
+            try await useCaseProvider.postScrapUseCase.execute(postId: postItem?.postId ?? 0)
             isScrapToggling = false
         } catch {
             // 실패 시 이전 상태로 롤백
-            postItem.isScrapped = previousScrapState
-            postItem.scrapCount = previousScrapCount
+            postItem?.isScrapped = previousScrapState
+            postItem?.scrapCount = previousScrapCount
             isScrapToggling = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
@@ -150,18 +170,18 @@ class CommunityDetailViewModel {
         isLikeToggling = true
 
         // 낙관적 업데이트
-        let previousLikeState = postItem.isLiked
-        let previousLikeCount = postItem.likeCount
-        postItem.isLiked.toggle()
-        postItem.likeCount += postItem.isLiked ? 1 : -1
+        let previousLikeState = postItem?.isLiked ?? false
+        let previousLikeCount = postItem?.likeCount ?? 0
+        postItem?.isLiked.toggle()
+        postItem?.likeCount += postItem?.isLiked ?? false ? 1 : -1
 
         do {
-            try await useCaseProvider.postLikeUseCase.execute(postId: postItem.postId)
+            try await useCaseProvider.postLikeUseCase.execute(postId: postItem?.postId ?? 0)
             isLikeToggling = false
         } catch {
             // 실패 시 이전 상태로 롤백
-            postItem.isLiked = previousLikeState
-            postItem.likeCount = previousLikeCount
+            postItem?.isLiked = previousLikeState
+            postItem?.likeCount = previousLikeCount
             isLikeToggling = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
@@ -183,7 +203,7 @@ class CommunityDetailViewModel {
 
         do {
             try await useCaseProvider.postCommentUseCase.execute(
-                postId: postItem.postId,
+                postId: postItem?.postId ?? 0,
                 request: request
             )
             isPostingComment = false
@@ -207,7 +227,7 @@ class CommunityDetailViewModel {
         postDetailState = .loading
 
         do {
-            let updatedPost = try await useCaseProvider.fetchPostDetailUseCase.execute(postId: postItem.postId)
+            let updatedPost = try await useCaseProvider.fetchPostDetailUseCase.execute(postId: postItem?.postId ?? 0)
             postItem = updatedPost
             postDetailState = .loaded(updatedPost)
         } catch let error as AppError {
@@ -221,7 +241,7 @@ class CommunityDetailViewModel {
     @MainActor
     func reportPost() async {
         do {
-            try await useCaseProvider.reportPostUseCase.execute(postId: postItem.postId)
+            try await useCaseProvider.reportPostUseCase.execute(postId: postItem?.postId ?? 0)
             // 신고 성공 시 사용자에게 알림 (ErrorHandler 사용)
             errorHandler.handle(
                 AppError.domain(.custom(message: "게시글이 신고되었습니다.")),

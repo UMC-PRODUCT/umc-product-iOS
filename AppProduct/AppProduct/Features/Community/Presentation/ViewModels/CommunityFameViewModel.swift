@@ -73,13 +73,9 @@ class CommunityFameViewModel {
         do {
             let items = try await useCaseProvider.fetchFameItemsUseCase.execute(query: query)
             fameItems = .loaded(items)
-            print("[Fame] ✅ Loaded \(items.count) items")
         } catch let error as AppError {
-            print("[Fame] ❌ AppError: \(error)")
             fameItems = .failed(error)
         } catch {
-            print("[Fame] ❌ Error: \(error)")
-            print("[Fame] ❌ Error localizedDescription: \(error.localizedDescription)")
             fameItems = .failed(.unknown(message: error.localizedDescription))
         }
     }

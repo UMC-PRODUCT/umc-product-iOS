@@ -74,7 +74,7 @@ enum NavigationDestination: Hashable {
     /// 커뮤니티(Community) 관련 화면 목적지
     enum Community: Hashable {
         /// 게시글 상세
-        case detail(postItem: CommunityItemModel)
+        case detail(postId: Int)
         /// 게시글 작성/수정 (editItem: 수정할 게시글, nil이면 작성 모드)
         case post(editItem: CommunityItemModel? = nil)
     }
