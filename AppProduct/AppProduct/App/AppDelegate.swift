@@ -145,8 +145,8 @@ private extension AppDelegate {
 
     /// FCM 토큰을 서버에 동기화합니다.
     ///
-    /// memberId와 fcmToken이 모두 존재하고,
-    /// 이전에 업로드한 토큰/멤버ID와 다를 때만 서버에 등록합니다.
+    /// fcmToken이 존재하고,
+    /// 이전에 업로드한 토큰/멤버ID 조합과 다를 때만 서버에 등록합니다.
     ///
     /// - Parameter trigger: 동기화를 트리거한 이벤트 이름 (디버그 로그용)
     @MainActor
@@ -182,7 +182,6 @@ private extension AppDelegate {
         do {
             let provider = container.resolve(HomeUseCaseProviding.self)
             try await provider.registerFCMTokenUseCase.execute(
-                memberId: memberId,
                 fcmToken: fcmToken
             )
             lastFailedFCMUpload = nil

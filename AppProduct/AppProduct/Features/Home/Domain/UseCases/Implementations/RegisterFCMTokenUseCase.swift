@@ -24,12 +24,9 @@ final class RegisterFCMTokenUseCase: RegisterFCMTokenUseCaseProtocol {
 
     /// FCM 토큰을 서버에 등록/갱신합니다.
     ///
-    /// - Parameters:
-    ///   - memberId: 등록 대상 멤버 ID
-    ///   - fcmToken: Firebase Cloud Messaging 토큰
-    func execute(memberId: Int, fcmToken: String) async throws {
+    /// - Parameter fcmToken: Firebase Cloud Messaging 토큰
+    func execute(fcmToken: String) async throws {
         try await repository.registerFCMToken(
-            memberId: memberId,
             fcmToken: fcmToken
         )
     }

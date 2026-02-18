@@ -35,7 +35,9 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
             APIResponse<MyProfileResponseDTO>.self,
             from: response.data
         )
-        return try apiResponse.unwrap().toHomeProfileResult()
+        let profile = try apiResponse.unwrap()
+        let seasonTypes = try await makeSeasonTypes(profile: profile)
+        return profile.toHomeProfileResult(seasonTypes: seasonTypes)
     }
 
     /// 월별 일정을 조회하고 날짜별로 그룹핑하여 반환합니다.
@@ -87,12 +89,10 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
 
     /// FCM 토큰을 서버에 등록/갱신합니다.
     func registerFCMToken(
-        memberId: Int,
         fcmToken: String
     ) async throws {
         let response = try await adapter.request(
-            HomeRouter.postFCMToken(
-                memberId: memberId,
+            HomeRouter.putFCMToken(
                 request: RegisterFCMTokenRequestDTO(fcmToken: fcmToken)
             )
         )
@@ -103,4 +103,56 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
         _ = try apiResponse.unwrap()
     }
 
+}
+
+// MARK: - Private Helpers
+
+private extension HomeRepository {
+    func makeSeasonTypes(profile: MyProfileResponseDTO) async throws -> [SeasonType] {
+        let generations = Set(profile.roles.map(\.gisu)).sorted()
+        let gisuIds = Set(profile.roles.map(\.gisuId)).filter { $0 > 0 }
+
+        guard !gisuIds.isEmpty else {
+            return [
+                .days(0),
+                .gens(generations)
+            ]
+        }
+
+        var totalDays = 0
+        try await withThrowingTaskGroup(of: Int.self) { group in
+            for gisuId in gisuIds {
+                group.addTask {
+                    try await self.fetchActivityDays(gisuId: gisuId)
+                }
+            }
+
+            for try await days in group {
+                totalDays += days
+            }
+        }
+
+        return [
+            .days(max(totalDays, 0)),
+            .gens(generations)
+        ]
+    }
+
+    func fetchActivityDays(gisuId: Int) async throws -> Int {
+        let response = try await adapter.request(
+            HomeRouter.getGisuDetail(gisuId: gisuId)
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<GisuDetailDTO>.self,
+            from: response.data
+        )
+        let gisuDetail = try apiResponse.unwrap()
+
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: gisuDetail.startAt)
+        let endSource = gisuDetail.isActive ? Date() : gisuDetail.endAt
+        let end = calendar.startOfDay(for: endSource)
+
+        return max(calendar.dateComponents([.day], from: start, to: end).day ?? 0, 0)
+    }
 }

@@ -125,38 +125,13 @@ enum MemberStatus: String, Codable {
 // MARK: - toDomain
 
 extension MyProfileResponseDTO {
-    /// 기수당 활동일 수
-    private static let daysPerGisu = 165
-
-    /// DTO → [SeasonType] 변환 (홈 화면 기수 카드용)
-    ///
-    /// - ACTIVE: 현재(최신) 기수는 진행 중이므로 누적 활동일 계산에서 제외
-    /// - INACTIVE/WITHDRAWN: 모든 기수가 완료된 것으로 간주
-    func toSeasonTypes() -> [SeasonType] {
-        let gisuIds = Set(roles.map(\.gisu)).sorted()
-
-        let completedCount: Int
-        if status == .active, gisuIds.count > 1 {
-            completedCount = gisuIds.count - 1
-        } else if status == .active {
-            completedCount = 0
-        } else {
-            completedCount = gisuIds.count
-        }
-
-        return [
-            .days(completedCount * Self.daysPerGisu),
-            .gens(gisuIds)
-        ]
-    }
-
     /// DTO → 최고 권한 역할 반환
     func highestRole() -> ManagementTeam {
         roles.map(\.roleType).max() ?? .challenger
     }
 
     /// DTO → HomeProfileResult 변환 (기수 카드 + 역할 정보)
-    func toHomeProfileResult() -> HomeProfileResult {
+    func toHomeProfileResult(seasonTypes: [SeasonType]? = nil) -> HomeProfileResult {
         let challengerRoles = roles.map {
             ChallengerRole(
                 challengerId: $0.challengerId,
@@ -188,6 +163,11 @@ extension MyProfileResponseDTO {
         let latestRecord = (challengerRecords ?? [])
             .max(by: { $0.gisu < $1.gisu })
 
+        let resolvedSeasonTypes = seasonTypes ?? [
+            .days(0),
+            .gens(Set(roles.map(\.gisu)).sorted())
+        ]
+
         return HomeProfileResult(
             memberId: id,
             schoolId: schoolId,
@@ -197,7 +177,7 @@ extension MyProfileResponseDTO {
             chapterId: latestRecord?.chapterId,
             chapterName: latestRecord?.chapterName ?? "",
             part: latestRecord.flatMap { UMCPartType(apiValue: $0.part) },
-            seasonTypes: toSeasonTypes(),
+            seasonTypes: resolvedSeasonTypes,
             roles: challengerRoles,
             generations: generations
         )

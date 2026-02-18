@@ -38,11 +38,8 @@ protocol HomeRepositoryProtocol: Sendable {
     ) async throws -> [RecentNoticeData]
 
     /// FCM 토큰 등록/갱신
-    /// - Parameters:
-    ///   - memberId: 멤버 ID
-    ///   - fcmToken: Firebase Cloud Messaging 토큰
+    /// - Parameter fcmToken: Firebase Cloud Messaging 토큰
     func registerFCMToken(
-        memberId: Int,
         fcmToken: String
     ) async throws
 }
