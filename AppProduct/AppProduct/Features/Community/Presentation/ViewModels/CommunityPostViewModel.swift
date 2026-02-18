@@ -83,6 +83,13 @@ class CommunityPostViewModel {
         titleText = post.title
         contentText = post.content
 
+        // 번개글인 경우 번개 정보도 프리필
+        if let lightningInfo = post.lightningInfo {
+            selectedDate = lightningInfo.meetAt
+            maxParticipants = lightningInfo.maxParticipants
+            linkText = lightningInfo.openChatUrl
+        }
+
         initialEditSnapshot = currentEditSnapshot
     }
 
@@ -101,7 +108,7 @@ class CommunityPostViewModel {
                     title: titleText,
                     content: contentText,
                     meetAt: meetAtString,
-                    location: selectedPlace.address,
+                    location: "\(selectedPlace.address), \(selectedPlace.name)",
                     maxParticipants: maxParticipants,
                     openChatUrl: linkText
                 )
