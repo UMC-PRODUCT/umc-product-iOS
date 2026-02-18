@@ -57,8 +57,8 @@ struct CommunityDetailView: View {
             case .idle, .loading:
                 Progress(message: Constant.loadingMessage, size: .regular)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            case .loaded(let postItem):
-                detailContent(postItem: postItem)
+            case .loaded:
+                detailContent()
             case .failed:
                 postDetailFailedContent()
             }
@@ -66,12 +66,14 @@ struct CommunityDetailView: View {
         .navigation(naviTitle: .communityDetail, displayMode: .inline)
         .task {
             await vm.fetchPostDetail()
+            await vm.fetchComments()
         }
         .onChange(of: pathStore.communityPath.count) { oldCount, newCount in
             if newCount < oldCount {
                 Task {
                     try? await Task.sleep(nanoseconds: 300_000_000) // 0.3초
                     await vm.fetchPostDetail()
+                    await vm.fetchComments()
                 }
             }
         }
@@ -84,22 +86,24 @@ struct CommunityDetailView: View {
     }
 
     @ViewBuilder
-    private func detailContent(postItem: CommunityItemModel) -> some View {
+    private func detailContent() -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
-                VStack(spacing: DefaultSpacing.spacing12) {
-                    CommunityPostCard(
-                        model: postItem,
-                        onLikeTapped: {
-                            await vm.toggleLike()
-                        },
-                        onScrapTapped: {
-                            await vm.toggleScrap()
-                        }
-                    )
+                if let postItem = vm.postItem {
+                    VStack(spacing: DefaultSpacing.spacing12) {
+                        CommunityPostCard(
+                            model: postItem,
+                            onLikeTapped: {
+                                await vm.toggleLike()
+                            },
+                            onScrapTapped: {
+                                await vm.toggleScrap()
+                            }
+                        )
 
-                    if postItem.category == .lighting {
-                        CommunityLightningCard(model: postItem)
+                        if postItem.category == .lighting {
+                            CommunityLightningCard(model: postItem)
+                        }
                     }
                 }
 
@@ -117,9 +121,6 @@ struct CommunityDetailView: View {
             .padding(Constant.mainPadding)
         }
         .scrollDismissesKeyboard(.immediately)
-        .task {
-            await vm.fetchComments()
-        }
         .safeAreaInset(edge: .bottom) {
             commentInputSection
         }

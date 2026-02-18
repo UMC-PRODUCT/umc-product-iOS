@@ -10,18 +10,17 @@ import Foundation
 final class FetchCommentsUseCase: FetchCommentsUseCaseProtocol {
     // MARK: - Property
     
-    private let repository: CommunityRepositoryProtocol
+    private let repository: CommunityDetailRepositoryProtocol
     
     // MARK: - Init
     
-    init(repository: CommunityRepositoryProtocol) {
+    init(repository: CommunityDetailRepositoryProtocol) {
         self.repository = repository
     }
     
     // MARK: - Function
     
     func execute(postId: Int) async throws -> [CommunityCommentModel] {
-//        try await repository.fetchComments(postId: postId)
-        return []
+        try await repository.getComments(postId: postId)
     }
 }

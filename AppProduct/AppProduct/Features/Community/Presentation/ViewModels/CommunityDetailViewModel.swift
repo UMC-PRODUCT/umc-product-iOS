@@ -70,14 +70,14 @@ class CommunityDetailViewModel {
             case .failed:
                 comments = .failed(.unknown(message: "댓글을 불러오지 못했습니다."))
             case .loaded, .loadedAll, .loadedQuestion, .loadedLightning:
-                comments = .loaded(Self.debugComments(for: postItem.postId))
+                comments = .loaded(Self.debugComments(for: postId))
             }
             return
         }
         #endif
 
         do {
-            let fetchedComments = try await useCaseProvider.fetchCommentUseCase.execute(postId: postItem.postId)
+            let fetchedComments = try await useCaseProvider.fetchCommentUseCase.execute(postId: postId)
             comments = .loaded(fetchedComments)
         } catch let error as AppError {
             comments = .failed(error)

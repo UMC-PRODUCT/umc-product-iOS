@@ -89,7 +89,7 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
             repository: communityPostRepository
         )
         self.fetchCommentUseCase = FetchCommentsUseCase(
-            repository: communityRepository
+            repository: communityDetailRepository
         )
         self.deletePostUseCase = DeletePostUseCase(
             repository: communityDetailRepository
