@@ -43,6 +43,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         Messaging.messaging().delegate = self
         UNUserNotificationCenter.current().delegate = self
         logDeviceIdentifiers()
+        seedAPITestTokenIfNeeded()
         seedAppStorageProfileIfNeeded()
         seedAuthTokenFromEnvironmentIfNeeded()
         registerRemoteNotificationsIfAuthorized()
@@ -224,6 +225,28 @@ private extension AppDelegate {
         print("[Device] simulatorUDID=\(simulatorUDID), identifierForVendor=\(vendorId)")
         #else
         print("[Device] identifierForVendor=\(vendorId)")
+        #endif
+    }
+
+    func seedAPITestTokenIfNeeded() {
+        #if DEBUG
+        let environment = ProcessInfo.processInfo.environment
+        guard let rawAccessToken = environment["UMC_API_TEST_ACCESS_TOKEN"] else { return }
+        let accessToken = rawAccessToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !accessToken.isEmpty else { return }
+        let refreshToken = accessToken
+
+        Task {
+            do {
+                try await KeychainTokenStore().save(
+                    accessToken: accessToken,
+                    refreshToken: refreshToken
+                )
+                print("[Auth] Seeded API test access token from scheme environment.")
+            } catch {
+                print("[Auth] Failed to seed API test token: \(error)")
+            }
+        }
         #endif
     }
 
