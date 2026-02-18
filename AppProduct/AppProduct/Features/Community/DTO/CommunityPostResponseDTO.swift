@@ -151,6 +151,7 @@ extension PostDetailDTO {
             commentCount: Int(commentCount) ?? 0,
             scrapCount: Int(scrapCount) ?? 0,
             isLiked: isLiked,
+            isScrapped: isScrapped,
             isAuthor: isAuthor,
             lightningInfo: lightningInfo?.toModel()
         )
