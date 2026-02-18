@@ -45,9 +45,19 @@
       {
         "createdDate" : "2026-02-18T04:17:32Z",
         "event" : "trainingStarted",
-        "id" : "6A8EC13C-C58B-4FC1-85FC-BD50F631C02E",
-        "subtitle" : "10 iterations",
+        "id" : "89640A4A-4317-4D91-82F5-C33798784841",
+        "subtitle" : "50 iterations",
         "title" : "Training Started"
+      }
+    ],
+    "trainingDataAdded",
+    [
+      {
+        "createdDate" : "2026-02-18T05:31:39Z",
+        "event" : "trainingDataAdded",
+        "id" : "A6BB4EF4-27AF-4491-954D-2D12967A05F3",
+        "subtitle" : "ScheduleTrainingData.json",
+        "title" : "Training Data Added"
       }
     ]
   ],
@@ -436,7 +446,7 @@
             },
             {
               "actual" : "networking",
-              "count" : 1,
+              "count" : 5,
               "expected" : "networking"
             },
             {
@@ -535,7 +545,7 @@
               }
             },
             "general" : {
-              "count" : 6,
+              "count" : 4,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 0.6666666666666666,
@@ -1446,7 +1456,7 @@
           },
           {
             "actual" : "networking",
-            "count" : 1,
+            "count" : 5,
             "expected" : "networking"
           },
           {
@@ -1545,7 +1555,7 @@
             }
           },
           "general" : {
-            "count" : 6,
+            "count" : 4,
             "precisionRecall" : {
               "success" : {
                 "precision" : 0.6666666666666666,
