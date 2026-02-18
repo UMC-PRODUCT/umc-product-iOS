@@ -11,7 +11,6 @@ struct CommunityDetailView: View {
     // MARK: - Properties
 
     @State private var vm: CommunityDetailViewModel
-    @State private var alertPrompt: AlertPrompt?
     @Environment(\.di) private var di
     @Environment(ErrorHandler.self) var errorHandler
 
@@ -82,7 +81,7 @@ struct CommunityDetailView: View {
                 ToolBarCollection.ToolbarTrailingMenu(actions: toolbarActions(for: postItem))
             }
         }
-        .alertPrompt(item: $alertPrompt)
+        .alertPrompt(item: $vm.alertPrompt)
     }
 
     @ViewBuilder
@@ -153,7 +152,7 @@ struct CommunityDetailView: View {
 
     /// 게시글 삭제 확인 Alert
     private func showDeletePostAlert() {
-        alertPrompt = AlertPrompt(
+        vm.alertPrompt = AlertPrompt(
             title: "게시글 삭제",
             message: "게시글을 삭제하시겠습니까?",
             positiveBtnTitle: "삭제",
@@ -170,7 +169,7 @@ struct CommunityDetailView: View {
 
     /// 게시글 신고 확인 Alert
     private func showReportPostAlert() {
-        alertPrompt = AlertPrompt(
+        vm.alertPrompt = AlertPrompt(
             title: "게시글 신고",
             message: "이 게시글을 신고하시겠습니까?",
             positiveBtnTitle: "신고",

@@ -28,6 +28,7 @@ class CommunityDetailViewModel {
     private(set) var isPermissionsLoaded: Bool = false
 
     var commentText: String = ""
+    var alertPrompt: AlertPrompt?
 
     // MARK: - Init
 
@@ -285,14 +286,28 @@ class CommunityDetailViewModel {
     func reportPost() async {
         do {
             try await useCaseProvider.reportPostUseCase.execute(postId: postItem?.postId ?? 0)
-            // 신고 성공 시 사용자에게 알림 (ErrorHandler 사용)
-            errorHandler.handle(
-                AppError.domain(.custom(message: "게시글이 신고되었습니다.")),
-                context: ErrorContext(
-                    feature: "Community",
-                    action: "reportPost"
-                )
+            alertPrompt = AlertPrompt(
+                title: "신고 완료",
+                message: "해당 게시글이 신고되었습니다.",
+                positiveBtnTitle: "확인"
             )
+        } catch let error as RepositoryError {
+            // 409 에러: 이미 신고한 게시글
+            if case .serverError(let code, let message) = error, code == "409" {
+                alertPrompt = AlertPrompt(
+                    title: "신고 불가",
+                    message: message ?? "이미 신고한 게시글입니다.",
+                    positiveBtnTitle: "확인"
+                )
+            } else {
+                errorHandler.handle(error, context: ErrorContext(
+                    feature: "Community",
+                    action: "reportPost",
+                    retryAction: { [weak self] in
+                        await self?.reportPost()
+                    }
+                ))
+            }
         } catch {
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
@@ -309,14 +324,28 @@ class CommunityDetailViewModel {
     func reportComment(commentId: Int) async {
         do {
             try await useCaseProvider.reportCommentUseCase.execute(commentId: commentId)
-            // 신고 성공 시 사용자에게 알림 (ErrorHandler 사용)
-            errorHandler.handle(
-                AppError.domain(.custom(message: "댓글이 신고되었습니다.")),
-                context: ErrorContext(
-                    feature: "Community",
-                    action: "reportComment"
-                )
+            alertPrompt = AlertPrompt(
+                title: "신고 완료",
+                message: "해당 댓글이 신고되었습니다.",
+                positiveBtnTitle: "확인"
             )
+        } catch let error as RepositoryError {
+            // 409 에러: 이미 신고한 댓글
+            if case .serverError(let code, let message) = error, code == "409" {
+                alertPrompt = AlertPrompt(
+                    title: "신고 불가",
+                    message: message ?? "이미 신고한 댓글입니다.",
+                    positiveBtnTitle: "확인"
+                )
+            } else {
+                errorHandler.handle(error, context: ErrorContext(
+                    feature: "Community",
+                    action: "reportComment",
+                    retryAction: { [weak self] in
+                        await self?.reportComment(commentId: commentId)
+                    }
+                ))
+            }
         } catch {
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",

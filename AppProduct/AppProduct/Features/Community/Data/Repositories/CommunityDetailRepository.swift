@@ -34,7 +34,7 @@ final class CommunityDetailRepository: CommunityDetailRepositoryProtocol {
             APIResponse<EmptyResult>.self,
             from: response.data
         )
-        _ = try apiResponse.unwrap()
+        try apiResponse.validateSuccess()
     }
     
     func deleteComment(postId: Int, commentId: Int) async throws {
@@ -45,7 +45,7 @@ final class CommunityDetailRepository: CommunityDetailRepositoryProtocol {
             APIResponse<EmptyResult>.self,
             from: response.data
         )
-        _ = try apiResponse.unwrap()
+        try apiResponse.validateSuccess()
     }
     
     func getComments(postId: Int) async throws -> [CommunityCommentModel] {
@@ -104,24 +104,56 @@ final class CommunityDetailRepository: CommunityDetailRepositoryProtocol {
     }
     
     func postPostReport(postId: Int) async throws {
-        let response = try await adapter.request(
-            CommunityDetailRouter.postPostReports(postId: postId)
-        )
-        let apiResponse = try decoder.decode(
-            APIResponse<EmptyResult>.self,
-            from: response.data
-        )
-        _ = try apiResponse.unwrap()
+        do {
+            let response = try await adapter.request(
+                CommunityDetailRouter.postPostReports(postId: postId)
+            )
+            do {
+                let apiResponse = try decoder.decode(
+                    APIResponse<EmptyResult>.self,
+                    from: response.data
+                )
+                try apiResponse.validateSuccess()
+            } catch {
+                if response.statusCode == 409 {
+                    throw RepositoryError.serverError(code: "409", message: "이미 신고한 게시글입니다.")
+                }
+                guard (200..<300).contains(response.statusCode) else {
+                    throw error
+                }
+            }
+        } catch let networkError as NetworkError {
+            if case .requestFailed(let statusCode, _) = networkError, statusCode == 409 {
+                throw RepositoryError.serverError(code: "409", message: "이미 신고한 게시글입니다.")
+            }
+            throw networkError
+        }
     }
     
     func postCommentReport(commentId: Int) async throws {
-        let response = try await adapter.request(
-            CommunityDetailRouter.postCommentReports(commentId: commentId)
-        )
-        let apiResponse = try decoder.decode(
-            APIResponse<EmptyResult>.self,
-            from: response.data
-        )
-        _ = try apiResponse.unwrap()
+        do {
+            let response = try await adapter.request(
+                CommunityDetailRouter.postCommentReports(commentId: commentId)
+            )
+            do {
+                let apiResponse = try decoder.decode(
+                    APIResponse<EmptyResult>.self,
+                    from: response.data
+                )
+                try apiResponse.validateSuccess()
+            } catch {
+                if response.statusCode == 409 {
+                    throw RepositoryError.serverError(code: "409", message: "이미 신고한 댓글입니다.")
+                }
+                guard (200..<300).contains(response.statusCode) else {
+                    throw error
+                }
+            }
+        } catch let networkError as NetworkError {
+            if case .requestFailed(let statusCode, _) = networkError, statusCode == 409 {
+                throw RepositoryError.serverError(code: "409", message: "이미 신고한 댓글입니다.")
+            }
+            throw networkError
+        }
     }
 }
