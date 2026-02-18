@@ -71,10 +71,20 @@ extension APIResponse {
     /// - Throws: `RepositoryError.serverError` (실패 시)
     /// - Returns: result 값
     func unwrap() throws -> T {
-        guard isSuccess, let result else {
+        guard isSuccess else {
             throw RepositoryError.serverError(code: code, message: message)
         }
-        return result
+
+        if let result {
+            return result
+        }
+
+        // result가 없는 성공 응답은 EmptyResult로 복구합니다.
+        if T.self == EmptyResult.self, let empty = EmptyResult() as? T {
+            return empty
+        }
+
+        throw RepositoryError.serverError(code: code, message: message)
     }
 
     /// 성공 여부만 검증합니다.

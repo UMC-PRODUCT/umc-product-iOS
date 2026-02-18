@@ -100,7 +100,7 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
             APIResponse<EmptyResult>.self,
             from: response.data
         )
-        _ = try apiResponse.unwrap()
+        try apiResponse.validateSuccess()
     }
 
 }
