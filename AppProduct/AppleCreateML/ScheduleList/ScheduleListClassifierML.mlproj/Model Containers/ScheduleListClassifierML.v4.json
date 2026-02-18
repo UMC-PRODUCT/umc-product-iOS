@@ -39,6 +39,16 @@
         "subtitle" : "ScheduleTrainingData.json",
         "title" : "Training Data Added"
       }
+    ],
+    "trainingStarted",
+    [
+      {
+        "createdDate" : "2026-02-18T04:17:32Z",
+        "event" : "trainingStarted",
+        "id" : "6A8EC13C-C58B-4FC1-85FC-BD50F631C02E",
+        "subtitle" : "10 iterations",
+        "title" : "Training Started"
+      }
     ]
   ],
   "contentDataResult" : {
@@ -426,7 +436,7 @@
             },
             {
               "actual" : "networking",
-              "count" : 5,
+              "count" : 1,
               "expected" : "networking"
             },
             {
@@ -525,7 +535,7 @@
               }
             },
             "general" : {
-              "count" : 4,
+              "count" : 6,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 0.6666666666666666,
@@ -1436,7 +1446,7 @@
           },
           {
             "actual" : "networking",
-            "count" : 5,
+            "count" : 1,
             "expected" : "networking"
           },
           {
@@ -1535,7 +1545,7 @@
             }
           },
           "general" : {
-            "count" : 4,
+            "count" : 6,
             "precisionRecall" : {
               "success" : {
                 "precision" : 0.6666666666666666,
