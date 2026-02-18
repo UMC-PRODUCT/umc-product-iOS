@@ -83,7 +83,23 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--seed-appstorage-dummy-central"
+            argument = "--open-activity-tab"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-seed-member-role"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "centralOperatingTeamMember"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-activityDebugState"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "loaded"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

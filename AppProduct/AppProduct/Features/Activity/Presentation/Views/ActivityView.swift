@@ -78,6 +78,13 @@ struct ActivityView: View {
                         classifyScheduleUseCase: activityProvider.classifyScheduleUseCase
                     )
                 }
+                #if DEBUG
+                if let debugState = ActivityDebugState.fromLaunchArgument(),
+                   let viewModel {
+                    debugState.apply(to: viewModel)
+                    return
+                }
+                #endif
                 await viewModel?.loadInitialData()
             }
             .navigationDestination(for: NavigationDestination.self) { destination in
