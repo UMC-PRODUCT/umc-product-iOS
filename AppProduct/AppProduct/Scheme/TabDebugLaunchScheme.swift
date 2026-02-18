@@ -12,6 +12,7 @@ import Foundation
 enum TabDebugLaunchRoute {
     case openNoticeTab
     case openCommunityTab
+    case openMyPageTab
 
     /// 런치 인자에서 최초 매칭되는 디버그 진입 경로를 반환합니다.
     static func fromLaunchArguments(_ arguments: [String] = ProcessInfo.processInfo.arguments) -> TabDebugLaunchRoute? {
@@ -20,6 +21,9 @@ enum TabDebugLaunchRoute {
         }
         if arguments.contains("--open-community-tab") {
             return .openCommunityTab
+        }
+        if arguments.contains("--open-mypage-tab") {
+            return .openMyPageTab
         }
         return nil
     }

@@ -146,6 +146,8 @@ struct UmcTab: View {
             tabCase = .notice
         case .openCommunityTab:
             tabCase = .community
+        case .openMyPageTab:
+            tabCase = .mypage
         }
         #endif
     }
