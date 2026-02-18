@@ -83,22 +83,6 @@ class CommunityPostViewModel {
         titleText = post.title
         contentText = post.content
 
-//        if selectedCategory == .lighting {
-//            if let meetAtString = post.meetAt,
-//               let meetAtDate = ISO8601DateFormatter().date(from: meetAtString) {
-//                selectedDate = meetAtDate
-//            }
-//            maxParticipants = post.maxParticipants ?? 3
-//            if let location = post.location {
-//                selectedPlace = PlaceSearchInfo(
-//                    name: location,
-//                    address: location,
-//                    coordinate: .init(latitude: 0.0, longitude: 0.0)
-//                )
-//            }
-//            linkText = post.openChatUrl ?? ""
-//        }
-
         initialEditSnapshot = currentEditSnapshot
     }
 
@@ -135,6 +119,15 @@ class CommunityPostViewModel {
                 try await useCaseProvider.createPostUseCase.execute(request: request)
                 submitState = .loaded(true)
             }
+        } catch let error as AppError {
+            submitState = .idle
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Community",
+                action: "createPost",
+                retryAction: { [weak self] in
+                    await self?.createPost()
+                }
+            ))
         } catch {
             submitState = .idle
             errorHandler.handle(error, context: ErrorContext(
@@ -189,6 +182,15 @@ class CommunityPostViewModel {
                 )
                 submitState = .loaded(true)
             }
+        } catch let error as AppError {
+            submitState = .idle
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Community",
+                action: "updatePost",
+                retryAction: { [weak self] in
+                    await self?.updatePost()
+                }
+            ))
         } catch {
             submitState = .idle
             errorHandler.handle(error, context: ErrorContext(
