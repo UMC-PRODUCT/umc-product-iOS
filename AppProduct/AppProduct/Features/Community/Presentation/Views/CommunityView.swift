@@ -46,7 +46,7 @@ struct CommunityView: View {
         )) {
             Group {
                 switch vm.selectedMenu {
-                case .all, .question, .party:
+                case .all, .party, .question, .information, .habit, .free:
                     contentSection
                         .searchable(text: $vm.searchText)
                         .searchToolbarBehavior(.minimize)
@@ -63,7 +63,7 @@ struct CommunityView: View {
                 #endif
 
                 switch vm.selectedMenu {
-                case .all, .question, .party:
+                case .all, .party, .question, .information, .habit, .free:
                     await vm.fetchInitialIfNeeded()
                 case .fame:
                     break

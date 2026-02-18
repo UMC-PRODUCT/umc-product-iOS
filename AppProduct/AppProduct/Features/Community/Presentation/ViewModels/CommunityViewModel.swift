@@ -36,10 +36,16 @@ class CommunityViewModel {
         if selectedMenu != .all {
             switch selectedMenu {
             case .all: break
-            case .question:
-                filtered = filtered.filter { $0.category == .question }
             case .party:
                 filtered = filtered.filter { $0.category == .lighting }
+            case .question:
+                filtered = filtered.filter { $0.category == .question }
+            case .information:
+                filtered = filtered.filter { $0.category == .information }
+            case .habit:
+                filtered = filtered.filter { $0.category == .habit }
+            case .free:
+                filtered = filtered.filter { $0.category == .free }
             case .fame: break
             }
         }
