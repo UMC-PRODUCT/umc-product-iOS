@@ -17,6 +17,8 @@ enum HomeRouter {
     case getGen
     /// 월별 내 일정 조회
     case getSchedules(year: Int, month: Int)
+    /// 일정 상세 조회
+    case getScheduleDetail(scheduleId: Int)
     /// 최근 공지사항 조회
     case getNoticeRecent(query: NoticeListRequestDTO)
     /// FCM 토큰 등록/갱신
@@ -32,6 +34,8 @@ extension HomeRouter: BaseTargetType {
             return "/api/v1/member/me"
         case .getSchedules:
             return "/api/v1/schedules/my-list"
+        case .getScheduleDetail(let scheduleId):
+            return "/api/v1/schedules/\(scheduleId)"
         case .getNoticeRecent:
             return "/api/v1/notices"
         case .postFCMToken(let memberId, _):
@@ -43,7 +47,7 @@ extension HomeRouter: BaseTargetType {
 
     var method: Moya.Method {
         switch self {
-        case .getGen, .getSchedules, .getNoticeRecent:
+        case .getGen, .getSchedules, .getScheduleDetail, .getNoticeRecent:
             return .get
         case .postFCMToken:
             return .post
@@ -61,6 +65,8 @@ extension HomeRouter: BaseTargetType {
                 parameters: ["year": year, "month": month],
                 encoding: URLEncoding.queryString
             )
+        case .getScheduleDetail:
+            return .requestPlain
         case .getNoticeRecent(let query):
             return .requestParameters(
                 parameters: query.queryItems,

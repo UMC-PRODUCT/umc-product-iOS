@@ -40,12 +40,28 @@ struct ScheduleDetailView: View {
         .navigation(naviTitle: .detailSchedule, displayMode: .inline)
         .toolbar { toolbarContent }
         .alertPrompt(item: $viewModel.alertPromprt)
-        .fullScreenCover(isPresented: $viewModel.isShowModify, content: editCoverContent)
+        .fullScreenCover(
+            isPresented: $viewModel.isShowModify,
+            onDismiss: {
+                Task { @MainActor in
+                    let provider = di.resolve(HomeUseCaseProviding.self)
+                    await viewModel.fetchScheduleDetail(
+                        fetchScheduleDetailUseCase: provider.fetchScheduleDetailUseCase
+                    )
+                }
+            },
+            content: editCoverContent
+        )
         .task {
+            let provider = di.resolve(HomeUseCaseProviding.self)
             let authorizationUseCase = di.resolve(AuthorizationUseCaseProtocol.self)
-            await viewModel.fetchSchedulePermission(
+            async let detailTask: () = viewModel.fetchScheduleDetail(
+                fetchScheduleDetailUseCase: provider.fetchScheduleDetailUseCase
+            )
+            async let permissionTask: () = viewModel.fetchSchedulePermission(
                 authorizationUseCase: authorizationUseCase
             )
+            _ = await (detailTask, permissionTask)
         }
     }
 

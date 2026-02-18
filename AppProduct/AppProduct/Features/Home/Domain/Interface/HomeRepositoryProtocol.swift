@@ -23,6 +23,13 @@ protocol HomeRepositoryProtocol: Sendable {
         year: Int, month: Int
     ) async throws -> [Date: [ScheduleData]]
 
+    /// 일정 상세 조회
+    /// - Parameter scheduleId: 일정 ID
+    /// - Returns: 일정 상세 데이터
+    func getScheduleDetail(
+        scheduleId: Int
+    ) async throws -> ScheduleDetailData
+
     /// 최근 공지 조회
     /// - Parameter query: 공지 목록 요청 파라미터
     /// - Returns: 최근 공지 데이터 목록

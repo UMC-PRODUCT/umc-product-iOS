@@ -1,32 +1,5 @@
 {
   "activityEntities" : [
-    "dataSourceMetrics",
-    [
-      {
-        "createdDate" : "2026-01-21T11:16:56Z",
-        "event" : "dataSourceMetrics",
-        "id" : "085B7E5A-1F7D-44B0-A724-D57876BF8544",
-        "subtitle" : "13 Classes, 851 Items",
-        "title" : "Data Summary"
-      },
-      {
-        "createdDate" : "2026-01-21T11:22:40Z",
-        "event" : "dataSourceMetrics",
-        "id" : "0375C384-D115-4866-B6C5-544DECE9DCC8",
-        "subtitle" : "13 Classes, 855 Items",
-        "title" : "Data Summary"
-      }
-    ],
-    "dataSourceCreated",
-    [
-      {
-        "createdDate" : "2026-01-21T11:16:53Z",
-        "event" : "dataSourceCreated",
-        "id" : "D88A46B0-415E-43D1-B694-F9FB15E66FB9",
-        "subtitle" : "ScheduleTrainingData.json",
-        "title" : "Data Source Created"
-      }
-    ],
     "dataSourceTrainingStarted",
     [
       {
@@ -42,6 +15,75 @@
         "id" : "8BA14A73-0BBE-4349-AE38-C3DDAFD1E552",
         "subtitle" : "ScheduleListClassifierML",
         "title" : "Used By"
+      },
+      {
+        "createdDate" : "2026-02-18T03:57:00Z",
+        "event" : "dataSourceTrainingStarted",
+        "id" : "50EFEB99-69CB-43A8-8DAD-139BA93561BB",
+        "subtitle" : "ScheduleListClassifierML",
+        "title" : "Used By"
+      },
+      {
+        "createdDate" : "2026-02-18T04:12:15Z",
+        "event" : "dataSourceTrainingStarted",
+        "id" : "92596B7B-D6C7-4C55-8DD4-57C0DAD90452",
+        "subtitle" : "ScheduleListClassifierML",
+        "title" : "Used By"
+      },
+      {
+        "createdDate" : "2026-02-18T04:17:32Z",
+        "event" : "dataSourceTrainingStarted",
+        "id" : "9F02469D-FFE5-4A10-87EB-4A14B37D3AA8",
+        "subtitle" : "ScheduleListClassifierML",
+        "title" : "Used By"
+      }
+    ],
+    "dataSourceMetrics",
+    [
+      {
+        "createdDate" : "2026-01-21T11:16:56Z",
+        "event" : "dataSourceMetrics",
+        "id" : "085B7E5A-1F7D-44B0-A724-D57876BF8544",
+        "subtitle" : "13 Classes, 851 Items",
+        "title" : "Data Summary"
+      },
+      {
+        "createdDate" : "2026-01-21T11:22:40Z",
+        "event" : "dataSourceMetrics",
+        "id" : "0375C384-D115-4866-B6C5-544DECE9DCC8",
+        "subtitle" : "13 Classes, 855 Items",
+        "title" : "Data Summary"
+      },
+      {
+        "createdDate" : "2026-02-18T03:57:00Z",
+        "event" : "dataSourceMetrics",
+        "id" : "B4DF43FD-C06F-4FEA-92E5-E5410A0225B8",
+        "subtitle" : "13 Classes, 1,637 Items",
+        "title" : "Data Summary"
+      },
+      {
+        "createdDate" : "2026-02-18T04:12:15Z",
+        "event" : "dataSourceMetrics",
+        "id" : "E229B27A-3D8E-402C-98E4-B3716B15ECD2",
+        "subtitle" : "13 Classes, 3,199 Items",
+        "title" : "Data Summary"
+      },
+      {
+        "createdDate" : "2026-02-18T04:17:32Z",
+        "event" : "dataSourceMetrics",
+        "id" : "BCD744FD-E775-40AE-87C8-1907C32DD576",
+        "subtitle" : "13 Classes, 3,199 Items",
+        "title" : "Data Summary"
+      }
+    ],
+    "dataSourceCreated",
+    [
+      {
+        "createdDate" : "2026-01-21T11:16:53Z",
+        "event" : "dataSourceCreated",
+        "id" : "D88A46B0-415E-43D1-B694-F9FB15E66FB9",
+        "subtitle" : "ScheduleTrainingData.json",
+        "title" : "Data Source Created"
       }
     ]
   ],
@@ -53,36 +95,36 @@
     "dataAnalysis" : {
       "classifierAnalysis" : {
         "labelStats" : {
-          "celebration" : 65,
-          "fee" : 65,
-          "general" : 65,
-          "hackathon" : 65,
-          "leadership" : 65,
-          "meeting" : 65,
-          "networking" : 65,
-          "orientation" : 65,
-          "presentation" : 66,
-          "project" : 69,
-          "review" : 65,
-          "study" : 70,
-          "workshop" : 65
+          "celebration" : 124,
+          "fee" : 130,
+          "general" : 124,
+          "hackathon" : 125,
+          "leadership" : 129,
+          "meeting" : 130,
+          "networking" : 128,
+          "orientation" : 1651,
+          "presentation" : 130,
+          "project" : 138,
+          "review" : 127,
+          "study" : 140,
+          "workshop" : 123
         }
       },
       "issues" : [
         {
-          "description" : "13 classes found, including study, project, presentation",
+          "description" : "13 classes found, including orientation, study, project",
           "severity" : "debug"
         },
         {
-          "description" : "855 texts found, automatically creating validation set",
+          "description" : "3199 texts found, automatically creating validation set",
           "severity" : "good"
         },
         {
-          "description" : "Smallest class is \"workshop\" with 65 texts",
+          "description" : "Smallest class is \"workshop\" with 123 texts",
           "severity" : "debug"
         },
         {
-          "description" : "Largest class is \"study\" with 70 text",
+          "description" : "Largest class is \"orientation\" with 1651 text",
           "severity" : "debug"
         }
       ],
@@ -94,19 +136,20 @@
       "summary" : {
         "canUseValidation" : 1,
         "classCount" : 13,
-        "sampleCount" : 855
+        "sampleCount" : 3199
       }
     },
     "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
     "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
-    "itemsCount" : 855
+    "itemsCount" : 3199
   },
   "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
   "experimentIDs" : [
-    "F338F915-0B88-44DC-8F5D-F8DAB1B35AA6"
+    "E7D707F3-BCB5-4A13-9DDC-556A85E27CBA",
+    "70FD6D07-FE9A-41BB-89A2-B2F4C7C7DED1"
   ],
   "id" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
-  "modifiedDate" : "2026-01-21T11:22:40Z",
+  "modifiedDate" : "2026-02-18T04:17:32Z",
   "pathType" : 0,
   "preferredFilename" : "ScheduleTrainingData.json",
   "title" : "ScheduleTrainingData.json",

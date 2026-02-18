@@ -58,6 +58,18 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
         }
     }
 
+    /// 일정 상세를 조회합니다.
+    func getScheduleDetail(scheduleId: Int) async throws -> ScheduleDetailData {
+        let response = try await adapter.request(
+            HomeRouter.getScheduleDetail(scheduleId: scheduleId)
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<ScheduleDetailDTO>.self,
+            from: response.data
+        )
+        return try apiResponse.unwrap().toScheduleDetailData()
+    }
+
     /// 최근 공지사항을 조회합니다 (최대 5개).
     func getRecentNotices(
         query: NoticeListRequestDTO

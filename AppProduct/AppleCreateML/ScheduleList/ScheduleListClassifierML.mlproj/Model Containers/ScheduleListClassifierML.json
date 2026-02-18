@@ -1,112 +1,112 @@
 {
   "activityEntities" : [
-    "trainingStarted",
+    "experimentCreated",
     [
       {
-        "createdDate" : "2026-01-21T11:22:40Z",
-        "event" : "trainingStarted",
-        "id" : "10491676-2D0B-4FFC-8C7F-309EFDBB5D68",
-        "subtitle" : "10 iterations",
-        "title" : "Training Started"
+        "createdDate" : "2026-02-18T04:17:13Z",
+        "event" : "experimentCreated",
+        "id" : "51547E3C-F34A-4EB0-8126-BB50486A4135",
+        "subtitle" : "ScheduleListClassifierML",
+        "title" : "Model Source Created"
       }
     ],
     "trainingDataAdded",
     [
       {
-        "createdDate" : "2026-01-21T11:22:20Z",
+        "createdDate" : "2026-02-18T04:17:28Z",
         "event" : "trainingDataAdded",
-        "id" : "E1DC2261-7180-46B5-9B4A-CA68622E92BB",
+        "id" : "8A1B1621-C891-4B3B-915F-AEF55A175686",
         "subtitle" : "ScheduleTrainingData.json",
         "title" : "Training Data Added"
-      }
-    ],
-    "experimentCreated",
-    [
-      {
-        "createdDate" : "2026-01-21T11:22:05Z",
-        "event" : "experimentCreated",
-        "id" : "311A62C4-FAAC-4DFB-9681-8F780054D457",
-        "subtitle" : "ScheduleListClassifierML",
-        "title" : "Model Source Created"
       }
     ],
     "trainingFinished",
     [
       {
-        "createdDate" : "2026-01-21T11:22:40Z",
+        "createdDate" : "2026-02-18T04:17:32Z",
         "event" : "trainingFinished",
-        "id" : "FCC3F1E9-5F1C-4510-B261-4712C4B2C2D5",
+        "id" : "B0E898F5-BA27-4823-B5CF-DE0A8ABC5239",
         "subtitle" : "Model converged at 5 iterations",
         "title" : "Training Completed"
+      }
+    ],
+    "trainingStarted",
+    [
+      {
+        "createdDate" : "2026-02-18T04:17:32Z",
+        "event" : "trainingStarted",
+        "id" : "6A8EC13C-C58B-4FC1-85FC-BD50F631C02E",
+        "subtitle" : "10 iterations",
+        "title" : "Training Started"
       }
     ]
   ],
   "contentDataResult" : {
-    "createdDate" : "2026-01-21T11:15:58Z"
+    "createdDate" : "2026-02-18T04:17:13Z"
   },
-  "createdDate" : "2026-01-21T11:22:05Z",
+  "createdDate" : "2026-02-18T04:17:13Z",
   "evaluationContainerEntity" : {
-    "createdDate" : "2026-01-21T11:22:40Z",
+    "createdDate" : "2026-02-18T04:17:32Z",
     "evaluationEntities" : [
       {
         "analysedDataType" : "none",
-        "createdDate" : "2026-01-21T11:22:40Z",
+        "createdDate" : "2026-02-18T04:17:32Z",
         "dataResult" : {
 
         },
-        "id" : "cf7ac71f-2b6a-4b5b-b022-f0acdb512ae8"
+        "id" : "e6d1c31a-8059-480a-abd8-5eac835eac62"
       }
     ],
-    "id" : "a287413e-e0f1-4675-8118-cea89253fb93",
-    "modifiedDate" : "2026-01-21T11:22:40Z",
+    "id" : "652deb5c-713c-4549-bd5e-460abc475ea8",
+    "modifiedDate" : "2026-02-18T04:17:32Z",
     "previewType" : "textClassifier",
     "testingEvaluationEntity" : {
       "analysedDataType" : "none",
-      "createdDate" : "2026-01-21T11:22:05Z",
+      "createdDate" : "2026-02-18T04:17:13Z",
       "dataResult" : {
-        "createdDate" : "2026-01-21T11:22:05Z"
+        "createdDate" : "2026-02-18T04:17:13Z"
       },
-      "id" : "076781ca-20a9-4854-821e-96aadb0fa965"
+      "id" : "0faad150-39ee-4256-a2d3-5020ad9926b5"
     },
     "trainingEvaluationEntity" : {
       "analysedDataType" : "none",
-      "createdDate" : "2026-01-21T11:22:05Z",
+      "createdDate" : "2026-02-18T04:17:13Z",
       "dataResult" : {
         "classesCount" : 13,
-        "createdDate" : "2026-01-21T11:22:05Z",
+        "createdDate" : "2026-02-18T04:17:13Z",
         "dataAnalysis" : {
           "classifierAnalysis" : {
             "labelStats" : {
-              "celebration" : 65,
-              "fee" : 65,
-              "general" : 65,
-              "hackathon" : 65,
-              "leadership" : 65,
-              "meeting" : 65,
-              "networking" : 65,
-              "orientation" : 65,
-              "presentation" : 66,
-              "project" : 69,
-              "review" : 65,
-              "study" : 70,
-              "workshop" : 65
+              "celebration" : 124,
+              "fee" : 130,
+              "general" : 124,
+              "hackathon" : 125,
+              "leadership" : 129,
+              "meeting" : 130,
+              "networking" : 128,
+              "orientation" : 1651,
+              "presentation" : 130,
+              "project" : 138,
+              "review" : 127,
+              "study" : 140,
+              "workshop" : 123
             }
           },
           "issues" : [
             {
-              "description" : "13 classes found, including study, project, presentation",
+              "description" : "13 classes found, including orientation, study, project",
               "severity" : "debug"
             },
             {
-              "description" : "855 texts found, automatically creating validation set",
+              "description" : "3199 texts found, automatically creating validation set",
               "severity" : "good"
             },
             {
-              "description" : "Smallest class is \"workshop\" with 65 texts",
+              "description" : "Smallest class is \"workshop\" with 123 texts",
               "severity" : "debug"
             },
             {
-              "description" : "Largest class is \"study\" with 70 text",
+              "description" : "Largest class is \"orientation\" with 1651 text",
               "severity" : "debug"
             }
           ],
@@ -118,46 +118,46 @@
           "summary" : {
             "canUseValidation" : 1,
             "classCount" : 13,
-            "sampleCount" : 855
+            "sampleCount" : 3199
           }
         },
         "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
         "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
-        "itemsCount" : 855
+        "itemsCount" : 3199
       },
       "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
       "evaluationResult" : {
         "textClassifier" : {
-          "accuracy" : 0.998769987699877,
+          "accuracy" : 0.9993421052631579,
           "confusionMatrix" : [
             {
               "actual" : "celebration",
-              "count" : 64,
+              "count" : 119,
               "expected" : "celebration"
             },
             {
               "actual" : "fee",
-              "count" : 61,
+              "count" : 121,
               "expected" : "fee"
             },
             {
               "actual" : "general",
-              "count" : 61,
+              "count" : 118,
               "expected" : "general"
             },
             {
               "actual" : "hackathon",
-              "count" : 60,
+              "count" : 120,
               "expected" : "hackathon"
             },
             {
               "actual" : "leadership",
-              "count" : 63,
+              "count" : 123,
               "expected" : "leadership"
             },
             {
               "actual" : "meeting",
-              "count" : 59,
+              "count" : 118,
               "expected" : "meeting"
             },
             {
@@ -167,43 +167,48 @@
             },
             {
               "actual" : "networking",
-              "count" : 60,
+              "count" : 122,
               "expected" : "networking"
             },
             {
               "actual" : "orientation",
-              "count" : 59,
+              "count" : 1572,
               "expected" : "orientation"
             },
             {
               "actual" : "presentation",
-              "count" : 62,
+              "count" : 123,
               "expected" : "presentation"
             },
             {
               "actual" : "project",
-              "count" : 68,
+              "count" : 1,
+              "expected" : "meeting"
+            },
+            {
+              "actual" : "project",
+              "count" : 130,
               "expected" : "project"
             },
             {
               "actual" : "review",
-              "count" : 63,
+              "count" : 122,
               "expected" : "review"
             },
             {
               "actual" : "study",
-              "count" : 69,
+              "count" : 133,
               "expected" : "study"
             },
             {
               "actual" : "workshop",
-              "count" : 63,
+              "count" : 117,
               "expected" : "workshop"
             }
           ],
           "statsByLabel" : {
             "celebration" : {
-              "count" : 64,
+              "count" : 119,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -212,7 +217,7 @@
               }
             },
             "fee" : {
-              "count" : 61,
+              "count" : 121,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -221,7 +226,7 @@
               }
             },
             "general" : {
-              "count" : 61,
+              "count" : 118,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -230,7 +235,7 @@
               }
             },
             "hackathon" : {
-              "count" : 60,
+              "count" : 120,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -239,7 +244,7 @@
               }
             },
             "leadership" : {
-              "count" : 63,
+              "count" : 123,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -248,16 +253,16 @@
               }
             },
             "meeting" : {
-              "count" : 60,
+              "count" : 119,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 1,
-                  "recall" : 0.9833333333333333
+                  "precision" : 0.9915966386554622,
+                  "recall" : 0.9915966386554622
                 }
               }
             },
             "networking" : {
-              "count" : 60,
+              "count" : 122,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -266,7 +271,7 @@
               }
             },
             "orientation" : {
-              "count" : 59,
+              "count" : 1572,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -275,7 +280,7 @@
               }
             },
             "presentation" : {
-              "count" : 62,
+              "count" : 123,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -284,16 +289,16 @@
               }
             },
             "project" : {
-              "count" : 68,
+              "count" : 131,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.9855072463768116,
-                  "recall" : 1
+                  "precision" : 0.9923664122137404,
+                  "recall" : 0.9923664122137404
                 }
               }
             },
             "review" : {
-              "count" : 63,
+              "count" : 122,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -302,7 +307,7 @@
               }
             },
             "study" : {
-              "count" : 69,
+              "count" : 133,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -311,7 +316,7 @@
               }
             },
             "workshop" : {
-              "count" : 63,
+              "count" : 117,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -322,47 +327,57 @@
           }
         }
       },
-      "id" : "f36fa9c5-e7e9-4e09-b036-e1a25babe5d8"
+      "id" : "7c1e9e27-1209-42ef-9aaa-1061eb67a8b7"
     },
     "validationEvaluationEntity" : {
       "analysedDataType" : "auto",
-      "createdDate" : "2026-01-21T11:22:05Z",
+      "createdDate" : "2026-02-18T04:17:13Z",
       "dataResult" : {
-        "createdDate" : "2026-01-21T11:22:05Z"
+        "createdDate" : "2026-02-18T04:17:13Z"
       },
       "evaluationResult" : {
         "textClassifier" : {
-          "accuracy" : 0.9047619047619048,
+          "accuracy" : 0.7358490566037735,
           "confusionMatrix" : [
             {
               "actual" : "celebration",
-              "count" : 1,
+              "count" : 2,
               "expected" : "celebration"
             },
             {
-              "actual" : "fee",
+              "actual" : "celebration",
               "count" : 3,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "fee",
+              "count" : 4,
               "expected" : "fee"
             },
             {
               "actual" : "fee",
-              "count" : 1,
-              "expected" : "workshop"
+              "count" : 5,
+              "expected" : "orientation"
             },
             {
               "actual" : "general",
-              "count" : 4,
+              "count" : 3,
               "expected" : "general"
             },
             {
+              "actual" : "general",
+              "count" : 3,
+              "expected" : "orientation"
+            },
+            {
               "actual" : "hackathon",
-              "count" : 4,
+              "count" : 2,
               "expected" : "hackathon"
             },
             {
               "actual" : "hackathon",
-              "count" : 1,
-              "expected" : "study"
+              "count" : 3,
+              "expected" : "orientation"
             },
             {
               "actual" : "leadership",
@@ -370,14 +385,19 @@
               "expected" : "leadership"
             },
             {
+              "actual" : "leadership",
+              "count" : 4,
+              "expected" : "orientation"
+            },
+            {
               "actual" : "meeting",
-              "count" : 1,
-              "expected" : "celebration"
+              "count" : 7,
+              "expected" : "meeting"
             },
             {
               "actual" : "meeting",
               "count" : 3,
-              "expected" : "meeting"
+              "expected" : "orientation"
             },
             {
               "actual" : "meeting",
@@ -386,23 +406,48 @@
             },
             {
               "actual" : "networking",
-              "count" : 5,
+              "count" : 1,
               "expected" : "networking"
             },
             {
+              "actual" : "networking",
+              "count" : 4,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "networking",
+              "count" : 1,
+              "expected" : "study"
+            },
+            {
               "actual" : "orientation",
-              "count" : 6,
+              "count" : 79,
               "expected" : "orientation"
             },
             {
               "actual" : "presentation",
               "count" : 4,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "presentation",
+              "count" : 3,
               "expected" : "presentation"
             },
             {
               "actual" : "project",
-              "count" : 1,
+              "count" : 3,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "project",
+              "count" : 4,
               "expected" : "project"
+            },
+            {
+              "actual" : "review",
+              "count" : 3,
+              "expected" : "orientation"
             },
             {
               "actual" : "review",
@@ -411,40 +456,55 @@
             },
             {
               "actual" : "study",
+              "count" : 3,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "study",
               "count" : 1,
+              "expected" : "review"
+            },
+            {
+              "actual" : "study",
+              "count" : 3,
               "expected" : "study"
             },
             {
               "actual" : "workshop",
-              "count" : 2,
+              "count" : 1,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "workshop",
+              "count" : 5,
               "expected" : "workshop"
             }
           ],
           "statsByLabel" : {
             "celebration" : {
-              "count" : 1,
+              "count" : 5,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.5,
-                  "recall" : 1
+                  "precision" : 1,
+                  "recall" : 0.4
                 }
               }
             },
             "fee" : {
-              "count" : 4,
+              "count" : 9,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 0.75
+                  "recall" : 0.4444444444444444
                 }
               }
             },
             "general" : {
-              "count" : 4,
+              "count" : 6,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 1
+                  "recall" : 0.5
                 }
               }
             },
@@ -453,95 +513,95 @@
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 0.8
+                  "recall" : 0.4
                 }
               }
             },
             "leadership" : {
-              "count" : 2,
-              "precisionRecall" : {
-                "success" : {
-                  "precision" : 1,
-                  "recall" : 1
-                }
-              }
-            },
-            "meeting" : {
-              "count" : 5,
-              "precisionRecall" : {
-                "success" : {
-                  "precision" : 1,
-                  "recall" : 0.6
-                }
-              }
-            },
-            "networking" : {
-              "count" : 5,
-              "precisionRecall" : {
-                "success" : {
-                  "precision" : 1,
-                  "recall" : 1
-                }
-              }
-            },
-            "orientation" : {
               "count" : 6,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
+                  "recall" : 0.3333333333333333
+                }
+              }
+            },
+            "meeting" : {
+              "count" : 11,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.6363636363636364
+                }
+              }
+            },
+            "networking" : {
+              "count" : 6,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.16666666666666666
+                }
+              }
+            },
+            "orientation" : {
+              "count" : 79,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.6694915254237288,
                   "recall" : 1
                 }
               }
             },
             "presentation" : {
-              "count" : 4,
+              "count" : 7,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.8,
-                  "recall" : 1
+                  "precision" : 0.75,
+                  "recall" : 0.42857142857142855
                 }
               }
             },
             "project" : {
-              "count" : 1,
+              "count" : 7,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 1
+                  "recall" : 0.5714285714285714
                 }
               }
             },
             "review" : {
-              "count" : 2,
+              "count" : 5,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 1,
-                  "recall" : 1
+                  "precision" : 0.6666666666666666,
+                  "recall" : 0.4
                 }
               }
             },
             "study" : {
-              "count" : 1,
+              "count" : 7,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.5,
-                  "recall" : 1
+                  "precision" : 0.75,
+                  "recall" : 0.42857142857142855
                 }
               }
             },
             "workshop" : {
-              "count" : 2,
+              "count" : 6,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.6666666666666666,
-                  "recall" : 1
+                  "precision" : 1,
+                  "recall" : 0.8333333333333334
                 }
               }
             }
           }
         }
       },
-      "id" : "1aecca1b-b61d-4c46-a765-493987f69aea"
+      "id" : "04e7b5fa-918e-406a-9691-c3cf02195110"
     }
   },
   "evaluationEntity" : {
@@ -549,20 +609,20 @@
     "dataResult" : {
 
     },
-    "id" : "d3de9a40-31ab-46f6-b692-e3123b1c4901"
+    "id" : "a0eddcd1-f136-4a0b-8d92-93c928594f07"
   },
   "evaluationState" : "uninitialized",
-  "id" : "F338F915-0B88-44DC-8F5D-F8DAB1B35AA6",
+  "id" : "70FD6D07-FE9A-41BB-89A2-B2F4C7C7DED1",
   "modelEntity" : {
-    "createdDate" : "2026-01-21T11:22:05Z",
-    "experimentID" : "AC87E507-F237-4A60-95C9-E99F436737F6",
-    "id" : "B1660946-970C-4900-AA6A-6A6BDD7B53E3",
+    "createdDate" : "2026-02-18T04:17:13Z",
+    "experimentID" : "70FD6D07-FE9A-41BB-89A2-B2F4C7C7DED1",
+    "id" : "99DFD3FD-B098-40F8-83A2-D38D1DD8E601",
     "modelURL" : "Models/ScheduleListClassifierML.mlmodel",
-    "modifiedDate" : "2026-01-21T11:22:05Z",
+    "modifiedDate" : "2026-02-18T04:17:13Z",
     "title" : "",
     "version" : "1.0"
   },
-  "modifiedDate" : "2026-01-21T11:22:40Z",
+  "modifiedDate" : "2026-02-18T04:17:32Z",
   "preferredFilename" : "ScheduleListClassifierML",
   "settingEntity" : {
     "algorithmType" : "maxEnt",
@@ -595,7 +655,7 @@
     "withoutSnapshots" : 0
   },
   "state" : "trained",
-  "title" : "ScheduleListClassifierML copy",
+  "title" : "ScheduleListClassifierML 1",
   "trainingEntity" : {
     "analysedDataType" : "datasource",
     "checkpointMetrics" : {
@@ -603,40 +663,40 @@
     },
     "dataResult" : {
       "classesCount" : 13,
-      "createdDate" : "2026-01-21T11:22:05Z",
+      "createdDate" : "2026-02-18T04:17:13Z",
       "dataAnalysis" : {
         "classifierAnalysis" : {
           "labelStats" : {
-            "celebration" : 65,
-            "fee" : 65,
-            "general" : 65,
-            "hackathon" : 65,
-            "leadership" : 65,
-            "meeting" : 65,
-            "networking" : 65,
-            "orientation" : 65,
-            "presentation" : 66,
-            "project" : 69,
-            "review" : 65,
-            "study" : 70,
-            "workshop" : 65
+            "celebration" : 124,
+            "fee" : 130,
+            "general" : 124,
+            "hackathon" : 125,
+            "leadership" : 129,
+            "meeting" : 130,
+            "networking" : 128,
+            "orientation" : 1651,
+            "presentation" : 130,
+            "project" : 138,
+            "review" : 127,
+            "study" : 140,
+            "workshop" : 123
           }
         },
         "issues" : [
           {
-            "description" : "13 classes found, including study, project, presentation",
+            "description" : "13 classes found, including orientation, study, project",
             "severity" : "debug"
           },
           {
-            "description" : "855 texts found, automatically creating validation set",
+            "description" : "3199 texts found, automatically creating validation set",
             "severity" : "good"
           },
           {
-            "description" : "Smallest class is \"workshop\" with 65 texts",
+            "description" : "Smallest class is \"workshop\" with 123 texts",
             "severity" : "debug"
           },
           {
-            "description" : "Largest class is \"study\" with 70 text",
+            "description" : "Largest class is \"orientation\" with 1651 text",
             "severity" : "debug"
           }
         ],
@@ -648,16 +708,16 @@
         "summary" : {
           "canUseValidation" : 1,
           "classCount" : 13,
-          "sampleCount" : 855
+          "sampleCount" : 3199
         }
       },
       "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
       "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
-      "itemsCount" : 855
+      "itemsCount" : 3199
     },
     "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
     "featureExtractionCheckpointMayBeAvailable" : false,
-    "finishTime" : "2026-01-21T11:22:40Z",
+    "finishTime" : "2026-02-18T04:17:32Z",
     "progress" : [
       {
         "count" : 1,
@@ -671,7 +731,7 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 10,
-          "trainingAccuracy" : 0.07503075152635574,
+          "trainingAccuracy" : 0.5171052813529968,
           "validationAccuracy" : 0
         }
       },
@@ -687,7 +747,7 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 9,
-          "trainingAccuracy" : 0.9876998662948608,
+          "trainingAccuracy" : 0.9855263233184814,
           "validationAccuracy" : 0
         }
       },
@@ -703,7 +763,7 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 8,
-          "trainingAccuracy" : 0.9913899302482605,
+          "trainingAccuracy" : 0.9970394968986511,
           "validationAccuracy" : 0
         }
       },
@@ -719,7 +779,7 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 7,
-          "trainingAccuracy" : 0.9975399971008301,
+          "trainingAccuracy" : 0.9986842274665833,
           "validationAccuracy" : 0
         }
       },
@@ -735,12 +795,12 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 6,
-          "trainingAccuracy" : 0.998769998550415,
+          "trainingAccuracy" : 0.9993420839309692,
           "validationAccuracy" : 0
         }
       },
       {
-        "count" : 13,
+        "count" : 40,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -748,7 +808,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 93,
+        "count" : 140,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -756,7 +816,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 173,
+        "count" : 240,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -764,7 +824,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 253,
+        "count" : 340,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -772,7 +832,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 333,
+        "count" : 440,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -780,7 +840,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 413,
+        "count" : 540,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -788,7 +848,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 493,
+        "count" : 640,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -796,7 +856,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 573,
+        "count" : 740,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -804,7 +864,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 653,
+        "count" : 840,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -812,7 +872,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 733,
+        "count" : 940,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -820,7 +880,167 @@
         "tableIndex" : 0
       },
       {
-        "count" : 813,
+        "count" : 1040,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1140,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1240,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1340,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1440,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1540,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1640,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1740,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1840,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1940,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2040,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2140,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2240,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2340,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2440,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2540,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2640,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2740,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2840,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2940,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3040,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -831,40 +1051,40 @@
     "snapshottableCheckpoints" : {
 
     },
-    "startTime" : "2026-01-21T11:22:40Z",
-    "trainingAccuracy" : 0.998769987699877,
+    "startTime" : "2026-02-18T04:17:32Z",
+    "trainingAccuracy" : 0.9993421052631579,
     "trainingResults" : {
       "textClassifier" : {
-        "accuracy" : 0.998769987699877,
+        "accuracy" : 0.9993421052631579,
         "confusionMatrix" : [
           {
             "actual" : "celebration",
-            "count" : 64,
+            "count" : 119,
             "expected" : "celebration"
           },
           {
             "actual" : "fee",
-            "count" : 61,
+            "count" : 121,
             "expected" : "fee"
           },
           {
             "actual" : "general",
-            "count" : 61,
+            "count" : 118,
             "expected" : "general"
           },
           {
             "actual" : "hackathon",
-            "count" : 60,
+            "count" : 120,
             "expected" : "hackathon"
           },
           {
             "actual" : "leadership",
-            "count" : 63,
+            "count" : 123,
             "expected" : "leadership"
           },
           {
             "actual" : "meeting",
-            "count" : 59,
+            "count" : 118,
             "expected" : "meeting"
           },
           {
@@ -874,43 +1094,48 @@
           },
           {
             "actual" : "networking",
-            "count" : 60,
+            "count" : 122,
             "expected" : "networking"
           },
           {
             "actual" : "orientation",
-            "count" : 59,
+            "count" : 1572,
             "expected" : "orientation"
           },
           {
             "actual" : "presentation",
-            "count" : 62,
+            "count" : 123,
             "expected" : "presentation"
           },
           {
             "actual" : "project",
-            "count" : 68,
+            "count" : 1,
+            "expected" : "meeting"
+          },
+          {
+            "actual" : "project",
+            "count" : 130,
             "expected" : "project"
           },
           {
             "actual" : "review",
-            "count" : 63,
+            "count" : 122,
             "expected" : "review"
           },
           {
             "actual" : "study",
-            "count" : 69,
+            "count" : 133,
             "expected" : "study"
           },
           {
             "actual" : "workshop",
-            "count" : 63,
+            "count" : 117,
             "expected" : "workshop"
           }
         ],
         "statsByLabel" : {
           "celebration" : {
-            "count" : 64,
+            "count" : 119,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -919,7 +1144,7 @@
             }
           },
           "fee" : {
-            "count" : 61,
+            "count" : 121,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -928,7 +1153,7 @@
             }
           },
           "general" : {
-            "count" : 61,
+            "count" : 118,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -937,7 +1162,7 @@
             }
           },
           "hackathon" : {
-            "count" : 60,
+            "count" : 120,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -946,7 +1171,7 @@
             }
           },
           "leadership" : {
-            "count" : 63,
+            "count" : 123,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -955,16 +1180,16 @@
             }
           },
           "meeting" : {
-            "count" : 60,
+            "count" : 119,
             "precisionRecall" : {
               "success" : {
-                "precision" : 1,
-                "recall" : 0.9833333333333333
+                "precision" : 0.9915966386554622,
+                "recall" : 0.9915966386554622
               }
             }
           },
           "networking" : {
-            "count" : 60,
+            "count" : 122,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -973,7 +1198,7 @@
             }
           },
           "orientation" : {
-            "count" : 59,
+            "count" : 1572,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -982,7 +1207,7 @@
             }
           },
           "presentation" : {
-            "count" : 62,
+            "count" : 123,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -991,16 +1216,16 @@
             }
           },
           "project" : {
-            "count" : 68,
+            "count" : 131,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.9855072463768116,
-                "recall" : 1
+                "precision" : 0.9923664122137404,
+                "recall" : 0.9923664122137404
               }
             }
           },
           "review" : {
-            "count" : 63,
+            "count" : 122,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -1009,7 +1234,7 @@
             }
           },
           "study" : {
-            "count" : 69,
+            "count" : 133,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -1018,7 +1243,7 @@
             }
           },
           "workshop" : {
-            "count" : 63,
+            "count" : 117,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -1029,40 +1254,50 @@
         }
       }
     },
-    "validationAccuracy" : 0.9047619047619048,
+    "validationAccuracy" : 0.7358490566037735,
     "validationResults" : {
       "textClassifier" : {
-        "accuracy" : 0.9047619047619048,
+        "accuracy" : 0.7358490566037735,
         "confusionMatrix" : [
           {
             "actual" : "celebration",
-            "count" : 1,
+            "count" : 2,
             "expected" : "celebration"
           },
           {
-            "actual" : "fee",
+            "actual" : "celebration",
             "count" : 3,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "fee",
+            "count" : 4,
             "expected" : "fee"
           },
           {
             "actual" : "fee",
-            "count" : 1,
-            "expected" : "workshop"
+            "count" : 5,
+            "expected" : "orientation"
           },
           {
             "actual" : "general",
-            "count" : 4,
+            "count" : 3,
             "expected" : "general"
           },
           {
+            "actual" : "general",
+            "count" : 3,
+            "expected" : "orientation"
+          },
+          {
             "actual" : "hackathon",
-            "count" : 4,
+            "count" : 2,
             "expected" : "hackathon"
           },
           {
             "actual" : "hackathon",
-            "count" : 1,
-            "expected" : "study"
+            "count" : 3,
+            "expected" : "orientation"
           },
           {
             "actual" : "leadership",
@@ -1070,14 +1305,19 @@
             "expected" : "leadership"
           },
           {
+            "actual" : "leadership",
+            "count" : 4,
+            "expected" : "orientation"
+          },
+          {
             "actual" : "meeting",
-            "count" : 1,
-            "expected" : "celebration"
+            "count" : 7,
+            "expected" : "meeting"
           },
           {
             "actual" : "meeting",
             "count" : 3,
-            "expected" : "meeting"
+            "expected" : "orientation"
           },
           {
             "actual" : "meeting",
@@ -1086,23 +1326,48 @@
           },
           {
             "actual" : "networking",
-            "count" : 5,
+            "count" : 1,
             "expected" : "networking"
           },
           {
+            "actual" : "networking",
+            "count" : 4,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "networking",
+            "count" : 1,
+            "expected" : "study"
+          },
+          {
             "actual" : "orientation",
-            "count" : 6,
+            "count" : 79,
             "expected" : "orientation"
           },
           {
             "actual" : "presentation",
             "count" : 4,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "presentation",
+            "count" : 3,
             "expected" : "presentation"
           },
           {
             "actual" : "project",
-            "count" : 1,
+            "count" : 3,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "project",
+            "count" : 4,
             "expected" : "project"
+          },
+          {
+            "actual" : "review",
+            "count" : 3,
+            "expected" : "orientation"
           },
           {
             "actual" : "review",
@@ -1111,40 +1376,55 @@
           },
           {
             "actual" : "study",
+            "count" : 3,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "study",
             "count" : 1,
+            "expected" : "review"
+          },
+          {
+            "actual" : "study",
+            "count" : 3,
             "expected" : "study"
           },
           {
             "actual" : "workshop",
-            "count" : 2,
+            "count" : 1,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "workshop",
+            "count" : 5,
             "expected" : "workshop"
           }
         ],
         "statsByLabel" : {
           "celebration" : {
-            "count" : 1,
+            "count" : 5,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.5,
-                "recall" : 1
+                "precision" : 1,
+                "recall" : 0.4
               }
             }
           },
           "fee" : {
-            "count" : 4,
+            "count" : 9,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 0.75
+                "recall" : 0.4444444444444444
               }
             }
           },
           "general" : {
-            "count" : 4,
+            "count" : 6,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 1
+                "recall" : 0.5
               }
             }
           },
@@ -1153,88 +1433,88 @@
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 0.8
+                "recall" : 0.4
               }
             }
           },
           "leadership" : {
-            "count" : 2,
-            "precisionRecall" : {
-              "success" : {
-                "precision" : 1,
-                "recall" : 1
-              }
-            }
-          },
-          "meeting" : {
-            "count" : 5,
-            "precisionRecall" : {
-              "success" : {
-                "precision" : 1,
-                "recall" : 0.6
-              }
-            }
-          },
-          "networking" : {
-            "count" : 5,
-            "precisionRecall" : {
-              "success" : {
-                "precision" : 1,
-                "recall" : 1
-              }
-            }
-          },
-          "orientation" : {
             "count" : 6,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
+                "recall" : 0.3333333333333333
+              }
+            }
+          },
+          "meeting" : {
+            "count" : 11,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.6363636363636364
+              }
+            }
+          },
+          "networking" : {
+            "count" : 6,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.16666666666666666
+              }
+            }
+          },
+          "orientation" : {
+            "count" : 79,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.6694915254237288,
                 "recall" : 1
               }
             }
           },
           "presentation" : {
-            "count" : 4,
+            "count" : 7,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.8,
-                "recall" : 1
+                "precision" : 0.75,
+                "recall" : 0.42857142857142855
               }
             }
           },
           "project" : {
-            "count" : 1,
+            "count" : 7,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 1
+                "recall" : 0.5714285714285714
               }
             }
           },
           "review" : {
-            "count" : 2,
+            "count" : 5,
             "precisionRecall" : {
               "success" : {
-                "precision" : 1,
-                "recall" : 1
+                "precision" : 0.6666666666666666,
+                "recall" : 0.4
               }
             }
           },
           "study" : {
-            "count" : 1,
+            "count" : 7,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.5,
-                "recall" : 1
+                "precision" : 0.75,
+                "recall" : 0.42857142857142855
               }
             }
           },
           "workshop" : {
-            "count" : 2,
+            "count" : 6,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.6666666666666666,
-                "recall" : 1
+                "precision" : 1,
+                "recall" : 0.8333333333333334
               }
             }
           }
@@ -1245,7 +1525,7 @@
   "validationEntity" : {
     "analysedDataType" : "auto",
     "dataResult" : {
-      "createdDate" : "2026-01-21T11:22:05Z"
+      "createdDate" : "2026-02-18T04:17:13Z"
     },
     "splitOptions" : {
       "strategy" : {

@@ -26,23 +26,35 @@ final class ClassifyScheduleUseCaseImpl: ClassifyScheduleUseCase {
     /// - Parameter title: 분류할 일정 제목
     /// - Returns: 분류된 카테고리
     func execute(title: String) async -> ScheduleIconCategory {
-        // 1. 캐시 확인
-        if let cached = repository.getCachedCategory(for: title) {
-            print("캐시에서 가져옴: \(title) → \(cached.rawValue)")
-            return cached
-        }
+        let keywordResult = repository.classifyWithKeywords(title: title)
+        let forcedRule = forcedRuleCategory(for: title)
 
         // 2. CoreML 분류 시도
         if repository.isModelLoaded, let mlResult = repository.classifyWithML(title: title) {
-            print("CoreML 분류: \(title) → \(mlResult.rawValue)")
-            repository.cacheCategory(mlResult, for: title)
+            if let forcedRule, forcedRule != mlResult {
+                print("ScheduleClassifier [ML+RULE] \(title) -> \(forcedRule.rawValue) (ml=\(mlResult.rawValue))")
+                return forcedRule
+            }
+
+            print("ScheduleClassifier [ML] \(title) -> \(mlResult.rawValue)")
             return mlResult
         }
 
         // 3. 키워드 기반 분류 (Fallback)
-        let keywordResult = repository.classifyWithKeywords(title: title)
-        print("키워드 기반 분류: \(title) → \(keywordResult.rawValue)")
-        repository.cacheCategory(keywordResult, for: title)
+        print("ScheduleClassifier [KW] \(title) -> \(keywordResult.rawValue)")
         return keywordResult
+    }
+
+    /// 모델 예측보다 우선해야 하는 강한 규칙 카테고리
+    ///
+    /// 예: OT/오리엔테이션/온보딩은 `orientation`으로 고정
+    private func forcedRuleCategory(for title: String) -> ScheduleIconCategory? {
+        let normalized = title.lowercased()
+        let orientationTokens = ["ot", "오티", "오리엔테이션", "온보딩"]
+
+        if orientationTokens.contains(where: { normalized.contains($0) }) {
+            return .orientation
+        }
+        return nil
     }
 }

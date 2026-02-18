@@ -24,6 +24,12 @@ struct ScheduleListCard: View, Equatable {
     
     /// 분류 로딩 상태
     @State var isLoading: Bool = true
+
+    /// 카드마다 모델/캐시를 재로딩하지 않도록 분류기를 공유합니다.
+    private static let sharedUseCase: ClassifyScheduleUseCase = {
+        let repository = ScheduleClassifierRepositoryImpl()
+        return ClassifyScheduleUseCaseImpl(repository: repository)
+    }()
     
     private enum Constants {
         /// 아이콘 패딩
@@ -32,6 +38,8 @@ struct ScheduleListCard: View, Equatable {
         static let padding: EdgeInsets = .init(top: 20, leading: 16, bottom: 20, trailing: 16)
         /// 카드 모서리 반경
         static let cornerRadius: CGFloat = 24
+        /// 라인 limit 제한
+        static let lineLimit: Int = 1
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -61,11 +69,9 @@ struct ScheduleListCard: View, Equatable {
         }
         .task(id: data.id) {
             isLoading = true
-            
-            let repository = ScheduleClassifierRepositoryImpl()
-            let useCase = ClassifyScheduleUseCaseImpl(repository: repository)
-            category = await useCase.execute(title: data.title)
-            
+
+            category = await Self.sharedUseCase.execute(title: data.title)
+
             isLoading = false
         }
     }
@@ -76,10 +82,15 @@ struct ScheduleListCard: View, Equatable {
             // 일정 제목
             Text(data.title)
                 .appFont(.calloutEmphasis, color: .grey900)
+                .lineLimit(Constants.lineLimit)
             // 참여 상태 + D-Day
-            Text("\(data.status) · D-\(data.dDay)")
+            Text("\(data.status) · \(dDayText)")
                 .appFont(.subheadline, color: .grey600)
         })
+    }
+
+    private var dDayText: String {
+        data.dDay == 0 ? "D-Day" : "D\(data.dDay)"
     }
     
     private var chevron: some View {

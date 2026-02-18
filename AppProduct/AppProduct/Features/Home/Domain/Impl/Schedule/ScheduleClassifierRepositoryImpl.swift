@@ -22,7 +22,7 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
     /// 인메모리 캐시 저장소
     private var cache: [String: ScheduleIconCategory] = [:]
     /// 캐시 저장용 UserDefaults 키
-    private let userDefaultKey = "ScheduleClassifierCache"
+    private let userDefaultKey = "ScheduleClassifierCache.v3"
     
     /// 생성자 - 캐시 및 모델 로드
     init() {
@@ -37,9 +37,7 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
         do {
             try loadModel()
             isModelLoaded = true
-            print("ScheduleClassifier 모델 로드 성공")
         } catch {
-            print("ScheduleClassifier 모델을 찾을 수 없습니다. 키워드 기반 분류를 사용합니다.")
             isModelLoaded = false
         }
     }
@@ -67,13 +65,61 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
             let prediction = try model.prediction(from: input)
             
             if let output = prediction.featureValue(for: "label")?.stringValue {
-                return ScheduleIconCategory(rawValue: output) ?? .general
+                return mapMLLabelToCategory(output)
             }
         } catch {
             print("CoreML 예측 실패: \(error.localizedDescription)")
         }
         
         return nil
+    }
+
+    /// CoreML 라벨 문자열을 앱 카테고리로 변환합니다.
+    ///
+    /// 모델 라벨이 소문자(`project`)거나 별칭(`fee`, `review`, `celebration`)인 경우도 매핑합니다.
+    /// 유효하지 않은 라벨(`-`)은 nil을 반환해 키워드 분류로 fallback 합니다.
+    private func mapMLLabelToCategory(_ rawLabel: String) -> ScheduleIconCategory? {
+        let normalized = rawLabel
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        if normalized.isEmpty || normalized == "-" {
+            return nil
+        }
+
+        switch normalized {
+        case "leadership":
+            return .leadership
+        case "study":
+            return .study
+        case "fee", "dues":
+            return .fee
+        case "meeting":
+            return .meeting
+        case "networking":
+            return .networking
+        case "hackathon":
+            return .hackathon
+        case "project":
+            return .project
+        case "presentation":
+            return .presentation
+        case "workshop":
+            return .workshop
+        case "review", "retrospective":
+            return .review
+        case "celebration", "after_party", "after-party":
+            return .celebration
+        case "orientation":
+            return .orientation
+        case "general":
+            return .general
+        default:
+            if let rawMatched = ScheduleIconCategory(rawValue: normalized.uppercased()) {
+                return rawMatched
+            }
+            return nil
+        }
     }
     
     /// 키워드 매칭을 통한 분류
@@ -183,7 +229,6 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
         if let data = UserDefaults.standard.data(forKey: userDefaultKey),
            let decoded = try? JSONDecoder().decode([String: String].self, from: data) {
             self.cache = decoded.compactMapValues { ScheduleIconCategory(rawValue: $0) }
-            print("캐시 로드: \(cache.count)개")
         }
     }
     
