@@ -31,6 +31,8 @@ struct NoticeEditorView: View {
 
     /// 사용자 지부 ID
     @AppStorage(AppStorageKey.chapterId) private var chapterId: Int = 0
+    /// 사용자 역할
+    @AppStorage(AppStorageKey.memberRole) private var memberRoleRaw: String = ""
 
     @State private var viewModel: NoticeEditorViewModel
     private let selectedGisuId: Int?
@@ -107,6 +109,7 @@ struct NoticeEditorView: View {
         .task {
             viewModel.updateErrorHandler(errorHandler)
             applyInitialOrganizationType()
+            applyInitialMemberRole()
             applyInitialUserContext()
         }
         .onChange(of: viewModel.createState) { _, newValue in
@@ -120,6 +123,9 @@ struct NoticeEditorView: View {
         }
         .onChange(of: organizationType) { _, newValue in
             handleOrganizationTypeChanged(newValue)
+        }
+        .onChange(of: memberRoleRaw) { _, newValue in
+            handleMemberRoleChanged(newValue)
         }
         .onChange(of: gisuId) { _, newValue in
             handleUserContextChanged(gisuId: newValue, chapterId: chapterId)
@@ -177,7 +183,7 @@ struct NoticeEditorView: View {
             }
 
             HStack(spacing: Constants.chipSpacing) {
-                ForEach(viewModel.selectedCategory.subCategories) { subCategory in
+                ForEach(viewModel.visibleSubCategories) { subCategory in
                     ChipButton(
                         subCategory.labelText,
                         isSelected: viewModel.isSubCategoryHighlighted(subCategory),
@@ -405,13 +411,24 @@ struct NoticeEditorView: View {
 
     /// 메인 카테고리가 지부/학교일 때 본인 소속명을 서브타이틀로 노출합니다.
     private var navigationSubtitle: String {
+        if viewModel.isEditMode {
+            switch viewModel.selectedCategory {
+            case .branch:
+                return normalizedName(from: chapterName, fallback: "지부")
+            case .school:
+                return normalizedName(from: schoolName, fallback: "학교")
+            case .all, .central, .part:
+                return ""
+            }
+        }
+
         switch viewModel.selectedCategory {
-        case .branch:
-            return normalizedName(from: chapterName, fallback: "지부")
-        case .school:
-            return normalizedName(from: schoolName, fallback: "학교")
-        case .central, .part:
+        case .all:
             return ""
+        case .central, .branch, .school, .part:
+            let targetGisu = selectedGisuId ?? gisuId
+            guard targetGisu > 0 else { return "" }
+            return "\(targetGisu)기"
         }
     }
 
@@ -457,6 +474,11 @@ struct NoticeEditorView: View {
     /// 초기 진입 시 조직 타입을 ViewModel에 반영합니다.
     private func applyInitialOrganizationType() {
         viewModel.applyOrganizationType(organizationType)
+    }
+
+    /// 초기 진입 시 멤버 역할을 ViewModel에 반영합니다.
+    private func applyInitialMemberRole() {
+        viewModel.applyMemberRole(memberRoleRaw)
     }
 
     /// 초기 진입 시 사용자 컨텍스트를 ViewModel에 반영합니다.
@@ -553,13 +575,18 @@ struct NoticeEditorView: View {
         guard !newItems.isEmpty else { return }
 
         Task {
-            await viewModel.loadSelectedImages()
+            await viewModel.loadSelectedPhotoItemsForNoticeUpload()
         }
     }
 
     /// AppStorage 조직 타입 변경을 ViewModel에 반영합니다.
     private func handleOrganizationTypeChanged(_ newValue: String) {
         viewModel.applyOrganizationType(newValue)
+    }
+
+    /// AppStorage 멤버 역할 변경을 ViewModel에 반영합니다.
+    private func handleMemberRoleChanged(_ newValue: String) {
+        viewModel.applyMemberRole(newValue)
     }
 
     /// AppStorage 사용자 컨텍스트 변경을 ViewModel에 반영합니다.

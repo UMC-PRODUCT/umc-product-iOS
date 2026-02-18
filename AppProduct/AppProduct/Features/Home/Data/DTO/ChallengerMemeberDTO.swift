@@ -214,21 +214,38 @@ extension ChallengerMemberDTO {
     ///
     /// - Note: `bestWorkbook` 포인트는 제외하고 `warning`, `out`만 포함합니다.
     func toGenerationData(gisuId: Int) -> GenerationData {
+        let maxRecentPenaltyLogs = 3
+
         // 패널티 유형(warning, out)만 필터링
         let penaltyPoints = challengerPoints.filter {
             $0.pointType == .warning || $0.pointType == .out
         }
 
-        // ISO 8601 → yyyy.MM.dd 표시 형식 변환
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        // ISO 8601 파싱 (소수 초 유무 모두 허용)
+        let fractionalFormatter = ISO8601DateFormatter()
+        fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        let internetDateTimeFormatter = ISO8601DateFormatter()
+        internetDateTimeFormatter.formatOptions = [.withInternetDateTime]
+
+        func parseISODate(_ raw: String) -> Date? {
+            fractionalFormatter.date(from: raw) ?? internetDateTimeFormatter.date(from: raw)
+        }
 
         let displayFormatter = DateFormatter()
         displayFormatter.dateFormat = "yyyy.MM.dd"
 
-        let logs = penaltyPoints.map { point in
+        let recentPenaltyPoints = penaltyPoints
+            .sorted { lhs, rhs in
+                let lhsDate = parseISODate(lhs.createdAt) ?? .distantPast
+                let rhsDate = parseISODate(rhs.createdAt) ?? .distantPast
+                return lhsDate > rhsDate
+            }
+            .prefix(maxRecentPenaltyLogs)
+
+        let logs = recentPenaltyPoints.map { point in
             let dateString: String
-            if let date = formatter.date(from: point.createdAt) {
+            if let date = parseISODate(point.createdAt) {
                 dateString = displayFormatter.string(from: date)
             } else {
                 dateString = point.createdAt

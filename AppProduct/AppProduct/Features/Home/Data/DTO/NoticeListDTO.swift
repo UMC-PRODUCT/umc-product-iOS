@@ -173,6 +173,28 @@ struct TargetInfoDTO: Codable {
         self.targetSchoolId = try container.decodeIntFlexibleIfPresent(forKey: .targetSchoolId)
         self.targetParts = try container.decodeIfPresent([UMCPartType].self, forKey: .targetParts)
     }
+
+    /// 공지 생성/수정 요청 인코딩 시 null 규칙을 맞춥니다.
+    /// - targetGisuId <= 0: null
+    /// - targetParts 비어있음: null
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        if targetGisuId > 0 {
+            try container.encode(targetGisuId, forKey: .targetGisuId)
+        } else {
+            try container.encodeNil(forKey: .targetGisuId)
+        }
+
+        try container.encodeIfPresent(targetChapterId, forKey: .targetChapterId)
+        try container.encodeIfPresent(targetSchoolId, forKey: .targetSchoolId)
+
+        if let targetParts, !targetParts.isEmpty {
+            try container.encode(targetParts, forKey: .targetParts)
+        } else {
+            try container.encodeNil(forKey: .targetParts)
+        }
+    }
 }
 
 // MARK: - PageDTO

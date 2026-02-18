@@ -37,6 +37,8 @@ enum ScheduleIconCategory: String, Codable, CaseIterable {
     case celebration = "AFTER_PARTY"
     /// 오리엔테이션 (OT)
     case orientation = "ORIENTATION"
+    /// 테스트/검증 일정
+    case testing = "TESTING"
     /// 일반 일정
     case general = "GENERAL"
 
@@ -55,6 +57,7 @@ enum ScheduleIconCategory: String, Codable, CaseIterable {
         case .review:  return "lightbulb.fill"
         case .celebration:     return "sparkles"
         case .orientation:    return "megaphone.fill"
+        case .testing:        return "chevron.left.forwardslash.chevron.right"
         case .general:        return "calendar.badge"
         }
     }
@@ -74,6 +77,7 @@ enum ScheduleIconCategory: String, Codable, CaseIterable {
         case .review:  return .yellow
         case .celebration:     return .accentColor
         case .orientation:    return .orange
+        case .testing:        return .gray
         case .general:        return .indigo500
         }
     }
@@ -93,6 +97,7 @@ enum ScheduleIconCategory: String, Codable, CaseIterable {
         case .review:  return "회고"
         case .celebration:     return "뒷풀이"
         case .orientation:    return "오리엔테이션"
+        case .testing:        return "테스트"
         case .general:        return "일반"
         }
     }

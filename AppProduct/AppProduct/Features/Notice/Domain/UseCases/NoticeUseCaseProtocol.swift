@@ -13,9 +13,11 @@ protocol NoticeUseCaseProtocol {
     // MARK: - 파일 업로드
     
     /// 공지 첨부 이미지를 업로드하고 파일 ID를 반환합니다.
-    /// - Parameter imageData: 업로드할 JPEG 바이너리 데이터
+    /// - Parameters:
+    ///   - imageData: 업로드할 JPEG 바이너리 데이터
+    ///   - fileName: 업로드 파일명 (앨범 원본 이름 기반)
     /// - Returns: 저장된 파일 ID
-    func uploadNoticeAttachmentImage(imageData: Data) async throws -> String
+    func uploadNoticeAttachmentImage(imageData: Data, fileName: String?) async throws -> String
     
     // MARK: - 공지 생성 (POST)
     

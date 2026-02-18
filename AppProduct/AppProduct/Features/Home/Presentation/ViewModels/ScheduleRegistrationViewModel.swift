@@ -120,6 +120,7 @@ class ScheduleRegistrationViewModel {
         case "회고": return .review
         case "뒷풀이": return .celebration
         case "오리엔테이션": return .orientation
+        case "테스트": return .testing
         case "일반": return .general
         default: return nil
         }

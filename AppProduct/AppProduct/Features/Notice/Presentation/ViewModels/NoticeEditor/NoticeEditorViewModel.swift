@@ -49,6 +49,12 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
         UserDefaults.standard.integer(forKey: AppStorageKey.schoolId)
     }
 
+    /// 사용자 조직 타입 (AppStorage 반영)
+    var organizationType: OrganizationType?
+
+    /// 사용자 권한/역할 (AppStorage 반영)
+    var memberRole: ManagementTeam?
+
     /// 뷰에서 전달받는 사용자 컨텍스트(우선 적용)
     var userGisuId: Int?
     var userChapterId: Int?
@@ -186,9 +192,9 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
         self.mode = mode
         self.userGisuId = selectedGisuId
 
-        let categories: [EditorMainCategory] = [.branch, .school]
+        let categories: [EditorMainCategory] = [.all, .central, .branch, .school]
         availableCategories = categories
-        selectedCategory = categories.first ?? .branch
+        selectedCategory = categories.first ?? .all
 
         if case .edit(_, let notice) = mode {
             loadNoticeForEdit(notice)

@@ -32,6 +32,16 @@ extension NoticeEditorViewModel {
     /// 이미지 업로드 -> 공지 생성 -> 투표 첨부(선택) 순서로 진행됩니다.
     @MainActor
     func createNewNotice() async {
+        if let targetValidationMessage {
+            alertPrompt = AlertPrompt(
+                id: .init(),
+                title: "대상 설정 확인",
+                message: targetValidationMessage,
+                positiveBtnTitle: "확인"
+            )
+            return
+        }
+
         createState = .loading
 
         do {
@@ -171,33 +181,50 @@ extension NoticeEditorViewModel {
 
     /// 공지 생성 API용 TargetInfoDTO를 구성합니다.
     func buildTargetInfo() -> TargetInfoDTO {
-        let currentGeneration = resolvedGisuId
-        let selectedParts = subCategorySelection.selectedParts.isEmpty
+        let currentGeneration = resolvedGisuId > 0 ? resolvedGisuId : 0
+        let selectedBranchId = subCategorySelection.selectedBranch?.id
+        let selectedSchoolFromSheet = subCategorySelection.selectedSchool?.id
+        let mySchoolId = schoolId > 0 ? schoolId : nil
+        var selectedParts = subCategorySelection.selectedParts.isEmpty
             ? nil
             : Array(subCategorySelection.selectedParts)
-        let selectedChapterId = subCategorySelection.selectedBranch?.id
-        let selectedSchoolId = subCategorySelection.selectedSchool?.id
+
+        // 기수 미선택 상태에서는 학교 + 파트 동시 지정을 허용하지 않습니다.
+        if currentGeneration <= 0, selectedSchoolFromSheet != nil {
+            selectedParts = nil
+        }
 
         switch selectedCategory {
+        case .all:
+            // 전체 기수: targetGisuId = null, 지부/파트는 전체
+            // 학교 선택 칩을 통해 특정 학교를 선택한 경우에만 targetSchoolId 지정
+            return TargetInfoDTO(
+                targetGisuId: 0,
+                targetChapterId: nil,
+                targetSchoolId: selectedSchoolFromSheet,
+                targetParts: nil as [UMCPartType]?
+            )
         case .central:
             return TargetInfoDTO(
                 targetGisuId: currentGeneration,
-                targetChapterId: selectedChapterId,
-                targetSchoolId: selectedSchoolId,
+                // 기수 + 지부 + 학교 동시 지정 금지: 학교 선택 시 지부는 제외
+                targetChapterId: selectedSchoolFromSheet == nil ? selectedBranchId : nil,
+                targetSchoolId: selectedSchoolFromSheet,
                 targetParts: selectedParts
             )
         case .branch:
             return TargetInfoDTO(
                 targetGisuId: currentGeneration,
-                targetChapterId: resolvedChapterId,
-                targetSchoolId: selectedSchoolId,
+                // 지부 카테고리: 지부 단일 선택 또는 학교 단일 선택
+                targetChapterId: selectedSchoolFromSheet == nil ? selectedBranchId : nil,
+                targetSchoolId: selectedSchoolFromSheet,
                 targetParts: selectedParts
             )
         case .school:
             return TargetInfoDTO(
                 targetGisuId: currentGeneration,
                 targetChapterId: nil,
-                targetSchoolId: schoolId,
+                targetSchoolId: selectedSchoolFromSheet ?? mySchoolId,
                 targetParts: selectedParts
             )
         case .part(let part):
@@ -319,7 +346,10 @@ extension NoticeEditorViewModel {
 
             noticeImages[index].isLoading = true
             do {
-                let fileId = try await noticeUseCase.uploadNoticeAttachmentImage(imageData: imageData)
+                let fileId = try await noticeUseCase.uploadNoticeAttachmentImage(
+                    imageData: imageData,
+                    fileName: noticeImages[index].uploadFileName
+                )
                 noticeImages[index].fileId = fileId
                 noticeImages[index].isLoading = false
             } catch {

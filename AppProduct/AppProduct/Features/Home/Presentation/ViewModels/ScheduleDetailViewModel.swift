@@ -21,7 +21,7 @@ class ScheduleDetailViewModel {
 
     /// 조회 대상 일정 ID
     var scheduleId: Int
-    let data: Loadable<ScheduleDetailData> = .idle
+    private(set) var data: Loadable<ScheduleDetailData> = .idle
 
     /// 캘린더에서 선택한 날짜 (일시 표시에 사용)
     var selectedDate: Date
@@ -118,6 +118,27 @@ class ScheduleDetailViewModel {
         } catch {
             canEditSchedule = false
             canDeleteSchedule = false
+        }
+    }
+
+    /// 일정 상세 정보를 조회합니다.
+    @MainActor
+    func fetchScheduleDetail(
+        fetchScheduleDetailUseCase: FetchScheduleDetailUseCaseProtocol
+    ) async {
+        if data.isIdle {
+            data = .loading
+        }
+
+        do {
+            let detail = try await fetchScheduleDetailUseCase.execute(
+                scheduleId: scheduleId
+            )
+            data = .loaded(detail)
+        } catch let error as AppError {
+            data = .failed(error)
+        } catch {
+            data = .failed(.unknown(message: error.localizedDescription))
         }
     }
 }

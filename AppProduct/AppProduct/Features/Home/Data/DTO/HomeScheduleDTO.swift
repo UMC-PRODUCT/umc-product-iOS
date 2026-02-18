@@ -70,9 +70,19 @@ extension HomeScheduleResponseDTO {
         ]
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
+        let noTimezoneFormatter = DateFormatter()
+        noTimezoneFormatter.locale = Locale(identifier: "en_US_POSIX")
+        noTimezoneFormatter.timeZone = .current
+        noTimezoneFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        let noTimezoneFractionFormatter = DateFormatter()
+        noTimezoneFractionFormatter.locale = Locale(identifier: "en_US_POSIX")
+        noTimezoneFractionFormatter.timeZone = .current
+        noTimezoneFractionFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
 
         return formatterWithFraction.date(from: string)
             ?? formatter.date(from: string)
+            ?? noTimezoneFractionFormatter.date(from: string)
+            ?? noTimezoneFormatter.date(from: string)
             ?? .now
     }
 }

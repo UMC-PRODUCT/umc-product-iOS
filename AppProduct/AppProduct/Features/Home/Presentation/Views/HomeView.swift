@@ -296,12 +296,7 @@ struct HomeView: View {
     @ViewBuilder
     private func recentView(_ recentNoticeData: [RecentNoticeData]) -> some View {
         if recentNoticeData.isEmpty {
-            ContentUnavailableView(
-                "최근 공지가 없습니다.",
-                systemImage: "tray",
-                description: Text("새로운 공지사항이 등록되면 이곳에 표시됩니다.")
-            )
-            .glassEffect(.regular, in: .containerRelative)
+            LoadingView(.home(.recentNoticeLoading))
         } else {
             LazyVStack(spacing: DefaultSpacing.spacing8) {
                 ForEach(recentNoticeData.prefix(Constants.recentCardCount), id: \.id) { data in

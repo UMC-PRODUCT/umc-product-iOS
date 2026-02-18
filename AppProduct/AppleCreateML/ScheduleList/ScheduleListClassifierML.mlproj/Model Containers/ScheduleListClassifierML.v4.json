@@ -1,112 +1,113 @@
 {
   "activityEntities" : [
-    "trainingStarted",
-    [
-      {
-        "createdDate" : "2026-01-21T11:22:40Z",
-        "event" : "trainingStarted",
-        "id" : "10491676-2D0B-4FFC-8C7F-309EFDBB5D68",
-        "subtitle" : "10 iterations",
-        "title" : "Training Started"
-      }
-    ],
-    "trainingDataAdded",
-    [
-      {
-        "createdDate" : "2026-01-21T11:22:20Z",
-        "event" : "trainingDataAdded",
-        "id" : "E1DC2261-7180-46B5-9B4A-CA68622E92BB",
-        "subtitle" : "ScheduleTrainingData.json",
-        "title" : "Training Data Added"
-      }
-    ],
     "experimentCreated",
     [
       {
-        "createdDate" : "2026-01-21T11:22:05Z",
+        "createdDate" : "2026-02-18T05:30:52Z",
         "event" : "experimentCreated",
-        "id" : "311A62C4-FAAC-4DFB-9681-8F780054D457",
-        "subtitle" : "ScheduleListClassifierML",
+        "id" : "57EA7179-1D91-4373-8E47-81E0F9F129B9",
+        "subtitle" : "ScheduleListClassifierML.v4",
         "title" : "Model Source Created"
       }
     ],
     "trainingFinished",
     [
       {
-        "createdDate" : "2026-01-21T11:22:40Z",
+        "createdDate" : "2026-02-18T05:31:45Z",
         "event" : "trainingFinished",
-        "id" : "FCC3F1E9-5F1C-4510-B261-4712C4B2C2D5",
+        "id" : "A2230F16-365C-43BD-9FB0-B84DE9810B9A",
         "subtitle" : "Model converged at 5 iterations",
         "title" : "Training Completed"
+      }
+    ],
+    "trainingStarted",
+    [
+      {
+        "createdDate" : "2026-02-18T05:31:44Z",
+        "event" : "trainingStarted",
+        "id" : "89640A4A-4317-4D91-82F5-C33798784841",
+        "subtitle" : "50 iterations",
+        "title" : "Training Started"
+      }
+    ],
+    "trainingDataAdded",
+    [
+      {
+        "createdDate" : "2026-02-18T05:31:39Z",
+        "event" : "trainingDataAdded",
+        "id" : "A6BB4EF4-27AF-4491-954D-2D12967A05F3",
+        "subtitle" : "ScheduleTrainingData.json",
+        "title" : "Training Data Added"
       }
     ]
   ],
   "contentDataResult" : {
-    "createdDate" : "2026-01-21T11:15:58Z"
+    "createdDate" : "2026-02-18T05:31:03Z"
   },
-  "createdDate" : "2026-01-21T11:22:05Z",
+  "createdDate" : "2026-02-18T05:30:52Z",
   "evaluationContainerEntity" : {
-    "createdDate" : "2026-01-21T11:22:40Z",
+    "createdDate" : "2026-02-18T05:31:45Z",
     "evaluationEntities" : [
       {
         "analysedDataType" : "none",
-        "createdDate" : "2026-01-21T11:22:40Z",
+        "createdDate" : "2026-02-18T05:31:45Z",
         "dataResult" : {
 
         },
-        "id" : "cf7ac71f-2b6a-4b5b-b022-f0acdb512ae8"
+        "id" : "0abc1cb2-a33e-48c9-98f7-883def900f3d"
       }
     ],
-    "id" : "a287413e-e0f1-4675-8118-cea89253fb93",
-    "modifiedDate" : "2026-01-21T11:22:40Z",
+    "id" : "b3ac2422-9e1f-4f58-9cc7-29cbfb0d0b7e",
+    "modifiedDate" : "2026-02-18T05:31:45Z",
     "previewType" : "textClassifier",
     "testingEvaluationEntity" : {
       "analysedDataType" : "none",
-      "createdDate" : "2026-01-21T11:22:05Z",
+      "createdDate" : "2026-02-18T05:30:52Z",
       "dataResult" : {
-        "createdDate" : "2026-01-21T11:22:05Z"
+        "createdDate" : "2026-02-18T05:31:03Z"
       },
-      "id" : "076781ca-20a9-4854-821e-96aadb0fa965"
+      "id" : "b78d576d-31cf-4791-a29f-d0b3cb6fe137"
     },
     "trainingEvaluationEntity" : {
       "analysedDataType" : "none",
-      "createdDate" : "2026-01-21T11:22:05Z",
+      "createdDate" : "2026-02-18T05:30:52Z",
       "dataResult" : {
-        "classesCount" : 13,
-        "createdDate" : "2026-01-21T11:22:05Z",
+        "classesCount" : 14,
+        "createdDate" : "2026-02-18T05:31:03Z",
         "dataAnalysis" : {
           "classifierAnalysis" : {
             "labelStats" : {
-              "celebration" : 65,
-              "fee" : 65,
-              "general" : 65,
-              "hackathon" : 65,
-              "leadership" : 65,
-              "meeting" : 65,
-              "networking" : 65,
-              "orientation" : 65,
-              "presentation" : 66,
-              "project" : 69,
-              "review" : 65,
-              "study" : 70,
-              "workshop" : 65
+              "celebration" : 124,
+              "fee" : 130,
+              "general" : 124,
+              "hackathon" : 125,
+              "leadership" : 129,
+              "meeting" : 130,
+              "networking" : 128,
+              "orientation" : 1651,
+              "presentation" : 130,
+              "project" : 138,
+              "review" : 127,
+              "study" : 140,
+              "testing" : 763,
+              "workshop" : 123
             }
           },
           "issues" : [
             {
-              "description" : "13 classes found, including study, project, presentation",
+              "description" : "14 classes found, including orientation, testing, study",
               "severity" : "debug"
             },
             {
-              "description" : "855 texts found, automatically creating validation set",
+              "description" : "3962 texts found, automatically creating validation set",
               "severity" : "good"
             },
             {
-              "description" : "Smallest class is \"workshop\" with 65 texts",
+              "description" : "Smallest class is \"workshop\" with 123 texts",
               "severity" : "debug"
             },
             {
-              "description" : "Largest class is \"study\" with 70 text",
+              "description" : "Largest class is \"orientation\" with 1651 text",
               "severity" : "debug"
             }
           ],
@@ -117,47 +118,47 @@
           },
           "summary" : {
             "canUseValidation" : 1,
-            "classCount" : 13,
-            "sampleCount" : 855
+            "classCount" : 14,
+            "sampleCount" : 3962
           }
         },
         "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
         "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
-        "itemsCount" : 855
+        "itemsCount" : 3962
       },
       "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
       "evaluationResult" : {
         "textClassifier" : {
-          "accuracy" : 0.998769987699877,
+          "accuracy" : 0.9989373007438895,
           "confusionMatrix" : [
             {
               "actual" : "celebration",
-              "count" : 64,
+              "count" : 114,
               "expected" : "celebration"
             },
             {
               "actual" : "fee",
-              "count" : 61,
+              "count" : 124,
               "expected" : "fee"
             },
             {
               "actual" : "general",
-              "count" : 61,
+              "count" : 120,
               "expected" : "general"
             },
             {
               "actual" : "hackathon",
-              "count" : 60,
+              "count" : 121,
               "expected" : "hackathon"
             },
             {
               "actual" : "leadership",
-              "count" : 63,
+              "count" : 125,
               "expected" : "leadership"
             },
             {
               "actual" : "meeting",
-              "count" : 59,
+              "count" : 126,
               "expected" : "meeting"
             },
             {
@@ -167,43 +168,58 @@
             },
             {
               "actual" : "networking",
-              "count" : 60,
+              "count" : 122,
               "expected" : "networking"
             },
             {
               "actual" : "orientation",
-              "count" : 59,
+              "count" : 1563,
               "expected" : "orientation"
             },
             {
               "actual" : "presentation",
-              "count" : 62,
+              "count" : 120,
               "expected" : "presentation"
             },
             {
               "actual" : "project",
-              "count" : 68,
+              "count" : 1,
+              "expected" : "meeting"
+            },
+            {
+              "actual" : "project",
+              "count" : 127,
               "expected" : "project"
             },
             {
+              "actual" : "project",
+              "count" : 2,
+              "expected" : "testing"
+            },
+            {
               "actual" : "review",
-              "count" : 63,
+              "count" : 121,
               "expected" : "review"
             },
             {
               "actual" : "study",
-              "count" : 69,
+              "count" : 133,
               "expected" : "study"
             },
             {
+              "actual" : "testing",
+              "count" : 730,
+              "expected" : "testing"
+            },
+            {
               "actual" : "workshop",
-              "count" : 63,
+              "count" : 114,
               "expected" : "workshop"
             }
           ],
           "statsByLabel" : {
             "celebration" : {
-              "count" : 64,
+              "count" : 114,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -212,7 +228,7 @@
               }
             },
             "fee" : {
-              "count" : 61,
+              "count" : 124,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -221,7 +237,7 @@
               }
             },
             "general" : {
-              "count" : 61,
+              "count" : 120,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -230,7 +246,7 @@
               }
             },
             "hackathon" : {
-              "count" : 60,
+              "count" : 121,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -239,7 +255,7 @@
               }
             },
             "leadership" : {
-              "count" : 63,
+              "count" : 125,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -248,16 +264,16 @@
               }
             },
             "meeting" : {
-              "count" : 60,
+              "count" : 127,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 1,
-                  "recall" : 0.9833333333333333
+                  "precision" : 0.9921259842519685,
+                  "recall" : 0.9921259842519685
                 }
               }
             },
             "networking" : {
-              "count" : 60,
+              "count" : 122,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -266,7 +282,7 @@
               }
             },
             "orientation" : {
-              "count" : 59,
+              "count" : 1563,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -275,7 +291,7 @@
               }
             },
             "presentation" : {
-              "count" : 62,
+              "count" : 120,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -284,16 +300,16 @@
               }
             },
             "project" : {
-              "count" : 68,
+              "count" : 130,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.9855072463768116,
-                  "recall" : 1
+                  "precision" : 0.9921875,
+                  "recall" : 0.9769230769230769
                 }
               }
             },
             "review" : {
-              "count" : 63,
+              "count" : 121,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -302,7 +318,7 @@
               }
             },
             "study" : {
-              "count" : 69,
+              "count" : 133,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -310,8 +326,17 @@
                 }
               }
             },
+            "testing" : {
+              "count" : 730,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.9972677595628415,
+                  "recall" : 1
+                }
+              }
+            },
             "workshop" : {
-              "count" : 63,
+              "count" : 114,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
@@ -322,47 +347,62 @@
           }
         }
       },
-      "id" : "f36fa9c5-e7e9-4e09-b036-e1a25babe5d8"
+      "id" : "c0fa9207-ee67-461d-b37b-c636af9f7641"
     },
     "validationEvaluationEntity" : {
       "analysedDataType" : "auto",
-      "createdDate" : "2026-01-21T11:22:05Z",
+      "createdDate" : "2026-02-18T05:30:52Z",
       "dataResult" : {
-        "createdDate" : "2026-01-21T11:22:05Z"
+        "createdDate" : "2026-02-18T05:31:03Z"
       },
       "evaluationResult" : {
         "textClassifier" : {
-          "accuracy" : 0.9047619047619048,
+          "accuracy" : 0.46464646464646464,
           "confusionMatrix" : [
             {
               "actual" : "celebration",
-              "count" : 1,
+              "count" : 4,
               "expected" : "celebration"
             },
             {
+              "actual" : "celebration",
+              "count" : 6,
+              "expected" : "networking"
+            },
+            {
               "actual" : "fee",
-              "count" : 3,
+              "count" : 1,
               "expected" : "fee"
             },
             {
               "actual" : "fee",
-              "count" : 1,
-              "expected" : "workshop"
+              "count" : 5,
+              "expected" : "networking"
             },
             {
               "actual" : "general",
-              "count" : 4,
+              "count" : 2,
               "expected" : "general"
             },
             {
+              "actual" : "general",
+              "count" : 2,
+              "expected" : "networking"
+            },
+            {
               "actual" : "hackathon",
-              "count" : 4,
+              "count" : 1,
               "expected" : "hackathon"
             },
             {
               "actual" : "hackathon",
+              "count" : 3,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "leadership",
               "count" : 1,
-              "expected" : "study"
+              "expected" : "general"
             },
             {
               "actual" : "leadership",
@@ -370,19 +410,19 @@
               "expected" : "leadership"
             },
             {
-              "actual" : "meeting",
+              "actual" : "leadership",
               "count" : 1,
-              "expected" : "celebration"
+              "expected" : "networking"
             },
             {
               "actual" : "meeting",
-              "count" : 3,
+              "count" : 2,
               "expected" : "meeting"
             },
             {
               "actual" : "meeting",
               "count" : 1,
-              "expected" : "presentation"
+              "expected" : "networking"
             },
             {
               "actual" : "networking",
@@ -390,52 +430,97 @@
               "expected" : "networking"
             },
             {
-              "actual" : "orientation",
-              "count" : 6,
-              "expected" : "orientation"
-            },
-            {
-              "actual" : "presentation",
-              "count" : 4,
-              "expected" : "presentation"
-            },
-            {
-              "actual" : "project",
-              "count" : 1,
-              "expected" : "project"
-            },
-            {
-              "actual" : "review",
-              "count" : 2,
-              "expected" : "review"
-            },
-            {
-              "actual" : "study",
+              "actual" : "networking",
               "count" : 1,
               "expected" : "study"
             },
             {
-              "actual" : "workshop",
+              "actual" : "orientation",
+              "count" : 46,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "orientation",
+              "count" : 42,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "presentation",
+              "count" : 8,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "presentation",
               "count" : 2,
+              "expected" : "presentation"
+            },
+            {
+              "actual" : "project",
+              "count" : 3,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "project",
+              "count" : 5,
+              "expected" : "project"
+            },
+            {
+              "actual" : "review",
+              "count" : 3,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "review",
+              "count" : 3,
+              "expected" : "review"
+            },
+            {
+              "actual" : "study",
+              "count" : 5,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "study",
+              "count" : 2,
+              "expected" : "study"
+            },
+            {
+              "actual" : "testing",
+              "count" : 17,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "testing",
+              "count" : 16,
+              "expected" : "testing"
+            },
+            {
+              "actual" : "workshop",
+              "count" : 4,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "workshop",
+              "count" : 5,
               "expected" : "workshop"
             }
           ],
           "statsByLabel" : {
             "celebration" : {
-              "count" : 1,
+              "count" : 10,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.5,
-                  "recall" : 1
+                  "precision" : 1,
+                  "recall" : 0.4
                 }
               }
             },
             "fee" : {
-              "count" : 4,
+              "count" : 6,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 0.75
+                  "recall" : 0.16666666666666666
                 }
               }
             },
@@ -443,105 +528,114 @@
               "count" : 4,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 1,
-                  "recall" : 1
+                  "precision" : 0.6666666666666666,
+                  "recall" : 0.5
                 }
               }
             },
             "hackathon" : {
-              "count" : 5,
+              "count" : 4,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 0.8
+                  "recall" : 0.25
                 }
               }
             },
             "leadership" : {
-              "count" : 2,
+              "count" : 4,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 1
+                  "recall" : 0.5
                 }
               }
             },
             "meeting" : {
-              "count" : 5,
+              "count" : 3,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 0.6
+                  "recall" : 0.6666666666666666
                 }
               }
             },
             "networking" : {
-              "count" : 5,
+              "count" : 6,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 1,
-                  "recall" : 1
+                  "precision" : 0.045871559633027525,
+                  "recall" : 0.8333333333333334
                 }
               }
             },
             "orientation" : {
-              "count" : 6,
+              "count" : 88,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 1
+                  "recall" : 0.4772727272727273
                 }
               }
             },
             "presentation" : {
-              "count" : 4,
+              "count" : 10,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.8,
-                  "recall" : 1
+                  "precision" : 1,
+                  "recall" : 0.2
                 }
               }
             },
             "project" : {
-              "count" : 1,
+              "count" : 8,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 1
+                  "recall" : 0.625
                 }
               }
             },
             "review" : {
-              "count" : 2,
+              "count" : 6,
               "precisionRecall" : {
                 "success" : {
                   "precision" : 1,
-                  "recall" : 1
+                  "recall" : 0.5
                 }
               }
             },
             "study" : {
-              "count" : 1,
+              "count" : 7,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.5,
-                  "recall" : 1
+                  "precision" : 0.6666666666666666,
+                  "recall" : 0.2857142857142857
+                }
+              }
+            },
+            "testing" : {
+              "count" : 33,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.48484848484848486
                 }
               }
             },
             "workshop" : {
-              "count" : 2,
+              "count" : 9,
               "precisionRecall" : {
                 "success" : {
-                  "precision" : 0.6666666666666666,
-                  "recall" : 1
+                  "precision" : 1,
+                  "recall" : 0.5555555555555556
                 }
               }
             }
           }
         }
       },
-      "id" : "1aecca1b-b61d-4c46-a765-493987f69aea"
+      "id" : "32640ae7-99a8-4222-b05d-25e280479f4f"
     }
   },
   "evaluationEntity" : {
@@ -549,21 +643,21 @@
     "dataResult" : {
 
     },
-    "id" : "d3de9a40-31ab-46f6-b692-e3123b1c4901"
+    "id" : "e72b050b-3587-49f3-a48f-5c0cbc4f163a"
   },
   "evaluationState" : "uninitialized",
-  "id" : "F338F915-0B88-44DC-8F5D-F8DAB1B35AA6",
+  "id" : "8A65B9DB-E687-4AAA-8DF9-97130511A356",
   "modelEntity" : {
-    "createdDate" : "2026-01-21T11:22:05Z",
-    "experimentID" : "AC87E507-F237-4A60-95C9-E99F436737F6",
-    "id" : "B1660946-970C-4900-AA6A-6A6BDD7B53E3",
-    "modelURL" : "Models/ScheduleListClassifierML.mlmodel",
-    "modifiedDate" : "2026-01-21T11:22:05Z",
+    "createdDate" : "2026-02-18T05:30:52Z",
+    "experimentID" : "8A65B9DB-E687-4AAA-8DF9-97130511A356",
+    "id" : "A39F39CC-A71E-4662-A043-30C617334753",
+    "modelURL" : "Models/ScheduleListClassifierML.v4.mlmodel",
+    "modifiedDate" : "2026-02-18T05:30:52Z",
     "title" : "",
     "version" : "1.0"
   },
-  "modifiedDate" : "2026-01-21T11:22:40Z",
-  "preferredFilename" : "ScheduleListClassifierML",
+  "modifiedDate" : "2026-02-18T05:31:45Z",
+  "preferredFilename" : "ScheduleListClassifierML.v4",
   "settingEntity" : {
     "algorithmType" : "maxEnt",
     "augmentations" : [
@@ -579,7 +673,7 @@
 
     ],
     "harVideoAugmentations" : 0,
-    "iterationCount" : 10,
+    "iterationCount" : 50,
     "seedType" : "default",
     "styleTransferAlgorithmType" : "image",
     "taskType" : "textClassifier",
@@ -595,48 +689,49 @@
     "withoutSnapshots" : 0
   },
   "state" : "trained",
-  "title" : "ScheduleListClassifierML copy",
+  "title" : "ScheduleListClassifierML 2",
   "trainingEntity" : {
     "analysedDataType" : "datasource",
     "checkpointMetrics" : {
 
     },
     "dataResult" : {
-      "classesCount" : 13,
-      "createdDate" : "2026-01-21T11:22:05Z",
+      "classesCount" : 14,
+      "createdDate" : "2026-02-18T05:31:03Z",
       "dataAnalysis" : {
         "classifierAnalysis" : {
           "labelStats" : {
-            "celebration" : 65,
-            "fee" : 65,
-            "general" : 65,
-            "hackathon" : 65,
-            "leadership" : 65,
-            "meeting" : 65,
-            "networking" : 65,
-            "orientation" : 65,
-            "presentation" : 66,
-            "project" : 69,
-            "review" : 65,
-            "study" : 70,
-            "workshop" : 65
+            "celebration" : 124,
+            "fee" : 130,
+            "general" : 124,
+            "hackathon" : 125,
+            "leadership" : 129,
+            "meeting" : 130,
+            "networking" : 128,
+            "orientation" : 1651,
+            "presentation" : 130,
+            "project" : 138,
+            "review" : 127,
+            "study" : 140,
+            "testing" : 763,
+            "workshop" : 123
           }
         },
         "issues" : [
           {
-            "description" : "13 classes found, including study, project, presentation",
+            "description" : "14 classes found, including orientation, testing, study",
             "severity" : "debug"
           },
           {
-            "description" : "855 texts found, automatically creating validation set",
+            "description" : "3962 texts found, automatically creating validation set",
             "severity" : "good"
           },
           {
-            "description" : "Smallest class is \"workshop\" with 65 texts",
+            "description" : "Smallest class is \"workshop\" with 123 texts",
             "severity" : "debug"
           },
           {
-            "description" : "Largest class is \"study\" with 70 text",
+            "description" : "Largest class is \"orientation\" with 1651 text",
             "severity" : "debug"
           }
         ],
@@ -647,17 +742,17 @@
         },
         "summary" : {
           "canUseValidation" : 1,
-          "classCount" : 13,
-          "sampleCount" : 855
+          "classCount" : 14,
+          "sampleCount" : 3962
         }
       },
       "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
       "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
-      "itemsCount" : 855
+      "itemsCount" : 3962
     },
     "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
     "featureExtractionCheckpointMayBeAvailable" : false,
-    "finishTime" : "2026-01-21T11:22:40Z",
+    "finishTime" : "2026-02-18T05:31:45Z",
     "progress" : [
       {
         "count" : 1,
@@ -671,7 +766,7 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 10,
-          "trainingAccuracy" : 0.07503075152635574,
+          "trainingAccuracy" : 0.0324123278260231,
           "validationAccuracy" : 0
         }
       },
@@ -687,7 +782,7 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 9,
-          "trainingAccuracy" : 0.9876998662948608,
+          "trainingAccuracy" : 0.978480339050293,
           "validationAccuracy" : 0
         }
       },
@@ -703,7 +798,7 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 8,
-          "trainingAccuracy" : 0.9913899302482605,
+          "trainingAccuracy" : 0.9968119263648987,
           "validationAccuracy" : 0
         }
       },
@@ -719,7 +814,7 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 7,
-          "trainingAccuracy" : 0.9975399971008301,
+          "trainingAccuracy" : 0.9976089000701904,
           "validationAccuracy" : 0
         }
       },
@@ -735,12 +830,12 @@
           "hasTraining" : true,
           "hasValidation" : false,
           "remainingIterationCount" : 6,
-          "trainingAccuracy" : 0.998769998550415,
+          "trainingAccuracy" : 0.9989373087882996,
           "validationAccuracy" : 0
         }
       },
       {
-        "count" : 13,
+        "count" : 64,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -748,7 +843,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 93,
+        "count" : 164,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -756,7 +851,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 173,
+        "count" : 264,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -764,7 +859,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 253,
+        "count" : 364,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -772,7 +867,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 333,
+        "count" : 464,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -780,7 +875,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 413,
+        "count" : 564,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -788,7 +883,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 493,
+        "count" : 664,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -796,7 +891,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 573,
+        "count" : 764,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -804,7 +899,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 653,
+        "count" : 864,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -812,7 +907,7 @@
         "tableIndex" : 0
       },
       {
-        "count" : 733,
+        "count" : 964,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -820,7 +915,223 @@
         "tableIndex" : 0
       },
       {
-        "count" : 813,
+        "count" : 1064,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1164,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1264,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1364,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1464,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1564,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1664,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1764,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1864,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1964,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2064,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2164,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2264,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2364,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2464,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2564,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2664,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2764,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2864,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2964,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3064,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3164,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3264,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3364,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3464,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3564,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3664,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3764,
         "currentRowIndex" : 0,
         "isLast" : false,
         "percentComplete" : 0,
@@ -831,40 +1142,40 @@
     "snapshottableCheckpoints" : {
 
     },
-    "startTime" : "2026-01-21T11:22:40Z",
-    "trainingAccuracy" : 0.998769987699877,
+    "startTime" : "2026-02-18T05:31:44Z",
+    "trainingAccuracy" : 0.9989373007438895,
     "trainingResults" : {
       "textClassifier" : {
-        "accuracy" : 0.998769987699877,
+        "accuracy" : 0.9989373007438895,
         "confusionMatrix" : [
           {
             "actual" : "celebration",
-            "count" : 64,
+            "count" : 114,
             "expected" : "celebration"
           },
           {
             "actual" : "fee",
-            "count" : 61,
+            "count" : 124,
             "expected" : "fee"
           },
           {
             "actual" : "general",
-            "count" : 61,
+            "count" : 120,
             "expected" : "general"
           },
           {
             "actual" : "hackathon",
-            "count" : 60,
+            "count" : 121,
             "expected" : "hackathon"
           },
           {
             "actual" : "leadership",
-            "count" : 63,
+            "count" : 125,
             "expected" : "leadership"
           },
           {
             "actual" : "meeting",
-            "count" : 59,
+            "count" : 126,
             "expected" : "meeting"
           },
           {
@@ -874,43 +1185,58 @@
           },
           {
             "actual" : "networking",
-            "count" : 60,
+            "count" : 122,
             "expected" : "networking"
           },
           {
             "actual" : "orientation",
-            "count" : 59,
+            "count" : 1563,
             "expected" : "orientation"
           },
           {
             "actual" : "presentation",
-            "count" : 62,
+            "count" : 120,
             "expected" : "presentation"
           },
           {
             "actual" : "project",
-            "count" : 68,
+            "count" : 1,
+            "expected" : "meeting"
+          },
+          {
+            "actual" : "project",
+            "count" : 127,
             "expected" : "project"
           },
           {
+            "actual" : "project",
+            "count" : 2,
+            "expected" : "testing"
+          },
+          {
             "actual" : "review",
-            "count" : 63,
+            "count" : 121,
             "expected" : "review"
           },
           {
             "actual" : "study",
-            "count" : 69,
+            "count" : 133,
             "expected" : "study"
           },
           {
+            "actual" : "testing",
+            "count" : 730,
+            "expected" : "testing"
+          },
+          {
             "actual" : "workshop",
-            "count" : 63,
+            "count" : 114,
             "expected" : "workshop"
           }
         ],
         "statsByLabel" : {
           "celebration" : {
-            "count" : 64,
+            "count" : 114,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -919,7 +1245,7 @@
             }
           },
           "fee" : {
-            "count" : 61,
+            "count" : 124,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -928,7 +1254,7 @@
             }
           },
           "general" : {
-            "count" : 61,
+            "count" : 120,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -937,7 +1263,7 @@
             }
           },
           "hackathon" : {
-            "count" : 60,
+            "count" : 121,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -946,7 +1272,7 @@
             }
           },
           "leadership" : {
-            "count" : 63,
+            "count" : 125,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -955,16 +1281,16 @@
             }
           },
           "meeting" : {
-            "count" : 60,
+            "count" : 127,
             "precisionRecall" : {
               "success" : {
-                "precision" : 1,
-                "recall" : 0.9833333333333333
+                "precision" : 0.9921259842519685,
+                "recall" : 0.9921259842519685
               }
             }
           },
           "networking" : {
-            "count" : 60,
+            "count" : 122,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -973,7 +1299,7 @@
             }
           },
           "orientation" : {
-            "count" : 59,
+            "count" : 1563,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -982,7 +1308,7 @@
             }
           },
           "presentation" : {
-            "count" : 62,
+            "count" : 120,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -991,16 +1317,16 @@
             }
           },
           "project" : {
-            "count" : 68,
+            "count" : 130,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.9855072463768116,
-                "recall" : 1
+                "precision" : 0.9921875,
+                "recall" : 0.9769230769230769
               }
             }
           },
           "review" : {
-            "count" : 63,
+            "count" : 121,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -1009,7 +1335,7 @@
             }
           },
           "study" : {
-            "count" : 69,
+            "count" : 133,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -1017,8 +1343,17 @@
               }
             }
           },
+          "testing" : {
+            "count" : 730,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.9972677595628415,
+                "recall" : 1
+              }
+            }
+          },
           "workshop" : {
-            "count" : 63,
+            "count" : 114,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
@@ -1029,40 +1364,55 @@
         }
       }
     },
-    "validationAccuracy" : 0.9047619047619048,
+    "validationAccuracy" : 0.46464646464646464,
     "validationResults" : {
       "textClassifier" : {
-        "accuracy" : 0.9047619047619048,
+        "accuracy" : 0.46464646464646464,
         "confusionMatrix" : [
           {
             "actual" : "celebration",
-            "count" : 1,
+            "count" : 4,
             "expected" : "celebration"
           },
           {
+            "actual" : "celebration",
+            "count" : 6,
+            "expected" : "networking"
+          },
+          {
             "actual" : "fee",
-            "count" : 3,
+            "count" : 1,
             "expected" : "fee"
           },
           {
             "actual" : "fee",
-            "count" : 1,
-            "expected" : "workshop"
+            "count" : 5,
+            "expected" : "networking"
           },
           {
             "actual" : "general",
-            "count" : 4,
+            "count" : 2,
             "expected" : "general"
           },
           {
+            "actual" : "general",
+            "count" : 2,
+            "expected" : "networking"
+          },
+          {
             "actual" : "hackathon",
-            "count" : 4,
+            "count" : 1,
             "expected" : "hackathon"
           },
           {
             "actual" : "hackathon",
+            "count" : 3,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "leadership",
             "count" : 1,
-            "expected" : "study"
+            "expected" : "general"
           },
           {
             "actual" : "leadership",
@@ -1070,19 +1420,19 @@
             "expected" : "leadership"
           },
           {
-            "actual" : "meeting",
+            "actual" : "leadership",
             "count" : 1,
-            "expected" : "celebration"
+            "expected" : "networking"
           },
           {
             "actual" : "meeting",
-            "count" : 3,
+            "count" : 2,
             "expected" : "meeting"
           },
           {
             "actual" : "meeting",
             "count" : 1,
-            "expected" : "presentation"
+            "expected" : "networking"
           },
           {
             "actual" : "networking",
@@ -1090,52 +1440,97 @@
             "expected" : "networking"
           },
           {
-            "actual" : "orientation",
-            "count" : 6,
-            "expected" : "orientation"
-          },
-          {
-            "actual" : "presentation",
-            "count" : 4,
-            "expected" : "presentation"
-          },
-          {
-            "actual" : "project",
-            "count" : 1,
-            "expected" : "project"
-          },
-          {
-            "actual" : "review",
-            "count" : 2,
-            "expected" : "review"
-          },
-          {
-            "actual" : "study",
+            "actual" : "networking",
             "count" : 1,
             "expected" : "study"
           },
           {
-            "actual" : "workshop",
+            "actual" : "orientation",
+            "count" : 46,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "orientation",
+            "count" : 42,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "presentation",
+            "count" : 8,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "presentation",
             "count" : 2,
+            "expected" : "presentation"
+          },
+          {
+            "actual" : "project",
+            "count" : 3,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "project",
+            "count" : 5,
+            "expected" : "project"
+          },
+          {
+            "actual" : "review",
+            "count" : 3,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "review",
+            "count" : 3,
+            "expected" : "review"
+          },
+          {
+            "actual" : "study",
+            "count" : 5,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "study",
+            "count" : 2,
+            "expected" : "study"
+          },
+          {
+            "actual" : "testing",
+            "count" : 17,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "testing",
+            "count" : 16,
+            "expected" : "testing"
+          },
+          {
+            "actual" : "workshop",
+            "count" : 4,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "workshop",
+            "count" : 5,
             "expected" : "workshop"
           }
         ],
         "statsByLabel" : {
           "celebration" : {
-            "count" : 1,
+            "count" : 10,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.5,
-                "recall" : 1
+                "precision" : 1,
+                "recall" : 0.4
               }
             }
           },
           "fee" : {
-            "count" : 4,
+            "count" : 6,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 0.75
+                "recall" : 0.16666666666666666
               }
             }
           },
@@ -1143,98 +1538,107 @@
             "count" : 4,
             "precisionRecall" : {
               "success" : {
-                "precision" : 1,
-                "recall" : 1
+                "precision" : 0.6666666666666666,
+                "recall" : 0.5
               }
             }
           },
           "hackathon" : {
-            "count" : 5,
+            "count" : 4,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 0.8
+                "recall" : 0.25
               }
             }
           },
           "leadership" : {
-            "count" : 2,
+            "count" : 4,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 1
+                "recall" : 0.5
               }
             }
           },
           "meeting" : {
-            "count" : 5,
+            "count" : 3,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 0.6
+                "recall" : 0.6666666666666666
               }
             }
           },
           "networking" : {
-            "count" : 5,
+            "count" : 6,
             "precisionRecall" : {
               "success" : {
-                "precision" : 1,
-                "recall" : 1
+                "precision" : 0.045871559633027525,
+                "recall" : 0.8333333333333334
               }
             }
           },
           "orientation" : {
-            "count" : 6,
+            "count" : 88,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 1
+                "recall" : 0.4772727272727273
               }
             }
           },
           "presentation" : {
-            "count" : 4,
+            "count" : 10,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.8,
-                "recall" : 1
+                "precision" : 1,
+                "recall" : 0.2
               }
             }
           },
           "project" : {
-            "count" : 1,
+            "count" : 8,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 1
+                "recall" : 0.625
               }
             }
           },
           "review" : {
-            "count" : 2,
+            "count" : 6,
             "precisionRecall" : {
               "success" : {
                 "precision" : 1,
-                "recall" : 1
+                "recall" : 0.5
               }
             }
           },
           "study" : {
-            "count" : 1,
+            "count" : 7,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.5,
-                "recall" : 1
+                "precision" : 0.6666666666666666,
+                "recall" : 0.2857142857142857
+              }
+            }
+          },
+          "testing" : {
+            "count" : 33,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.48484848484848486
               }
             }
           },
           "workshop" : {
-            "count" : 2,
+            "count" : 9,
             "precisionRecall" : {
               "success" : {
-                "precision" : 0.6666666666666666,
-                "recall" : 1
+                "precision" : 1,
+                "recall" : 0.5555555555555556
               }
             }
           }
@@ -1245,7 +1649,7 @@
   "validationEntity" : {
     "analysedDataType" : "auto",
     "dataResult" : {
-      "createdDate" : "2026-01-21T11:22:05Z"
+      "createdDate" : "2026-02-18T05:31:03Z"
     },
     "splitOptions" : {
       "strategy" : {

@@ -179,6 +179,7 @@ extension MyProfileResponseDTO {
                 partialResult[role.gisu] = role.gisuId
             }
         }
+        
         let generations: [GenerationData] = (challengerRecords ?? []).compactMap { record in
             let gisuId = gisuIdByGisu[record.gisu] ?? record.gisuId
             return record.toGenerationData(gisuId: gisuId)

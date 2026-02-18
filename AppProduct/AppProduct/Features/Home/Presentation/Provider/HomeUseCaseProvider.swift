@@ -13,6 +13,8 @@ protocol HomeUseCaseProviding {
     var fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol { get }
     /// 월별 일정 조회 UseCase
     var fetchSchedulesUseCase: FetchSchedulesUseCaseProtocol { get }
+    /// 일정 상세 조회 UseCase
+    var fetchScheduleDetailUseCase: FetchScheduleDetailUseCaseProtocol { get }
     /// 최근 공지 조회 UseCase
     var fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol { get }
     /// FCM 토큰 등록 UseCase
@@ -37,6 +39,7 @@ final class HomeUseCaseProvider: HomeUseCaseProviding {
 
     let fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol
     let fetchSchedulesUseCase: FetchSchedulesUseCaseProtocol
+    let fetchScheduleDetailUseCase: FetchScheduleDetailUseCaseProtocol
     let fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol
     let registerFCMTokenUseCase: RegisterFCMTokenUseCaseProtocol
     let generateScheduleUseCase: GenerateScheduleUseCaseProtocol
@@ -55,6 +58,9 @@ final class HomeUseCaseProvider: HomeUseCaseProviding {
             repository: homeRepository
         )
         self.fetchSchedulesUseCase = FetchSchedulesUseCase(
+            repository: homeRepository
+        )
+        self.fetchScheduleDetailUseCase = FetchScheduleDetailUseCase(
             repository: homeRepository
         )
         self.fetchRecentNoticesUseCase = FetchRecentNoticesUseCase(
