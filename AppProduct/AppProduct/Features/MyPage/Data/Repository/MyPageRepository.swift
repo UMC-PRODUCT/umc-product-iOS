@@ -159,7 +159,12 @@ private extension MyPageRepository {
 private extension MyPagePostResponseDTO {
     /// MyPagePostResponseDTO를 커뮤니티 아이템 모델로 변환합니다.
     func toCommunityItemModel() -> CommunityItemModel {
-        CommunityItemModel(
+        let parsedCreatedAt = DateParser.iso8601WithFractional.date(from: createdAt)
+            ?? DateParser.iso8601.date(from: createdAt)
+            ?? DateParser.iso8601WithoutTimezone.date(from: createdAt)
+            ?? Date()
+
+        return CommunityItemModel(
             postId: postId,
             userId: authorId,
             category: toCommunityCategory(),
@@ -168,7 +173,7 @@ private extension MyPagePostResponseDTO {
             profileImage: authorProfileImage,
             userName: authorName,
             part: authorPart,
-            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
+            createdAt: parsedCreatedAt,
             likeCount: likeCount,
             commentCount: commentCount,
             scrapCount: 0,
@@ -208,6 +213,14 @@ private enum DateParser {
     static let iso8601: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    static let iso8601WithoutTimezone: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         return formatter
     }()
 }

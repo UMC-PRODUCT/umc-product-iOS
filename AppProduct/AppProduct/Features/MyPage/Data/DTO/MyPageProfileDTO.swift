@@ -19,6 +19,36 @@ struct MyPageProfileResponseDTO: Codable {
     let status: MemberStatus
     let roles: [MyPageRoleDTO]
     let challengerRecords: [MyPageChallengerRecordDTO]?
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case nickname
+        case email
+        case schoolId
+        case schoolName
+        case profileImageLink
+        case status
+        case roles
+        case challengerRecords
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeFlexibleInt(forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        nickname = try container.decode(String.self, forKey: .nickname)
+        email = try container.decode(String.self, forKey: .email)
+        schoolId = try container.decodeFlexibleInt(forKey: .schoolId)
+        schoolName = try container.decode(String.self, forKey: .schoolName)
+        profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
+        status = try container.decode(MemberStatus.self, forKey: .status)
+        roles = try container.decodeIfPresent([MyPageRoleDTO].self, forKey: .roles) ?? []
+        challengerRecords = try container.decodeIfPresent(
+            [MyPageChallengerRecordDTO].self,
+            forKey: .challengerRecords
+        )
+    }
 }
 
 struct MyPageRoleDTO: Codable {
@@ -30,6 +60,29 @@ struct MyPageRoleDTO: Codable {
     let responsiblePart: String?
     let gisu: Int?
     let gisuId: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case challengerId
+        case roleType
+        case organizationType
+        case organizationId
+        case responsiblePart
+        case gisu
+        case gisuId
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeFlexibleInt(forKey: .id)
+        challengerId = try container.decodeFlexibleInt(forKey: .challengerId)
+        roleType = try container.decode(ManagementTeam.self, forKey: .roleType)
+        organizationType = try container.decode(OrganizationType.self, forKey: .organizationType)
+        organizationId = try container.decodeFlexibleInt(forKey: .organizationId)
+        responsiblePart = try container.decodeIfPresent(String.self, forKey: .responsiblePart)
+        gisu = try container.decodeFlexibleIntIfPresent(forKey: .gisu)
+        gisuId = try container.decodeFlexibleInt(forKey: .gisuId)
+    }
 }
 
 struct MyPageChallengerRecordDTO: Codable {
@@ -67,9 +120,9 @@ struct MyPageChallengerRecordDTO: Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        challengerId = try container.decode(Int.self, forKey: .challengerId)
-        memberId = try container.decode(Int.self, forKey: .memberId)
-        gisu = try container.decode(Int.self, forKey: .gisu)
+        challengerId = try container.decodeFlexibleInt(forKey: .challengerId)
+        memberId = try container.decodeFlexibleInt(forKey: .memberId)
+        gisu = try container.decodeFlexibleInt(forKey: .gisu)
         part = try container.decode(String.self, forKey: .part)
         challengerPoints = try container.decodeIfPresent([MyPageChallengerPointDTO].self, forKey: .challengerPoints)
             ?? decoder.decodeMyPagePointsArrayFallback()
@@ -77,7 +130,7 @@ struct MyPageChallengerRecordDTO: Codable {
         name = try container.decode(String.self, forKey: .name)
         nickname = try container.decode(String.self, forKey: .nickname)
         email = try container.decode(String.self, forKey: .email)
-        schoolId = try container.decode(Int.self, forKey: .schoolId)
+        schoolId = try container.decodeFlexibleInt(forKey: .schoolId)
         schoolName = try container.decode(String.self, forKey: .schoolName)
         profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
         let fallbackContainer = try decoder.container(keyedBy: FallbackCodingKeys.self)
@@ -117,6 +170,23 @@ struct MyPageChallengerPointDTO: Codable {
     let point: Double
     let description: String
     let createdAt: String
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case pointType
+        case point
+        case description
+        case createdAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeFlexibleInt(forKey: .id)
+        pointType = try container.decode(String.self, forKey: .pointType)
+        point = try container.decodeFlexibleDouble(forKey: .point)
+        description = try container.decode(String.self, forKey: .description)
+        createdAt = try container.decode(String.self, forKey: .createdAt)
+    }
 }
 
 extension MyPageProfileResponseDTO {

@@ -49,6 +49,41 @@ struct MyPagePostResponseDTO: Codable {
     let isLiked: Bool
     let isAuthor: Bool
     let lightningInfo: LightningInfoDTO?
+
+    private enum CodingKeys: String, CodingKey {
+        case postId
+        case title
+        case content
+        case category
+        case authorId
+        case authorName
+        case authorProfileImage
+        case authorPart
+        case createdAt
+        case commentCount
+        case likeCount
+        case isLiked
+        case isAuthor
+        case lightningInfo
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        postId = try container.decodeFlexibleInt(forKey: .postId)
+        title = try container.decode(String.self, forKey: .title)
+        content = try container.decode(String.self, forKey: .content)
+        category = try container.decode(String.self, forKey: .category)
+        authorId = try container.decodeFlexibleInt(forKey: .authorId)
+        authorName = try container.decode(String.self, forKey: .authorName)
+        authorProfileImage = try container.decodeIfPresent(String.self, forKey: .authorProfileImage)
+        authorPart = try container.decode(UMCPartType.self, forKey: .authorPart)
+        createdAt = try container.decode(String.self, forKey: .createdAt)
+        commentCount = try container.decodeFlexibleInt(forKey: .commentCount)
+        likeCount = try container.decodeFlexibleInt(forKey: .likeCount)
+        isLiked = try container.decode(Bool.self, forKey: .isLiked)
+        isAuthor = try container.decode(Bool.self, forKey: .isAuthor)
+        lightningInfo = try container.decodeIfPresent(LightningInfoDTO.self, forKey: .lightningInfo)
+    }
 }
 
 struct MyPagePostPageDTO<T: Codable>: Codable {
@@ -59,4 +94,25 @@ struct MyPagePostPageDTO<T: Codable>: Codable {
     let totalPages: Int
     let hasNext: Bool
     let hasPrevious: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case content
+        case page
+        case size
+        case totalElements
+        case totalPages
+        case hasNext
+        case hasPrevious
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        content = try container.decode([T].self, forKey: .content)
+        page = try container.decodeFlexibleInt(forKey: .page)
+        size = try container.decodeFlexibleInt(forKey: .size)
+        totalElements = try container.decodeFlexibleInt(forKey: .totalElements)
+        totalPages = try container.decodeFlexibleInt(forKey: .totalPages)
+        hasNext = try container.decode(Bool.self, forKey: .hasNext)
+        hasPrevious = try container.decode(Bool.self, forKey: .hasPrevious)
+    }
 }

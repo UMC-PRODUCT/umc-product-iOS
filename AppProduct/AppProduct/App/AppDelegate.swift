@@ -44,6 +44,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         UNUserNotificationCenter.current().delegate = self
         logDeviceIdentifiers()
         seedAppStorageProfileIfNeeded()
+        seedAuthTokenFromEnvironmentIfNeeded()
         registerRemoteNotificationsIfAuthorized()
         NotificationCenter.default.addObserver(
             self,
@@ -273,6 +274,27 @@ private extension AppDelegate {
             ? "CENTRAL"
             : (isSchoolSeed ? "SCHOOL" : (isChapterSeed ? "CHAPTER" : (isChallengerSeed ? "CHALLENGER" : "CENTRAL")))
         print("[AppStorage] seeded dummy profile for scheme (\(seededType), role=\(seededRole.rawValue))")
+        #endif
+    }
+
+    func seedAuthTokenFromEnvironmentIfNeeded() {
+        #if DEBUG
+        let environment = ProcessInfo.processInfo.environment
+        let accessToken = environment["UMC_API_TEST_ACCESS_TOKEN"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !accessToken.isEmpty else { return }
+
+        Task {
+            do {
+                try await KeychainTokenStore().save(
+                    accessToken: accessToken,
+                    refreshToken: accessToken
+                )
+                print("[AuthDebug] Seeded access token from scheme environment")
+            } catch {
+                print("[AuthDebug] Failed to seed access token: \(error)")
+            }
+        }
         #endif
     }
 

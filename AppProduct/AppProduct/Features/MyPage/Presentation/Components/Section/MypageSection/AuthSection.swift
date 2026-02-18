@@ -81,7 +81,9 @@ struct AuthSection: View {
         do {
             let provider = di.resolve(MyPageUseCaseProviding.self)
             try await provider.deleteMemberUseCase.execute()
-            appFlow.logout()
+            try await di.resolve(NetworkClient.self).logout()
+            di.resetCache()
+            appFlow.showLogin()
         } catch {
             errorHandler.handle(
                 error,

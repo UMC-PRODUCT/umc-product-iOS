@@ -65,48 +65,20 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "NoticeRole(no Select)"
+            argument = "HomeState(no Select)"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--seed-appstorage-dummy-central"
+            argument = "-homeDebugState loading"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-homeDebugState loaded"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--seed-appstorage-dummy-chapter"
+            argument = "-homeDebugState failed"
             isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--seed-appstorage-dummy-school"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--seed-appstorage-dummy-challenger"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "NoticeState(no Select)"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-noticeDebugState loading"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-noticeDebugState loaded"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-noticeDebugState failed"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--open-notice-tab"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--notice-force-permission"
-            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
       <EnvironmentVariables>
@@ -133,11 +105,6 @@
          <EnvironmentVariable
             key = "API_BASE_URL"
             value = ""
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "UMC_API_TEST_ACCESS_TOKEN"
-            value = "$(UMC_API_TEST_ACCESS_TOKEN)"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
