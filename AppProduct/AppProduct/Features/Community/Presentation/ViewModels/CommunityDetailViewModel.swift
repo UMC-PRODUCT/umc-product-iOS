@@ -12,6 +12,7 @@ class CommunityDetailViewModel {
     // MARK: - Property
 
     private let useCaseProvider: CommunityUseCaseProviding
+    private let authorizationUseCase: AuthorizationUseCaseProtocol
     private let errorHandler: ErrorHandler
     private let postId: Int
 
@@ -23,6 +24,8 @@ class CommunityDetailViewModel {
     private(set) var isScrapToggling: Bool = false
     private(set) var isLikeToggling: Bool = false
     private(set) var isPostingComment: Bool = false
+    private(set) var commentDeletePermissions: [Int: Bool] = [:]
+    private(set) var isPermissionsLoaded: Bool = false
 
     var commentText: String = ""
 
@@ -34,6 +37,7 @@ class CommunityDetailViewModel {
         postId: Int
     ) {
         self.useCaseProvider = container.resolve(CommunityUseCaseProviding.self)
+        self.authorizationUseCase = container.resolve(AuthorizationUseCaseProtocol.self)
         self.errorHandler = errorHandler
         self.postId = postId
     }
@@ -59,7 +63,6 @@ class CommunityDetailViewModel {
     /// 댓글 목록 조회
     @MainActor
     func fetchComments() async {
-        guard let postItem = postItem else { return }
         comments = .loading
 
         #if DEBUG
@@ -79,11 +82,51 @@ class CommunityDetailViewModel {
         do {
             let fetchedComments = try await useCaseProvider.fetchCommentUseCase.execute(postId: postId)
             comments = .loaded(fetchedComments)
+
+            // 댓글 권한 조회
+            await fetchCommentPermissions(for: fetchedComments)
         } catch let error as AppError {
             comments = .failed(error)
         } catch {
             comments = .failed(.unknown(message: error.localizedDescription))
         }
+    }
+
+    /// 댓글 권한 조회
+    @MainActor
+    private func fetchCommentPermissions(for comments: [CommunityCommentModel]) async {
+        isPermissionsLoaded = false
+
+        // 모든 댓글에 대한 권한을 병렬로 조회
+        await withTaskGroup(of: (Int, Bool).self) { group in
+            for comment in comments {
+                group.addTask { [weak self] in
+                    guard let self = self else { return (comment.commentId, false) }
+                    do {
+                        let permission = try await self.authorizationUseCase.getResourcePermission(
+                            resourceType: .comment,
+                            resourceId: comment.commentId
+                        )
+                        let canDelete = await permission.has(.delete)
+                        return (comment.commentId, canDelete)
+                    } catch {
+                        return (comment.commentId, false)
+                    }
+                }
+            }
+
+            for await (commentId, canDelete) in group {
+                commentDeletePermissions[commentId] = canDelete
+            }
+        }
+
+        isPermissionsLoaded = true
+    }
+
+    /// 댓글 삭제 권한 확인
+    func canDeleteComment(commentId: Int) -> Bool {
+        let result = commentDeletePermissions[commentId] ?? false
+        return result
     }
 
     /// 게시글 삭제

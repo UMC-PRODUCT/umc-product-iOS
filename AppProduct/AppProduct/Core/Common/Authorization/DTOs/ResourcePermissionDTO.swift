@@ -10,7 +10,7 @@ import Foundation
 /// 리소스 권한 조회 응답 DTO
 struct ResourcePermissionResponseDTO: Codable {
     let resourceType: String
-    let resourceId: Int
+    let resourceId: String
     let permissions: [ResourcePermissionItemDTO]
 
     private enum CodingKeys: String, CodingKey {

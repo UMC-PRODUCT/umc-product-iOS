@@ -192,8 +192,10 @@ struct CommunityDetailView: View {
                 .appFont(.subheadline, color: .grey600)
 
             ForEach(comments) { comment in
+                let canDelete = vm.canDeleteComment(commentId: comment.commentId)
                 CommunityCommentItem(
                     model: comment,
+                    canDelete: canDelete,
                     onDeleteTapped: {
                         await vm.deleteComment(commentId: comment.commentId)
                     },
@@ -201,7 +203,6 @@ struct CommunityDetailView: View {
                         await vm.reportComment(commentId: comment.commentId)
                     }
                 )
-                .equatable()
             }
         }
     }

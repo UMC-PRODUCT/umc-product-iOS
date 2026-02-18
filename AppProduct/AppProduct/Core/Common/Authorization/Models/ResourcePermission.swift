@@ -16,6 +16,7 @@ enum AuthorizationResourceType: String, CaseIterable, Hashable {
     case workbookSubmission = "WORKBOOK_SUBMISSION"
     case attendanceSheet = "ATTENDANCE_SHEET"
     case attendanceRecord = "ATTENDANCE_RECORD"
+    case comment = "COMMUNITY_COMMENT"
 }
 
 /// 리소스 권한 타입
