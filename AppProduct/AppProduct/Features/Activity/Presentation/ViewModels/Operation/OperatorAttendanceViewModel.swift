@@ -412,6 +412,10 @@ final class OperatorAttendanceViewModel {
                 pendingMembers: updatedMembers
             )
             sessionsState = .loaded(sessions)
+            notifySharedSessionChange(
+                session: sessions[index],
+                isApproval: isApproval
+            )
         }
     }
 
@@ -427,6 +431,10 @@ final class OperatorAttendanceViewModel {
                 pendingMembers: []
             )
             sessionsState = .loaded(sessions)
+            notifySharedSessionChange(
+                session: sessions[index],
+                isApproval: isApproval
+            )
         }
     }
 
@@ -449,7 +457,41 @@ final class OperatorAttendanceViewModel {
                 pendingMembers: updatedMembers
             )
             sessionsState = .loaded(sessions)
+            notifySharedSessionChange(
+                session: sessions[index],
+                isApproval: isApproval
+            )
         }
+    }
+
+    /// 공유 Session 객체 출석 상태 업데이트 + Notification 발송
+    ///
+    /// 운영진 승인/반려 후 챌린저 뷰의 @Observable Session이
+    /// 자동 갱신되도록 직접 업데이트합니다.
+    private func notifySharedSessionChange(
+        session: OperatorSessionAttendance,
+        isApproval: Bool
+    ) {
+        let sharedSession = session.session
+        let newStatus: AttendanceStatus = isApproval ? .present : .absent
+
+        if sharedSession.hasSubmitted,
+           let existing = sharedSession.attendance
+        {
+            sharedSession.updateState(.loaded(Attendance(
+                sessionId: existing.sessionId,
+                userId: existing.userId,
+                type: existing.type,
+                status: newStatus,
+                locationVerification: existing.locationVerification,
+                reason: existing.reason
+            )))
+        }
+
+        NotificationCenter.default.post(
+            name: .attendanceStatusChanged,
+            object: nil
+        )
     }
 
 }

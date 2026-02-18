@@ -23,6 +23,8 @@ final class ChallengerAttendanceViewModel {
     /// 재시도 중 여부 (RetryContentUnavailableView용)
     private(set) var isRetrying: Bool = false
 
+    private var statusObserver: (any NSObjectProtocol)?
+
     // MARK: - Init
 
     init(
@@ -33,6 +35,40 @@ final class ChallengerAttendanceViewModel {
         self.container = container
         self.errorHandler = errorHandler
         self.challengeAttendanceUseCase = challengeAttendanceUseCase
+        observeAttendanceStatusChange()
+    }
+
+    deinit {
+        if let observer = statusObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
+    // MARK: - Notification
+
+    private func observeAttendanceStatusChange() {
+        statusObserver = NotificationCenter.default.addObserver(
+            forName: .attendanceStatusChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.refreshMyHistory()
+            }
+        }
+    }
+
+    /// 출석 이력 배경 갱신 (로딩 상태 변경 없이)
+    @MainActor
+    private func refreshMyHistory() async {
+        guard !myHistory.isLoading else { return }
+        do {
+            let history = try await challengeAttendanceUseCase
+                .fetchMyHistory()
+            myHistory = .loaded(history)
+        } catch {
+            // 배경 갱신 실패는 무시
+        }
     }
 
     // MARK: - Action
@@ -97,9 +133,11 @@ final class ChallengerAttendanceViewModel {
         } catch let error as DomainError {
             session.updateState(.failed(.domain(error)))
         } catch {
-            // 기타 에러 (네트워크 등)
+            // 기타 에러 (네트워크 등) — 상태 복구 후 Alert
             if let prev = session.attendance {
                 session.updateState(.loaded(prev))
+            } else {
+                session.updateState(.idle)
             }
             errorHandler.handle(error, context: .init(
                 feature: "Activity",
@@ -133,9 +171,11 @@ final class ChallengerAttendanceViewModel {
         } catch let error as DomainError {
             session.updateState(.failed(.domain(error)))
         } catch {
-            // 기타 에러 (네트워크 등)
+            // 기타 에러 (네트워크 등) — 상태 복구 후 Alert
             if let attendance = session.attendance {
                 session.updateState(.loaded(attendance))
+            } else {
+                session.updateState(.idle)
             }
             errorHandler.handle(error, context: .init(
                 feature: "Activity",
@@ -178,8 +218,11 @@ final class ChallengerAttendanceViewModel {
         } catch let error as DomainError {
             session.updateState(.failed(.domain(error)))
         } catch {
+            // 기타 에러 (네트워크 등) — 상태 복구 후 Alert
             if let prev = session.attendance {
                 session.updateState(.loaded(prev))
+            } else {
+                session.updateState(.idle)
             }
             errorHandler.handle(error, context: .init(
                 feature: "Activity",

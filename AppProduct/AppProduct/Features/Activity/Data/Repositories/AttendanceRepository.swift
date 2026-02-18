@@ -128,19 +128,19 @@ final class AttendanceRepository: ChallengerAttendanceRepositoryProtocol,
             let response = try await adapter.request(
                 AttendanceRouter.check(body: request)
             )
-            // 성공 응답 디코딩 시도
-            do {
-                let apiResponse = try decoder.decode(
-                    APIResponse<Int>.self,
-                    from: response.data
-                )
-                return try apiResponse.unwrap()
-            } catch {
-                // result가 String인 에러 응답 (e.g. "이미 출석 체크가 완료되었습니다")
+            let apiResponse = try decoder.decode(
+                APIResponse<String>.self,
+                from: response.data
+            )
+            let result = try apiResponse.unwrap()
+            guard let id = Int(result) else {
                 throw Self.parseErrorResponse(
                     from: response.data
-                ) ?? error
+                ) ?? RepositoryError.serverError(
+                    code: nil, message: result
+                )
             }
+            return id
         } catch let error as NetworkError {
             throw Self.parseServerError(from: error) ?? error
         }
@@ -153,17 +153,19 @@ final class AttendanceRepository: ChallengerAttendanceRepositoryProtocol,
             let response = try await adapter.request(
                 AttendanceRouter.submitReason(body: request)
             )
-            do {
-                let apiResponse = try decoder.decode(
-                    APIResponse<Int>.self,
-                    from: response.data
-                )
-                return try apiResponse.unwrap()
-            } catch {
+            let apiResponse = try decoder.decode(
+                APIResponse<String>.self,
+                from: response.data
+            )
+            let result = try apiResponse.unwrap()
+            guard let id = Int(result) else {
                 throw Self.parseErrorResponse(
                     from: response.data
-                ) ?? error
+                ) ?? RepositoryError.serverError(
+                    code: nil, message: result
+                )
             }
+            return id
         } catch let error as NetworkError {
             throw Self.parseServerError(from: error) ?? error
         }
