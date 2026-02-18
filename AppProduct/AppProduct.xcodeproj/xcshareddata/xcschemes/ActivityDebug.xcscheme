@@ -53,6 +53,24 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
+      <PreActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Fetch debug tokens"
+               scriptText = "#!/bin/bash&#10;MEMBER_ID=1&#10;BASE=&quot;https://dev.api.umc.it.kr&quot;&#10;CRED=$(echo -n &quot;umcproduct:hello_world_product!&quot; | base64)&#10;&#10;ACCESS=$(curl -sf -m 10 -H &quot;Authorization: Basic $CRED&quot; &quot;$BASE/test/token/access?memberId=$MEMBER_ID&amp;expirationInMinutes=200&quot;) || exit 0&#10;REFRESH=$(curl -sf -m 10 -H &quot;Authorization: Basic $CRED&quot; &quot;$BASE/test/token/refresh/$MEMBER_ID&quot;) || exit 0&#10;[ -z &quot;$ACCESS&quot; ] || [ -z &quot;$REFRESH&quot; ] &amp;&amp; exit 0&#10;&#10;cat &gt; /tmp/umc_debug_tokens.json &lt;&lt;EOF&#10;{&quot;accessToken&quot;:&quot;$ACCESS&quot;,&quot;refreshToken&quot;:&quot;$REFRESH&quot;,&quot;memberId&quot;:$MEMBER_ID}&#10;EOF&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "0E6380A82F02F1020060E4D9"
+                     BuildableName = "AppProduct.app"
+                     BlueprintName = "AppProduct"
+                     ReferencedContainer = "container:AppProduct.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PreActions>
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
@@ -65,11 +83,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-injectTestToken"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "1"
+            argument = "--seed-appstorage-dummy-central"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -107,6 +121,11 @@
          <EnvironmentVariable
             key = "FIREBASE_PROJECT_ID"
             value = ""
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SKIP_TOKEN_REFRESH"
+            value = "1"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

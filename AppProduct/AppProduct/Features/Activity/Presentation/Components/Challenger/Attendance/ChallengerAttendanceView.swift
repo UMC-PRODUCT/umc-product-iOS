@@ -117,13 +117,27 @@ struct ChallengerAttendanceView: View, Equatable {
         MainButton(attendanceViewModel.buttonStyle(for: session)) {
             triggerHaptic()
             Task {
+                guard let sheetId = attendanceViewModel
+                    .sheetId(for: session.info.sessionId)
+                else {
+                    #if DEBUG
+                    print("[Attendance] sheetId not found for sessionId: \(session.info.sessionId.value)")
+                    print("[Attendance] availableSchedules: \(attendanceViewModel.availableSchedules)")
+                    #endif
+                    return
+                }
                 await attendanceViewModel.attendanceBtnTapped(
-                    userId: userId, session: session)
+                    userId: userId,
+                    session: session,
+                    sheetId: sheetId
+                )
                 triggerSuccessHaptic()
             }
         }
         .buttonStyle(.glassProminent)
-        .disabled(!attendanceViewModel.isAttendanceAvailable(for: session))
+        .disabled(
+            !attendanceViewModel.isAttendanceAvailable(for: session)
+        )
     }
 
     private var lateReasonButton: some View {
@@ -135,13 +149,23 @@ struct ChallengerAttendanceView: View, Equatable {
                 .underline()
         }
         .buttonStyle(.plain)
-        .disabled(!attendanceViewModel.isAttendanceAvailable(for: session))
+        .disabled(
+            !attendanceViewModel.isAttendanceAvailable(for: session)
+            && !attendanceViewModel.isReasonSubmittable(for: session)
+        )
         .sheet(isPresented: $showReasonSheet) {
             ChallengerAttendanceReasonSheet { reason in
+                guard let sheetId = attendanceViewModel.sheetId(for: session.info.sessionId) else {
+                    #if DEBUG
+                    print("[Attendance] sheetId not found for reason submit")
+                    #endif
+                    return
+                }
                 await attendanceViewModel.submitAttendanceReason(
                     userId: userId,
                     session: session,
-                    reason: reason
+                    reason: reason,
+                    sheetId: sheetId
                 )
             }
         }

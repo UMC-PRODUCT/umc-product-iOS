@@ -37,6 +37,7 @@ enum AuthSystemFactory {
     /// - Parameters:
     ///   - baseURL: API 서버 기본 URL
     ///   - session: URLSession (기본값: .shared)
+    ///   - tokenStore: 외부 주입 TokenStore (nil이면 내부 생성)
     ///
     /// - Returns: 완전히 구성된 NetworkClient 인스턴스
     ///
@@ -66,10 +67,11 @@ enum AuthSystemFactory {
     /// ```
     static func makeNetworkClient(
         baseURL: URL,
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        tokenStore: TokenStore? = nil
     ) -> NetworkClient {
-        // 1. Keychain 기반 토큰 저장소 생성
-        let tokenStore = KeychainTokenStore()
+        // 1. 토큰 저장소 (외부 주입 또는 Keychain 기반 생성)
+        let store = tokenStore ?? KeychainTokenStore()
 
         // 2. 실제 서버 토큰 갱신 서비스 생성
         let refreshService = TokenRefreshServiceImpl(baseURL: baseURL, session: session)
@@ -77,7 +79,7 @@ enum AuthSystemFactory {
         // 3. NetworkClient 생성 (모든 의존성 주입)
         return NetworkClient(
             session: session,
-            tokenStore: tokenStore,
+            tokenStore: store,
             refreshService: refreshService
         )
     }

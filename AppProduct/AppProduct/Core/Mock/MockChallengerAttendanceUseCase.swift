@@ -39,7 +39,7 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
 
     // MARK: - Protocol Methods
 
-    func requestGPSAttendance(sessionId: SessionID, userId: UserID) async throws -> Attendance {
+    func requestGPSAttendance(sessionId: SessionID, userId: UserID, sheetId: Int) async throws -> Attendance {
         try await Task.sleep(for: .seconds(responseDelay))
 
         if let error = mockError {
@@ -61,7 +61,7 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
         )
     }
 
-    func submitLateReason(sessionId: SessionID, userId: UserID, reason: String) async throws -> Attendance {
+    func submitLateReason(sessionId: SessionID, userId: UserID, reason: String, sheetId: Int) async throws -> Attendance {
         try await Task.sleep(for: .seconds(responseDelay))
 
         if let error = mockError {
@@ -78,7 +78,7 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
         )
     }
 
-    func submitAbsentReason(sessionId: SessionID, userId: UserID, reason: String) async throws -> Attendance {
+    func submitAbsentReason(sessionId: SessionID, userId: UserID, reason: String, sheetId: Int) async throws -> Attendance {
         try await Task.sleep(for: .seconds(responseDelay))
 
         return Attendance(
@@ -89,6 +89,18 @@ final class MockChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
             locationVerification: nil,
             reason: reason
         )
+    }
+
+    func fetchAvailableSchedules() async throws -> [AvailableAttendanceSchedule] {
+        try await Task.sleep(for: .seconds(responseDelay))
+        if let error = mockError { throw error }
+        return []
+    }
+
+    func fetchMyHistory() async throws -> [AttendanceHistoryItem] {
+        try await Task.sleep(for: .seconds(responseDelay))
+        if let error = mockError { throw error }
+        return []
     }
 
     func isWithinAttendanceTime(info: SessionInfo) -> AttendanceTimeWindow {

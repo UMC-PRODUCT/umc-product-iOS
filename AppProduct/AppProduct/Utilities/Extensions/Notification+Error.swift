@@ -20,4 +20,10 @@ extension Notification.Name {
     ///
     /// 이 알림을 받으면 승인 대기 안내 화면으로 이동해야 합니다.
     static let navigateToPendingApproval = Notification.Name("navigateToPendingApproval")
+
+    /// 출석 승인/반려 상태 변경 알림.
+    ///
+    /// 운영진이 출석을 승인/반려하면 발송됩니다.
+    /// 챌린저 ViewModel이 수신하여 `myHistory`를 갱신합니다.
+    static let attendanceStatusChanged = Notification.Name("attendanceStatusChanged")
 }

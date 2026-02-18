@@ -22,7 +22,7 @@ struct ChallengerRole: Equatable {
     /// 소속 조직 타입 (CENTRAL / CHAPTER / SCHOOL)
     let organizationType: OrganizationType
     /// 소속 조직 ID (organizationType에 따라 지부/학교 ID)
-    let organizationId: Int
+    let organizationId: Int?
 }
 
 /// 홈 프로필 조회 결과

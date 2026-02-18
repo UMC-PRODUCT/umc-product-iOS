@@ -17,14 +17,10 @@ struct ChallengerMyAttendanceStatusView: View {
 
     // MARK: - Init
 
-    /// - Parameters:
-    ///   - sessions: 전체 세션 목록 (pending 상태는 내부에서 필터링)
-    ///   - categoryFor: 제목으로 카테고리 조회 (ViewModel에서 제공)
-    init(sessions: [Session], categoryFor: (String) -> ScheduleIconCategory) {
-        // pending 상태 제외, 완료된 출석만 표시
-        self.models = sessions.compactMap { session in
-            let category = categoryFor(session.info.title)
-            return MyAttendanceItemModel(from: session, category: category)
+    /// History API 데이터로 초기화
+    init(historyItems: [AttendanceHistoryItem]) {
+        self.models = historyItems.compactMap {
+            MyAttendanceItemModel(from: $0)
         }
     }
     
@@ -64,8 +60,19 @@ struct ChallengerMyAttendanceStatusView: View {
         Color.grey100.ignoresSafeArea()
 
         ChallengerMyAttendanceStatusView(
-            sessions: AttendancePreviewData.sessions,
-            categoryFor: { _ in .general }  // Preview용 기본값
+            historyItems: [
+                AttendanceHistoryItem(
+                    attendanceId: 1,
+                    scheduleId: 1,
+                    scheduleName: "정기 세션",
+                    tags: ["STUDY"],
+                    scheduledDate: "2026-02-17",
+                    startTime: "14:00",
+                    endTime: "16:00",
+                    status: .present,
+                    statusDisplay: "출석"
+                )
+            ]
         )
     }
     .frame(height: 600)

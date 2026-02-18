@@ -13,7 +13,7 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
 
     // MARK: - Property
 
-    private let repository: AttendanceRepositoryProtocol
+    private let repository: ChallengerAttendanceRepositoryProtocol
     private let locationManager: LocationManager = .shared
 
     // MARK: - Computed Property
@@ -28,15 +28,25 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
 
     // MARK: - Init
 
-    init(repository: AttendanceRepositoryProtocol) {
+    init(repository: ChallengerAttendanceRepositoryProtocol) {
         self.repository = repository
     }
 
     // MARK: - Function
 
+    /// 출석 가능한 세션 목록 조회
+    func fetchAvailableSchedules() async throws -> [AvailableAttendanceSchedule] {
+        return try await repository.getAvailableSchedules()
+    }
+
+    /// 내 출석 이력 조회
+    func fetchMyHistory() async throws -> [AttendanceHistoryItem] {
+        return try await repository.getMyHistory()
+    }
+
     /// GPS 기반 출석 요청 (pending 상태로 서버 전송)
     /// - throws: LocationError.notAuthorized, LocationError.locationFailed, DomainError.attendanceOutOfRange
-    func requestGPSAttendance(sessionId: SessionID, userId: UserID) async throws -> Attendance {
+    func requestGPSAttendance(sessionId: SessionID, userId: UserID, sheetId: Int) async throws -> Attendance {
         // 위치 권한 검증
         guard locationManager.isAuthorized else {
             throw LocationError.notAuthorized
@@ -52,16 +62,33 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
             throw DomainError.attendanceOutOfRange
         }
 
-        // 서버에 출석 요청 (pending 상태)
-        let request = CreateAttendanceRequest(
+        // 서버에 GPS 출석 요청
+        _ = try await repository.checkAttendance(
+            request: AttendanceCheckRequestDTO(
+                attendanceSheetId: sheetId,
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude,
+                locationVerified: true
+            )
+        )
+
+        return Attendance(
             sessionId: sessionId,
             userId: userId,
             type: .gps,
-            coordinate: coordinate,
+            status: .beforeAttendance,
+            locationVerification: LocationVerification(
+                isVerified: true,
+                coordinate: coordinate,
+                address: .init(
+                    fullAddress: "",
+                    city: "",
+                    district: ""
+                ),
+                verifiedAt: .now
+            ),
             reason: nil
         )
-
-        return try await repository.createAttendance(request: request)
     }
 
     /// 지각 사유 제출
@@ -69,7 +96,8 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
     func submitLateReason(
         sessionId: SessionID,
         userId: UserID,
-        reason: String
+        reason: String,
+        sheetId: Int
     ) async throws -> Attendance {
         // 사유 필수 검증
         guard !reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -77,15 +105,21 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
         }
 
         // 서버에 지각 사유 제출
-        let request = CreateAttendanceRequest(
+        _ = try await repository.submitReason(
+            request: AttendanceReasonRequestDTO(
+                attendanceSheetId: sheetId,
+                reason: reason
+            )
+        )
+
+        return Attendance(
             sessionId: sessionId,
             userId: userId,
             type: .reason,
-            coordinate: nil,
+            status: .pendingApproval,
+            locationVerification: nil,
             reason: reason
         )
-
-        return try await repository.createAttendance(request: request)
     }
 
     /// 불참 사유 제출
@@ -93,21 +127,28 @@ final class ChallengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol {
     func submitAbsentReason(
         sessionId: SessionID,
         userId: UserID,
-        reason: String
+        reason: String,
+        sheetId: Int
     ) async throws -> Attendance {
         guard !reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw DomainError.attendanceReasonRequired
         }
 
-        let request = CreateAttendanceRequest(
+        _ = try await repository.submitReason(
+            request: AttendanceReasonRequestDTO(
+                attendanceSheetId: sheetId,
+                reason: reason
+            )
+        )
+
+        return Attendance(
             sessionId: sessionId,
             userId: userId,
             type: .reason,
-            coordinate: nil,
+            status: .pendingApproval,
+            locationVerification: nil,
             reason: reason
         )
-
-        return try await repository.createAttendance(request: request)
     }
 
     /// 현재 시간이 어느 출석 시간대에 속하는지 확인

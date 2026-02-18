@@ -108,14 +108,43 @@ struct ActivityView: View {
             ChallengerMemberListView(
                 container: di, errorHandler: errorHandler)
         case (.admin, .attendanceManage):
-            OperatorAttendanceSectionView(
-                container: di, errorHandler: errorHandler)
+            operatorAttendanceContent
         case (.admin, .studyManage):
             OperatorStudyManagementView(container: di, errorHandler: errorHandler)
         case (.admin, .memberManage):
             OperatorMemberManagementView(container: di, errorHandler: errorHandler)
         default:
             EmptyView()
+        }
+    }
+
+    /// 운영진 출석 관리 섹션 (ViewModel 상태에 따라 표시)
+    @ViewBuilder
+    private var operatorAttendanceContent: some View {
+        if let vm = viewModel {
+            switch vm.sessionsState {
+            case .idle, .loading:
+                ProgressView("세션 로딩 중...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            case .loaded(let sessions):
+                OperatorAttendanceSectionView(
+                    container: di,
+                    errorHandler: errorHandler,
+                    sessions: sessions
+                )
+            case .failed(let error):
+                ContentUnavailableView {
+                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(error.localizedDescription)
+                } actions: {
+                    Button("다시 시도") {
+                        Task { await vm.fetchSessions() }
+                    }
+                }
+            }
+        } else {
+            ProgressView()
         }
     }
 

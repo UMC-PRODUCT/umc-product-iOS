@@ -57,13 +57,19 @@ final class SplashViewModel {
             return .notLoggedIn
         }
 
-        // 앱 시작 시 토큰을 선행 갱신하여 이후 API 실패 가능성을 줄입니다.
-        do {
-            _ = try await networkClient.forceRefreshToken()
-        } catch {
-            // 리프레시 만료/실패 시 인증 상태를 정리하고 로그인 화면으로 보냅니다.
-            try? await networkClient.logout()
-            return .notLoggedIn
+        // HomeDebug 스킴: 환경변수로 토큰 갱신 스킵
+        let skipRefresh = ProcessInfo.processInfo
+            .environment["SKIP_TOKEN_REFRESH"] != nil
+
+        if !skipRefresh {
+            // 앱 시작 시 토큰을 선행 갱신하여 이후 API 실패 가능성을 줄입니다.
+            do {
+                _ = try await networkClient.forceRefreshToken()
+            } catch {
+                // 리프레시 만료/실패 시 인증 상태를 정리하고 로그인 화면으로 보냅니다.
+                try? await networkClient.logout()
+                return .notLoggedIn
+            }
         }
 
         do {

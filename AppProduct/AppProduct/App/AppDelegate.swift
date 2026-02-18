@@ -47,6 +47,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         seedAPITestTokenIfNeeded()
         seedAppStorageProfileIfNeeded()
         seedAuthTokenFromEnvironmentIfNeeded()
+        injectDebugTokensIfNeeded()
         registerRemoteNotificationsIfAuthorized()
         NotificationCenter.default.addObserver(
             self,
@@ -259,6 +260,51 @@ private extension AppDelegate {
             }
         }
         #endif
+    }
+
+    /// HomeDebug 스킴 Pre-action이 생성한 토큰 파일을 읽어 Keychain에 직접 주입
+    func injectDebugTokensIfNeeded() {
+        #if DEBUG
+        let path = "/tmp/umc_debug_tokens.json"
+        guard let data = FileManager.default.contents(atPath: path),
+              let json = try? JSONSerialization.jsonObject(with: data)
+                  as? [String: Any],
+              let access = json["accessToken"] as? String,
+              !access.isEmpty,
+              let refresh = json["refreshToken"] as? String,
+              !refresh.isEmpty,
+              let memberId = json["memberId"] as? Int
+        else { return }
+
+        writeToKeychain(key: "accessToken", value: access)
+        writeToKeychain(key: "refreshToken", value: refresh)
+        UserDefaults.standard.set(
+            memberId,
+            forKey: AppStorageKey.memberId
+        )
+        try? FileManager.default.removeItem(atPath: path)
+        print("[DebugTokens] 주입 완료 (memberId: \(memberId))")
+        #endif
+    }
+
+    func writeToKeychain(key: String, value: String) {
+        let service = "com.ump.product"
+        guard let data = value.data(using: .utf8) else { return }
+        let deleteQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: key
+        ]
+        SecItemDelete(deleteQuery as CFDictionary)
+        let addQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: key,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String:
+                kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+        SecItemAdd(addQuery as CFDictionary, nil)
     }
 
     func seedAppStorageProfileIfNeeded() {

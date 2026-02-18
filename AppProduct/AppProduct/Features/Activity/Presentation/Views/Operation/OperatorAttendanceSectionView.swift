@@ -16,16 +16,18 @@ struct OperatorAttendanceSectionView: View {
     // MARK: - Property
 
     @State private var viewModel: OperatorAttendanceViewModel
-    @State private var selectedPendingSession: OperatorSessionAttendance?
+    @State private var selectedPendingSessionId: UUID?
 
     private let container: DIContainer
     private let errorHandler: ErrorHandler
+    private let sessions: [Session]
 
     // MARK: - Init
 
-    init(container: DIContainer, errorHandler: ErrorHandler) {
+    init(container: DIContainer, errorHandler: ErrorHandler, sessions: [Session]) {
         self.container = container
         self.errorHandler = errorHandler
+        self.sessions = sessions
 
         let useCase = container.resolve(ActivityUseCaseProviding.self)
         _viewModel = State(initialValue: OperatorAttendanceViewModel(
@@ -35,6 +37,13 @@ struct OperatorAttendanceSectionView: View {
         ))
     }
     
+    private var selectedPendingSession: OperatorSessionAttendance? {
+        guard let id = selectedPendingSessionId,
+              case .loaded(let sessions) = viewModel.sessionsState
+        else { return nil }
+        return sessions.first(where: { $0.id == id })
+    }
+
     // MARK: - Constants
     
     private enum Constants {
@@ -54,7 +63,7 @@ struct OperatorAttendanceSectionView: View {
         .task {
             // 상위 컨테이너에서 한 번만 호출 (View 교체로 인한 Task 취소 방지)
             if viewModel.sessionsState.isIdle {
-                await viewModel.fetchSessions()
+                await viewModel.fetchSessions(from: sessions)
             }
         }
         .alertPrompt(item: $viewModel.alertPrompt)
@@ -71,29 +80,31 @@ struct OperatorAttendanceSectionView: View {
                 }
             )
         }
-        .sheet(item: $selectedPendingSession) { session in
-            OperatorPendingSheetView(
-                sessionAttendance: session,
-                actions: pendingSheetActions(for: session)
-            )
+        .sheet(isPresented: Binding(
+            get: { selectedPendingSessionId != nil },
+            set: { if !$0 { selectedPendingSessionId = nil } }
+        )) {
+            if let session = selectedPendingSession {
+                OperatorPendingSheetView(
+                    sessionAttendance: session,
+                    actions: pendingSheetActions(for: session)
+                )
+            }
         }
         .onChange(of: viewModel.sessionsState) { _, newState in
-            guard let selected = selectedPendingSession,
-                  case .loaded(let sessions) = newState,
+            guard let id = selectedPendingSessionId else { return }
+
+            guard case .loaded(let sessions) = newState,
                   let updated = sessions.first(where: {
-                      $0.id == selected.id
+                      $0.id == id
                   })
             else {
-                // 세션을 못 찾으면 시트 닫기
-                if selectedPendingSession != nil {
-                    selectedPendingSession = nil
-                }
+                selectedPendingSessionId = nil
                 return
             }
+
             if updated.pendingMembers.isEmpty {
-                selectedPendingSession = nil
-            } else {
-                selectedPendingSession = updated
+                selectedPendingSessionId = nil
             }
         }
     }
@@ -213,7 +224,7 @@ struct OperatorAttendanceSectionView: View {
     ) -> OperatorSessionCard.Actions {
         .init(
             onLocationTap: { viewModel.locationButtonTapped(session: sessionAttendance.session) },
-            onPendingListTap: { selectedPendingSession = sessionAttendance },
+            onPendingListTap: { selectedPendingSessionId = sessionAttendance.id },
             onReasonTap: { viewModel.reasonButtonTapped(member: $0) },
             onRejectTap: { viewModel.rejectButtonTapped(member: $0, sessionId: sessionAttendance.id) },
             onApproveTap: { viewModel.approveButtonTapped(member: $0, sessionId: sessionAttendance.id) }
@@ -230,7 +241,7 @@ struct OperatorAttendanceSectionView: View {
         } actions: {
             Button {
                 Task {
-                    await viewModel.fetchSessions()
+                    await viewModel.fetchSessions(from: sessions)
                 }
             } label: {
                 Image(systemName: "arrow.trianglehead.clockwise")
@@ -249,6 +260,7 @@ struct OperatorAttendanceSectionView: View {
 #Preview {
     OperatorAttendanceSectionView(
         container: AttendancePreviewData.container,
-        errorHandler: AttendancePreviewData.errorHandler
+        errorHandler: AttendancePreviewData.errorHandler,
+        sessions: AttendancePreviewData.sessions
     )
 }
