@@ -13,8 +13,8 @@ import SwiftUI
 /// 서버 API `roleType` 값과 1:1 매핑됩니다.
 ///
 /// 계층 구조 (높은 → 낮은)
-/// 1. superAdmin (총괄 관리자)
-/// 2. centralPresident / centralVicePresident (중앙 회장단)
+/// 1. superAdmin (시스템 관리자)
+/// 2. centralPresident / centralVicePresident (총괄/부총괄)
 /// 3. centralOperatingTeamMember / centralEducationTeamMember (중앙 운영진)
 /// 4. chapterPresident (지부장)
 /// 5. schoolPresident / schoolVicePresident (교내 회장단)
@@ -72,9 +72,9 @@ enum ManagementTeam: String, CaseIterable, Codable, Comparable {
     /// 한글 표시명
     var korean: String {
         switch self {
-        case .superAdmin:                   return "총괄단"
-        case .centralPresident:             return "중앙 회장"
-        case .centralVicePresident:         return "중앙 부회장"
+        case .superAdmin:                   return "시스템 관리자"
+        case .centralPresident:             return "총괄"
+        case .centralVicePresident:         return "부총괄"
         case .centralOperatingTeamMember:   return "중앙 운영팀"
         case .centralEducationTeamMember:   return "중앙 교육팀"
         case .chapterPresident:             return "지부장"
