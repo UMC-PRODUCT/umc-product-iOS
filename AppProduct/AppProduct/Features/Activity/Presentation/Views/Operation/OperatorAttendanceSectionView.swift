@@ -16,7 +16,7 @@ struct OperatorAttendanceSectionView: View {
     // MARK: - Property
 
     @State private var viewModel: OperatorAttendanceViewModel
-    @State private var selectedPendingSession: OperatorSessionAttendance?
+    @State private var selectedPendingSessionId: UUID?
 
     private let container: DIContainer
     private let errorHandler: ErrorHandler
@@ -37,6 +37,13 @@ struct OperatorAttendanceSectionView: View {
         ))
     }
     
+    private var selectedPendingSession: OperatorSessionAttendance? {
+        guard let id = selectedPendingSessionId,
+              case .loaded(let sessions) = viewModel.sessionsState
+        else { return nil }
+        return sessions.first(where: { $0.id == id })
+    }
+
     // MARK: - Constants
     
     private enum Constants {
@@ -73,29 +80,31 @@ struct OperatorAttendanceSectionView: View {
                 }
             )
         }
-        .sheet(item: $selectedPendingSession) { session in
-            OperatorPendingSheetView(
-                sessionAttendance: session,
-                actions: pendingSheetActions(for: session)
-            )
+        .sheet(isPresented: Binding(
+            get: { selectedPendingSessionId != nil },
+            set: { if !$0 { selectedPendingSessionId = nil } }
+        )) {
+            if let session = selectedPendingSession {
+                OperatorPendingSheetView(
+                    sessionAttendance: session,
+                    actions: pendingSheetActions(for: session)
+                )
+            }
         }
         .onChange(of: viewModel.sessionsState) { _, newState in
-            guard let selected = selectedPendingSession,
-                  case .loaded(let sessions) = newState,
+            guard let id = selectedPendingSessionId else { return }
+
+            guard case .loaded(let sessions) = newState,
                   let updated = sessions.first(where: {
-                      $0.id == selected.id
+                      $0.id == id
                   })
             else {
-                // 세션을 못 찾으면 시트 닫기
-                if selectedPendingSession != nil {
-                    selectedPendingSession = nil
-                }
+                selectedPendingSessionId = nil
                 return
             }
+
             if updated.pendingMembers.isEmpty {
-                selectedPendingSession = nil
-            } else {
-                selectedPendingSession = updated
+                selectedPendingSessionId = nil
             }
         }
     }
@@ -215,7 +224,7 @@ struct OperatorAttendanceSectionView: View {
     ) -> OperatorSessionCard.Actions {
         .init(
             onLocationTap: { viewModel.locationButtonTapped(session: sessionAttendance.session) },
-            onPendingListTap: { selectedPendingSession = sessionAttendance },
+            onPendingListTap: { selectedPendingSessionId = sessionAttendance.id },
             onReasonTap: { viewModel.reasonButtonTapped(member: $0) },
             onRejectTap: { viewModel.rejectButtonTapped(member: $0, sessionId: sessionAttendance.id) },
             onApproveTap: { viewModel.approveButtonTapped(member: $0, sessionId: sessionAttendance.id) }

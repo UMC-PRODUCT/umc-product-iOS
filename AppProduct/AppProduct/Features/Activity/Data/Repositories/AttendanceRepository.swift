@@ -107,7 +107,7 @@ final class AttendanceRepository: ChallengerAttendanceRepositoryProtocol,
             APIResponse<EmptyResult>.self,
             from: response.data
         )
-        _ = try apiResponse.unwrap()
+        try apiResponse.validateSuccess()
     }
 
     func rejectAttendance(recordId: Int) async throws {
@@ -118,7 +118,7 @@ final class AttendanceRepository: ChallengerAttendanceRepositoryProtocol,
             APIResponse<EmptyResult>.self,
             from: response.data
         )
-        _ = try apiResponse.unwrap()
+        try apiResponse.validateSuccess()
     }
 
     func checkAttendance(
