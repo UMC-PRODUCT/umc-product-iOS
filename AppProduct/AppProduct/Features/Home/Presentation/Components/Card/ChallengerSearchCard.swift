@@ -27,7 +27,7 @@ struct ChallengerSearchCard: View, Equatable {
     
     /// 뷰 재렌더링 최적화를 위한 Equatable 구현
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.participant.id == rhs.participant.id &&
+        lhs.participant.selectionKey == rhs.participant.selectionKey &&
         lhs.showCheck == rhs.showCheck &&
         lhs.isSelected == rhs.isSelected
     }

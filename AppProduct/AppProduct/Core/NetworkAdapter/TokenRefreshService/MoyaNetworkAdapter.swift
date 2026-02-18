@@ -387,7 +387,6 @@ fileprivate struct AnyEncodable: Encodable {
 // MARK: - NetworkVerboseLogger
 
 private enum NetworkVerboseLogger {
-    private static let maxBodyLength = 1_500
     private static let maxLineWidth = 120
 
     static func makeRequestID() -> String {
@@ -472,7 +471,7 @@ private enum NetworkVerboseLogger {
         }
 
         if !response.data.isEmpty {
-            printSection("body", truncated(formattedBody(from: response.data, shortenLongStrings: true)))
+            printSection("body", formattedBody(from: response.data, shortenLongStrings: true))
         } else {
             printSection("body", "(empty)")
         }
@@ -500,7 +499,7 @@ private enum NetworkVerboseLogger {
         if case let NetworkError.requestFailed(statusCode, data) = error {
             print("  status: \(statusCode)")
             if let data, !data.isEmpty {
-                printSection("error body", truncated(formattedBody(from: data, shortenLongStrings: true)))
+                printSection("error body", formattedBody(from: data, shortenLongStrings: true))
             } else {
                 printSection("error body", "(empty)")
             }
@@ -540,12 +539,6 @@ private enum NetworkVerboseLogger {
             .sorted { $0.key < $1.key }
             .map { "\($0.key): \($0.value)" }
             .joined(separator: "\n")
-    }
-
-    private static func truncated(_ value: String) -> String {
-        guard value.count > maxBodyLength else { return value }
-        let prefix = value.prefix(maxBodyLength)
-        return "\(prefix)\n... (truncated: \(value.count - maxBodyLength) chars)"
     }
 
     private static func printSection(_ title: String, _ content: String) {

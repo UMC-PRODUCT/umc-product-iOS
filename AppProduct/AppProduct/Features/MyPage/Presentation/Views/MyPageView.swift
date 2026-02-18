@@ -89,7 +89,7 @@ struct MyPageView: View {
         RetryContentUnavailableView(
             title: "로딩 실패",
             systemImage: "exclamationmark.triangle",
-            description: "마이페이지 데이터를 불러오지 못했습니다.",
+            description: error.userMessage,
             isRetrying: isRetryingProfile,
             topPadding: DefaultSpacing.spacing32
         ) {

@@ -44,7 +44,7 @@ struct SearchChallengerView: View {
                 ChallengerFormView(
                     challenger: .constant(viewModel.allChallengers),
                     showCheckBox: true,
-                    selectedIds: $viewModel.selectedMemberIds,
+                    selectedIds: $viewModel.selectedKeys,
                     tap: toggleSelection,
                     onBottomReached: {
                         Task { await viewModel.fetchNextPage() }
@@ -102,17 +102,17 @@ struct SearchChallengerView: View {
     
     // MARK: - Actions
     
-    /// 챌린저 선택/해제 토글 (memberId 기반)
+    /// 챌린저 선택/해제 토글 (행 식별 키 기반)
     ///
     /// 선택 시 `selectedChallengersMap`에 보관하여 검색 결과가 바뀌어도 선택 정보 유지
     private func toggleSelection(participant: ChallengerInfo) {
-        let id = participant.memberId
-        if viewModel.selectedMemberIds.contains(id) {
-            viewModel.selectedMemberIds.remove(id)
-            viewModel.selectedChallengersMap.removeValue(forKey: id)
+        let key = participant.selectionKey
+        if viewModel.selectedKeys.contains(key) {
+            viewModel.selectedKeys.remove(key)
+            viewModel.selectedChallengersMap.removeValue(forKey: key)
         } else {
-            viewModel.selectedMemberIds.insert(id)
-            viewModel.selectedChallengersMap[id] = participant
+            viewModel.selectedKeys.insert(key)
+            viewModel.selectedChallengersMap[key] = participant
         }
     }
 
@@ -127,9 +127,9 @@ struct SearchChallengerView: View {
     ///
     /// 상위 뷰에서 전달받은 `selectedChallengers`를 ViewModel의 선택 상태에 반영합니다.
     private func initializeSelectedIds() {
-        viewModel.selectedMemberIds = Set(selectedChallengers.map(\.memberId))
+        viewModel.selectedKeys = Set(selectedChallengers.map(\.selectionKey))
         for challenger in selectedChallengers {
-            viewModel.selectedChallengersMap[challenger.memberId] = challenger
+            viewModel.selectedChallengersMap[challenger.selectionKey] = challenger
         }
     }
     

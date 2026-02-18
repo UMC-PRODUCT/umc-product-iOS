@@ -37,20 +37,13 @@ struct MyPageProfileView: View {
             ToolBarCollection.ConfirmBtn(
                 action: { submitProfileUpdate() },
                 disable: !viewModel.canSubmit,
+                isLoading: viewModel.isUpdatingProfileImage,
                 dismissOnTap: false
             )
         })
         .onChange(of: viewModel.selectedPhotoItem) { _, _ in
             Task {
                 await viewModel.loadSelectedImage()
-            }
-        }
-        .overlay {
-            if viewModel.isUpdatingProfileImage {
-                Progress(
-                    message: "프로필 이미지를 저장하는 중입니다.",
-                    size: .regular
-                )
             }
         }
     }

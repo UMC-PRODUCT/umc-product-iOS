@@ -19,7 +19,8 @@
 	<string>$(KAKAO_KEY)</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string></string>
+		<string>kakaokompassauth</string>
+		<string>kakaoplus</string>
 	</array>
 	<key>UIAppFonts</key>
 	<array>

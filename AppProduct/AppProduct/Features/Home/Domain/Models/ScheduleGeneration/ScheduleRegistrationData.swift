@@ -56,4 +56,11 @@ struct ChallengerInfo: Identifiable, Equatable, Hashable {
     
     /// UMC 파트 및 부서 정보 (iOS, Web, Server 등)
     let part: UMCPartType
+
+    /// 검색/선택 UI에서 사용하는 안정적인 행 식별 키
+    ///
+    /// 동일 memberId라도 기수/파트가 다르면 별도 항목으로 취급합니다.
+    var selectionKey: String {
+        "\(memberId)|\(gen)|\(part.apiValue)"
+    }
 }

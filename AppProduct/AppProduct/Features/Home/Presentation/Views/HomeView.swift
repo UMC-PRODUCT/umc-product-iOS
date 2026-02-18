@@ -32,6 +32,9 @@ struct HomeView: View {
     /// 섹션별 재시도 로딩 상태
     @State private var isRetryingProfileSection: Bool = false
     @State private var isRetryingRecentNoticeSection: Bool = false
+    @State private var isScheduleCategoryLoading: Bool = false
+    @State private var scheduleCategories: [Int: ScheduleIconCategory] = [:]
+    @State private var scheduleClassificationKey: [Int] = []
 
     /// Path Store
     private var pathStore: PathStore {
@@ -40,6 +43,12 @@ struct HomeView: View {
 
     /// 화면 진입 시 초기 데이터 로딩 수행 여부
     private let shouldFetchOnTask: Bool
+
+    /// 일정 분류기를 공유해 모델/캐시 로딩 오버헤드를 줄입니다.
+    private static let sharedScheduleClassifierUseCase: ClassifyScheduleUseCase = {
+        let repository = ScheduleClassifierRepositoryImpl()
+        return ClassifyScheduleUseCaseImpl(repository: repository)
+    }()
     
     // MARK: - Init
     init(
@@ -116,7 +125,7 @@ struct HomeView: View {
     
     // MARK: - Season Info
     
-    /// 상단 기수 관련 정보 (남은 기간, 현재 기수 등)를 표시하는 카드 뷰
+    /// 상단 기 뷰
     @ViewBuilder
     private var seasonCard: some View {
         switch viewModel.seasonData {
@@ -200,29 +209,39 @@ struct HomeView: View {
     @ViewBuilder
     private var scheduleList: some View {
         let schedules = viewModel.getSchedules(selectedDate)
-        
-        if schedules.isEmpty {
-            emptySchedule
-        } else {
-            LazyVStack(spacing: DefaultSpacing.spacing8) {
-                ForEach(schedules, id: \.id) { schedule in
-                    Button(action: {
-                        // 일정 상세 화면으로 이동하며 선택 날짜를 함께 전달합니다.
-                        pathStore.homePath.append(
-                            .home(
-                                .detailSchedule(
-                                    scheduleId: schedule.scheduleId,
-                                    selectedDate: selectedDate
+
+        Group {
+            if schedules.isEmpty {
+                emptySchedule
+            } else if isScheduleCategoryLoading || !areScheduleCategoriesReady(for: schedules) {
+                LoadingView(.home(.seasonLoading))
+            } else {
+                LazyVStack(spacing: DefaultSpacing.spacing8) {
+                    ForEach(schedules, id: \.id) { schedule in
+                        Button(action: {
+                            // 일정 상세 화면으로 이동하며 선택 날짜를 함께 전달합니다.
+                            pathStore.homePath.append(
+                                .home(
+                                    .detailSchedule(
+                                        scheduleId: schedule.scheduleId,
+                                        selectedDate: selectedDate
+                                    )
                                 )
                             )
-                        )
-                    }) {
-                        ScheduleListCard(data: schedule)
-                            .equatable()
+                        }) {
+                            ScheduleListCard(
+                                data: schedule,
+                                category: scheduleCategories[schedule.scheduleId]
+                            )
+                                .equatable()
+                        }
+                        .buttonStyle(ScheduleCardPressStyle())
                     }
-                    .buttonStyle(ScheduleCardPressStyle())
                 }
             }
+        }
+        .task(id: scheduleClassificationTaskKey(for: schedules)) {
+            await classifyScheduleCategories(for: schedules)
         }
     }
     
@@ -233,6 +252,49 @@ struct HomeView: View {
                                description: Text("선택한 날짜에 등록된 일정이 없습니다.")
         )
         .glassEffect(.regular, in: .containerRelative)
+    }
+
+    @MainActor
+    private func classifyScheduleCategories(for schedules: [ScheduleData]) async {
+        let ids = schedules.map(\.scheduleId)
+
+        guard !ids.isEmpty else {
+            scheduleClassificationKey = []
+            isScheduleCategoryLoading = false
+            return
+        }
+
+        scheduleClassificationKey = ids
+        isScheduleCategoryLoading = true
+
+        var classified: [Int: ScheduleIconCategory] = [:]
+        await withTaskGroup(of: (Int, ScheduleIconCategory).self) { group in
+            for schedule in schedules {
+                group.addTask {
+                    let category = await Self.sharedScheduleClassifierUseCase.execute(title: schedule.title)
+                    return (schedule.scheduleId, category)
+                }
+            }
+
+            for await (scheduleId, category) in group {
+                classified[scheduleId] = category
+            }
+        }
+
+        // 스크롤/날짜 변경으로 대상이 바뀐 경우 이전 결과는 버립니다.
+        guard scheduleClassificationKey == ids else { return }
+        scheduleCategories.merge(classified) { _, new in new }
+        isScheduleCategoryLoading = false
+    }
+
+    private func areScheduleCategoriesReady(for schedules: [ScheduleData]) -> Bool {
+        schedules.allSatisfy { scheduleCategories[$0.scheduleId] != nil }
+    }
+
+    private func scheduleClassificationTaskKey(for schedules: [ScheduleData]) -> String {
+        schedules
+            .map { "\($0.scheduleId):\($0.title)" }
+            .joined(separator: "|")
     }
     
     // MARK: - Recent Notices

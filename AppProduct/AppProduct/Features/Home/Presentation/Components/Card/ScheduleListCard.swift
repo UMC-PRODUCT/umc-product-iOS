@@ -18,12 +18,15 @@ struct ScheduleListCard: View, Equatable {
     
     /// 표시할 일정 데이터
     let data: ScheduleData
+
+    /// 부모에서 미리 분류한 카테고리 (nil이면 카드 내부에서 분류)
+    private let resolvedCategory: ScheduleIconCategory?
     
     /// 일정 카테고리 (자동 분류됨, 기본값: .general)
     @State var category: ScheduleIconCategory = .general
     
     /// 분류 로딩 상태
-    @State var isLoading: Bool = true
+    @State var isLoading: Bool
 
     /// 카드마다 모델/캐시를 재로딩하지 않도록 분류기를 공유합니다.
     private static let sharedUseCase: ClassifyScheduleUseCase = {
@@ -50,8 +53,11 @@ struct ScheduleListCard: View, Equatable {
     
     /// ScheduleListCard 생성자
     /// - Parameter data: 표시할 일정 데이터
-    init(data: ScheduleData) {
+    init(data: ScheduleData, category: ScheduleIconCategory? = nil) {
         self.data = data
+        self.resolvedCategory = category
+        _category = State(initialValue: category ?? .general)
+        _isLoading = State(initialValue: category == nil)
     }
     
     var body: some View {
@@ -68,10 +74,14 @@ struct ScheduleListCard: View, Equatable {
                 .glass()
         }
         .task(id: data.id) {
+            if let resolvedCategory {
+                category = resolvedCategory
+                isLoading = false
+                return
+            }
+
             isLoading = true
-
             category = await Self.sharedUseCase.execute(title: data.title)
-
             isLoading = false
         }
     }
@@ -84,13 +94,20 @@ struct ScheduleListCard: View, Equatable {
                 .appFont(.calloutEmphasis, color: .grey900)
                 .lineLimit(Constants.lineLimit)
             // 참여 상태 + D-Day
-            Text("\(data.status) · \(dDayText)")
+            Text(statusText)
                 .appFont(.subheadline, color: .grey600)
         })
     }
 
+    private var statusText: String {
+        data.status == "종료됨" ? data.status : "\(data.status) · \(dDayText)"
+    }
+
     private var dDayText: String {
-        data.dDay == 0 ? "D-Day" : "D\(data.dDay)"
+        if data.dDay > 0 {
+            return "D+\(data.dDay)"
+        }
+        return "D-Day"
     }
     
     private var chevron: some View {

@@ -22,11 +22,11 @@ class SearchChallengerViewModel {
     /// 전체 챌린저 목록 데이터
     var allChallengers: [ChallengerInfo] = []
 
-    /// 현재 선택된 챌린저들의 memberId 목록 (서버 ID 기반, 검색 결과가 바뀌어도 유지)
-    var selectedMemberIds: Set<Int> = []
+    /// 현재 선택된 챌린저들의 행 식별 키 목록
+    var selectedKeys: Set<String> = []
 
     /// 선택된 챌린저 정보를 별도 보관 (검색 결과 교체 시에도 유지)
-    var selectedChallengersMap: [Int: ChallengerInfo] = [:]
+    var selectedChallengersMap: [String: ChallengerInfo] = [:]
 
     /// 검색창 입력 텍스트
     var searchText: String = ""
@@ -135,8 +135,9 @@ extension SearchChallengerViewModel {
 
             // 이름 또는 닉네임으로 챌린저 찾기
             if let matched = findChallenger(name: searchName, nickname: searchNickname) {
-                selectedMemberIds.insert(matched.memberId)
-                selectedChallengersMap[matched.memberId] = matched
+                let key = matched.selectionKey
+                selectedKeys.insert(key)
+                selectedChallengersMap[key] = matched
                 matchedCount += 1
             } else {
                 unmatchedNames.append("\(searchName)/\(searchNickname)")

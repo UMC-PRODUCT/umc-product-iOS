@@ -17,8 +17,8 @@ struct ChallengerFormView: View {
     /// 표시할 챌린저 목록 바인딩
     @Binding var challenger: [ChallengerInfo]
     
-    /// 현재 선택된 챌린저들의 memberId 집합 (체크박스 모드일 때 사용)
-    @Binding var selectedIds: Set<Int>
+    /// 현재 선택된 챌린저들의 행 식별 키 집합 (체크박스 모드일 때 사용)
+    @Binding var selectedIds: Set<String>
     
     /// 삭제 기능 활성화 여부 (true일 경우 스와이프로 삭제 가능)
     let isDeletAction: Bool
@@ -39,14 +39,14 @@ struct ChallengerFormView: View {
     ///   - challenger: 챌린저 목록 바인딩
     ///   - isDeletAction: 삭제 기능 활성화 여부 (기본값: false)
     ///   - showCheckBox: 체크박스 표시 여부 (기본값: false)
-    ///   - selectedIds: 선택된 memberId 집합 바인딩 (기본값: 빈 집합)
+    ///   - selectedIds: 선택된 행 식별 키 집합 바인딩 (기본값: 빈 집합)
     ///   - tap: 탭 액션 클로저 (기본값: nil)
     ///   - onBottomReached: 리스트 마지막 아이템 도달 시 호출되는 클로저 (페이지네이션용, 기본값: nil)
     init(
         challenger: Binding<[ChallengerInfo]>,
         isDeletAction: Bool = false,
         showCheckBox: Bool = false,
-        selectedIds: Binding<Set<Int>> = .constant([]),
+        selectedIds: Binding<Set<String>> = .constant([]),
         tap: ((ChallengerInfo) -> Void)? = nil,
         onBottomReached: (() -> Void)? = nil
     ) {
@@ -75,11 +75,11 @@ struct ChallengerFormView: View {
     @ViewBuilder
     private func section(part: UMCPartType) -> some View {
         Section(content: {
-            let forEach = ForEach(groupedByPart[part] ?? [], id: \.id) { participant in
+            let forEach = ForEach(groupedByPart[part] ?? [], id: \.selectionKey) { participant in
                 ChallengerSearchCard(
                     participant: participant,
                     showCheck: showCheckBox,
-                    isSelected: selectedIds.contains(participant.memberId)
+                    isSelected: selectedIds.contains(participant.selectionKey)
                 )
                 .equatable()
                 .contentShape(Rectangle()) // 터치 영역 확장
@@ -88,7 +88,7 @@ struct ChallengerFormView: View {
                 }
                 .onAppear {
                     // 마지막 아이템 도달 시 페이지네이션 트리거
-                    if participant.memberId == challenger.last?.memberId {
+                    if participant.selectionKey == challenger.last?.selectionKey {
                         onBottomReached?()
                     }
                 }

@@ -65,9 +65,9 @@ struct LightningInfoDTO: Codable {
         location = try container.decode(String.self, forKey: .location)
         openChatUrl = try container.decode(String.self, forKey: .openChatUrl)
 
-        if let intValue = try container.decodeIfPresent(Int.self, forKey: .maxParticipants) {
+        if let intValue = try? container.decode(Int.self, forKey: .maxParticipants) {
             maxParticipants = intValue
-        } else if let stringValue = try container.decodeIfPresent(String.self, forKey: .maxParticipants),
+        } else if let stringValue = try? container.decode(String.self, forKey: .maxParticipants),
                   let intValue = Int(stringValue) {
             maxParticipants = intValue
         } else {
