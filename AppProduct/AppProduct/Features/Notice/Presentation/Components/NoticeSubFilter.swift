@@ -23,7 +23,8 @@ struct NoticeSubFilter: View, Equatable {
     }
 
     private var subFilterItems: [NoticeSubFilterType] {
-        [.all, .staff]
+        /// !!!: 추후 운영진 필터 가리기 해제할 것
+        [.all, /*.staff*/]
     }
 
     var body: some View {
