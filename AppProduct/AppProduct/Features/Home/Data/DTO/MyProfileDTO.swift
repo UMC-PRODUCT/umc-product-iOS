@@ -169,9 +169,16 @@ extension MyProfileResponseDTO {
             )
         }
 
-        let gisuIdByGisu = Dictionary(
-            uniqueKeysWithValues: roles.map { ($0.gisu, $0.gisuId) }
-        )
+        let gisuIdByGisu = roles.reduce(into: [Int: Int]()) { partialResult, role in
+            // 동일 기수 역할이 여러 개일 수 있어 안전하게 병합한다.
+            if let existing = partialResult[role.gisu] {
+                if existing == 0, role.gisuId != 0 {
+                    partialResult[role.gisu] = role.gisuId
+                }
+            } else {
+                partialResult[role.gisu] = role.gisuId
+            }
+        }
         let generations: [GenerationData] = (challengerRecords ?? []).compactMap { record in
             let gisuId = gisuIdByGisu[record.gisu] ?? record.gisuId
             return record.toGenerationData(gisuId: gisuId)
