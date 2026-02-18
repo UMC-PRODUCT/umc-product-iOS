@@ -72,7 +72,14 @@ extension MyAttendanceItemModel {
         self.week = 0
         self.title = item.scheduleName
         self.startTime = Self.parseTimeString(item.startTime)
-        self.endTime = Self.parseTimeString(item.endTime)
+        var parsedEnd = Self.parseTimeString(item.endTime)
+        // FIXME: 자정 넘김 휴리스틱 — 서버가 ISO 8601 datetime 반환 시 제거 (#304) - [25.02.18] 이재원
+        if parsedEnd < self.startTime {
+            parsedEnd = Calendar.current.date(
+                byAdding: .day, value: 1, to: parsedEnd
+            ) ?? parsedEnd
+        }
+        self.endTime = parsedEnd
         self.status = itemStatus
         self.category = .general
     }

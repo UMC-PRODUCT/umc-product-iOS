@@ -30,7 +30,15 @@ final class ActivityRepository: ActivityRepositoryProtocol, @unchecked Sendable 
         let schedules = try await attendanceRepository
             .getAvailableSchedules()
         return schedules.map { schedule in
-            Session(
+            let startTime = Self.parseTime(schedule.startTime)
+            var endTime = Self.parseTime(schedule.endTime)
+            // FIXME: 자정 넘김 휴리스틱 — 서버가 ISO 8601 datetime 반환 시 제거 (#304) - [25.02.18] 이재원
+            if endTime < startTime {
+                endTime = Calendar.current.date(
+                    byAdding: .day, value: 1, to: endTime
+                ) ?? endTime
+            }
+            return Session(
                 info: SessionInfo(
                     sessionId: SessionID(
                         value: String(schedule.scheduleId)
@@ -39,8 +47,8 @@ final class ActivityRepository: ActivityRepositoryProtocol, @unchecked Sendable 
                     icon: .Activity.profile,
                     title: schedule.scheduleName,
                     week: 0,
-                    startTime: Self.parseTime(schedule.startTime),
-                    endTime: Self.parseTime(schedule.endTime),
+                    startTime: startTime,
+                    endTime: endTime,
                     location: Coordinate(
                         latitude: 37.582967,
                         longitude: 127.010527
