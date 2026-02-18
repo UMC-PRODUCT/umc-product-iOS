@@ -56,7 +56,7 @@ struct LinkSection: View {
 
             Button(action: {
                 // 유효한 URL이 있으면 열고, 없으면 Alert 표시
-                if let validURL = URL(string: linkRow.url), !linkRow.url.isEmpty {
+                if let validURL = Self.normalizedURL(linkRow.url) {
                     openURL(validURL)
                 } else {
                     alertInsert(linkRow.type.rawValue)
@@ -82,6 +82,25 @@ struct LinkSection: View {
     /// - Parameter profileLink: 표시할 프로필 링크 데이터
     /// - Returns: MyPageSectionRow 뷰
     private func row(_ profileLink: ProfileLink) -> some View {
-        MyPageSectionRow(icon: profileLink.type.icon, title: profileLink.type.title, rightImage: "arrow.up.right")
+            MyPageSectionRow(icon: profileLink.type.icon, title: profileLink.type.title, rightImage: "arrow.up.right")
+    }
+
+    /// URL 문자열을 정규화하여 유효한 URL을 반환합니다.
+    ///
+    /// 스킴이 없는 경우 `https://`를 자동 보완합니다.
+    /// 빈 문자열이거나 유효하지 않으면 `nil`을 반환합니다.
+    private static func normalizedURL(_ rawURL: String) -> URL? {
+        let trimmed = rawURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let directURL = URL(string: trimmed), directURL.scheme != nil {
+            return directURL
+        }
+
+        if let withHTTPS = URL(string: "https://\(trimmed)") {
+            return withHTTPS
+        }
+
+        return nil
     }
 }

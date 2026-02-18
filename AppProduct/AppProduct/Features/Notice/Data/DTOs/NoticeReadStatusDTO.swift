@@ -16,6 +16,14 @@ struct NoticeReadStaticsDTO: Codable {
     let unreadCount: String
     let readRate: String
 
+    /// 테스트/프리뷰 및 낙관적 UI 갱신용 멤버와이즈 이니셜라이저
+    init(totalCount: String, readCount: String, unreadCount: String, readRate: String) {
+        self.totalCount = totalCount
+        self.readCount = readCount
+        self.unreadCount = unreadCount
+        self.readRate = readRate
+    }
+
     private enum CodingKeys: String, CodingKey {
         case totalCount
         case readCount
@@ -23,6 +31,7 @@ struct NoticeReadStaticsDTO: Codable {
         case readRate
     }
 
+    /// 커스텀 디코더: 서버 응답의 숫자/문자열 타입 불일치를 유연하게 처리합니다.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.totalCount = container.decodeFlexibleString(forKey: .totalCount)

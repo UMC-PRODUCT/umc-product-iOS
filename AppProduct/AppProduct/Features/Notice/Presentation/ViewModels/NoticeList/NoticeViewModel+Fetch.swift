@@ -98,12 +98,19 @@ extension NoticeViewModel {
             let request = buildNoticeListRequest(gisuId: gisuId, page: page)
             let response = try await requestAction(request)
             applyPagedResponse(response, page: page)
+        } catch let error as RepositoryError {
+            handleFetchError(.repository(error), page: page, action: "fetchNotices", failure: error)
         } catch let error as DomainError {
-            handleFetchError(.domain(error), page: page)
+            handleFetchError(.domain(error), page: page, action: "fetchNotices", failure: error)
         } catch let error as NetworkError {
-            handleFetchError(.network(error), page: page)
+            handleFetchError(.network(error), page: page, action: "fetchNotices", failure: error)
         } catch {
-            handleFetchError(.unknown(message: error.localizedDescription), page: page)
+            handleFetchError(
+                .unknown(message: error.localizedDescription),
+                page: page,
+                action: "fetchNotices",
+                failure: error
+            )
         }
     }
 
@@ -118,7 +125,12 @@ extension NoticeViewModel {
         guard pagingState.begin(page: page) else { return nil }
 
         guard let gisuId = currentSelectedGisuId() else {
-            handleFetchError(.domain(.custom(message: "기수 정보를 불러오지 못했습니다.")), page: page)
+            handleFetchError(
+                .domain(.custom(message: "기수 정보를 불러오지 못했습니다.")),
+                page: page,
+                action: "fetchNotices",
+                failure: DomainError.custom(message: "기수 정보를 불러오지 못했습니다.")
+            )
             return nil
         }
         return gisuId
@@ -130,6 +142,32 @@ extension NoticeViewModel {
     ///   - page: 조회한 페이지 인덱스
     @MainActor
     private func applyPagedResponse(_ response: NoticePageDTO<NoticeDTO>, page: Int) {
+        #if DEBUG
+        print(
+            "[NoticeViewModel] applyPagedResponse " +
+            "page=\(page) " +
+            "contentCount=\(response.content.count) " +
+            "totalElements=\(response.totalElements) " +
+            "hasNext=\(response.hasNext)"
+        )
+        #endif
+
+        if page == 0,
+           response.content.isEmpty,
+           (Int(response.totalElements) ?? 0) > 0 {
+            let decodeError = RepositoryError.decodingError(
+                detail: "공지 목록 응답 불일치: totalElements=\(response.totalElements), content=0"
+            )
+
+            handleFetchError(
+                .repository(decodeError),
+                page: page,
+                action: "fetchNotices",
+                failure: decodeError
+            )
+            return
+        }
+
         let items = response.content.map { $0.toItemModel() }
         pagingState.applySuccess(page: page, hasNextPage: response.hasNext)
 
@@ -146,11 +184,18 @@ extension NoticeViewModel {
     ///   - error: 화면에 표시할 앱 에러
     ///   - page: 실패한 페이지 인덱스
     @MainActor
-    private func handleFetchError(_ error: AppError, page: Int) {
+    private func handleFetchError(_ error: AppError, page: Int, action: String, failure: Error) {
         if page == 0 {
             noticeItems = .failed(error)
         }
         pagingState.applyFailure()
+        errorHandler?.handle(
+            failure,
+            context: ErrorContext(
+                feature: "Notice",
+                action: action
+            )
+        )
     }
 
     /// NoticeListRequestDTO 생성

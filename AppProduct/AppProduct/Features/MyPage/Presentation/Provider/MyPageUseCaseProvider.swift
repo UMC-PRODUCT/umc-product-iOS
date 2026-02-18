@@ -14,6 +14,8 @@ import Foundation
 protocol MyPageUseCaseProviding {
     var fetchMyPageProfileUseCase: FetchMyPageProfileUseCaseProtocol { get }
     var updateMyPageProfileImageUseCase: UpdateMyPageProfileImageUseCaseProtocol { get }
+    /// 프로필 외부 링크 수정 UseCase
+    var updateMyPageProfileLinksUseCase: UpdateMyPageProfileLinksUseCaseProtocol { get }
     var deleteMemberUseCase: DeleteMemberUseCaseProtocol { get }
     var fetchMyPostsUseCase: FetchMyPostsUseCaseProtocol { get }
     var fetchMyCommentedPostsUseCase: FetchMyCommentedPostsUseCaseProtocol { get }
@@ -30,6 +32,7 @@ final class MyPageUseCaseProvider: MyPageUseCaseProviding {
 
     let fetchMyPageProfileUseCase: FetchMyPageProfileUseCaseProtocol
     let updateMyPageProfileImageUseCase: UpdateMyPageProfileImageUseCaseProtocol
+    let updateMyPageProfileLinksUseCase: UpdateMyPageProfileLinksUseCaseProtocol
     let deleteMemberUseCase: DeleteMemberUseCaseProtocol
     let fetchMyPostsUseCase: FetchMyPostsUseCaseProtocol
     let fetchMyCommentedPostsUseCase: FetchMyCommentedPostsUseCaseProtocol
@@ -44,6 +47,9 @@ final class MyPageUseCaseProvider: MyPageUseCaseProviding {
             repository: repository
         )
         self.updateMyPageProfileImageUseCase = UpdateMyPageProfileImageUseCase(
+            repository: repository
+        )
+        self.updateMyPageProfileLinksUseCase = UpdateMyPageProfileLinksUseCase(
             repository: repository
         )
         self.deleteMemberUseCase = DeleteMemberUseCase(

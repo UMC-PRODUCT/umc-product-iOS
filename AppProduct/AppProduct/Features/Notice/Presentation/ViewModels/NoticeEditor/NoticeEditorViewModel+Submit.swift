@@ -67,6 +67,9 @@ extension NoticeEditorViewModel {
         } catch let error as DomainError {
             createState = .failed(.domain(error))
             handleError(error, action: "createNotice")
+        } catch let error as RepositoryError {
+            createState = .failed(.repository(error))
+            handleError(error, action: "createNotice")
         } catch let error as NetworkError {
             createState = .failed(.network(error))
             handleError(error, action: "createNotice")
@@ -144,14 +147,11 @@ extension NoticeEditorViewModel {
                     try await noticeUseCase.getDetailNotice(noticeId: noticeId)
                 )
             }
-            alertPrompt = AlertPrompt(
-                id: .init(),
-                title: "수정 완료",
-                message: "공지사항이 수정되었습니다.",
-                positiveBtnTitle: "확인"
-            )
         } catch let error as DomainError {
             createState = .failed(.domain(error))
+            handleError(error, action: "updateNotice")
+        } catch let error as RepositoryError {
+            createState = .failed(.repository(error))
             handleError(error, action: "updateNotice")
         } catch let error as NetworkError {
             createState = .failed(.network(error))
@@ -185,6 +185,10 @@ extension NoticeEditorViewModel {
         let selectedBranchId = subCategorySelection.selectedBranch?.id
         let selectedSchoolFromSheet = subCategorySelection.selectedSchool?.id
         let mySchoolId = schoolId > 0 ? schoolId : nil
+        let isSchoolCoreRole = memberRole == .schoolPresident
+            || memberRole == .schoolVicePresident
+            || memberRole == .schoolPartLeader
+            || memberRole == .schoolEtcAdmin
         var selectedParts = subCategorySelection.selectedParts.isEmpty
             ? nil
             : Array(subCategorySelection.selectedParts)
@@ -197,11 +201,11 @@ extension NoticeEditorViewModel {
         switch selectedCategory {
         case .all:
             // 전체 기수: targetGisuId = null, 지부/파트는 전체
-            // 학교 선택 칩을 통해 특정 학교를 선택한 경우에만 targetSchoolId 지정
+            // 학교 회장단은 학교를 본인 학교로 고정합니다.
             return TargetInfoDTO(
                 targetGisuId: 0,
                 targetChapterId: nil,
-                targetSchoolId: selectedSchoolFromSheet,
+                targetSchoolId: isSchoolCoreRole ? mySchoolId : selectedSchoolFromSheet,
                 targetParts: nil as [UMCPartType]?
             )
         case .central:
@@ -213,18 +217,21 @@ extension NoticeEditorViewModel {
                 targetParts: selectedParts
             )
         case .branch:
+            let isChapterPresident = memberRole == .chapterPresident
             return TargetInfoDTO(
                 targetGisuId: currentGeneration,
-                // 지부 카테고리: 지부 단일 선택 또는 학교 단일 선택
-                targetChapterId: selectedSchoolFromSheet == nil ? selectedBranchId : nil,
-                targetSchoolId: selectedSchoolFromSheet,
+                // CHAPTER_PRESIDENT는 본인 지부로 고정합니다.
+                targetChapterId: isChapterPresident
+                    ? (resolvedChapterId > 0 ? resolvedChapterId : nil)
+                    : (selectedSchoolFromSheet == nil ? selectedBranchId : nil),
+                targetSchoolId: isChapterPresident ? nil : selectedSchoolFromSheet,
                 targetParts: selectedParts
             )
         case .school:
             return TargetInfoDTO(
                 targetGisuId: currentGeneration,
                 targetChapterId: nil,
-                targetSchoolId: selectedSchoolFromSheet ?? mySchoolId,
+                targetSchoolId: isSchoolCoreRole ? mySchoolId : (selectedSchoolFromSheet ?? mySchoolId),
                 targetParts: selectedParts
             )
         case .part(let part):

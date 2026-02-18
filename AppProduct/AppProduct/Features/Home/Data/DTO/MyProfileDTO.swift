@@ -30,6 +30,8 @@ struct MyProfileResponseDTO: Codable {
     let schoolName: String
     /// 프로필 이미지 URL
     let profileImageLink: String?
+    /// 외부 프로필 링크
+    let profile: MyProfileExternalLinksDTO?
     /// 멤버 상태 (ACTIVE / INACTIVE / WITHDRAWN)
     let status: MemberStatus
     /// 기수별 역할 목록
@@ -45,6 +47,7 @@ struct MyProfileResponseDTO: Codable {
         case schoolId
         case schoolName
         case profileImageLink
+        case profile
         case status
         case roles
         case challengerRecords
@@ -59,9 +62,41 @@ struct MyProfileResponseDTO: Codable {
         schoolId = try container.decodeIntFlexibleIfPresent(forKey: .schoolId) ?? 0
         schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
         profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
+        profile = try container.decodeIfPresent(MyProfileExternalLinksDTO.self, forKey: .profile)
         status = try container.decodeIfPresent(MemberStatus.self, forKey: .status) ?? .inactive
         roles = try container.decodeIfPresent([RoleDTO].self, forKey: .roles) ?? []
         challengerRecords = try container.decodeIfPresent([ChallengerMemberDTO].self, forKey: .challengerRecords) ?? []
+    }
+}
+
+// MARK: - External Links DTO
+
+/// 내 프로필 응답 내 `profile` 하위 객체
+struct MyProfileExternalLinksDTO: Codable {
+    let id: Int?
+    let linkedIn: String?
+    let instagram: String?
+    let github: String?
+    let blog: String?
+    let personal: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case linkedIn
+        case instagram
+        case github
+        case blog
+        case personal
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIntFlexibleIfPresent(forKey: .id)
+        linkedIn = try container.decodeIfPresent(String.self, forKey: .linkedIn)
+        instagram = try container.decodeIfPresent(String.self, forKey: .instagram)
+        github = try container.decodeIfPresent(String.self, forKey: .github)
+        blog = try container.decodeIfPresent(String.self, forKey: .blog)
+        personal = try container.decodeIfPresent(String.self, forKey: .personal)
     }
 }
 

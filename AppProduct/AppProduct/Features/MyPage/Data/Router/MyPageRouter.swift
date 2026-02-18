@@ -15,8 +15,12 @@ import Moya
 enum MyPageRouter {
     /// 내 프로필 조회
     case getMyProfile
+    /// 특정 멤버 프로필 조회
+    case getMemberProfile(memberId: Int)
     /// 회원 정보 수정 (프로필 이미지 ID 반영)
     case patchMember(request: UpdateMemberProfileImageRequestDTO)
+    /// 회원 정보 수정 (외부 링크 반영)
+    case patchMemberProfileLinks(request: UpdateMemberProfileLinksRequestDTO)
     /// 회원 탈퇴
     case deleteMember
     /// 내가 쓴 글 목록
@@ -37,8 +41,12 @@ extension MyPageRouter: BaseTargetType {
         switch self {
         case .getMyProfile:
             return "/api/v1/member/me"
+        case .getMemberProfile(let memberId):
+            return "/api/v1/member/profile/\(memberId)"
         case .patchMember:
             return "/api/v1/member"
+        case .patchMemberProfileLinks:
+            return "/api/v1/member/profile/links"
         case .deleteMember:
             return "/api/v1/member"
         case .getMyPosts:
@@ -56,7 +64,11 @@ extension MyPageRouter: BaseTargetType {
         switch self {
         case .getMyProfile:
             return .get
+        case .getMemberProfile:
+            return .get
         case .patchMember:
+            return .patch
+        case .patchMemberProfileLinks:
             return .patch
         case .deleteMember:
             return .delete
@@ -71,7 +83,11 @@ extension MyPageRouter: BaseTargetType {
         switch self {
         case .getMyProfile, .deleteMember:
             return .requestPlain
+        case .getMemberProfile:
+            return .requestPlain
         case .patchMember(let request):
+            return .requestJSONEncodable(request)
+        case .patchMemberProfileLinks(let request):
             return .requestJSONEncodable(request)
         case .getMyPosts(let query),
              .getCommentedPosts(let query),

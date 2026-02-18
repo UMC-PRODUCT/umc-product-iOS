@@ -78,9 +78,16 @@ fileprivate struct HomeBottonAccessoryView: View {
 fileprivate struct NoticeAccessoryView: View {
     @Environment(\.di) private var di
     @AppStorage(AppStorageKey.noticeSelectedGisuId) private var noticeSelectedGisuId: Int = 0
+    @AppStorage(AppStorageKey.memberRole) private var memberRoleRaw: String = ""
 
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
+    }
+
+    /// 중앙 운영 사무국원은 공지 작성 권한이 없어 작성 버튼을 노출하지 않습니다.
+    private var canShowCreateButton: Bool {
+        let role = ManagementTeam(rawValue: memberRoleRaw)
+        return role != .centralOperatingTeamMember && role != .challenger
     }
 
     /// 에디터에 전달할 기수 ID (0이면 nil로 변환)
@@ -90,7 +97,7 @@ fileprivate struct NoticeAccessoryView: View {
 
     var body: some View {
         Group {
-            if pathStore.noticePath.isEmpty {
+            if pathStore.noticePath.isEmpty && canShowCreateButton {
                 Button(action: {
                     pathStore.noticePath.append(
                         .notice(.editor(mode: .create, selectedGisuId: selectedGisuId))

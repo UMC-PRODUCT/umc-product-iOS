@@ -16,17 +16,20 @@ struct NoticeReadStatusButton: View {
     let confirmedCount: Int
     let totalCount: Int
     let readRate: Double?
+    let isLoading: Bool
     let action: () -> Void
 
     init(
         confirmedCount: Int,
         totalCount: Int,
         readRate: Double? = nil,
+        isLoading: Bool = false,
         action: @escaping () -> Void
     ) {
         self.confirmedCount = confirmedCount
         self.totalCount = totalCount
         self.readRate = readRate
+        self.isLoading = isLoading
         self.action = action
     }
     
@@ -47,6 +50,9 @@ struct NoticeReadStatusButton: View {
     }
     
     private var progressText: String {
+        if isLoading {
+            return "불러오는 중..."
+        }
         let percentage = Int(progress * 100)
         return "\(confirmedCount)/\(totalCount)명 (\(percentage)%)"
     }
@@ -88,9 +94,15 @@ struct NoticeReadStatusButton: View {
                 .foregroundStyle(.grey000)
                 
                 // 중간: Gauge
-                Gauge(value: progress, in: 0...1) {}
-                    .gaugeStyle(.linearCapacity)
-                    .tint(progressGradient)
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(.linear)
+                        .tint(.grey400)
+                } else {
+                    Gauge(value: progress, in: 0...1) {}
+                        .gaugeStyle(.linearCapacity)
+                        .tint(progressGradient)
+                }
                 
                 // 하단: 안내 텍스트
                 Text("터치하여 미확인 인원 관리하기")
@@ -105,6 +117,7 @@ struct NoticeReadStatusButton: View {
                     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
             }
         }
+        .disabled(isLoading)
     }
 }
 
@@ -122,6 +135,14 @@ struct NoticeReadStatusButton: View {
         
         NoticeReadStatusButton(confirmedCount: 0, totalCount: 10) {
             print("Tapped")
+        }
+
+        NoticeReadStatusButton(
+            confirmedCount: 0,
+            totalCount: 0,
+            isLoading: true
+        ) {
+            print("Loading")
         }
     }
     .padding()

@@ -15,40 +15,106 @@ struct NoticeSubFilter: View, Equatable {
 
     static func == (lhs: NoticeSubFilter, rhs: NoticeSubFilter) -> Bool {
         lhs.viewModel.selectedSubFilter == rhs.viewModel.selectedSubFilter &&
-        lhs.viewModel.selectedPart == rhs.viewModel.selectedPart
+        lhs.viewModel.selectedPart == rhs.viewModel.selectedPart &&
+        lhs.viewModel.selectedMainFilter == rhs.viewModel.selectedMainFilter &&
+        lhs.viewModel.subFilterChips == rhs.viewModel.subFilterChips
     }
 
     private enum Constants {
         static let hstackSpacing: CGFloat = 8
     }
 
-    private var subFilterItems: [NoticeSubFilterType] {
-        /// !!!: 추후 운영진 필터 가리기 해제할 것
-        [.all, /*.staff*/]
-    }
-
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Constants.hstackSpacing) {
-                ForEach(subFilterItems) { filter in
-                    filterChip(for: filter)
+                ForEach(viewModel.subFilterChips) { chip in
+                    chipView(for: chip)
                 }
-                PartFilterMenu(viewModel: viewModel)
-                    .equatable()
             }
             .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
     }
 
+    /// 칩 타입에 따라 ChipButton 또는 PartFilterMenu를 반환합니다.
     @ViewBuilder
-    private func filterChip(for filter: NoticeSubFilterType) -> some View {
-        ChipButton(
-            filter.labelText,
-            isSelected: viewModel.selectedSubFilter == filter
-        ) {
-            viewModel.selectSubFilter(filter)
+    private func chipView(for chip: NoticeListSubFilterChip) -> some View {
+        switch chip {
+        case .part:
+            PartFilterMenu(viewModel: viewModel)
+                .equatable()
+        case .all, .branch, .school:
+            ChipButton(chipDisplayTitle(chip), isSelected: isChipSelected(chip)) {
+                handleChipTap(chip)
+            }
+            .buttonSize(.medium)
         }
-        .buttonSize(.medium)
+    }
+
+    /// 칩의 선택 상태를 판단합니다.
+    ///
+    /// - all: 파트가 미선택이면 선택 상태
+    /// - branch: 현재 메인필터가 지부이면 선택 상태
+    /// - school: 현재 메인필터가 학교이고 파트 미선택이면 선택 상태
+    /// - part: 파트가 선택되었으면 선택 상태
+    private func isChipSelected(_ chip: NoticeListSubFilterChip) -> Bool {
+        switch chip {
+        case .all:
+            return viewModel.selectedPart == nil
+        case .branch:
+            if case .branch = viewModel.selectedMainFilter { return true }
+            return false
+        case .school:
+            if case .school = viewModel.selectedMainFilter {
+                return viewModel.selectedPart == nil
+            }
+            return false
+        case .part:
+            return viewModel.selectedPart != nil
+        }
+    }
+
+    /// 칩 탭 시 메인필터 전환 또는 파트 초기화를 수행합니다.
+    private func handleChipTap(_ chip: NoticeListSubFilterChip) {
+        switch chip {
+        case .all:
+            viewModel.selectPart(nil)
+        case .branch:
+            let branchFilter = viewModel.mainFilterItems.first {
+                if case .branch = $0 { return true }
+                return false
+            }
+            if let branchFilter {
+                viewModel.selectMainFilter(branchFilter)
+            }
+        case .school:
+            // 학교 메인 탭에서는 "전체(학교 전체)" 칩으로 동작합니다.
+            if case .school = viewModel.selectedMainFilter {
+                viewModel.selectPart(nil)
+                return
+            }
+            let schoolFilter = viewModel.mainFilterItems.first {
+                if case .school = $0 { return true }
+                return false
+            }
+            if let schoolFilter {
+                viewModel.selectMainFilter(schoolFilter)
+            }
+        case .part:
+            return
+        }
+    }
+
+    /// 칩 라벨 텍스트를 반환합니다. 학교 메인탭에서는 "전체"로 표시합니다.
+    private func chipDisplayTitle(_ chip: NoticeListSubFilterChip) -> String {
+        switch chip {
+        case .school:
+            if case .school = viewModel.selectedMainFilter {
+                return "전체"
+            }
+            return chip.labelText
+        default:
+            return chip.labelText
+        }
     }
 }
 

@@ -50,7 +50,7 @@ struct NoticeImageCard: View {
     }
 
     private func thumbnailImage(url: String, index: Int) -> some View {
-        KFImage(URL(string: url))
+        KFImage(resolveNoticeImageURL(from: url))
             .placeholder {
                 Progress(size: .regular)
                     .frame(width: Constants.imageSize, height: Constants.imageSize)
@@ -127,7 +127,7 @@ struct ImageViewerScreen: View {
 
     @ViewBuilder
     private func blurredBackgroundImage(url: String) -> some View {
-        let image = KFImage(URL(string: url))
+        let image = KFImage(resolveNoticeImageURL(from: url))
             .placeholder {
                 Color.black
             }
@@ -145,7 +145,7 @@ struct ImageViewerScreen: View {
     }
 
     private func foregroundImage(url: String) -> some View {
-        KFImage(URL(string: url))
+        KFImage(resolveNoticeImageURL(from: url))
             .placeholder {
                 Progress(
                     progressColor: .grey200,
@@ -183,7 +183,8 @@ struct ImageViewerScreen: View {
     // MARK: - Prefetch
 
     private func startPrefetching() {
-        let urls = imageURLs.compactMap(URL.init(string:))
+        let urls = imageURLs
+            .compactMap(resolveNoticeImageURL(from:))
         guard !urls.isEmpty else { return }
 
         let prefetcher = ImagePrefetcher(urls: urls)
@@ -195,6 +196,24 @@ struct ImageViewerScreen: View {
         prefetcher?.stop()
         prefetcher = nil
     }
+
+}
+
+// MARK: - Image URL Resolver
+
+/// 공지 이미지 문자열을 URL로 변환합니다.
+///
+/// 절대 URL이면 그대로, 상대 식별값(업로드 파일 ID)이면 서버 파일 조회 API 경로로 합성합니다.
+private func resolveNoticeImageURL(from rawURL: String) -> URL? {
+    let trimmed = rawURL.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return nil }
+
+    if let absoluteURL = URL(string: trimmed), absoluteURL.scheme != nil {
+        return absoluteURL
+    }
+
+    guard let baseURL = URL(string: Config.baseURL) else { return nil }
+    return baseURL.appendingPathComponent("api/v1/storage/\(trimmed)")
 }
 
 // MARK: - KFImage Styling

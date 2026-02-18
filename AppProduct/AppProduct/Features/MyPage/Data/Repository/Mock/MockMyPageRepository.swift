@@ -13,12 +13,36 @@ final class MockMyPageRepository: MyPageRepositoryProtocol {
         MyPageMockData.profile
     }
 
+    func fetchMemberProfile(memberId: Int) async throws -> MemberProfileSummary {
+        let profile = MyPageMockData.profile
+        let latestRole = profile.activityLogs
+            .sorted { $0.role > $1.role }
+            .first
+        return MemberProfileSummary(
+            memberId: "\(memberId)",
+            name: profile.challangerInfo.name,
+            nickname: profile.challangerInfo.nickname,
+            generation: profile.challangerInfo.gen,
+            roleName: latestRole?.role.korean ?? "챌린저",
+            profileImageURL: profile.challangerInfo.profileImage
+        )
+    }
+
     func updateProfileImage(
         imageData: Data,
         fileName: String,
         contentType: String
     ) async throws -> ProfileData {
         MyPageMockData.profile
+    }
+
+    func updateProfileLinks(
+        _ links: [ProfileLink]
+    ) async throws -> ProfileData {
+        let target = MyPageMockData.profile
+        var profile = target
+        profile.profileLink = links
+        return profile
     }
 
     func deleteMember() async throws {}

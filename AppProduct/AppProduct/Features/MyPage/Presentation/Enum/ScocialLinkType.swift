@@ -49,4 +49,30 @@ enum SocialLinkType: String, CaseIterable {
         case .blog: return "https://yourblog.com"
         }
     }
+
+    /// API 요청/응답에서 사용하는 type 문자열
+    var apiType: String {
+        switch self {
+        case .github:
+            return "GITHUB"
+        case .linkedin:
+            return "LINKEDIN"
+        case .blog:
+            return "BLOG"
+        }
+    }
+
+    /// API 문자열에서 SocialLinkType을 유추합니다.
+    init?(apiType: String) {
+        switch apiType.uppercased() {
+        case "GITHUB":
+            self = .github
+        case "LINKEDIN":
+            self = .linkedin
+        case "BLOG":
+            self = .blog
+        default:
+            return nil
+        }
+    }
 }
