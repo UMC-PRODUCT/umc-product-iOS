@@ -204,38 +204,17 @@ struct PageDTO<T: Codable>: Codable {
     /// 현재 페이지 항목 목록
     let content: [T]
     /// 현재 페이지 번호 (0부터 시작)
-    let page: Int
+    let page: String
     /// 한 페이지 항목 수
-    let size: Int
+    let size: String
     /// 전체 항목 수
-    let totalElements: Int
+    let totalElements: String
     /// 전체 페이지 수
-    let totalPages: Int
+    let totalPages: String
     /// 다음 페이지 존재 여부
     let hasNext: Bool
     /// 이전 페이지 존재 여부
     let hasPrevious: Bool
-
-    private enum CodingKeys: String, CodingKey {
-        case content
-        case page
-        case size
-        case totalElements
-        case totalPages
-        case hasNext
-        case hasPrevious
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        content = try container.decodeIfPresent([T].self, forKey: .content) ?? []
-        page = try container.decodeIntFlexibleIfPresent(forKey: .page) ?? 0
-        size = try container.decodeIntFlexibleIfPresent(forKey: .size) ?? 0
-        totalElements = try container.decodeIntFlexibleIfPresent(forKey: .totalElements) ?? 0
-        totalPages = try container.decodeIntFlexibleIfPresent(forKey: .totalPages) ?? 0
-        hasNext = try container.decodeBoolFlexibleIfPresent(forKey: .hasNext) ?? false
-        hasPrevious = try container.decodeBoolFlexibleIfPresent(forKey: .hasPrevious) ?? false
-    }
 }
 
 private extension KeyedDecodingContainer {

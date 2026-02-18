@@ -49,7 +49,7 @@ struct PostListItemDTO: Codable {
 struct LightningInfoDTO: Codable {
     let meetAt: String
     let location: String
-    let maxParticipants: Int
+    let maxParticipants: String
     let openChatUrl: String
 
     private enum CodingKeys: String, CodingKey {
@@ -65,17 +65,12 @@ struct LightningInfoDTO: Codable {
         location = try container.decode(String.self, forKey: .location)
         openChatUrl = try container.decode(String.self, forKey: .openChatUrl)
 
-        if let intValue = try? container.decode(Int.self, forKey: .maxParticipants) {
-            maxParticipants = intValue
-        } else if let stringValue = try? container.decode(String.self, forKey: .maxParticipants),
-                  let intValue = Int(stringValue) {
-            maxParticipants = intValue
+        if let stringValue = try? container.decode(String.self, forKey: .maxParticipants) {
+            maxParticipants = stringValue
+        } else if let intValue = try? container.decode(Int.self, forKey: .maxParticipants) {
+            maxParticipants = String(intValue)
         } else {
-            throw DecodingError.dataCorruptedError(
-                forKey: .maxParticipants,
-                in: container,
-                debugDescription: "Expected Int or String-convertible Int"
-            )
+            maxParticipants = "0"
         }
     }
     
@@ -88,7 +83,7 @@ struct LightningInfoDTO: Codable {
         return CommunityLightningInfo(
             meetAt: parsedMeetAt,
             location: location,
-            maxParticipants: maxParticipants,
+            maxParticipants: Int(maxParticipants) ?? 0,
             openChatUrl: openChatUrl
         )
     }
@@ -134,7 +129,7 @@ extension PostListItemDTO {
             scrapCount: 0,
             isLiked: isLiked,
             isAuthor: isAuthor,
-            lightningInfo: lightningInfo?.toModel()
+            lightningInfo: lightningInfo?.toModel(),
         )
     }
 }
