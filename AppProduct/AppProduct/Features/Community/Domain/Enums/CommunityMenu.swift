@@ -10,8 +10,8 @@ import Foundation
 enum CommunityMenu: String, Identifiable, CaseIterable {
     case all = "전체"
     case question = "질문"
-    case party = "번개모임"
-    case fame = "명예의전당"
+    case party = "번개 모임"
+    case fame = "명예의 전당"
     
     var id: String { self.rawValue }
     

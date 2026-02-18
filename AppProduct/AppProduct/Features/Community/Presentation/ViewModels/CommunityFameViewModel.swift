@@ -16,28 +16,22 @@ class CommunityFameViewModel {
     
     var selectedWeek: Int = 1
     var selectedUniversity: String = "전체"
-    var selectedPart: String = "전체"
+    var selectedPart: UMCPartType? = nil  // nil = "전체"
 
     private(set) var fameItems: Loadable<[CommunityFameItemModel]> = .idle
 
     // MARK: -  Computed Properties
-    
+
     var availableWeeks: [Int] {
         guard case .loaded(let items) = fameItems else { return [1] }
         let weeks = Set(items.map { $0.week })
         return weeks.sorted()
     }
-    
+
     var availableUniversities: [String] {
         guard case .loaded(let items) = fameItems else { return [] }
         let universities = Set(items.map(\.university))
         return universities.sorted()
-    }
-    
-    var availableParts: [String] {
-        guard case .loaded(let items) = fameItems else { return [] }
-        let parts = Set(items.map(\.part.name))
-        return parts.sorted()
     }
 
     var groupedByUniversity: [(university: String, items: [CommunityFameItemModel])] {
@@ -50,10 +44,9 @@ class CommunityFameViewModel {
                 // 학교 필터
                 let matchUniversity = (selectedUniversity == "전체" || selectedUniversity.isEmpty)
                                       ? true : item.university == selectedUniversity
-                
+
                 // 파트 필터
-                let matchPart = (selectedPart == "전체" || selectedPart.isEmpty)
-                ? true : item.part.name == selectedPart
+                let matchPart = selectedPart == nil ? true : item.part == selectedPart
                 
                 return matchWeek && matchUniversity && matchPart
             }
@@ -97,7 +90,7 @@ class CommunityFameViewModel {
         fameItems: Loadable<[CommunityFameItemModel]>,
         selectedWeek: Int,
         selectedUniversity: String,
-        selectedPart: String
+        selectedPart: UMCPartType?
     ) {
         self.fameItems = fameItems
         self.selectedWeek = selectedWeek

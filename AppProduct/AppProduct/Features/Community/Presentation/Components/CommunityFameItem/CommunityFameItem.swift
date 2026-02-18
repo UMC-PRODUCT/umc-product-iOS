@@ -173,20 +173,3 @@ struct CommunityFameItem: View, Equatable {
         )
     }
 }
-
-#Preview {
-    CommunityFameItem(
-        model: .init(
-            week: 1,
-            university: "서울대학교",
-            profileImage: nil,
-            userName: "김멋사",
-            part: .front(type: .web),
-            workbookTitle: "React Todo List 만들기",
-            content: "컴포넌트 분리가 매우 잘 되어있고, 상태 관리가 깔끔합니다."
-        ),
-        action: {
-            print("1번 리스트")
-        }
-    )
-}

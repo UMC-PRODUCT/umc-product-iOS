@@ -22,11 +22,13 @@ struct CommunityView: View {
         /// 실패 상태 문구
         static let failedTitle: String = "불러오지 못했어요"
         static let failedSystemImage: String = "exclamationmark.triangle"
-        static let failedDescription: String = "게시글을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+        static let failedDescription: String = "게시글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요."
         /// 재시도 버튼 문구/크기
         static let retryTitle: String = "다시 시도"
         static let retryMinimumWidth: CGFloat = 72
         static let retryMinimumHeight: CGFloat = 20
+        /// 로딩중 문구
+        static let loadingMessage: String = "게시글을 가져오는 중입니다."
     }
 
     init(container: DIContainer) {
@@ -67,7 +69,8 @@ struct CommunityView: View {
                     break
                 }
             }
-            .navigation(naviTitle: .community, displayMode: .inline)
+            .navigationTitle(vm.selectedMenu.rawValue)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolBarCollection.ToolBarCenterMenu(
                     items: CommunityMenu.allCases,
@@ -87,7 +90,7 @@ struct CommunityView: View {
         Group {
             switch vm.items {
             case .idle,.loading:
-                ProgressView("커뮤니티 게시글 로딩 중...")
+                Progress(message: Constants.loadingMessage, size: .regular)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
                 listSection
@@ -102,7 +105,12 @@ struct CommunityView: View {
     private var listSection: some View {
         Group {
             if vm.filteredItems.isEmpty {
-                unableContent
+                // 검색어가 있으면 검색 결과 없음, 없으면 글이 없음
+                if !vm.searchText.isEmpty {
+                    searchEmptyContent
+                } else {
+                    emptyContent
+                }
             } else {
                 postsList
             }
@@ -145,7 +153,7 @@ struct CommunityView: View {
         .listRowSeparator(.hidden)
     }
 
-    private var unableContent: some View {
+    private var emptyContent: some View {
         ContentUnavailableView {
             Label(
                 "아직 작성된 글이 없습니다.",
@@ -153,6 +161,17 @@ struct CommunityView: View {
             )
         } description: {
             Text("가장 먼저 글을 작성해 보세요!")
+        }
+    }
+
+    private var searchEmptyContent: some View {
+        ContentUnavailableView {
+            Label(
+                "검색 결과가 없습니다.",
+                systemImage: "exclamationmark.magnifyingglass"
+            )
+        } description: {
+            Text("다른 검색어로 다시 시도해보세요.")
         }
     }
 

@@ -68,9 +68,7 @@ struct CommunityPostView: View {
                 
                 // 2-3. 장소
                 Section {
-                    PlaceSelectView(place: Binding(
-                        get: { vm.selectedPlace }, set: { vm.selectedPlace = $0 }
-                    ))
+                    PlaceSelectView(place: $vm.selectedPlace)
                 }
                 
                 // 2-4. 오픈채팅 링크
@@ -81,12 +79,8 @@ struct CommunityPostView: View {
             
             // 3. 제목 및 내용
             Section {
-                ArticleTextField(placeholder: .title, text: Binding(
-                    get: { vm.titleText }, set: { vm.titleText = $0 }
-                ))
-                ArticleTextField(placeholder: .content, text: Binding(
-                    get: { vm.contentText }, set: { vm.contentText = $0 }
-                ))
+                ArticleTextField(placeholder: .title, text: $vm.titleText)
+                ArticleTextField(placeholder: .content, text: $vm.contentText)
                     .frame(minHeight: Constants.contentMinHeight, alignment: .top)
             }
         }
@@ -96,11 +90,19 @@ struct CommunityPostView: View {
             displayMode: .inline
         )
         .toolbar {
-            ToolBarCollection.ConfirmBtn(action: {
-                Task {
-                    await vm.submit()
-                }
-            }, disable: !vm.isValid)
+            if vm.isEditMode {
+                ToolBarCollection.ConfirmBtn(action: {
+                    Task {
+                        await vm.submit()
+                    }
+                }, disable: !vm.isValid, isLoading: vm.submitState.isLoading)
+            } else {
+                ToolBarCollection.AddBtn(action: {
+                    Task {
+                        await vm.submit()
+                    }
+                }, disable: !vm.isValid, isLoading: vm.submitState.isLoading)
+            }
         }
         .overlay { submittingOverlay }
         // 생성 성공 시 화면 자동 닫기
@@ -114,9 +116,7 @@ struct CommunityPostView: View {
     // MARK: - Subviews
     
     private func categorySection(vm: CommunityPostViewModel) -> some View {
-        Picker("카테고리", selection: Binding(
-            get: { vm.selectedCategory }, set: { vm.selectedCategory = $0 }
-        )) {
+        Picker("카테고리", selection: $vm.selectedCategory) {
             ForEach(CommunityItemCategory.allCases, id: \.self) { category in
                 Text(category.text)
             }
@@ -125,9 +125,7 @@ struct CommunityPostView: View {
     
     private func dateSection(vm: CommunityPostViewModel) -> some View {
         DatePicker("날짜",
-                   selection: Binding(
-                    get: { vm.selectedDate }, set: { vm.selectedDate = $0 }
-                   ),
+                   selection: $vm.selectedDate,
                    displayedComponents: [.date])
             .datePickerStyle(.compact)
             .tint(.indigo500)
@@ -135,26 +133,20 @@ struct CommunityPostView: View {
     
     private func timeSection(vm: CommunityPostViewModel) -> some View {
         DatePicker("시간",
-                   selection: Binding(
-                    get: { vm.selectedDate }, set: { vm.selectedDate = $0 }
-                   ),
+                   selection: $vm.selectedDate,
                    displayedComponents: [.hourAndMinute])
             .tint(.indigo500)
     }
 
     private func maxParticipantsSection(vm: CommunityPostViewModel) -> some View {
-        Stepper(value: Binding(
-            get: { vm.maxParticipants }, set: { vm.maxParticipants = $0 }
-        ), in: Constants.participantsRange) {
+        Stepper(value: $vm.maxParticipants, in: Constants.participantsRange) {
             Text("\(vm.maxParticipants)명")
                 .appFont(.body, color: .black)
         }
     }
 
     private func linkSection(vm: CommunityPostViewModel) -> some View {
-        TextField("오픈채팅 링크를 입력하세요.", text: Binding(
-            get: { vm.linkText }, set: { vm.linkText = $0 }
-        ))
+        TextField("오픈채팅 링크를 입력하세요.", text: $vm.linkText)
             .appFont(.callout)
             .keyboardType(.URL)
             .autocapitalization(.none)
