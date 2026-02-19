@@ -17,15 +17,15 @@ struct PostSearchQuery: Encodable {
     /// 검색 키워드
     let keyword: String
     /// 페이지 (0부터 시작)
-    let page: Int
+    let page: Int?
     /// 페이지 크기
-    let size: Int
+    let size: Int?
     
     var toParameters: [String: Any] {
         [
             "keyword": keyword,
-            "page": page,
-            "size": size
+            "page": page ?? 0,
+            "size": size ?? 20
         ]
     }
 }

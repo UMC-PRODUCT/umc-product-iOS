@@ -19,4 +19,10 @@ protocol CommunityRepositoryProtocol {
         items: [CommunityItemModel],
         hasNext: Bool
     )
+    
+    /// 커뮤니티 검색
+    func getSearch(query: PostSearchQuery) async throws -> (
+        items: [CommunityItemModel],
+        hasNext: Bool
+    )
 }

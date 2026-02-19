@@ -34,6 +34,8 @@ struct PostListItemDTO: Codable {
     let content: String
     let category: String
     let authorId: String
+    let authorChallengerId: String
+    let authorMemberId: String?
     let authorName: String
     let authorProfileImage: String?
     let authorPart: String?

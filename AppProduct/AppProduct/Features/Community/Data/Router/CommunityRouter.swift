@@ -11,6 +11,7 @@ import Moya
 enum CommunityRouter {
     case getPosts(query: PostListQuery) // 게시글 목록 조회
     case getTrophies(query: TrophyListQuery) // 명예의전당 목록 조회
+    case getSearch(query: PostSearchQuery)
 }
 
 extension CommunityRouter: BaseTargetType {
@@ -23,6 +24,8 @@ extension CommunityRouter: BaseTargetType {
             return "/api/v1/posts"
         case .getTrophies:
             return "/api/v1/trophies"
+        case .getSearch:
+            return "/api/v1/posts/search"
         }
     }
     
@@ -30,7 +33,7 @@ extension CommunityRouter: BaseTargetType {
     
     var method: Moya.Method {
         switch self {
-        case .getPosts, .getTrophies:
+        case .getPosts, .getTrophies, .getSearch:
             return .get
         }
     }
@@ -42,6 +45,8 @@ extension CommunityRouter: BaseTargetType {
         case .getPosts(let query):
             return .requestParameters(parameters: query.toParameters, encoding: URLEncoding.queryString)
         case .getTrophies(let query):
+            return .requestParameters(parameters: query.toParameters, encoding: URLEncoding.queryString)
+        case .getSearch(let query):
             return .requestParameters(parameters: query.toParameters, encoding: URLEncoding.queryString)
         }
     }

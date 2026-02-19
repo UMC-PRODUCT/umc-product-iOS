@@ -50,6 +50,9 @@ struct CommunityView: View {
                     contentSection
                         .searchable(text: $vm.searchText)
                         .searchToolbarBehavior(.minimize)
+                        .onChange(of: vm.searchText) { _, _ in
+                            vm.onSearchTextChanged()
+                        }
                 case .fame:
                     CommunityFameView(container: di)
                 }
@@ -82,6 +85,14 @@ struct CommunityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            .onChange(of: vm.selectedMenu) { _, newMenu in
+                switch newMenu {
+                case .all, .party, .question, .information, .habit, .free:
+                    Task { await vm.refresh() }
+                case .fame:
+                    break
+                }
+            }
             .onChange(of: pathStore.communityPath.count) { oldCount, newCount in
                 if newCount < oldCount {
                     Task {
@@ -95,8 +106,8 @@ struct CommunityView: View {
 
     private var contentSection: some View {
         Group {
-            switch vm.items {
-            case .idle,.loading:
+            switch vm.contentState {
+            case .idle, .loading:
                 Progress(message: Constants.loadingMessage, size: .regular)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
@@ -130,7 +141,7 @@ struct CommunityView: View {
                 postRow(item)
             }
 
-            if vm.isLoadingMore {
+            if vm.contentIsLoadingMore {
                 loadingMoreRow
             }
         }
@@ -189,7 +200,7 @@ struct CommunityView: View {
             systemImage: Constants.failedSystemImage,
             description: Constants.failedDescription,
             retryTitle: Constants.retryTitle,
-            isRetrying: vm.items.isLoading,
+            isRetrying: vm.contentState.isLoading,
             minRetryButtonWidth: Constants.retryMinimumWidth,
             minRetryButtonHeight: Constants.retryMinimumHeight
         ) {
