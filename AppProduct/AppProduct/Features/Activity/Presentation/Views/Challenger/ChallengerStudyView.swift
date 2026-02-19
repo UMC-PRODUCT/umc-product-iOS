@@ -23,11 +23,25 @@ struct ChallengerStudyView: View {
         errorHandler: ErrorHandler
     ) {
         let activityProvider = container.resolve(ActivityUseCaseProviding.self)
-        self._viewModel = .init(wrappedValue: .init(
+        let challengerStudyViewModel = ChallengerStudyViewModel(
             fetchCurriculumUseCase: activityProvider.fetchCurriculumUseCase,
             submitMissionUseCase: activityProvider.submitMissionUseCase,
             errorHandler: errorHandler
-        ))
+        )
+        #if DEBUG
+        if let debugState = ActivityDebugState.fromLaunchArgument() {
+            challengerStudyViewModel.seedForDebugState(debugState)
+        }
+        #endif
+        self._viewModel = .init(wrappedValue: challengerStudyViewModel)
+    }
+
+    private var viewModelDebugState: ActivityDebugState? {
+        #if DEBUG
+        ActivityDebugState.fromLaunchArgument()
+        #else
+        nil
+        #endif
     }
 
     // MARK: - Body
@@ -37,6 +51,11 @@ struct ChallengerStudyView: View {
             contentView(viewModel: viewModel)
         }
         .task {
+            #if DEBUG
+            if viewModelDebugState != nil {
+                return
+            }
+            #endif
             await viewModel.fetchCurriculum()
         }
     }
@@ -75,17 +94,13 @@ struct ChallengerStudyView: View {
     }
 
     private func errorView(error: AppError, viewModel: ChallengerStudyViewModel) -> some View {
-        ContentUnavailableView {
-            Label("로딩 실패", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text(error.errorDescription ?? "알 수 없는 오류가 발생했습니다.")
-        } actions: {
-            Button("다시 시도") {
-                Task {
-                    await viewModel.fetchCurriculum()
-                }
-            }
-            .buttonStyle(.borderedProminent)
+        RetryContentUnavailableView(
+            title: "로딩 실패",
+            systemImage: "exclamationmark.triangle",
+            description: error.errorDescription ?? "알 수 없는 오류가 발생했습니다.",
+            isRetrying: false
+        ) {
+            await viewModel.fetchCurriculum()
         }
     }
 }

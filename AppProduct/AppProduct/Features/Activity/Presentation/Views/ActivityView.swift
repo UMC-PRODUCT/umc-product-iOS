@@ -141,14 +141,13 @@ struct ActivityView: View {
                     sessions: sessions
                 )
             case .failed(let error):
-                ContentUnavailableView {
-                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(error.localizedDescription)
-                } actions: {
-                    Button("다시 시도") {
-                        Task { await vm.fetchSessions() }
-                    }
+                RetryContentUnavailableView(
+                    title: "로딩 실패",
+                    systemImage: "exclamationmark.triangle",
+                    description: error.localizedDescription,
+                    isRetrying: false
+                ) {
+                    await vm.fetchSessions()
                 }
             }
         } else {
@@ -173,14 +172,13 @@ struct ActivityView: View {
                     categoryFor: vm.category(for:)
                 )
             case .failed(let error):
-                ContentUnavailableView {
-                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(error.localizedDescription)
-                } actions: {
-                    Button("다시 시도") {
-                        Task { await vm.fetchSessions() }
-                    }
+                RetryContentUnavailableView(
+                    title: "로딩 실패",
+                    systemImage: "exclamationmark.triangle",
+                    description: error.localizedDescription,
+                    isRetrying: false
+                ) {
+                    await vm.fetchSessions()
                 }
             }
         } else {

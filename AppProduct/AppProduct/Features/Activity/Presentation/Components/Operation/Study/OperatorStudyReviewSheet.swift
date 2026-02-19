@@ -15,10 +15,12 @@ struct OperatorStudyReviewSheet: View {
 
     @State private var feedback: String = ""
     @State private var showRejectAlert: Bool = false
+    @State private var isApproving = false
+    @State private var isRejecting = false
 
     let member: StudyMemberItem
-    let onApprove: (String) -> Void
-    let onReject: (String) -> Void
+    let onApprove: (String) async -> Bool
+    let onReject: (String) async -> Bool
 
     fileprivate enum Constants {
         static let feedbackMinHeight: CGFloat = 350
@@ -45,22 +47,23 @@ struct OperatorStudyReviewSheet: View {
             .scrollDismissesKeyboard(.immediately)
             .navigationTitle("\(member.week)주차 \(member.displayName)")
             .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            dismissButton
-
+            .toolbar {
+                dismissButton
                 actionButtons
             }
-        }
-        .presentationDetents([.fraction(0.9)])
-        .interactiveDismissDisabled()
-        .presentationDragIndicator(.hidden)
-        .alert(Constants.rejectTitle, isPresented: $showRejectAlert) {
-            Button(Constants.cancel, role: .cancel) {}
-            Button(Constants.rejectPositive, role: .destructive) {
-                confirmReject()
+            .presentationDetents([.fraction(0.9)])
+            .interactiveDismissDisabled()
+            .presentationDragIndicator(.hidden)
+            .alert(Constants.rejectTitle, isPresented: $showRejectAlert) {
+                Button(Constants.cancel, role: .cancel) {}
+                Button(Constants.rejectPositive, role: .destructive) {
+                    Task {
+                        await confirmReject()
+                    }
+                }
+            } message: {
+                Text(String(format: Constants.rejectMessageTemplate, member.displayName, member.week))
             }
-        } message: {
-            Text(String(format: Constants.rejectMessageTemplate, member.displayName, member.week))
         }
     }
 
@@ -82,16 +85,36 @@ struct OperatorStudyReviewSheet: View {
     }
 
     private var rejectButton: some View {
-        Button(action: rejectAction) {
-            Image(systemName: Constants.rejectIcon)
+        Button(action: { Task { await rejectAction() } }) {
+            ZStack {
+                Image(systemName: Constants.rejectIcon)
+                    .opacity(isRejecting ? 0 : 1)
+
+                if isRejecting {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.grey900)
+                }
+            }
         }
+        .disabled(isApproving || isRejecting)
         .tint(.grey900)
     }
 
     private var approveButton: some View {
-        Button(action: approveAction) {
-            Image(systemName: Constants.confirmIcon)
+        Button(action: { Task { await approveAction() } }) {
+            ZStack {
+                Image(systemName: Constants.confirmIcon)
+                    .opacity(isApproving ? 0 : 1)
+
+                if isApproving {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.indigo500)
+                }
+            }
         }
+        .disabled(isApproving || isRejecting)
         .tint(.indigo500)
     }
 
@@ -99,18 +122,30 @@ struct OperatorStudyReviewSheet: View {
         dismiss()
     }
 
-    private func rejectAction() {
+    private func rejectAction() async {
         showRejectAlert = true
     }
 
-    private func approveAction() {
-        onApprove(feedback)
-        dismiss()
+    private func approveAction() async {
+        guard !isApproving, !isRejecting else { return }
+        isApproving = true
+        defer { isApproving = false }
+
+        let isSuccess = await onApprove(feedback)
+        if isSuccess {
+            dismiss()
+        }
     }
 
-    private func confirmReject() {
-        onReject(feedback)
-        dismiss()
+    private func confirmReject() async {
+        guard !isApproving, !isRejecting else { return }
+        isRejecting = true
+        defer { isRejecting = false }
+
+        let isSuccess = await onReject(feedback)
+        if isSuccess {
+            dismiss()
+        }
     }
 
     @ViewBuilder
@@ -195,8 +230,14 @@ struct OperatorStudyReviewSheet: View {
                     week: 3,
                     submissionURL: "https://github.com/example/study"
                 ),
-                onApprove: { print("승인: \($0)") },
-                onReject: { print("반려: \($0)") }
+                onApprove: { feedback in
+                    print("승인: \(feedback)")
+                    return true
+                },
+                onReject: { feedback in
+                    print("반려: \(feedback)")
+                    return true
+                }
             )
         }
 }

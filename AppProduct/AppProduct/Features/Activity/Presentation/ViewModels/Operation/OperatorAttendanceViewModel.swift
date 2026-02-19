@@ -102,6 +102,31 @@ final class OperatorAttendanceViewModel {
         showLocationSheet = true
     }
 
+    /// 위치 변경 확인 액션
+    @MainActor
+    func confirmLocationChange(to place: PlaceSearchInfo) async -> Bool {
+        guard selectedSession != nil else {
+            alertPrompt = AlertPrompt(
+                title: "위치 변경 실패",
+                message: "세션 정보를 찾을 수 없습니다.",
+                positiveBtnTitle: "확인"
+            )
+            return false
+        }
+
+        guard !place.name.isEmpty, !place.address.isEmpty else {
+            alertPrompt = AlertPrompt(
+                title: "위치 변경 실패",
+                message: "변경할 위치를 선택해 주세요.",
+                positiveBtnTitle: "확인"
+            )
+            return false
+        }
+
+        // TODO: 실제 위치 변경 API 연동 필요
+        return true
+    }
+
     /// 출석 사유 확인 버튼 탭
     func reasonButtonTapped(member: OperatorPendingMember) {
         guard let reason = member.reason else { return }
@@ -505,4 +530,17 @@ final class OperatorAttendanceViewModel {
         )
     }
 
+    #if DEBUG
+    @MainActor
+    func seedForDebugState(_ state: ActivityDebugState) {
+        switch state {
+        case .loading, .allLoading:
+            sessionsState = .loading
+        case .loaded:
+            sessionsState = .loaded(OperatorAttendancePreviewData.sessions)
+        case .failed:
+            sessionsState = .failed(.unknown(message: "출석 현황을 불러오지 못했습니다."))
+        }
+    }
+    #endif
 }

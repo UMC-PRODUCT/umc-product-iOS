@@ -21,6 +21,9 @@ final class OperatorStudyManagementViewModel {
     /// 스터디원 목록 로딩 상태
     private(set) var membersState: Loadable<[StudyMemberItem]> = .idle
 
+    /// 스터디 그룹 관리 로딩 상태
+    private(set) var studyGroupDetailsState: Loadable<[StudyGroupInfo]> = .idle
+
     /// 스터디 그룹 필터 목록
     private(set) var studyGroups: [StudyGroupItem] = [.all]
 
@@ -66,6 +69,11 @@ final class OperatorStudyManagementViewModel {
     /// 제출 현황 탭 필터(그룹/주차) 최초 로드 여부
     private var hasLoadedSubmissionFilters = false
 
+    #if DEBUG
+    /// Activity Debug 스킴 시뮬레이션 모드
+    private var isDebugSeedMode = false
+    #endif
+
     // MARK: - Initializer
 
     /// - Parameters:
@@ -98,6 +106,28 @@ final class OperatorStudyManagementViewModel {
     @MainActor
     func fetchSubmissionMembers() async {
         membersState = .loading
+
+        #if DEBUG
+        if isDebugSeedMode {
+            if allMembers.isEmpty {
+                allMembers = ActivityDebugState.studyMembersByCurrentWeek
+            }
+
+            if !hasLoadedSubmissionFilters {
+                if studyGroups == [.all] {
+                    studyGroups = normalizeStudyGroups(StudyGroupItem.preview)
+                }
+                weeks = Array(1...10)
+                if !weeks.contains(selectedWeek), let firstWeek = weeks.first {
+                    selectedWeek = firstWeek
+                }
+                hasLoadedSubmissionFilters = true
+            }
+
+            filterMembers()
+            return
+        }
+        #endif
 
         do {
             if !hasLoadedSubmissionFilters {
@@ -139,6 +169,8 @@ final class OperatorStudyManagementViewModel {
             return
         }
 
+        studyGroupDetailsState = .loading
+
         do {
             if studyGroups == [.all] {
                 let fetchedGroups = try await useCase.fetchStudyGroups()
@@ -146,14 +178,21 @@ final class OperatorStudyManagementViewModel {
             }
 
             let groupDetails = try await useCase.fetchStudyGroupDetails()
-            if !groupDetails.isEmpty {
-                studyGroupDetails = groupDetails
-            }
+            studyGroupDetails = groupDetails
+            studyGroupDetailsState = .loaded(groupDetails)
             hasLoadedStudyGroupDetails = true
+        } catch let error as DomainError {
+            studyGroupDetailsState = .failed(.domain(error))
         } catch {
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Activity",
-                action: "fetchStudyGroupManagement"
+                action: "fetchStudyGroupManagement",
+                retryAction: { [weak self] in
+                    await self?.fetchGroupManagementData()
+                }
+            ))
+            studyGroupDetailsState = .failed(.unknown(
+                message: "스터디 그룹 관리 데이터를 불러오지 못했습니다."
             ))
         }
     }
@@ -210,9 +249,7 @@ final class OperatorStudyManagementViewModel {
             return false
         }
 
-        guard let index = studyGroupDetails.firstIndex(
-            where: { $0.id == groupID }
-        ) else {
+        guard let oldGroup = studyGroupDetails.first(where: { $0.id == groupID }) else {
             alertPrompt = AlertPrompt(
                 title: "수정 실패",
                 message: "그룹 정보를 찾을 수 없습니다.",
@@ -221,7 +258,7 @@ final class OperatorStudyManagementViewModel {
             return false
         }
 
-        guard let serverGroupId = Int(studyGroupDetails[index].serverID) else {
+        guard let serverGroupId = Int(oldGroup.serverID) else {
             alertPrompt = AlertPrompt(
                 title: "수정 실패",
                 message: "유효한 그룹 식별자가 아닙니다.",
@@ -248,6 +285,15 @@ final class OperatorStudyManagementViewModel {
                 feature: "Activity",
                 action: "updateStudyGroup"
             ))
+            return false
+        }
+
+        guard let index = studyGroupDetails.firstIndex(where: { $0.id == groupID }) else {
+            alertPrompt = AlertPrompt(
+                title: "수정 실패",
+                message: "그룹이 삭제되어 수정할 수 없습니다.",
+                positiveBtnTitle: "확인"
+            )
             return false
         }
 
@@ -472,16 +518,30 @@ final class OperatorStudyManagementViewModel {
     /// - Parameters:
     ///   - member: 대상 멤버
     ///   - feedback: 피드백 내용
-    func submitReviewApproval(member: StudyMemberItem, feedback: String) {
-        submitReview(member: member, feedback: feedback, isApproved: true)
+    func submitReviewApproval(
+        member: StudyMemberItem,
+        feedback: String
+    ) async -> Bool {
+        await submitReview(
+            member: member,
+            feedback: feedback,
+            isApproved: true
+        )
     }
 
     /// 스터디 반려 확인 다이얼로그 준비
     /// - Parameters:
     ///   - member: 대상 멤버
     ///   - feedback: 피드백 내용
-    func submitReviewRejection(member: StudyMemberItem, feedback: String) {
-        submitReview(member: member, feedback: feedback, isApproved: false)
+    func submitReviewRejection(
+        member: StudyMemberItem,
+        feedback: String
+    ) async -> Bool {
+        await submitReview(
+            member: member,
+            feedback: feedback,
+            isApproved: false
+        )
     }
 
     /// 베스트 워크북 선정 제출
@@ -491,8 +551,8 @@ final class OperatorStudyManagementViewModel {
     func submitBestWorkbookSelection(
         member: StudyMemberItem,
         recommendation: String
-    ) {
-        submitBestWorkbook(
+    ) async -> Bool {
+        await submitBestWorkbook(
             member: member,
             recommendation: recommendation
         )
@@ -502,73 +562,73 @@ final class OperatorStudyManagementViewModel {
         member: StudyMemberItem,
         feedback: String,
         isApproved: Bool
-    ) {
+    ) async -> Bool {
         guard let challengerWorkbookId = member.challengerWorkbookId else {
             alertPrompt = AlertPrompt(
                 title: "검토 실패",
                 message: "워크북 식별자를 찾을 수 없습니다.",
                 positiveBtnTitle: "확인"
             )
-            return
+            return false
         }
 
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            do {
-                try await self.useCase.reviewWorkbook(
-                    challengerWorkbookId: challengerWorkbookId,
-                    isApproved: isApproved,
-                    feedback: feedback
-                )
-                self.removeMember(member)
-            } catch let error as DomainError {
-                self.alertPrompt = AlertPrompt(
-                    title: "검토 실패",
-                    message: error.userMessage,
-                    positiveBtnTitle: "확인"
-                )
-            } catch {
-                self.errorHandler.handle(error, context: ErrorContext(
-                    feature: "Activity",
-                    action: "reviewWorkbook"
-                ))
-            }
+        do {
+            try await useCase.reviewWorkbook(
+                challengerWorkbookId: challengerWorkbookId,
+                isApproved: isApproved,
+                feedback: feedback
+            )
+            removeMember(member)
+            return true
+        } catch let error as DomainError {
+            alertPrompt = AlertPrompt(
+                title: "검토 실패",
+                message: error.userMessage,
+                positiveBtnTitle: "확인"
+            )
+            return false
+        } catch {
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Activity",
+                action: "reviewWorkbook"
+            ))
+            return false
         }
     }
 
     private func submitBestWorkbook(
         member: StudyMemberItem,
         recommendation: String
-    ) {
+    ) async -> Bool {
         guard let challengerWorkbookId = member.challengerWorkbookId else {
             alertPrompt = AlertPrompt(
                 title: "선정 실패",
                 message: "워크북 식별자를 찾을 수 없습니다.",
                 positiveBtnTitle: "확인"
             )
-            return
+            return false
         }
 
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            do {
-                try await self.useCase.selectBestWorkbook(
-                    challengerWorkbookId: challengerWorkbookId,
-                    bestReason: recommendation
-                )
-                self.markAsBestWorkbook(member)
-            } catch let error as DomainError {
-                self.alertPrompt = AlertPrompt(
-                    title: "선정 실패",
-                    message: error.userMessage,
-                    positiveBtnTitle: "확인"
-                )
-            } catch {
-                self.errorHandler.handle(error, context: ErrorContext(
-                    feature: "Activity",
-                    action: "selectBestWorkbook"
-                ))
-            }
+        do {
+            try await useCase.selectBestWorkbook(
+                challengerWorkbookId: challengerWorkbookId,
+                bestReason: recommendation
+            )
+            markAsBestWorkbook(member)
+            return true
+        } catch let error as DomainError {
+            alertPrompt = AlertPrompt(
+                title: "선정 실패",
+                message: error.userMessage,
+                positiveBtnTitle: "확인"
+            )
+            return false
+        } catch {
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Activity",
+                action: "selectBestWorkbook"
+            ))
+            return false
         }
     }
 
@@ -591,6 +651,21 @@ final class OperatorStudyManagementViewModel {
 
     /// 선택된 스터디 그룹과 주차에 따라 멤버 필터링
     private func filterMembers() {
+        #if DEBUG
+        if isDebugSeedMode {
+            var filtered = allMembers
+                .filter { $0.week == selectedWeek }
+
+            if selectedStudyGroup != .all,
+               let targetPart = selectedStudyGroup.part {
+                filtered = filtered.filter { $0.part == targetPart }
+            }
+
+            membersState = .loaded(filtered)
+            return
+        }
+        #endif
+
         membersState = .loaded(allMembers)
     }
 
@@ -618,4 +693,31 @@ final class OperatorStudyManagementViewModel {
             selectedStudyGroup = .all
         }
     }
+
+    #if DEBUG
+    @MainActor
+    func seedForDebugState(_ state: ActivityDebugState) {
+        switch state {
+        case .loading, .allLoading:
+            membersState = .loading
+            studyGroupDetailsState = .loading
+        case .loaded:
+            weeks = Array(1...10)
+            selectedWeek = 1
+            studyGroups = normalizeStudyGroups(StudyGroupItem.preview)
+            studyGroupDetails = StudyGroupPreviewData.groups
+            studyGroupDetailsState = .loaded(studyGroupDetails)
+
+            hasLoadedSubmissionFilters = true
+            hasLoadedStudyGroupDetails = true
+
+            allMembers = ActivityDebugState.studyMembersAllWeeks
+            isDebugSeedMode = true
+            filterMembers()
+        case .failed:
+            membersState = .failed(.unknown(message: "스터디 관리 데이터를 불러오지 못했습니다."))
+            studyGroupDetailsState = .failed(.unknown(message: "스터디 관리 데이터를 불러오지 못했습니다."))
+        }
+    }
+    #endif
 }

@@ -40,7 +40,7 @@ struct CoreMemberManagementList: View {
             CoreMemberTextPresenter(
                 name: memberManagementItem.name,
                 nickname: memberManagementItem.nickname,
-                part: memberManagementItem.generation,
+                part: memberManagementItem.part,
             )
             
             Spacer()
@@ -72,15 +72,25 @@ struct CoreMemberTextPresenter: View {
     let nickname: String
     
     /// 소속 파트
-    let part: String
+    let part: UMCPartType
     
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             Text("\(name)/\(nickname)")
                 .appFont(.calloutEmphasis, color: .black)
             
-            Text(part)
-                .appFont(.subheadline, color: .grey500)
+            Text(part.name)
+                .appFont(.footnote, color: part.color)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background {
+                    Capsule()
+                        .fill(part.color.opacity(0.16))
+                }
+                .overlay {
+                    Capsule()
+                        .stroke(part.color.opacity(0.4), lineWidth: 1)
+                }
         }
     }
 }

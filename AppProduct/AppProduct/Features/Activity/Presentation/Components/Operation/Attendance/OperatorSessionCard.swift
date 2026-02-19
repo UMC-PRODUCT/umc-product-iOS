@@ -178,7 +178,7 @@ struct OperatorSessionCard: View, Equatable {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            if currentSessionStatus != .ended {
+            if currentSessionStatus == .beforeStart {
                 Button(action: actions.onLocationTap) {
                     ZStack {
                         Circle()

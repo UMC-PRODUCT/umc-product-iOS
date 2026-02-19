@@ -13,12 +13,14 @@ import SwiftUI
 struct OperatorBestWorkbookSheet: View {
     // MARK: - Property
 
+    @Environment(\.dismiss) private var dismiss
     @State private var recommendation: String = ""
+    @State private var isSubmitting = false
 
     /// 선정 대상 스터디원
     let member: StudyMemberItem
     /// 선정 완료 콜백 (추천사 전달)
-    let onSelect: (String) -> Void
+    let onSelect: (String) async -> Bool
 
     fileprivate enum Constants {
         static let avatarSize: CGFloat = 48
@@ -51,10 +53,11 @@ struct OperatorBestWorkbookSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolBarCollection.CancelBtn(action: {})
-
-                ToolBarCollection.ConfirmBtn {
-                    onSelect(recommendation)
-                }
+                ToolBarCollection.ConfirmBtn(
+                    action: submitSelection,
+                    isLoading: isSubmitting,
+                    dismissOnTap: false
+                )
             }
         }
         .presentationDetents([.fraction(0.7)])
@@ -148,6 +151,21 @@ struct OperatorBestWorkbookSheet: View {
     }
 }
 
+private extension OperatorBestWorkbookSheet {
+    private func submitSelection() {
+        guard !isSubmitting else { return }
+        isSubmitting = true
+        Task {
+            let isSuccess = await onSelect(recommendation)
+            isSubmitting = false
+
+            if isSuccess {
+                dismiss()
+            }
+        }
+    }
+}
+
 // MARK: - Preview
 
 #if DEBUG
@@ -164,7 +182,10 @@ struct OperatorBestWorkbookSheet: View {
                     studyTopic: "SwiftUI 심화",
                     week: 3
                 ),
-                onSelect: { print("선정: \($0)") }
+                onSelect: { recommendation in
+                    print("선정: \(recommendation)")
+                    return true
+                }
             )
         }
 }

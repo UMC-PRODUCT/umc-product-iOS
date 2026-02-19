@@ -24,10 +24,16 @@ struct OperatorMemberManagementView: View {
         errorHandler: ErrorHandler
     ) {
         let useCaseProvider = container.resolve(ActivityUseCaseProviding.self)
-        self._viewModel = .init(wrappedValue: .init(
+        let memberListViewModel = MemberListViewModel(
             fetchMembersUseCase: useCaseProvider.fetchMembersUseCase,
             errorHandler: errorHandler
-        ))
+        )
+        #if DEBUG
+        if let debugState = ActivityDebugState.fromLaunchArgument() {
+            memberListViewModel.seedForDebugState(debugState)
+        }
+        #endif
+        self._viewModel = .init(wrappedValue: memberListViewModel)
     }
     
     // MARK: - Constant
@@ -43,18 +49,22 @@ struct OperatorMemberManagementView: View {
             case .loaded:
                 memberListContent
             case .failed(let error):
-                ContentUnavailableView {
-                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(error.localizedDescription)
-                } actions: {
-                    Button("다시 시도") {
-                        Task { await viewModel.fetchMembers() }
-                    }
+                RetryContentUnavailableView(
+                    title: "로딩 실패",
+                    systemImage: "exclamationmark.triangle",
+                    description: error.localizedDescription,
+                    isRetrying: false
+                ) {
+                    await viewModel.fetchMembers()
                 }
             }
         }
         .task {
+            #if DEBUG
+            if ActivityDebugState.fromLaunchArgument() != nil {
+                return
+            }
+            #endif
             await viewModel.fetchMembers()
         }
         .searchable(text: $viewModel.searchText)

@@ -44,6 +44,17 @@ final class StudyScheduleRegistrationViewModel {
             && !place.name.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
+    /// 스케줄 등록 실행
+    /// TODO: 실제 일정 등록 API 연동
+    @MainActor
+    func submitSchedule() async -> Bool {
+        guard canSubmit else {
+            return false
+        }
+
+        return true
+    }
+
     // MARK: - Init
 
     /// - Parameter studyName: 스터디 그룹 이름 (초기값)

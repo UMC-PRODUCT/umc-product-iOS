@@ -14,10 +14,12 @@ struct OperatorLocationChangeSheetView: View {
 
     // MARK: - Property
 
+    @Environment(\.dismiss) private var dismiss
+
     private let session: Session?
     private let errorHandler: ErrorHandler
     private let onDismiss: () -> Void
-    private let onConfirm: (PlaceSearchInfo) -> Void
+    private let onConfirm: (PlaceSearchInfo) async -> Bool
 
     @State private var selectedPlace: PlaceSearchInfo = .init(
         name: "",
@@ -25,6 +27,7 @@ struct OperatorLocationChangeSheetView: View {
         coordinate: .init(latitude: 0, longitude: 0)
     )
     @State private var showSearchPlaceSheet: Bool = false
+    @State private var isSubmitting = false
 
     // MARK: - Constant
 
@@ -40,7 +43,7 @@ struct OperatorLocationChangeSheetView: View {
         session: Session?,
         errorHandler: ErrorHandler,
         onDismiss: @escaping () -> Void,
-        onConfirm: @escaping (PlaceSearchInfo) -> Void
+        onConfirm: @escaping (PlaceSearchInfo) async -> Bool
     ) {
         self.session = session
         self.errorHandler = errorHandler
@@ -75,15 +78,32 @@ struct OperatorLocationChangeSheetView: View {
                     onDismiss()
                 }
 
-                ToolBarCollection.ConfirmBtn(action: {
-                    onConfirm(selectedPlace)
-                }, disable: selectedPlace.name.isEmpty)
+                ToolBarCollection.ConfirmBtn(
+                    action: submitChange,
+                    disable: selectedPlace.name.isEmpty,
+                    isLoading: isSubmitting,
+                    dismissOnTap: false
+                )
             }
             .sheet(isPresented: $showSearchPlaceSheet) {
                 SearchMapView(errorHandler: errorHandler) { place in
                     selectedPlace = place
                     showSearchPlaceSheet = false
                 }
+            }
+        }
+    }
+
+    private func submitChange() {
+        guard !isSubmitting else { return }
+        isSubmitting = true
+        Task {
+            let isSuccess = await onConfirm(selectedPlace)
+            isSubmitting = false
+
+            if isSuccess {
+                onDismiss()
+                dismiss()
             }
         }
     }
@@ -165,7 +185,9 @@ struct OperatorLocationChangeSheetView: View {
             session: OperatorAttendancePreviewData.sessions.first?.session,
             errorHandler: AttendancePreviewData.errorHandler,
             onDismiss: {},
-            onConfirm: { _ in }
+            onConfirm: { _ in
+                true
+            }
         )
     }
 }

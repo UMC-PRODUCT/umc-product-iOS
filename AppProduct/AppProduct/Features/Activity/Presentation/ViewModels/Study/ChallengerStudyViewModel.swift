@@ -113,4 +113,31 @@ final class ChallengerStudyViewModel {
             )
         }
     }
+
+    #if DEBUG
+    @MainActor
+    func seedForDebugState(_ state: ActivityDebugState) {
+        switch state {
+        case .loading, .allLoading:
+            curriculumState = .loading
+        case .loaded:
+            let missions = Array(MissionPreviewData.iosMissions)
+            let completedCount = missions.filter { $0.status == .pass }.count
+            curriculumState = .loaded(
+                CurriculumData(
+                    progress: CurriculumProgressModel(
+                        partType: .front(type: .ios),
+                        partName: "iOS PART CURRICULUM",
+                        curriculumTitle: "iOS 파트 커리큘럼",
+                        completedCount: completedCount,
+                        totalCount: missions.count
+                    ),
+                    missions: missions
+                )
+            )
+        case .failed:
+            curriculumState = .failed(.unknown(message: "커리큘럼을 불러오지 못했습니다."))
+        }
+    }
+    #endif
 }
