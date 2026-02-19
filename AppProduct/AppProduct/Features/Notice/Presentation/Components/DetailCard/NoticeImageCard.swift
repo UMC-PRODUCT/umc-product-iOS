@@ -82,6 +82,7 @@ struct ImageViewerScreen: View {
     let imageURLs: [String]
     @State var selectedIndex: Int
     @State private var prefetcher: ImagePrefetcher?
+    @State private var verticalDragOffset: CGFloat = .zero
     let onDismiss: () -> Void
     
     // MARK: - Constant
@@ -94,6 +95,8 @@ struct ImageViewerScreen: View {
         static let foregroundVerticalCount: Int = 10
         static let foregroundVerticalSpan: Int = 5
         static let viewerDownsampleSize: CGSize = .init(width: 1440, height: 1440)
+        static let dismissDragThreshold: CGFloat = 120
+        static let dragResetAnimation: Animation = .spring(response: 0.28, dampingFraction: 0.85)
     }
     
     // MARK: - Body
@@ -111,6 +114,8 @@ struct ImageViewerScreen: View {
 
             closeButton
         }
+        .offset(y: max(0, verticalDragOffset))
+        .gesture(dismissDragGesture)
         .task {
             startPrefetching()
         }
@@ -178,6 +183,23 @@ struct ImageViewerScreen: View {
                 .foregroundStyle(.white)
                 .padding(Constants.closeButtonPadding)
         }
+    }
+
+    private var dismissDragGesture: some Gesture {
+        DragGesture(minimumDistance: 10, coordinateSpace: .local)
+            .onChanged { value in
+                guard value.translation.height > 0 else { return }
+                verticalDragOffset = value.translation.height
+            }
+            .onEnded { value in
+                if value.translation.height > Constants.dismissDragThreshold {
+                    onDismiss()
+                } else {
+                    withAnimation(Constants.dragResetAnimation) {
+                        verticalDragOffset = .zero
+                    }
+                }
+            }
     }
 
     // MARK: - Prefetch

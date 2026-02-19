@@ -250,7 +250,7 @@ struct NoticeDetailView: View {
     /// 펼침 상태 수신 확인 카드 inset
     @ViewBuilder
     private func expandedReadStatusInset() -> some View {
-        if !isReadStatusBarCollapsed {
+        if shouldShowReadStatusInset && !isReadStatusBarCollapsed {
             NoticeReadStatusButton(
                 confirmedCount: viewModel.confirmedCount,
                 totalCount: viewModel.totalCount,
@@ -269,7 +269,7 @@ struct NoticeDetailView: View {
     /// 압축 상태 원형 버튼 inset
     @ViewBuilder
     private func collapsedReadStatusInset() -> some View {
-        if isReadStatusBarCollapsed {
+        if shouldShowReadStatusInset && isReadStatusBarCollapsed {
             Button(action: expandReadStatusBar) {
                 Image(systemName: Constants.collapsedButtonIcon)
                     .font(.system(size: Constants.collapsedButtonIconSize, weight: .semibold))
@@ -317,6 +317,10 @@ struct NoticeDetailView: View {
 
         guard !shouldForceDetailFailedInDebug else {
             viewModel.noticeState = .failed(.unknown(message: "공지 상세 데이터를 불러오지 못했습니다."))
+            return
+        }
+        guard viewModel.noticeID > 0 else {
+            viewModel.noticeState = .failed(.unknown(message: "유효하지 않은 공지입니다."))
             return
         }
 
@@ -454,5 +458,13 @@ struct NoticeDetailView: View {
     /// 현재 로드된 공지 상세 데이터 (loaded 상태일 때만 존재)
     private var currentNotice: NoticeDetail? {
         viewModel.noticeState.value
+    }
+
+    /// 상세 로드 실패/로딩 상태에서는 하단 수신 확인 inset을 숨깁니다.
+    private var shouldShowReadStatusInset: Bool {
+        if case .loaded = viewModel.noticeState {
+            return true
+        }
+        return false
     }
 }

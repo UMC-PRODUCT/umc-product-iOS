@@ -62,6 +62,7 @@ struct NoticeListRequestDTO {
 /// 홈 화면 최근 공지 Response DTO
 struct NoticeListResponseDTO: Codable {
     let id: String
+    let noticeId: Int
     let title: String
     let content: String
     let shouldSendNotification: Bool
@@ -75,6 +76,7 @@ struct NoticeListResponseDTO: Codable {
 
     private enum CodingKeys: String, CodingKey {
         case id
+        case noticeId
         case title
         case content
         case shouldSendNotification
@@ -89,7 +91,11 @@ struct NoticeListResponseDTO: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        self.id = try container.decodeStringFlexibleIfPresent(forKey: .id) ?? "0"
+        let decodedId = try container.decodeStringFlexibleIfPresent(forKey: .id) ?? "0"
+        let decodedNoticeId = try container.decodeIntFlexibleIfPresent(forKey: .noticeId)
+
+        self.id = decodedId
+        self.noticeId = decodedNoticeId ?? Int(decodedId) ?? 0
         self.title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
         self.content = try container.decodeIfPresent(String.self, forKey: .content) ?? ""
         self.shouldSendNotification = try container.decodeBoolFlexibleIfPresent(forKey: .shouldSendNotification) ?? false
@@ -120,6 +126,7 @@ extension NoticeListResponseDTO {
         let date = createdAt.toISO8601Date()
 
         return RecentNoticeData(
+            noticeId: noticeId,
             category: category,
             title: title,
             createdAt: date

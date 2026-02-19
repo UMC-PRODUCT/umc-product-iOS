@@ -75,6 +75,12 @@ private extension NavigationRoutingView {
                 scheduleId: scheduleId,
                 selectedDate: selectedDate
             )
+        case .detailNotice(let detailItem):
+            NoticeDetailView(
+                container: di,
+                errorHandler: errorHandler,
+                model: detailItem
+            )
         }
     }
     
