@@ -16,6 +16,7 @@ mkdir -p "${CI_WORKSPACE}/AppProduct/AppProduct/Core/Secret"
 cat > "$CONFIG_PATH" << EOF
 KAKAO_KEY=${KAKAO_KEY}
 BASE_URL=${BASE_URL}
+TMAP_SECRET_KEY=${TMAP_SECRET_KEY}
 EOF
 
 echo "Secrets.xcconfig created successfully"

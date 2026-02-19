@@ -322,6 +322,11 @@ extension DIContainer {
         }
         
         // MARK: - Community Feature
+        container.register(TMapGeocodingRepositoryProtocol.self) {
+            TMapGeocodingRepository(
+                adapter: container.resolve(MoyaNetworkAdapter.self)
+            )
+        }
         container.register(CommunityRepositoryProtocol.self) {
             CommunityRepository(
                 adapter: container.resolve(MoyaNetworkAdapter.self)

@@ -28,4 +28,11 @@ enum Config {
         }
         return key
     }()
+
+    static let tmapSecretKey: String = {
+        guard let key = Config.infoDictionary["TMAP_SECRET_KEY"] as? String else {
+            fatalError("TMAP_SECRET_KEY not found")
+        }
+        return key
+    }()
 }

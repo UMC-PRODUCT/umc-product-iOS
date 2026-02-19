@@ -7,11 +7,14 @@
 
 import SwiftUI
 import MapKit
+import CoreLocation
 
 struct CommunityLightningCard: View {
     // MARK: - Properties
 
+    @Environment(\.di) private var di
     private let model: CommunityItemModel
+    @State private var geocodedCoordinateText: String?
     
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 16, leading: 16, bottom: 24, trailing: 16)
@@ -20,6 +23,7 @@ struct CommunityLightningCard: View {
         static let buttonPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
         static let tagPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
         static let iconSize: CGSize = .init(width: 30, height: 30)
+        static let unknownAddressPrefix = "주소 정보 없음"
     }
     
     private enum SectionType {
@@ -91,23 +95,23 @@ struct CommunityLightningCard: View {
             Text(type.title)
                 .appFont(.footnote, color: .grey500)
 
-            HStack {
-                Label {
-                    Text(type.content(from: model))
-                        .appFont(.subheadlineEmphasis, color: .black)
-                } icon: {
-                    Image(systemName: type.icon)
-                        .appFont(.subheadline)
-                        .frame(width: Constant.iconSize.width, height: Constant.iconSize.height)
-                        .foregroundStyle(type.iconColor)
-                        .glassEffect(.clear.tint(type.iconColor.opacity(0.2)))
-                }
-                
-                Spacer()
-                
+            HStack(alignment: .center, spacing: DefaultSpacing.spacing12) {
+                Image(systemName: type.icon)
+                    .appFont(.subheadline)
+                    .frame(width: Constant.iconSize.width, height: Constant.iconSize.height)
+                    .foregroundStyle(type.iconColor)
+                    .glassEffect(.clear.tint(type.iconColor.opacity(0.2)))
+
+                Text(type.content(from: model))
+                    .appFont(.subheadlineEmphasis, color: .black)
+                    .multilineTextAlignment(.leading)
+                    .lineSpacing(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
                 if type == .location {
                     Image(systemName: "arrow.up.right.square")
                         .foregroundStyle(.grey500)
+                        .padding(.top, 2)
                 }
             }
         }
@@ -117,35 +121,116 @@ struct CommunityLightningCard: View {
     /// 장소 섹션 (지도 링크 포함)
     @ViewBuilder
     private func makeLocationSection() -> some View {
-        Button(action: {
-            openMap()
-        }) {
-            makeSection(type: .location)
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+            Button(action: {
+                Task {
+                    await openMap()
+                }
+            }) {
+                makeSection(type: .location)
+            }
+
+            if let text = geocodedCoordinateText {
+                Text(text)
+                    .appFont(.footnote, color: .grey500)
+            }
         }
     }
 
     // MARK: - Function
 
-    // !!!: - 지도 해결 부탁 지도장인 제옹 감사합니다
-    private func openMap() {
+    private struct MapInput {
+        let mapLabel: String
+        let geocodeQuery: String
+    }
+
+    private func openMap() async {
         guard let location = model.lightningInfo?.location else { return }
 
-        // MKLocalSearch를 사용하여 주소 검색 후 지도 열기
-        let searchRequest = MKLocalSearch.Request()
-        searchRequest.naturalLanguageQuery = location
+        await MainActor.run {
+            geocodedCoordinateText = nil
+        }
+        logGeocodeText("map open request: raw=\(location)")
 
-        let search = MKLocalSearch(request: searchRequest)
-        search.start { response, error in
-            guard let mapItem = response?.mapItems.first else {
-                // 검색 실패 시: 지도 앱을 주소 검색 모드로 열기
-                if let encodedQuery = location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-                   let url = URL(string: "maps://?q=\(encodedQuery)") {
-                    UIApplication.shared.open(url)
-                }
-                return
+        guard let mapInput = makeMapInput(from: location) else {
+            await MainActor.run {
+                geocodedCoordinateText = "지도 검색을 위한 유효한 장소 정보가 없습니다."
             }
-            // 검색 성공 시 해당 위치로 지도 열기
-            mapItem.openInMaps()
+            return
+        }
+
+        if let tmapRepository = di.resolveIfRegistered(TMapGeocodingRepositoryProtocol.self),
+           let coordinate = await tmapRepository.geocodeCoordinate(from: mapInput.geocodeQuery) {
+            logGeocodeText("tmap result: lat=\(coordinate.latitude), lng=\(coordinate.longitude)")
+            await MainActor.run {
+                geocodedCoordinateText = "지오코딩 좌표: \(coordinate.latitude), \(coordinate.longitude)"
+            }
+            logGeocodedCoordinate(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            openMapByCoordinate(coordinate, query: mapInput.mapLabel)
+            return
+        }
+
+        await MainActor.run {
+            geocodedCoordinateText = "지도 검색 좌표를 찾지 못했습니다."
         }
     }
+
+    private func makeMapInput(from location: String) -> MapInput? {
+        let normalizedLocation = normalizeLocationForMap(location)
+        let parts = normalizedLocation
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        guard let first = parts.first else { return nil }
+        if first == Constant.unknownAddressPrefix {
+            let placeName = parts.dropFirst().joined(separator: ", ")
+            guard !placeName.isEmpty else { return nil }
+            return MapInput(
+                mapLabel: placeName,
+                geocodeQuery: placeName
+            )
+        }
+
+        return MapInput(
+            mapLabel: normalizedLocation,
+            geocodeQuery: normalizedLocation
+        )
+    }
+
+    private func normalizeLocationForMap(_ location: String) -> String {
+        return location
+            .replacingOccurrences(of: "^대한민국\\s*", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "\\b\\d{5}\\b", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func openMapByCoordinate(_ coordinate: CLLocationCoordinate2D, query: String) {
+        let lat = coordinate.latitude
+        let lng = coordinate.longitude
+        let mapItem = MKMapItem(
+            location: CLLocation(latitude: lat, longitude: lng),
+            address: nil
+        )
+        mapItem.name = query
+        mapItem.openInMaps()
+
+#if DEBUG
+        print("[CommunityLightningCard] openMapByCoordinate: lat=\(lat), lng=\(lng), query=\(query)")
+#endif
+    }
+
+    private func logGeocodedCoordinate(latitude: Double, longitude: Double) {
+#if DEBUG
+        print("[CommunityLightningCard] geocoded lat=\(latitude), lng=\(longitude)")
+#endif
+    }
+
+    private func logGeocodeText(_ message: String) {
+#if DEBUG
+        print("[CommunityLightningCard] \(message)")
+#endif
+    }
+
 }

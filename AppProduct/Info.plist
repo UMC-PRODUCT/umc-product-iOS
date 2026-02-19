@@ -17,6 +17,8 @@
 	</array>
 	<key>KAKAO_KEY</key>
 	<string>$(KAKAO_KEY)</string>
+	<key>TMAP_SECRET_KEY</key>
+	<string>$(TMAP_SECRET_KEY)</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>kakaokompassauth</string>
