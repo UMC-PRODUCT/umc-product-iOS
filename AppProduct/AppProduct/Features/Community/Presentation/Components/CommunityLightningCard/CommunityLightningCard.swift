@@ -126,7 +126,7 @@ struct CommunityLightningCard: View {
 
     // MARK: - Function
 
-    /// 주소로 애플 지도 열기
+    // !!!: - 지도 해결 부탁 지도장인 제옹 감사합니다
     private func openMap() {
         guard let location = model.lightningInfo?.location else { return }
 
