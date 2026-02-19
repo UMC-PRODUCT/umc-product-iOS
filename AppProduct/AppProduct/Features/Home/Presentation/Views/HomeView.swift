@@ -362,10 +362,55 @@ struct HomeView: View {
         } else {
             LazyVStack(spacing: DefaultSpacing.spacing8) {
                 ForEach(recentNoticeData.prefix(Constants.recentCardCount), id: \.id) { data in
-                    RecentNoticeCard(data: data)
+                    Button {
+                        openRecentNoticeDetail(data)
+                    } label: {
+                        RecentNoticeCard(data: data)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
+    }
+
+    private func openRecentNoticeDetail(_ data: RecentNoticeData) {
+        let detail = makeNoticeDetail(from: data)
+        pathStore.homePath.append(.home(.detailNotice(detailItem: detail)))
+    }
+
+    private func makeNoticeDetail(from data: RecentNoticeData) -> NoticeDetail {
+        let scope: NoticeScope
+        switch data.category {
+        case .operationsTeam:
+            scope = .central
+        case .univ:
+            scope = .campus
+        case .oranization:
+            scope = .branch
+        }
+
+        let generation = viewModel.roles.max(by: { $0.gisu < $1.gisu })?.gisu ?? 0
+        let targetAudience = TargetAudience.all(generation: generation, scope: scope)
+
+        return NoticeDetail(
+            id: String(data.noticeId),
+            generation: generation,
+            scope: scope,
+            category: .general,
+            isMustRead: false,
+            title: data.title,
+            content: "",
+            authorID: "",
+            authorName: "",
+            authorImageURL: nil,
+            createdAt: data.createdAt,
+            updatedAt: nil,
+            targetAudience: targetAudience,
+            hasPermission: false,
+            images: [],
+            links: [],
+            vote: nil
+        )
     }
 }
 

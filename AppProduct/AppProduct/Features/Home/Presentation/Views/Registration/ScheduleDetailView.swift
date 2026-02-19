@@ -22,6 +22,11 @@ struct ScheduleDetailView: View {
         static let editLoadingMessage: String = "일정 정보를 불러오는 중입니다."
         static let detailTitle: String = "상세 안내"
         static let mapButtonTitle: String = "지도 보기"
+        static let failedTitle: String = "일정을 불러오지 못했어요"
+        static let failedSystemImage: String = "exclamationmark.triangle"
+        static let retryTitle: String = "다시 시도"
+        static let retryMinButtonWidth: CGFloat = 72
+        static let retryMinButtonHeight: CGFloat = 20
     }
 
     // MARK: - Init
@@ -81,8 +86,22 @@ struct ScheduleDetailView: View {
                         longitude: data.longitude
                     )
                 }
-        case .failed:
-            Color.clear
+        case .failed(let error):
+            RetryContentUnavailableView(
+                title: Constants.failedTitle,
+                systemImage: Constants.failedSystemImage,
+                description: error.userMessage,
+                retryTitle: Constants.retryTitle,
+                isRetrying: viewModel.data.isLoading,
+                minRetryButtonWidth: Constants.retryMinButtonWidth,
+                minRetryButtonHeight: Constants.retryMinButtonHeight
+            ) {
+                let provider = di.resolve(HomeUseCaseProviding.self)
+                await viewModel.fetchScheduleDetail(
+                    fetchScheduleDetailUseCase: provider.fetchScheduleDetailUseCase
+                )
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 

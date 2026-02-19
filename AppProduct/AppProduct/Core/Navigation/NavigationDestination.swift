@@ -61,6 +61,8 @@ enum NavigationDestination: Hashable {
         case registrationSchedule
         /// 일정 상세 (scheduleId: 일정 ID, selectedDate: 선택 날짜)
         case detailSchedule(scheduleId: Int, selectedDate: Date)
+        /// 홈에서 진입하는 공지 상세
+        case detailNotice(detailItem: NoticeDetail)
     }
 
     /// 공지사항(Notice) 관련 화면 목적지

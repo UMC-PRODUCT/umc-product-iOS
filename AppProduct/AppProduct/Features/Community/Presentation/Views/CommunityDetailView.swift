@@ -29,12 +29,12 @@ struct CommunityDetailView: View {
         static let commentInputActionRowSpacing: CGFloat = DefaultSpacing.spacing8
         static let textFieldMinHeight: CGFloat = 36
         static let textFieldPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
-        static let sendButtonSize: CGSize = .init(width: 48, height: 48)
+        static let sendButtonSize: CGSize = .init(width: 42, height: 42)
         static let commentLoadingMessage: String = "댓글을 불러오는 중입니다..."
         static let commentsCountTitle: String = "댓글 %d개"
         static let commentLoadFailedTitle: String = "댓글을 불러오지 못했어요"
         static let commentLoadFailedDescription: String = "댓글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요."
-        static let collapsedButtonSize: CGFloat = 56
+        static let collapsedButtonSize: CGFloat = 64
         static let inputHorizontalPadding: CGFloat = 20
         static let inputBottomOffset: CGFloat = 10
         static let commentInputAnimation: Animation = .easeInOut(duration: 0.2)
