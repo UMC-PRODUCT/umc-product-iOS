@@ -51,6 +51,7 @@ struct CommunityFameItem: View, Equatable {
             .indigo500.opacity(0.035),
             .grey100.opacity(0.92)
         ]
+        static let feedbackShape: ConcentricRectangle = .init(corners: .concentric(minimum: feedbackConcentricRadius), isUniform: true)
     }
 
     // MARK: - Init
@@ -123,13 +124,16 @@ struct CommunityFameItem: View, Equatable {
             .lineSpacing(Constant.feedbackLineSpacing)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Constant.feedbackPadding)
-            .background(feedbackBackground)
+            .background(
+                feedbackBackground
+                    .clipShape(Constant.feedbackShape)
+            )
             .glassEffect(
                 .clear.tint(.white.opacity(Constant.feedbackGlassTintOpacity)),
-                in: .rect(corners: .concentric(minimum: Constant.feedbackConcentricRadius), isUniform: true)
+                in: Constant.feedbackShape
             )
             .overlay(
-                ConcentricRectangle(corners: .concentric(minimum: Constant.feedbackConcentricRadius), isUniform: true)
+                Constant.feedbackShape
                     .stroke(
                         Color.white.opacity(Constant.feedbackBorderOpacity),
                         lineWidth: Constant.feedbackBorderWidth

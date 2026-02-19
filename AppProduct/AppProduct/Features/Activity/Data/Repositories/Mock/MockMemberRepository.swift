@@ -116,11 +116,11 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 school: "한국대학교",
                 position: "Member",
                 part: .pm,
-                penalty: 1,
+                penalty: 5,
                 badge: false,
                 managementTeam: .challenger,
                 attendanceRecords: MockAttendanceRecords.average,
-                penaltyHistory: MockPenaltyHistory.oneOut
+                penaltyHistory: MockPenaltyHistory.fiveOut
             ),
             
             // 신입생 - 출석 기록 없음
@@ -346,6 +346,35 @@ private enum MockPenaltyHistory {
         OperatorMemberPenaltyHistory(
             date: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1주 전
             reason: "세션 결석 (사유 없음)",
+            penaltyScore: 1.0
+        )
+    ]
+
+    /// 5아웃 (히스토리 길이 확인용)
+    static let fiveOut: [OperatorMemberPenaltyHistory] = [
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-35 * 24 * 60 * 60), // 5주 전
+            reason: "세션 지각",
+            penaltyScore: 1.0
+        ),
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-28 * 24 * 60 * 60), // 4주 전
+            reason: "워크북 미제출",
+            penaltyScore: 1.0
+        ),
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-21 * 24 * 60 * 60), // 3주 전
+            reason: "세션 결석 (사전 공유 없음)",
+            penaltyScore: 1.0
+        ),
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-14 * 24 * 60 * 60), // 2주 전
+            reason: "세션 지각",
+            penaltyScore: 1.0
+        ),
+        OperatorMemberPenaltyHistory(
+            date: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1주 전
+            reason: "세션 지각",
             penaltyScore: 1.0
         )
     ]

@@ -53,24 +53,6 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <PreActions>
-         <ExecutionAction
-            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
-            <ActionContent
-               title = "Fetch debug tokens"
-               scriptText = "#!/bin/bash&#10;MEMBER_ID=1&#10;BASE=&quot;https://dev.api.umc.it.kr&quot;&#10;CRED=$(echo -n &quot;umcproduct:hello_world_product!&quot; | base64)&#10;&#10;ACCESS=$(curl -sf -m 10 -H &quot;Authorization: Basic $CRED&quot; &quot;$BASE/test/token/access?memberId=$MEMBER_ID&amp;expirationInMinutes=200&quot;) || exit 0&#10;REFRESH=$(curl -sf -m 10 -H &quot;Authorization: Basic $CRED&quot; &quot;$BASE/test/token/refresh/$MEMBER_ID&quot;) || exit 0&#10;[ -z &quot;$ACCESS&quot; ] || [ -z &quot;$REFRESH&quot; ] &amp;&amp; exit 0&#10;&#10;cat &gt; /tmp/umc_debug_tokens.json &lt;&lt;EOF&#10;{&quot;accessToken&quot;:&quot;$ACCESS&quot;,&quot;refreshToken&quot;:&quot;$REFRESH&quot;,&quot;memberId&quot;:$MEMBER_ID}&#10;EOF&#10;">
-               <EnvironmentBuildable>
-                  <BuildableReference
-                     BuildableIdentifier = "primary"
-                     BlueprintIdentifier = "0E6380A82F02F1020060E4D9"
-                     BuildableName = "AppProduct.app"
-                     BlueprintName = "AppProduct"
-                     ReferencedContainer = "container:AppProduct.xcodeproj">
-                  </BuildableReference>
-               </EnvironmentBuildable>
-            </ActionContent>
-         </ExecutionAction>
-      </PreActions>
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
@@ -83,24 +65,80 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--open-activity-tab"
+            argument = "-noticeDebugState"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "loaded"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--seed-appstorage-role-central-operating-team-member"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-homeDebugState"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "loaded"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "CommunityState(no Select)"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-seed-member-role"
+            argument = "-communityDebugState loading"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "centralOperatingTeamMember"
+            argument = "-communityDebugState loaded"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-communityDebugState failed"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "FameState(no Select)"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-fameDebugState loading"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-fameDebugState loaded"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-fameDebugState failed"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-activityDebugState"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "loaded"
-            isEnabled = "NO">
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-myPageDebugState"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "loaded"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-injectTestToken"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "1"
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
       <EnvironmentVariables>
@@ -127,6 +165,11 @@
          <EnvironmentVariable
             key = "API_BASE_URL"
             value = ""
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "UMC_API_TEST_ACCESS_TOKEN"
+            value = "$(UMC_API_TEST_ACCESS_TOKEN)"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable

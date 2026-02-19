@@ -2,7 +2,7 @@
 //  CurriculumProgressDTO.swift
 //  AppProduct
 //
-//  Created by Codex on 2/18/26.
+//  Created by euijjang97 on 2/18/26.
 //
 
 import Foundation
@@ -47,6 +47,7 @@ extension ChallengerCurriculumProgressDTO {
 
         return CurriculumData(
             progress: CurriculumProgressModel(
+                partType: UMCPartType(apiValue: part),
                 partName: partDisplayName,
                 curriculumTitle: currentTitle,
                 completedCount: completed,

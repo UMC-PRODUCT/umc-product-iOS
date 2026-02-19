@@ -43,7 +43,8 @@ struct StudyGroupPreviewData {
                     serverID: "m_002",
                     name: "이수빈",
                     nickname: "수비",
-                    university: "국민대"
+                    university: "국민대",
+                    bestWorkbookPoint: 20
                 ),
                 StudyGroupMember(
                     serverID: "m_003",
@@ -91,7 +92,8 @@ struct StudyGroupPreviewData {
                     serverID: "m_021",
                     name: "이예지",
                     nickname: "소피",
-                    university: "가천대"
+                    university: "가천대",
+                    bestWorkbookPoint: 35
                 ),
                 StudyGroupMember(
                     serverID: "m_022",
@@ -118,7 +120,8 @@ struct StudyGroupPreviewData {
                 StudyGroupMember(
                     serverID: "m_031",
                     name: "김태현",
-                    university: "세종대"
+                    university: "세종대",
+                    bestWorkbookPoint: 10
                 ),
             ]
         ),

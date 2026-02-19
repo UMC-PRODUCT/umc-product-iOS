@@ -51,4 +51,28 @@ enum ActivitySection: String, Identifiable, CaseIterable {
             .attendanceManage
         }
     }
+
+    /// 다른 모드에서 의미상 대응되는 섹션을 반환합니다.
+    func mapped(to mode: ActivityMode) -> ActivitySection {
+        switch mode {
+        case .challenger:
+            switch self {
+            case .attendanceCheck, .attendanceManage:
+                return .attendanceCheck
+            case .studyActivity, .studyManage:
+                return .studyActivity
+            case .members, .memberManage:
+                return .members
+            }
+        case .admin:
+            switch self {
+            case .attendanceCheck, .attendanceManage:
+                return .attendanceManage
+            case .studyActivity, .studyManage:
+                return .studyManage
+            case .members, .memberManage:
+                return .memberManage
+            }
+        }
+    }
 }

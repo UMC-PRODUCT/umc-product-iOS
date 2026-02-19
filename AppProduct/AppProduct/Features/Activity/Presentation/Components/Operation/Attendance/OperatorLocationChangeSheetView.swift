@@ -26,6 +26,14 @@ struct OperatorLocationChangeSheetView: View {
     )
     @State private var showSearchPlaceSheet: Bool = false
 
+    // MARK: - Constant
+
+    private enum Constants {
+        static let rootHorizontalPadding: CGFloat = 14
+        static let rootTopPadding: CGFloat = 6
+        static let rootBottomPadding: CGFloat = 16
+    }
+
     // MARK: - Init
 
     init(
@@ -44,18 +52,24 @@ struct OperatorLocationChangeSheetView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
                 if let session = session {
-                    sessionInfoSection(session: session)
-
-                    placeSelectionSection
+                    sessionInfoCard(session: session)
+                    placeSelectionCard
+                } else {
+                    Text("세션 정보를 불러올 수 없습니다.")
+                        .appFont(.subheadline, color: .grey500)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, DefaultSpacing.spacing8)
                 }
             }
-            .formStyle(.grouped)
+            .padding(.horizontal, Constants.rootHorizontalPadding)
+            .padding(.top, Constants.rootTopPadding)
+            .padding(.bottom, Constants.rootBottomPadding)
             .navigationTitle("위치 변경")
             .navigationBarTitleDisplayMode(.inline)
-            .presentationDetents([.height(310)])
-            .presentationDragIndicator(.visible)
+            .presentationDetents([.height(320)])
+            .presentationDragIndicator(.hidden)
             .toolbar {
                 ToolBarCollection.CancelBtn {
                     onDismiss()
@@ -74,26 +88,32 @@ struct OperatorLocationChangeSheetView: View {
         }
     }
 
-    // MARK: - Session Info Section
+    // MARK: - Session Info Card
 
-    private func sessionInfoSection(session: Session) -> some View {
-        Section {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                Text(session.info.title)
-                    .appFont(.calloutEmphasis)
+    private func sessionInfoCard(session: Session) -> some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            Text("세션")
+                .appFont(.caption1, color: .grey500)
 
-                Text(session.info.startTime.timeRange(to: session.info.endTime))
-                    .appFont(.footnote, color: .grey500)
-            }
-        } header: {
-            Text("세션 정보")
+            Text(session.info.title)
+                .appFont(.calloutEmphasis)
+
+            Text(session.info.startTime.timeRange(to: session.info.endTime))
+                .appFont(.footnote, color: .grey500)
         }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+        .glass()
     }
 
-    // MARK: - Place Selection Section
+    // MARK: - Place Selection Card
 
-    private var placeSelectionSection: some View {
-        Section {
+    private var placeSelectionCard: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            Text("새 위치")
+                .appFont(.caption1, color: .grey500)
+
             Group {
                 if selectedPlace.name == "" {
                     placeholderPlaceInfo
@@ -106,14 +126,20 @@ struct OperatorLocationChangeSheetView: View {
             .onTapGesture {
                 showSearchPlaceSheet = true
             }
-        } header: {
-            Text("새 위치")
         }
+        .padding(14)
+        .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+        .glass()
     }
     
     private var placeholderPlaceInfo: some View {
-        Text("위치 선택하기")
-            .appFont(.calloutEmphasis, color: .gray)
+        HStack {
+            Image(systemName: "location.circle")
+                .foregroundStyle(.grey400)
+            Text("위치 선택하기")
+                .appFont(.callout, color: .grey500)
+        }
+        .padding(.vertical, 2)
     }
 
     private var selectedPlaceInfo: some View {

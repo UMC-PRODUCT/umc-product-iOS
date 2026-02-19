@@ -72,12 +72,23 @@ final class OperatorAttendanceViewModel {
                 }
             }
 
+            // TODO: 서버에서 출석 집계(total/attended/rate) 제공 시 해당 값으로 교체
+            let sessionStatus = OperatorSessionStatus.from(
+                startTime: session.info.startTime,
+                endTime: session.info.endTime
+            )
+            let totalCount = sessionStatus == .beforeStart ? 0 : 40
+            let attendedCount = max(0, totalCount - pendingMembers.count)
+            let attendanceRate = totalCount > 0
+                ? Double(attendedCount) / Double(totalCount)
+                : 0
+
             updatedSessions.append(OperatorSessionAttendance(
                 serverID: scheduleIdString,
                 session: session,
-                attendanceRate: 0.0,
-                attendedCount: 0,
-                totalCount: 0,
+                attendanceRate: attendanceRate,
+                attendedCount: attendedCount,
+                totalCount: totalCount,
                 pendingMembers: pendingMembers
             ))
         }

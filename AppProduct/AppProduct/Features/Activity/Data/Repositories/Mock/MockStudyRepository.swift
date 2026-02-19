@@ -148,9 +148,12 @@ final class MockStudyRepository: StudyRepositoryProtocol {
 
     // MARK: - 운영진 스터디 관리
 
-    func fetchStudyMembers() async throws -> [StudyMemberItem] {
+    func fetchStudyMembers(
+        week: Int,
+        studyGroupId: Int?
+    ) async throws -> [StudyMemberItem] {
         try await Task.sleep(for: .milliseconds(500))
-        return StudyMemberItem.preview
+        return StudyMemberItem.preview.filter { $0.week == week }
     }
 
     func fetchStudyGroups() async throws -> [StudyGroupItem] {
@@ -158,8 +161,70 @@ final class MockStudyRepository: StudyRepositoryProtocol {
         return StudyGroupItem.preview
     }
 
+    func fetchStudyGroupDetails() async throws -> [StudyGroupInfo] {
+        try await Task.sleep(for: .milliseconds(300))
+        return StudyGroupPreviewData.groups
+    }
+
     func fetchWeeks() async throws -> [Int] {
         try await Task.sleep(for: .milliseconds(200))
         return Array(1...10)
+    }
+
+    func fetchWorkbookSubmissionURL(
+        challengerWorkbookId: Int
+    ) async throws -> String? {
+        try await Task.sleep(for: .milliseconds(150))
+        return "https://github.com/user/repo-\(challengerWorkbookId)"
+    }
+
+    func reviewWorkbook(
+        challengerWorkbookId: Int,
+        isApproved: Bool,
+        feedback: String
+    ) async throws {
+        _ = challengerWorkbookId
+        _ = isApproved
+        _ = feedback
+        try await Task.sleep(for: .milliseconds(200))
+    }
+
+    func selectBestWorkbook(
+        challengerWorkbookId: Int,
+        bestReason: String
+    ) async throws {
+        _ = bestReason
+        try await Task.sleep(for: .milliseconds(200))
+    }
+
+    func createStudyGroup(
+        name: String,
+        part: UMCPartType,
+        leaderId: Int,
+        memberIds: [Int]
+    ) async throws {
+        _ = name
+        _ = part
+        _ = leaderId
+        _ = memberIds
+        try await Task.sleep(for: .milliseconds(300))
+    }
+
+    func updateStudyGroup(
+        groupId: Int,
+        name: String,
+        part: UMCPartType
+    ) async throws {
+        _ = groupId
+        _ = name
+        _ = part
+        try await Task.sleep(for: .milliseconds(300))
+    }
+
+    func deleteStudyGroup(
+        groupId: Int
+    ) async throws {
+        _ = groupId
+        try await Task.sleep(for: .milliseconds(200))
     }
 }

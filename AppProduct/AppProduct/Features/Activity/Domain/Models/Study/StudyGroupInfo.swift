@@ -93,7 +93,8 @@ extension StudyGroupInfo {
                 serverID: "member_002",
                 name: "홍길동",
                 nickname: "길동2",
-                university: "서울대"
+                university: "서울대",
+                bestWorkbookPoint: 30
             ),
             StudyGroupMember(
                 serverID: "member_003",

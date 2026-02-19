@@ -35,8 +35,7 @@ struct TitleLabel: View {
         HStack(spacing: DefaultSpacing.spacing4, content: {
             // 제목 텍스트 (Bold, 18pt)
             Text(title)
-                .font(.system(size: 18))
-                .fontWeight(.heavy)
+                .appFont(.bodyEmphasis, color: .black)
 
             // 필수 입력 표시
             if isRequired {
@@ -44,6 +43,5 @@ struct TitleLabel: View {
                     .appFont(.body, color: .red)
             }
         })
-        .padding(.leading, 12)
     }
 }

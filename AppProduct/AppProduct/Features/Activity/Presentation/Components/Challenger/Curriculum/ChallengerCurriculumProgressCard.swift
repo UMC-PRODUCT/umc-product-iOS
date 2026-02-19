@@ -55,17 +55,17 @@ struct ChallengerCurriculumProgressCard: View, Equatable {
         HStack(spacing: DefaultSpacing.spacing12) {
             CardIconImage(
                 image: Constants.iconName,
-                color: .indigo500,
+                color: model.partColor,
                 isLoading: .constant(false)
             )
 
             Text(model.partName)
-                .appFont(.calloutEmphasis, color: .indigo500)
+                .appFont(.calloutEmphasis, color: model.partColor)
             
             Spacer()
 
             Text("\(model.progressPercentage)%")
-                .appFont(.title3Emphasis, color: .indigo500)
+                .appFont(.title3Emphasis, color: model.partColor)
         }
     }
 
@@ -83,7 +83,7 @@ struct ChallengerCurriculumProgressCard: View, Equatable {
         .gaugeStyle(.linearCapacity)
         .tint(
             LinearGradient(
-                colors: [.indigo300, .indigo600],
+                colors: [model.partColor.opacity(0.8), model.partColor],
                 startPoint: .leading,
                 endPoint: .trailing
             )

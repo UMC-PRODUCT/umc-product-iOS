@@ -55,6 +55,7 @@ struct OperatorSessionCard: View, Equatable {
 
     fileprivate enum Constants {
         static let mapPinIconSize: CGSize = .init(width: 24, height: 24)
+        static let mapButtonSize: CGFloat = 42
         static let titleLineLimit: Int = 2
         static let statusRadius: CGFloat = 8
         static let clockIconSize: CGSize = .init(width: 14, height: 14)
@@ -177,17 +178,36 @@ struct OperatorSessionCard: View, Equatable {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button(action: actions.onLocationTap) {
-                Image(.Map.mapPinGrey)
-                    .resizable()
-                    .font(.system(size: 12))
+            if currentSessionStatus != .ended {
+                Button(action: actions.onLocationTap) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.indigo300, .indigo600],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white.opacity(0.7), lineWidth: 1)
+                            )
+
+                        Image(systemName: "map.fill")
+                            .font(.system(size: 14, weight: .bold))
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .yellow)
+                    }
                     .frame(
-                        width: Constants.mapPinIconSize.width,
-                        height: Constants.mapPinIconSize.height)
+                        width: Constants.mapButtonSize,
+                        height: Constants.mapButtonSize
+                    )
+                    .shadow(color: .indigo500.opacity(0.22), radius: 8, y: 3)
+                }
+                .buttonStyle(.plain)
+                .glassEffect(.clear.interactive(), in: .circle)
             }
-            .padding(DefaultConstant.defaultBtnPadding)
-            .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: .circle)
         }
     }
 

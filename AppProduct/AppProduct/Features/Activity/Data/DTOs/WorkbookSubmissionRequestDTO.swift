@@ -2,7 +2,7 @@
 //  WorkbookSubmissionRequestDTO.swift
 //  AppProduct
 //
-//  Created by Codex on 2/18/26.
+//  Created by euijjang97 on 2/18/26.
 //
 
 import Foundation

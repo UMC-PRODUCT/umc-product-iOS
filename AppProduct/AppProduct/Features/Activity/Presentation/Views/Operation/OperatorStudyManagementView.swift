@@ -86,9 +86,11 @@ struct OperatorStudyManagementView: View {
                 groupManagementPlaceholder
             }
         }
-        .task {
-            if viewModel.membersState.isIdle {
-                await viewModel.fetchMembers()
+        .task(id: selectedTab) {
+            if selectedTab == .submission {
+                await viewModel.fetchSubmissionMembers()
+            } else {
+                await viewModel.fetchGroupManagementData()
             }
         }
         .toolbar {
@@ -116,13 +118,13 @@ struct OperatorStudyManagementView: View {
             OperatorStudyReviewSheet(
                 member: member,
                 onApprove: { feedback in
-                    viewModel.confirmReviewApproval(
+                    viewModel.submitReviewApproval(
                         member: member,
                         feedback: feedback
                     )
                 },
                 onReject: { feedback in
-                    viewModel.confirmReviewRejection(
+                    viewModel.submitReviewRejection(
                         member: member,
                         feedback: feedback
                     )
@@ -136,7 +138,7 @@ struct OperatorStudyManagementView: View {
             OperatorBestWorkbookSheet(
                 member: member,
                 onSelect: { recommendation in
-                    viewModel.confirmBestWorkbookSelection(
+                    viewModel.submitBestWorkbookSelection(
                         member: member,
                         recommendation: recommendation
                     )
@@ -155,7 +157,7 @@ struct OperatorStudyManagementView: View {
             OperatorStudyGroupEditSheet(
                 detail: group,
                 onSave: { name, part in
-                    viewModel.applyGroupEdit(
+                    await viewModel.updateGroup(
                         groupID: group.id,
                         name: name,
                         part: part
@@ -165,7 +167,7 @@ struct OperatorStudyManagementView: View {
         }
         .navigationDestination(isPresented: $showCreateView) {
             OperatorStudyGroupCreateView { name, part, leader, members in
-                viewModel.createGroup(
+                await viewModel.createGroup(
                     name: name,
                     part: part,
                     leader: leader,
@@ -299,7 +301,7 @@ struct OperatorStudyManagementView: View {
                     ))
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button {
-                            viewModel.selectedMemberForReview = member
+                            viewModel.openReviewSheet(for: member)
                         } label: {
                             Label("검토", systemImage: "checkmark.circle.fill")
                         }
@@ -330,7 +332,7 @@ struct OperatorStudyManagementView: View {
             } actions: {
                 Button {
                     Task {
-                        await viewModel.fetchMembers()
+                        await viewModel.fetchSubmissionMembers()
                     }
                 } label: {
                     Image(systemName: "arrow.trianglehead.clockwise")

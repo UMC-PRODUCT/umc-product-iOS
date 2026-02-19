@@ -2,7 +2,7 @@
 //  StudyRepository.swift
 //  AppProduct
 //
-//  Created by Codex on 2/18/26.
+//  Created by euijjang97 on 2/18/26.
 //
 
 import Foundation
@@ -102,12 +102,108 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
 
     // MARK: - 운영진 스터디 관리 (Fallback)
 
-    func fetchStudyMembers() async throws -> [StudyMemberItem] {
-        try await fallbackRepository.fetchStudyMembers()
+    func fetchStudyMembers(
+        week: Int,
+        studyGroupId: Int?
+    ) async throws -> [StudyMemberItem] {
+        if let studyGroupId {
+            return try await fetchMembersByGroup(
+                week: week,
+                studyGroupId: studyGroupId
+            )
+        }
+
+        let groups = try await fetchStudyGroups()
+            .filter { $0 != .all }
+            .compactMap { Int($0.serverID) }
+        if groups.isEmpty {
+            return try await fallbackRepository.fetchStudyMembers(
+                week: week,
+                studyGroupId: nil
+            )
+        }
+
+        var merged: [StudyMemberItem] = []
+        for groupId in groups {
+            let members = try await fetchMembersByGroup(
+                week: week,
+                studyGroupId: groupId
+            )
+            merged.append(contentsOf: members)
+        }
+
+        // 중복 제거 (같은 챌린저가 여러 그룹에 걸쳐 중복 노출되는 경우 방지)
+        var deduplicated: [String: StudyMemberItem] = [:]
+        merged.forEach { deduplicated[$0.serverID] = $0 }
+        return Array(deduplicated.values)
+            .sorted { $0.displayName < $1.displayName }
     }
 
     func fetchStudyGroups() async throws -> [StudyGroupItem] {
-        try await fallbackRepository.fetchStudyGroups()
+        let response = try await adapter.request(StudyRouter.getStudyGroupNames)
+
+        // 서버별 응답 포맷 차이를 흡수합니다.
+        if let apiResponse = try? decoder.decode(
+            APIResponse<StudyGroupNamesDTO>.self,
+            from: response.data
+        ),
+           let wrapped = try? apiResponse.unwrap() {
+            return wrapped.toDomain()
+        }
+
+        if let plain = try? decoder.decode(
+            StudyGroupNamesDTO.self,
+            from: response.data
+        ) {
+            return plain.toDomain()
+        }
+
+        return try await fallbackRepository.fetchStudyGroups()
+    }
+
+    func fetchStudyGroupDetails() async throws -> [StudyGroupInfo] {
+        let groups = try await fetchStudyGroups()
+            .filter { $0 != .all }
+
+        if groups.isEmpty {
+            return try await fallbackRepository.fetchStudyGroupDetails()
+        }
+
+        var details: [StudyGroupInfo] = []
+        for group in groups {
+            guard let groupId = Int(group.serverID) else { continue }
+
+            do {
+                let response = try await adapter.request(
+                    StudyRouter.getStudyGroupDetail(groupId: groupId)
+                )
+
+                let dto: StudyGroupDetailDTO
+                if let apiResponse = try? decoder.decode(
+                    APIResponse<StudyGroupDetailDTO>.self,
+                    from: response.data
+                ),
+                   let wrapped = try? apiResponse.unwrap() {
+                    dto = wrapped
+                } else {
+                    dto = try decoder.decode(
+                        StudyGroupDetailDTO.self,
+                        from: response.data
+                    )
+                }
+
+                details.append(
+                    dto.toDomain(defaultGroupName: group.name)
+                )
+            } catch {
+                continue
+            }
+        }
+
+        if details.isEmpty {
+            return try await fallbackRepository.fetchStudyGroupDetails()
+        }
+        return details
     }
 
     func fetchWeeks() async throws -> [Int] {
@@ -130,7 +226,219 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
         return weeks
     }
 
+    func fetchWorkbookSubmissionURL(
+        challengerWorkbookId: Int
+    ) async throws -> String? {
+        let response = try await adapter.request(
+            StudyRouter.getWorkbookSubmission(
+                challengerWorkbookId: challengerWorkbookId
+            )
+        )
+
+        let dto: WorkbookSubmissionDetailDTO
+        if let apiResponse = try? decoder.decode(
+            APIResponse<WorkbookSubmissionDetailDTO>.self,
+            from: response.data
+        ),
+           let wrapped = try? apiResponse.unwrap() {
+            dto = wrapped
+        } else {
+            dto = try decoder.decode(
+                WorkbookSubmissionDetailDTO.self,
+                from: response.data
+            )
+        }
+
+        guard let submission = dto.submission,
+              !submission.isEmpty else {
+            return nil
+        }
+        return submission
+    }
+
+    func reviewWorkbook(
+        challengerWorkbookId: Int,
+        isApproved: Bool,
+        feedback: String
+    ) async throws {
+        let status = isApproved ? "PASS" : "FAIL"
+        let response = try await adapter.request(
+            StudyRouter.reviewWorkbook(
+                challengerWorkbookId: challengerWorkbookId,
+                body: WorkbookReviewRequestDTO(
+                    status: status,
+                    feedback: feedback
+                )
+            )
+        )
+
+        if response.data.isEmpty {
+            return
+        }
+        if let apiResponse = try? decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        ) {
+            try apiResponse.validateSuccess()
+        }
+    }
+
+    func selectBestWorkbook(
+        challengerWorkbookId: Int,
+        bestReason: String
+    ) async throws {
+        let response = try await adapter.request(
+            StudyRouter.selectBestWorkbook(
+                challengerWorkbookId: challengerWorkbookId,
+                body: BestWorkbookSelectionRequestDTO(bestReason: bestReason)
+            )
+        )
+
+        if response.data.isEmpty {
+            return
+        }
+        if let apiResponse = try? decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        ) {
+            try apiResponse.validateSuccess()
+        }
+    }
+
+    func createStudyGroup(
+        name: String,
+        part: UMCPartType,
+        leaderId: Int,
+        memberIds: [Int]
+    ) async throws {
+        let response = try await adapter.request(
+            StudyRouter.createStudyGroup(
+                body: StudyGroupCreateRequestDTO(
+                    name: name,
+                    part: part.apiValue,
+                    leaderId: leaderId,
+                    memberIds: memberIds
+                )
+            )
+        )
+
+        if response.data.isEmpty {
+            return
+        }
+
+        if let apiResponse = try? decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        ) {
+            try apiResponse.validateSuccess()
+            return
+        }
+
+        if let apiResponse = try? decoder.decode(
+            APIResponse<StudyGroupDetailDTO>.self,
+            from: response.data
+        ),
+           let _ = try? apiResponse.unwrap() {
+            return
+        }
+    }
+
+    func updateStudyGroup(
+        groupId: Int,
+        name: String,
+        part: UMCPartType
+    ) async throws {
+        let response = try await adapter.request(
+            StudyRouter.updateStudyGroup(
+                groupId: groupId,
+                body: StudyGroupUpdateRequestDTO(
+                    name: name,
+                    part: part.apiValue
+                )
+            )
+        )
+
+        if response.data.isEmpty {
+            return
+        }
+
+        if let apiResponse = try? decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        ) {
+            try apiResponse.validateSuccess()
+            return
+        }
+
+        if let apiResponse = try? decoder.decode(
+            APIResponse<StudyGroupDetailDTO>.self,
+            from: response.data
+        ),
+           let _ = try? apiResponse.unwrap() {
+            return
+        }
+    }
+
+    func deleteStudyGroup(
+        groupId: Int
+    ) async throws {
+        let response = try await adapter.request(
+            StudyRouter.deleteStudyGroup(
+                groupId: groupId
+            )
+        )
+
+        if response.data.isEmpty {
+            return
+        }
+
+        if let apiResponse = try? decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        ) {
+            try apiResponse.validateSuccess()
+        }
+    }
+
     // MARK: - Private Helper
+
+    private func fetchMembersByGroup(
+        week: Int,
+        studyGroupId: Int
+    ) async throws -> [StudyMemberItem] {
+        var cursor: Int? = nil
+        var hasNext = true
+        var members: [StudyMemberItem] = []
+
+        while hasNext {
+            let response = try await adapter.request(
+                StudyRouter.getWorkbookSubmissions(
+                    weekNo: week,
+                    studyGroupId: studyGroupId,
+                    cursor: cursor,
+                    size: 100
+                )
+            )
+            let page: WorkbookSubmissionPageDTO
+            if let apiResponse = try? decoder.decode(
+                APIResponse<WorkbookSubmissionPageDTO>.self,
+                from: response.data
+            ),
+               let wrapped = try? apiResponse.unwrap() {
+                page = wrapped
+            } else {
+                page = try decoder.decode(
+                    WorkbookSubmissionPageDTO.self,
+                    from: response.data
+                )
+            }
+
+            members.append(contentsOf: page.content.map { $0.toDomain(week: week) })
+            hasNext = page.hasNext
+            cursor = page.nextCursor
+        }
+        return members
+    }
 
     private var resolvedPartAPIValue: String {
         let defaults = UserDefaults.standard

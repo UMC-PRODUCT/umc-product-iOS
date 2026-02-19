@@ -15,6 +15,7 @@ struct CurriculumProgressModel: Equatable, Identifiable {
     // MARK: - Property
 
     let id: UUID
+    let partType: UMCPartType?
     let partName: String
     let curriculumTitle: String
     let completedCount: Int
@@ -38,16 +39,59 @@ struct CurriculumProgressModel: Equatable, Identifiable {
         "\(completedCount)/\(totalCount) 완료"
     }
 
+    /// 파트 메인 컬러
+    var partColor: Color {
+        if let partType {
+            return partType.color
+        }
+
+        return parsedPartType?.color ?? .indigo500
+    }
+
+    // MARK: - Private Property
+
+    private var parsedPartType: UMCPartType? {
+        let normalizedPart = partName
+            .replacingOccurrences(of: " PART CURRICULUM", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+
+        switch normalizedPart {
+        case "PLAN":
+            return .pm
+        case "PM":
+            return .pm
+        case "DESIGN":
+            return .design
+        case "WEB":
+            return .front(type: .web)
+        case "ANDROID":
+            return .front(type: .android)
+        case "IOS":
+            return .front(type: .ios)
+        case "SPRING", "SPRINGBOOT":
+            return .server(type: .spring)
+        case "SERVER":
+            return .server(type: .spring)
+        case "NODE", "NODEJS":
+            return .server(type: .node)
+        default:
+            return nil
+        }
+    }
+
     // MARK: - Initializer
 
     init(
         id: UUID = UUID(),
+        partType: UMCPartType? = nil,
         partName: String,
         curriculumTitle: String,
         completedCount: Int,
         totalCount: Int
     ) {
         self.id = id
+        self.partType = partType
         self.partName = partName
         self.curriculumTitle = curriculumTitle
         self.completedCount = completedCount

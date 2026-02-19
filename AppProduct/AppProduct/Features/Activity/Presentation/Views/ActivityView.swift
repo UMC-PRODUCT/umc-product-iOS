@@ -91,8 +91,9 @@ struct ActivityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
-            .onChange(of: userSession.currentActivityMode) { _, _ in
-                selectedSection = nil
+            .onChange(of: userSession.currentActivityMode) { oldMode, newMode in
+                let previousSection = selectedSection ?? ActivitySection.defaultSection(for: oldMode)
+                selectedSection = previousSection.mapped(to: newMode)
             }
         }
     }
