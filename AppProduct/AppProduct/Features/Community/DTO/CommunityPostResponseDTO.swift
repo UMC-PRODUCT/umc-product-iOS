@@ -77,13 +77,8 @@ struct LightningInfoDTO: Codable {
     }
     
     func toModel() -> CommunityLightningInfo {
-        let parsedMeetAt = DateParser.iso8601WithFractional.date(from: meetAt)
-            ?? DateParser.iso8601.date(from: meetAt)
-            ?? DateParser.iso8601WithoutTimezone.date(from: meetAt)
-            ?? Date()
-
         return CommunityLightningInfo(
-            meetAt: parsedMeetAt,
+            meetAt: DateParser.parse(meetAt),
             location: location,
             maxParticipants: Int(maxParticipants) ?? 0,
             openChatUrl: openChatUrl
@@ -111,6 +106,13 @@ private enum DateParser {
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         return formatter
     }()
+
+    static func parse(_ string: String) -> Date {
+        iso8601WithFractional.date(from: string)
+            ?? iso8601.date(from: string)
+            ?? iso8601WithoutTimezone.date(from: string)
+            ?? Date()
+    }
 }
 
 // 리스트 항목 변환
@@ -125,7 +127,7 @@ extension PostListItemDTO {
             profileImage: authorProfileImage,
             userName: authorName,
             part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
-            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
+            createdAt: DateParser.parse(createdAt),
             likeCount: Int(likeCount) ?? 0,
             commentCount: Int(commentCount) ?? 0,
             scrapCount: 0,
@@ -148,7 +150,7 @@ extension PostDetailDTO {
             profileImage: authorProfileImage,
             userName: authorName,
             part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
-            createdAt: ISO8601DateFormatter().date(from: writeTime) ?? Date(),
+            createdAt: DateParser.parse(writeTime),
             likeCount: Int(likeCount) ?? 0,
             commentCount: Int(commentCount) ?? 0,
             scrapCount: Int(scrapCount) ?? 0,
