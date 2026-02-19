@@ -11,11 +11,8 @@ struct CommunityDetailView: View {
     // MARK: - Properties
 
     @State private var vm: CommunityDetailViewModel
-    @State private var alertPrompt: AlertPrompt?
     @Environment(\.di) private var di
     @Environment(ErrorHandler.self) var errorHandler
-
-    let postItem: CommunityItemModel
 
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
@@ -31,23 +28,22 @@ struct CommunityDetailView: View {
         /// 실패 상태 문구
         static let failedTitle: String = "불러오지 못했어요"
         static let failedSystemImage: String = "exclamationmark.triangle"
-        static let failedDescription: String = "댓글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요."
+        static let failedDescription: String = "게시글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요."
         /// 재시도 버튼 문구/크기
         static let retryTitle: String = "다시 시도"
         static let retryMinimumWidth: CGFloat = 72
         static let retryMinimumHeight: CGFloat = 20
-        /// 댓글 로딩 문구
-        static let loadingMessage: String = "댓글을 불러오는 중입니다."
+        /// 로딩 문구
+        static let loadingMessage: String = "게시글을 불러오는 중입니다..."
     }
-    
+
     // MARK: - Init
     init(container: DIContainer,
          errorHandler: ErrorHandler,
-         postItem: CommunityItemModel
+         postId: Int
     ) {
-        self.postItem = postItem
         let viewModel = CommunityDetailViewModel(
-            container: container, errorHandler: errorHandler, postItem: postItem
+            container: container, errorHandler: errorHandler, postId: postId
         )
         self._vm = .init(wrappedValue: viewModel)
     }
@@ -55,46 +51,75 @@ struct CommunityDetailView: View {
     // MARK: - Body
 
     var body: some View {
+        Group {
+            switch vm.postDetailState {
+            case .idle, .loading:
+                Progress(message: Constant.loadingMessage, size: .regular)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            case .loaded:
+                detailContent()
+            case .failed:
+                postDetailFailedContent()
+            }
+        }
+        .navigation(naviTitle: .communityDetail, displayMode: .inline)
+        .task {
+            await vm.fetchPostDetail()
+            await vm.fetchComments()
+        }
+        .onChange(of: pathStore.communityPath.count) { oldCount, newCount in
+            if newCount < oldCount {
+                Task {
+                    try? await Task.sleep(nanoseconds: 300_000_000) // 0.3초
+                    await vm.fetchPostDetail()
+                    await vm.fetchComments()
+                }
+            }
+        }
+        .toolbar {
+            if let postItem = vm.postItem {
+                ToolBarCollection.ToolbarTrailingMenu(actions: toolbarActions(for: postItem))
+            }
+        }
+        .alertPrompt(item: $vm.alertPrompt)
+    }
+
+    @ViewBuilder
+    private func detailContent() -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
-                VStack(spacing: DefaultSpacing.spacing12) {
-                    CommunityPostCard(
-                        model: vm.postItem,
-                        onLikeTapped: {
-                            await vm.toggleLike()
-                        },
-                        onScrapTapped: {
-                            await vm.toggleScrap()
+                if let postItem = vm.postItem {
+                    VStack(spacing: DefaultSpacing.spacing12) {
+                        CommunityPostCard(
+                            model: postItem,
+                            onLikeTapped: {
+                                await vm.toggleLike()
+                            },
+                            onScrapTapped: {
+                                await vm.toggleScrap()
+                            }
+                        )
+
+                        if postItem.category == .lighting {
+                            CommunityLightningCard(model: postItem)
                         }
-                    )
-                    
-                    if vm.postItem.category == .lighting {
-                        CommunityLightningCard(model: vm.postItem)
                     }
                 }
 
                 Group {
                     switch vm.comments {
                     case .idle, .loading:
-                        Progress(message: Constant.loadingMessage, size: .regular)
+                        Progress(message: "댓글을 불러오는 중입니다...", size: .regular)
                     case .loaded(let comments):
                         commentSection(comments)
                     case .failed:
-                        failedContent()
+                        commentFailedContent()
                     }
                 }
             }
             .padding(Constant.mainPadding)
         }
         .scrollDismissesKeyboard(.immediately)
-        .navigation(naviTitle: .communityDetail, displayMode: .inline)
-        .task {
-            await vm.fetchComments()
-        }
-        .toolbar {
-            ToolBarCollection.ToolbarTrailingMenu(actions: toolbarActions)
-        }
-        .alertPrompt(item: $alertPrompt)
         .safeAreaInset(edge: .bottom) {
             commentInputSection
         }
@@ -102,12 +127,12 @@ struct CommunityDetailView: View {
 
     // MARK: - Toolbar Actions
 
-    private var toolbarActions: [ToolBarCollection.ToolbarTrailingMenu.ActionItem] {
-        if canEditOrDeletePost {
+    private func toolbarActions(for postItem: CommunityItemModel) -> [ToolBarCollection.ToolbarTrailingMenu.ActionItem] {
+        if postItem.isAuthor {
             // 본인 게시글: 수정/삭제
             return [
                 .init(title: "수정하기", icon: "pencil") {
-                    pathStore.communityPath.append(.community(.post(editItem: vm.postItem)))
+                    pathStore.communityPath.append(.community(.post(editItem: postItem)))
                 },
                 .init(title: "삭제하기", icon: "trash", role: .destructive) {
                     showDeletePostAlert()
@@ -123,21 +148,11 @@ struct CommunityDetailView: View {
         }
     }
 
-    private var canEditOrDeletePost: Bool {
-        #if DEBUG
-        let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("--community-force-permission") {
-            return true
-        }
-        #endif
-        return postItem.isAuthor
-    }
-
     // MARK: - Alert Functions
 
     /// 게시글 삭제 확인 Alert
     private func showDeletePostAlert() {
-        alertPrompt = AlertPrompt(
+        vm.alertPrompt = AlertPrompt(
             title: "게시글 삭제",
             message: "게시글을 삭제하시겠습니까?",
             positiveBtnTitle: "삭제",
@@ -145,6 +160,7 @@ struct CommunityDetailView: View {
                 Task {
                     await vm.deletePost()
                 }
+                pathStore.communityPath.removeLast()
             },
             negativeBtnTitle: "취소",
             isPositiveBtnDestructive: true
@@ -153,7 +169,7 @@ struct CommunityDetailView: View {
 
     /// 게시글 신고 확인 Alert
     private func showReportPostAlert() {
-        alertPrompt = AlertPrompt(
+        vm.alertPrompt = AlertPrompt(
             title: "게시글 신고",
             message: "이 게시글을 신고하시겠습니까?",
             positiveBtnTitle: "신고",
@@ -175,8 +191,10 @@ struct CommunityDetailView: View {
                 .appFont(.subheadline, color: .grey600)
 
             ForEach(comments) { comment in
+                let canDelete = vm.canDeleteComment(commentId: comment.commentId)
                 CommunityCommentItem(
                     model: comment,
+                    canDelete: canDelete,
                     onDeleteTapped: {
                         await vm.deleteComment(commentId: comment.commentId)
                     },
@@ -184,17 +202,33 @@ struct CommunityDetailView: View {
                         await vm.reportComment(commentId: comment.commentId)
                     }
                 )
-                .equatable()
             }
         }
     }
     
     /// Failed - 데이터 로드 실패
-    private func failedContent() -> some View {
+    /// 게시글 상세 로드 실패
+    private func postDetailFailedContent() -> some View {
         RetryContentUnavailableView(
-            title: Constant.failedTitle,
-            systemImage: Constant.failedSystemImage,
+            title: "불러오지 못했어요",
+            systemImage: "exclamationmark.triangle",
             description: Constant.failedDescription,
+            retryTitle: Constant.retryTitle,
+            isRetrying: vm.postDetailState.isLoading,
+            minRetryButtonWidth: Constant.retryMinimumWidth,
+            minRetryButtonHeight: Constant.retryMinimumHeight
+        ) {
+            await vm.fetchPostDetail()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+
+    /// 댓글 로드 실패
+    private func commentFailedContent() -> some View {
+        RetryContentUnavailableView(
+            title: "댓글을 불러오지 못했어요",
+            systemImage: "exclamationmark.triangle",
+            description: "댓글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.",
             retryTitle: Constant.retryTitle,
             isRetrying: vm.comments.isLoading,
             minRetryButtonWidth: Constant.retryMinimumWidth,

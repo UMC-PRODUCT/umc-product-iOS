@@ -13,6 +13,8 @@ protocol CommunityUseCaseProviding {
     var fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol { get }
     /// 커뮤니티 목록 조회
     var fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol { get }
+    /// 게시글 검색
+    var searchPostUseCase: SearchPostUseCaseProtocol { get }
     /// 게시글 생성
     var createPostUseCase: CreatePostUseCaseProtocol { get }
     /// 번개글 생성
@@ -49,6 +51,7 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
 
     let fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol
     let fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol
+    let searchPostUseCase: SearchPostUseCaseProtocol
     let createPostUseCase: CreatePostUseCaseProtocol
     let createLightningUseCase: CreateLightningUseCaseProtocol
     let updatePostUseCase: UpdatePostUseCaseProtocol
@@ -76,6 +79,9 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
         self.fetchCommunityItemsUseCase = FetchCommunityItemsUseCase(
             repository: communityRepository
         )
+        self.searchPostUseCase = SearchPostUseCase(
+            repository: communityRepository
+        )
         self.createPostUseCase = CreatePostUseCase(
             repository: communityPostRepository
         )
@@ -89,7 +95,7 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
             repository: communityPostRepository
         )
         self.fetchCommentUseCase = FetchCommentsUseCase(
-            repository: communityRepository
+            repository: communityDetailRepository
         )
         self.deletePostUseCase = DeletePostUseCase(
             repository: communityDetailRepository

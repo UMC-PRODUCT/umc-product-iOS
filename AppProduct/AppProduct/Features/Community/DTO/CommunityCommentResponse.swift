@@ -13,7 +13,7 @@ struct CommentDTO: Codable {
     let challengerId: String
     let challengerName: String
     let challengerProfileImage: String?
-    let challengerPart: String
+    let challengerPart: String?
     let content: String
     let createdAt: String
     let isAuthor: Bool

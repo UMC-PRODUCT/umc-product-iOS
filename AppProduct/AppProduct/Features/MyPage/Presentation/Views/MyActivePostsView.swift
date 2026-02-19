@@ -106,7 +106,7 @@ struct MyActivePostsView: View {
     private func postRow(_ item: CommunityItemModel) -> some View {
         CommunityItem(model: item) {
             pathStore.mypagePath.append(
-                .community(.detail(postItem: item))
+                .community(.detail(postId: item.postId))
             )
         }
         .equatable()

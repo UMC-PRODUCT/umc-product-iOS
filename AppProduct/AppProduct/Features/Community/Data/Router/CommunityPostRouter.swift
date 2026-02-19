@@ -23,11 +23,11 @@ extension CommunityPostRouter: BaseTargetType {
         case .postPosts:
             return "/api/v1/posts"
         case .postLighting:
-            return "/api/v1/posts/lighting"
+            return "/api/v1/posts/lightning"
         case .patchPosts(let postId, _):
             return "/api/v1/posts/\(postId)"
         case .patchLighting(let postId, _):
-            return "/api/v1/posts/\(postId)/lighting"
+            return "/api/v1/posts/\(postId)/lightning"
         }
     }
     

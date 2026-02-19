@@ -97,8 +97,8 @@ private extension NavigationRoutingView {
     @ViewBuilder
     func communityView(_ route: NavigationDestination.Community) -> some View {
         switch route {
-        case .detail(let postItem):
-            CommunityDetailView(container: di, errorHandler: errorHandler, postItem: postItem)
+        case .detail(let postId):
+            CommunityDetailView(container: di, errorHandler: errorHandler, postId: postId)
         case .post(let editItem):
             CommunityPostView(
                 container: di,

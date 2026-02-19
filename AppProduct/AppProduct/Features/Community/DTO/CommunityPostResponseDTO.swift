@@ -16,7 +16,7 @@ struct PostDetailDTO: Codable {
     let authorId: String
     let authorName: String
     let authorProfileImage: String?
-    let authorPart: String
+    let authorPart: String?
     let lightningInfo: LightningInfoDTO?
     let commentCount: String
     let writeTime: String
@@ -34,9 +34,11 @@ struct PostListItemDTO: Codable {
     let content: String
     let category: String
     let authorId: String
+    let authorChallengerId: String
+    let authorMemberId: String?
     let authorName: String
     let authorProfileImage: String?
-    let authorPart: String
+    let authorPart: String?
     let createdAt: String
     let commentCount: String
     let likeCount: String
@@ -49,7 +51,7 @@ struct PostListItemDTO: Codable {
 struct LightningInfoDTO: Codable {
     let meetAt: String
     let location: String
-    let maxParticipants: Int
+    let maxParticipants: String
     let openChatUrl: String
 
     private enum CodingKeys: String, CodingKey {
@@ -65,17 +67,12 @@ struct LightningInfoDTO: Codable {
         location = try container.decode(String.self, forKey: .location)
         openChatUrl = try container.decode(String.self, forKey: .openChatUrl)
 
-        if let intValue = try? container.decode(Int.self, forKey: .maxParticipants) {
-            maxParticipants = intValue
-        } else if let stringValue = try? container.decode(String.self, forKey: .maxParticipants),
-                  let intValue = Int(stringValue) {
-            maxParticipants = intValue
+        if let stringValue = try? container.decode(String.self, forKey: .maxParticipants) {
+            maxParticipants = stringValue
+        } else if let intValue = try? container.decode(Int.self, forKey: .maxParticipants) {
+            maxParticipants = String(intValue)
         } else {
-            throw DecodingError.dataCorruptedError(
-                forKey: .maxParticipants,
-                in: container,
-                debugDescription: "Expected Int or String-convertible Int"
-            )
+            maxParticipants = "0"
         }
     }
     
@@ -88,7 +85,7 @@ struct LightningInfoDTO: Codable {
         return CommunityLightningInfo(
             meetAt: parsedMeetAt,
             location: location,
-            maxParticipants: maxParticipants,
+            maxParticipants: Int(maxParticipants) ?? 0,
             openChatUrl: openChatUrl
         )
     }
@@ -127,14 +124,14 @@ extension PostListItemDTO {
             content: content,
             profileImage: authorProfileImage,
             userName: authorName,
-            part: UMCPartType(apiValue: authorPart) ?? .pm,
+            part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
             createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
             likeCount: Int(likeCount) ?? 0,
             commentCount: Int(commentCount) ?? 0,
             scrapCount: 0,
             isLiked: isLiked,
             isAuthor: isAuthor,
-            lightningInfo: lightningInfo?.toModel()
+            lightningInfo: lightningInfo?.toModel(),
         )
     }
 }
@@ -150,12 +147,13 @@ extension PostDetailDTO {
             content: content,
             profileImage: authorProfileImage,
             userName: authorName,
-            part: UMCPartType(apiValue: authorPart) ?? .pm,
+            part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
             createdAt: ISO8601DateFormatter().date(from: writeTime) ?? Date(),
             likeCount: Int(likeCount) ?? 0,
             commentCount: Int(commentCount) ?? 0,
             scrapCount: Int(scrapCount) ?? 0,
             isLiked: isLiked,
+            isScrapped: isScrapped,
             isAuthor: isAuthor,
             lightningInfo: lightningInfo?.toModel()
         )
@@ -165,10 +163,10 @@ extension PostDetailDTO {
 // MARK: - 좋아요/스크랩
 struct CommunityLikeDTO: Codable {
     let liked: Bool
-    let likeCount: Int
+    let likeCount: String
 }
 
 struct CommunityScrapDTO: Codable {
     let scrapped: Bool
-    let scrapCount: Int
+    let scrapCount: String
 }

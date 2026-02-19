@@ -54,4 +54,20 @@ final class CommunityRepository: CommunityRepositoryProtocol {
             hasNext: page.hasNext
         )
     }
+    
+    func getSearch(
+        query: PostSearchQuery
+    ) async throws -> (items: [CommunityItemModel], hasNext: Bool) {
+        let response = try await adapter.request(CommunityRouter.getSearch(query: query))
+        let apiResponse = try decoder.decode(
+            APIResponse<PageDTO<PostListItemDTO>>.self,
+            from: response.data
+        )
+        
+        let page = try apiResponse.unwrap()
+        return (
+            items: page.content.map { $0.toCommunityItemModel() },
+            hasNext: page.hasNext
+        )
+    }
 }

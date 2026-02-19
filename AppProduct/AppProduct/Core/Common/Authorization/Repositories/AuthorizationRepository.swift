@@ -40,6 +40,10 @@ struct AuthorizationRepository: AuthorizationRepositoryProtocol {
             throw RepositoryError.decodingError(detail: "Unknown resourceType: \(dto.resourceType)")
         }
 
+        guard let resourceIdInt = Int(dto.resourceId) else {
+            throw RepositoryError.decodingError(detail: "Invalid resourceId: \(dto.resourceId)")
+        }
+
         let granted = Set(
             dto.permissions.compactMap { item -> AuthorizationPermissionType? in
                 guard item.hasPermission else { return nil }
@@ -49,7 +53,7 @@ struct AuthorizationRepository: AuthorizationRepositoryProtocol {
 
         return ResourcePermission(
             resourceType: mappedResourceType,
-            resourceId: dto.resourceId,
+            resourceId: resourceIdInt,
             grantedPermissions: granted
         )
     }

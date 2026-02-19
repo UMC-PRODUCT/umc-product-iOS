@@ -46,10 +46,13 @@ struct CommunityView: View {
         )) {
             Group {
                 switch vm.selectedMenu {
-                case .all, .question, .party:
+                case .all, .party, .question, .information, .habit, .free:
                     contentSection
                         .searchable(text: $vm.searchText)
                         .searchToolbarBehavior(.minimize)
+                        .onChange(of: vm.searchText) { _, _ in
+                            vm.onSearchTextChanged()
+                        }
                 case .fame:
                     CommunityFameView(container: di)
                 }
@@ -63,7 +66,7 @@ struct CommunityView: View {
                 #endif
 
                 switch vm.selectedMenu {
-                case .all, .question, .party:
+                case .all, .party, .question, .information, .habit, .free:
                     await vm.fetchInitialIfNeeded()
                 case .fame:
                     break
@@ -82,14 +85,29 @@ struct CommunityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
+            .onChange(of: vm.selectedMenu) { _, newMenu in
+                switch newMenu {
+                case .all, .party, .question, .information, .habit, .free:
+                    Task { await vm.refresh() }
+                case .fame:
+                    break
+                }
+            }
+            .onChange(of: pathStore.communityPath.count) { oldCount, newCount in
+                if newCount < oldCount {
+                    Task {
+                        await vm.refresh()
+                    }
+                }
+            }
             .umcDefaultBackground()
         }
     }
 
     private var contentSection: some View {
         Group {
-            switch vm.items {
-            case .idle,.loading:
+            switch vm.contentState {
+            case .idle, .loading:
                 Progress(message: Constants.loadingMessage, size: .regular)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
@@ -123,7 +141,7 @@ struct CommunityView: View {
                 postRow(item)
             }
 
-            if vm.isLoadingMore {
+            if vm.contentIsLoadingMore {
                 loadingMoreRow
             }
         }
@@ -133,7 +151,7 @@ struct CommunityView: View {
 
     private func postRow(_ item: CommunityItemModel) -> some View {
         CommunityItem(model: item) {
-            pathStore.communityPath.append(.community(.detail(postItem: item)))
+            pathStore.communityPath.append(.community(.detail(postId: item.postId)))
         }
         .equatable()
         .listRowBackground(Color.clear)
@@ -182,7 +200,7 @@ struct CommunityView: View {
             systemImage: Constants.failedSystemImage,
             description: Constants.failedDescription,
             retryTitle: Constants.retryTitle,
-            isRetrying: vm.items.isLoading,
+            isRetrying: vm.contentState.isLoading,
             minRetryButtonWidth: Constants.retryMinimumWidth,
             minRetryButtonHeight: Constants.retryMinimumHeight
         ) {

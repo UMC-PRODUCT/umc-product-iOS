@@ -11,6 +11,7 @@ struct CommunityCommentItem: View, Equatable {
     // MARK: - Properties
 
     private let model: CommunityCommentModel
+    private let canDelete: Bool
     private let onDeleteTapped: () async -> Void
     private let onReportTapped: () async -> Void
 
@@ -26,16 +27,18 @@ struct CommunityCommentItem: View, Equatable {
 
     init(
         model: CommunityCommentModel,
+        canDelete: Bool,
         onDeleteTapped: @escaping () async -> Void = {},
         onReportTapped: @escaping () async -> Void = {}
     ) {
         self.model = model
+        self.canDelete = canDelete
         self.onDeleteTapped = onDeleteTapped
         self.onReportTapped = onReportTapped
     }
 
     static func == (lhs: CommunityCommentItem, rhs: CommunityCommentItem) -> Bool {
-        lhs.model == rhs.model
+        lhs.model == rhs.model && lhs.canDelete == rhs.canDelete
     }
     
     // MARK: - Body
@@ -60,7 +63,7 @@ struct CommunityCommentItem: View, Equatable {
                     .appFont(.footnote, color: .grey500)
                 Spacer()
                 Menu {
-                    if model.isAuthor {
+                    if canDelete {
                         Button(role: .destructive, action: {
                             showDeleteAlert()
                         }) {
@@ -121,5 +124,5 @@ struct CommunityCommentItem: View, Equatable {
 }
 
 #Preview {
-    CommunityCommentItem(model: .init(commentId: 1, userId: 1, profileImage: nil, userName: "김미주", content: "안녕하세요", createdAt: Date(), isAuthor: true))
+    CommunityCommentItem(model: .init(commentId: 1, userId: 1, profileImage: nil, userName: "김미주", content: "안녕하세요", createdAt: Date(), isAuthor: true), canDelete: true)
 }

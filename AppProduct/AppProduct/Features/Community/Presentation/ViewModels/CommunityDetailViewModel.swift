@@ -10,11 +10,13 @@ import Foundation
 @Observable
 class CommunityDetailViewModel {
     // MARK: - Property
-    
-    private let useCaseProvider: CommunityUseCaseProviding
-    private let errorHandler: ErrorHandler
 
-    private(set) var postItem: CommunityItemModel
+    private let useCaseProvider: CommunityUseCaseProviding
+    private let authorizationUseCase: AuthorizationUseCaseProtocol
+    private let errorHandler: ErrorHandler
+    private let postId: Int
+
+    private(set) var postItem: CommunityItemModel?
     private(set) var comments: Loadable<[CommunityCommentModel]> = .idle
     private(set) var postDetailState: Loadable<CommunityItemModel> = .idle
     private(set) var isDeleting: Bool = false
@@ -22,22 +24,42 @@ class CommunityDetailViewModel {
     private(set) var isScrapToggling: Bool = false
     private(set) var isLikeToggling: Bool = false
     private(set) var isPostingComment: Bool = false
-    
+    private(set) var commentDeletePermissions: [Int: Bool] = [:]
+    private(set) var isPermissionsLoaded: Bool = false
+
     var commentText: String = ""
+    var alertPrompt: AlertPrompt?
 
     // MARK: - Init
 
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,
-        postItem: CommunityItemModel
+        postId: Int
     ) {
         self.useCaseProvider = container.resolve(CommunityUseCaseProviding.self)
+        self.authorizationUseCase = container.resolve(AuthorizationUseCaseProtocol.self)
         self.errorHandler = errorHandler
-        self.postItem = postItem
+        self.postId = postId
     }
 
     // MARK: - Function
+
+    /// 게시글 상세 조회
+    @MainActor
+    func fetchPostDetail() async {
+        postDetailState = .loading
+
+        do {
+            let detail = try await useCaseProvider.fetchPostDetailUseCase.execute(postId: postId)
+            postItem = detail
+            postDetailState = .loaded(detail)
+        } catch let error as AppError {
+            postDetailState = .failed(error)
+        } catch {
+            postDetailState = .failed(.unknown(message: error.localizedDescription))
+        }
+    }
 
     /// 댓글 목록 조회
     @MainActor
@@ -52,15 +74,18 @@ class CommunityDetailViewModel {
             case .failed:
                 comments = .failed(.unknown(message: "댓글을 불러오지 못했습니다."))
             case .loaded, .loadedAll, .loadedQuestion, .loadedLightning:
-                comments = .loaded(Self.debugComments(for: postItem.postId))
+                comments = .loaded(Self.debugComments(for: postId))
             }
             return
         }
         #endif
 
         do {
-            let fetchedComments = try await useCaseProvider.fetchCommentUseCase.execute(postId: postItem.postId)
+            let fetchedComments = try await useCaseProvider.fetchCommentUseCase.execute(postId: postId)
             comments = .loaded(fetchedComments)
+
+            // 댓글 권한 조회
+            await fetchCommentPermissions(for: fetchedComments)
         } catch let error as AppError {
             comments = .failed(error)
         } catch {
@@ -68,23 +93,62 @@ class CommunityDetailViewModel {
         }
     }
 
+    /// 댓글 권한 조회
+    @MainActor
+    private func fetchCommentPermissions(for comments: [CommunityCommentModel]) async {
+        isPermissionsLoaded = false
+
+        // 모든 댓글에 대한 권한을 병렬로 조회
+        await withTaskGroup(of: (Int, Bool).self) { group in
+            for comment in comments {
+                group.addTask { [weak self] in
+                    guard let self = self else { return (comment.commentId, false) }
+                    do {
+                        let permission = try await self.authorizationUseCase.getResourcePermission(
+                            resourceType: .comment,
+                            resourceId: comment.commentId
+                        )
+                        let canDelete = await permission.has(.delete)
+                        return (comment.commentId, canDelete)
+                    } catch {
+                        return (comment.commentId, false)
+                    }
+                }
+            }
+
+            for await (commentId, canDelete) in group {
+                commentDeletePermissions[commentId] = canDelete
+            }
+        }
+
+        isPermissionsLoaded = true
+    }
+
+    /// 댓글 삭제 권한 확인
+    func canDeleteComment(commentId: Int) -> Bool {
+        let result = commentDeletePermissions[commentId] ?? false
+        return result
+    }
+
     /// 게시글 삭제
     @MainActor
-    func deletePost() async {
+    func deletePost() async -> Bool {
         isDeleting = true
 
         do {
-            try await useCaseProvider.deletePostUseCase.execute(postId: postItem.postId)
+            try await useCaseProvider.deletePostUseCase.execute(postId: postItem?.postId ?? 0)
             isDeleting = false
+            return true
         } catch {
             isDeleting = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
                 action: "deletePost",
                 retryAction: { [weak self] in
-                    await self?.deletePost()
+                    _ = await self?.deletePost()
                 }
             ))
+            return false
         }
     }
 
@@ -95,7 +159,7 @@ class CommunityDetailViewModel {
 
         do {
             try await useCaseProvider.deleteCommentUseCase.execute(
-                postId: postItem.postId,
+                postId: postItem?.postId ?? 0,
                 commentId: commentId
             )
             isDeletingComment = false
@@ -116,22 +180,25 @@ class CommunityDetailViewModel {
     /// 게시글 스크랩
     @MainActor
     func toggleScrap() async {
-        guard !isScrapToggling else { return }
+        guard !isScrapToggling, var item = postItem else { return }
         isScrapToggling = true
 
         // 낙관적 업데이트
-        let previousScrapState = postItem.isScrapped
-        let previousScrapCount = postItem.scrapCount
-        postItem.isScrapped.toggle()
-        postItem.scrapCount += postItem.isScrapped ? 1 : -1
+        let previousScrapState = item.isScrapped
+        let previousScrapCount = item.scrapCount
+        item.isScrapped.toggle()
+        item.scrapCount += item.isScrapped ? 1 : -1
+        postItem = item
 
         do {
-            try await useCaseProvider.postScrapUseCase.execute(postId: postItem.postId)
+            try await useCaseProvider.postScrapUseCase.execute(postId: item.postId)
             isScrapToggling = false
         } catch {
             // 실패 시 이전 상태로 롤백
-            postItem.isScrapped = previousScrapState
-            postItem.scrapCount = previousScrapCount
+            var rollbackItem = item
+            rollbackItem.isScrapped = previousScrapState
+            rollbackItem.scrapCount = previousScrapCount
+            postItem = rollbackItem
             isScrapToggling = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
@@ -146,22 +213,25 @@ class CommunityDetailViewModel {
     /// 게시글 좋아요
     @MainActor
     func toggleLike() async {
-        guard !isLikeToggling else { return }
+        guard !isLikeToggling, var item = postItem else { return }
         isLikeToggling = true
 
         // 낙관적 업데이트
-        let previousLikeState = postItem.isLiked
-        let previousLikeCount = postItem.likeCount
-        postItem.isLiked.toggle()
-        postItem.likeCount += postItem.isLiked ? 1 : -1
+        let previousLikeState = item.isLiked
+        let previousLikeCount = item.likeCount
+        item.isLiked.toggle()
+        item.likeCount += item.isLiked ? 1 : -1
+        postItem = item
 
         do {
-            try await useCaseProvider.postLikeUseCase.execute(postId: postItem.postId)
+            try await useCaseProvider.postLikeUseCase.execute(postId: item.postId)
             isLikeToggling = false
         } catch {
             // 실패 시 이전 상태로 롤백
-            postItem.isLiked = previousLikeState
-            postItem.likeCount = previousLikeCount
+            var rollbackItem = item
+            rollbackItem.isLiked = previousLikeState
+            rollbackItem.likeCount = previousLikeCount
+            postItem = rollbackItem
             isLikeToggling = false
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
@@ -183,7 +253,7 @@ class CommunityDetailViewModel {
 
         do {
             try await useCaseProvider.postCommentUseCase.execute(
-                postId: postItem.postId,
+                postId: postItem?.postId ?? 0,
                 request: request
             )
             isPostingComment = false
@@ -207,7 +277,7 @@ class CommunityDetailViewModel {
         postDetailState = .loading
 
         do {
-            let updatedPost = try await useCaseProvider.fetchPostDetailUseCase.execute(postId: postItem.postId)
+            let updatedPost = try await useCaseProvider.fetchPostDetailUseCase.execute(postId: postItem?.postId ?? 0)
             postItem = updatedPost
             postDetailState = .loaded(updatedPost)
         } catch let error as AppError {
@@ -221,15 +291,29 @@ class CommunityDetailViewModel {
     @MainActor
     func reportPost() async {
         do {
-            try await useCaseProvider.reportPostUseCase.execute(postId: postItem.postId)
-            // 신고 성공 시 사용자에게 알림 (ErrorHandler 사용)
-            errorHandler.handle(
-                AppError.domain(.custom(message: "게시글이 신고되었습니다.")),
-                context: ErrorContext(
-                    feature: "Community",
-                    action: "reportPost"
-                )
+            try await useCaseProvider.reportPostUseCase.execute(postId: postItem?.postId ?? 0)
+            alertPrompt = AlertPrompt(
+                title: "신고 완료",
+                message: "해당 게시글이 신고되었습니다.",
+                positiveBtnTitle: "확인"
             )
+        } catch let error as RepositoryError {
+            // 409 에러: 이미 신고한 게시글
+            if case .serverError(let code, let message) = error, code == "409" {
+                alertPrompt = AlertPrompt(
+                    title: "신고 불가",
+                    message: message ?? "이미 신고한 게시글입니다.",
+                    positiveBtnTitle: "확인"
+                )
+            } else {
+                errorHandler.handle(error, context: ErrorContext(
+                    feature: "Community",
+                    action: "reportPost",
+                    retryAction: { [weak self] in
+                        await self?.reportPost()
+                    }
+                ))
+            }
         } catch {
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",
@@ -246,14 +330,28 @@ class CommunityDetailViewModel {
     func reportComment(commentId: Int) async {
         do {
             try await useCaseProvider.reportCommentUseCase.execute(commentId: commentId)
-            // 신고 성공 시 사용자에게 알림 (ErrorHandler 사용)
-            errorHandler.handle(
-                AppError.domain(.custom(message: "댓글이 신고되었습니다.")),
-                context: ErrorContext(
-                    feature: "Community",
-                    action: "reportComment"
-                )
+            alertPrompt = AlertPrompt(
+                title: "신고 완료",
+                message: "해당 댓글이 신고되었습니다.",
+                positiveBtnTitle: "확인"
             )
+        } catch let error as RepositoryError {
+            // 409 에러: 이미 신고한 댓글
+            if case .serverError(let code, let message) = error, code == "409" {
+                alertPrompt = AlertPrompt(
+                    title: "신고 불가",
+                    message: message ?? "이미 신고한 댓글입니다.",
+                    positiveBtnTitle: "확인"
+                )
+            } else {
+                errorHandler.handle(error, context: ErrorContext(
+                    feature: "Community",
+                    action: "reportComment",
+                    retryAction: { [weak self] in
+                        await self?.reportComment(commentId: commentId)
+                    }
+                ))
+            }
         } catch {
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Community",

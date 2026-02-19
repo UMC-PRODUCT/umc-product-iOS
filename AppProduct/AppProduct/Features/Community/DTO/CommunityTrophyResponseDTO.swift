@@ -16,7 +16,7 @@ struct TrophyListResponse: Codable {
     let challengerId: String
     let week: String
     let challengerName: String
-    let challengerProfileImage: String
+    let challengerProfileImage: String?
     let school: String
     let part: String
     let title: String

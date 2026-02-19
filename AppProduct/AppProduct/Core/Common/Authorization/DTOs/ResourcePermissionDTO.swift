@@ -10,7 +10,7 @@ import Foundation
 /// 리소스 권한 조회 응답 DTO
 struct ResourcePermissionResponseDTO: Codable {
     let resourceType: String
-    let resourceId: Int
+    let resourceId: String
     let permissions: [ResourcePermissionItemDTO]
 
     private enum CodingKeys: String, CodingKey {
@@ -23,7 +23,7 @@ struct ResourcePermissionResponseDTO: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         resourceType = try container.decode(String.self, forKey: .resourceType)
         permissions = try container.decodeIfPresent([ResourcePermissionItemDTO].self, forKey: .permissions) ?? []
-        resourceId = try container.decodeIntFlexible(forKey: .resourceId)
+        resourceId = try container.decodeStringFlexible(forKey: .resourceId)
     }
 }
 
@@ -50,6 +50,24 @@ private extension KeyedDecodingContainer {
             DecodingError.Context(
                 codingPath: codingPath + [key],
                 debugDescription: "Expected Int/String-number/Double for key '\(key.stringValue)'"
+            )
+        )
+    }
+    func decodeStringFlexible(forKey key: Key) throws -> String {
+        if let value = try? decode(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return String(value)
+        }
+        throw DecodingError.typeMismatch(
+            String.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected String/Int/Double for key '\(key.stringValue)'"
             )
         )
     }
