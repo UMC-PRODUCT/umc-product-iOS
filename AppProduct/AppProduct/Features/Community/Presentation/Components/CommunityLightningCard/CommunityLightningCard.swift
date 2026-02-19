@@ -121,19 +121,12 @@ struct CommunityLightningCard: View {
     /// 장소 섹션 (지도 링크 포함)
     @ViewBuilder
     private func makeLocationSection() -> some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            Button(action: {
-                Task {
-                    await openMap()
-                }
-            }) {
-                makeSection(type: .location)
+        Button(action: {
+            Task {
+                await openMap()
             }
-
-            if let text = geocodedCoordinateText {
-                Text(text)
-                    .appFont(.footnote, color: .grey500)
-            }
+        }) {
+            makeSection(type: .location)
         }
     }
 

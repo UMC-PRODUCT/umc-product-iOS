@@ -11,6 +11,9 @@ struct CommunityDetailView: View {
     // MARK: - Properties
 
     @State private var vm: CommunityDetailViewModel
+    @State private var isCommentInputExpanded: Bool = false
+    @State private var isCommentInputHidden: Bool = true
+    @FocusState private var isCommentFieldFocused: Bool
     @Environment(\.di) private var di
     @Environment(ErrorHandler.self) var errorHandler
 
@@ -20,11 +23,32 @@ struct CommunityDetailView: View {
 
     private enum Constant {
         static let mainPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
-        static let profileSize: CGSize = .init(width: 40, height: 40)
-        static let textFieldHeight: CGFloat = 50
+        static let postSectionSpacing: CGFloat = DefaultSpacing.spacing12
+        static let contentSectionSpacing: CGFloat = DefaultSpacing.spacing32
+        static let commentsSectionSpacing: CGFloat = DefaultSpacing.spacing16
+        static let commentInputActionRowSpacing: CGFloat = DefaultSpacing.spacing8
+        static let textFieldMinHeight: CGFloat = 36
         static let textFieldPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
-        static let sendButtonSize: CGSize = .init(width: 50, height: 50)
-        static let bottomPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
+        static let sendButtonSize: CGSize = .init(width: 48, height: 48)
+        static let commentLoadingMessage: String = "댓글을 불러오는 중입니다..."
+        static let commentsCountTitle: String = "댓글 %d개"
+        static let commentLoadFailedTitle: String = "댓글을 불러오지 못했어요"
+        static let commentLoadFailedDescription: String = "댓글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요."
+        static let collapsedButtonSize: CGFloat = 56
+        static let inputHorizontalPadding: CGFloat = 20
+        static let inputBottomOffset: CGFloat = 10
+        static let commentInputAnimation: Animation = .easeInOut(duration: 0.2)
+        static let commentSectionBottomSpacing: CGFloat = 6
+        static let commentInputBottomPadding: CGFloat = 6
+        static let collapsedButtonFontSize: CGFloat = 22
+        static let commentTextFieldHorizontalPadding: CGFloat = 14
+        static let commentTextFieldVerticalPadding: CGFloat = 10
+        static let commentTextLineLimit: ClosedRange<Int> = 1...4
+        static let commentPrompt: String = "댓글 추가"
+        static let sendButtonIconSize: CGFloat = 17
+        static let inputSectionSpacing: CGFloat = 24
+        static let sendButtonActiveColor: Color = .indigo500
+        static let sendButtonDisabledColor: Color = .grey200
         /// 실패 상태 문구
         static let failedTitle: String = "불러오지 못했어요"
         static let failedSystemImage: String = "exclamationmark.triangle"
@@ -51,17 +75,7 @@ struct CommunityDetailView: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
-            switch vm.postDetailState {
-            case .idle, .loading:
-                Progress(message: Constant.loadingMessage, size: .regular)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            case .loaded:
-                detailContent()
-            case .failed:
-                postDetailFailedContent()
-            }
-        }
+        rootContent
         .navigation(naviTitle: .communityDetail, displayMode: .inline)
         .task {
             await vm.fetchPostDetail()
@@ -85,43 +99,31 @@ struct CommunityDetailView: View {
     }
 
     @ViewBuilder
+    private var rootContent: some View {
+        switch vm.postDetailState {
+        case .idle, .loading:
+            Progress(message: Constant.loadingMessage, size: .regular)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .loaded:
+            detailContent()
+        case .failed:
+            postDetailFailedContent()
+        }
+    }
+
+    @ViewBuilder
     private func detailContent() -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
-                if let postItem = vm.postItem {
-                    VStack(spacing: DefaultSpacing.spacing12) {
-                        CommunityPostCard(
-                            model: postItem,
-                            onLikeTapped: {
-                                await vm.toggleLike()
-                            },
-                            onScrapTapped: {
-                                await vm.toggleScrap()
-                            }
-                        )
-
-                        if postItem.category == .lighting {
-                            CommunityLightningCard(model: postItem)
-                        }
-                    }
-                }
-
-                Group {
-                    switch vm.comments {
-                    case .idle, .loading:
-                        Progress(message: "댓글을 불러오는 중입니다...", size: .regular)
-                    case .loaded(let comments):
-                        commentSection(comments)
-                    case .failed:
-                        commentFailedContent()
-                    }
-                }
+            VStack(alignment: .leading, spacing: Constant.contentSectionSpacing) {
+                postSection
+                commentStateSection
             }
             .padding(Constant.mainPadding)
         }
+        .onScrollPhaseChange { _, newPhase in handleScrollPhaseChange(newPhase) }
         .scrollDismissesKeyboard(.immediately)
-        .safeAreaInset(edge: .bottom) {
-            commentInputSection
+        .safeAreaBar(edge: .bottom, alignment: .trailing, spacing: Constant.inputSectionSpacing) {
+            commentInputInset
         }
     }
 
@@ -185,33 +187,99 @@ struct CommunityDetailView: View {
 
     // MARK: - Comment
 
+    private var normalizedCommentText: String {
+        vm.commentText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var canSendComment: Bool {
+        !normalizedCommentText.isEmpty && !vm.isPostingComment
+    }
+
     private func commentSection(_ comments: [CommunityCommentModel]) -> some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-            Text("댓글 \(comments.count)개")
+        VStack(alignment: .leading, spacing: Constant.commentsSectionSpacing) {
+            Text(String(format: Constant.commentsCountTitle, comments.count))
                 .appFont(.subheadline, color: .grey600)
 
             ForEach(comments) { comment in
-                let canDelete = vm.canDeleteComment(commentId: comment.commentId)
-                CommunityCommentItem(
-                    model: comment,
-                    canDelete: canDelete,
-                    onDeleteTapped: {
-                        await vm.deleteComment(commentId: comment.commentId)
-                    },
-                    onReportTapped: {
-                        await vm.reportComment(commentId: comment.commentId)
-                    }
-                )
+                commentItemView(comment)
             }
         }
+    }
+
+    private var postSection: some View {
+        Group {
+            if let postItem = vm.postItem {
+                VStack(spacing: Constant.postSectionSpacing) {
+                    CommunityPostCard(
+                        model: postItem,
+                        onLikeTapped: {
+                            await vm.toggleLike()
+                        },
+                        onScrapTapped: {
+                            await vm.toggleScrap()
+                        }
+                    )
+
+                    if postItem.category == .lighting {
+                        CommunityLightningCard(model: postItem)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var commentStateSection: some View {
+        switch vm.comments {
+        case .idle, .loading:
+            commentLoadingIndicator
+        case .loaded(let comments):
+            commentSection(comments)
+        case .failed:
+            commentFailedContent()
+        }
+    }
+
+    @ViewBuilder
+    private var commentInputInset: some View {
+        if !isCommentInputHidden {
+            commentInputSection
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        } else {
+            collapsedCommentInputButton
+                .transition(.opacity.combined(with: .scale(scale: 0.92, anchor: .trailing)))
+        }
+    }
+
+    private func commentItemView(_ comment: CommunityCommentModel) -> some View {
+        let canDelete = vm.canDeleteComment(commentId: comment.commentId)
+        return CommunityCommentItem(
+            model: comment,
+            canDelete: canDelete,
+            onDeleteTapped: {
+                await vm.deleteComment(commentId: comment.commentId)
+            },
+            onReportTapped: {
+                await vm.reportComment(commentId: comment.commentId)
+            }
+        )
+    }
+
+    private func handleScrollPhaseChange(_ phase: ScrollPhase) {
+        if phase == .idle {
+            guard isCommentInputExpanded else { return }
+            setCommentInputVisibility(hidden: false, expanded: true, focused: isCommentFieldFocused)
+            return
+        }
+        hideCommentInputByScroll()
     }
     
     /// Failed - 데이터 로드 실패
     /// 게시글 상세 로드 실패
     private func postDetailFailedContent() -> some View {
         RetryContentUnavailableView(
-            title: "불러오지 못했어요",
-            systemImage: "exclamationmark.triangle",
+            title: Constant.failedTitle,
+            systemImage: Constant.failedSystemImage,
             description: Constant.failedDescription,
             retryTitle: Constant.retryTitle,
             isRetrying: vm.postDetailState.isLoading,
@@ -226,9 +294,9 @@ struct CommunityDetailView: View {
     /// 댓글 로드 실패
     private func commentFailedContent() -> some View {
         RetryContentUnavailableView(
-            title: "댓글을 불러오지 못했어요",
-            systemImage: "exclamationmark.triangle",
-            description: "댓글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.",
+            title: Constant.commentLoadFailedTitle,
+            systemImage: Constant.failedSystemImage,
+            description: Constant.commentLoadFailedDescription,
             retryTitle: Constant.retryTitle,
             isRetrying: vm.comments.isLoading,
             minRetryButtonWidth: Constant.retryMinimumWidth,
@@ -242,44 +310,112 @@ struct CommunityDetailView: View {
     // MARK: - Comment Input
 
     private var commentInputSection: some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
+        VStack(spacing: Constant.commentSectionBottomSpacing) {
+            commentTextEditor
+
+            commentInputActionRow
+                .padding(.horizontal, Constant.textFieldPadding.leading)
+                .padding(.bottom, Constant.commentInputBottomPadding)
+        }
+        .background(.thinMaterial, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
+        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
+        .padding(.horizontal, Constant.inputHorizontalPadding)
+        .padding(.bottom, Constant.inputBottomOffset)
+    }
+
+    private var collapsedCommentInputButton: some View {
+        Button {
+            setCommentInputVisibility(hidden: false, expanded: true, focused: true)
+        } label: {
+            Image(systemName: "plus.bubble")
+                .font(.system(size: Constant.collapsedButtonFontSize, weight: .semibold))
+                .foregroundStyle(.grey900)
+                .frame(width: Constant.collapsedButtonSize, height: Constant.collapsedButtonSize)
+                .background {
+                    Circle().fill(.clear)
+                        .glassEffect(.regular.interactive(), in: .circle)
+                }
+        }
+        .padding(.horizontal, Constant.inputHorizontalPadding)
+        .padding(.bottom, Constant.inputBottomOffset)
+    }
+
+    private var commentTextEditor: some View {
+        ZStack(alignment: .topLeading) {
             TextField(
                 "",
                 text: $vm.commentText,
-                prompt: Text("댓글을 입력해 주세요."),
-                axis: .horizontal
+                axis: .vertical
             )
+            .focused($isCommentFieldFocused)
             .appFont(.body)
-            .scrollIndicators(.hidden)
-            .padding(Constant.textFieldPadding)
-            .frame(height: Constant.textFieldHeight)
-            .glassEffect()
-            
+            .lineLimit(Constant.commentTextLineLimit)
+            .padding(.horizontal, Constant.commentTextFieldHorizontalPadding)
+            .padding(.vertical, Constant.commentTextFieldVerticalPadding)
+            .frame(minHeight: Constant.textFieldMinHeight, alignment: .topLeading)
+
+            if vm.commentText.isEmpty && !isCommentFieldFocused {
+                Text(Constant.commentPrompt)
+                    .appFont(.body, color: .grey400)
+                    .padding(.horizontal, Constant.commentTextFieldHorizontalPadding)
+                    .padding(.vertical, Constant.commentTextFieldVerticalPadding)
+                    .allowsHitTesting(false)
+            }
+        }
+    }
+
+    private var commentLoadingIndicator: some View {
+        Progress(message: Constant.commentLoadingMessage, size: .regular)
+    }
+
+    private var commentInputActionRow: some View {
+        HStack(spacing: Constant.commentInputActionRowSpacing) {
+            Spacer()
+
             Button {
                 Task {
                     await sendComment()
                 }
             } label: {
                 Image(systemName: "paperplane.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(vm.commentText.isEmpty ? .grey400 : .white)
+                    .font(.system(size: Constant.sendButtonIconSize, weight: .semibold))
+                    .foregroundStyle(canSendComment ? .white : .grey400)
             }
-            .padding(.zero)
             .frame(width: Constant.sendButtonSize.width, height: Constant.sendButtonSize.height)
-            .disabled(vm.commentText.isEmpty || vm.isPostingComment)
+            .disabled(!canSendComment)
             .buttonBorderShape(.circle)
-            .glassEffect(.regular.tint(vm.commentText.isEmpty ? .clear : .indigo500))
+            .background(
+                Circle()
+                    .fill(canSendComment ? Constant.sendButtonActiveColor : Constant.sendButtonDisabledColor)
+            )
         }
-        .padding(Constant.bottomPadding)
     }
 
     // MARK: - Actions
 
     private func sendComment() async {
-        let content = vm.commentText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let content = normalizedCommentText
         guard !content.isEmpty else { return }
 
         vm.commentText = ""
         await vm.postComment(content: content, parentId: 0)
+        closeCommentInput()
+    }
+
+    private func hideCommentInputByScroll() {
+        guard !isCommentInputHidden else { return }
+        setCommentInputVisibility(hidden: true, expanded: false, focused: false)
+    }
+
+    private func closeCommentInput() {
+        setCommentInputVisibility(hidden: true, expanded: false, focused: false)
+    }
+
+    private func setCommentInputVisibility(hidden: Bool, expanded: Bool, focused: Bool) {
+        withAnimation(Constant.commentInputAnimation) {
+            isCommentInputHidden = hidden
+            isCommentInputExpanded = expanded
+        }
+        isCommentFieldFocused = focused
     }
 }
