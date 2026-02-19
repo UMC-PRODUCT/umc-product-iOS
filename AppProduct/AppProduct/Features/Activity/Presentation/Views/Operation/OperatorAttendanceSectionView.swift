@@ -30,11 +30,17 @@ struct OperatorAttendanceSectionView: View {
         self.sessions = sessions
 
         let useCase = container.resolve(ActivityUseCaseProviding.self)
-        _viewModel = State(initialValue: OperatorAttendanceViewModel(
+        let attendanceViewModel = OperatorAttendanceViewModel(
             container: container,
             errorHandler: errorHandler,
             useCase: useCase.operatorAttendanceUseCase
-        ))
+        )
+        #if DEBUG
+        if let debugState = ActivityDebugState.fromLaunchArgument() {
+            attendanceViewModel.seedForDebugState(debugState)
+        }
+        #endif
+        _viewModel = State(initialValue: attendanceViewModel)
     }
     
     private var selectedPendingSession: OperatorSessionAttendance? {
@@ -61,6 +67,11 @@ struct OperatorAttendanceSectionView: View {
             .bottom, DefaultConstant.defaultContentBottomMargins,
             for: .scrollContent)
         .task {
+            #if DEBUG
+            if ActivityDebugState.fromLaunchArgument() != nil {
+                return
+            }
+            #endif
             // 상위 컨테이너에서 한 번만 호출 (View 교체로 인한 Task 취소 방지)
             if viewModel.sessionsState.isIdle {
                 await viewModel.fetchSessions(from: sessions)
@@ -75,8 +86,7 @@ struct OperatorAttendanceSectionView: View {
                     viewModel.showLocationSheet = false
                 },
                 onConfirm: { place in
-                    // TODO: 실제 위치 변경 API 호출 - [25.02.06] 이재원
-                    viewModel.showLocationSheet = false
+                    await viewModel.confirmLocationChange(to: place)
                 }
             )
         }
@@ -234,23 +244,15 @@ struct OperatorAttendanceSectionView: View {
     // MARK: - Error View
 
     private func errorView(error: AppError) -> some View {
-        ContentUnavailableView {
-            Label("로딩 실패", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text(error.localizedDescription)
-        } actions: {
-            Button {
-                Task {
-                    await viewModel.fetchSessions(from: sessions)
-                }
-            } label: {
-                Image(systemName: "arrow.trianglehead.clockwise")
-                    .renderingMode(.template)
-                    .foregroundStyle(.indigo600)
-            }
-            .buttonStyle(.glassProminent)
+        RetryContentUnavailableView(
+            title: "로딩 실패",
+            systemImage: "exclamationmark.triangle",
+            description: error.localizedDescription,
+            isRetrying: false,
+            topPadding: DefaultSpacing.spacing32
+        ) {
+            await viewModel.fetchSessions(from: sessions)
         }
-        .padding(.top, DefaultSpacing.spacing32)
     }
 
 }

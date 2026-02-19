@@ -69,6 +69,7 @@ struct ActivityView: View {
                     itemIcon: { $0.icon }
                 )
             }
+            .umcDefaultBackground()
             .task {
                 // ViewModel 초기화 및 데이터 로드(Computed Property를 위해 init 대신 task에서 초기화)
                 if viewModel == nil {
@@ -90,9 +91,9 @@ struct ActivityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
-            .umcDefaultBackground()
-            .onChange(of: userSession.currentActivityMode) { _, _ in
-                selectedSection = nil
+            .onChange(of: userSession.currentActivityMode) { oldMode, newMode in
+                let previousSection = selectedSection ?? ActivitySection.defaultSection(for: oldMode)
+                selectedSection = previousSection.mapped(to: newMode)
             }
         }
     }
@@ -140,14 +141,13 @@ struct ActivityView: View {
                     sessions: sessions
                 )
             case .failed(let error):
-                ContentUnavailableView {
-                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(error.localizedDescription)
-                } actions: {
-                    Button("다시 시도") {
-                        Task { await vm.fetchSessions() }
-                    }
+                RetryContentUnavailableView(
+                    title: "로딩 실패",
+                    systemImage: "exclamationmark.triangle",
+                    description: error.localizedDescription,
+                    isRetrying: false
+                ) {
+                    await vm.fetchSessions()
                 }
             }
         } else {
@@ -172,14 +172,13 @@ struct ActivityView: View {
                     categoryFor: vm.category(for:)
                 )
             case .failed(let error):
-                ContentUnavailableView {
-                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(error.localizedDescription)
-                } actions: {
-                    Button("다시 시도") {
-                        Task { await vm.fetchSessions() }
-                    }
+                RetryContentUnavailableView(
+                    title: "로딩 실패",
+                    systemImage: "exclamationmark.triangle",
+                    description: error.localizedDescription,
+                    isRetrying: false
+                ) {
+                    await vm.fetchSessions()
                 }
             }
         } else {

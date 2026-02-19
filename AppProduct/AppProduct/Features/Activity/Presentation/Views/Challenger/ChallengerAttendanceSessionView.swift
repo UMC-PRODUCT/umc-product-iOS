@@ -48,11 +48,17 @@ struct ChallengerAttendanceSessionView: View {
         let activityProvider = container.resolve(ActivityUseCaseProviding.self)
         let repositoryProvider = container.resolve(ActivityRepositoryProviding.self)
 
-        self._attendanceViewModel = .init(wrappedValue: .init(
+        let attendanceViewModel = ChallengerAttendanceViewModel(
             container: container,
             errorHandler: errorHandler,
             challengeAttendanceUseCase: activityProvider.challengerAttendanceUseCase
-        ))
+        )
+        #if DEBUG
+        if let debugState = ActivityDebugState.fromLaunchArgument() {
+            attendanceViewModel.seedForDebugState(debugState)
+        }
+        #endif
+        self._attendanceViewModel = .init(wrappedValue: attendanceViewModel)
         self._sessionViewModel = .init(wrappedValue: .init(
             container: container,
             errorHandler: errorHandler,
@@ -106,6 +112,11 @@ struct ChallengerAttendanceSessionView: View {
             DefaultConstant.defaultContentBottomMargins,
             for: .scrollContent)
         .task {
+            #if DEBUG
+            if ActivityDebugState.fromLaunchArgument() != nil {
+                return
+            }
+            #endif
             await attendanceViewModel.fetchAvailableSchedules()
             await attendanceViewModel.fetchMyHistory()
         }
@@ -121,26 +132,47 @@ struct ChallengerAttendanceSessionView: View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             attendanceSectionHeader
 
-            if availableSessions.isEmpty {
-                emptySessionView
-            } else {
-                ChallengerAttendanceSessionList(
-                    container: container,
-                    errorHandler: errorHandler,
-                    sessions: availableSessions,
-                    expandedSessionId: expandedSessionId,
-                    attendanceViewModel: attendanceViewModel,
-                    userId: userId,
-                    mapViewModelProvider: { session in mapViewModel(for: session) }
-                ) { sessionId in
-                    withAnimation(.spring(Spring(
-                        response: Constants.animationResponse,
-                        dampingRatio: Constants.animationDamping
-                    ))) {
-                        expandedSessionId = expandedSessionId == sessionId ? nil : sessionId
+            switch attendanceViewModel.availableSchedules {
+            case .idle:
+                Color.clear
+
+            case .loading:
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DefaultSpacing.spacing32)
+
+            case .loaded:
+                if availableSessions.isEmpty {
+                    emptySessionView
+                } else {
+                    ChallengerAttendanceSessionList(
+                        container: container,
+                        errorHandler: errorHandler,
+                        sessions: availableSessions,
+                        expandedSessionId: expandedSessionId,
+                        attendanceViewModel: attendanceViewModel,
+                        userId: userId,
+                        mapViewModelProvider: { session in mapViewModel(for: session) }
+                    ) { sessionId in
+                        withAnimation(.spring(Spring(
+                            response: Constants.animationResponse,
+                            dampingRatio: Constants.animationDamping
+                        ))) {
+                            expandedSessionId = expandedSessionId == sessionId ? nil : sessionId
+                        }
                     }
+                    .equatable()
                 }
-                .equatable()
+
+            case .failed(let error):
+                RetryContentUnavailableView(
+                    title: "로딩 실패",
+                    systemImage: "exclamationmark.triangle",
+                    description: error.localizedDescription,
+                    isRetrying: attendanceViewModel.isRetrying
+                ) {
+                    await attendanceViewModel.fetchAvailableSchedules()
+                }
             }
         }
     }
@@ -187,14 +219,13 @@ struct ChallengerAttendanceSessionView: View {
                     )
                 }
             case .failed(let error):
-                ContentUnavailableView {
-                    Label("로딩 실패", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(error.localizedDescription)
-                } actions: {
-                    Button("다시 시도") {
-                        Task { await attendanceViewModel.fetchMyHistory() }
-                    }
+                RetryContentUnavailableView(
+                    title: "로딩 실패",
+                    systemImage: "exclamationmark.triangle",
+                    description: error.localizedDescription,
+                    isRetrying: attendanceViewModel.isRetrying
+                ) {
+                    await attendanceViewModel.fetchMyHistory()
                 }
             }
         }

@@ -44,6 +44,7 @@ struct StudyGroupCard: View, Equatable {
         self.onSchedule = onSchedule
     }
 
+    
     // MARK: - Equatable
 
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -57,7 +58,6 @@ struct StudyGroupCard: View, Equatable {
             headerSection
             leaderSection
             membersSection
-            scheduleButton
         }
         .padding(DefaultConstant.defaultCardPadding)
         .background(
@@ -86,6 +86,7 @@ struct StudyGroupCard: View, Equatable {
 
                 Spacer()
 
+                scheduleActionButton
                 settingsMenu
             }
 
@@ -113,6 +114,23 @@ struct StudyGroupCard: View, Equatable {
         }
     }
 
+    private var scheduleActionButton: some View {
+        Button {
+            onSchedule?()
+        } label: {
+            HStack(spacing: DefaultSpacing.spacing4) {
+                Image(systemName: "calendar.badge.plus")
+                Text("일정 등록")
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+            .appFont(.footnoteEmphasis, color: .indigo600)
+            .padding(.horizontal, DefaultSpacing.spacing4)
+            .padding(.vertical, DefaultSpacing.spacing4)
+        }
+        .buttonStyle(.glass)
+    }
+
     private var metadataRow: some View {
         Text("생성일: \(detail.formattedCreatedDate) | 멤버 \(detail.memberCount)명")
             .appFont(.footnote, color: .grey500)
@@ -122,7 +140,10 @@ struct StudyGroupCard: View, Equatable {
     private var leaderSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             SectionHeaderView(title: "담당 파트장")
-            StudyGroupLeaderRow(leader: detail.leader)
+            StudyGroupLeaderRow(
+                leader: detail.leader,
+                partTintColor: detail.part.color
+            )
         }
     }
 
@@ -155,12 +176,6 @@ struct StudyGroupCard: View, Equatable {
         .glassEffect()
     }
 
-    private var scheduleButton: some View {
-        MainButton("스터디 일정 등록하기") {
-            onSchedule?()
-        }
-        .buttonStyle(.glassProminent)
-    }
 }
 
 // MARK: - Preview

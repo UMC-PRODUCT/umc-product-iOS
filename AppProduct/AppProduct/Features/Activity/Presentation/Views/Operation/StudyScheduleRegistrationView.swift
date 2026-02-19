@@ -16,6 +16,8 @@ struct StudyScheduleRegistrationView: View {
     // MARK: - Property
 
     @State private var viewModel: StudyScheduleRegistrationViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var isSubmitting = false
 
     // MARK: - Init
 
@@ -51,9 +53,26 @@ struct StudyScheduleRegistrationView: View {
         )
         .toolbar {
             ToolBarCollection.ConfirmBtn(
-                action: {},
-                disable: !viewModel.canSubmit
+                action: submitSchedule,
+                disable: !viewModel.canSubmit || isSubmitting,
+                isLoading: isSubmitting,
+                dismissOnTap: false
             )
+        }
+    }
+
+    private func submitSchedule() {
+        guard !isSubmitting else { return }
+        guard viewModel.canSubmit else { return }
+
+        Task {
+            isSubmitting = true
+            let isSuccess = await viewModel.submitSchedule()
+            isSubmitting = false
+
+            if isSuccess {
+                dismiss()
+            }
         }
     }
 

@@ -72,6 +72,7 @@ struct ChallengerMissionCardContent: View, Equatable {
         MissionSubmissionView(
             missionID: model.id,
             submissionType: submissionType,
+            availableSubmissionTypes: model.missionType.availableSubmissionTypes,
             linkText: linkText,
             focusedMissionID: focusedMissionID,
             onSubmissionTypeChanged: onSubmissionTypeChanged,
@@ -105,27 +106,32 @@ struct ChallengerMissionCardContent: View, Equatable {
     }
     
     private var typeSelectionSection: some View {
-        Picker(
-            selection: Binding(
-                get: { submissionType },
-                set: { newType in
-                    withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
-                        onSubmissionTypeChanged(newType)
-                        if newType == .completeOnly {
-                            onLinkTextChanged("")
+        Group {
+            let availableSubmissionTypes = model.missionType.availableSubmissionTypes
+            if availableSubmissionTypes.count > 1 {
+                Picker(
+                    selection: Binding(
+                        get: { submissionType },
+                        set: { newType in
+                            withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
+                                onSubmissionTypeChanged(newType)
+                                if newType == .completeOnly {
+                                    onLinkTextChanged("")
+                                }
+                            }
                         }
+                    )
+                ) {
+                    ForEach(availableSubmissionTypes, id: \.self) { type in
+                        Label(type.rawValue, systemImage: type.icon)
+                            .tag(type)
                     }
+                } label: {
+                    EmptyView()
                 }
-            )
-        ) {
-            ForEach(MissionSubmissionType.allCases, id: \.self) { type in
-                Label(type.rawValue, systemImage: type.icon)
-                    .tag(type)
+                .pickerStyle(.segmented)
             }
-        } label: {
-            EmptyView()
         }
-        .pickerStyle(.segmented)
     }
 }
 
@@ -138,6 +144,7 @@ fileprivate struct MissionSubmissionView: View, Equatable {
 
     let missionID: UUID
     let submissionType: MissionSubmissionType
+    let availableSubmissionTypes: [MissionSubmissionType]
     let linkText: String
     var focusedMissionID: FocusState<UUID?>.Binding
     let onSubmissionTypeChanged: (MissionSubmissionType) -> Void
@@ -149,6 +156,7 @@ fileprivate struct MissionSubmissionView: View, Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.missionID == rhs.missionID &&
         lhs.submissionType == rhs.submissionType &&
+        lhs.availableSubmissionTypes == rhs.availableSubmissionTypes &&
         lhs.linkText == rhs.linkText
     }
 
@@ -166,7 +174,10 @@ fileprivate struct MissionSubmissionView: View, Equatable {
     }
 
     private var isSubmitDisabled: Bool {
-        submissionType == .link && !linkText.isValidHTTPURL
+        guard availableSubmissionTypes.contains(submissionType) else {
+            return true
+        }
+        return submissionType == .link && !linkText.isValidHTTPURL
     }
 
     // MARK: - Body

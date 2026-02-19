@@ -26,12 +26,6 @@ struct OperatorStudyManagementView: View {
     @State private var selectedTab: ManagementTab = .submission
     @State private var showCreateView = false
 
-    // MARK: - Constants
-
-    private enum Constants {
-        static let loadingPlaceholderHeight: CGFloat = 80
-    }
-
     /// 관리 화면 탭 구분
     private enum ManagementTab: Int, CaseIterable {
         case submission
@@ -58,11 +52,17 @@ struct OperatorStudyManagementView: View {
         let useCase = container
             .resolve(ActivityUseCaseProviding.self)
             .fetchStudyMembersUseCase
-        _viewModel = State(initialValue: OperatorStudyManagementViewModel(
+        let studyManagementViewModel = OperatorStudyManagementViewModel(
             container: container,
             errorHandler: errorHandler,
             useCase: useCase
-        ))
+        )
+        #if DEBUG
+        if let debugState = ActivityDebugState.fromLaunchArgument() {
+            studyManagementViewModel.seedForDebugState(debugState)
+        }
+        #endif
+        _viewModel = State(initialValue: studyManagementViewModel)
     }
 
     // MARK: - Body
@@ -83,12 +83,19 @@ struct OperatorStudyManagementView: View {
                 submissionContentView
 
             case .groupManagement:
-                groupManagementPlaceholder
+                groupManagementContentView
             }
         }
-        .task {
-            if viewModel.membersState.isIdle {
-                await viewModel.fetchMembers()
+        .task(id: selectedTab) {
+            #if DEBUG
+            if ActivityDebugState.fromLaunchArgument() != nil {
+                return
+            }
+            #endif
+            if selectedTab == .submission {
+                await viewModel.fetchSubmissionMembers()
+            } else {
+                await viewModel.fetchGroupManagementData()
             }
         }
         .toolbar {
@@ -116,13 +123,13 @@ struct OperatorStudyManagementView: View {
             OperatorStudyReviewSheet(
                 member: member,
                 onApprove: { feedback in
-                    viewModel.confirmReviewApproval(
+                    await viewModel.submitReviewApproval(
                         member: member,
                         feedback: feedback
                     )
                 },
                 onReject: { feedback in
-                    viewModel.confirmReviewRejection(
+                    await viewModel.submitReviewRejection(
                         member: member,
                         feedback: feedback
                     )
@@ -136,7 +143,7 @@ struct OperatorStudyManagementView: View {
             OperatorBestWorkbookSheet(
                 member: member,
                 onSelect: { recommendation in
-                    viewModel.confirmBestWorkbookSelection(
+                    await viewModel.submitBestWorkbookSelection(
                         member: member,
                         recommendation: recommendation
                     )
@@ -155,7 +162,7 @@ struct OperatorStudyManagementView: View {
             OperatorStudyGroupEditSheet(
                 detail: group,
                 onSave: { name, part in
-                    viewModel.applyGroupEdit(
+                    await viewModel.updateGroup(
                         groupID: group.id,
                         name: name,
                         part: part
@@ -165,7 +172,7 @@ struct OperatorStudyManagementView: View {
         }
         .navigationDestination(isPresented: $showCreateView) {
             OperatorStudyGroupCreateView { name, part, leader, members in
-                viewModel.createGroup(
+                await viewModel.createGroup(
                     name: name,
                     part: part,
                     leader: leader,
@@ -182,7 +189,7 @@ struct OperatorStudyManagementView: View {
     private var submissionContentView: some View {
         switch viewModel.membersState {
         case .idle, .loading:
-            loadingView
+            loadingView(message: "제출 현황 불러오는 중...")
 
         case .loaded(let members):
             if members.isEmpty {
@@ -198,10 +205,42 @@ struct OperatorStudyManagementView: View {
 
     // MARK: - Group Management View
 
-    private var groupManagementPlaceholder: some View {
+    @ViewBuilder
+    private var groupManagementContentView: some View {
+        switch viewModel.studyGroupDetailsState {
+        case .idle, .loading:
+            loadingView(message: "스터디 그룹 관리 불러오는 중...")
+
+        case .loaded:
+            if viewModel.studyGroupDetails.isEmpty {
+                groupManagementEmptyView
+            } else {
+                groupManagementListView(groups: viewModel.studyGroupDetails)
+            }
+
+        case .failed(let error):
+            errorView(error: error) {
+                await viewModel.fetchGroupManagementData()
+            }
+        }
+    }
+
+    private var groupManagementEmptyView: some View {
+        ScrollView {
+            ContentUnavailableView {
+                Label("스터디 그룹 관리", systemImage: "person.3")
+            } description: {
+                Text("등록된 스터디 그룹이 없습니다")
+            }
+            .padding(.top, DefaultSpacing.spacing32)
+            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        }
+    }
+
+    private func groupManagementListView(groups: [StudyGroupInfo]) -> some View {
         ScrollView {
             LazyVStack(spacing: DefaultSpacing.spacing16) {
-                ForEach(viewModel.studyGroupDetails) { group in
+                ForEach(groups) { group in
                     StudyGroupCard(
                         detail: group,
                         onEdit: {
@@ -242,30 +281,17 @@ struct OperatorStudyManagementView: View {
 
     // MARK: - Loading View
 
-    private var loadingView: some View {
-        ScrollView {
-            VStack(spacing: DefaultSpacing.spacing12) {
-                ForEach(0..<3, id: \.self) { _ in
-                    loadingPlaceholder
-                }
-            }
-            .padding(.top, DefaultSpacing.spacing16)
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        }
-        .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
-    }
-
-    private var loadingPlaceholder: some View {
-        ConcentricRectangle(
-            corners: .concentric(minimum: DefaultConstant.concentricRadius),
-            isUniform: true
-        )
-        .fill(Color.grey100)
-        .frame(height: Constants.loadingPlaceholderHeight)
-        .overlay {
+    private func loadingView(message: String) -> some View {
+        VStack(spacing: DefaultSpacing.spacing12) {
             ProgressView()
-                .tint(.grey400)
+                .controlSize(.large)
+                .tint(.grey500)
+
+            Text(message)
+                .appFont(.subheadline, color: .grey500)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
 
     // MARK: - Empty View
@@ -299,7 +325,7 @@ struct OperatorStudyManagementView: View {
                     ))
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button {
-                            viewModel.selectedMemberForReview = member
+                            viewModel.openReviewSheet(for: member)
                         } label: {
                             Label("검토", systemImage: "checkmark.circle.fill")
                         }
@@ -322,25 +348,29 @@ struct OperatorStudyManagementView: View {
     // MARK: - Error View
 
     private func errorView(error: AppError) -> some View {
+        errorView(error: error) {
+            await viewModel.fetchSubmissionMembers()
+        }
+    }
+
+    private func errorView(
+        error: AppError,
+        retryAction: @escaping () async -> Void
+    ) -> some View {
         ScrollView {
-            ContentUnavailableView {
-                Label("로딩 실패", systemImage: "exclamationmark.triangle")
-            } description: {
-                Text(error.localizedDescription)
-            } actions: {
-                Button {
-                    Task {
-                        await viewModel.fetchMembers()
-                    }
-                } label: {
-                    Image(systemName: "arrow.trianglehead.clockwise")
-                        .renderingMode(.template)
-                        .foregroundStyle(.indigo600)
-                }
-                .buttonStyle(.glassProminent)
+            RetryContentUnavailableView(
+                title: "로딩 실패",
+                systemImage: "exclamationmark.triangle",
+                description: error.localizedDescription,
+                isRetrying: false,
+                topPadding: DefaultSpacing.spacing32
+            ) {
+                await retryAction()
             }
-            .padding(.top, DefaultSpacing.spacing32)
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .safeAreaPadding(
+                .horizontal,
+                DefaultConstant.defaultSafeHorizon
+            )
         }
     }
 }

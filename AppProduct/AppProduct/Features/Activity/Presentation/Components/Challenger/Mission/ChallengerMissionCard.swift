@@ -32,6 +32,7 @@ struct ChallengerMissionCard: View {
         self.model = model
         self.focusedMissionID = focusedMissionID
         self.onSubmit = onSubmit
+        self._submissionType = State(initialValue: model.missionType.defaultSubmissionType)
     }
 
     // MARK: - Body

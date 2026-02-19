@@ -189,7 +189,7 @@ extension DIContainer {
                 baseURL: URL(string: Config.baseURL)!
             )
         }
-
+        
         // MARK: - Storage Infrastructure
         container.register(StorageRepositoryProtocol.self) {
             StorageRepository(

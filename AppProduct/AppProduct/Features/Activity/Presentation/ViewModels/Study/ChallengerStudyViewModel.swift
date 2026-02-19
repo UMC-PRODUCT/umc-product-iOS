@@ -82,8 +82,12 @@ final class ChallengerStudyViewModel {
         link: String?
     ) async {
         do {
-            let updatedMission = try await submitMissionUseCase.execute(
-                missionId: mission.id,
+            guard let challengerWorkbookId = mission.challengerWorkbookId else {
+                throw DomainError.missionNotFound
+            }
+
+            try await submitMissionUseCase.execute(
+                missionId: challengerWorkbookId,
                 type: type,
                 link: link
             )
@@ -91,7 +95,7 @@ final class ChallengerStudyViewModel {
             // 로컬 상태 업데이트
             if case .loaded(var data) = curriculumState {
                 if let index = data.missions.firstIndex(where: { $0.id == mission.id }) {
-                    data.missions[index] = updatedMission
+                    data.missions[index].status = .pendingApproval
                     withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
                         curriculumState = .loaded(data)
                     }
@@ -109,4 +113,31 @@ final class ChallengerStudyViewModel {
             )
         }
     }
+
+    #if DEBUG
+    @MainActor
+    func seedForDebugState(_ state: ActivityDebugState) {
+        switch state {
+        case .loading, .allLoading:
+            curriculumState = .loading
+        case .loaded:
+            let missions = Array(MissionPreviewData.iosMissions)
+            let completedCount = missions.filter { $0.status == .pass }.count
+            curriculumState = .loaded(
+                CurriculumData(
+                    progress: CurriculumProgressModel(
+                        partType: .front(type: .ios),
+                        partName: "iOS PART CURRICULUM",
+                        curriculumTitle: "iOS 파트 커리큘럼",
+                        completedCount: completedCount,
+                        totalCount: missions.count
+                    ),
+                    missions: missions
+                )
+            )
+        case .failed:
+            curriculumState = .failed(.unknown(message: "커리큘럼을 불러오지 못했습니다."))
+        }
+    }
+    #endif
 }

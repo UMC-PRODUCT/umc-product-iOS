@@ -14,7 +14,9 @@ struct StudyGroupMemberChip: View, Equatable {
     // MARK: - Constants
     fileprivate enum Constants {
         static let avatarSize: CGFloat = 28
-        static let defaultIconSize: CGFloat = 12
+        static let bestBorderWidth: CGFloat = 1
+        static let bestBadgeHorizontalPadding: CGFloat = 6
+        static let bestBadgeVerticalPadding: CGFloat = 2
     }
 
     // MARK: - Property
@@ -32,44 +34,61 @@ struct StudyGroupMemberChip: View, Equatable {
         lhs.member == rhs.member
     }
 
+    private var hasBestWorkbookPoint: Bool {
+        member.bestWorkbookPoint > 0
+    }
+
     // MARK: - Body
     var body: some View {
         VStack(spacing: DefaultSpacing.spacing8) {
             avatarView
             Text(member.name)
                 .appFont(.subheadline)
+            if hasBestWorkbookPoint {
+                bestWorkbookBadge
+            }
         }
         .padding(DefaultConstant.badgePadding)
         .glassEffect(
-            .regular.tint(.gray.opacity(0.15)),
+            hasBestWorkbookPoint
+                ? .regular.tint(.orange.opacity(0.22))
+                : .regular.tint(.gray.opacity(0.15)),
             in: .rect(corners: .concentric(minimum: 16))
         )
+        .overlay {
+            if hasBestWorkbookPoint {
+                ConcentricRectangle(corners: .concentric(minimum: 16))
+                    .stroke(.orange.opacity(0.45), lineWidth: Constants.bestBorderWidth)
+            }
+        }
     }
 
     // MARK: - View Components
     @ViewBuilder
     private var avatarView: some View {
-        if let urlString = member.profileImageURL, !urlString.isEmpty {
-            RemoteImage(
-                urlString: urlString,
-                size: CGSize(
-                    width: Constants.avatarSize,
-                    height: Constants.avatarSize
-                ),
-                cornerRadius: 0,
-                placeholderImage: "person.fill"
-            )
-            .clipShape(Circle())
-        } else {
-            Image(systemName: "person.fill")
-                .font(.system(size: Constants.defaultIconSize))
-                .foregroundStyle(.white)
-                .frame(
-                    width: Constants.avatarSize,
-                    height: Constants.avatarSize
-                )
-                .background(Color.gray.opacity(0.4), in: Circle())
+        RemoteImage(
+            urlString: member.profileImageURL ?? "",
+            size: CGSize(
+                width: Constants.avatarSize,
+                height: Constants.avatarSize
+            ),
+            cornerRadius: 0,
+            placeholderImage: "person.fill"
+        )
+        .clipShape(Circle())
+    }
+
+    private var bestWorkbookBadge: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "trophy.fill")
+                .font(.caption2)
+            Text("+\(member.bestWorkbookPoint)P")
+                .appFont(.caption2Emphasis, color: .orange)
         }
+        .foregroundStyle(.orange)
+        .padding(.horizontal, Constants.bestBadgeHorizontalPadding)
+        .padding(.vertical, Constants.bestBadgeVerticalPadding)
+        .background(.orange.opacity(0.15), in: Capsule())
     }
 }
 
@@ -93,7 +112,8 @@ struct StudyGroupMemberChip: View, Equatable {
                     name: "이영희",
                     university: "연세대",
                     profileImageURL: "https://picsum.photos/201",
-                    role: .member
+                    role: .member,
+                    bestWorkbookPoint: 30
                 )
             )
             StudyGroupMemberChip(

@@ -8,6 +8,9 @@
 import Foundation
 
 protocol StudyRepositoryProtocol {
+    /// 커리큘럼 화면에서 사용하는 데이터(진행률 + 미션 목록)를 가져옵니다.
+    func fetchCurriculumData() async throws -> CurriculumData
+
     /// 커리큘럼 진행률 정보를 가져옵니다.
     /// - Returns: 커리큘럼 진행률 모델
     /// - Throws: 네트워크 오류 또는 파싱 오류
@@ -20,31 +23,104 @@ protocol StudyRepositoryProtocol {
 
     /// 미션을 제출합니다.
     /// - Parameters:
-    ///   - missionId: 제출할 미션의 고유 ID
+    ///   - missionId: 제출할 챌린저 워크북 ID
     ///   - type: 미션 제출 타입 (링크 또는 체크)
     ///   - link: 제출 링크 (타입이 링크인 경우 필수)
-    /// - Returns: 업데이트된 미션 카드 모델
     /// - Throws: 네트워크 오류, 파싱 오류, 또는 유효성 검증 오류
     func submitMission(
-        missionId: UUID,
+        missionId: Int,
         type: MissionSubmissionType,
         link: String?
-    ) async throws -> MissionCardModel
+    ) async throws
 
     // MARK: - 운영진 스터디 관리
 
     /// 스터디원 목록을 가져옵니다.
+    /// - Parameters:
+    ///   - week: 조회 주차
+    ///   - studyGroupId: 특정 그룹 ID (nil이면 전체 그룹)
     /// - Returns: 스터디원 모델 배열
     /// - Throws: 네트워크 오류 또는 파싱 오류
-    func fetchStudyMembers() async throws -> [StudyMemberItem]
+    func fetchStudyMembers(
+        week: Int,
+        studyGroupId: Int?
+    ) async throws -> [StudyMemberItem]
 
     /// 스터디 그룹 목록을 가져옵니다.
     /// - Returns: 스터디 그룹 모델 배열
     /// - Throws: 네트워크 오류 또는 파싱 오류
     func fetchStudyGroups() async throws -> [StudyGroupItem]
 
+    /// 스터디 그룹 상세 목록을 가져옵니다.
+    /// - Returns: 스터디 그룹 상세 모델 배열
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func fetchStudyGroupDetails() async throws -> [StudyGroupInfo]
+
     /// 스터디 주차 목록을 가져옵니다.
     /// - Returns: 주차 번호 배열
     /// - Throws: 네트워크 오류 또는 파싱 오류
     func fetchWeeks() async throws -> [Int]
+
+    /// 챌린저 워크북 제출 URL을 조회합니다.
+    /// - Parameter challengerWorkbookId: 챌린저 워크북 ID
+    /// - Returns: 제출 URL 문자열 (없으면 nil)
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func fetchWorkbookSubmissionURL(
+        challengerWorkbookId: Int
+    ) async throws -> String?
+
+    /// 챌린저 워크북을 검토합니다.
+    /// - Parameters:
+    ///   - challengerWorkbookId: 챌린저 워크북 ID
+    ///   - isApproved: 통과 여부 (true: PASS, false: FAIL)
+    ///   - feedback: 피드백 내용
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func reviewWorkbook(
+        challengerWorkbookId: Int,
+        isApproved: Bool,
+        feedback: String
+    ) async throws
+
+    /// 베스트 워크북으로 선정합니다.
+    /// - Parameters:
+    ///   - challengerWorkbookId: 챌린저 워크북 ID
+    ///   - bestReason: 선정 사유
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func selectBestWorkbook(
+        challengerWorkbookId: Int,
+        bestReason: String
+    ) async throws
+
+    /// 스터디 그룹을 생성합니다.
+    ///
+    /// - Parameters:
+    ///   - name: 그룹 이름
+    ///   - part: 스터디 파트
+    ///   - leaderId: 파트장 챌린저 ID
+    ///   - memberIds: 스터디원 챌린저 ID 목록
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func createStudyGroup(
+        name: String,
+        part: UMCPartType,
+        leaderId: Int,
+        memberIds: [Int]
+    ) async throws
+
+    /// 스터디 그룹 정보를 수정합니다.
+    /// - Parameters:
+    ///   - groupId: 그룹 ID
+    ///   - name: 그룹 이름
+    ///   - part: 스터디 파트
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func updateStudyGroup(
+        groupId: Int,
+        name: String,
+        part: UMCPartType
+    ) async throws
+
+    /// 스터디 그룹을 삭제합니다.
+    /// - Parameters:
+    ///   - groupId: 그룹 ID
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func deleteStudyGroup(groupId: Int) async throws
 }

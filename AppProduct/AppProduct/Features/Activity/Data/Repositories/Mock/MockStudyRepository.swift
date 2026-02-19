@@ -19,6 +19,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
     /// iOS 파트 실제 커리큘럼 (7기 기준)
     private var missions: [MissionCardModel] = [
         .init(
+            challengerWorkbookId: 1,
             week: 1,
             platform: "iOS",
             title: "SwiftUI 화면 구성 및 상태 관리",
@@ -26,6 +27,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            challengerWorkbookId: 2,
             week: 2,
             platform: "iOS",
             title: "SwiftUI 데이터 바인딩 및 MVVM 패턴",
@@ -33,6 +35,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            challengerWorkbookId: 3,
             week: 3,
             platform: "iOS",
             title: "SwiftUI 리스트와 스크롤뷰, 그리고 네비게이션까지!",
@@ -40,6 +43,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            challengerWorkbookId: 4,
             week: 4,
             platform: "iOS",
             title: "순간 반응하는 앱 만들기 – Swift 비동기와 Combine",
@@ -47,6 +51,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .fail
         ),
         .init(
+            challengerWorkbookId: 5,
             week: 5,
             platform: "iOS",
             title: "API 없이도 앱이 동작하게 – 모델 설계와 JSON 파싱",
@@ -54,6 +59,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            challengerWorkbookId: 6,
             week: 6,
             platform: "iOS",
             title: "진짜 서버랑 대화하기 – Alamofire API 연동 1",
@@ -61,6 +67,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            challengerWorkbookId: 7,
             week: 7,
             platform: "iOS",
             title: "Moya로 깔끔하게 통신하기 - API 연동 실전 2",
@@ -68,6 +75,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            challengerWorkbookId: 8,
             week: 8,
             platform: "iOS",
             title: "좋은 컴포넌트 설계란 무엇일까",
@@ -75,6 +83,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .inProgress
         ),
         .init(
+            challengerWorkbookId: 9,
             week: 9,
             platform: "iOS",
             title: "UIKit을 SwiftUI에 녹이는 방법 – UIViewControllerRepresentable",
@@ -82,6 +91,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .locked
         ),
         .init(
+            challengerWorkbookId: 10,
             week: 10,
             platform: "iOS",
             title: "혼자 말고 함께 – iOS 개발 협업 가이드라인",
@@ -91,6 +101,15 @@ final class MockStudyRepository: StudyRepositoryProtocol {
     ]
 
     // MARK: - StudyRepositoryProtocol
+
+    func fetchCurriculumData() async throws -> CurriculumData {
+        async let progress = fetchCurriculumProgress()
+        async let missions = fetchMissions()
+        return CurriculumData(
+            progress: try await progress,
+            missions: try await missions
+        )
+    }
 
     func fetchCurriculumProgress() async throws -> CurriculumProgressModel {
         // 네트워크 지연 시뮬레이션
@@ -112,27 +131,29 @@ final class MockStudyRepository: StudyRepositoryProtocol {
     }
 
     func submitMission(
-        missionId: UUID,
+        missionId: Int,
         type: MissionSubmissionType,
         link: String?
-    ) async throws -> MissionCardModel {
+    ) async throws {
         // 네트워크 지연 시뮬레이션
         try await Task.sleep(for: .milliseconds(500))
 
-        guard let index = missions.firstIndex(where: { $0.id == missionId }) else {
+        guard let index = missions.firstIndex(where: { $0.challengerWorkbookId == missionId }) else {
             throw DomainError.missionNotFound
         }
 
         // 상태를 pendingApproval로 변경
         missions[index].status = .pendingApproval
-        return missions[index]
     }
 
     // MARK: - 운영진 스터디 관리
 
-    func fetchStudyMembers() async throws -> [StudyMemberItem] {
+    func fetchStudyMembers(
+        week: Int,
+        studyGroupId: Int?
+    ) async throws -> [StudyMemberItem] {
         try await Task.sleep(for: .milliseconds(500))
-        return StudyMemberItem.preview
+        return StudyMemberItem.preview.filter { $0.week == week }
     }
 
     func fetchStudyGroups() async throws -> [StudyGroupItem] {
@@ -140,8 +161,70 @@ final class MockStudyRepository: StudyRepositoryProtocol {
         return StudyGroupItem.preview
     }
 
+    func fetchStudyGroupDetails() async throws -> [StudyGroupInfo] {
+        try await Task.sleep(for: .milliseconds(300))
+        return StudyGroupPreviewData.groups
+    }
+
     func fetchWeeks() async throws -> [Int] {
         try await Task.sleep(for: .milliseconds(200))
         return Array(1...10)
+    }
+
+    func fetchWorkbookSubmissionURL(
+        challengerWorkbookId: Int
+    ) async throws -> String? {
+        try await Task.sleep(for: .milliseconds(150))
+        return "https://github.com/user/repo-\(challengerWorkbookId)"
+    }
+
+    func reviewWorkbook(
+        challengerWorkbookId: Int,
+        isApproved: Bool,
+        feedback: String
+    ) async throws {
+        _ = challengerWorkbookId
+        _ = isApproved
+        _ = feedback
+        try await Task.sleep(for: .milliseconds(200))
+    }
+
+    func selectBestWorkbook(
+        challengerWorkbookId: Int,
+        bestReason: String
+    ) async throws {
+        _ = bestReason
+        try await Task.sleep(for: .milliseconds(200))
+    }
+
+    func createStudyGroup(
+        name: String,
+        part: UMCPartType,
+        leaderId: Int,
+        memberIds: [Int]
+    ) async throws {
+        _ = name
+        _ = part
+        _ = leaderId
+        _ = memberIds
+        try await Task.sleep(for: .milliseconds(300))
+    }
+
+    func updateStudyGroup(
+        groupId: Int,
+        name: String,
+        part: UMCPartType
+    ) async throws {
+        _ = groupId
+        _ = name
+        _ = part
+        try await Task.sleep(for: .milliseconds(300))
+    }
+
+    func deleteStudyGroup(
+        groupId: Int
+    ) async throws {
+        _ = groupId
+        try await Task.sleep(for: .milliseconds(200))
     }
 }

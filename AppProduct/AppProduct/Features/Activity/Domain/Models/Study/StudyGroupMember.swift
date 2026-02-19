@@ -43,6 +43,9 @@ struct StudyGroupMember: Identifiable, Equatable, Hashable {
     /// 역할
     let role: MemberRole
 
+    /// 베스트 워크북 포인트
+    let bestWorkbookPoint: Int
+
     // MARK: - Computed Property
 
     /// 표시용 이름 (닉네임/이름 또는 이름만)
@@ -59,7 +62,8 @@ struct StudyGroupMember: Identifiable, Equatable, Hashable {
         nickname: String? = nil,
         university: String,
         profileImageURL: String? = nil,
-        role: MemberRole = .member
+        role: MemberRole = .member,
+        bestWorkbookPoint: Int = 0
     ) {
         self.serverID = serverID
         self.name = name
@@ -67,5 +71,6 @@ struct StudyGroupMember: Identifiable, Equatable, Hashable {
         self.university = university
         self.profileImageURL = profileImageURL
         self.role = role
+        self.bestWorkbookPoint = bestWorkbookPoint
     }
 }

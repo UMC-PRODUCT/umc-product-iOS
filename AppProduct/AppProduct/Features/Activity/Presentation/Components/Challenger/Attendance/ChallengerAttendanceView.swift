@@ -96,7 +96,7 @@ struct ChallengerAttendanceView: View, Equatable {
                 ChallengerPendingApprovalView()
                     .glassEffect(
                         .regular,
-                        in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+                        in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
                     .glassEffectID(
                         Constants.attendanceActionId, in: attendanceNamespace)
 

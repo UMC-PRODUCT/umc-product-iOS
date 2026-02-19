@@ -18,20 +18,30 @@ struct StudyGroupLeaderRow: View, Equatable {
 
     fileprivate enum Constants {
         static let avatarSize: CGFloat = 48
-        static let defaultAvatarIconSize: CGFloat = 20
         static let rowPadding: CGFloat = 8
+        static let surfaceShadowRadius: CGFloat = 10
+        static let surfaceHighlightRadius: CGFloat = 4
+        static let surfaceShadowYOffset: CGFloat = 6
     }
 
     // MARK: - Property
 
     /// 파트장 정보
     let leader: StudyGroupMember
+    /// 스터디 파트 메인 색
+    let partTintColor: Color
 
     // MARK: - Initializer
 
-    /// - Parameter leader: 표시할 파트장 정보
-    init(leader: StudyGroupMember) {
+    /// - Parameters:
+    ///   - leader: 표시할 파트장 정보
+    ///   - partTintColor: 파트 메인 색상
+    init(
+        leader: StudyGroupMember,
+        partTintColor: Color
+    ) {
         self.leader = leader
+        self.partTintColor = partTintColor
     }
 
     // MARK: - Equatable
@@ -55,40 +65,52 @@ struct StudyGroupLeaderRow: View, Equatable {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Constants.rowPadding)
-        .background(
-            ConcentricRectangle(
-                corners: .concentric(minimum: DefaultConstant.concentricRadius)
-            )
-            .fill(.gray.opacity(0.15))
-        )
+        .background(surfaceBackground)
     }
 
     // MARK: - View Components
 
     private var avatarView: some View {
-        Group {
-            if let urlString = leader.profileImageURL, !urlString.isEmpty {
-                RemoteImage(
-                    urlString: urlString,
-                    size: CGSize(
-                        width: Constants.avatarSize,
-                        height: Constants.avatarSize
-                    ),
-                    cornerRadius: 0,
-                    placeholderImage: "person.fill"
-                )
-                .clipShape(Circle())
-            } else {
-                Image(systemName: "person.fill")
-                    .font(.system(size: Constants.defaultAvatarIconSize))
-                    .foregroundStyle(.white)
-                    .frame(
-                        width: Constants.avatarSize,
-                        height: Constants.avatarSize
-                    )
-                    .background(.gray.opacity(0.4), in: Circle())
-            }
-        }
+        RemoteImage(
+            urlString: leader.profileImageURL ?? "",
+            size: CGSize(
+                width: Constants.avatarSize,
+                height: Constants.avatarSize
+            ),
+            cornerRadius: 0,
+            placeholderImage: "person.fill"
+        )
+        .clipShape(Circle())
+    }
+
+    private var surfaceBackground: some View {
+        ConcentricRectangle(
+            corners: .concentric(minimum: DefaultConstant.concentricRadius)
+        )
+        .fill(
+            LinearGradient(
+                colors: [
+                    .white,
+                    partTintColor.opacity(0.22),
+                    partTintColor.opacity(0.10)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .glass()
+        .shadow(
+            color: .black.opacity(0.08),
+            radius: Constants.surfaceShadowRadius,
+            x: 0,
+            y: Constants.surfaceShadowYOffset
+        )
+        .shadow(
+            color: .white.opacity(0.7),
+            radius: Constants.surfaceHighlightRadius,
+            x: -2,
+            y: -2
+        )
     }
 }
 
@@ -104,7 +126,8 @@ struct StudyGroupLeaderRow: View, Equatable {
                 university: "홍익대학교",
                 profileImageURL: nil,
                 role: .leader
-            )
+            ),
+            partTintColor: .indigo500
         )
 
         StudyGroupLeaderRow(
@@ -114,7 +137,8 @@ struct StudyGroupLeaderRow: View, Equatable {
                 university: "서울대학교",
                 profileImageURL: "https://example.com/avatar.jpg",
                 role: .leader
-            )
+            ),
+            partTintColor: .orange
         )
     }
     .padding()

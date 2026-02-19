@@ -16,7 +16,8 @@ struct ChallengerPendingApprovalView: View {
 
     private enum Constant {
         static let iconSize: CGFloat = 32
-        static let containerPadding: CGFloat = 24
+        static let horizontalPadding: CGFloat = 24
+        static let verticalPadding: CGFloat = 28
         static let backgroundOpacity: CGFloat = 0.1
     }
 
@@ -28,9 +29,9 @@ struct ChallengerPendingApprovalView: View {
             titleText
             descriptionText
         }
+        .padding(.horizontal, Constant.horizontalPadding)
+        .padding(.vertical, Constant.verticalPadding)
         .frame(maxWidth: .infinity)
-        .padding(Constant.containerPadding)
-        .clipShape(.rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
         .background(Color.yellow.opacity(Constant.backgroundOpacity), in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
     }
 

@@ -72,12 +72,23 @@ final class OperatorAttendanceViewModel {
                 }
             }
 
+            // TODO: 서버에서 출석 집계(total/attended/rate) 제공 시 해당 값으로 교체
+            let sessionStatus = OperatorSessionStatus.from(
+                startTime: session.info.startTime,
+                endTime: session.info.endTime
+            )
+            let totalCount = sessionStatus == .beforeStart ? 0 : 40
+            let attendedCount = max(0, totalCount - pendingMembers.count)
+            let attendanceRate = totalCount > 0
+                ? Double(attendedCount) / Double(totalCount)
+                : 0
+
             updatedSessions.append(OperatorSessionAttendance(
                 serverID: scheduleIdString,
                 session: session,
-                attendanceRate: 0.0,
-                attendedCount: 0,
-                totalCount: 0,
+                attendanceRate: attendanceRate,
+                attendedCount: attendedCount,
+                totalCount: totalCount,
                 pendingMembers: pendingMembers
             ))
         }
@@ -89,6 +100,31 @@ final class OperatorAttendanceViewModel {
     func locationButtonTapped(session: Session) {
         selectedSession = session
         showLocationSheet = true
+    }
+
+    /// 위치 변경 확인 액션
+    @MainActor
+    func confirmLocationChange(to place: PlaceSearchInfo) async -> Bool {
+        guard selectedSession != nil else {
+            alertPrompt = AlertPrompt(
+                title: "위치 변경 실패",
+                message: "세션 정보를 찾을 수 없습니다.",
+                positiveBtnTitle: "확인"
+            )
+            return false
+        }
+
+        guard !place.name.isEmpty, !place.address.isEmpty else {
+            alertPrompt = AlertPrompt(
+                title: "위치 변경 실패",
+                message: "변경할 위치를 선택해 주세요.",
+                positiveBtnTitle: "확인"
+            )
+            return false
+        }
+
+        // TODO: 실제 위치 변경 API 연동 필요
+        return true
     }
 
     /// 출석 사유 확인 버튼 탭
@@ -494,4 +530,17 @@ final class OperatorAttendanceViewModel {
         )
     }
 
+    #if DEBUG
+    @MainActor
+    func seedForDebugState(_ state: ActivityDebugState) {
+        switch state {
+        case .loading, .allLoading:
+            sessionsState = .loading
+        case .loaded:
+            sessionsState = .loaded(OperatorAttendancePreviewData.sessions)
+        case .failed:
+            sessionsState = .failed(.unknown(message: "출석 현황을 불러오지 못했습니다."))
+        }
+    }
+    #endif
 }

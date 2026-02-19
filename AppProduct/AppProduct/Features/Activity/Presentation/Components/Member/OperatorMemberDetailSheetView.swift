@@ -13,67 +13,59 @@ struct OperatorMemberDetailSheetView: View {
     
     @Environment(\.dismiss) private var dismiss
     var member: MemberManagementItem
-    @State private var showPenalty: Bool = false
-    @State private var showEditHistory: Bool = false
+    @State private var showPenaltyAlert: Bool = false
     @State private var penaltyReason: String = ""
     @State private var penaltyHistory: [OperatorMemberPenaltyHistory] = []
     @State private var totalPenalty: Double = 0
-    @State private var selectedPenaltyScore: Double = 1.0
     
     // MARK: - Constant
     
     private enum Constants {
         static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
-        static let boxPadding: EdgeInsets = .init(top: 12, leading: 0, bottom: 12, trailing: 0)
-        static let listPadding: EdgeInsets = .init(top: 12, leading: 12, bottom: 12, trailing: 12)
         static let profileSize: CGSize = .init(width: 60, height: 60)
+        static let fixedPenaltyScore: Double = 1.0
+        static let contentHorizontalPadding: CGFloat = 16
+        static let contentTopPadding: CGFloat = 8
+        static let contentBottomPadding: CGFloat = 16
+        static let contentSpacing: CGFloat = 24
         
-        static let baseHeight: CGFloat = 340  // 기본 정보 영역
-        static let emptyHistoryHeight: CGFloat = 150 // 빈 상태 뷰 높이
-        static let historyRowHeight: CGFloat = 50  // 각 출석 기록 행의 높이
-        static let maxVisibleHistory: Int = 5  // 스크롤 없이 보이는 최대 기록 수
-        static let minSheetHeight: CGFloat = 420  // 최소 시트 높이
-        static let maxSheetHeight: CGFloat = 700  // 최대 시트 높이
+        static let baseHeight: CGFloat = 340
+        static let emptyHistoryHeight: CGFloat = 150
+        static let historyRowHeight: CGFloat = 50
+        static let maxVisibleHistory: Int = 5
+        static let minSheetHeight: CGFloat = 420
+        static let maxSheetHeight: CGFloat = 700
         static let badgePadding: EdgeInsets = .init(top: 6, leading: 8, bottom: 6, trailing: 8)
         static let bgOpacity: Double = 0.2
-        static let textfieldPadding: CGFloat = 12
+        static let animation: Animation = .spring(response: 0.34, dampingFraction: 0.86)
     }
     
     // MARK: - Computed Properties
     
     /// 사유 입력 유효성 검사
-     private var isReasonValid: Bool {
-         !penaltyReason.trimmingCharacters(in: .whitespaces).isEmpty
-     }
+    private var isReasonValid: Bool {
+        !penaltyReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var partTint: Color {
+        member.part.color
+    }
     
     /// 아웃 기록 개수에 따른 동적 시트 높이
     private var dynamicSheetHeight: CGFloat {
         let historyCount = penaltyHistory.count
         
-        // 기본 높이 계산
         var calculatedHeight: CGFloat = Constants.baseHeight
         
-        // 히스토리 영역 높이
         if historyCount == 0 {
             calculatedHeight += Constants.emptyHistoryHeight
         } else {
             let visibleHistory = min(historyCount, Constants.maxVisibleHistory)
             let historyHeight = (CGFloat(visibleHistory) * Constants.historyRowHeight)
-            + (CGFloat(max(0, visibleHistory - 1)) * DefaultSpacing.spacing8)
+                + (CGFloat(max(0, visibleHistory - 1)) * DefaultSpacing.spacing8)
             calculatedHeight += historyHeight
         }
         
-        // 아웃 부여 TextField + 버튼 높이 추가
-        if showPenalty {
-            calculatedHeight += 120  // TextField(~50) + Button(~50) + spacing(~20)
-        }
-        
-        // 기록 수정 안내 메시지 높이 추가
-        if showEditHistory {
-            calculatedHeight += 40  // Label 높이
-        }
-        
-        // 최소/최대 높이 제한
         return max(Constants.minSheetHeight, min(calculatedHeight, Constants.maxSheetHeight))
     }
     
@@ -87,7 +79,7 @@ struct OperatorMemberDetailSheetView: View {
         
         let visibleHistory = min(recordCount, Constants.maxVisibleHistory)
         let historyHeight = (CGFloat(visibleHistory) * Constants.historyRowHeight)
-        + (CGFloat(max(0, visibleHistory - 1)) * DefaultSpacing.spacing8)
+            + (CGFloat(max(0, visibleHistory - 1)) * DefaultSpacing.spacing8)
         
         return historyHeight
     }
@@ -96,193 +88,157 @@ struct OperatorMemberDetailSheetView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
+            VStack(alignment: .leading, spacing: Constants.contentSpacing) {
                 memberInfoView
-                
-                btnView
-                
                 historyView
             }
-            .toolbar {
-                ToolBarCollection.CancelBtn(action: {
-                    dismiss()
-                })
-            }
-            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .toolbar { toolbarItems }
+            .padding(.horizontal, Constants.contentHorizontalPadding)
+            .padding(.top, Constants.contentTopPadding)
+            .padding(.bottom, Constants.contentBottomPadding)
             .scrollContentBackground(.hidden)
             .presentationDetents([.height(dynamicSheetHeight)])
             .interactiveDismissDisabled()
+            .animation(Constants.animation, value: penaltyHistory.count)
+            .alert("아웃 부여", isPresented: $showPenaltyAlert) {
+                outPenaltyInputField
+                outPenaltyCancelButton
+                outPenaltyConfirmButton
+            } message: {
+                outPenaltyMessage
+            }
         }
-        .onChange(of: member) { oldValue, newValue in
+        .onChange(of: member) { _, newValue in
             penaltyHistory = newValue.penaltyHistory
             totalPenalty = newValue.penalty
         }
         .task {
-            // 초기 로드
             penaltyHistory = member.penaltyHistory
             totalPenalty = member.penalty
         }
     }
     
+    // MARK: - Toolbar
+    
+    @ToolbarContentBuilder
+    private var toolbarItems: some ToolbarContent {
+        ToolBarCollection.CancelBtn {
+            dismiss()
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            outPenaltyTriggerButton
+        }
+    }
+    
+    private var outPenaltyTriggerButton: some View {
+        Button {
+            penaltyReason = ""
+            showPenaltyAlert = true
+        } label: {
+            Label("아웃 부여", systemImage: "slash.circle.fill")
+                .foregroundStyle(.red)
+        }
+        .tint(.red)
+    }
+    
+    private var outPenaltyInputField: some View {
+        TextField("아웃 사유를 입력하세요", text: $penaltyReason)
+    }
+    
+    private var outPenaltyCancelButton: some View {
+        Button("취소", role: .cancel) {
+            penaltyReason = ""
+        }
+    }
+    
+    private var outPenaltyConfirmButton: some View {
+        Button("확정") {
+            addPenalty()
+        }
+        .disabled(!isReasonValid)
+    }
+    
+    private var outPenaltyMessage: some View {
+        Text("사유를 입력하면 아웃 +\(String(format: "%.1f", Constants.fixedPenaltyScore))가 기록됩니다.")
+    }
+    
     // MARK: - SubView
     
-    /// 멤버 기본 정보
     private var memberInfoView: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             RemoteImage(urlString: member.profile ?? "", size: Constants.profileSize)
-            
-            HStack (spacing: DefaultSpacing.spacing8) {
-                Text("\(member.name)/\(member.nickname)")
-                    .appFont(.title2Emphasis)
-                Text(member.part.name)
-                    .appFont(.callout, color: .gray)
-                    .padding(Constants.tagPadding)
-                    .background(.white, in: Capsule())
-                Text(member.school)
-                    .appFont(.callout, color: .black)
-                    .padding(Constants.tagPadding)
-                    .background(.white, in: Capsule())
-            }
+            memberMetadataView
         }
     }
     
-    /// 아웃 부여/기록 수정 버튼
-    private var btnView: some View {
-        VStack(spacing: DefaultSpacing.spacing16) {
-            HStack(spacing: DefaultSpacing.spacing16) {
-                penaltyBtn
-                editHistory
-            }
-            if showPenalty {
-                penaltyInputSection
-            }
-            if showEditHistory {
-                Label(title: {
-                    Text("삭제 버튼을 눌러 기록을 삭제할 수 있습니다.")
-                        .foregroundStyle(.black)
-                        .appFont(.callout)
-                }, icon: {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.blue)
-                        .appFont(.callout)
-                })
-            }
+    private var memberMetadataView: some View {
+        HStack(spacing: DefaultSpacing.spacing8) {
+            Text("\(member.name)/\(member.nickname)")
+                .appFont(.title2Emphasis)
+            statusChip(title: member.part.name, style: .accent)
+            statusChip(title: member.school, style: .plain)
         }
     }
     
-    /// 아웃 부여
-    private var penaltyBtn: some View {
-        VStack {
-            Button(action: {
-                showEditHistory = false
-                showPenalty.toggle()
-            }, label: {
-                VStack(spacing: DefaultSpacing.spacing8) {
-                    Image(systemName: "slash.circle")
-                    Text("아웃 부여")
+    private enum StatusChipStyle {
+        case accent
+        case plain
+    }
+    
+    @ViewBuilder
+    private func statusChip(title: String, style: StatusChipStyle) -> some View {
+        switch style {
+        case .accent:
+            Text(title)
+                .appFont(.calloutEmphasis, color: partTint)
+                .padding(Constants.tagPadding)
+                .background(partTint.opacity(0.14), in: Capsule())
+                .overlay {
+                    Capsule()
+                        .stroke(partTint.opacity(0.4), lineWidth: 1)
                 }
-                .appFont(.body, color: showPenalty ? .red : .grey500)
-                .padding(Constants.boxPadding)
-                .frame(maxWidth: .infinity)
-                .background(showPenalty ? .red.opacity(Constants.bgOpacity) : .white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-                .glass()
-            })
+        case .plain:
+            Text(title)
+                .appFont(.callout, color: .black)
+                .padding(Constants.tagPadding)
+                .background(.white, in: Capsule())
         }
     }
     
-    /// 아웃 사유/점수 입력
-    private var penaltyInputSection: some View {
-        VStack {
-            HStack {
-                // 아웃 사유 TextField
-                TextField("", text: $penaltyReason, prompt: Text("아웃 사유를 입력하세요"))
-                    .frame(maxWidth: .infinity)
-                    .padding(Constants.textfieldPadding)
-                    .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
-                    .glass()
-                
-                // 아웃 점수 선택 메뉴
-                Menu {
-                    Button("0.5점") {
-                        selectedPenaltyScore = 0.5
-                    }
-                    Button("1점") {
-                        selectedPenaltyScore = 1.0
-                    }
-                    Button("2점") {
-                        selectedPenaltyScore = 2.0
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text("+\(String(format: "%.1f", selectedPenaltyScore))")
-                            .appFont(.calloutEmphasis, color: .red)
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.red)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .background(.red.opacity(0.1), in: Capsule())
-                }
-            }
-            
-            // 아웃 확정하기 Btn
-            Button(action: {
-                addPenalty()
-            }, label: {
-                Text("아웃 확정하기")
-                    .foregroundStyle(isReasonValid ? .red : .grey400)
-                    .frame(maxWidth: .infinity)
-                    .padding(Constants.textfieldPadding)
-                    .background(
-                        isReasonValid ? Color.red.opacity(Constants.bgOpacity) : Color.grey200,
-                        in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                    )
-            })
-            .disabled(!isReasonValid)
-        }
-    }
-    
-    /// 기록 수정
-    private var editHistory: some View {
-        VStack {
-            Button(action: {
-                showPenalty = false
-                showEditHistory.toggle()
-            }, label: {
-                VStack(spacing: DefaultSpacing.spacing8) {
-                    Image(systemName: "gearshape")
-                    Text("기록 수정")
-                }
-                .appFont(.body, color: showEditHistory ? .blue : .grey500)
-                .padding(Constants.boxPadding)
-                .frame(maxWidth: .infinity)
-                .background(showEditHistory ? .blue.opacity(Constants.bgOpacity) : .white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-                .glass()
-            })
-        }
-    }
-    
-    /// 히스토리
     private var historyView: some View {
         VStack(alignment: .leading) {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                Label("히스토리", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
-                    .appFont(.title3Emphasis)
-                
-                if !penaltyHistory.isEmpty {
-                    penaltyBadge
-                }
-            }
+            historyHeader
+            historyListContainer
+            historyDeleteHint
+        }
+    }
+    
+    private var historyHeader: some View {
+        HStack(spacing: DefaultSpacing.spacing8) {
+            Label("히스토리", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                .appFont(.title3Emphasis)
             
+            if !penaltyHistory.isEmpty {
+                penaltyBadge
+            }
+        }
+    }
+    
+    private var historyListContainer: some View {
+        Group {
             if penaltyHistory.isEmpty {
-                // 기록 없음
                 emptyHistoryView
             } else {
-                // 기록 리스트
                 historyListView
             }
         }
+    }
+    
+    private var historyDeleteHint: some View {
+        Text("히스토리 항목을 왼쪽으로 밀어서 삭제할 수 있습니다.")
+            .appFont(.footnote, color: .grey500)
+            .padding(.top, DefaultSpacing.spacing8)
     }
     
     /// 누적 경고 뱃지
@@ -299,7 +255,6 @@ struct OperatorMemberDetailSheetView: View {
     
     /// 기록 없음 뷰
     private var emptyHistoryView: some View {
-        
         VStack(spacing: DefaultSpacing.spacing8) {
             Image(systemName: "exclamationmark.bubble.fill")
                 .appFont(.title1, color: .grey500)
@@ -314,10 +269,19 @@ struct OperatorMemberDetailSheetView: View {
     
     /// 히스토리 리스트 뷰
     private var historyListView: some View {
-        List(penaltyHistory, rowContent:  { history in
-            penaltyHistoryRow(history)
-                .listRowBackground(Color.clear)
-        })
+        List {
+            ForEach(penaltyHistory) { history in
+                penaltyHistoryRow(history)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            deletePenalty(history)
+                        } label: {
+                            Label("삭제", systemImage: "trash")
+                        }
+                    }
+                    .listRowBackground(Color.clear)
+            }
+        }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
@@ -329,29 +293,17 @@ struct OperatorMemberDetailSheetView: View {
     /// 아웃 히스토리 행
     private func penaltyHistoryRow(_ history: OperatorMemberPenaltyHistory) -> some View {
         HStack(spacing: DefaultSpacing.spacing16) {
-            // 날짜
             Text(history.date.toYearMonthDay())
                 .appFont(.subheadlineEmphasis)
             
-            // 아웃 사유
             Text(history.reason)
                 .appFont(.subheadline)
                 .lineLimit(1)
             
             Spacer()
             
-            // 아웃 점수
             Text("아웃 +\(String(format: "%.1f", history.penaltyScore))")
                 .appFont(.subheadline, color: .red)
-            
-            if showEditHistory {
-                Button(action: {
-                    deletePenalty(history)
-                }, label: {
-                    Image(systemName: "xmark")
-                        .foregroundStyle(.grey500)
-                })
-            }
         }
     }
     
@@ -359,37 +311,33 @@ struct OperatorMemberDetailSheetView: View {
     
     /// 아웃 부여하기
     private func addPenalty() {
-        guard !penaltyReason.trimmingCharacters(in: .whitespaces).isEmpty else {
+        guard !penaltyReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
         
         let newPenalty = OperatorMemberPenaltyHistory(
             date: Date(),
             reason: penaltyReason,
-            penaltyScore: selectedPenaltyScore
+            penaltyScore: Constants.fixedPenaltyScore
         )
         
-        // 히스토리에 추가 후 날짜순 정렬 (최신순)
-        penaltyHistory.append(newPenalty)
-        penaltyHistory.sort { $0.date > $1.date }
+        withAnimation(Constants.animation) {
+            penaltyHistory.append(newPenalty)
+            penaltyHistory.sort { $0.date > $1.date }
+        }
         
-        // 총 페널티 점수 업데이트
-        totalPenalty += selectedPenaltyScore
-        
-        // 입력 필드 초기화 및 모드 종료
+        totalPenalty += Constants.fixedPenaltyScore
         penaltyReason = ""
-        selectedPenaltyScore = 1.0
-        showPenalty = false
     }
     
     /// 히스토리 삭제하기
     private func deletePenalty(_ history: OperatorMemberPenaltyHistory) {
         if let index = penaltyHistory.firstIndex(where: { $0.id == history.id }) {
             let deletedScore = penaltyHistory[index].penaltyScore
-            penaltyHistory.remove(at: index)
-            
-            // 총 페널티 점수 업데이트
-            totalPenalty -= deletedScore
+            withAnimation(Constants.animation) {
+                penaltyHistory.remove(at: index)
+                totalPenalty -= deletedScore
+            }
         }
     }
 }
@@ -397,31 +345,34 @@ struct OperatorMemberDetailSheetView: View {
 #Preview {
     Text("Preview")
         .sheet(isPresented: .constant(true), content: {
-            OperatorMemberDetailSheetView(
-                member: .init(
-                    profile: nil,
-                    name: "김미주",
-                    nickname: "마티",
-                    generation: "9기",
-                    school: "덕성여자대학교",
-                    position: "Challenger",
-                    part: .front(type: .ios),
-                    penalty: 2,
-                    badge: false,
-                    managementTeam: .schoolPartLeader,
-                    attendanceRecords: [],
-                    penaltyHistory: [
-                        OperatorMemberPenaltyHistory(
-                            date: Date().addingTimeInterval(-14 * 24 * 60 * 60), // 2주 전
-                            reason: "세션 지각",
-                            penaltyScore: 1.0
-                        ),
-                        OperatorMemberPenaltyHistory(
-                            date: Date().addingTimeInterval(-7 * 24 * 60 * 60), // 1주 전
-                            reason: "세션 결석 (사유 없음)",
-                            penaltyScore: 1.0
-                        )
-                    ]
-                ))
-            })
+            OperatorMemberDetailSheetView(member: OperatorMemberDetailSheetView.previewMember)
+        })
+}
+
+private extension OperatorMemberDetailSheetView {
+    static let previewMember = MemberManagementItem(
+        profile: nil,
+        name: "김미주",
+        nickname: "마티",
+        generation: "9기",
+        school: "덕성여자대학교",
+        position: "Challenger",
+        part: .front(type: .ios),
+        penalty: 2,
+        badge: false,
+        managementTeam: .schoolPartLeader,
+        attendanceRecords: [],
+        penaltyHistory: [
+            OperatorMemberPenaltyHistory(
+                date: Date().addingTimeInterval(-14 * 24 * 60 * 60),
+                reason: "세션 지각",
+                penaltyScore: 1.0
+            ),
+            OperatorMemberPenaltyHistory(
+                date: Date().addingTimeInterval(-7 * 24 * 60 * 60),
+                reason: "세션 결석 (사유 없음)",
+                penaltyScore: 1.0
+            )
+        ]
+    )
 }

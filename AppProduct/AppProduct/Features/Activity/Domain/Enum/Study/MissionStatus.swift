@@ -17,7 +17,20 @@ enum MissionStatus: String, CaseIterable {
     case fail = "Fail"
     case locked = "Locked"
 
-    var displayText: String { rawValue }
+    var displayText: String {
+        switch self {
+        case .notStarted, .locked:
+            return "아직 열리지 않음"
+        case .inProgress:
+            return "In Progress"
+        case .pendingApproval:
+            return "대기중"
+        case .pass:
+            return "Pass"
+        case .fail:
+            return "Fail"
+        }
+    }
 
     var backgroundColor: Color {
         switch self {

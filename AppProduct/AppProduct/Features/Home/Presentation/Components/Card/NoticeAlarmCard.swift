@@ -46,6 +46,7 @@ struct NoticeAlarmCard: View {
             .foregroundStyle(notice.icon.color)
             .padding(Constants.iconPadding)
             .background(notice.icon.color.opacity(0.2), in: .circle)
+            .glassEffect(.clear, in: .circle)
     }
 }
 

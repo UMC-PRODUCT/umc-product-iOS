@@ -24,15 +24,85 @@ final class FetchStudyMembersUseCase: FetchStudyMembersUseCaseProtocol {
 
     // MARK: - Function
 
-    func fetchMembers() async throws -> [StudyMemberItem] {
-        try await repository.fetchStudyMembers()
+    func fetchMembers(
+        week: Int,
+        studyGroupId: Int?
+    ) async throws -> [StudyMemberItem] {
+        try await repository.fetchStudyMembers(
+            week: week,
+            studyGroupId: studyGroupId
+        )
     }
 
     func fetchStudyGroups() async throws -> [StudyGroupItem] {
         try await repository.fetchStudyGroups()
     }
 
+    func fetchStudyGroupDetails() async throws -> [StudyGroupInfo] {
+        try await repository.fetchStudyGroupDetails()
+    }
+
     func fetchWeeks() async throws -> [Int] {
         try await repository.fetchWeeks()
+    }
+
+    func fetchWorkbookSubmissionURL(
+        challengerWorkbookId: Int
+    ) async throws -> String? {
+        try await repository.fetchWorkbookSubmissionURL(
+            challengerWorkbookId: challengerWorkbookId
+        )
+    }
+
+    func reviewWorkbook(
+        challengerWorkbookId: Int,
+        isApproved: Bool,
+        feedback: String
+    ) async throws {
+        try await repository.reviewWorkbook(
+            challengerWorkbookId: challengerWorkbookId,
+            isApproved: isApproved,
+            feedback: feedback
+        )
+    }
+
+    func selectBestWorkbook(
+        challengerWorkbookId: Int,
+        bestReason: String
+    ) async throws {
+        try await repository.selectBestWorkbook(
+            challengerWorkbookId: challengerWorkbookId,
+            bestReason: bestReason
+        )
+    }
+
+    func createStudyGroup(
+        name: String,
+        part: UMCPartType,
+        leaderId: Int,
+        memberIds: [Int]
+    ) async throws {
+        try await repository.createStudyGroup(
+            name: name,
+            part: part,
+            leaderId: leaderId,
+            memberIds: memberIds
+        )
+    }
+
+    func updateStudyGroup(
+        groupId: Int,
+        name: String,
+        part: UMCPartType
+    ) async throws {
+        try await repository.updateStudyGroup(
+            groupId: groupId,
+            name: name,
+            part: part
+        )
+    }
+
+    func deleteStudyGroup(groupId: Int) async throws {
+        try await repository.deleteStudyGroup(groupId: groupId)
     }
 }

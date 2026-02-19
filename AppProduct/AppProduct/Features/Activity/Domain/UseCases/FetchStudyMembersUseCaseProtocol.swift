@@ -11,11 +11,62 @@ import Foundation
 
 protocol FetchStudyMembersUseCaseProtocol {
     /// 스터디원 목록 조회
-    func fetchMembers() async throws -> [StudyMemberItem]
+    func fetchMembers(
+        week: Int,
+        studyGroupId: Int?
+    ) async throws -> [StudyMemberItem]
 
     /// 스터디 그룹 목록 조회
     func fetchStudyGroups() async throws -> [StudyGroupItem]
 
+    /// 스터디 그룹 상세 목록 조회
+    func fetchStudyGroupDetails() async throws -> [StudyGroupInfo]
+
     /// 스터디 주차 목록 조회
     func fetchWeeks() async throws -> [Int]
+
+    /// 챌린저 워크북 제출 URL 조회
+    func fetchWorkbookSubmissionURL(
+        challengerWorkbookId: Int
+    ) async throws -> String?
+
+    /// 챌린저 워크북 검토
+    func reviewWorkbook(
+        challengerWorkbookId: Int,
+        isApproved: Bool,
+        feedback: String
+    ) async throws
+
+    /// 베스트 워크북 선정
+    func selectBestWorkbook(
+        challengerWorkbookId: Int,
+        bestReason: String
+    ) async throws
+
+    /// 스터디 그룹 생성
+    /// - Parameters:
+    ///   - name: 그룹 이름
+    ///   - part: 스터디 파트
+    ///   - leaderId: 파트장 챌린저 ID
+    ///   - memberIds: 스터디원 챌린저 ID 목록
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func createStudyGroup(
+        name: String,
+        part: UMCPartType,
+        leaderId: Int,
+        memberIds: [Int]
+    ) async throws
+
+    /// 스터디 그룹 수정
+    func updateStudyGroup(
+        groupId: Int,
+        name: String,
+        part: UMCPartType
+    ) async throws
+
+    /// 스터디 그룹 삭제
+    /// - Parameters:
+    ///   - groupId: 그룹 ID
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func deleteStudyGroup(groupId: Int) async throws
 }
