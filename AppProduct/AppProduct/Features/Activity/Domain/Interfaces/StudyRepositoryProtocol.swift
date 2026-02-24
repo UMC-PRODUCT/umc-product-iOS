@@ -123,4 +123,33 @@ protocol StudyRepositoryProtocol {
     ///   - groupId: 그룹 ID
     /// - Throws: 네트워크 오류 또는 파싱 오류
     func deleteStudyGroup(groupId: Int) async throws
+
+    /// 스터디 그룹 일정을 생성합니다.
+    ///
+    /// - Parameters:
+    ///   - name: 일정 이름
+    ///   - startsAt: 시작 일시
+    ///   - endsAt: 종료 일시
+    ///   - isAllDay: 종일 여부
+    ///   - locationName: 장소명
+    ///   - latitude: 위도
+    ///   - longitude: 경도
+    ///   - description: 일정 설명
+    ///   - studyGroupId: 스터디 그룹 ID
+    ///   - gisuId: 기수 ID
+    ///   - requiresApproval: 승인 필요 여부
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func createStudyGroupSchedule(
+        name: String,
+        startsAt: Date,
+        endsAt: Date,
+        isAllDay: Bool,
+        locationName: String,
+        latitude: Double,
+        longitude: Double,
+        description: String,
+        studyGroupId: Int,
+        gisuId: Int,
+        requiresApproval: Bool
+    ) async throws
 }

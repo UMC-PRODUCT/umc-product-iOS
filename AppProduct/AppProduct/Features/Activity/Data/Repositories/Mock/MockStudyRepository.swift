@@ -227,4 +227,31 @@ final class MockStudyRepository: StudyRepositoryProtocol {
         _ = groupId
         try await Task.sleep(for: .milliseconds(200))
     }
+
+    func createStudyGroupSchedule(
+        name: String,
+        startsAt: Date,
+        endsAt: Date,
+        isAllDay: Bool,
+        locationName: String,
+        latitude: Double,
+        longitude: Double,
+        description: String,
+        studyGroupId: Int,
+        gisuId: Int,
+        requiresApproval: Bool
+    ) async throws {
+        _ = name
+        _ = startsAt
+        _ = endsAt
+        _ = isAllDay
+        _ = locationName
+        _ = latitude
+        _ = longitude
+        _ = description
+        _ = studyGroupId
+        _ = gisuId
+        _ = requiresApproval
+        try await Task.sleep(for: .milliseconds(300))
+    }
 }

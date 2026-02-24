@@ -30,6 +30,19 @@ struct ChallengerCurriculumProgressCard: View, Equatable {
         static let progressBarHeight: CGFloat = 8
         static let iconName: String = "book.fill"
     }
+    
+    private var progressGradient: LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: model.partColor.opacity(0.68), location: 0.0),
+                .init(color: model.partColor.opacity(0.9), location: 0.32),
+                .init(color: model.partColor, location: 0.62),
+                .init(color: model.partColor.opacity(0.82), location: 1.0)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 
     // MARK: - Body
 
@@ -81,13 +94,7 @@ struct ChallengerCurriculumProgressCard: View, Equatable {
             EmptyView()
         }
         .gaugeStyle(.linearCapacity)
-        .tint(
-            LinearGradient(
-                colors: [model.partColor.opacity(0.8), model.partColor],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        )
+        .tint(progressGradient)
         .frame(height: Constants.progressBarHeight)
     }
 

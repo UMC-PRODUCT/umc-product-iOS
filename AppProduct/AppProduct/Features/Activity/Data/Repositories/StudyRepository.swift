@@ -17,6 +17,10 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
     private let decoder: JSONDecoder
     private let fallbackRepository: StudyRepositoryProtocol
 
+    private enum Constants {
+        static let myStudyGroupsPageSize = 100
+    }
+
     // MARK: - Init
 
     init(
@@ -117,10 +121,7 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
             .filter { $0 != .all }
             .compactMap { Int($0.serverID) }
         if groups.isEmpty {
-            return try await fallbackRepository.fetchStudyMembers(
-                week: week,
-                studyGroupId: nil
-            )
+            return []
         }
 
         var merged: [StudyMemberItem] = []
@@ -140,22 +141,12 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
     }
 
     func fetchStudyGroups() async throws -> [StudyGroupItem] {
-        let response = try await adapter.request(StudyRouter.getStudyGroupNames)
-
-        // 서버별 응답 포맷 차이를 흡수합니다.
-        if let apiResponse = try? decoder.decode(
-            APIResponse<StudyGroupNamesDTO>.self,
-            from: response.data
-        ),
-           let wrapped = try? apiResponse.unwrap() {
-            return wrapped.toDomain()
-        }
-
-        if let plain = try? decoder.decode(
-            StudyGroupNamesDTO.self,
-            from: response.data
-        ) {
-            return plain.toDomain()
+        if isSchoolCoreRole {
+            if let groups = try await fetchStudyGroupsByNames() {
+                return groups
+            }
+        } else if let groups = try await fetchMyStudyGroups() {
+            return groups
         }
 
         return try await fallbackRepository.fetchStudyGroups()
@@ -166,10 +157,10 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
             .filter { $0 != .all }
 
         if groups.isEmpty {
-            return try await fallbackRepository.fetchStudyGroupDetails()
+            return []
         }
 
-        var details: [StudyGroupInfo] = []
+        var detailDTOs: [(groupName: String, dto: StudyGroupDetailDTO)] = []
         for group in groups {
             guard let groupId = Int(group.serverID) else { continue }
 
@@ -192,16 +183,36 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
                     )
                 }
 
-                details.append(
-                    dto.toDomain(defaultGroupName: group.name)
-                )
+                detailDTOs.append((groupName: group.name, dto: dto))
             } catch {
                 continue
             }
         }
 
+        if detailDTOs.isEmpty {
+            return []
+        }
+
+        let memberIDs = Array(
+            Set(
+                detailDTOs.flatMap { item in
+                    [item.dto.leader.memberId] + item.dto.members.map(\.memberId)
+                }
+            )
+        )
+        let bestWorkbookPointByMemberID = await fetchBestWorkbookPoints(
+            memberIDs: memberIDs
+        )
+
+        let details = detailDTOs.map { item in
+            item.dto.toDomain(
+                defaultGroupName: item.groupName,
+                bestWorkbookPointByMemberID: bestWorkbookPointByMemberID
+            )
+        }
+
         if details.isEmpty {
-            return try await fallbackRepository.fetchStudyGroupDetails()
+            return []
         }
         return details
     }
@@ -343,6 +354,45 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
         }
     }
 
+    func createStudyGroupSchedule(
+        name: String,
+        startsAt: Date,
+        endsAt: Date,
+        isAllDay: Bool,
+        locationName: String,
+        latitude: Double,
+        longitude: Double,
+        description: String,
+        studyGroupId: Int,
+        gisuId: Int,
+        requiresApproval: Bool
+    ) async throws {
+        let response = try await adapter.request(
+            StudyRouter.createStudyGroupSchedule(
+                body: StudyGroupScheduleCreateRequestDTO(
+                    name: name,
+                    startsAt: startsAt,
+                    endsAt: endsAt,
+                    isAllDay: isAllDay,
+                    locationName: locationName,
+                    latitude: latitude,
+                    longitude: longitude,
+                    description: description,
+                    tags: ["STUDY"],
+                    studyGroupId: studyGroupId,
+                    gisuId: gisuId,
+                    requiresApproval: requiresApproval
+                )
+            )
+        )
+
+        let apiResponse = try decoder.decode(
+            APIResponse<String>.self,
+            from: response.data
+        )
+        try apiResponse.validateSuccess()
+    }
+
     func updateStudyGroup(
         groupId: Int,
         name: String,
@@ -362,20 +412,18 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
             return
         }
 
-        if let apiResponse = try? decoder.decode(
-            APIResponse<EmptyResult>.self,
-            from: response.data
-        ) {
+        do {
+            let apiResponse = try decoder.decode(
+                APIResponse<EmptyResult>.self,
+                from: response.data
+            )
             try apiResponse.validateSuccess()
-            return
-        }
-
-        if let apiResponse = try? decoder.decode(
-            APIResponse<StudyGroupDetailDTO>.self,
-            from: response.data
-        ),
-           let _ = try? apiResponse.unwrap() {
-            return
+        } catch let repositoryError as RepositoryError {
+            throw repositoryError
+        } catch {
+            throw RepositoryError.decodingError(
+                detail: error.localizedDescription
+            )
         }
     }
 
@@ -440,6 +488,155 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
         return members
     }
 
+    /// 회장단(교내 회장/부회장) 권한 여부
+    private var isSchoolCoreRole: Bool {
+        let defaults = UserDefaults.standard
+        let roleRawValue = defaults.string(forKey: AppStorageKey.memberRole) ?? ""
+        guard let role = ManagementTeam(rawValue: roleRawValue) else {
+            return false
+        }
+        return role == .schoolPresident || role == .schoolVicePresident
+    }
+
+    /// 교내 회장단 전용 전체 그룹 목록 조회 (`/study-groups/names`)
+    private func fetchStudyGroupsByNames() async throws -> [StudyGroupItem]? {
+        let response = try await adapter.request(StudyRouter.getStudyGroupNames)
+
+        // 서버별 응답 포맷 차이를 흡수합니다.
+        if let apiResponse = try? decoder.decode(
+            APIResponse<StudyGroupNamesDTO>.self,
+            from: response.data
+        ),
+           let wrapped = try? apiResponse.unwrap() {
+            return wrapped.toDomain()
+        }
+
+        if let plain = try? decoder.decode(
+            StudyGroupNamesDTO.self,
+            from: response.data
+        ) {
+            return plain.toDomain()
+        }
+
+        return nil
+    }
+
+    /// 회장단 외 사용자 전용 그룹 목록 조회 (`/study-groups`, cursor 기반)
+    private func fetchMyStudyGroups() async throws -> [StudyGroupItem]? {
+        var cursor: Int? = nil
+        var hasNext = true
+        var aggregated: [StudyGroupNameItemDTO] = []
+
+        while hasNext {
+            let response = try await adapter.request(
+                StudyRouter.getMyStudyGroups(
+                    cursor: cursor,
+                    size: Constants.myStudyGroupsPageSize
+                )
+            )
+
+            let page: MyStudyGroupsPageDTO
+            if let apiResponse = try? decoder.decode(
+                APIResponse<MyStudyGroupsPageDTO>.self,
+                from: response.data
+            ),
+               let wrapped = try? apiResponse.unwrap() {
+                page = wrapped
+            } else if let plain = try? decoder.decode(
+                MyStudyGroupsPageDTO.self,
+                from: response.data
+            ) {
+                page = plain
+            } else {
+                return nil
+            }
+
+            aggregated.append(contentsOf: page.studyGroups)
+            hasNext = page.hasNext
+            cursor = page.nextCursor
+            if hasNext && cursor == nil {
+                break
+            }
+        }
+
+        guard !aggregated.isEmpty else {
+            return [.all]
+        }
+
+        var deduplicatedByGroupID: [Int: StudyGroupNameItemDTO] = [:]
+        aggregated.forEach { item in
+            deduplicatedByGroupID[item.groupId] = item
+        }
+
+        let sortedItems = deduplicatedByGroupID.values.sorted { lhs, rhs in
+            lhs.groupId < rhs.groupId
+        }
+
+        return [.all] + sortedItems.map { item in
+            StudyGroupItem(
+                serverID: String(item.groupId),
+                name: item.name,
+                iconName: "person.2.fill",
+                part: nil
+            )
+        }
+    }
+
+    /// 멤버별 베스트 워크북 점수 조회 (`/member/profile/{memberId}`)
+    private func fetchBestWorkbookPoints(
+        memberIDs: [Int]
+    ) async -> [Int: Int] {
+        var result: [Int: Int] = [:]
+
+        await withTaskGroup(of: (Int, Int)?.self) { group in
+            for memberID in Set(memberIDs) {
+                group.addTask { [weak self] in
+                    guard let self else { return nil }
+                    let point = await self.fetchBestWorkbookPoint(memberID: memberID)
+                    return (memberID, point)
+                }
+            }
+
+            for await item in group {
+                guard let item else { continue }
+                result[item.0] = item.1
+            }
+        }
+
+        return result
+    }
+
+    /// 단일 멤버 베스트 워크북 점수 조회
+    private func fetchBestWorkbookPoint(memberID: Int) async -> Int {
+        do {
+            let response = try await adapter.request(
+                StudyRouter.getMemberProfile(memberId: memberID)
+            )
+
+            if let apiResponse = try? decoder.decode(
+                APIResponse<MemberProfileBestWorkbookDTO>.self,
+                from: response.data
+            ),
+               let wrapped = try? apiResponse.unwrap() {
+                return wrapped.bestWorkbookDisplayPoint
+            }
+
+            if let plain = try? decoder.decode(
+                MemberProfileBestWorkbookDTO.self,
+                from: response.data
+            ) {
+                return plain.bestWorkbookDisplayPoint
+            }
+        } catch {
+            // 포인트 조회 실패는 그룹 상세 표시를 막지 않도록 0점 처리
+        }
+
+        return 0
+    }
+
+    /// UserDefaults에 저장된 담당 파트를 API 요청에 사용할 값으로 변환합니다.
+    ///
+    /// 알 수 없는 파트 값은 "IOS"로 fallback 처리합니다.
     private var resolvedPartAPIValue: String {
         let defaults = UserDefaults.standard
         let storedPart = defaults.string(forKey: AppStorageKey.responsiblePart) ?? "IOS"
@@ -451,6 +648,11 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
         }
     }
 
+    /// 서버 오류 응답에서 도메인/리포지토리 에러를 파싱합니다.
+    ///
+    /// HTTP 상태 코드와 서버 에러 코드/메시지를 분석하여 적절한 에러 타입으로 변환합니다.
+    /// - Parameter error: 네트워크 계층에서 발생한 `NetworkError`
+    /// - Returns: 변환된 도메인/리포지토리 에러, 변환 불가 시 nil
     private static func parseSubmissionError(
         from error: NetworkError
     ) -> Error? {

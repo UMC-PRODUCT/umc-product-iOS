@@ -226,15 +226,10 @@ struct OperatorStudyManagementView: View {
     }
 
     private var groupManagementEmptyView: some View {
-        ScrollView {
-            ContentUnavailableView {
-                Label("스터디 그룹 관리", systemImage: "person.3")
-            } description: {
-                Text("등록된 스터디 그룹이 없습니다")
-            }
-            .padding(.top, DefaultSpacing.spacing32)
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        }
+        emptyContentView(
+            title: "스터디 그룹 관리",
+            message: "등록된 스터디 그룹이 없습니다"
+        )
     }
 
     private func groupManagementListView(groups: [StudyGroupInfo]) -> some View {
@@ -255,10 +250,14 @@ struct OperatorStudyManagementView: View {
                             )
                         },
                         onSchedule: {
+                            guard let studyGroupId = Int(group.serverID) else {
+                                return
+                            }
                             pathStore.activityPath.append(
                                 .activity(
                                     .studyScheduleRegistration(
-                                        studyName: group.name
+                                        studyName: group.name,
+                                        studyGroupId: studyGroupId
                                     )
                                 )
                             )
@@ -297,15 +296,23 @@ struct OperatorStudyManagementView: View {
     // MARK: - Empty View
 
     private var emptyView: some View {
-        ScrollView {
-            ContentUnavailableView {
-                Label("스터디원 관리", systemImage: "person.3")
-            } description: {
-                Text("스터디원이 없습니다")
-            }
-            .padding(.top, DefaultSpacing.spacing32)
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        emptyContentView(
+            title: "제출 현황 관리",
+            message: "과제를 제출한 스터디원이 없습니다."
+        )
+    }
+
+    private func emptyContentView(
+        title: String,
+        message: String
+    ) -> some View {
+        ContentUnavailableView {
+            Label(title, systemImage: "person.3")
+        } description: {
+            Text(message)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
 
     // MARK: - Member List View

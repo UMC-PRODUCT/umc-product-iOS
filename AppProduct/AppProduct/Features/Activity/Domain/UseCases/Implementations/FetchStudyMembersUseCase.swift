@@ -105,4 +105,32 @@ final class FetchStudyMembersUseCase: FetchStudyMembersUseCaseProtocol {
     func deleteStudyGroup(groupId: Int) async throws {
         try await repository.deleteStudyGroup(groupId: groupId)
     }
+
+    func createStudyGroupSchedule(
+        name: String,
+        startsAt: Date,
+        endsAt: Date,
+        isAllDay: Bool,
+        locationName: String,
+        latitude: Double,
+        longitude: Double,
+        description: String,
+        studyGroupId: Int,
+        gisuId: Int,
+        requiresApproval: Bool
+    ) async throws {
+        try await repository.createStudyGroupSchedule(
+            name: name,
+            startsAt: startsAt,
+            endsAt: endsAt,
+            isAllDay: isAllDay,
+            locationName: locationName,
+            latitude: latitude,
+            longitude: longitude,
+            description: description,
+            studyGroupId: studyGroupId,
+            gisuId: gisuId,
+            requiresApproval: requiresApproval
+        )
+    }
 }

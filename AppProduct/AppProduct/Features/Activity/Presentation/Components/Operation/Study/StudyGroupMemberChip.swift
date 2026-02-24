@@ -17,25 +17,35 @@ struct StudyGroupMemberChip: View, Equatable {
         static let bestBorderWidth: CGFloat = 1
         static let bestBadgeHorizontalPadding: CGFloat = 6
         static let bestBadgeVerticalPadding: CGFloat = 2
+        static let chipWidth: CGFloat = 104
     }
 
     // MARK: - Property
     /// 표시할 멤버 정보
     let member: StudyGroupMember
+    /// 베스트 워크북 배지 노출 여부
+    let showsBestWorkbookBadge: Bool
 
     // MARK: - Initializer
-    /// - Parameter member: 표시할 멤버 정보
-    init(member: StudyGroupMember) {
+    /// - Parameters:
+    ///   - member: 표시할 멤버 정보
+    ///   - showsBestWorkbookBadge: 베스트 워크북 배지 노출 여부
+    init(
+        member: StudyGroupMember,
+        showsBestWorkbookBadge: Bool = false
+    ) {
         self.member = member
+        self.showsBestWorkbookBadge = showsBestWorkbookBadge
     }
 
     // MARK: - Equatable
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.member == rhs.member
+        lhs.member == rhs.member &&
+            lhs.showsBestWorkbookBadge == rhs.showsBestWorkbookBadge
     }
 
     private var hasBestWorkbookPoint: Bool {
-        member.bestWorkbookPoint > 0
+        showsBestWorkbookBadge && member.bestWorkbookPoint > 0
     }
 
     // MARK: - Body
@@ -44,11 +54,14 @@ struct StudyGroupMemberChip: View, Equatable {
             avatarView
             Text(member.name)
                 .appFont(.subheadline)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             if hasBestWorkbookPoint {
                 bestWorkbookBadge
             }
         }
         .padding(DefaultConstant.badgePadding)
+        .frame(width: Constants.chipWidth)
         .glassEffect(
             hasBestWorkbookPoint
                 ? .regular.tint(.orange.opacity(0.22))

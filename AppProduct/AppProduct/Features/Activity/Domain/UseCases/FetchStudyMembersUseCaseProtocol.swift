@@ -69,4 +69,19 @@ protocol FetchStudyMembersUseCaseProtocol {
     ///   - groupId: 그룹 ID
     /// - Throws: 네트워크 오류 또는 파싱 오류
     func deleteStudyGroup(groupId: Int) async throws
+
+    /// 스터디 그룹 일정 생성
+    func createStudyGroupSchedule(
+        name: String,
+        startsAt: Date,
+        endsAt: Date,
+        isAllDay: Bool,
+        locationName: String,
+        latitude: Double,
+        longitude: Double,
+        description: String,
+        studyGroupId: Int,
+        gisuId: Int,
+        requiresApproval: Bool
+    ) async throws
 }

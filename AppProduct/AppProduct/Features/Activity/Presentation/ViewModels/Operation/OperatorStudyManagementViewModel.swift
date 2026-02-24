@@ -346,14 +346,14 @@ final class OperatorStudyManagementViewModel {
         }
 
         let memberIds = members
-            .map(\.memberId)
-            .filter { $0 != leader.memberId }
+            .map(\.challengerId)
+            .filter { $0 != leader.challengerId }
 
         do {
             try await useCase.createStudyGroup(
                 name: trimmedName,
                 part: part,
-                leaderId: leader.memberId,
+                leaderId: leader.challengerId,
                 memberIds: memberIds
             )
 

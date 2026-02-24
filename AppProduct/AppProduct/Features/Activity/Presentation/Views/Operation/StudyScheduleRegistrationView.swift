@@ -21,11 +21,26 @@ struct StudyScheduleRegistrationView: View {
 
     // MARK: - Init
 
-    /// - Parameter studyName: 스터디 그룹 이름 (초기값)
-    init(studyName: String) {
+    /// - Parameters:
+    ///   - container: 의존성 주입 컨테이너
+    ///   - errorHandler: 전역 에러 핸들러
+    ///   - studyName: 스터디 그룹 이름 (초기값)
+    ///   - studyGroupId: 스터디 그룹 식별자
+    init(
+        container: DIContainer,
+        errorHandler: ErrorHandler,
+        studyName: String,
+        studyGroupId: Int
+    ) {
+        let useCase = container
+            .resolve(ActivityUseCaseProviding.self)
+            .fetchStudyMembersUseCase
         _viewModel = State(
             initialValue: StudyScheduleRegistrationViewModel(
-                studyName: studyName
+                studyName: studyName,
+                studyGroupId: studyGroupId,
+                useCase: useCase,
+                errorHandler: errorHandler
             )
         )
     }
@@ -169,7 +184,12 @@ struct StudyScheduleRegistrationView: View {
 #if DEBUG
 #Preview {
     NavigationStack {
-        StudyScheduleRegistrationView(studyName: "iOS 스터디")
+        StudyScheduleRegistrationView(
+            container: DIContainer(),
+            errorHandler: ErrorHandler(),
+            studyName: "iOS 스터디",
+            studyGroupId: 1
+        )
     }
     .environment(ErrorHandler())
 }

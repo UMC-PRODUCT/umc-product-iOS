@@ -58,7 +58,8 @@ struct OperatorStudyGroupCreateView: View {
         .navigationTitle("스터디 그룹 생성")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolBarCollection.ConfirmBtn(
+            ToolBarCollection.AddBtn(
+                title: "생성",
                 action: { save() },
                 disable: !isValid,
                 isLoading: isSaving,

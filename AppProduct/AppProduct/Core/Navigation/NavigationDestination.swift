@@ -91,8 +91,8 @@ enum NavigationDestination: Hashable {
 
     /// 활동(Activity) 관련 화면 목적지
     enum Activity: Hashable {
-        /// 스터디 일정 등록 (studyName: 스터디명)
-        case studyScheduleRegistration(studyName: String)
+        /// 스터디 일정 등록 (studyName: 스터디명, studyGroupId: 스터디 그룹 ID)
+        case studyScheduleRegistration(studyName: String, studyGroupId: Int)
     }
 
     case auth(Auth)

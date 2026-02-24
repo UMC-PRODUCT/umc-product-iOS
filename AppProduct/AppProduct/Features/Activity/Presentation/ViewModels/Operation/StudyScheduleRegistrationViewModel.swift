@@ -11,6 +11,12 @@ import Foundation
 @Observable
 final class StudyScheduleRegistrationViewModel {
 
+    // MARK: - Dependency
+
+    private let useCase: FetchStudyMembersUseCaseProtocol
+    private let errorHandler: ErrorHandler
+    private let studyGroupId: Int
+
     // MARK: - Property
 
     /// 선택된 장소
@@ -42,23 +48,65 @@ final class StudyScheduleRegistrationViewModel {
     var canSubmit: Bool {
         !studyName.trimmingCharacters(in: .whitespaces).isEmpty
             && !place.name.trimmingCharacters(in: .whitespaces).isEmpty
+            && studyGroupId > 0
+            && endDate >= startDate
     }
 
     /// 스케줄 등록 실행
-    /// TODO: 실제 일정 등록 API 연동
     @MainActor
     func submitSchedule() async -> Bool {
         guard canSubmit else {
             return false
         }
 
-        return true
+        let gisuId = UserDefaults.standard.integer(forKey: AppStorageKey.gisuId)
+        guard gisuId > 0 else {
+            return false
+        }
+
+        do {
+            try await useCase.createStudyGroupSchedule(
+                name: studyName.trimmingCharacters(in: .whitespacesAndNewlines),
+                startsAt: startDate,
+                endsAt: endDate,
+                isAllDay: false,
+                locationName: place.name,
+                latitude: place.coordinate.latitude,
+                longitude: place.coordinate.longitude,
+                description: "",
+                studyGroupId: studyGroupId,
+                gisuId: gisuId,
+                requiresApproval: true
+            )
+            return true
+        } catch {
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Activity",
+                action: "createStudyGroupSchedule",
+                retryAction: { [weak self] in
+                    _ = await self?.submitSchedule()
+                }
+            ))
+            return false
+        }
     }
 
     // MARK: - Init
 
-    /// - Parameter studyName: 스터디 그룹 이름 (초기값)
-    init(studyName: String) {
+    /// - Parameters:
+    ///   - studyName: 스터디 그룹 이름 (초기값)
+    ///   - studyGroupId: 스터디 그룹 식별자
+    ///   - useCase: 스터디 관리 UseCase
+    ///   - errorHandler: 전역 에러 핸들러
+    init(
+        studyName: String,
+        studyGroupId: Int,
+        useCase: FetchStudyMembersUseCaseProtocol,
+        errorHandler: ErrorHandler
+    ) {
         self.studyName = studyName
+        self.studyGroupId = studyGroupId
+        self.useCase = useCase
+        self.errorHandler = errorHandler
     }
 }

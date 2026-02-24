@@ -38,6 +38,9 @@ struct ChallengerInfo: Identifiable, Equatable, Hashable {
     
     /// member ID (서버 연동 등 식별용)
     let memberId: Int
+
+    /// challenger ID (챌린저 엔티티 식별용)
+    let challengerId: Int
     
     /// 기수 (예: 11기)
     let gen: Int
@@ -62,5 +65,27 @@ struct ChallengerInfo: Identifiable, Equatable, Hashable {
     /// 동일 memberId라도 기수/파트가 다르면 별도 항목으로 취급합니다.
     var selectionKey: String {
         "\(memberId)|\(gen)|\(part.apiValue)"
+    }
+
+    init(
+        id: UUID = .init(),
+        memberId: Int,
+        challengerId: Int? = nil,
+        gen: Int,
+        name: String,
+        nickname: String,
+        schoolName: String,
+        profileImage: String?,
+        part: UMCPartType
+    ) {
+        self.id = id
+        self.memberId = memberId
+        self.challengerId = challengerId ?? memberId
+        self.gen = gen
+        self.name = name
+        self.nickname = nickname
+        self.schoolName = schoolName
+        self.profileImage = profileImage
+        self.part = part
     }
 }
