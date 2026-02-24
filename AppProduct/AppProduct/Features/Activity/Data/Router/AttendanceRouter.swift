@@ -38,6 +38,8 @@ enum AttendanceRouter {
     case submitReason(body: AttendanceReasonRequestDTO)
     /// GPS 출석 체크
     case check(body: AttendanceCheckRequestDTO)
+    /// 일정 위치 변경 (관리자)
+    case patchScheduleLocation(scheduleId: Int, body: ScheduleLocationUpdateRequestDTO)
 }
 
 // MARK: - BaseTargetType
@@ -66,6 +68,8 @@ extension AttendanceRouter: BaseTargetType {
             return "/api/v1/attendances/reason"
         case .check:
             return "/api/v1/attendances/check"
+        case .patchScheduleLocation(let scheduleId, _):
+            return "/api/v1/schedules/\(scheduleId)/location"
         }
     }
 
@@ -78,6 +82,8 @@ extension AttendanceRouter: BaseTargetType {
             return .get
         case .reject, .approve, .submitReason, .check:
             return .post
+        case .patchScheduleLocation:
+            return .patch
         }
     }
 
@@ -92,6 +98,8 @@ extension AttendanceRouter: BaseTargetType {
         case .submitReason(let body):
             return .requestJSONEncodable(body)
         case .check(let body):
+            return .requestJSONEncodable(body)
+        case .patchScheduleLocation(_, let body):
             return .requestJSONEncodable(body)
         }
     }

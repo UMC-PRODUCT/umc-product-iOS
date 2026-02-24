@@ -86,6 +86,10 @@ extension MyAttendanceItemModel {
 
     /// "HH:mm:ss" 또는 "HH:mm" → 오늘 Date 변환
     private static func parseTimeString(_ timeString: String) -> Date {
+        if let isoDate = ServerDateTimeConverter.parseUTCDateTime(timeString) {
+            return isoDate
+        }
+
         let calendar = Calendar.current
         let now = Date()
         for format in ["HH:mm:ss", "HH:mm"] {

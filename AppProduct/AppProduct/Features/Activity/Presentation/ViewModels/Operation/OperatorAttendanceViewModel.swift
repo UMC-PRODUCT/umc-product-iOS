@@ -105,7 +105,7 @@ final class OperatorAttendanceViewModel {
     /// 위치 변경 확인 액션
     @MainActor
     func confirmLocationChange(to place: PlaceSearchInfo) async -> Bool {
-        guard selectedSession != nil else {
+        guard let selectedSession else {
             alertPrompt = AlertPrompt(
                 title: "위치 변경 실패",
                 message: "세션 정보를 찾을 수 없습니다.",
@@ -114,7 +114,7 @@ final class OperatorAttendanceViewModel {
             return false
         }
 
-        guard !place.name.isEmpty, !place.address.isEmpty else {
+        guard !place.name.isEmpty else {
             alertPrompt = AlertPrompt(
                 title: "위치 변경 실패",
                 message: "변경할 위치를 선택해 주세요.",
@@ -123,8 +123,30 @@ final class OperatorAttendanceViewModel {
             return false
         }
 
-        // TODO: 실제 위치 변경 API 연동 필요
-        return true
+        guard let scheduleId = Int(selectedSession.id.value) else {
+            alertPrompt = AlertPrompt(
+                title: "위치 변경 실패",
+                message: "유효하지 않은 세션 ID입니다.",
+                positiveBtnTitle: "확인"
+            )
+            return false
+        }
+
+        do {
+            try await useCase.updateScheduleLocation(
+                scheduleId: scheduleId,
+                locationName: place.name,
+                latitude: place.coordinate.latitude,
+                longitude: place.coordinate.longitude
+            )
+            return true
+        } catch {
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Activity",
+                action: "updateScheduleLocation"
+            ))
+            return false
+        }
     }
 
     /// 출석 사유 확인 버튼 탭

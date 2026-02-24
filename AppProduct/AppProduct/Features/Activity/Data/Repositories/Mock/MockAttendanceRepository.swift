@@ -92,6 +92,18 @@ final class MockAttendanceRepository: ChallengerAttendanceRepositoryProtocol,
 
     func rejectAttendance(recordId: Int) async throws {}
 
+    func updateScheduleLocation(
+        scheduleId: Int,
+        locationName: String,
+        latitude: Double,
+        longitude: Double
+    ) async throws {
+        _ = scheduleId
+        _ = locationName
+        _ = latitude
+        _ = longitude
+    }
+
     func checkAttendance(
         request: AttendanceCheckRequestDTO
     ) async throws -> Int {

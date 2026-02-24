@@ -152,7 +152,11 @@ struct OperatorStudyManagementView: View {
         }
         .sheet(
             item: $viewModel.addMemberGroup,
-            onDismiss: { viewModel.applySelectedChallengers() }
+            onDismiss: {
+                Task {
+                    await viewModel.applySelectedChallengers()
+                }
+            }
         ) { _ in
             SelectedChallengerView(
                 challenger: $viewModel.selectedChallengers
@@ -264,6 +268,20 @@ struct OperatorStudyManagementView: View {
                         }
                     )
                     .equatable()
+                    .onAppear {
+                        Task {
+                            await viewModel.loadMoreGroupManagementDataIfNeeded(
+                                currentGroupID: group.id
+                            )
+                        }
+                    }
+                }
+
+                if viewModel.isLoadingMoreStudyGroupDetails {
+                    ProgressView()
+                        .tint(.grey500)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DefaultSpacing.spacing8)
                 }
             }
             .safeAreaPadding(

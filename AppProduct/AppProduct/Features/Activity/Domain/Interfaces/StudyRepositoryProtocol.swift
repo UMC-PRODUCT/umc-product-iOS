@@ -56,6 +56,17 @@ protocol StudyRepositoryProtocol {
     /// - Throws: 네트워크 오류 또는 파싱 오류
     func fetchStudyGroupDetails() async throws -> [StudyGroupInfo]
 
+    /// 스터디 그룹 상세 목록을 페이지 단위로 가져옵니다.
+    /// - Parameters:
+    ///   - cursor: 페이지 커서 (첫 페이지는 nil)
+    ///   - size: 페이지 크기
+    /// - Returns: 스터디 그룹 상세 페이지 결과
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func fetchStudyGroupDetailsPage(
+        cursor: Int?,
+        size: Int
+    ) async throws -> StudyGroupDetailsPage
+
     /// 스터디 주차 목록을 가져옵니다.
     /// - Returns: 주차 번호 배열
     /// - Throws: 네트워크 오류 또는 파싱 오류
@@ -104,6 +115,16 @@ protocol StudyRepositoryProtocol {
         part: UMCPartType,
         leaderId: Int,
         memberIds: [Int]
+    ) async throws
+
+    /// 스터디 그룹 멤버를 변경합니다. (추가/삭제 반영)
+    /// - Parameters:
+    ///   - groupId: 그룹 ID
+    ///   - challengerIds: 스터디원 챌린저 ID 목록
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func updateStudyGroupMembers(
+        groupId: Int,
+        challengerIds: [Int]
     ) async throws
 
     /// 스터디 그룹 정보를 수정합니다.

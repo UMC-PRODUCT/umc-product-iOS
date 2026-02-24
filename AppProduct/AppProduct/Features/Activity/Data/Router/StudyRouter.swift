@@ -30,8 +30,11 @@ enum StudyRouter {
     case reviewWorkbook(challengerWorkbookId: Int, body: WorkbookReviewRequestDTO)
     case selectBestWorkbook(challengerWorkbookId: Int, body: BestWorkbookSelectionRequestDTO)
     case createStudyGroup(body: StudyGroupCreateRequestDTO)
+    case updateStudyGroupMembers(groupId: Int, body: StudyGroupMembersUpdateRequestDTO)
     case updateStudyGroup(groupId: Int, body: StudyGroupUpdateRequestDTO)
     case deleteStudyGroup(groupId: Int)
+    case createChallengerPoint(challengerId: Int, body: ChallengerPointCreateRequestDTO)
+    case deleteChallengerPoint(challengerPointId: Int)
 }
 
 extension StudyRouter: BaseTargetType {
@@ -65,10 +68,16 @@ extension StudyRouter: BaseTargetType {
             return "/api/v1/workbooks/challenger/\(challengerWorkbookId)/best"
         case .createStudyGroup:
             return "/api/v1/study-groups"
+        case .updateStudyGroupMembers(let groupId, _):
+            return "/api/v1/study-groups/\(groupId)/members"
         case .updateStudyGroup(let groupId, _):
             return "/api/v1/study-groups/\(groupId)"
         case .deleteStudyGroup(let groupId):
             return "/api/v1/study-groups/\(groupId)"
+        case .createChallengerPoint(let challengerId, _):
+            return "/api/v1/challenger/\(challengerId)/points"
+        case .deleteChallengerPoint(let challengerPointId):
+            return "/api/v1/challenger/points/\(challengerPointId)"
         }
     }
 
@@ -82,6 +91,12 @@ extension StudyRouter: BaseTargetType {
             return .patch
         case .createStudyGroup:
             return .post
+        case .createChallengerPoint:
+            return .post
+        case .deleteChallengerPoint:
+            return .delete
+        case .updateStudyGroupMembers:
+            return .put
         case .createStudyGroupSchedule:
             return .post
         case .updateStudyGroup:
@@ -150,8 +165,14 @@ extension StudyRouter: BaseTargetType {
             return .requestJSONEncodable(body)
         case .createStudyGroup(let body):
             return .requestJSONEncodable(body)
+        case .updateStudyGroupMembers(_, let body):
+            return .requestJSONEncodable(body)
         case .updateStudyGroup(_, let body):
             return .requestJSONEncodable(body)
+        case .createChallengerPoint(_, let body):
+            return .requestJSONEncodable(body)
+        case .deleteChallengerPoint:
+            return .requestPlain
         case .deleteStudyGroup:
             return .requestPlain
         }

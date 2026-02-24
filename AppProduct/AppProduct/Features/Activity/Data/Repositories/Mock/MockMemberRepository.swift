@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Preview 및 테스트용 Mock MemberRepository
 final class MockMemberRepository: MemberRepositoryProtocol {
     // MARK: - Function
     func fetchMembers() async throws -> [MemberManagementItem] {
@@ -139,6 +140,30 @@ final class MockMemberRepository: MemberRepositoryProtocol {
                 penaltyHistory: MockPenaltyHistory.oneOut
             ),
         ]
+    }
+
+    func grantOutPoint(
+        challengerId: Int,
+        description: String
+    ) async throws {
+        _ = challengerId
+        _ = description
+        try await Task.sleep(for: .milliseconds(300))
+    }
+
+    func deleteOutPoint(
+        challengerPointId: Int
+    ) async throws {
+        _ = challengerPointId
+        try await Task.sleep(for: .milliseconds(200))
+    }
+
+    func fetchAttendanceRecords(
+        challengerId: Int
+    ) async throws -> [MemberAttendanceRecord] {
+        _ = challengerId
+        try await Task.sleep(for: .milliseconds(150))
+        return MockAttendanceRecords.good
     }
 }
 

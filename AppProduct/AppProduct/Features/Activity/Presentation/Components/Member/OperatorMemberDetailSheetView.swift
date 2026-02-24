@@ -7,12 +7,17 @@
 
 import SwiftUI
 
+/// 운영진 멤버 상세 정보 및 아웃 포인트 관리 시트 뷰
 struct OperatorMemberDetailSheetView: View {
     
     // MARK: - Property
     
     @Environment(\.dismiss) private var dismiss
     var member: MemberManagementItem
+    let isSubmittingOutPoint: Bool
+    let isDeletingOutPoint: Bool
+    let onGrantOut: @Sendable (String) async -> Bool
+    let onDeleteOut: @Sendable (OperatorMemberPenaltyHistory) async -> Bool
     @State private var showPenaltyAlert: Bool = false
     @State private var penaltyReason: String = ""
     @State private var penaltyHistory: [OperatorMemberPenaltyHistory] = []
@@ -136,10 +141,16 @@ struct OperatorMemberDetailSheetView: View {
             penaltyReason = ""
             showPenaltyAlert = true
         } label: {
-            Label("아웃 부여", systemImage: "slash.circle.fill")
-                .foregroundStyle(.red)
+            if isSubmittingOutPoint {
+                ProgressView()
+                    .tint(.red)
+            } else {
+                Image(systemName: "slash.circle.fill")
+                    .foregroundStyle(.red)
+            }
         }
         .tint(.red)
+        .disabled(isSubmittingOutPoint)
     }
     
     private var outPenaltyInputField: some View {
@@ -154,9 +165,11 @@ struct OperatorMemberDetailSheetView: View {
     
     private var outPenaltyConfirmButton: some View {
         Button("확정") {
-            addPenalty()
+            Task {
+                await addPenalty()
+            }
         }
-        .disabled(!isReasonValid)
+        .disabled(!isReasonValid || isSubmittingOutPoint)
     }
     
     private var outPenaltyMessage: some View {
@@ -274,11 +287,14 @@ struct OperatorMemberDetailSheetView: View {
                 penaltyHistoryRow(history)
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
-                            deletePenalty(history)
+                            Task {
+                                await deletePenalty(history)
+                            }
                         } label: {
                             Label("삭제", systemImage: "trash")
                         }
                     }
+                    .disabled(isDeletingOutPoint)
                     .listRowBackground(Color.clear)
             }
         }
@@ -310,14 +326,19 @@ struct OperatorMemberDetailSheetView: View {
     // MARK: - Function
     
     /// 아웃 부여하기
-    private func addPenalty() {
+    @MainActor
+    private func addPenalty() async {
         guard !penaltyReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
+
+        let reason = penaltyReason
+        let isSuccess = await onGrantOut(reason)
+        guard isSuccess else { return }
         
         let newPenalty = OperatorMemberPenaltyHistory(
             date: Date(),
-            reason: penaltyReason,
+            reason: reason,
             penaltyScore: Constants.fixedPenaltyScore
         )
         
@@ -331,7 +352,11 @@ struct OperatorMemberDetailSheetView: View {
     }
     
     /// 히스토리 삭제하기
-    private func deletePenalty(_ history: OperatorMemberPenaltyHistory) {
+    @MainActor
+    private func deletePenalty(_ history: OperatorMemberPenaltyHistory) async {
+        let isSuccess = await onDeleteOut(history)
+        guard isSuccess else { return }
+
         if let index = penaltyHistory.firstIndex(where: { $0.id == history.id }) {
             let deletedScore = penaltyHistory[index].penaltyScore
             withAnimation(Constants.animation) {
@@ -345,7 +370,13 @@ struct OperatorMemberDetailSheetView: View {
 #Preview {
     Text("Preview")
         .sheet(isPresented: .constant(true), content: {
-            OperatorMemberDetailSheetView(member: OperatorMemberDetailSheetView.previewMember)
+            OperatorMemberDetailSheetView(
+                member: OperatorMemberDetailSheetView.previewMember,
+                isSubmittingOutPoint: false,
+                isDeletingOutPoint: false,
+                onGrantOut: { _ in true },
+                onDeleteOut: { _ in true }
+            )
         })
 }
 

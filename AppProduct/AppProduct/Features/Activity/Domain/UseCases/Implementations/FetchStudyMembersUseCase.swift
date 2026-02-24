@@ -42,6 +42,16 @@ final class FetchStudyMembersUseCase: FetchStudyMembersUseCaseProtocol {
         try await repository.fetchStudyGroupDetails()
     }
 
+    func fetchStudyGroupDetailsPage(
+        cursor: Int?,
+        size: Int
+    ) async throws -> StudyGroupDetailsPage {
+        try await repository.fetchStudyGroupDetailsPage(
+            cursor: cursor,
+            size: size
+        )
+    }
+
     func fetchWeeks() async throws -> [Int] {
         try await repository.fetchWeeks()
     }
@@ -87,6 +97,16 @@ final class FetchStudyMembersUseCase: FetchStudyMembersUseCaseProtocol {
             part: part,
             leaderId: leaderId,
             memberIds: memberIds
+        )
+    }
+
+    func updateStudyGroupMembers(
+        groupId: Int,
+        challengerIds: [Int]
+    ) async throws {
+        try await repository.updateStudyGroupMembers(
+            groupId: groupId,
+            challengerIds: challengerIds
         )
     }
 

@@ -54,7 +54,8 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
         let schedules = try apiResponse.unwrap().map {
             $0.toScheduleData()
         }
-        let calendar = Calendar.current
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = ServerDateTimeConverter.kstTimeZone
         return Dictionary(grouping: schedules) {
             calendar.startOfDay(for: $0.startsAt)
         }

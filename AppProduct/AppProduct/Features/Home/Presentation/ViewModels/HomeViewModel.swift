@@ -112,6 +112,10 @@ final class HomeViewModel {
             forKey: AppStorageKey.organizationId
         )
         defaults.set((latestRole?.roleType ?? .challenger).rawValue, forKey: AppStorageKey.memberRole)
+        defaults.set(
+            result.roles.map(\.roleType.rawValue),
+            forKey: AppStorageKey.memberRoles
+        )
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
     }
 
@@ -141,7 +145,8 @@ final class HomeViewModel {
     ///   - month: 조회 월 (nil이면 현재 월)
     @MainActor
     func fetchSchedules(year: Int? = nil, month: Int? = nil) async {
-        let calendar = Calendar.current
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = ServerDateTimeConverter.kstTimeZone
         let now = Date()
         let y = year ?? calendar.component(.year, from: now)
         let m = month ?? calendar.component(.month, from: now)
@@ -181,7 +186,8 @@ final class HomeViewModel {
     /// - Parameter date: 조회하려는 날짜
     /// - Returns: 해당 날짜의 일정 데이터 배열 (없으면 빈 배열 반환)
     func getSchedules(_ date: Date) -> [ScheduleData] {
-        let calendar = Calendar.current
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = ServerDateTimeConverter.kstTimeZone
         let normalizedDate = calendar.startOfDay(for: date)
         return scheduleByDates[normalizedDate] ?? []
     }

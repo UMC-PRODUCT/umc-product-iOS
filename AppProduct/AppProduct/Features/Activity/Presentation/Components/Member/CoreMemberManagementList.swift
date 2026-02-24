@@ -112,15 +112,19 @@ struct ManagementTeamBadgePresenter: View {
     }
     
     var body: some View {
-        Text(managementTeam.korean)
-            .font(.app(.footnote, weight: .regular))
-            .foregroundStyle(managementTeam.textColor)
-            .padding(.vertical, Constants.verticalPadding)
-            .padding(.horizontal, Constants.horizontalPadding)
-            .background {
-                RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
-                    .fill(managementTeam.backgroundColor)
+        Group {
+            if managementTeam != .challenger {
+                Text(managementTeam.korean)
+                    .font(.app(.footnote, weight: .regular))
+                    .foregroundStyle(managementTeam.textColor)
+                    .padding(.vertical, Constants.verticalPadding)
+                    .padding(.horizontal, Constants.horizontalPadding)
+                    .background {
+                        RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
+                            .fill(managementTeam.backgroundColor)
+                    }
             }
+        }
     }
 }
 

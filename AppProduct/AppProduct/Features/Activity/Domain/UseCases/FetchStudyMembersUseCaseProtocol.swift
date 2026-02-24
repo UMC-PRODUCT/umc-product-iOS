@@ -22,6 +22,12 @@ protocol FetchStudyMembersUseCaseProtocol {
     /// 스터디 그룹 상세 목록 조회
     func fetchStudyGroupDetails() async throws -> [StudyGroupInfo]
 
+    /// 스터디 그룹 상세 목록 페이지 조회
+    func fetchStudyGroupDetailsPage(
+        cursor: Int?,
+        size: Int
+    ) async throws -> StudyGroupDetailsPage
+
     /// 스터디 주차 목록 조회
     func fetchWeeks() async throws -> [Int]
 
@@ -55,6 +61,12 @@ protocol FetchStudyMembersUseCaseProtocol {
         part: UMCPartType,
         leaderId: Int,
         memberIds: [Int]
+    ) async throws
+
+    /// 스터디 그룹 멤버 변경
+    func updateStudyGroupMembers(
+        groupId: Int,
+        challengerIds: [Int]
     ) async throws
 
     /// 스터디 그룹 수정

@@ -196,7 +196,8 @@ struct HomeView: View {
         })
         // 월 변경 시 해당 월의 일정을 다시 불러옵니다.
         .onChange(of: currentMonth) { _, newMonth in
-            let calendar = Calendar.current
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = ServerDateTimeConverter.kstTimeZone
             let year = calendar.component(.year, from: newMonth)
             let month = calendar.component(.month, from: newMonth)
             Task {

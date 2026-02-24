@@ -31,4 +31,12 @@ protocol OperatorAttendanceRepositoryProtocol {
 
     /// 출석 반려 (관리자)
     func rejectAttendance(recordId: Int) async throws
+
+    /// 세션 출석 위치 변경 (관리자)
+    func updateScheduleLocation(
+        scheduleId: Int,
+        locationName: String,
+        latitude: Double,
+        longitude: Double
+    ) async throws
 }

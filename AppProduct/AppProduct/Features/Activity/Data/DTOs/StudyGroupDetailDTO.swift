@@ -116,6 +116,8 @@ extension StudyGroupDetailDTO {
 
         let leaderMember = StudyGroupMember(
             serverID: String(leader.memberId),
+            challengerID: leader.challengerId,
+            memberID: leader.memberId,
             name: leader.name,
             university: university,
             profileImageURL: normalizedURL(leader.profileImageUrl),
@@ -128,6 +130,8 @@ extension StudyGroupDetailDTO {
         let memberItems = members.map { member in
             StudyGroupMember(
                 serverID: String(member.memberId),
+                challengerID: member.challengerId,
+                memberID: member.memberId,
                 name: member.name,
                 university: university,
                 profileImageURL: normalizedURL(member.profileImageUrl),

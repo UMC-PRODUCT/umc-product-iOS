@@ -53,19 +53,13 @@ struct OperatorAttendanceSectionView: View {
     // MARK: - Constants
     
     private enum Constants {
-        static let loadingPlaceholderHeight: CGFloat = 200
+        static let loadingMessage: String = "출석 관리 데이터를 불러오는 중..."
     }
 
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            content
-                .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        }
-        .contentMargins(
-            .bottom, DefaultConstant.defaultContentBottomMargins,
-            for: .scrollContent)
+        content
         .task {
             #if DEBUG
             if ActivityDebugState.fromLaunchArgument() != nil {
@@ -131,36 +125,37 @@ struct OperatorAttendanceSectionView: View {
             if sessions.isEmpty {
                 emptyView
             } else {
-                sessionListView(sessions: sessions)
+                ScrollView {
+                    sessionListView(sessions: sessions)
+                        .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+                }
+                .contentMargins(
+                    .bottom, DefaultConstant.defaultContentBottomMargins,
+                    for: .scrollContent
+                )
             }
 
         case .failed(let error):
-            errorView(error: error)
+            ScrollView {
+                errorView(error: error)
+                    .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            }
         }
     }
 
     // MARK: - Loading View
 
     private var loadingView: some View {
-        VStack(spacing: DefaultSpacing.spacing16) {
-            ForEach(0..<2, id: \.self) { _ in
-                loadingPlaceholder
-            }
-        }
-        .padding(.top, DefaultSpacing.spacing16)
-    }
-
-    private var loadingPlaceholder: some View {
-        ConcentricRectangle(
-            corners: .concentric(minimum: DefaultConstant.concentricRadius),
-            isUniform: true
-        )
-        .fill(Color.grey100)
-        .frame(height: Constants.loadingPlaceholderHeight)
-        .overlay {
+        VStack(spacing: DefaultSpacing.spacing12) {
             ProgressView()
-                .tint(.grey400)
+                .controlSize(.large)
+                .tint(.grey500)
+
+            Text(Constants.loadingMessage)
+                .appFont(.subheadline, color: .grey500)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
 
     // MARK: - Empty View
@@ -171,7 +166,8 @@ struct OperatorAttendanceSectionView: View {
         } description: {
             Text("관리할 세션이 없습니다")
         }
-        .padding(.top, DefaultSpacing.spacing32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
 
     // MARK: - Session List View

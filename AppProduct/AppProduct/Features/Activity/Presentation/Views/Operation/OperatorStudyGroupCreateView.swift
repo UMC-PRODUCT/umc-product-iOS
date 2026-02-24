@@ -59,7 +59,6 @@ struct OperatorStudyGroupCreateView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolBarCollection.AddBtn(
-                title: "생성",
                 action: { save() },
                 disable: !isValid,
                 isLoading: isSaving,
@@ -169,6 +168,7 @@ struct OperatorStudyGroupCreateView: View {
         !trimmedName.isEmpty
             && selectedPart != nil
             && !selectedLeader.isEmpty
+            && !selectedMembers.isEmpty
     }
 
     private var trimmedName: String {
@@ -182,7 +182,8 @@ struct OperatorStudyGroupCreateView: View {
     private func save() {
         guard !isSaving else { return }
         guard let leader = selectedLeader.first,
-              let selectedPart
+              let selectedPart,
+              !selectedMembers.isEmpty
         else { return }
 
         Task {

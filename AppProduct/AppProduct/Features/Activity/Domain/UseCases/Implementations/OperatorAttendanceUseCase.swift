@@ -9,6 +9,7 @@ import Foundation
 
 // MARK: - Implementation
 
+/// 운영진 출석 관리 UseCase 구현체
 final class OperatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol {
 
     // MARK: - Property
@@ -33,5 +34,19 @@ final class OperatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol {
 
     func rejectAttendance(recordId: Int) async throws {
         try await repository.rejectAttendance(recordId: recordId)
+    }
+
+    func updateScheduleLocation(
+        scheduleId: Int,
+        locationName: String,
+        latitude: Double,
+        longitude: Double
+    ) async throws {
+        try await repository.updateScheduleLocation(
+            scheduleId: scheduleId,
+            locationName: locationName,
+            latitude: latitude,
+            longitude: longitude
+        )
     }
 }

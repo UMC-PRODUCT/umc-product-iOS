@@ -13,15 +13,26 @@ import SwiftUI
 struct StudyGroupMemberChip: View, Equatable {
     // MARK: - Constants
     fileprivate enum Constants {
-        static let avatarSize: CGFloat = 24
+        static let avatarSize: CGFloat = 22
+        static let avatarCornerRadius: CGFloat = 0
+        static let avatarPlaceholderImageName: String = "person.fill"
         static let bestBorderWidth: CGFloat = 1
-        static let chipHeight: CGFloat = 82
-        static let chipHorizontalPadding: CGFloat = 8
-        static let chipVerticalPadding: CGFloat = 8
-        static let bestIconSize: CGFloat = 10
-        static let bestIconContainerSize: CGFloat = 18
-        static let bestIconPadding: CGFloat = 5
-        static let chipWidth: CGFloat = 90
+        static let bestPointThreshold: Int = 0
+        static let chipCornerMinimum: Edge.Corner.Style = 16
+        static let chipHeight: CGFloat = 68
+        static let chipHorizontalPadding: CGFloat = 6
+        static let chipVerticalPadding: CGFloat = 6
+        static let nameLineLimit: Int = 1
+        static let nameMinimumScaleFactor: CGFloat = 0.8
+        static let bestIconSize: CGFloat = 12
+        static let bestIconContainerSize: CGFloat = 22
+        static let bestIconOverlapOffset: CGFloat = 7
+        static let bestIconSystemName: String = "trophy.fill"
+        static let baseTintOpacity: CGFloat = 0.15
+        static let bestBorderOpacity: CGFloat = 0.32
+        static let defaultBorderOpacity: CGFloat = 0.06
+        static let bestIconBackgroundOpacity: CGFloat = 0.12
+        static let chipWidth: CGFloat = 68
     }
 
     // MARK: - Property
@@ -49,7 +60,7 @@ struct StudyGroupMemberChip: View, Equatable {
     }
 
     private var hasBestWorkbookPoint: Bool {
-        showsBestWorkbookBadge && member.bestWorkbookPoint > 0
+        showsBestWorkbookBadge && member.bestWorkbookPoint > Constants.bestPointThreshold
     }
 
     // MARK: - Body
@@ -57,30 +68,33 @@ struct StudyGroupMemberChip: View, Equatable {
         VStack(spacing: DefaultSpacing.spacing4) {
             avatarView
             Text(member.name)
-                .appFont(.footnote)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .appFont(.caption1)
+                .lineLimit(Constants.nameLineLimit)
+                .minimumScaleFactor(Constants.nameMinimumScaleFactor)
         }
         .padding(.horizontal, Constants.chipHorizontalPadding)
         .padding(.vertical, Constants.chipVerticalPadding)
         .frame(width: Constants.chipWidth, height: Constants.chipHeight)
         .glassEffect(
-            .regular.tint(.gray.opacity(0.15)),
-            in: .rect(corners: .concentric(minimum: 16))
+            .regular.tint(.gray.opacity(Constants.baseTintOpacity)),
+            in: .rect(corners: .concentric(minimum: Constants.chipCornerMinimum))
         )
         .overlay {
-            ConcentricRectangle(corners: .concentric(minimum: 16))
+            ConcentricRectangle(corners: .concentric(minimum: Constants.chipCornerMinimum))
                 .stroke(
                     hasBestWorkbookPoint
-                        ? .orange.opacity(0.32)
-                        : .black.opacity(0.06),
+                        ? .orange.opacity(Constants.bestBorderOpacity)
+                        : .black.opacity(Constants.defaultBorderOpacity),
                     lineWidth: Constants.bestBorderWidth
                 )
         }
         .overlay(alignment: .topTrailing) {
             if hasBestWorkbookPoint {
                 bestWorkbookIcon
-                    .padding(Constants.bestIconPadding)
+                    .offset(
+                        x: Constants.bestIconOverlapOffset,
+                        y: -Constants.bestIconOverlapOffset
+                    )
             }
         }
     }
@@ -94,21 +108,21 @@ struct StudyGroupMemberChip: View, Equatable {
                 width: Constants.avatarSize,
                 height: Constants.avatarSize
             ),
-            cornerRadius: 0,
-            placeholderImage: "person.fill"
+            cornerRadius: Constants.avatarCornerRadius,
+            placeholderImage: Constants.avatarPlaceholderImageName
         )
         .clipShape(Circle())
     }
 
     private var bestWorkbookIcon: some View {
-        Image(systemName: "trophy.fill")
+        Image(systemName: Constants.bestIconSystemName)
             .font(.system(size: Constants.bestIconSize, weight: .semibold))
         .foregroundStyle(.orange)
         .frame(
             width: Constants.bestIconContainerSize,
             height: Constants.bestIconContainerSize
         )
-        .background(.orange.opacity(0.12), in: Circle())
+        .background(.orange.opacity(Constants.bestIconBackgroundOpacity), in: Circle())
     }
 }
 

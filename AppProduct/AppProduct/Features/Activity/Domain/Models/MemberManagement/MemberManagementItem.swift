@@ -17,7 +17,13 @@ import SwiftUI
 /// 위 두 뷰에서 공통으로 사용됩니다.
 struct MemberManagementItem: Identifiable, Equatable {
     /// 고유 식별자
-    let id: UUID = .init()
+    let id: UUID
+
+    /// 멤버 고유 식별자
+    let memberID: Int?
+
+    /// 챌린저 고유 식별자
+    let challengerID: Int?
     
     /// 프로필 이미지 리소스
     let profile: String?
@@ -58,4 +64,38 @@ struct MemberManagementItem: Identifiable, Equatable {
     
     /// 경고 히스토리
     let penaltyHistory: [OperatorMemberPenaltyHistory]
+
+    init(
+        id: UUID = .init(),
+        memberID: Int? = nil,
+        challengerID: Int? = nil,
+        profile: String?,
+        name: String,
+        nickname: String,
+        generation: String,
+        school: String,
+        position: String,
+        part: UMCPartType,
+        penalty: Double,
+        badge: Bool,
+        managementTeam: ManagementTeam,
+        attendanceRecords: [MemberAttendanceRecord],
+        penaltyHistory: [OperatorMemberPenaltyHistory]
+    ) {
+        self.id = id
+        self.memberID = memberID
+        self.challengerID = challengerID
+        self.profile = profile
+        self.name = name
+        self.nickname = nickname
+        self.generation = generation
+        self.school = school
+        self.position = position
+        self.part = part
+        self.penalty = penalty
+        self.badge = badge
+        self.managementTeam = managementTeam
+        self.attendanceRecords = attendanceRecords
+        self.penaltyHistory = penaltyHistory
+    }
 }
