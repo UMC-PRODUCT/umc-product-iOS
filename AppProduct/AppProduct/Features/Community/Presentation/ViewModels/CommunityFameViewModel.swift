@@ -19,13 +19,12 @@ class CommunityFameViewModel {
 
     private(set) var fameItems: Loadable<[CommunityFameItemModel]> = .idle
     private(set) var hasLoadedInitialData: Bool = false
-    private(set) var weekOptions: [Int] = [1]
     private(set) var schoolOptions: [String] = []
 
     // MARK: -  Computed Properties
 
     var availableWeeks: [Int] {
-        weekOptions
+        Array(1...12)
     }
 
     var availableUniversities: [String] {
@@ -75,11 +74,7 @@ class CommunityFameViewModel {
         guard !hasLoadedInitialData else { return }
 
         async let schoolsTask: Void = fetchSchools()
-        async let trophiesTask: Void = fetchFameItems(query: .init(
-            week: nil,
-            school: nil,
-            part: nil
-        ))
+        async let trophiesTask: Void = fetchFameItems(query: currentFilterQuery())
         _ = await (schoolsTask, trophiesTask)
 
         hasLoadedInitialData = true
@@ -90,7 +85,6 @@ class CommunityFameViewModel {
         fameItems = .loading
         do {
             let items = try await useCaseProvider.fetchFameItemsUseCase.execute(query: query)
-            updateWeekOptions(with: items)
             fameItems = .loaded(items)
         } catch let error as AppError {
             fameItems = .failed(error)
@@ -133,21 +127,5 @@ class CommunityFameViewModel {
             return nil
         }
         return trimmed
-    }
-
-    @MainActor
-    private func updateWeekOptions(with items: [CommunityFameItemModel]) {
-        let newWeeks = items
-            .map(\.week)
-            .filter { $0 > 0 }
-        guard !newWeeks.isEmpty else { return }
-
-        let mergedWeeks = Set(weekOptions).union(newWeeks).sorted()
-        weekOptions = mergedWeeks
-
-        if !weekOptions.contains(selectedWeek),
-           let firstWeek = weekOptions.first {
-            selectedWeek = firstWeek
-        }
     }
 }
