@@ -46,15 +46,7 @@ extension PendingAttendanceDTO {
 
     /// ISO 8601 문자열 → Date 변환
     private static func parseISO8601(_ string: String) -> Date {
-        let formatterWithFraction = ISO8601DateFormatter()
-        formatterWithFraction.formatOptions = [
-            .withInternetDateTime, .withFractionalSeconds
-        ]
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-
-        return formatterWithFraction.date(from: string)
-            ?? formatter.date(from: string)
+        ServerDateTimeConverter.parseUTCDateTime(string)
             ?? .now
     }
 }

@@ -46,6 +46,8 @@ enum AppStorageKey {
     static let responsiblePart: String = "responsiblePart"
     /// 멤버 역할 (`ManagementTeam.rawValue` 문자열)
     static let memberRole: String = "memberRole"
+    /// 사용자가 보유한 전체 역할 목록 (`[ManagementTeam.rawValue]`)
+    static let memberRoles: String = "memberRoles"
     /// 소속 조직 타입 (`OrganizationType.rawValue` 문자열)
     static let organizationType: String = "organizationType"
     /// 소속 조직 ID (`organizationType`에 따라 지부/학교 ID)

@@ -80,6 +80,10 @@ extension ActivityRepositoryProvider {
     ) -> ActivityRepositoryProvider {
         let attendanceRepo = AttendanceRepository(adapter: adapter)
         let studyRepository = StudyRepository(adapter: adapter)
+        let memberRepository = MemberRepository(
+            adapter: adapter,
+            studyRepository: studyRepository
+        )
         return ActivityRepositoryProvider(
             challengerAttendanceRepository: attendanceRepo,
             operatorAttendanceRepository: attendanceRepo,
@@ -88,7 +92,7 @@ extension ActivityRepositoryProvider {
                 attendanceRepository: attendanceRepo
             ),
             studyRepository: studyRepository,
-            memberRepository: MockMemberRepository()
+            memberRepository: memberRepository
         )
     }
 }

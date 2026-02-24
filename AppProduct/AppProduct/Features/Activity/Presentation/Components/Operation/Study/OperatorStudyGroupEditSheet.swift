@@ -68,7 +68,7 @@ struct OperatorStudyGroupEditSheet: View {
                 ToolBarCollection.CancelBtn {}
                 ToolBarCollection.ConfirmBtn(
                     action: submit,
-                    disable: isSaveDisabled,
+                    disable: isSaveDisabled || isSaving,
                     isLoading: isSaving,
                     dismissOnTap: false
                 )
@@ -149,6 +149,7 @@ struct OperatorStudyGroupEditSheet: View {
     }
 
     private func submit() {
+        guard !isSaveDisabled else { return }
         guard !isSaving else { return }
         isSaving = true
 

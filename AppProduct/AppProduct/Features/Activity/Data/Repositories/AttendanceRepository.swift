@@ -121,6 +121,29 @@ final class AttendanceRepository: ChallengerAttendanceRepositoryProtocol,
         try apiResponse.validateSuccess()
     }
 
+    func updateScheduleLocation(
+        scheduleId: Int,
+        locationName: String,
+        latitude: Double,
+        longitude: Double
+    ) async throws {
+        let response = try await adapter.request(
+            AttendanceRouter.patchScheduleLocation(
+                scheduleId: scheduleId,
+                body: ScheduleLocationUpdateRequestDTO(
+                    locationName: locationName,
+                    latitude: latitude,
+                    longitude: longitude
+                )
+            )
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        )
+        try apiResponse.validateSuccess()
+    }
+
     func checkAttendance(
         request: AttendanceCheckRequestDTO
     ) async throws -> Int {

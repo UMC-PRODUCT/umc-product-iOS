@@ -21,4 +21,30 @@ final class FetchMembersUseCase: FetchMembersUseCaseProtocol {
     func execute() async throws -> [MemberManagementItem] {
         try await repository.fetchMembers()
     }
+
+    func grantOutPoint(
+        challengerId: Int,
+        description: String
+    ) async throws {
+        try await repository.grantOutPoint(
+            challengerId: challengerId,
+            description: description
+        )
+    }
+
+    func deleteOutPoint(
+        challengerPointId: Int
+    ) async throws {
+        try await repository.deleteOutPoint(
+            challengerPointId: challengerPointId
+        )
+    }
+
+    func fetchAttendanceRecords(
+        challengerId: Int
+    ) async throws -> [MemberAttendanceRecord] {
+        try await repository.fetchAttendanceRecords(
+            challengerId: challengerId
+        )
+    }
 }

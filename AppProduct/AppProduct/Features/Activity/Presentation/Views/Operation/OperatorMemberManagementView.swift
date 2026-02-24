@@ -15,7 +15,6 @@ struct OperatorMemberManagementView: View {
     // MARK: - Property
     
     @State private var viewModel: MemberListViewModel
-    @State private var showSheet: Bool = false
     
     // MARK: - Initializer
     
@@ -69,9 +68,26 @@ struct OperatorMemberManagementView: View {
         }
         .searchable(text: $viewModel.searchText)
         .searchToolbarBehavior(.minimize)
-        .sheet(isPresented: $showSheet) {
-            OperatorMemberDetailSheetView(member: viewModel.selectedMember!)
+        .sheet(item: $viewModel.selectedMember) { member in
+            OperatorMemberDetailSheetView(
+                member: member,
+                isSubmittingOutPoint: viewModel.isSubmittingOutPoint,
+                isDeletingOutPoint: viewModel.isDeletingOutPoint,
+                onGrantOut: { reason in
+                    await viewModel.submitOutPoint(
+                        member: member,
+                        reason: reason
+                    )
+                },
+                onDeleteOut: { history in
+                    await viewModel.deleteOutPoint(
+                        member: member,
+                        history: history
+                    )
+                }
+            )
         }
+        .alertPrompt(item: $viewModel.alertPrompt)
     }
     
     // MARK: - SubView
@@ -88,7 +104,9 @@ struct OperatorMemberManagementView: View {
 
     private var memberListContent: some View {
         Group {
-            if viewModel.isSearchResultEmpty {
+            if viewModel.groupedMembers.isEmpty && viewModel.searchText.isEmpty {
+                emptyMemberView
+            } else if viewModel.isSearchResultEmpty {
                 searchEmptyView
             } else {
                 memberList
@@ -102,7 +120,6 @@ struct OperatorMemberManagementView: View {
                 Section {
                     ForEach(group.members) { item in
                         Button(action: {
-                            showSheet.toggle()
                             viewModel.selectedMember = item
                         }) {
                             CoreMemberManagementList(memberManagementItem: item, mode: .management)
@@ -121,6 +138,14 @@ struct OperatorMemberManagementView: View {
             Label("검색 결과가 없습니다.", systemImage: "magnifyingglass")
         } description: {
             Text("'\(viewModel.searchText)'에 대한 결과가 없습니다")
+        }
+    }
+
+    private var emptyMemberView: some View {
+        ContentUnavailableView {
+            Label("멤버 관리", systemImage: "person.3")
+        } description: {
+            Text("등록된 멤버가 없습니다")
         }
     }
 }

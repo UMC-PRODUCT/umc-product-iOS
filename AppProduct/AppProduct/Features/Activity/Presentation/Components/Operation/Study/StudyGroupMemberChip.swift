@@ -13,52 +13,88 @@ import SwiftUI
 struct StudyGroupMemberChip: View, Equatable {
     // MARK: - Constants
     fileprivate enum Constants {
-        static let avatarSize: CGFloat = 28
+        static let avatarSize: CGFloat = 22
+        static let avatarCornerRadius: CGFloat = 0
+        static let avatarPlaceholderImageName: String = "person.fill"
         static let bestBorderWidth: CGFloat = 1
-        static let bestBadgeHorizontalPadding: CGFloat = 6
-        static let bestBadgeVerticalPadding: CGFloat = 2
+        static let bestPointThreshold: Int = 0
+        static let chipCornerMinimum: Edge.Corner.Style = 16
+        static let chipHeight: CGFloat = 68
+        static let chipHorizontalPadding: CGFloat = 6
+        static let chipVerticalPadding: CGFloat = 6
+        static let nameLineLimit: Int = 1
+        static let nameMinimumScaleFactor: CGFloat = 0.8
+        static let bestIconSize: CGFloat = 12
+        static let bestIconContainerSize: CGFloat = 22
+        static let bestIconOverlapOffset: CGFloat = 7
+        static let bestIconSystemName: String = "trophy.fill"
+        static let baseTintOpacity: CGFloat = 0.15
+        static let bestBorderOpacity: CGFloat = 0.32
+        static let defaultBorderOpacity: CGFloat = 0.06
+        static let bestIconBackgroundOpacity: CGFloat = 0.12
+        static let chipWidth: CGFloat = 68
     }
 
     // MARK: - Property
     /// 표시할 멤버 정보
     let member: StudyGroupMember
+    /// 베스트 워크북 배지 노출 여부
+    let showsBestWorkbookBadge: Bool
 
     // MARK: - Initializer
-    /// - Parameter member: 표시할 멤버 정보
-    init(member: StudyGroupMember) {
+    /// - Parameters:
+    ///   - member: 표시할 멤버 정보
+    ///   - showsBestWorkbookBadge: 베스트 워크북 배지 노출 여부
+    init(
+        member: StudyGroupMember,
+        showsBestWorkbookBadge: Bool = false
+    ) {
         self.member = member
+        self.showsBestWorkbookBadge = showsBestWorkbookBadge
     }
 
     // MARK: - Equatable
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.member == rhs.member
+        lhs.member == rhs.member &&
+            lhs.showsBestWorkbookBadge == rhs.showsBestWorkbookBadge
     }
 
     private var hasBestWorkbookPoint: Bool {
-        member.bestWorkbookPoint > 0
+        showsBestWorkbookBadge && member.bestWorkbookPoint > Constants.bestPointThreshold
     }
 
     // MARK: - Body
     var body: some View {
-        VStack(spacing: DefaultSpacing.spacing8) {
+        VStack(spacing: DefaultSpacing.spacing4) {
             avatarView
             Text(member.name)
-                .appFont(.subheadline)
-            if hasBestWorkbookPoint {
-                bestWorkbookBadge
-            }
+                .appFont(.caption1)
+                .lineLimit(Constants.nameLineLimit)
+                .minimumScaleFactor(Constants.nameMinimumScaleFactor)
         }
-        .padding(DefaultConstant.badgePadding)
+        .padding(.horizontal, Constants.chipHorizontalPadding)
+        .padding(.vertical, Constants.chipVerticalPadding)
+        .frame(width: Constants.chipWidth, height: Constants.chipHeight)
         .glassEffect(
-            hasBestWorkbookPoint
-                ? .regular.tint(.orange.opacity(0.22))
-                : .regular.tint(.gray.opacity(0.15)),
-            in: .rect(corners: .concentric(minimum: 16))
+            .regular.tint(.gray.opacity(Constants.baseTintOpacity)),
+            in: .rect(corners: .concentric(minimum: Constants.chipCornerMinimum))
         )
         .overlay {
+            ConcentricRectangle(corners: .concentric(minimum: Constants.chipCornerMinimum))
+                .stroke(
+                    hasBestWorkbookPoint
+                        ? .orange.opacity(Constants.bestBorderOpacity)
+                        : .black.opacity(Constants.defaultBorderOpacity),
+                    lineWidth: Constants.bestBorderWidth
+                )
+        }
+        .overlay(alignment: .topTrailing) {
             if hasBestWorkbookPoint {
-                ConcentricRectangle(corners: .concentric(minimum: 16))
-                    .stroke(.orange.opacity(0.45), lineWidth: Constants.bestBorderWidth)
+                bestWorkbookIcon
+                    .offset(
+                        x: Constants.bestIconOverlapOffset,
+                        y: -Constants.bestIconOverlapOffset
+                    )
             }
         }
     }
@@ -72,23 +108,21 @@ struct StudyGroupMemberChip: View, Equatable {
                 width: Constants.avatarSize,
                 height: Constants.avatarSize
             ),
-            cornerRadius: 0,
-            placeholderImage: "person.fill"
+            cornerRadius: Constants.avatarCornerRadius,
+            placeholderImage: Constants.avatarPlaceholderImageName
         )
         .clipShape(Circle())
     }
 
-    private var bestWorkbookBadge: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "trophy.fill")
-                .font(.caption2)
-            Text("+\(member.bestWorkbookPoint)P")
-                .appFont(.caption2Emphasis, color: .orange)
-        }
+    private var bestWorkbookIcon: some View {
+        Image(systemName: Constants.bestIconSystemName)
+            .font(.system(size: Constants.bestIconSize, weight: .semibold))
         .foregroundStyle(.orange)
-        .padding(.horizontal, Constants.bestBadgeHorizontalPadding)
-        .padding(.vertical, Constants.bestBadgeVerticalPadding)
-        .background(.orange.opacity(0.15), in: Capsule())
+        .frame(
+            width: Constants.bestIconContainerSize,
+            height: Constants.bestIconContainerSize
+        )
+        .background(.orange.opacity(Constants.bestIconBackgroundOpacity), in: Circle())
     }
 }
 

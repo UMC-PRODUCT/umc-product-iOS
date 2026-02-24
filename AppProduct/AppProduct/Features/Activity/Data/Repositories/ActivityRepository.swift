@@ -74,41 +74,8 @@ final class ActivityRepository: ActivityRepositoryProtocol, @unchecked Sendable 
     ///
     /// 지원 형식: ISO 8601, "HH:mm:ss", "HH:mm"
     private static func parseTime(_ timeString: String) -> Date {
-        // ISO 8601 형식 시도
-        let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [
-            .withInternetDateTime,
-            .withFractionalSeconds
-        ]
-        if let date = isoFormatter.date(from: timeString) {
-            return date
-        }
-
-        // "HH:mm:ss" 또는 "HH:mm" 형식 시도
-        let calendar = Calendar.current
-        let now = Date()
-        for format in ["HH:mm:ss", "HH:mm"] {
-            let formatter = DateFormatter()
-            formatter.dateFormat = format
-            formatter.locale = Locale(identifier: "ko_KR")
-            if let time = formatter.date(from: timeString) {
-                var components = calendar.dateComponents(
-                    [.year, .month, .day], from: now
-                )
-                let timeComponents = calendar.dateComponents(
-                    [.hour, .minute, .second], from: time
-                )
-                components.hour = timeComponents.hour
-                components.minute = timeComponents.minute
-                components.second = timeComponents.second
-                if let date = calendar.date(from: components) {
-                    return date
-                }
-            }
-        }
-
-        // 폴백: 현재 시간
-        return Date()
+        // 서버 UTC 시간(ISO 8601 또는 HH:mm:ss/HH:mm) 파싱
+        ServerDateTimeConverter.parseUTCDateTimeOrTime(timeString) ?? Date()
     }
 
     /// AvailableAttendanceSchedule의 status → 초기 Attendance 변환

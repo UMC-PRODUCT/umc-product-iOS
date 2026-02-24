@@ -16,4 +16,12 @@ protocol OperatorAttendanceUseCaseProtocol {
     func approveAttendance(recordId: Int) async throws
     /// 개별 출석 반려
     func rejectAttendance(recordId: Int) async throws
+
+    /// 세션 출석 위치 변경
+    func updateScheduleLocation(
+        scheduleId: Int,
+        locationName: String,
+        latitude: Double,
+        longitude: Double
+    ) async throws
 }

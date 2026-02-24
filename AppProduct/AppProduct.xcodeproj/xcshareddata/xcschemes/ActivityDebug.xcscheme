@@ -84,7 +84,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--open-activity-tab"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-seed-member-role"
@@ -104,7 +104,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "loading"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "allLoading"
@@ -112,7 +112,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "failed"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
       <EnvironmentVariables>

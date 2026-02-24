@@ -14,7 +14,6 @@ struct ChallengerMemberListView: View {
     // MARK: - Properties
     
     @State private var viewModel: MemberListViewModel
-    @State private var showSheet: Bool = false
     
     // MARK: - Init
     
@@ -65,8 +64,16 @@ struct ChallengerMemberListView: View {
         }
         .searchable(text: $viewModel.searchText)
         .searchToolbarBehavior(.minimize)
-        .sheet(isPresented: $showSheet) {
-            ChallengerMemberDetailSheetView(member: viewModel.selectedMember!)
+        .overlay {
+            if viewModel.isLoadingMemberDetail {
+                ProgressView()
+                    .controlSize(.regular)
+                    .padding()
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .sheet(item: $viewModel.selectedMember) { member in
+            ChallengerMemberDetailSheetView(member: member)
         }
     }
     
@@ -84,7 +91,9 @@ struct ChallengerMemberListView: View {
     
     private var memberListContent: some View {
         Group {
-            if viewModel.isSearchResultEmpty {
+            if viewModel.groupedMembers.isEmpty && viewModel.searchText.isEmpty {
+                emptyMemberView
+            } else if viewModel.isSearchResultEmpty {
                 searchEmptyView
             } else {
                 memberList
@@ -98,8 +107,9 @@ struct ChallengerMemberListView: View {
                 Section {
                     ForEach(group.members) { item in
                         Button(action: {
-                            showSheet.toggle()
-                            viewModel.selectedMember = item
+                            Task {
+                                await viewModel.openChallengerMemberDetail(item)
+                            }
                         }) {
                             CoreMemberManagementList(memberManagementItem: item, mode: .challenger)
                         }
@@ -117,6 +127,14 @@ struct ChallengerMemberListView: View {
             Label("검색 결과가 없습니다.", systemImage: "magnifyingglass")
         } description: {
             Text("'\(viewModel.searchText)'에 대한 결과가 없습니다")
+        }
+    }
+
+    private var emptyMemberView: some View {
+        ContentUnavailableView {
+            Label("구성원 관리", systemImage: "person.3")
+        } description: {
+            Text("구성원이 없습니다.")
         }
     }
 }

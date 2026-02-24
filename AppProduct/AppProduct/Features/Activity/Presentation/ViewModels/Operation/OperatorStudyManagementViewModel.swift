@@ -14,6 +14,10 @@ import Foundation
 final class OperatorStudyManagementViewModel {
     // MARK: - Property
 
+    private enum Constants {
+        static let groupManagementPageSize = 20
+    }
+
     private var container: DIContainer
     private var errorHandler: ErrorHandler
     private var useCase: FetchStudyMembersUseCaseProtocol
@@ -39,11 +43,17 @@ final class OperatorStudyManagementViewModel {
     /// 스터디 그룹 관리 상태
     private(set) var studyGroupDetails: [StudyGroupInfo] = []
 
+    /// 스터디 그룹 목록 추가 페이지 로딩 여부
+    private(set) var isLoadingMoreStudyGroupDetails = false
+
     /// 편집 중인 그룹 (시트 표시용)
     var editingGroup: StudyGroupInfo?
 
     /// 멤버 추가 대상 그룹 (시트 표시용)
     var addMemberGroup: StudyGroupInfo?
+
+    /// 멤버 변경 API 호출 대상 그룹 (시트 dismiss 이후 사용)
+    private var memberUpdateTargetGroup: StudyGroupInfo?
 
     /// 시트에서 선택된 챌린저 목록
     var selectedChallengers: [ChallengerInfo] = []
@@ -65,6 +75,12 @@ final class OperatorStudyManagementViewModel {
 
     /// 그룹 상세 목록 최초 로드 여부
     private var hasLoadedStudyGroupDetails = false
+
+    /// 스터디 그룹 상세 목록 다음 페이지 커서
+    private var studyGroupDetailsNextCursor: Int?
+
+    /// 스터디 그룹 상세 목록 다음 페이지 존재 여부
+    private var studyGroupDetailsHasNext = false
 
     /// 제출 현황 탭 필터(그룹/주차) 최초 로드 여부
     private var hasLoadedSubmissionFilters = false
@@ -130,12 +146,17 @@ final class OperatorStudyManagementViewModel {
         #endif
 
         do {
-            if !hasLoadedSubmissionFilters {
+            let shouldReloadSubmissionFilters = !hasLoadedSubmissionFilters
+            if shouldReloadSubmissionFilters {
                 let fetchedGroups = try await useCase.fetchStudyGroups()
                 studyGroups = normalizeStudyGroups(fetchedGroups)
                 weeks = try await useCase.fetchWeeks()
                 if !weeks.contains(selectedWeek), let firstWeek = weeks.first {
                     selectedWeek = firstWeek
+                }
+
+                if !studyGroups.contains(selectedStudyGroup) {
+                    selectedStudyGroup = .all
                 }
                 hasLoadedSubmissionFilters = true
             }
@@ -165,21 +186,20 @@ final class OperatorStudyManagementViewModel {
     /// 스터디 그룹 관리 탭 진입 시 그룹 목록 및 상세 조회
     @MainActor
     func fetchGroupManagementData() async {
-        if hasLoadedStudyGroupDetails {
-            return
-        }
-
         studyGroupDetailsState = .loading
+        isLoadingMoreStudyGroupDetails = false
+        studyGroupDetailsNextCursor = nil
+        studyGroupDetailsHasNext = false
 
         do {
-            if studyGroups == [.all] {
-                let fetchedGroups = try await useCase.fetchStudyGroups()
-                studyGroups = normalizeStudyGroups(fetchedGroups)
-            }
-
-            let groupDetails = try await useCase.fetchStudyGroupDetails()
-            studyGroupDetails = groupDetails
-            studyGroupDetailsState = .loaded(groupDetails)
+            let firstPage = try await useCase.fetchStudyGroupDetailsPage(
+                cursor: nil,
+                size: Constants.groupManagementPageSize
+            )
+            studyGroupDetails = firstPage.content
+            studyGroupDetailsNextCursor = firstPage.nextCursor
+            studyGroupDetailsHasNext = firstPage.hasNext
+            studyGroupDetailsState = .loaded(studyGroupDetails)
             hasLoadedStudyGroupDetails = true
         } catch let error as DomainError {
             studyGroupDetailsState = .failed(.domain(error))
@@ -197,35 +217,122 @@ final class OperatorStudyManagementViewModel {
         }
     }
 
-    /// Sheet dismiss 시 호출 — ChallengerInfo → StudyGroupMember 변환
-    func applySelectedChallengers() {
-        guard let targetGroup = addMemberGroup,
+    /// 스터디 그룹 관리 목록 마지막 카드 도달 시 다음 페이지를 로드합니다.
+    /// - Parameter currentGroupID: 현재 표시된 카드의 로컬 식별자
+    @MainActor
+    func loadMoreGroupManagementDataIfNeeded(currentGroupID: UUID) async {
+        guard case .loaded = studyGroupDetailsState else { return }
+        guard studyGroupDetails.last?.id == currentGroupID else { return }
+        guard studyGroupDetailsHasNext else { return }
+        guard !isLoadingMoreStudyGroupDetails else { return }
+
+        isLoadingMoreStudyGroupDetails = true
+        defer { isLoadingMoreStudyGroupDetails = false }
+
+        do {
+            let nextPage = try await useCase.fetchStudyGroupDetailsPage(
+                cursor: studyGroupDetailsNextCursor,
+                size: Constants.groupManagementPageSize
+            )
+
+            let existingServerIDs = Set(studyGroupDetails.map(\.serverID))
+            let newGroups = nextPage.content.filter {
+                !existingServerIDs.contains($0.serverID)
+            }
+            if !newGroups.isEmpty {
+                studyGroupDetails.append(contentsOf: newGroups)
+                studyGroupDetailsState = .loaded(studyGroupDetails)
+            }
+
+            studyGroupDetailsNextCursor = nextPage.nextCursor
+            studyGroupDetailsHasNext = nextPage.hasNext
+        } catch let error as DomainError {
+            alertPrompt = AlertPrompt(
+                title: "로딩 실패",
+                message: error.userMessage,
+                positiveBtnTitle: "확인"
+            )
+        } catch {
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Activity",
+                action: "fetchMoreStudyGroupManagement"
+            ))
+        }
+    }
+
+    /// Sheet dismiss 시 호출 — 변경된 스터디원 목록을 서버에 반영
+    @MainActor
+    func applySelectedChallengers() async {
+        guard let targetGroup = memberUpdateTargetGroup,
               let index = studyGroupDetails.firstIndex(
                   where: { $0.id == targetGroup.id }
               )
         else {
             selectedChallengers = []
+            memberUpdateTargetGroup = nil
             return
         }
 
-        let existingIDs = Set(
-            studyGroupDetails[index].members.map(\.serverID)
+        guard let serverGroupId = Int(targetGroup.serverID) else {
+            alertPrompt = AlertPrompt(
+                title: "변경 실패",
+                message: "유효하지 않은 그룹 ID입니다.",
+                positiveBtnTitle: "확인"
+            )
+            selectedChallengers = []
+            memberUpdateTargetGroup = nil
+            return
+        }
+
+        let currentChallengerIDs = Set(
+            studyGroupDetails[index]
+                .members
+                .compactMap(\.challengerID)
+                .filter { $0 > 0 }
         )
-        let newMembers = selectedChallengers
-            .map { challenger in
+        let updatedChallengerIDs = Set(
+            selectedChallengers
+                .map(\.challengerId)
+                .filter { $0 > 0 }
+        )
+
+        if currentChallengerIDs == updatedChallengerIDs {
+            selectedChallengers = []
+            memberUpdateTargetGroup = nil
+            return
+        }
+
+        do {
+            try await useCase.updateStudyGroupMembers(
+                groupId: serverGroupId,
+                challengerIds: Array(updatedChallengerIDs).sorted()
+            )
+            studyGroupDetails[index].members = selectedChallengers.map {
                 StudyGroupMember(
-                    serverID: String(challenger.memberId),
-                    name: challenger.name,
-                    nickname: challenger.nickname,
-                    university: challenger.schoolName,
-                    profileImageURL: challenger.profileImage
+                    serverID: String($0.memberId),
+                    challengerID: $0.challengerId,
+                    memberID: $0.memberId,
+                    name: $0.name,
+                    nickname: $0.nickname,
+                    university: $0.schoolName,
+                    profileImageURL: $0.profileImage
                 )
             }
-            .filter { !existingIDs.contains($0.serverID) }
-        studyGroupDetails[index].members.append(
-            contentsOf: newMembers
-        )
+        } catch let error as DomainError {
+            alertPrompt = AlertPrompt(
+                title: "변경 실패",
+                message: error.userMessage,
+                positiveBtnTitle: "확인"
+            )
+        } catch {
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Activity",
+                action: "updateStudyGroupMembers"
+            ))
+        }
+
         selectedChallengers = []
+        memberUpdateTargetGroup = nil
     }
 
     /// 그룹 정보(이름, 파트) 수정 적용
@@ -317,6 +424,24 @@ final class OperatorStudyManagementViewModel {
 
     /// 멤버 추가 시트 표시
     func showAddMemberSheet(for group: StudyGroupInfo) {
+        memberUpdateTargetGroup = group
+        selectedChallengers = group.members.map { member in
+            ChallengerInfo(
+                memberId: member.memberID
+                    ?? Int(member.serverID)
+                    ?? 0,
+                challengerId: member.challengerID
+                    ?? member.memberID
+                    ?? Int(member.serverID)
+                    ?? 0,
+                gen: 0,
+                name: member.name,
+                nickname: member.nickname ?? member.name,
+                schoolName: member.university,
+                profileImage: member.profileImageURL,
+                part: group.part
+            )
+        }
         addMemberGroup = group
     }
 
@@ -346,14 +471,14 @@ final class OperatorStudyManagementViewModel {
         }
 
         let memberIds = members
-            .map(\.memberId)
-            .filter { $0 != leader.memberId }
+            .map(\.challengerId)
+            .filter { $0 != leader.challengerId }
 
         do {
             try await useCase.createStudyGroup(
                 name: trimmedName,
                 part: part,
-                leaderId: leader.memberId,
+                leaderId: leader.challengerId,
                 memberIds: memberIds
             )
 
@@ -364,6 +489,9 @@ final class OperatorStudyManagementViewModel {
             if let updatedDetails = try? await useCase.fetchStudyGroupDetails(),
                !updatedDetails.isEmpty {
                 studyGroupDetails = updatedDetails
+                studyGroupDetailsState = .loaded(updatedDetails)
+                studyGroupDetailsNextCursor = nil
+                studyGroupDetailsHasNext = false
                 hasLoadedStudyGroupDetails = true
             } else {
                 studyGroupDetails.append(
@@ -374,6 +502,8 @@ final class OperatorStudyManagementViewModel {
                         createdDate: Date(),
                         leader: StudyGroupMember(
                             serverID: String(leader.memberId),
+                            challengerID: leader.challengerId,
+                            memberID: leader.memberId,
                             name: leader.name,
                             nickname: leader.nickname,
                             university: leader.schoolName,
@@ -383,6 +513,8 @@ final class OperatorStudyManagementViewModel {
                         members: members.compactMap {
                             $0.memberId != leader.memberId ? StudyGroupMember(
                                 serverID: String($0.memberId),
+                                challengerID: $0.challengerId,
+                                memberID: $0.memberId,
                                 name: $0.name,
                                 nickname: $0.nickname,
                                 university: $0.schoolName,
@@ -391,6 +523,9 @@ final class OperatorStudyManagementViewModel {
                         }
                     )
                 )
+                studyGroupDetailsState = .loaded(studyGroupDetails)
+                studyGroupDetailsNextCursor = nil
+                studyGroupDetailsHasNext = false
             }
 
             hasLoadedStudyGroupDetails = true
@@ -412,49 +547,39 @@ final class OperatorStudyManagementViewModel {
         }
     }
 
-    /// 그룹 삭제 확인 다이얼로그 표시
+    /// 그룹 삭제 API 호출
     func deleteGroup(_ group: StudyGroupInfo) {
-        alertPrompt = AlertPrompt(
-            title: "그룹 삭제",
-            message: "'\(group.name)' 그룹을 삭제하시겠습니까?",
-            positiveBtnTitle: "삭제",
-            positiveBtnAction: { [weak self] in
-                guard let self else { return }
-                Task { @MainActor [weak self] in
-                    guard let self else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
 
-                    guard let serverGroupId = Int(group.serverID) else {
-                        self.alertPrompt = AlertPrompt(
-                            title: "삭제 실패",
-                            message: "유효하지 않은 그룹 ID입니다.",
-                            positiveBtnTitle: "확인"
-                        )
-                        return
-                    }
+            guard let serverGroupId = Int(group.serverID) else {
+                self.alertPrompt = AlertPrompt(
+                    title: "삭제 실패",
+                    message: "유효하지 않은 그룹 ID입니다.",
+                    positiveBtnTitle: "확인"
+                )
+                return
+            }
 
-                    do {
-                        try await self.useCase.deleteStudyGroup(
-                            groupId: serverGroupId
-                        )
+            do {
+                try await self.useCase.deleteStudyGroup(
+                    groupId: serverGroupId
+                )
 
-                        self.removeGroupFromLocalState(group.serverID)
-                    } catch let error as DomainError {
-                        self.alertPrompt = AlertPrompt(
-                            title: "삭제 실패",
-                            message: error.userMessage,
-                            positiveBtnTitle: "확인"
-                        )
-                    } catch {
-                        self.errorHandler.handle(error, context: ErrorContext(
-                            feature: "Activity",
-                            action: "deleteStudyGroup"
-                        ))
-                    }
-                }
-            },
-            negativeBtnTitle: "취소",
-            isPositiveBtnDestructive: true
-        )
+                self.removeGroupFromLocalState(group.serverID)
+            } catch let error as DomainError {
+                self.alertPrompt = AlertPrompt(
+                    title: "삭제 실패",
+                    message: error.userMessage,
+                    positiveBtnTitle: "확인"
+                )
+            } catch {
+                self.errorHandler.handle(error, context: ErrorContext(
+                    feature: "Activity",
+                    action: "deleteStudyGroup"
+                ))
+            }
+        }
     }
 
     /// 주차 필터 변경 시 멤버 목록 갱신
@@ -688,6 +813,7 @@ final class OperatorStudyManagementViewModel {
         studyGroups.removeAll {
             $0.serverID == serverID && $0 != .all
         }
+        studyGroupDetailsState = .loaded(studyGroupDetails)
 
         if selectedStudyGroup.serverID == serverID {
             selectedStudyGroup = .all
@@ -701,12 +827,18 @@ final class OperatorStudyManagementViewModel {
         case .loading, .allLoading:
             membersState = .loading
             studyGroupDetailsState = .loading
+            isLoadingMoreStudyGroupDetails = false
+            studyGroupDetailsNextCursor = nil
+            studyGroupDetailsHasNext = false
         case .loaded:
             weeks = Array(1...10)
             selectedWeek = 1
             studyGroups = normalizeStudyGroups(StudyGroupItem.preview)
             studyGroupDetails = StudyGroupPreviewData.groups
             studyGroupDetailsState = .loaded(studyGroupDetails)
+            isLoadingMoreStudyGroupDetails = false
+            studyGroupDetailsNextCursor = nil
+            studyGroupDetailsHasNext = false
 
             hasLoadedSubmissionFilters = true
             hasLoadedStudyGroupDetails = true
@@ -717,6 +849,9 @@ final class OperatorStudyManagementViewModel {
         case .failed:
             membersState = .failed(.unknown(message: "스터디 관리 데이터를 불러오지 못했습니다."))
             studyGroupDetailsState = .failed(.unknown(message: "스터디 관리 데이터를 불러오지 못했습니다."))
+            isLoadingMoreStudyGroupDetails = false
+            studyGroupDetailsNextCursor = nil
+            studyGroupDetailsHasNext = false
         }
     }
     #endif

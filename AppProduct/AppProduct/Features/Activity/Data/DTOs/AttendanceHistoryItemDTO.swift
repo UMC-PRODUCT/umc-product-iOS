@@ -30,16 +30,62 @@ extension AttendanceHistoryItemDTO {
 
     /// DTO → AttendanceHistoryItem Domain 모델 변환
     func toDomain() -> AttendanceHistoryItem {
-        AttendanceHistoryItem(
+        let startDate = Self.parseUTCDateTimeOrTime(
+            startTime,
+            utcDate: scheduledDate
+        )
+        let endDate = Self.parseUTCDateTimeOrTime(
+            endTime,
+            utcDate: scheduledDate
+        )
+
+        return AttendanceHistoryItem(
             attendanceId: Int(attendanceId) ?? 0,
             scheduleId: Int(scheduleId) ?? 0,
             scheduleName: scheduleName,
             tags: tag,
-            scheduledDate: scheduledDate,
-            startTime: startTime,
-            endTime: endTime,
+            scheduledDate: Self.toKSTDateString(
+                startDate,
+                fallback: scheduledDate
+            ),
+            startTime: Self.toKSTTimeString(
+                startDate,
+                fallback: startTime
+            ),
+            endTime: Self.toKSTTimeString(
+                endDate,
+                fallback: endTime
+            ),
             status: AttendanceStatus(serverStatus: status),
             statusDisplay: statusDisplay
         )
+    }
+
+    // MARK: - Private Helper
+
+    private static func parseUTCDateTimeOrTime(
+        _ value: String,
+        utcDate: String
+    ) -> Date? {
+        ServerDateTimeConverter.parseUTCDateTimeOrTime(
+            value,
+            utcDate: utcDate
+        )
+    }
+
+    private static func toKSTDateString(
+        _ date: Date?,
+        fallback: String
+    ) -> String {
+        guard let date else { return fallback }
+        return ServerDateTimeConverter.toKSTDateString(date)
+    }
+
+    private static func toKSTTimeString(
+        _ date: Date?,
+        fallback: String
+    ) -> String {
+        guard let date else { return fallback }
+        return ServerDateTimeConverter.toKSTTimeString(date)
     }
 }

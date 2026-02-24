@@ -22,6 +22,12 @@ protocol FetchStudyMembersUseCaseProtocol {
     /// 스터디 그룹 상세 목록 조회
     func fetchStudyGroupDetails() async throws -> [StudyGroupInfo]
 
+    /// 스터디 그룹 상세 목록 페이지 조회
+    func fetchStudyGroupDetailsPage(
+        cursor: Int?,
+        size: Int
+    ) async throws -> StudyGroupDetailsPage
+
     /// 스터디 주차 목록 조회
     func fetchWeeks() async throws -> [Int]
 
@@ -57,6 +63,12 @@ protocol FetchStudyMembersUseCaseProtocol {
         memberIds: [Int]
     ) async throws
 
+    /// 스터디 그룹 멤버 변경
+    func updateStudyGroupMembers(
+        groupId: Int,
+        challengerIds: [Int]
+    ) async throws
+
     /// 스터디 그룹 수정
     func updateStudyGroup(
         groupId: Int,
@@ -69,4 +81,19 @@ protocol FetchStudyMembersUseCaseProtocol {
     ///   - groupId: 그룹 ID
     /// - Throws: 네트워크 오류 또는 파싱 오류
     func deleteStudyGroup(groupId: Int) async throws
+
+    /// 스터디 그룹 일정 생성
+    func createStudyGroupSchedule(
+        name: String,
+        startsAt: Date,
+        endsAt: Date,
+        isAllDay: Bool,
+        locationName: String,
+        latitude: Double,
+        longitude: Double,
+        description: String,
+        studyGroupId: Int,
+        gisuId: Int,
+        requiresApproval: Bool
+    ) async throws
 }

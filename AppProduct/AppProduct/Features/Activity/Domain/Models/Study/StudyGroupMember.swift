@@ -28,6 +28,12 @@ struct StudyGroupMember: Identifiable, Equatable, Hashable {
     /// 서버 식별자
     let serverID: String
 
+    /// 챌린저 식별자
+    let challengerID: Int?
+
+    /// 멤버 식별자
+    let memberID: Int?
+
     /// 이름
     let name: String
 
@@ -58,6 +64,8 @@ struct StudyGroupMember: Identifiable, Equatable, Hashable {
 
     init(
         serverID: String,
+        challengerID: Int? = nil,
+        memberID: Int? = nil,
         name: String,
         nickname: String? = nil,
         university: String,
@@ -66,6 +74,8 @@ struct StudyGroupMember: Identifiable, Equatable, Hashable {
         bestWorkbookPoint: Int = 0
     ) {
         self.serverID = serverID
+        self.challengerID = challengerID
+        self.memberID = memberID
         self.name = name
         self.nickname = nickname
         self.university = university

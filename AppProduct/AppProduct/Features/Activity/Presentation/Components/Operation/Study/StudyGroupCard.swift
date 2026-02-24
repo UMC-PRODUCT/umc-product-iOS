@@ -16,6 +16,8 @@ struct StudyGroupCard: View, Equatable {
 
     // MARK: - Property
 
+    @State private var deleteAlertPrompt: AlertPrompt?
+
     private let detail: StudyGroupInfo
     private var onEdit: (() -> Void)?
     private var onDelete: (() -> Void)?
@@ -67,6 +69,7 @@ struct StudyGroupCard: View, Equatable {
             .fill(.white)
             .glass()
         )
+        .alertPrompt(item: $deleteAlertPrompt)
     }
 
     // MARK: - View Components
@@ -103,7 +106,16 @@ struct StudyGroupCard: View, Equatable {
             Divider()
 
             Button("그룹 삭제", systemImage: "trash", role: .destructive) {
-                onDelete?()
+                deleteAlertPrompt = AlertPrompt(
+                    title: "그룹 삭제",
+                    message: "'\(detail.name)' 그룹을 삭제하시겠습니까?",
+                    positiveBtnTitle: "삭제",
+                    positiveBtnAction: {
+                        onDelete?()
+                    },
+                    negativeBtnTitle: "취소",
+                    isPositiveBtnDestructive: true
+                )
             }
         } label: {
             Image(systemName: "gearshape")
@@ -158,11 +170,29 @@ struct StudyGroupCard: View, Equatable {
 
             FlowLayout(spacing: DefaultSpacing.spacing8) {
                 ForEach(detail.members) { member in
-                    StudyGroupMemberChip(member: member)
+                    StudyGroupMemberChip(
+                        member: member,
+                        showsBestWorkbookBadge: topBestWorkbookMemberServerIDs.contains(member.serverID)
+                    )
                         .equatable()
                 }
             }
         }
+    }
+
+    private var topBestWorkbookMemberServerIDs: Set<String> {
+        guard let topScore = detail.members
+            .map(\.bestWorkbookPoint)
+            .max(),
+              topScore > 0 else {
+            return []
+        }
+
+        return Set(
+            detail.members
+                .filter { $0.bestWorkbookPoint == topScore }
+                .map(\.serverID)
+        )
     }
 
     private var addMemberButton: some View {

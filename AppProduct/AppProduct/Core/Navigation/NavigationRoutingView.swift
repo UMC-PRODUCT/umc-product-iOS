@@ -132,8 +132,13 @@ private extension NavigationRoutingView {
         _ route: NavigationDestination.Activity
     ) -> some View {
         switch route {
-        case .studyScheduleRegistration(let studyName):
-            StudyScheduleRegistrationView(studyName: studyName)
+        case .studyScheduleRegistration(let studyName, let studyGroupId):
+            StudyScheduleRegistrationView(
+                container: di,
+                errorHandler: errorHandler,
+                studyName: studyName,
+                studyGroupId: studyGroupId
+            )
         }
     }
 }

@@ -166,6 +166,34 @@ final class MockStudyRepository: StudyRepositoryProtocol {
         return StudyGroupPreviewData.groups
     }
 
+    func fetchStudyGroupDetailsPage(
+        cursor: Int?,
+        size: Int
+    ) async throws -> StudyGroupDetailsPage {
+        try await Task.sleep(for: .milliseconds(300))
+
+        let allGroups = StudyGroupPreviewData.groups
+        let startIndex = max(cursor ?? 0, 0)
+        guard startIndex < allGroups.count else {
+            return StudyGroupDetailsPage(
+                content: [],
+                hasNext: false,
+                nextCursor: nil
+            )
+        }
+
+        let pageSize = max(size, 1)
+        let endIndex = min(startIndex + pageSize, allGroups.count)
+        let pageContent = Array(allGroups[startIndex..<endIndex])
+        let hasNext = endIndex < allGroups.count
+
+        return StudyGroupDetailsPage(
+            content: pageContent,
+            hasNext: hasNext,
+            nextCursor: hasNext ? endIndex : nil
+        )
+    }
+
     func fetchWeeks() async throws -> [Int] {
         try await Task.sleep(for: .milliseconds(200))
         return Array(1...10)
@@ -210,6 +238,15 @@ final class MockStudyRepository: StudyRepositoryProtocol {
         try await Task.sleep(for: .milliseconds(300))
     }
 
+    func updateStudyGroupMembers(
+        groupId: Int,
+        challengerIds: [Int]
+    ) async throws {
+        _ = groupId
+        _ = challengerIds
+        try await Task.sleep(for: .milliseconds(300))
+    }
+
     func updateStudyGroup(
         groupId: Int,
         name: String,
@@ -226,5 +263,32 @@ final class MockStudyRepository: StudyRepositoryProtocol {
     ) async throws {
         _ = groupId
         try await Task.sleep(for: .milliseconds(200))
+    }
+
+    func createStudyGroupSchedule(
+        name: String,
+        startsAt: Date,
+        endsAt: Date,
+        isAllDay: Bool,
+        locationName: String,
+        latitude: Double,
+        longitude: Double,
+        description: String,
+        studyGroupId: Int,
+        gisuId: Int,
+        requiresApproval: Bool
+    ) async throws {
+        _ = name
+        _ = startsAt
+        _ = endsAt
+        _ = isAllDay
+        _ = locationName
+        _ = latitude
+        _ = longitude
+        _ = description
+        _ = studyGroupId
+        _ = gisuId
+        _ = requiresApproval
+        try await Task.sleep(for: .milliseconds(300))
     }
 }

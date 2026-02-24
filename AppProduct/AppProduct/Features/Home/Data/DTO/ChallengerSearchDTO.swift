@@ -66,6 +66,7 @@ struct ChallengerSearchResponseDTO: Codable {
 /// 챌린저 검색 결과 항목 DTO
 struct ChallengerSearchItemDTO: Codable {
     let memberId: Int
+    let challengerId: Int
     let nickname: String
     let name: String
     let part: UMCPartType
@@ -75,6 +76,7 @@ struct ChallengerSearchItemDTO: Codable {
 
     private enum CodingKeys: String, CodingKey {
         case memberId
+        case challengerId
         case nickname
         case name
         case part
@@ -85,6 +87,7 @@ struct ChallengerSearchItemDTO: Codable {
 
     init(
         memberId: Int,
+        challengerId: Int,
         nickname: String,
         name: String,
         part: UMCPartType,
@@ -93,6 +96,7 @@ struct ChallengerSearchItemDTO: Codable {
         profileImageUrl: String?
     ) {
         self.memberId = memberId
+        self.challengerId = challengerId
         self.nickname = nickname
         self.name = name
         self.part = part
@@ -104,6 +108,7 @@ struct ChallengerSearchItemDTO: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         memberId = try container.decodeIntFlexibleIfPresent(forKey: .memberId) ?? 0
+        challengerId = try container.decodeIntFlexibleIfPresent(forKey: .challengerId) ?? memberId
         nickname = try container.decodeIfPresent(String.self, forKey: .nickname) ?? ""
         name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
         part = try container.decodeIfPresent(UMCPartType.self, forKey: .part) ?? .pm
@@ -149,9 +154,12 @@ struct CursorDTO<T: Codable>: Codable {
 // MARK: - toDomain
 
 extension ChallengerSearchItemDTO {
+    /// DTO를 도메인 모델 `ChallengerInfo`로 변환합니다.
+    /// - Returns: 변환된 `ChallengerInfo` 도메인 모델
     func toChallengerInfo() -> ChallengerInfo {
         ChallengerInfo(
             memberId: memberId,
+            challengerId: challengerId,
             gen: Int(gisu) ?? 0,
             name: name,
             nickname: nickname,
@@ -163,6 +171,8 @@ extension ChallengerSearchItemDTO {
 }
 
 extension ChallengerSearchResponseDTO {
+    /// 응답 DTO의 전체 항목을 `ChallengerInfo` 배열로 변환합니다.
+    /// - Returns: 변환된 `ChallengerInfo` 배열
     func toChallengerInfoList() -> [ChallengerInfo] {
         cursor.content.map { $0.toChallengerInfo() }
     }
