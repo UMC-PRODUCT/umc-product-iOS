@@ -66,27 +66,35 @@ final class MemberListViewModel {
     }
     
     // MARK: - Action
-    
+
+    /// 멤버 전체 목록을 조회합니다.
     @MainActor
     func fetchMembers() async {
         membersState = .loading
         do {
             let members = try await fetchMembersUseCase.execute()
             membersState = .loaded(members)
+        } catch let error as AppError {
+            membersState = .failed(error)
         } catch let error as DomainError {
             membersState = .failed(.domain(error))
+        } catch let error as NetworkError {
+            membersState = .failed(.network(error))
+        } catch let error as RepositoryError {
+            membersState = .failed(.repository(error))
         } catch {
-            errorHandler.handle(
-                error,
-                context: ErrorContext(
-                    feature: "Activity",
-                    action: "fetchMembers"
-                )
+            membersState = .failed(
+                .unknown(message: error.localizedDescription)
             )
-            membersState = .idle
         }
     }
 
+    /// 멤버에게 아웃 포인트를 부여합니다.
+    ///
+    /// - Parameters:
+    ///   - member: 아웃을 부여할 멤버
+    ///   - reason: 아웃 사유
+    /// - Returns: 성공 여부
     @MainActor
     func submitOutPoint(
         member: MemberManagementItem,
@@ -143,6 +151,12 @@ final class MemberListViewModel {
         }
     }
 
+    /// 챌린저 멤버 상세 시트를 표시합니다.
+    ///
+    /// 출석 기록을 조회한 뒤 `selectedMember`를 설정합니다.
+    /// 조회 실패 시 기존 멤버 데이터 그대로 시트를 표시합니다.
+    ///
+    /// - Parameter member: 상세 정보를 표시할 멤버
     @MainActor
     func openChallengerMemberDetail(
         _ member: MemberManagementItem
@@ -181,6 +195,12 @@ final class MemberListViewModel {
         }
     }
 
+    /// 아웃 포인트 기록을 삭제합니다.
+    ///
+    /// - Parameters:
+    ///   - member: 아웃을 삭제할 멤버
+    ///   - history: 삭제할 아웃 이력 항목
+    /// - Returns: 성공 여부
     @MainActor
     func deleteOutPoint(
         member: MemberManagementItem,
@@ -229,9 +249,17 @@ final class MemberListViewModel {
     ) async throws {
         let updatedMembers = try await fetchMembersUseCase.execute()
         membersState = .loaded(updatedMembers)
-        selectedMember = resolveMember(
+        guard let resolvedMember = resolveMember(
             in: updatedMembers,
             from: member
+        ) else {
+            selectedMember = nil
+            return
+        }
+
+        selectedMember = memberWithStableSheetIdentity(
+            base: member,
+            updated: resolvedMember
         )
     }
 
@@ -254,6 +282,31 @@ final class MemberListViewModel {
 
             return false
         })
+    }
+
+    /// `sheet(item:)`는 `id`가 바뀌면 다른 시트로 인식해 닫았다가 다시 엽니다.
+    /// 서버 재조회 후 데이터는 최신 값으로 바꾸되, 시트 식별자는 유지합니다.
+    private func memberWithStableSheetIdentity(
+        base: MemberManagementItem,
+        updated: MemberManagementItem
+    ) -> MemberManagementItem {
+        MemberManagementItem(
+            id: base.id,
+            memberID: updated.memberID,
+            challengerID: updated.challengerID,
+            profile: updated.profile,
+            name: updated.name,
+            nickname: updated.nickname,
+            generation: updated.generation,
+            school: updated.school,
+            position: updated.position,
+            part: updated.part,
+            penalty: updated.penalty,
+            badge: updated.badge,
+            managementTeam: updated.managementTeam,
+            attendanceRecords: updated.attendanceRecords,
+            penaltyHistory: updated.penaltyHistory
+        )
     }
 
     #if DEBUG

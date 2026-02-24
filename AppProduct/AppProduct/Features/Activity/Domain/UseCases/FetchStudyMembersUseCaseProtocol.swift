@@ -31,6 +31,12 @@ protocol FetchStudyMembersUseCaseProtocol {
     /// 스터디 주차 목록 조회
     func fetchWeeks() async throws -> [Int]
 
+    /// 멤버 ID를 챌린저 ID로 변환
+    func resolveChallengerId(
+        memberId: Int,
+        preferredGeneration: Int?
+    ) async throws -> Int?
+
     /// 챌린저 워크북 제출 URL 조회
     func fetchWorkbookSubmissionURL(
         challengerWorkbookId: Int

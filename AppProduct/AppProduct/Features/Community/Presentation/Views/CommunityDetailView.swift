@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+/// 커뮤니티 게시글 상세 화면
+///
+/// 게시글 상세 정보, 댓글 목록, 좋아요/스크랩 기능을 제공합니다.
+/// 본인 게시글인 경우 수정/삭제, 타인 게시글인 경우 신고 기능이 툴바에 표시됩니다.
 struct CommunityDetailView: View {
     // MARK: - Properties
 
@@ -96,6 +100,7 @@ struct CommunityDetailView: View {
             }
         }
         .alertPrompt(item: $vm.alertPrompt)
+        .umcDefaultBackground()
     }
 
     @ViewBuilder

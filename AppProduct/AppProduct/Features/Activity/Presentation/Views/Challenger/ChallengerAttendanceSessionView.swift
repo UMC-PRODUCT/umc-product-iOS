@@ -7,7 +7,9 @@
 
 import SwiftUI
 
-/// Session별 MapViewModel 캐시
+/// Session별 MapViewModel 인스턴스를 캐싱합니다.
+///
+/// View body 평가 중 Reference type을 통해 mutation을 안전하게 처리합니다.
 private final class MapViewModelCache {
     private var cache: [Session.ID: BaseMapViewModel] = [:]
 
@@ -93,6 +95,8 @@ struct ChallengerAttendanceSessionView: View {
         return newViewModel
     }
 
+    // MARK: - Body
+
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing48) {
@@ -168,7 +172,7 @@ struct ChallengerAttendanceSessionView: View {
                 RetryContentUnavailableView(
                     title: "로딩 실패",
                     systemImage: "exclamationmark.triangle",
-                    description: error.localizedDescription,
+                    description: error.userMessage,
                     isRetrying: attendanceViewModel.isRetrying
                 ) {
                     await attendanceViewModel.fetchAvailableSchedules()
@@ -222,7 +226,7 @@ struct ChallengerAttendanceSessionView: View {
                 RetryContentUnavailableView(
                     title: "로딩 실패",
                     systemImage: "exclamationmark.triangle",
-                    description: error.localizedDescription,
+                    description: error.userMessage,
                     isRetrying: attendanceViewModel.isRetrying
                 ) {
                     await attendanceViewModel.fetchMyHistory()

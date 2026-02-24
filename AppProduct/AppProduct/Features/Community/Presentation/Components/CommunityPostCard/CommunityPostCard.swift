@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+/// 커뮤니티 게시글 카드 컴포넌트
+///
+/// 게시글의 카테고리, 제목, 프로필, 본문, 좋아요/스크랩 버튼을 표시합니다.
+/// 번개 카테고리인 경우 오픈채팅 링크 버튼이 추가로 표시됩니다.
 struct CommunityPostCard: View {
     // MARK: - Properties
 
@@ -99,7 +103,7 @@ struct CommunityPostCard: View {
             openChatLink()
         }) {
             HStack(spacing: DefaultSpacing.spacing16) {
-                Image(.kakaoIcon)
+                Image(.kakaoInner)
                     .resizable()
                     .frame(width: Constant.kakaoSize.width, height: Constant.kakaoSize.height)
                     .clipShape(RoundedRectangle(cornerRadius: Constant.kakaoRadius))
@@ -107,7 +111,7 @@ struct CommunityPostCard: View {
                     Text("오픈채팅방으로 이동")
                         .appFont(.subheadlineEmphasis, color: .black)
                     Text("참여 전 소통하기")
-                        .appFont(.footnote, color: .grey500)
+                        .appFont(.footnote, color: .grey300)
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -115,7 +119,7 @@ struct CommunityPostCard: View {
             }
             .padding(Constant.kakaoPadding)
         }
-        .glassEffect(.clear.interactive())
+        .glassEffect(.clear.interactive().tint(.kakao))
     }
 
     private var buttonSection: some View {
@@ -143,6 +147,12 @@ struct CommunityPostCard: View {
         UIApplication.shared.open(url)
     }
 
+    /// 좋아요/스크랩 액션 버튼을 생성합니다.
+    ///
+    /// - Parameters:
+    ///   - type: 버튼 타입 (좋아요 또는 스크랩)
+    ///   - isSelected: 현재 선택 상태
+    ///   - action: 탭 시 실행할 클로저
     private func makeButton(type: CommunityButtonType, isSelected: Bool, action: @escaping () -> Void) -> some View {
         let count: Int = {
             switch type {

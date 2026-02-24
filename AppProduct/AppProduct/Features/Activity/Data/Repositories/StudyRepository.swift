@@ -15,7 +15,6 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
 
     private let adapter: MoyaNetworkAdapter
     private let decoder: JSONDecoder
-    private let fallbackRepository: StudyRepositoryProtocol
 
     private enum Constants {
         static let myStudyGroupsPageSize = 100
@@ -31,12 +30,10 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
 
     init(
         adapter: MoyaNetworkAdapter,
-        decoder: JSONDecoder = JSONDecoder(),
-        fallbackRepository: StudyRepositoryProtocol = MockStudyRepository()
+        decoder: JSONDecoder = JSONDecoder()
     ) {
         self.adapter = adapter
         self.decoder = decoder
-        self.fallbackRepository = fallbackRepository
     }
 
     // MARK: - Curriculum
@@ -147,29 +144,65 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
     }
 
     func fetchStudyGroups() async throws -> [StudyGroupItem] {
+        var lastError: Error?
+
         if isSchoolCoreRole {
-            if let groups = try? await fetchStudyGroupsByNames() {
-                return groups
-            }
-            if let groups = try await fetchMyStudyGroups() {
-                return groups
-            }
-        } else if let groups = try await fetchMyStudyGroups() {
-            if groups.contains(where: { $0 != .all }) {
-                return groups
+            do {
+                if let groups = try await fetchStudyGroupsByNames() {
+                    return groups
+                }
+            } catch {
+                lastError = error
             }
 
-            // 멀티 역할 사용자에서 role 캐시가 단일값으로 저장된 경우 보정
-            // (`/study-groups`가 비어있고 `/study-groups/names`는 조회 가능한 케이스)
-            if let groupsByNames = try? await fetchStudyGroupsByNames(),
-               groupsByNames.contains(where: { $0 != .all }) {
-                return groupsByNames
+            do {
+                if let groups = try await fetchMyStudyGroups() {
+                    return groups
+                }
+            } catch {
+                if lastError == nil {
+                    lastError = error
+                }
+            }
+        } else {
+            do {
+                if let groups = try await fetchMyStudyGroups() {
+                    if groups.contains(where: { $0 != .all }) {
+                        return groups
+                    }
+
+                    // 멀티 역할 사용자에서 role 캐시가 단일값으로 저장된 경우 보정
+                    // (`/study-groups`가 비어있고 `/study-groups/names`는 조회 가능한 케이스)
+                    if let groupsByNames = try? await fetchStudyGroupsByNames(),
+                       groupsByNames.contains(where: { $0 != .all }) {
+                        return groupsByNames
+                    }
+
+                    return groups
+                }
+            } catch {
+                lastError = error
             }
 
-            return groups
+            do {
+                if let groupsByNames = try await fetchStudyGroupsByNames(),
+                   groupsByNames.contains(where: { $0 != .all }) {
+                    return groupsByNames
+                }
+            } catch {
+                if lastError == nil {
+                    lastError = error
+                }
+            }
         }
 
-        return try await fallbackRepository.fetchStudyGroups()
+        if let lastError {
+            throw lastError
+        }
+        throw RepositoryError.serverError(
+            code: nil,
+            message: "스터디 그룹 정보를 불러오지 못했습니다."
+        )
     }
 
     func fetchStudyGroupDetails() async throws -> [StudyGroupInfo] {
@@ -198,57 +231,45 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
         cursor: Int?,
         size: Int
     ) async throws -> StudyGroupDetailsPage {
-        do {
-            let groupsPage = try await fetchStudyGroupItemsPage(
-                cursor: cursor,
-                size: size
-            )
+        let groupsPage = try await fetchStudyGroupItemsPage(
+            cursor: cursor,
+            size: size
+        )
 
-            let detailDTOs = await fetchStudyGroupDetailDTOs(
-                groups: groupsPage.groups
-            )
-            guard !detailDTOs.isEmpty else {
-                return StudyGroupDetailsPage(
-                    content: [],
-                    hasNext: groupsPage.hasNext,
-                    nextCursor: groupsPage.nextCursor
-                )
-            }
-
-            let memberIDs = Array(
-                Set(
-                    detailDTOs.flatMap { item in
-                        [item.dto.leader.memberId] + item.dto.members.map(\.memberId)
-                    }
-                )
-            )
-            let bestWorkbookPointByMemberID = await fetchBestWorkbookPoints(
-                memberIDs: memberIDs
-            )
-
-            let details = detailDTOs.map { item in
-                item.dto.toDomain(
-                    defaultGroupName: item.groupName,
-                    bestWorkbookPointByMemberID: bestWorkbookPointByMemberID
-                )
-            }
-
+        let detailDTOs = await fetchStudyGroupDetailDTOs(
+            groups: groupsPage.groups
+        )
+        guard !detailDTOs.isEmpty else {
             return StudyGroupDetailsPage(
-                content: details,
+                content: [],
                 hasNext: groupsPage.hasNext,
                 nextCursor: groupsPage.nextCursor
             )
-        } catch {
-            guard cursor == nil else {
-                throw error
-            }
+        }
 
-            return StudyGroupDetailsPage(
-                content: try await fallbackRepository.fetchStudyGroupDetails(),
-                hasNext: false,
-                nextCursor: nil
+        let memberIDs = Array(
+            Set(
+                detailDTOs.flatMap { item in
+                    [item.dto.leader.memberId] + item.dto.members.map(\.memberId)
+                }
+            )
+        )
+        let bestWorkbookPointByMemberID = await fetchBestWorkbookPoints(
+            memberIDs: memberIDs
+        )
+
+        let details = detailDTOs.map { item in
+            item.dto.toDomain(
+                defaultGroupName: item.groupName,
+                bestWorkbookPointByMemberID: bestWorkbookPointByMemberID
             )
         }
+
+        return StudyGroupDetailsPage(
+            content: details,
+            hasNext: groupsPage.hasNext,
+            nextCursor: groupsPage.nextCursor
+        )
     }
 
     func fetchWeeks() async throws -> [Int] {
@@ -265,10 +286,31 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
             .compactMap { Int($0.weekNo) }
             .sorted()
 
-        if weeks.isEmpty {
-            return try await fallbackRepository.fetchWeeks()
-        }
         return weeks
+    }
+
+    func resolveChallengerId(
+        memberId: Int,
+        preferredGeneration: Int?
+    ) async throws -> Int? {
+        let profile = try await fetchMemberManagementProfile(
+            memberId: memberId
+        )
+        let records = profile.challengerRecords.filter {
+            $0.memberId == memberId && $0.challengerId > 0
+        }
+
+        if let preferredGeneration, preferredGeneration > 0,
+           let matchedRecord = records.first(where: { $0.gisu == preferredGeneration }) {
+            return matchedRecord.challengerId
+        }
+
+        if let preferredGisuId,
+           let matchedRecord = records.first(where: { $0.gisuId == preferredGisuId }) {
+            return matchedRecord.challengerId
+        }
+
+        return records.first?.challengerId
     }
 
     func fetchWorkbookSubmissionURL(
@@ -930,6 +972,28 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
         return 0
     }
 
+    /// 멤버 프로필을 조회하여 챌린저 레코드 정보를 반환합니다.
+    private func fetchMemberManagementProfile(
+        memberId: Int
+    ) async throws -> MemberManagementProfileDTO {
+        let response = try await adapter.request(
+            StudyRouter.getMemberProfile(memberId: memberId)
+        )
+
+        if let apiResponse = try? decoder.decode(
+            APIResponse<MemberManagementProfileDTO>.self,
+            from: response.data
+        ),
+           let wrapped = try? apiResponse.unwrap() {
+            return wrapped
+        }
+
+        return try decoder.decode(
+            MemberManagementProfileDTO.self,
+            from: response.data
+        )
+    }
+
     /// UserDefaults에 저장된 담당 파트를 API 요청에 사용할 값으로 변환합니다.
     ///
     /// 알 수 없는 파트 값은 "IOS"로 fallback 처리합니다.
@@ -942,6 +1006,12 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
         default:
             return "IOS"
         }
+    }
+
+    /// UserDefaults에 저장된 현재 기수 ID를 반환합니다.
+    private var preferredGisuId: Int? {
+        let value = UserDefaults.standard.integer(forKey: AppStorageKey.gisuId)
+        return value > 0 ? value : nil
     }
 
     /// 서버 오류 응답에서 도메인/리포지토리 에러를 파싱합니다.

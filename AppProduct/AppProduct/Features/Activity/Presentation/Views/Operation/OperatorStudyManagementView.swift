@@ -386,7 +386,7 @@ struct OperatorStudyManagementView: View {
             RetryContentUnavailableView(
                 title: "로딩 실패",
                 systemImage: "exclamationmark.triangle",
-                description: error.localizedDescription,
+                description: error.userMessage,
                 isRetrying: false,
                 topPadding: DefaultSpacing.spacing32
             ) {

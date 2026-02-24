@@ -72,6 +72,17 @@ protocol StudyRepositoryProtocol {
     /// - Throws: 네트워크 오류 또는 파싱 오류
     func fetchWeeks() async throws -> [Int]
 
+    /// 멤버 ID로 챌린저 ID를 조회합니다.
+    /// - Parameters:
+    ///   - memberId: 멤버 ID
+    ///   - preferredGeneration: 우선 조회할 기수 (없으면 최신 레코드 기준)
+    /// - Returns: 조회된 챌린저 ID (없으면 nil)
+    /// - Throws: 네트워크 오류 또는 파싱 오류
+    func resolveChallengerId(
+        memberId: Int,
+        preferredGeneration: Int?
+    ) async throws -> Int?
+
     /// 챌린저 워크북 제출 URL을 조회합니다.
     /// - Parameter challengerWorkbookId: 챌린저 워크북 ID
     /// - Returns: 제출 URL 문자열 (없으면 nil)

@@ -97,7 +97,7 @@ struct ChallengerStudyView: View {
         RetryContentUnavailableView(
             title: "로딩 실패",
             systemImage: "exclamationmark.triangle",
-            description: error.errorDescription ?? "알 수 없는 오류가 발생했습니다.",
+            description: error.userMessage,
             isRetrying: false
         ) {
             await viewModel.fetchCurriculum()

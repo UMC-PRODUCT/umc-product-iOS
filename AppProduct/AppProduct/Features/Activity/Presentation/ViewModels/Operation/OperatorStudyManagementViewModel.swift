@@ -170,16 +170,18 @@ final class OperatorStudyManagementViewModel {
             )
             allMembers = members
             filterMembers()
+        } catch let error as AppError {
+            membersState = .failed(error)
         } catch let error as DomainError {
             membersState = .failed(.domain(error))
+        } catch let error as NetworkError {
+            membersState = .failed(.network(error))
+        } catch let error as RepositoryError {
+            membersState = .failed(.repository(error))
         } catch {
-            errorHandler.handle(error, context: ErrorContext(
-                feature: "Activity",
-                action: "fetchStudyMembers",
-                retryAction: { [weak self] in
-                    await self?.fetchSubmissionMembers()
-                }
-            ))
+            membersState = .failed(
+                .unknown(message: "제출 현황 데이터를 불러오지 못했습니다.")
+            )
         }
     }
 
@@ -201,16 +203,15 @@ final class OperatorStudyManagementViewModel {
             studyGroupDetailsHasNext = firstPage.hasNext
             studyGroupDetailsState = .loaded(studyGroupDetails)
             hasLoadedStudyGroupDetails = true
+        } catch let error as AppError {
+            studyGroupDetailsState = .failed(error)
         } catch let error as DomainError {
             studyGroupDetailsState = .failed(.domain(error))
+        } catch let error as NetworkError {
+            studyGroupDetailsState = .failed(.network(error))
+        } catch let error as RepositoryError {
+            studyGroupDetailsState = .failed(.repository(error))
         } catch {
-            errorHandler.handle(error, context: ErrorContext(
-                feature: "Activity",
-                action: "fetchStudyGroupManagement",
-                retryAction: { [weak self] in
-                    await self?.fetchGroupManagementData()
-                }
-            ))
             studyGroupDetailsState = .failed(.unknown(
                 message: "스터디 그룹 관리 데이터를 불러오지 못했습니다."
             ))
@@ -290,9 +291,23 @@ final class OperatorStudyManagementViewModel {
                 .compactMap(\.challengerID)
                 .filter { $0 > 0 }
         )
+        let resolvedChallengerIDs = await resolveChallengerIDs(
+            from: selectedChallengers
+        )
+        let unresolvedCount = selectedChallengers.count - resolvedChallengerIDs.count
+        guard unresolvedCount == 0 else {
+            alertPrompt = AlertPrompt(
+                title: "변경 실패",
+                message: "선택한 멤버의 챌린저 ID를 확인하지 못했습니다. 다시 시도해 주세요.",
+                positiveBtnTitle: "확인"
+            )
+            selectedChallengers = []
+            memberUpdateTargetGroup = nil
+            return
+        }
         let updatedChallengerIDs = Set(
             selectedChallengers
-                .map(\.challengerId)
+                .compactMap { resolvedChallengerIDs[$0.selectionKey] }
                 .filter { $0 > 0 }
         )
 
@@ -310,7 +325,7 @@ final class OperatorStudyManagementViewModel {
             studyGroupDetails[index].members = selectedChallengers.map {
                 StudyGroupMember(
                     serverID: String($0.memberId),
-                    challengerID: $0.challengerId,
+                    challengerID: resolvedChallengerIDs[$0.selectionKey],
                     memberID: $0.memberId,
                     name: $0.name,
                     nickname: $0.nickname,
@@ -470,15 +485,39 @@ final class OperatorStudyManagementViewModel {
             return false
         }
 
+        let resolvedChallengerIDs = await resolveChallengerIDs(
+            from: [leader] + members
+        )
+        guard let leaderId = resolvedChallengerIDs[leader.selectionKey] else {
+            alertPrompt = AlertPrompt(
+                title: "그룹 생성 실패",
+                message: "파트장의 챌린저 ID를 확인하지 못했습니다. 다시 선택해 주세요.",
+                positiveBtnTitle: "확인"
+            )
+            return false
+        }
+
+        let unresolvedMemberExists = members.contains {
+            resolvedChallengerIDs[$0.selectionKey] == nil
+        }
+        guard !unresolvedMemberExists else {
+            alertPrompt = AlertPrompt(
+                title: "그룹 생성 실패",
+                message: "초대한 멤버의 챌린저 ID를 확인하지 못했습니다. 다시 시도해 주세요.",
+                positiveBtnTitle: "확인"
+            )
+            return false
+        }
+
         let memberIds = members
-            .map(\.challengerId)
-            .filter { $0 != leader.challengerId }
+            .compactMap { resolvedChallengerIDs[$0.selectionKey] }
+            .filter { $0 != leaderId }
 
         do {
             try await useCase.createStudyGroup(
                 name: trimmedName,
                 part: part,
-                leaderId: leader.challengerId,
+                leaderId: leaderId,
                 memberIds: memberIds
             )
 
@@ -502,7 +541,7 @@ final class OperatorStudyManagementViewModel {
                         createdDate: Date(),
                         leader: StudyGroupMember(
                             serverID: String(leader.memberId),
-                            challengerID: leader.challengerId,
+                            challengerID: leaderId,
                             memberID: leader.memberId,
                             name: leader.name,
                             nickname: leader.nickname,
@@ -513,7 +552,7 @@ final class OperatorStudyManagementViewModel {
                         members: members.compactMap {
                             $0.memberId != leader.memberId ? StudyGroupMember(
                                 serverID: String($0.memberId),
-                                challengerID: $0.challengerId,
+                                challengerID: resolvedChallengerIDs[$0.selectionKey],
                                 memberID: $0.memberId,
                                 name: $0.name,
                                 nickname: $0.nickname,
@@ -763,6 +802,46 @@ final class OperatorStudyManagementViewModel {
     private func removeMember(_ member: StudyMemberItem) {
         allMembers.removeAll { $0.id == member.id }
         filterMembers()
+    }
+
+    private func resolveChallengerIDs(
+        from challengers: [ChallengerInfo]
+    ) async -> [String: Int] {
+        var resolved: [String: Int] = [:]
+        for challenger in challengers {
+            if let id = await resolveChallengerID(for: challenger) {
+                resolved[challenger.selectionKey] = id
+            }
+        }
+        return resolved
+    }
+
+    private func resolveChallengerID(
+        for challenger: ChallengerInfo
+    ) async -> Int? {
+        let hasDistinctChallengerID = challenger.challengerId > 0 &&
+            challenger.challengerId != challenger.memberId
+        if hasDistinctChallengerID {
+            return challenger.challengerId
+        }
+
+        do {
+            if let resolvedID = try await useCase.resolveChallengerId(
+                memberId: challenger.memberId,
+                preferredGeneration: challenger.gen
+            ),
+               resolvedID > 0 {
+                return resolvedID
+            }
+        } catch {
+            // 조회 실패 시 아래 fallback 규칙으로 처리
+        }
+
+        if challenger.memberId <= 0, challenger.challengerId > 0 {
+            return challenger.challengerId
+        }
+
+        return nil
     }
 
     /// 멤버를 베스트 워크북으로 표시

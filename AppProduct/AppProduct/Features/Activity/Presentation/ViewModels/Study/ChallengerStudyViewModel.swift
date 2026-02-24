@@ -56,17 +56,18 @@ final class ChallengerStudyViewModel {
         do {
             let data = try await fetchCurriculumUseCase.execute()
             curriculumState = .loaded(data)
+        } catch let error as AppError {
+            curriculumState = .failed(error)
         } catch let error as DomainError {
             curriculumState = .failed(.domain(error))
+        } catch let error as NetworkError {
+            curriculumState = .failed(.network(error))
+        } catch let error as RepositoryError {
+            curriculumState = .failed(.repository(error))
         } catch {
-            errorHandler.handle(
-                error,
-                context: ErrorContext(
-                    feature: "Study",
-                    action: "fetchCurriculum"
-                )
+            curriculumState = .failed(
+                .unknown(message: error.localizedDescription)
             )
-            curriculumState = .idle
         }
     }
 
