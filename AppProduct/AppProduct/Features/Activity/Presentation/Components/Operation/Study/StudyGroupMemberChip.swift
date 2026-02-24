@@ -13,11 +13,15 @@ import SwiftUI
 struct StudyGroupMemberChip: View, Equatable {
     // MARK: - Constants
     fileprivate enum Constants {
-        static let avatarSize: CGFloat = 28
+        static let avatarSize: CGFloat = 24
         static let bestBorderWidth: CGFloat = 1
-        static let bestBadgeHorizontalPadding: CGFloat = 6
-        static let bestBadgeVerticalPadding: CGFloat = 2
-        static let chipWidth: CGFloat = 104
+        static let chipHeight: CGFloat = 82
+        static let chipHorizontalPadding: CGFloat = 8
+        static let chipVerticalPadding: CGFloat = 8
+        static let bestIconSize: CGFloat = 10
+        static let bestIconContainerSize: CGFloat = 18
+        static let bestIconPadding: CGFloat = 5
+        static let chipWidth: CGFloat = 90
     }
 
     // MARK: - Property
@@ -50,28 +54,33 @@ struct StudyGroupMemberChip: View, Equatable {
 
     // MARK: - Body
     var body: some View {
-        VStack(spacing: DefaultSpacing.spacing8) {
+        VStack(spacing: DefaultSpacing.spacing4) {
             avatarView
             Text(member.name)
-                .appFont(.subheadline)
+                .appFont(.footnote)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-            if hasBestWorkbookPoint {
-                bestWorkbookBadge
-            }
         }
-        .padding(DefaultConstant.badgePadding)
-        .frame(width: Constants.chipWidth)
+        .padding(.horizontal, Constants.chipHorizontalPadding)
+        .padding(.vertical, Constants.chipVerticalPadding)
+        .frame(width: Constants.chipWidth, height: Constants.chipHeight)
         .glassEffect(
-            hasBestWorkbookPoint
-                ? .regular.tint(.orange.opacity(0.22))
-                : .regular.tint(.gray.opacity(0.15)),
+            .regular.tint(.gray.opacity(0.15)),
             in: .rect(corners: .concentric(minimum: 16))
         )
         .overlay {
+            ConcentricRectangle(corners: .concentric(minimum: 16))
+                .stroke(
+                    hasBestWorkbookPoint
+                        ? .orange.opacity(0.32)
+                        : .black.opacity(0.06),
+                    lineWidth: Constants.bestBorderWidth
+                )
+        }
+        .overlay(alignment: .topTrailing) {
             if hasBestWorkbookPoint {
-                ConcentricRectangle(corners: .concentric(minimum: 16))
-                    .stroke(.orange.opacity(0.45), lineWidth: Constants.bestBorderWidth)
+                bestWorkbookIcon
+                    .padding(Constants.bestIconPadding)
             }
         }
     }
@@ -91,17 +100,15 @@ struct StudyGroupMemberChip: View, Equatable {
         .clipShape(Circle())
     }
 
-    private var bestWorkbookBadge: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "trophy.fill")
-                .font(.caption2)
-            Text("+\(member.bestWorkbookPoint)P")
-                .appFont(.caption2Emphasis, color: .orange)
-        }
+    private var bestWorkbookIcon: some View {
+        Image(systemName: "trophy.fill")
+            .font(.system(size: Constants.bestIconSize, weight: .semibold))
         .foregroundStyle(.orange)
-        .padding(.horizontal, Constants.bestBadgeHorizontalPadding)
-        .padding(.vertical, Constants.bestBadgeVerticalPadding)
-        .background(.orange.opacity(0.15), in: Capsule())
+        .frame(
+            width: Constants.bestIconContainerSize,
+            height: Constants.bestIconContainerSize
+        )
+        .background(.orange.opacity(0.12), in: Circle())
     }
 }
 
