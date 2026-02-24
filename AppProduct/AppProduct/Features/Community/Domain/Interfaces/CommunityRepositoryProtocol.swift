@@ -11,6 +11,9 @@ import Foundation
 
 /// 커뮤니티 데이터 접근 인터페이스
 protocol CommunityRepositoryProtocol {
+    /// 학교 목록 조회
+    func getSchools() async throws -> [String]
+
     /// 명예의전당 아이템 조회
     func getTrophies(query: TrophyListQuery) async throws -> [CommunityFameItemModel]
     
