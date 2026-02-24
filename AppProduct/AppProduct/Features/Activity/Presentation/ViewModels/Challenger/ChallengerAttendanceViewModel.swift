@@ -101,23 +101,6 @@ final class ChallengerAttendanceViewModel {
         }
     }
 
-    #if DEBUG
-    @MainActor
-    func seedForDebugState(_ state: ActivityDebugState) {
-        switch state {
-        case .loading, .allLoading:
-            availableSchedules = .loading
-            myHistory = .loading
-        case .loaded:
-            availableSchedules = .loaded(ActivityDebugState.availableAttendanceSchedules)
-            myHistory = .loaded(ActivityDebugState.myAttendanceHistory)
-        case .failed:
-            availableSchedules = .failed(.unknown(message: "출석 가능한 세션을 불러오지 못했습니다."))
-            myHistory = .failed(.unknown(message: "출석 이력을 불러오지 못했습니다."))
-        }
-    }
-    #endif
-
     /// GPS 기반 출석 버튼 탭 처리
     @MainActor
     func attendanceBtnTapped(userId: UserID, session: Session, sheetId: Int) async {

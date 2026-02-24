@@ -127,13 +127,6 @@ class MyPageViewModel {
         }
     }
 
-#if DEBUG
-    @MainActor
-    func seedForDebugState(profileData: Loadable<ProfileData>) {
-        self.profileData = profileData
-    }
-#endif
-
     // MARK: - Private Function
 
     /// 소셜 타입별 OAuth 로그인을 수행하여 verification token을 반환합니다.

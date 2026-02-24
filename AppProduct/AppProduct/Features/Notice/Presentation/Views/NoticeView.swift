@@ -83,12 +83,6 @@ struct NoticeView: View {
                 applyUserContext()
                 syncSelectedGisuIdForNoticeEditor()
                 viewModel.updateErrorHandler(errorHandler)
-                #if DEBUG
-                if let debugState = NoticeDebugState.fromLaunchArgument() {
-                    debugState.apply(to: viewModel)
-                    return
-                }
-                #endif
                 viewModel.fetchGisuList()
             }
             .onChange(of: viewModel.selectedGeneration) { _, _ in

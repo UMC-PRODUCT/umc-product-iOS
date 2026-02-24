@@ -90,6 +90,7 @@ struct OperatorLocationChangeSheetView: View {
                     selectedPlace = place
                     showSearchPlaceSheet = false
                 }
+                .presentationDragIndicator(.visible)
             }
         }
     }

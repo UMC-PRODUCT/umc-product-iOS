@@ -27,11 +27,6 @@ struct OperatorMemberManagementView: View {
             fetchMembersUseCase: useCaseProvider.fetchMembersUseCase,
             errorHandler: errorHandler
         )
-        #if DEBUG
-        if let debugState = ActivityDebugState.fromLaunchArgument() {
-            memberListViewModel.seedForDebugState(debugState)
-        }
-        #endif
         self._viewModel = .init(wrappedValue: memberListViewModel)
     }
     
@@ -51,7 +46,7 @@ struct OperatorMemberManagementView: View {
                 RetryContentUnavailableView(
                     title: "로딩 실패",
                     systemImage: "exclamationmark.triangle",
-                    description: error.localizedDescription,
+                    description: error.userMessage,
                     isRetrying: false
                 ) {
                     await viewModel.fetchMembers()
@@ -59,11 +54,6 @@ struct OperatorMemberManagementView: View {
             }
         }
         .task {
-            #if DEBUG
-            if ActivityDebugState.fromLaunchArgument() != nil {
-                return
-            }
-            #endif
             await viewModel.fetchMembers()
         }
         .searchable(text: $viewModel.searchText)

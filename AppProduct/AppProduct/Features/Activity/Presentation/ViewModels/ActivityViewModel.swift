@@ -97,23 +97,4 @@ final class ActivityViewModel {
         categoryCache[title] ?? .general
     }
 
-#if DEBUG
-    /// Preview/디버그 스킴에서 상태를 직접 주입합니다.
-    @MainActor
-    func seedForDebugState(
-        sessionsState: Loadable<[Session]>,
-        userId: UserID
-    ) {
-        self.sessionsState = sessionsState
-        self.userId = userId
-
-        if case .loaded(let sessions) = sessionsState {
-            categoryCache = Dictionary(
-                uniqueKeysWithValues: sessions.map { ($0.info.title, .general) }
-            )
-        } else {
-            categoryCache = [:]
-        }
-    }
-#endif
 }

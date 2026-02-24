@@ -199,6 +199,15 @@ final class MockStudyRepository: StudyRepositoryProtocol {
         return Array(1...10)
     }
 
+    func resolveChallengerId(
+        memberId: Int,
+        preferredGeneration: Int?
+    ) async throws -> Int? {
+        _ = preferredGeneration
+        try await Task.sleep(for: .milliseconds(100))
+        return memberId > 0 ? memberId : nil
+    }
+
     func fetchWorkbookSubmissionURL(
         challengerWorkbookId: Int
     ) async throws -> String? {

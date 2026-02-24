@@ -14,6 +14,7 @@ struct CommunityFameView: View {
     @Environment(ErrorHandler.self) var errorHandler
     
     @State private var vm: CommunityFameViewModel
+    @State private var filterReloadTask: Task<Void, Never>?
 
     private enum Constants {
         static let weekPadding: EdgeInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
@@ -50,14 +51,19 @@ struct CommunityFameView: View {
             }
         }
         .task {
-            #if DEBUG
-            if let debugState = CommunityFameDebugState.fromLaunchArgument() {
-                debugState.apply(to: vm)
-                return
-            }
-            #endif
-
-            await vm.fetchFameItems(query: .init(week: 1, school: nil, part: nil))
+            await vm.loadInitialDataIfNeeded()
+        }
+        .onChange(of: vm.selectedWeek) { _, _ in
+            scheduleFilterReload()
+        }
+        .onChange(of: vm.selectedUniversity) { _, _ in
+            scheduleFilterReload()
+        }
+        .onChange(of: vm.selectedPart) { _, _ in
+            scheduleFilterReload()
+        }
+        .onDisappear {
+            filterReloadTask?.cancel()
         }
         .toolbar {
             ToolBarCollection.CommunityWeekFilter(
@@ -140,8 +146,17 @@ struct CommunityFameView: View {
             minRetryButtonWidth: Constants.retryMinimumWidth,
             minRetryButtonHeight: Constants.retryMinimumHeight
         ) {
-            await vm.fetchFameItems(query: .init(week: 1, school: nil, part: nil))
+            await vm.fetchFameItemsForCurrentFilter()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+
+    private func scheduleFilterReload() {
+        guard vm.hasLoadedInitialData else { return }
+
+        filterReloadTask?.cancel()
+        filterReloadTask = Task {
+            await vm.fetchFameItemsForCurrentFilter()
+        }
     }
 }

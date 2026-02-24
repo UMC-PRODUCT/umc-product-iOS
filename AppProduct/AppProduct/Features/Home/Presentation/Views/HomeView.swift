@@ -111,12 +111,6 @@ struct HomeView: View {
             .umcDefaultBackground()
             // 화면 진입 시 홈 화면에 필요한 모든 데이터를 한 번에 로드합니다.
             .task {
-                #if DEBUG
-                if let debugState = HomeDebugState.fromLaunchArgument() {
-                    debugState.apply(to: viewModel, selectedDate: selectedDate)
-                    return
-                }
-                #endif
                 guard shouldFetchOnTask else { return }
                 await viewModel.fetchAll()
             }

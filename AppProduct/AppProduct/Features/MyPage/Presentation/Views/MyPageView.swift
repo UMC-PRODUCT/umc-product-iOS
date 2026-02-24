@@ -54,12 +54,6 @@ struct MyPageView: View {
                     NavigationRoutingView(destination: destination)
                 }
                 .task {
-                    #if DEBUG
-                    if let debugState = MyPageDebugState.fromLaunchArgument() {
-                        debugState.apply(to: viewModel)
-                        return
-                    }
-                    #endif
                     guard shouldFetchOnAppear else { return }
                     await viewModel.fetchProfile(container: di)
                 }

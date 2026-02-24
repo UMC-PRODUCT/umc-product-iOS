@@ -28,20 +28,7 @@ struct ChallengerStudyView: View {
             submitMissionUseCase: activityProvider.submitMissionUseCase,
             errorHandler: errorHandler
         )
-        #if DEBUG
-        if let debugState = ActivityDebugState.fromLaunchArgument() {
-            challengerStudyViewModel.seedForDebugState(debugState)
-        }
-        #endif
         self._viewModel = .init(wrappedValue: challengerStudyViewModel)
-    }
-
-    private var viewModelDebugState: ActivityDebugState? {
-        #if DEBUG
-        ActivityDebugState.fromLaunchArgument()
-        #else
-        nil
-        #endif
     }
 
     // MARK: - Body
@@ -51,11 +38,6 @@ struct ChallengerStudyView: View {
             contentView(viewModel: viewModel)
         }
         .task {
-            #if DEBUG
-            if viewModelDebugState != nil {
-                return
-            }
-            #endif
             await viewModel.fetchCurriculum()
         }
     }
@@ -97,7 +79,7 @@ struct ChallengerStudyView: View {
         RetryContentUnavailableView(
             title: "로딩 실패",
             systemImage: "exclamationmark.triangle",
-            description: error.errorDescription ?? "알 수 없는 오류가 발생했습니다.",
+            description: error.userMessage,
             isRetrying: false
         ) {
             await viewModel.fetchCurriculum()

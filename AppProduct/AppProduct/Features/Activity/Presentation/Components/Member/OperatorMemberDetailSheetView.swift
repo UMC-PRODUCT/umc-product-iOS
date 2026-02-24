@@ -296,14 +296,15 @@ struct OperatorMemberDetailSheetView: View {
                     }
                     .disabled(isDeletingOutPoint)
                     .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(.init())
             }
         }
         .listStyle(.plain)
+        .listRowSpacing(DefaultSpacing.spacing8)
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
         .frame(height: scrollViewHeight)
-        .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-        .glass()
     }
     
     /// 아웃 히스토리 행
@@ -321,6 +322,10 @@ struct OperatorMemberDetailSheetView: View {
             Text("아웃 +\(String(format: "%.1f", history.penaltyScore))")
                 .appFont(.subheadline, color: .red)
         }
+        .padding(.horizontal, Constants.contentHorizontalPadding)
+        .frame(maxWidth: .infinity)
+        .frame(height: Constants.historyRowHeight)
+        .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
     
     // MARK: - Function

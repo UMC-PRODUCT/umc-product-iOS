@@ -56,6 +56,16 @@ final class FetchStudyMembersUseCase: FetchStudyMembersUseCaseProtocol {
         try await repository.fetchWeeks()
     }
 
+    func resolveChallengerId(
+        memberId: Int,
+        preferredGeneration: Int?
+    ) async throws -> Int? {
+        try await repository.resolveChallengerId(
+            memberId: memberId,
+            preferredGeneration: preferredGeneration
+        )
+    }
+
     func fetchWorkbookSubmissionURL(
         challengerWorkbookId: Int
     ) async throws -> String? {

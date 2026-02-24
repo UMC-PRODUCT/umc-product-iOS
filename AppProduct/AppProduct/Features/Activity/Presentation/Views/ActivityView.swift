@@ -79,13 +79,6 @@ struct ActivityView: View {
                         classifyScheduleUseCase: activityProvider.classifyScheduleUseCase
                     )
                 }
-                #if DEBUG
-                if let debugState = ActivityDebugState.fromLaunchArgument(),
-                   let viewModel {
-                    debugState.apply(to: viewModel)
-                    return
-                }
-                #endif
                 await viewModel?.loadInitialData()
             }
             .navigationDestination(for: NavigationDestination.self) { destination in
@@ -144,7 +137,7 @@ struct ActivityView: View {
                 RetryContentUnavailableView(
                     title: "로딩 실패",
                     systemImage: "exclamationmark.triangle",
-                    description: error.localizedDescription,
+                    description: error.userMessage,
                     isRetrying: false
                 ) {
                     await vm.fetchSessions()
@@ -175,7 +168,7 @@ struct ActivityView: View {
                 RetryContentUnavailableView(
                     title: "로딩 실패",
                     systemImage: "exclamationmark.triangle",
-                    description: error.localizedDescription,
+                    description: error.userMessage,
                     isRetrying: false
                 ) {
                     await vm.fetchSessions()

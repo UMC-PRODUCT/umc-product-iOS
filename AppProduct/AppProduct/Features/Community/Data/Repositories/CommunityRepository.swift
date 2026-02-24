@@ -26,6 +26,20 @@ final class CommunityRepository: CommunityRepositoryProtocol {
     }
     
     // MARK: - Function
+
+    func getSchools() async throws -> [String] {
+        let response = try await adapter.request(CommunityRouter.getAllSchools)
+        let apiResponse = try decoder.decode(
+            APIResponse<CommunitySchoolListResponseDTO>.self,
+            from: response.data
+        )
+
+        let schools = try apiResponse.unwrap().schools
+            .map(\.schoolName)
+            .filter { !$0.isEmpty }
+
+        return Array(Set(schools)).sorted()
+    }
     
     func getTrophies(
         query: TrophyListQuery

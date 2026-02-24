@@ -13,8 +13,6 @@ protocol ActivityRepositoryProviding {
     var challengerAttendanceRepository: ChallengerAttendanceRepositoryProtocol { get }
     /// 운영진 출석 관리 Repository
     var operatorAttendanceRepository: OperatorAttendanceRepositoryProtocol { get }
-    /// 세션 목록 데이터 접근 Repository
-    var sessionRepository: SessionRepositoryProtocol { get }
     /// Activity 통합 데이터 접근 Repository
     var activityRepository: ActivityRepositoryProtocol { get }
     /// Study 데이터 접근 Repository
@@ -33,7 +31,6 @@ final class ActivityRepositoryProvider: ActivityRepositoryProviding {
 
     let challengerAttendanceRepository: ChallengerAttendanceRepositoryProtocol
     let operatorAttendanceRepository: OperatorAttendanceRepositoryProtocol
-    let sessionRepository: SessionRepositoryProtocol
     let activityRepository: ActivityRepositoryProtocol
     let studyRepository: StudyRepositoryProtocol
     let memberRepository: MemberRepositoryProtocol
@@ -43,14 +40,12 @@ final class ActivityRepositoryProvider: ActivityRepositoryProviding {
     init(
         challengerAttendanceRepository: ChallengerAttendanceRepositoryProtocol,
         operatorAttendanceRepository: OperatorAttendanceRepositoryProtocol,
-        sessionRepository: SessionRepositoryProtocol,
         activityRepository: ActivityRepositoryProtocol,
         studyRepository: StudyRepositoryProtocol,
         memberRepository: MemberRepositoryProtocol
     ) {
         self.challengerAttendanceRepository = challengerAttendanceRepository
         self.operatorAttendanceRepository = operatorAttendanceRepository
-        self.sessionRepository = sessionRepository
         self.activityRepository = activityRepository
         self.studyRepository = studyRepository
         self.memberRepository = memberRepository
@@ -61,16 +56,17 @@ final class ActivityRepositoryProvider: ActivityRepositoryProviding {
 
 extension ActivityRepositoryProvider {
     /// Mock Repository들로 구성된 Provider 생성
+    #if DEBUG
     static func mock() -> ActivityRepositoryProvider {
         ActivityRepositoryProvider(
             challengerAttendanceRepository: MockAttendanceRepository(),
             operatorAttendanceRepository: MockAttendanceRepository(),
-            sessionRepository: MockSessionRepository(),
             activityRepository: MockActivityRepository(),
             studyRepository: MockStudyRepository(),
             memberRepository: MockMemberRepository()
         )
     }
+    #endif
 
     /// 실제 API 연결 Provider 생성
     ///
@@ -79,6 +75,9 @@ extension ActivityRepositoryProvider {
         adapter: MoyaNetworkAdapter
     ) -> ActivityRepositoryProvider {
         let attendanceRepo = AttendanceRepository(adapter: adapter)
+        let activityRepository = ActivityRepository(
+            attendanceRepository: attendanceRepo
+        )
         let studyRepository = StudyRepository(adapter: adapter)
         let memberRepository = MemberRepository(
             adapter: adapter,
@@ -87,10 +86,7 @@ extension ActivityRepositoryProvider {
         return ActivityRepositoryProvider(
             challengerAttendanceRepository: attendanceRepo,
             operatorAttendanceRepository: attendanceRepo,
-            sessionRepository: MockSessionRepository(),
-            activityRepository: ActivityRepository(
-                attendanceRepository: attendanceRepo
-            ),
+            activityRepository: activityRepository,
             studyRepository: studyRepository,
             memberRepository: memberRepository
         )

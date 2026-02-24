@@ -35,9 +35,13 @@ enum StudyRouter {
     case deleteStudyGroup(groupId: Int)
     case createChallengerPoint(challengerId: Int, body: ChallengerPointCreateRequestDTO)
     case deleteChallengerPoint(challengerPointId: Int)
+    case searchChallengersOffset(page: Int, size: Int, schoolId: Int)
 }
 
 extension StudyRouter: BaseTargetType {
+
+    // MARK: - Path
+
     var path: String {
         switch self {
         case .getCurriculum:
@@ -78,8 +82,12 @@ extension StudyRouter: BaseTargetType {
             return "/api/v1/challenger/\(challengerId)/points"
         case .deleteChallengerPoint(let challengerPointId):
             return "/api/v1/challenger/points/\(challengerPointId)"
+        case .searchChallengersOffset:
+            return "/api/v1/challenger/search/offset"
         }
     }
+
+    // MARK: - Method
 
     var method: Moya.Method {
         switch self {
@@ -95,6 +103,8 @@ extension StudyRouter: BaseTargetType {
             return .post
         case .deleteChallengerPoint:
             return .delete
+        case .searchChallengersOffset:
+            return .get
         case .updateStudyGroupMembers:
             return .put
         case .createStudyGroupSchedule:
@@ -115,6 +125,8 @@ extension StudyRouter: BaseTargetType {
             return .get
         }
     }
+
+    // MARK: - Task
 
     var task: Task {
         switch self {
@@ -175,6 +187,15 @@ extension StudyRouter: BaseTargetType {
             return .requestPlain
         case .deleteStudyGroup:
             return .requestPlain
+        case .searchChallengersOffset(let page, let size, let schoolId):
+            return .requestParameters(
+                parameters: [
+                    "page": page,
+                    "size": size,
+                    "schoolId": schoolId
+                ],
+                encoding: URLEncoding.queryString
+            )
         }
     }
 }

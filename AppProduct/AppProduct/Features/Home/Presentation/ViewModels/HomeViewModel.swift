@@ -70,6 +70,7 @@ final class HomeViewModel {
     @MainActor
     func fetchProfile() async {
         seasonData = .loading
+        generationData = .loading
         do {
             let result = try await useCaseProvider
                 .fetchMyProfileUseCase.execute()
@@ -80,8 +81,11 @@ final class HomeViewModel {
             applyGenerationsFromProfile(result.generations)
         } catch let error as AppError {
             seasonData = .failed(error)
+            generationData = .failed(error)
         } catch {
-            seasonData = .failed(.unknown(message: error.localizedDescription))
+            let appError = AppError.unknown(message: error.localizedDescription)
+            seasonData = .failed(appError)
+            generationData = .failed(appError)
         }
     }
 
@@ -192,20 +196,4 @@ final class HomeViewModel {
         return scheduleByDates[normalizedDate] ?? []
     }
 
-#if DEBUG
-    /// Preview/테스트 환경에서 ViewModel 상태를 직접 주입합니다.
-    func seedForDebugState(
-        seasonData: Loadable<[SeasonType]>,
-        generationData: Loadable<[GenerationData]>,
-        recentNoticeData: Loadable<[RecentNoticeData]>,
-        scheduleByDates: [Date: [ScheduleData]],
-        roles: [ChallengerRole] = []
-    ) {
-        self.seasonData = seasonData
-        self.generationData = generationData
-        self.recentNoticeData = recentNoticeData
-        self.scheduleByDates = scheduleByDates
-        self.roles = roles
-    }
-#endif
 }

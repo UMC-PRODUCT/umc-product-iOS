@@ -9,6 +9,8 @@ import Foundation
 
 /// Community Feature에서 사용하는 UseCase들을 제공하는 Provider Protocol
 protocol CommunityUseCaseProviding {
+    /// 커뮤니티 학교 목록 조회
+    var fetchCommunitySchoolsUseCase: FetchCommunitySchoolsUseCaseProtocol { get }
     /// 명예의전당 조회
     var fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol { get }
     /// 커뮤니티 목록 조회
@@ -49,6 +51,7 @@ protocol CommunityUseCaseProviding {
 final class CommunityUseCaseProvider: CommunityUseCaseProviding {
     // MARK: - Property
 
+    let fetchCommunitySchoolsUseCase: FetchCommunitySchoolsUseCaseProtocol
     let fetchFameItemsUseCase: FetchFameItemsUseCaseProtocol
     let fetchCommunityItemsUseCase: FetchCommunityItemsUseCaseProtocol
     let searchPostUseCase: SearchPostUseCaseProtocol
@@ -73,6 +76,9 @@ final class CommunityUseCaseProvider: CommunityUseCaseProviding {
         communityPostRepository: CommunityPostRepositoryProtocol,
         communityDetailRepository: CommunityDetailRepositoryProtocol
     ) {
+        self.fetchCommunitySchoolsUseCase = FetchCommunitySchoolsUseCase(
+            repository: communityRepository
+        )
         self.fetchFameItemsUseCase = FetchFameItemsUseCase(
             repository: communityRepository
         )

@@ -83,18 +83,6 @@ extension NoticeDetailViewModel {
     /// 공지 열람 현황 데이터 로드 (통계 + 상세)
     @MainActor
     func fetchReadStatus(showLoadingState: Bool = true) async {
-        #if DEBUG
-        if let debugState = NoticeDebugState.fromLaunchArgument() {
-            switch debugState {
-            case .loaded, .loadedCentral, .loadedBranch, .loadedSchool, .loadedPart:
-                readStatusState = .loaded(NoticeDetailMockData.sampleReadStatus)
-                return
-            case .loading, .failed, .detailFailed:
-                break
-            }
-        }
-        #endif
-
         if showLoadingState {
             readStatusState = .loading
         }

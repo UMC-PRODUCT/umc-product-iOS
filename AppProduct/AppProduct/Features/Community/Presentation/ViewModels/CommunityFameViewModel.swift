@@ -11,7 +11,6 @@ import Foundation
 class CommunityFameViewModel {
     // MARK: - Properties
     
-    private let container: DIContainer
     private let useCaseProvider: CommunityUseCaseProviding
     
     var selectedWeek: Int = 1
@@ -19,16 +18,20 @@ class CommunityFameViewModel {
     var selectedPart: UMCPartType? = nil  // nil = "전체"
 
     private(set) var fameItems: Loadable<[CommunityFameItemModel]> = .idle
+    private(set) var hasLoadedInitialData: Bool = false
+    private(set) var schoolOptions: [String] = []
 
     // MARK: -  Computed Properties
 
     var availableWeeks: [Int] {
-        guard case .loaded(let items) = fameItems else { return [1] }
-        let weeks = Set(items.map { $0.week })
-        return weeks.sorted()
+        Array(1...12)
     }
 
     var availableUniversities: [String] {
+        if !schoolOptions.isEmpty {
+            return schoolOptions
+        }
+
         guard case .loaded(let items) = fameItems else { return [] }
         let universities = Set(items.map(\.university))
         return universities.sorted()
@@ -61,11 +64,21 @@ class CommunityFameViewModel {
     // MARK: - Init
     
     init(container: DIContainer) {
-        self.container = container
         self.useCaseProvider = container.resolve(CommunityUseCaseProviding.self)
     }
 
     // MARK: - Function
+
+    @MainActor
+    func loadInitialDataIfNeeded() async {
+        guard !hasLoadedInitialData else { return }
+
+        async let schoolsTask: Void = fetchSchools()
+        async let trophiesTask: Void = fetchFameItems(query: currentFilterQuery())
+        _ = await (schoolsTask, trophiesTask)
+
+        hasLoadedInitialData = true
+    }
     
     @MainActor
     func fetchFameItems(query: TrophyListQuery) async {
@@ -80,22 +93,39 @@ class CommunityFameViewModel {
         }
     }
 
-    func selectWeek(_ week: Int) {
-        selectedWeek = week
+    @MainActor
+    func fetchFameItemsForCurrentFilter() async {
+        await fetchFameItems(query: currentFilterQuery())
     }
 
-    #if DEBUG
-    /// 디버그 모드에서 UI 상태를 시드하기 위한 메서드
-    func seedForDebugState(
-        fameItems: Loadable<[CommunityFameItemModel]>,
-        selectedWeek: Int,
-        selectedUniversity: String,
-        selectedPart: UMCPartType?
-    ) {
-        self.fameItems = fameItems
-        self.selectedWeek = selectedWeek
-        self.selectedUniversity = selectedUniversity
-        self.selectedPart = selectedPart
+    // MARK: - Private
+
+    @MainActor
+    private func fetchSchools() async {
+        do {
+            schoolOptions = try await useCaseProvider.fetchCommunitySchoolsUseCase.execute()
+            if selectedUniversity != "전체",
+               !schoolOptions.contains(selectedUniversity) {
+                selectedUniversity = "전체"
+            }
+        } catch {
+            // 학교 목록 조회 실패 시 기존 데이터(또는 명예의 전당 응답 유추값) 사용
+        }
     }
-    #endif
+
+    private func currentFilterQuery() -> TrophyListQuery {
+        TrophyListQuery(
+            week: selectedWeek,
+            school: normalizedSchoolQuery,
+            part: selectedPart?.apiValue
+        )
+    }
+
+    private var normalizedSchoolQuery: String? {
+        let trimmed = selectedUniversity.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty || trimmed == "전체" {
+            return nil
+        }
+        return trimmed
+    }
 }

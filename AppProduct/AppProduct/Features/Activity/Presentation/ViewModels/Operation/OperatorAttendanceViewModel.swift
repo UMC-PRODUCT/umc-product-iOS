@@ -552,17 +552,4 @@ final class OperatorAttendanceViewModel {
         )
     }
 
-    #if DEBUG
-    @MainActor
-    func seedForDebugState(_ state: ActivityDebugState) {
-        switch state {
-        case .loading, .allLoading:
-            sessionsState = .loading
-        case .loaded:
-            sessionsState = .loaded(OperatorAttendancePreviewData.sessions)
-        case .failed:
-            sessionsState = .failed(.unknown(message: "출석 현황을 불러오지 못했습니다."))
-        }
-    }
-    #endif
 }
