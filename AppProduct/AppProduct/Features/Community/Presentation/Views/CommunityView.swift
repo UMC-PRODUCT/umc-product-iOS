@@ -58,13 +58,6 @@ struct CommunityView: View {
                 }
             }
             .task {
-                #if DEBUG
-                if let debugState = CommunityDebugState.fromLaunchArgument() {
-                    debugState.apply(to: vm)
-                    return
-                }
-                #endif
-
                 switch vm.selectedMenu {
                 case .all, .party, .question, .information, .habit, .free:
                     await vm.fetchInitialIfNeeded()

@@ -212,32 +212,4 @@ extension NoticeViewModel {
             sort: pageSort
         )
     }
-
-#if DEBUG
-    /// 디버그 스킴 상태를 빠르게 재현하기 위한 시드 데이터 주입 함수입니다.
-    func seedForDebugState(
-        noticeItems: Loadable<[NoticeItemModel]>,
-        mainFilter: NoticeMainFilterType,
-        generations: [Generation] = [Generation(value: 9)],
-        selectedGeneration: Generation = Generation(value: 9),
-        subFilter: NoticeSubFilterType = .all,
-        selectedPart: NoticePart? = nil
-    ) {
-        self.generations = generations
-        self.selectedGeneration = selectedGeneration
-        self.noticeItems = noticeItems
-        self.searchQuery = ""
-        self.isSearchMode = false
-        pagingState.reset()
-
-        let key = MainFilterKey(from: mainFilter)
-        var state = GenerationFilterState()
-        state.mainFilter = mainFilter
-        state.updateState(
-            for: key,
-            state: MainFilterState(subFilter: subFilter, selectedPart: selectedPart)
-        )
-        generationStates[selectedGeneration.value] = state
-    }
-#endif
 }

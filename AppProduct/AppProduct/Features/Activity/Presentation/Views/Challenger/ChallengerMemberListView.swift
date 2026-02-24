@@ -26,11 +26,6 @@ struct ChallengerMemberListView: View {
             fetchMembersUseCase: useCaseProvider.fetchMembersUseCase,
             errorHandler: errorHandler
         )
-        #if DEBUG
-        if let debugState = ActivityDebugState.fromLaunchArgument() {
-            memberListViewModel.seedForDebugState(debugState)
-        }
-        #endif
         self._viewModel = .init(wrappedValue: memberListViewModel)
     }
     
@@ -55,11 +50,6 @@ struct ChallengerMemberListView: View {
             }
         }
         .task {
-            #if DEBUG
-            if ActivityDebugState.fromLaunchArgument() != nil {
-                return
-            }
-            #endif
             await viewModel.fetchMembers()
         }
         .searchable(text: $viewModel.searchText)

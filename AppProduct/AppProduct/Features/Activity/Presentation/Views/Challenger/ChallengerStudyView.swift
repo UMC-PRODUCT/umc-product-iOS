@@ -28,20 +28,7 @@ struct ChallengerStudyView: View {
             submitMissionUseCase: activityProvider.submitMissionUseCase,
             errorHandler: errorHandler
         )
-        #if DEBUG
-        if let debugState = ActivityDebugState.fromLaunchArgument() {
-            challengerStudyViewModel.seedForDebugState(debugState)
-        }
-        #endif
         self._viewModel = .init(wrappedValue: challengerStudyViewModel)
-    }
-
-    private var viewModelDebugState: ActivityDebugState? {
-        #if DEBUG
-        ActivityDebugState.fromLaunchArgument()
-        #else
-        nil
-        #endif
     }
 
     // MARK: - Body
@@ -51,11 +38,6 @@ struct ChallengerStudyView: View {
             contentView(viewModel: viewModel)
         }
         .task {
-            #if DEBUG
-            if viewModelDebugState != nil {
-                return
-            }
-            #endif
             await viewModel.fetchCurriculum()
         }
     }

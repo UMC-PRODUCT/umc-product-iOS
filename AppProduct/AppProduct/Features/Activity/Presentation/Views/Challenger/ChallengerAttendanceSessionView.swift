@@ -25,7 +25,6 @@ private final class MapViewModelCache {
 struct ChallengerAttendanceSessionView: View {
     @State private var expandedSessionId: Session.ID?
     @State private var attendanceViewModel: ChallengerAttendanceViewModel
-    @State private var sessionViewModel: ChallengerSessionViewModel
     @State private var mapViewModelCache = MapViewModelCache()
 
     private let container: DIContainer
@@ -48,24 +47,13 @@ struct ChallengerAttendanceSessionView: View {
         self.categoryFor = categoryFor
         
         let activityProvider = container.resolve(ActivityUseCaseProviding.self)
-        let repositoryProvider = container.resolve(ActivityRepositoryProviding.self)
 
         let attendanceViewModel = ChallengerAttendanceViewModel(
             container: container,
             errorHandler: errorHandler,
             challengeAttendanceUseCase: activityProvider.challengerAttendanceUseCase
         )
-        #if DEBUG
-        if let debugState = ActivityDebugState.fromLaunchArgument() {
-            attendanceViewModel.seedForDebugState(debugState)
-        }
-        #endif
         self._attendanceViewModel = .init(wrappedValue: attendanceViewModel)
-        self._sessionViewModel = .init(wrappedValue: .init(
-            container: container,
-            errorHandler: errorHandler,
-            sessionRepository: repositoryProvider.sessionRepository
-        ))
     }
     
     private enum Constants {
@@ -116,11 +104,6 @@ struct ChallengerAttendanceSessionView: View {
             DefaultConstant.defaultContentBottomMargins,
             for: .scrollContent)
         .task {
-            #if DEBUG
-            if ActivityDebugState.fromLaunchArgument() != nil {
-                return
-            }
-            #endif
             await attendanceViewModel.fetchAvailableSchedules()
             await attendanceViewModel.fetchMyHistory()
         }

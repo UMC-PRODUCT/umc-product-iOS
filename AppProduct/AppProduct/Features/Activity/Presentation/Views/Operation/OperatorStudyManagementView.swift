@@ -57,11 +57,6 @@ struct OperatorStudyManagementView: View {
             errorHandler: errorHandler,
             useCase: useCase
         )
-        #if DEBUG
-        if let debugState = ActivityDebugState.fromLaunchArgument() {
-            studyManagementViewModel.seedForDebugState(debugState)
-        }
-        #endif
         _viewModel = State(initialValue: studyManagementViewModel)
     }
 
@@ -87,11 +82,6 @@ struct OperatorStudyManagementView: View {
             }
         }
         .task(id: selectedTab) {
-            #if DEBUG
-            if ActivityDebugState.fromLaunchArgument() != nil {
-                return
-            }
-            #endif
             if selectedTab == .submission {
                 await viewModel.fetchSubmissionMembers()
             } else {

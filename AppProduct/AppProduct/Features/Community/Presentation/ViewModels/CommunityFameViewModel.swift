@@ -83,19 +83,4 @@ class CommunityFameViewModel {
     func selectWeek(_ week: Int) {
         selectedWeek = week
     }
-
-    #if DEBUG
-    /// 디버그 모드에서 UI 상태를 시드하기 위한 메서드
-    func seedForDebugState(
-        fameItems: Loadable<[CommunityFameItemModel]>,
-        selectedWeek: Int,
-        selectedUniversity: String,
-        selectedPart: UMCPartType?
-    ) {
-        self.fameItems = fameItems
-        self.selectedWeek = selectedWeek
-        self.selectedUniversity = selectedUniversity
-        self.selectedPart = selectedPart
-    }
-    #endif
 }

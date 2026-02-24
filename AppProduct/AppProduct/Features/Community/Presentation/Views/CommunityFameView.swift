@@ -50,13 +50,6 @@ struct CommunityFameView: View {
             }
         }
         .task {
-            #if DEBUG
-            if let debugState = CommunityFameDebugState.fromLaunchArgument() {
-                debugState.apply(to: vm)
-                return
-            }
-            #endif
-
             await vm.fetchFameItems(query: .init(week: 1, school: nil, part: nil))
         }
         .toolbar {

@@ -309,17 +309,4 @@ final class MemberListViewModel {
         )
     }
 
-    #if DEBUG
-    @MainActor
-    func seedForDebugState(_ state: ActivityDebugState) {
-        switch state {
-        case .loading, .allLoading:
-            membersState = .loading
-        case .loaded:
-            membersState = .loaded(ActivityDebugState.loadedMembers)
-        case .failed:
-            membersState = .failed(.unknown(message: "구성원을 불러오지 못했습니다."))
-        }
-    }
-    #endif
 }

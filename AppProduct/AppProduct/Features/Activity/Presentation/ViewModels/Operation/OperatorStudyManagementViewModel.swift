@@ -85,11 +85,6 @@ final class OperatorStudyManagementViewModel {
     /// 제출 현황 탭 필터(그룹/주차) 최초 로드 여부
     private var hasLoadedSubmissionFilters = false
 
-    #if DEBUG
-    /// Activity Debug 스킴 시뮬레이션 모드
-    private var isDebugSeedMode = false
-    #endif
-
     // MARK: - Initializer
 
     /// - Parameters:
@@ -104,10 +99,6 @@ final class OperatorStudyManagementViewModel {
         self.container = container
         self.errorHandler = errorHandler
         self.useCase = useCase
-
-        #if DEBUG
-        self.studyGroupDetails = StudyGroupPreviewData.groups
-        #endif
     }
 
     // MARK: - Function
@@ -122,28 +113,6 @@ final class OperatorStudyManagementViewModel {
     @MainActor
     func fetchSubmissionMembers() async {
         membersState = .loading
-
-        #if DEBUG
-        if isDebugSeedMode {
-            if allMembers.isEmpty {
-                allMembers = ActivityDebugState.studyMembersByCurrentWeek
-            }
-
-            if !hasLoadedSubmissionFilters {
-                if studyGroups == [.all] {
-                    studyGroups = normalizeStudyGroups(StudyGroupItem.preview)
-                }
-                weeks = Array(1...10)
-                if !weeks.contains(selectedWeek), let firstWeek = weeks.first {
-                    selectedWeek = firstWeek
-                }
-                hasLoadedSubmissionFilters = true
-            }
-
-            filterMembers()
-            return
-        }
-        #endif
 
         do {
             let shouldReloadSubmissionFilters = !hasLoadedSubmissionFilters
@@ -855,21 +824,6 @@ final class OperatorStudyManagementViewModel {
 
     /// 선택된 스터디 그룹과 주차에 따라 멤버 필터링
     private func filterMembers() {
-        #if DEBUG
-        if isDebugSeedMode {
-            var filtered = allMembers
-                .filter { $0.week == selectedWeek }
-
-            if selectedStudyGroup != .all,
-               let targetPart = selectedStudyGroup.part {
-                filtered = filtered.filter { $0.part == targetPart }
-            }
-
-            membersState = .loaded(filtered)
-            return
-        }
-        #endif
-
         membersState = .loaded(allMembers)
     }
 
@@ -899,39 +853,4 @@ final class OperatorStudyManagementViewModel {
         }
     }
 
-    #if DEBUG
-    @MainActor
-    func seedForDebugState(_ state: ActivityDebugState) {
-        switch state {
-        case .loading, .allLoading:
-            membersState = .loading
-            studyGroupDetailsState = .loading
-            isLoadingMoreStudyGroupDetails = false
-            studyGroupDetailsNextCursor = nil
-            studyGroupDetailsHasNext = false
-        case .loaded:
-            weeks = Array(1...10)
-            selectedWeek = 1
-            studyGroups = normalizeStudyGroups(StudyGroupItem.preview)
-            studyGroupDetails = StudyGroupPreviewData.groups
-            studyGroupDetailsState = .loaded(studyGroupDetails)
-            isLoadingMoreStudyGroupDetails = false
-            studyGroupDetailsNextCursor = nil
-            studyGroupDetailsHasNext = false
-
-            hasLoadedSubmissionFilters = true
-            hasLoadedStudyGroupDetails = true
-
-            allMembers = ActivityDebugState.studyMembersAllWeeks
-            isDebugSeedMode = true
-            filterMembers()
-        case .failed:
-            membersState = .failed(.unknown(message: "스터디 관리 데이터를 불러오지 못했습니다."))
-            studyGroupDetailsState = .failed(.unknown(message: "스터디 관리 데이터를 불러오지 못했습니다."))
-            isLoadingMoreStudyGroupDetails = false
-            studyGroupDetailsNextCursor = nil
-            studyGroupDetailsHasNext = false
-        }
-    }
-    #endif
 }

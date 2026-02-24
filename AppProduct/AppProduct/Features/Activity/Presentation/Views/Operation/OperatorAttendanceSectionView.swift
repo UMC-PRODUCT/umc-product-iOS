@@ -35,11 +35,6 @@ struct OperatorAttendanceSectionView: View {
             errorHandler: errorHandler,
             useCase: useCase.operatorAttendanceUseCase
         )
-        #if DEBUG
-        if let debugState = ActivityDebugState.fromLaunchArgument() {
-            attendanceViewModel.seedForDebugState(debugState)
-        }
-        #endif
         _viewModel = State(initialValue: attendanceViewModel)
     }
     
@@ -61,11 +56,6 @@ struct OperatorAttendanceSectionView: View {
     var body: some View {
         content
         .task {
-            #if DEBUG
-            if ActivityDebugState.fromLaunchArgument() != nil {
-                return
-            }
-            #endif
             // 상위 컨테이너에서 한 번만 호출 (View 교체로 인한 Task 취소 방지)
             if viewModel.sessionsState.isIdle {
                 await viewModel.fetchSessions(from: sessions)

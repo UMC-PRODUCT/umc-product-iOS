@@ -196,20 +196,4 @@ final class HomeViewModel {
         return scheduleByDates[normalizedDate] ?? []
     }
 
-#if DEBUG
-    /// Preview/테스트 환경에서 ViewModel 상태를 직접 주입합니다.
-    func seedForDebugState(
-        seasonData: Loadable<[SeasonType]>,
-        generationData: Loadable<[GenerationData]>,
-        recentNoticeData: Loadable<[RecentNoticeData]>,
-        scheduleByDates: [Date: [ScheduleData]],
-        roles: [ChallengerRole] = []
-    ) {
-        self.seasonData = seasonData
-        self.generationData = generationData
-        self.recentNoticeData = recentNoticeData
-        self.scheduleByDates = scheduleByDates
-        self.roles = roles
-    }
-#endif
 }

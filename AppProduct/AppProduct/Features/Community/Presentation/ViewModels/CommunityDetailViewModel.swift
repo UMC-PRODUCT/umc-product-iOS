@@ -66,20 +66,6 @@ class CommunityDetailViewModel {
     func fetchComments() async {
         comments = .loading
 
-        #if DEBUG
-        if let debugState = CommunityDebugState.fromLaunchArgument() {
-            switch debugState {
-            case .loading:
-                comments = .loading
-            case .failed:
-                comments = .failed(.unknown(message: "댓글을 불러오지 못했습니다."))
-            case .loaded, .loadedAll, .loadedQuestion, .loadedLightning:
-                comments = .loaded(Self.debugComments(for: postId))
-            }
-            return
-        }
-        #endif
-
         do {
             let fetchedComments = try await useCaseProvider.fetchCommentUseCase.execute(postId: postId)
             comments = .loaded(fetchedComments)
@@ -363,82 +349,4 @@ class CommunityDetailViewModel {
         }
     }
 
-    #if DEBUG
-    private static func debugComments(for postId: Int) -> [CommunityCommentModel] {
-        switch postId {
-        case 1001:
-            return [
-                CommunityCommentModel(
-                    commentId: 50001,
-                    userId: 7771,
-                    profileImage: nil,
-                    userName: "박서연",
-                    content: "path 배열을 enum으로 만들고 `navigationDestination`을 타입별로 분리하면 관리가 훨씬 쉬워요.",
-                    createdAt: .now.addingTimeInterval(-180),
-                    isAuthor: false
-                ),
-                CommunityCommentModel(
-                    commentId: 50002,
-                    userId: 7772,
-                    profileImage: nil,
-                    userName: "김미주",
-                    content: "로그인 플로우처럼 루트 전환이 필요한 경우엔 라우터를 중앙에서 들고 가는 방식이 안정적이었습니다.",
-                    createdAt: .now.addingTimeInterval(-540),
-                    isAuthor: true
-                ),
-                CommunityCommentModel(
-                    commentId: 50003,
-                    userId: 7773,
-                    profileImage: nil,
-                    userName: "정다은",
-                    content: "deep link로 진입할 거면 path 복원 로직까지 같이 설계해두는 걸 추천해요.",
-                    createdAt: .now.addingTimeInterval(-1100),
-                    isAuthor: false
-                )
-            ]
-        case 1002:
-            return [
-                CommunityCommentModel(
-                    commentId: 51001,
-                    userId: 7811,
-                    profileImage: nil,
-                    userName: "윤서준",
-                    content: "저 참여 가능해요. 오픈채팅 들어갔습니다!",
-                    createdAt: .now.addingTimeInterval(-240),
-                    isAuthor: false
-                ),
-                CommunityCommentModel(
-                    commentId: 51002,
-                    userId: 7812,
-                    profileImage: nil,
-                    userName: "한지민",
-                    content: "혹시 장소 상세 주소 공유 가능할까요?",
-                    createdAt: .now.addingTimeInterval(-900),
-                    isAuthor: false
-                )
-            ]
-        default:
-            return [
-                CommunityCommentModel(
-                    commentId: 52001,
-                    userId: 7901,
-                    profileImage: nil,
-                    userName: "이민수",
-                    content: "좋은 글 감사합니다!",
-                    createdAt: .now.addingTimeInterval(-300),
-                    isAuthor: false
-                ),
-                CommunityCommentModel(
-                    commentId: 52002,
-                    userId: 7902,
-                    profileImage: nil,
-                    userName: "최유진",
-                    content: "실무에서도 바로 써볼 수 있는 내용이네요.",
-                    createdAt: .now.addingTimeInterval(-840),
-                    isAuthor: false
-                )
-            ]
-        }
-    }
-    #endif
 }
