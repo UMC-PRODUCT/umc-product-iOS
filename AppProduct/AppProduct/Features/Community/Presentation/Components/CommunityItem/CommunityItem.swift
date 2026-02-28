@@ -1,0 +1,115 @@
+//
+//  CommunityItem.swift
+//  AppProduct
+//
+//  Created by 김미주 on 1/8/26.
+//
+
+import SwiftUI
+
+// MARK: - CummunityItem
+
+/// 커뮤니티 탭 - 리스트
+
+struct CommunityItem: View, Equatable {
+    // MARK: - Properties
+
+    private let model: CommunityItemModel
+    private let action: () -> Void
+
+    private enum Constant {
+        // tag + status
+        static let tagPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
+        // profile
+        static let profileSize: CGSize = .init(width: 30, height: 30)
+    }
+
+    // MARK: - Init
+
+    init(model: CommunityItemModel, action: @escaping () -> Void) {
+        self.model = model
+        self.action = action
+    }
+
+    static func == (lhs: CommunityItem, rhs: CommunityItem) -> Bool {
+        lhs.model == rhs.model
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+                topSection
+                contentSection
+                bottomSection
+            }
+            .padding(DefaultConstant.defaultCardPadding)
+            .background {
+                ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
+                    .fill(.white)
+                    .glass()
+                
+            }
+        }
+    }
+
+    // MARK: - Top
+
+    // 태그 + 상태 + 시간
+    private var topSection: some View {
+        HStack {
+            Text(model.category.text)
+                .appFont(.subheadline, color: .grey900)
+                .padding(Constant.tagPadding)
+                .glassEffect(.clear.tint(model.category.color))
+
+            Spacer()
+            Text(model.createdAt.timeAgoText)
+                .appFont(.footnote, color: .grey500)
+        }
+    }
+
+    // MARK: - Content
+
+    // 내용
+    private var contentSection: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+            Text(model.title)
+                .appFont(.calloutEmphasis, color: .grey900)
+                .lineLimit(1)
+
+            Text(model.content)
+                .appFont(.subheadline, color: .grey600)
+                .lineLimit(2)
+        }
+    }
+
+    // MARK: - Bottom
+
+    // 작성자 + 좋아요 + 댓글
+    private var bottomSection: some View {
+        HStack(spacing: DefaultSpacing.spacing8) {
+            // 프로필 이미지
+            RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileSize)
+            
+            // 이름 + 파트
+            Text("\(model.userName) • \(model.part.name)")
+
+            Spacer()
+
+            // 좋아요 + 댓글
+            HStack(spacing: DefaultSpacing.spacing4) {
+                Image(systemName: "heart")
+                    .foregroundStyle(.red)
+                Text(String(model.likeCount))
+            }
+            HStack(spacing: DefaultSpacing.spacing4) {
+                Image(systemName: "bubble")
+                    .foregroundStyle(.indigo500)
+                Text(String(model.commentCount))
+            }
+        }
+        .appFont(.footnote, color: .grey500)
+    }
+}

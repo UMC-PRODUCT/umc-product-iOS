@@ -1,0 +1,13 @@
+//
+//  ReportPostUseCaseProtocol.swift
+//  AppProduct
+//
+//  Created by 김미주 on 2/16/26.
+//
+
+import Foundation
+
+/// 게시글 신고 UseCase Protocol
+protocol ReportPostUseCaseProtocol {
+    func execute(postId: Int) async throws
+}

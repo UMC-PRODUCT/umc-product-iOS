@@ -1,0 +1,1683 @@
+{
+  "activityEntities" : [
+    "experimentCreated",
+    [
+      {
+        "createdDate" : "2026-02-18T05:30:52Z",
+        "event" : "experimentCreated",
+        "id" : "57EA7179-1D91-4373-8E47-81E0F9F129B9",
+        "subtitle" : "ScheduleListClassifierML.v4",
+        "title" : "Model Source Created"
+      }
+    ],
+    "trainingFinished",
+    [
+      {
+        "createdDate" : "2026-02-18T05:31:45Z",
+        "event" : "trainingFinished",
+        "id" : "A2230F16-365C-43BD-9FB0-B84DE9810B9A",
+        "subtitle" : "Model converged at 5 iterations",
+        "title" : "Training Completed"
+      }
+    ],
+    "trainingStarted",
+    [
+      {
+        "createdDate" : "2026-02-18T05:31:44Z",
+        "event" : "trainingStarted",
+        "id" : "89640A4A-4317-4D91-82F5-C33798784841",
+        "subtitle" : "50 iterations",
+        "title" : "Training Started"
+      }
+    ],
+    "trainingDataAdded",
+    [
+      {
+        "createdDate" : "2026-02-18T05:31:39Z",
+        "event" : "trainingDataAdded",
+        "id" : "A6BB4EF4-27AF-4491-954D-2D12967A05F3",
+        "subtitle" : "ScheduleTrainingData.json",
+        "title" : "Training Data Added"
+      }
+    ],
+    "trainingStarted",
+    [
+      {
+        "createdDate" : "2026-02-18T04:17:32Z",
+        "event" : "trainingStarted",
+        "id" : "89640A4A-4317-4D91-82F5-C33798784841",
+        "subtitle" : "50 iterations",
+        "title" : "Training Started"
+      }
+    ],
+    "trainingDataAdded",
+    [
+      {
+        "createdDate" : "2026-02-18T05:31:39Z",
+        "event" : "trainingDataAdded",
+        "id" : "A6BB4EF4-27AF-4491-954D-2D12967A05F3",
+        "subtitle" : "ScheduleTrainingData.json",
+        "title" : "Training Data Added"
+      }
+    ]
+  ],
+  "contentDataResult" : {
+    "createdDate" : "2026-02-18T05:31:03Z"
+  },
+  "createdDate" : "2026-02-18T05:30:52Z",
+  "evaluationContainerEntity" : {
+    "createdDate" : "2026-02-18T05:31:45Z",
+    "evaluationEntities" : [
+      {
+        "analysedDataType" : "none",
+        "createdDate" : "2026-02-18T05:31:45Z",
+        "dataResult" : {
+
+        },
+        "id" : "0abc1cb2-a33e-48c9-98f7-883def900f3d"
+      }
+    ],
+    "id" : "b3ac2422-9e1f-4f58-9cc7-29cbfb0d0b7e",
+    "modifiedDate" : "2026-02-18T05:31:45Z",
+    "previewType" : "textClassifier",
+    "testingEvaluationEntity" : {
+      "analysedDataType" : "none",
+      "createdDate" : "2026-02-18T05:30:52Z",
+      "dataResult" : {
+        "createdDate" : "2026-02-18T05:31:03Z"
+      },
+      "id" : "b78d576d-31cf-4791-a29f-d0b3cb6fe137"
+    },
+    "trainingEvaluationEntity" : {
+      "analysedDataType" : "none",
+      "createdDate" : "2026-02-18T05:30:52Z",
+      "dataResult" : {
+        "classesCount" : 14,
+        "createdDate" : "2026-02-18T05:31:03Z",
+        "dataAnalysis" : {
+          "classifierAnalysis" : {
+            "labelStats" : {
+              "celebration" : 124,
+              "fee" : 130,
+              "general" : 124,
+              "hackathon" : 125,
+              "leadership" : 129,
+              "meeting" : 130,
+              "networking" : 128,
+              "orientation" : 1651,
+              "presentation" : 130,
+              "project" : 138,
+              "review" : 127,
+              "study" : 140,
+              "testing" : 763,
+              "workshop" : 123
+            }
+          },
+          "issues" : [
+            {
+              "description" : "14 classes found, including orientation, testing, study",
+              "severity" : "debug"
+            },
+            {
+              "description" : "3962 texts found, automatically creating validation set",
+              "severity" : "good"
+            },
+            {
+              "description" : "Smallest class is \"workshop\" with 123 texts",
+              "severity" : "debug"
+            },
+            {
+              "description" : "Largest class is \"orientation\" with 1651 text",
+              "severity" : "debug"
+            }
+          ],
+          "objectDetectorAnalysis" : {
+            "details" : {
+
+            }
+          },
+          "summary" : {
+            "canUseValidation" : 1,
+            "classCount" : 14,
+            "sampleCount" : 3962
+          }
+        },
+        "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+        "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
+        "itemsCount" : 3962
+      },
+      "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+      "evaluationResult" : {
+        "textClassifier" : {
+          "accuracy" : 0.9989373007438895,
+          "confusionMatrix" : [
+            {
+              "actual" : "celebration",
+              "count" : 114,
+              "expected" : "celebration"
+            },
+            {
+              "actual" : "fee",
+              "count" : 124,
+              "expected" : "fee"
+            },
+            {
+              "actual" : "general",
+              "count" : 120,
+              "expected" : "general"
+            },
+            {
+              "actual" : "hackathon",
+              "count" : 121,
+              "expected" : "hackathon"
+            },
+            {
+              "actual" : "leadership",
+              "count" : 125,
+              "expected" : "leadership"
+            },
+            {
+              "actual" : "meeting",
+              "count" : 126,
+              "expected" : "meeting"
+            },
+            {
+              "actual" : "meeting",
+              "count" : 1,
+              "expected" : "project"
+            },
+            {
+              "actual" : "networking",
+              "count" : 122,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "orientation",
+              "count" : 1563,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "presentation",
+              "count" : 120,
+              "expected" : "presentation"
+            },
+            {
+              "actual" : "project",
+              "count" : 1,
+              "expected" : "meeting"
+            },
+            {
+              "actual" : "project",
+              "count" : 127,
+              "expected" : "project"
+            },
+            {
+              "actual" : "project",
+              "count" : 2,
+              "expected" : "testing"
+            },
+            {
+              "actual" : "review",
+              "count" : 121,
+              "expected" : "review"
+            },
+            {
+              "actual" : "study",
+              "count" : 133,
+              "expected" : "study"
+            },
+            {
+              "actual" : "testing",
+              "count" : 730,
+              "expected" : "testing"
+            },
+            {
+              "actual" : "workshop",
+              "count" : 114,
+              "expected" : "workshop"
+            }
+          ],
+          "statsByLabel" : {
+            "celebration" : {
+              "count" : 114,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "fee" : {
+              "count" : 124,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "general" : {
+              "count" : 120,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "hackathon" : {
+              "count" : 121,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "leadership" : {
+              "count" : 125,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "meeting" : {
+              "count" : 127,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.9921259842519685,
+                  "recall" : 0.9921259842519685
+                }
+              }
+            },
+            "networking" : {
+              "count" : 122,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "orientation" : {
+              "count" : 1563,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "presentation" : {
+              "count" : 120,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "project" : {
+              "count" : 130,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.9921875,
+                  "recall" : 0.9769230769230769
+                }
+              }
+            },
+            "review" : {
+              "count" : 121,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "study" : {
+              "count" : 133,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            },
+            "testing" : {
+              "count" : 730,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.9972677595628415,
+                  "recall" : 1
+                }
+              }
+            },
+            "workshop" : {
+              "count" : 114,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 1
+                }
+              }
+            }
+          }
+        }
+      },
+      "id" : "c0fa9207-ee67-461d-b37b-c636af9f7641"
+    },
+    "validationEvaluationEntity" : {
+      "analysedDataType" : "auto",
+      "createdDate" : "2026-02-18T05:30:52Z",
+      "dataResult" : {
+        "createdDate" : "2026-02-18T05:31:03Z"
+      },
+      "evaluationResult" : {
+        "textClassifier" : {
+          "accuracy" : 0.46464646464646464,
+          "confusionMatrix" : [
+            {
+              "actual" : "celebration",
+              "count" : 4,
+              "expected" : "celebration"
+            },
+            {
+              "actual" : "celebration",
+              "count" : 6,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "fee",
+              "count" : 1,
+              "expected" : "fee"
+            },
+            {
+              "actual" : "fee",
+              "count" : 5,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "general",
+              "count" : 2,
+              "expected" : "general"
+            },
+            {
+              "actual" : "general",
+              "count" : 2,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "hackathon",
+              "count" : 1,
+              "expected" : "hackathon"
+            },
+            {
+              "actual" : "hackathon",
+              "count" : 3,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "leadership",
+              "count" : 1,
+              "expected" : "general"
+            },
+            {
+              "actual" : "leadership",
+              "count" : 2,
+              "expected" : "leadership"
+            },
+            {
+              "actual" : "leadership",
+              "count" : 1,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "meeting",
+              "count" : 2,
+              "expected" : "meeting"
+            },
+            {
+              "actual" : "meeting",
+              "count" : 1,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "networking",
+              "count" : 5,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "networking",
+              "count" : 1,
+              "expected" : "study"
+            },
+            {
+              "actual" : "orientation",
+              "count" : 46,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "orientation",
+              "count" : 42,
+              "expected" : "orientation"
+            },
+            {
+              "actual" : "presentation",
+              "count" : 8,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "presentation",
+              "count" : 2,
+              "expected" : "presentation"
+            },
+            {
+              "actual" : "project",
+              "count" : 3,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "project",
+              "count" : 5,
+              "expected" : "project"
+            },
+            {
+              "actual" : "review",
+              "count" : 3,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "review",
+              "count" : 3,
+              "expected" : "review"
+            },
+            {
+              "actual" : "study",
+              "count" : 5,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "study",
+              "count" : 2,
+              "expected" : "study"
+            },
+            {
+              "actual" : "testing",
+              "count" : 17,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "testing",
+              "count" : 16,
+              "expected" : "testing"
+            },
+            {
+              "actual" : "workshop",
+              "count" : 4,
+              "expected" : "networking"
+            },
+            {
+              "actual" : "workshop",
+              "count" : 5,
+              "expected" : "workshop"
+            }
+          ],
+          "statsByLabel" : {
+            "celebration" : {
+              "count" : 10,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.4
+                }
+              }
+            },
+            "fee" : {
+              "count" : 6,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.16666666666666666
+                }
+              }
+            },
+            "general" : {
+              "count" : 4,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.6666666666666666,
+                  "recall" : 0.5
+                }
+              }
+            },
+            "hackathon" : {
+              "count" : 4,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.25
+                }
+              }
+            },
+            "leadership" : {
+              "count" : 4,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.5
+                }
+              }
+            },
+            "meeting" : {
+              "count" : 3,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.6666666666666666
+                }
+              }
+            },
+            "networking" : {
+              "count" : 6,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.045871559633027525,
+                  "recall" : 0.8333333333333334
+                }
+              }
+            },
+            "orientation" : {
+              "count" : 88,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.4772727272727273
+                }
+              }
+            },
+            "presentation" : {
+              "count" : 10,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.2
+                }
+              }
+            },
+            "project" : {
+              "count" : 8,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.625
+                }
+              }
+            },
+            "review" : {
+              "count" : 6,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.5
+                }
+              }
+            },
+            "study" : {
+              "count" : 7,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 0.6666666666666666,
+                  "recall" : 0.2857142857142857
+                }
+              }
+            },
+            "testing" : {
+              "count" : 33,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.48484848484848486
+                }
+              }
+            },
+            "workshop" : {
+              "count" : 9,
+              "precisionRecall" : {
+                "success" : {
+                  "precision" : 1,
+                  "recall" : 0.5555555555555556
+                }
+              }
+            }
+          }
+        }
+      },
+      "id" : "32640ae7-99a8-4222-b05d-25e280479f4f"
+    }
+  },
+  "evaluationEntity" : {
+    "analysedDataType" : "none",
+    "dataResult" : {
+
+    },
+    "id" : "e72b050b-3587-49f3-a48f-5c0cbc4f163a"
+  },
+  "evaluationState" : "uninitialized",
+  "id" : "8A65B9DB-E687-4AAA-8DF9-97130511A356",
+  "modelEntity" : {
+    "createdDate" : "2026-02-18T05:30:52Z",
+    "experimentID" : "8A65B9DB-E687-4AAA-8DF9-97130511A356",
+    "id" : "A39F39CC-A71E-4662-A043-30C617334753",
+    "modelURL" : "Models/ScheduleListClassifierML.v4.mlmodel",
+    "modifiedDate" : "2026-02-18T05:30:52Z",
+    "title" : "",
+    "version" : "1.0"
+  },
+  "modifiedDate" : "2026-02-18T05:31:45Z",
+  "preferredFilename" : "ScheduleListClassifierML.v4",
+  "settingEntity" : {
+    "algorithmType" : "maxEnt",
+    "augmentations" : [
+
+    ],
+    "featureNames" : [
+
+    ],
+    "handActionClassifierAugmentations" : [
+
+    ],
+    "handPoseClassifierAugmentations" : [
+
+    ],
+    "harVideoAugmentations" : 0,
+    "iterationCount" : 50,
+    "seedType" : "default",
+    "styleTransferAlgorithmType" : "image",
+    "taskType" : "textClassifier",
+    "textClassifierArabicLanguage" : "automatic",
+    "textClassifierCJKLanguage" : "automatic",
+    "textClassifierCyrillicLanguage" : "automatic",
+    "textClassifierIndicLanguage" : "automatic",
+    "textClassifierLatin" : "automatic",
+    "textClassifierScript" : "latin",
+    "textClassifierThaiLanguage" : "automatic"
+  },
+  "snapshotRole" : {
+    "withoutSnapshots" : 0
+  },
+  "state" : "trained",
+  "title" : "ScheduleListClassifierML 2",
+  "trainingEntity" : {
+    "analysedDataType" : "datasource",
+    "checkpointMetrics" : {
+
+    },
+    "dataResult" : {
+      "classesCount" : 14,
+      "createdDate" : "2026-02-18T05:31:03Z",
+      "dataAnalysis" : {
+        "classifierAnalysis" : {
+          "labelStats" : {
+            "celebration" : 124,
+            "fee" : 130,
+            "general" : 124,
+            "hackathon" : 125,
+            "leadership" : 129,
+            "meeting" : 130,
+            "networking" : 128,
+            "orientation" : 1651,
+            "presentation" : 130,
+            "project" : 138,
+            "review" : 127,
+            "study" : 140,
+            "testing" : 763,
+            "workshop" : 123
+          }
+        },
+        "issues" : [
+          {
+            "description" : "14 classes found, including orientation, testing, study",
+            "severity" : "debug"
+          },
+          {
+            "description" : "3962 texts found, automatically creating validation set",
+            "severity" : "good"
+          },
+          {
+            "description" : "Smallest class is \"workshop\" with 123 texts",
+            "severity" : "debug"
+          },
+          {
+            "description" : "Largest class is \"orientation\" with 1651 text",
+            "severity" : "debug"
+          }
+        ],
+        "objectDetectorAnalysis" : {
+          "details" : {
+
+          }
+        },
+        "summary" : {
+          "canUseValidation" : 1,
+          "classCount" : 14,
+          "sampleCount" : 3962
+        }
+      },
+      "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+      "dataURL" : "file:///Users/mymac/Desktop/My_Work/Project/umc-product-iOS/AppProduct/AppleCreateML/ScheduleList/ScheduleTrainingData.json",
+      "itemsCount" : 3962
+    },
+    "dataSourceID" : "232960B7-E1D6-424E-BA1F-7A0DFED4C292",
+    "featureExtractionCheckpointMayBeAvailable" : false,
+    "finishTime" : "2026-02-18T05:31:45Z",
+    "progress" : [
+      {
+        "count" : 1,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 10,
+          "trainingAccuracy" : 0.0324123278260231,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 2,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 9,
+          "trainingAccuracy" : 0.978480339050293,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 3,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 8,
+          "trainingAccuracy" : 0.9968119263648987,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 4,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 7,
+          "trainingAccuracy" : 0.9976089000701904,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 5,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : true,
+        "tableIndex" : 1,
+        "tcTrainingColumnHeader" : {
+          "elapsedTime" : 0,
+          "hasTraining" : true,
+          "hasValidation" : false,
+          "remainingIterationCount" : 6,
+          "trainingAccuracy" : 0.9989373087882996,
+          "validationAccuracy" : 0
+        }
+      },
+      {
+        "count" : 64,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 164,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 264,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 364,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 464,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 564,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 664,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 764,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 864,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 964,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1064,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1164,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1264,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1364,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1464,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1564,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1664,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1764,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1864,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 1964,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2064,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2164,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2264,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2364,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2464,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2564,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2664,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2764,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2864,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 2964,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3064,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3164,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3264,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3364,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3464,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3564,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3664,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : false,
+        "tableIndex" : 0
+      },
+      {
+        "count" : 3764,
+        "currentRowIndex" : 0,
+        "isLast" : false,
+        "percentComplete" : 0,
+        "tableDone" : true,
+        "tableIndex" : 0
+      }
+    ],
+    "snapshottableCheckpoints" : {
+
+    },
+    "startTime" : "2026-02-18T05:31:44Z",
+    "trainingAccuracy" : 0.9989373007438895,
+    "trainingResults" : {
+      "textClassifier" : {
+        "accuracy" : 0.9989373007438895,
+        "confusionMatrix" : [
+          {
+            "actual" : "celebration",
+            "count" : 114,
+            "expected" : "celebration"
+          },
+          {
+            "actual" : "fee",
+            "count" : 124,
+            "expected" : "fee"
+          },
+          {
+            "actual" : "general",
+            "count" : 120,
+            "expected" : "general"
+          },
+          {
+            "actual" : "hackathon",
+            "count" : 121,
+            "expected" : "hackathon"
+          },
+          {
+            "actual" : "leadership",
+            "count" : 125,
+            "expected" : "leadership"
+          },
+          {
+            "actual" : "meeting",
+            "count" : 126,
+            "expected" : "meeting"
+          },
+          {
+            "actual" : "meeting",
+            "count" : 1,
+            "expected" : "project"
+          },
+          {
+            "actual" : "networking",
+            "count" : 122,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "orientation",
+            "count" : 1563,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "presentation",
+            "count" : 120,
+            "expected" : "presentation"
+          },
+          {
+            "actual" : "project",
+            "count" : 1,
+            "expected" : "meeting"
+          },
+          {
+            "actual" : "project",
+            "count" : 127,
+            "expected" : "project"
+          },
+          {
+            "actual" : "project",
+            "count" : 2,
+            "expected" : "testing"
+          },
+          {
+            "actual" : "review",
+            "count" : 121,
+            "expected" : "review"
+          },
+          {
+            "actual" : "study",
+            "count" : 133,
+            "expected" : "study"
+          },
+          {
+            "actual" : "testing",
+            "count" : 730,
+            "expected" : "testing"
+          },
+          {
+            "actual" : "workshop",
+            "count" : 114,
+            "expected" : "workshop"
+          }
+        ],
+        "statsByLabel" : {
+          "celebration" : {
+            "count" : 114,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "fee" : {
+            "count" : 124,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "general" : {
+            "count" : 120,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "hackathon" : {
+            "count" : 121,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "leadership" : {
+            "count" : 125,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "meeting" : {
+            "count" : 127,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.9921259842519685,
+                "recall" : 0.9921259842519685
+              }
+            }
+          },
+          "networking" : {
+            "count" : 122,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "orientation" : {
+            "count" : 1563,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "presentation" : {
+            "count" : 120,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "project" : {
+            "count" : 130,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.9921875,
+                "recall" : 0.9769230769230769
+              }
+            }
+          },
+          "review" : {
+            "count" : 121,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "study" : {
+            "count" : 133,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          },
+          "testing" : {
+            "count" : 730,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.9972677595628415,
+                "recall" : 1
+              }
+            }
+          },
+          "workshop" : {
+            "count" : 114,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "validationAccuracy" : 0.46464646464646464,
+    "validationResults" : {
+      "textClassifier" : {
+        "accuracy" : 0.46464646464646464,
+        "confusionMatrix" : [
+          {
+            "actual" : "celebration",
+            "count" : 4,
+            "expected" : "celebration"
+          },
+          {
+            "actual" : "celebration",
+            "count" : 6,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "fee",
+            "count" : 1,
+            "expected" : "fee"
+          },
+          {
+            "actual" : "fee",
+            "count" : 5,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "general",
+            "count" : 2,
+            "expected" : "general"
+          },
+          {
+            "actual" : "general",
+            "count" : 2,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "hackathon",
+            "count" : 1,
+            "expected" : "hackathon"
+          },
+          {
+            "actual" : "hackathon",
+            "count" : 3,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "leadership",
+            "count" : 1,
+            "expected" : "general"
+          },
+          {
+            "actual" : "leadership",
+            "count" : 2,
+            "expected" : "leadership"
+          },
+          {
+            "actual" : "leadership",
+            "count" : 1,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "meeting",
+            "count" : 2,
+            "expected" : "meeting"
+          },
+          {
+            "actual" : "meeting",
+            "count" : 1,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "networking",
+            "count" : 5,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "networking",
+            "count" : 1,
+            "expected" : "study"
+          },
+          {
+            "actual" : "orientation",
+            "count" : 46,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "orientation",
+            "count" : 42,
+            "expected" : "orientation"
+          },
+          {
+            "actual" : "presentation",
+            "count" : 8,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "presentation",
+            "count" : 2,
+            "expected" : "presentation"
+          },
+          {
+            "actual" : "project",
+            "count" : 3,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "project",
+            "count" : 5,
+            "expected" : "project"
+          },
+          {
+            "actual" : "review",
+            "count" : 3,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "review",
+            "count" : 3,
+            "expected" : "review"
+          },
+          {
+            "actual" : "study",
+            "count" : 5,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "study",
+            "count" : 2,
+            "expected" : "study"
+          },
+          {
+            "actual" : "testing",
+            "count" : 17,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "testing",
+            "count" : 16,
+            "expected" : "testing"
+          },
+          {
+            "actual" : "workshop",
+            "count" : 4,
+            "expected" : "networking"
+          },
+          {
+            "actual" : "workshop",
+            "count" : 5,
+            "expected" : "workshop"
+          }
+        ],
+        "statsByLabel" : {
+          "celebration" : {
+            "count" : 10,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.4
+              }
+            }
+          },
+          "fee" : {
+            "count" : 6,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.16666666666666666
+              }
+            }
+          },
+          "general" : {
+            "count" : 4,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.6666666666666666,
+                "recall" : 0.5
+              }
+            }
+          },
+          "hackathon" : {
+            "count" : 4,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.25
+              }
+            }
+          },
+          "leadership" : {
+            "count" : 4,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.5
+              }
+            }
+          },
+          "meeting" : {
+            "count" : 3,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.6666666666666666
+              }
+            }
+          },
+          "networking" : {
+            "count" : 6,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.045871559633027525,
+                "recall" : 0.8333333333333334
+              }
+            }
+          },
+          "orientation" : {
+            "count" : 88,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.4772727272727273
+              }
+            }
+          },
+          "presentation" : {
+            "count" : 10,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.2
+              }
+            }
+          },
+          "project" : {
+            "count" : 8,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.625
+              }
+            }
+          },
+          "review" : {
+            "count" : 6,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.5
+              }
+            }
+          },
+          "study" : {
+            "count" : 7,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 0.6666666666666666,
+                "recall" : 0.2857142857142857
+              }
+            }
+          },
+          "testing" : {
+            "count" : 33,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.48484848484848486
+              }
+            }
+          },
+          "workshop" : {
+            "count" : 9,
+            "precisionRecall" : {
+              "success" : {
+                "precision" : 1,
+                "recall" : 0.5555555555555556
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "validationEntity" : {
+    "analysedDataType" : "auto",
+    "dataResult" : {
+      "createdDate" : "2026-02-18T05:31:03Z"
+    },
+    "splitOptions" : {
+      "strategy" : {
+        "automatic" : {
+
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

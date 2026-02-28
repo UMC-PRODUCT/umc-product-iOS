@@ -7,10 +7,6 @@
 .AppleDouble
 .LSOverride
 
-# Icon must end with two \r
-Icon
-
-
 # Thumbnails
 ._*
 
@@ -121,7 +117,6 @@ iOSInjectionProject/
 ### SwiftPackageManager ###
 Packages
 xcuserdata
-*.xcodeproj
 
 
 ### Xcode ###
@@ -143,3 +138,25 @@ xcuserdata
 
 ## Xcconfig
 Secrets.xcconfig
+
+## Claude Code (개인 설정)
+CLAUDE.local.md
+AGENTS.local.md
+CODEX.md
+AGENTS.md
+.claude/
+PROJECT_CONTEXT.md
+
+## Swagger 자동화 개인용 파일 (로컬 전용)
+tools/openapi/
+docs/openapi/
+AppProduct/AppProduct/Features/*/Data/Generated/
+
+## 테스트 설정 (토큰, 인증코드 등 민감 정보)
+.test-config.*
+
+# Personal agent context
+
+
+# Firebase local config
+GoogleService-Info.plist

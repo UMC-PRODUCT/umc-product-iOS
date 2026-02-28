@@ -1,0 +1,119 @@
+//
+//  MockAttendanceRepository.swift
+//  AppProduct
+//
+//  Created by jaewon Lee on 1/15/26.
+//
+
+import Foundation
+
+#if DEBUG
+/// Preview 및 테스트용 Mock AttendanceRepository
+///
+/// 실제 네트워크 요청 없이 더미 데이터를 반환합니다.
+final class MockAttendanceRepository: ChallengerAttendanceRepositoryProtocol,
+                                       OperatorAttendanceRepositoryProtocol {
+
+    // MARK: - 조회
+
+    func getAttendanceDetail(
+        recordId: Int
+    ) async throws -> AttendanceRecord {
+        AttendanceRecord(
+            id: recordId,
+            attendanceSheetId: 1,
+            memberId: 1,
+            status: .present,
+            memo: nil
+        )
+    }
+
+    func getPendingAttendances(
+        scheduleId: Int
+    ) async throws -> [PendingAttendanceRecord] {
+        [
+            PendingAttendanceRecord(
+                attendanceId: 1,
+                memberId: 1,
+                memberName: "일일일",
+                nickname: "길동이",
+                profileImageLink: nil,
+                schoolName: "중앙대학교",
+                status: .pendingApproval,
+                reason: "병원 방문으로 인한 지각",
+                requestedAt: .now
+            )
+        ]
+    }
+
+    func getMyHistory() async throws -> [AttendanceHistoryItem] {
+        [
+            AttendanceHistoryItem(
+                attendanceId: 1,
+                scheduleId: 1,
+                scheduleName: "9기 OT",
+                tags: ["SEMINAR", "ALL"],
+                scheduledDate: "2024-01-15",
+                startTime: "14:30",
+                endTime: "16:00",
+                status: .present,
+                statusDisplay: "출석"
+            )
+        ]
+    }
+
+    func getChallengerHistory(
+        challengerId: Int
+    ) async throws -> [AttendanceHistoryItem] {
+        try await getMyHistory()
+    }
+
+    func getAvailableSchedules(
+    ) async throws -> [AvailableAttendanceSchedule] {
+        [
+            AvailableAttendanceSchedule(
+                scheduleId: 1,
+                scheduleName: "9기 OT",
+                tags: ["STUDY", "PROJECT"],
+                startTime: "10:00:00",
+                endTime: "12:00:00",
+                sheetId: 1,
+                recordId: 1,
+                status: .beforeAttendance,
+                statusDisplay: "출석 전",
+                locationVerified: true
+            )
+        ]
+    }
+
+    // MARK: - 액션
+
+    func approveAttendance(recordId: Int) async throws {}
+
+    func rejectAttendance(recordId: Int) async throws {}
+
+    func updateScheduleLocation(
+        scheduleId: Int,
+        locationName: String,
+        latitude: Double,
+        longitude: Double
+    ) async throws {
+        _ = scheduleId
+        _ = locationName
+        _ = latitude
+        _ = longitude
+    }
+
+    func checkAttendance(
+        request: AttendanceCheckRequestDTO
+    ) async throws -> Int {
+        1
+    }
+
+    func submitReason(
+        request: AttendanceReasonRequestDTO
+    ) async throws -> Int {
+        1
+    }
+}
+#endif
