@@ -24,13 +24,13 @@ struct AppProductApp: App {
     @State private var container: DIContainer
     @State private var didConfigureAppDelegate: Bool = false
     @State private var errorHandler: ErrorHandler = .init()
-    @State private var appState: AppState = .main
+    @State private var appState: AppState = .splash
     private let sharedModelContainer: ModelContainer
     
     // MARK: - AppState
     
     /// 앱 전체 화면 상태
-    private enum AppState {
+    private enum AppState: Equatable {
         /// 스플래시 화면 (토큰 검사 중)
         case splash
         /// 로그인 화면
@@ -83,37 +83,49 @@ struct AppProductApp: App {
 extension AppProductApp {
     @ViewBuilder
     private var rootView: some View {
-        switch appState {
-        case .splash:
-            SplashView(
-                networkClient: container.resolve(NetworkClient.self),
-                fetchMyProfileUseCase: container.resolve(
-                    HomeUseCaseProviding.self
-                ).fetchMyProfileUseCase
-            )
-            
-        case .login:
-            LoginView(
-                loginUseCase: authProvider.loginUseCase,
-                errorHandler: errorHandler
-            )
-            
-        case .signUp(let verificationToken):
-            SignUpView(
-                oAuthVerificationToken: verificationToken,
-                sendEmailVerificationUseCase: authProvider
-                    .sendEmailVerificationUseCase,
-                verifyEmailCodeUseCase: authProvider
-                    .verifyEmailCodeUseCase,
-                registerUseCase: authProvider.registerUseCase,
-                fetchSignUpDataUseCase: authProvider.fetchSignUpDataUseCase
-            )
-        case .pendingApproval:
-            FailedVerificationUMC()
-            
-        case .main:
-            UmcTab()
+        ZStack {
+            switch appState {
+            case .splash:
+                SplashView(
+                    networkClient: container.resolve(NetworkClient.self),
+                    fetchMyProfileUseCase: container.resolve(
+                        HomeUseCaseProviding.self
+                    ).fetchMyProfileUseCase
+                )
+                .transition(rootTransition)
+
+            case .login:
+                LoginView(
+                    loginUseCase: authProvider.loginUseCase,
+                    fetchMyProfileUseCase: container.resolve(
+                        HomeUseCaseProviding.self
+                    ).fetchMyProfileUseCase,
+                    errorHandler: errorHandler
+                )
+                .transition(rootTransition)
+
+            case .signUp(let verificationToken):
+                SignUpView(
+                    oAuthVerificationToken: verificationToken,
+                    sendEmailVerificationUseCase: authProvider
+                        .sendEmailVerificationUseCase,
+                    verifyEmailCodeUseCase: authProvider
+                        .verifyEmailCodeUseCase,
+                    registerUseCase: authProvider.registerUseCase,
+                    fetchSignUpDataUseCase: authProvider.fetchSignUpDataUseCase
+                )
+                .transition(rootTransition)
+
+            case .pendingApproval:
+                FailedVerificationUMC()
+                    .transition(rootTransition)
+
+            case .main:
+                UmcTab()
+                    .transition(rootTransition)
+            }
         }
+        .animation(.easeInOut(duration: 0.28), value: appState)
     }
     
     /// Auth Feature의 UseCase Provider
@@ -123,9 +135,18 @@ extension AppProductApp {
     
     /// 앱 상태를 애니메이션과 함께 전환합니다.
     private func transition(to state: AppState) {
+        guard state != appState else { return }
         withAnimation {
             appState = state
         }
+    }
+
+    /// 루트 화면 전환에 사용하는 공통 트랜지션
+    private var rootTransition: AnyTransition {
+        .asymmetric(
+            insertion: .opacity.combined(with: .move(edge: .trailing)),
+            removal: .opacity.combined(with: .move(edge: .leading))
+        )
     }
     
     /// 카카오 로그인 딥링크 URL을 처리합니다.

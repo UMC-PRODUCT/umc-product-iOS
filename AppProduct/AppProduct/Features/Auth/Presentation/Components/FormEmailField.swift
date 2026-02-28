@@ -166,6 +166,7 @@ struct FormEmailField: View {
                 .padding(DefaultConstant.defaultTextFieldPadding)
                 .submitLabel(submitLabel)
                 .glassEffect(.regular, in: .capsule)
+                .keyboardType(.emailAddress)
                 .onSubmit {
                     onSubmit?()
                 }

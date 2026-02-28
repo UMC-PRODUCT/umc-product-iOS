@@ -12,12 +12,10 @@ struct Terms: Equatable, Identifiable {
 
     // MARK: - Property
 
-    /// 약관 ID (서버 id 필드)
-    let id: Int
-    /// 약관 제목
-    let title: String
-    /// 약관 내용 (HTML)
-    let content: String
+    /// 약관 ID (서버 id 필드, 문자열)
+    let id: String
+    /// 약관 링크
+    let link: String
     /// 필수 동의 여부
     let isMandatory: Bool
     /// 약관 종류

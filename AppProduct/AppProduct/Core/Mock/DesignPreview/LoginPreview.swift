@@ -11,6 +11,7 @@ import SwiftUI
 #Preview("로그인") {
     LoginView(
         loginUseCase: PreviewLoginUseCase(),
+        fetchMyProfileUseCase: PreviewFetchMyProfileUseCase(),
         errorHandler: ErrorHandler()
     )
 }
@@ -37,6 +38,28 @@ private struct PreviewLoginUseCase: LoginUseCaseProtocol {
                 accessToken: "preview",
                 refreshToken: "preview"
             )
+        )
+    }
+}
+
+/// Preview 전용 내 프로필 조회 UseCase
+private struct PreviewFetchMyProfileUseCase: FetchMyProfileUseCaseProtocol {
+    func execute() async throws -> HomeProfileResult {
+        HomeProfileResult(
+            memberId: 1,
+            schoolId: 1,
+            schoolName: "중앙대학교",
+            latestChallengerId: nil,
+            latestGisuId: nil,
+            chapterId: nil,
+            chapterName: "",
+            part: nil,
+            seasonTypes: [
+                .days(0),
+                .gens([])
+            ],
+            roles: [],
+            generations: []
         )
     }
 }
@@ -86,9 +109,8 @@ private struct PreviewFetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol {
     func fetchTerms(termsType: String) async throws -> Terms {
         let type = TermsType(rawValue: termsType) ?? .service
         return Terms(
-            id: 1,
-            title: "서비스 이용약관",
-            content: "<p>약관 내용</p>",
+            id: type == .service ? "2" : "1",
+            link: "https://example.com/terms/\(type.rawValue.lowercased())",
             isMandatory: true,
             termsType: type
         )

@@ -131,9 +131,8 @@ final class MockAuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         try await Task.sleep(for: .milliseconds(300))
         let type = TermsType(rawValue: termsType) ?? .service
         return Terms(
-            id: 1,
-            title: "Mock 약관",
-            content: "<p>Mock 약관 내용</p>",
+            id: type == .service ? "2" : "1",
+            link: "https://example.com/terms/\(type.rawValue.lowercased())",
             isMandatory: true,
             termsType: type
         )

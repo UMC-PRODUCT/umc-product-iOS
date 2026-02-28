@@ -67,43 +67,45 @@ struct FailedVerificationUMC: View {
     }
     
     var body: some View {
-        VStack {
-            Spacer().frame(maxHeight: Constants.spacerHeight)
-            topWarningImage
-            Spacer().frame(maxHeight: Constants.mianVspacing)
-            warningTitle
-            Spacer()
-        }
-        .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        .toolbar {
-            ToolBarCollection.FailedVerificationBottomToolbar(
-                isSubmitting: isSubmitting,
-                onHome: {
-                    if let url = URL(string: Constants.homePageURL) {
-                        openURL(url)
+        NavigationStack {
+            VStack {
+                Spacer().frame(maxHeight: Constants.spacerHeight)
+                topWarningImage
+                Spacer().frame(maxHeight: Constants.mianVspacing)
+                warningTitle
+                Spacer()
+            }
+            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .toolbar {
+                ToolBarCollection.FailedVerificationBottomToolbar(
+                    isSubmitting: isSubmitting,
+                    onHome: {
+                        if let url = URL(string: Constants.homePageURL) {
+                            openURL(url)
+                        }
+                    },
+                    onCode: {
+                        showCodeAlert = true
+                    },
+                    onInquiry: {
+                        kakaoPlusManager.openKakaoChannel()
                     }
-                },
-                onCode: {
-                    showCodeAlert = true
-                },
-                onInquiry: {
-                    kakaoPlusManager.openKakaoChannel()
+                )
+            }
+            .alert("기존 챌린저 코드 입력", isPresented: $showCodeAlert) {
+                TextField("6자리 코드", text: $challengerCode)
+                    .keyboardType(.numberPad)
+                Button("닫기", role: .cancel) {
+                    challengerCode = ""
                 }
-            )
-        }
-        .alert("기존 챌린저 코드 입력", isPresented: $showCodeAlert) {
-            TextField("6자리 코드", text: $challengerCode)
-                .keyboardType(.numberPad)
-            Button("닫기", role: .cancel) {
-                challengerCode = ""
+                Button("전송") {
+                    submitChallengerCode()
+                }
+            } message: {
+                Text("운영진에게 발급받은 6자리 코드를 입력해주세요.")
             }
-            Button("전송") {
-                submitChallengerCode()
-            }
-        } message: {
-            Text("운영진에게 발급받은 6자리 코드를 입력해주세요.")
+            .alertPrompt(item: $alertPrompt)
         }
-        .alertPrompt(item: $alertPrompt)
     }
     
     // MARK: - Top

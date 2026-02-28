@@ -344,7 +344,7 @@ private extension TermsType {
 
 /// 약관 Row 표시를 위한 뷰 모델
 private struct SignUpTermRowModel: Identifiable {
-    let id: Int
+    let id: String
     let title: String
     let isMandatory: Bool
     let isAgreed: Bool
@@ -519,10 +519,9 @@ private struct SignUpPreviewFetchSignUpDataUseCase: FetchSignUpDataUseCaseProtoc
         }
         let type = TermsType(rawValue: termsType) ?? .service
         return Terms(
-            id: type == .service ? 1 : (type == .privacy ? 2 : 3),
-            title: type == .service ? "서비스 이용 약관" : "개인정보처리 방침",
-            content: "<p>약관 내용</p>",
-            isMandatory: type != .marketing,
+            id: type == .service ? "2" : "1",
+            link: "https://makeus-challenge.notion.site/300b57f4596b803f8c94dd4f4fb71960?source=copy_link",
+            isMandatory: true,
             termsType: type
         )
     }

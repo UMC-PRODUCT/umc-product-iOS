@@ -17,13 +17,13 @@ class GenerationMappingRecord {
     // MARK: - Property
 
     /// 서버 기수 식별 ID
-    var gisuId: Int
+    var gisuId: Int = 0
 
     /// 기수 번호 (예: 9, 10, 11)
-    var gen: Int
+    var gen: Int = 0
 
     /// 마지막 업데이트 시간
-    var updatedAt: Date
+    var updatedAt: Date = Date()
 
     // MARK: - Init
 

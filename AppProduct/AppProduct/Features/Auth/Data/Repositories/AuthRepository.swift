@@ -222,23 +222,63 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
 
     /// 약관 정보를 조회합니다.
     ///
-    /// - Parameter termsType: 약관 종류 (SERVICE, PRIVACY, MARKETING)
+    /// - Parameter termsType: 약관 종류 (SERVICE, PRIVACY)
     /// - Returns: 약관 정보
     func getTerms(
         termsType: String
     ) async throws -> Terms {
-        let response = try await adapter.requestWithoutAuth(
-            AuthRouter.getTerms(termsType: termsType)
-        )
-        let apiResponse = try decoder.decode(
-            APIResponse<TermsDTO>.self,
-            from: response.data
-        )
         guard let type = TermsType(rawValue: termsType) else {
             throw RepositoryError.decodingError(
                 detail: "Unknown termsType: \(termsType)"
             )
         }
-        return try apiResponse.unwrap().toDomain(termsType: type)
+
+        let response = try await adapter.requestWithoutAuth(
+            AuthRouter.getTerms(termsType: termsType)
+        )
+
+        do {
+            let apiResponse = try decoder.decode(
+                APIResponse<TermsDTO>.self,
+                from: response.data
+            )
+            return try apiResponse.unwrap().toDomain(termsType: type)
+        } catch let decodingError as DecodingError {
+            let rawResponse = String(
+                data: response.data,
+                encoding: .utf8
+            ) ?? "<non-utf8 response>"
+            throw RepositoryError.decodingError(
+                detail: """
+                getTerms(\(termsType)) decoding failed
+                - reason: \(describeDecodingError(decodingError))
+                - response: \(rawResponse)
+                """
+            )
+        }
+    }
+}
+
+// MARK: - Private Helpers
+
+private extension AuthRepository {
+    func describeDecodingError(_ error: DecodingError) -> String {
+        switch error {
+        case .keyNotFound(let key, let context):
+            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            let location = path.isEmpty ? key.stringValue : "\(path).\(key.stringValue)"
+            return "Missing key: \(location)"
+        case .typeMismatch(let type, let context):
+            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            return "Type mismatch: expected \(type) at \(path)"
+        case .valueNotFound(let type, let context):
+            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            return "Value not found: \(type) at \(path)"
+        case .dataCorrupted(let context):
+            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            return "Data corrupted at \(path): \(context.debugDescription)"
+        @unknown default:
+            return "Unknown decoding error"
+        }
     }
 }

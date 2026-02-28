@@ -64,10 +64,16 @@ struct ActiveLogRow: View, Equatable {
     
     /// 직책(역할)을 표시하는 뱃지 뷰
     /// 역할별 고유 색상을 배경색으로 사용합니다.
+    @ViewBuilder
     private var role: some View {
-        Text(row.role.displayName)
-            .appFont(.footnote, weight: .medium, color: row.role.textColor)
-            .padding(Constants.padding)
-            .glassEffect(.clear.tint(row.role.backgroundColor), in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        if row.role != .challenger {
+            Text(row.role.displayName)
+                .appFont(.footnote, weight: .medium, color: row.role.textColor)
+                .padding(Constants.padding)
+                .glassEffect(
+                    .clear.tint(row.role.backgroundColor),
+                    in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius)
+                )
+        }
     }
 }

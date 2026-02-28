@@ -15,8 +15,12 @@ cp Secrets.xcconfig.template Secrets.xcconfig
 
 ```xcconfig
 KAKAO_KEY=your_actual_kakao_app_key
-BASE_URL=https://your-api-server.com
+BASE_URL=https:/$()/api.your-service.com
+BASE_URL[config=Debug]=https:/$()/dev.api.your-service.com
+BASE_URL[config=Release]=https:/$()/api.your-service.com
 ```
+
+> 참고: `xcconfig`에서 `//`는 주석으로 처리되어 URL이 잘릴 수 있으므로 `https:/$()/...` 형식을 사용합니다.
 
 ### 3. Xcode 프로젝트에서 확인
 
@@ -34,7 +38,9 @@ BASE_URL=https://your-api-server.com
 | 변수명 | 설명 | 예시 |
 |--------|------|------|
 | `KAKAO_KEY` | 카카오 앱 키 | `0f717a92fe343c7f22c3f9d7f9b953da` |
-| `BASE_URL` | API 서버 주소 | `https://api.umc-product.com` |
+| `BASE_URL_DEBUG` | Debug API 서버 주소 | `https://dev.api.umc-product.com` |
+| `BASE_URL_RELEASE` | Release API 서버 주소 | `https://api.umc-product.com` |
+| `BASE_URL` | 레거시 단일 API 주소(선택) | `https://api.umc-product.com` |
 
 4. 환경 변수는 `ci_scripts/ci_post_clone.sh`에서 자동으로 `Secrets.xcconfig`에 주입됩니다
 
@@ -46,7 +52,9 @@ GitHub Actions를 사용하는 경우:
 2. **New repository secret** 클릭
 3. 다음 Secret 추가:
    - `KAKAO_KEY`
-   - `BASE_URL`
+   - `BASE_URL_DEBUG`
+   - `BASE_URL_RELEASE`
+   - `BASE_URL` (선택, 하위 호환)
 
 ## 보안 주의사항
 

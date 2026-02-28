@@ -23,11 +23,13 @@ struct LoginView: View {
 
     init(
         loginUseCase: LoginUseCaseProtocol,
+        fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol,
         errorHandler: ErrorHandler
     ) {
         self._viewModel = .init(
             wrappedValue: LoginViewModel(
                 loginUseCase: loginUseCase,
+                fetchMyProfileUseCase: fetchMyProfileUseCase,
                 errorHandler: errorHandler
             )
         )
@@ -50,14 +52,15 @@ struct LoginView: View {
                 }
             )
         }
-        .onChange(of: viewModel.loginState) { _, newState in
-            if case .loaded(let result) = newState {
-                switch result {
-                case .existingMember:
-                    appFlow.showMain()
-                case .newMember(let verificationToken):
-                    appFlow.showSignUp(verificationToken)
-                }
+        .onChange(of: viewModel.destination) { _, newDestination in
+            guard let newDestination else { return }
+            switch newDestination {
+            case .main:
+                appFlow.showMain()
+            case .pendingApproval:
+                appFlow.showPendingApproval()
+            case .signUp(let verificationToken):
+                appFlow.showSignUp(verificationToken)
             }
         }
     }
@@ -126,11 +129,6 @@ fileprivate struct BottomSocialBtns: View {
                 })
                 .glassEffect(.regular.interactive())
                 .disabled(isLoading)
-            }
-
-            if isLoading {
-                ProgressView()
-                    .padding(.top, DefaultSpacing.spacing8)
             }
         }
     }

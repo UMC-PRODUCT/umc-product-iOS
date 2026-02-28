@@ -12,12 +12,10 @@ struct TermsDTO: Codable {
 
     // MARK: - Property
 
-    /// 약관 ID (termsId로 사용)
-    let id: Int
-    /// 약관 제목
-    let title: String
-    /// 약관 내용 (HTML)
-    let content: String
+    /// 약관 ID (termsId로 사용, 서버 응답 문자열)
+    let id: String
+    /// 약관 링크
+    let link: String
     /// 필수 동의 여부
     let isMandatory: Bool
 
@@ -27,8 +25,7 @@ struct TermsDTO: Codable {
     func toDomain(termsType: TermsType) -> Terms {
         Terms(
             id: id,
-            title: title,
-            content: content,
+            link: link,
             isMandatory: isMandatory,
             termsType: termsType
         )

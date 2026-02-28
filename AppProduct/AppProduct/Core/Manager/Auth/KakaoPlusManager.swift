@@ -25,8 +25,8 @@ class KakaoPlusManager {
     /// UMC 동아리 카카오톡 채널 ID
     ///
     /// - Note: 채널 관리자 페이지에서 확인 가능한 고유 ID입니다.
-    let channelId = "_xjqxcln"
-
+    let channelId = "_MDxhqX"
+    
     // MARK: - Function
 
     /// UMC 카카오톡 채널 채팅방을 엽니다.

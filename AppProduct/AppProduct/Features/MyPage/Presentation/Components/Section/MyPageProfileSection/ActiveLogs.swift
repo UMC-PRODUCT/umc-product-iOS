@@ -43,3 +43,37 @@ struct ActiveLogs: View, Equatable {
         })
     }
 }
+
+// MARK: - Preview
+
+private let activeLogsPreviewRows: [ActivityLog] = ManagementTeam.allCases.enumerated().map { index, role in
+    ActivityLog(
+        part: UMCPartType.allCases[index % UMCPartType.allCases.count],
+        generation: 12 - index,
+        role: role
+    )
+}
+
+#Preview("활동 이력 - 전체 역할") {
+    Form {
+        ActiveLogs(
+            rows: activeLogsPreviewRows,
+            header: "활동 이력"
+        )
+    }
+}
+
+#Preview("활동 이력 - 챌린저(무색)") {
+    Form {
+        ActiveLogs(
+            rows: [
+                ActivityLog(
+                    part: .front(type: .ios),
+                    generation: 11,
+                    role: .challenger
+                )
+            ],
+            header: "활동 이력"
+        )
+    }
+}

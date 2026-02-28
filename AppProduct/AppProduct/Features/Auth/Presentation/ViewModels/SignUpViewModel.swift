@@ -54,8 +54,8 @@ final class SignUpViewModel {
     /// 약관 목록 상태
     private(set) var termsState: Loadable<[Terms]> = .idle
 
-    /// 약관 동의 상태 (termsId → 동의 여부)
-    var termsAgreements: [Int: Bool] = [:]
+    /// 약관 동의 상태 (termsId(String) → 동의 여부)
+    var termsAgreements: [String: Bool] = [:]
 
     /// 이메일 인증 완료 여부
     var isEmailVerified: Bool = false
@@ -124,24 +124,37 @@ final class SignUpViewModel {
         }
     }
 
-    /// 약관 목록 조회 (SERVICE, PRIVACY, MARKETING)
+    /// 약관 목록 조회 (SERVICE, PRIVACY)
     @MainActor
     func fetchTerms() async {
         termsState = .loading
         do {
             var termsList: [Terms] = []
-            for type in TermsType.allCases {
+            termsAgreements.removeAll()
+            for type in [TermsType.service, TermsType.privacy] {
                 let terms = try await fetchSignUpDataUseCase
                     .fetchTerms(termsType: type.rawValue)
                 termsList.append(terms)
                 termsAgreements[terms.id] = false
             }
             termsState = .loaded(termsList)
+        } catch let appError as AppError {
+            termsState = .failed(appError)
+        } catch let repositoryError as RepositoryError {
+            termsState = .failed(.repository(repositoryError))
+        } catch let networkError as NetworkError {
+            termsState = .failed(.network(networkError))
         } catch {
             termsState = .failed(
                 .unknown(message: error.localizedDescription)
             )
         }
+
+        #if DEBUG
+        if case .failed(let error) = termsState {
+            print("[Auth][SignUp] fetchTerms failed: \(error.userMessage)")
+        }
+        #endif
     }
 
     /// 이메일 인증번호 요청
@@ -197,9 +210,23 @@ final class SignUpViewModel {
                 TermsAgreementDTO(termsId: 2, isAgreed: true),
                 TermsAgreementDTO(termsId: 1, isAgreed: true)
             ]
-            : termsAgreements.map { key, value in
-                TermsAgreementDTO(termsId: key, isAgreed: value)
+            : termsAgreements.compactMap { key, value in
+                guard let termsId = Int(key) else { return nil }
+                return TermsAgreementDTO(termsId: termsId, isAgreed: value)
             }
+
+        if !termsAgreements.isEmpty && agreements.count != termsAgreements.count {
+            registerState = .failed(
+                .validation(
+                    .invalidFormat(
+                        field: "termsId",
+                        expected: "numeric string"
+                    )
+                )
+            )
+            isLoading = false
+            return
+        }
 
         let request = RegisterRequestDTO(
             oAuthVerificationToken: oAuthVerificationToken,
