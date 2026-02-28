@@ -17,6 +17,7 @@ final class LoginViewModel {
     private let fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol
     private let kakaoLoginManager: KakaoLoginManager
     private let appleLoginManager: AppleLoginManager
+    private let tokenStore: TokenStore
     private let errorHandler: ErrorHandler
 
     /// 로그인 상태
@@ -29,12 +30,14 @@ final class LoginViewModel {
     init(
         loginUseCase: LoginUseCaseProtocol,
         fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol,
+        tokenStore: TokenStore,
         errorHandler: ErrorHandler,
         kakaoLoginManager: KakaoLoginManager = KakaoLoginManager(),
         appleLoginManager: AppleLoginManager = AppleLoginManager()
     ) {
         self.loginUseCase = loginUseCase
         self.fetchMyProfileUseCase = fetchMyProfileUseCase
+        self.tokenStore = tokenStore
         self.errorHandler = errorHandler
         self.kakaoLoginManager = kakaoLoginManager
         self.appleLoginManager = appleLoginManager
@@ -122,12 +125,61 @@ private extension LoginViewModel {
     ) async throws -> LoginDestination {
         switch result {
         case .newMember(let verificationToken):
+            UserDefaults.standard.set(
+                false,
+                forKey: AppStorageKey.canAutoLogin
+            )
             return .signUp(verificationToken: verificationToken)
 
-        case .existingMember:
+        case .existingMember(let tokenPair):
+            try await ensureTokensStored(tokenPair)
             let profile = try await fetchMyProfileUseCase.execute()
-            return profile.generations.isEmpty ? .pendingApproval : .main
+            let isApproved = isApprovedProfile(profile)
+            UserDefaults.standard.set(
+                isApproved,
+                forKey: AppStorageKey.canAutoLogin
+            )
+            return isApproved ? .main : .pendingApproval
         }
+    }
+
+    func ensureTokensStored(_ tokenPair: TokenPair) async throws {
+        let accessToken = tokenPair.accessToken.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let refreshToken = tokenPair.refreshToken.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        guard !accessToken.isEmpty, !refreshToken.isEmpty else {
+            return
+        }
+
+        let savedAccessToken = await tokenStore.getAccessToken()
+        let savedRefreshToken = await tokenStore.getRefreshToken()
+
+        guard savedAccessToken != accessToken || savedRefreshToken != refreshToken else {
+            return
+        }
+
+        try await tokenStore.save(
+            accessToken: accessToken,
+            refreshToken: refreshToken
+        )
+    }
+
+    func isApprovedProfile(_ profile: HomeProfileResult) -> Bool {
+        if !profile.generations.isEmpty {
+            return true
+        }
+
+        for seasonType in profile.seasonTypes {
+            if case .gens(let generations) = seasonType, !generations.isEmpty {
+                return true
+            }
+        }
+
+        return false
     }
 }
 

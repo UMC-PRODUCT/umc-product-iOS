@@ -98,6 +98,8 @@ final class HomeViewModel {
     private func saveProfileToStorage(_ result: HomeProfileResult) {
         let defaults = UserDefaults.standard
         let latestRole = result.roles.max(by: { $0.gisu < $1.gisu })
+        let resolvedRole = latestRole?.roleType ?? .challenger
+        let isApproved = isApprovedProfile(result)
 
         defaults.set(result.memberId, forKey: AppStorageKey.memberId)
         defaults.set(result.schoolId, forKey: AppStorageKey.schoolId)
@@ -115,12 +117,28 @@ final class HomeViewModel {
             latestRole?.organizationId ?? (result.chapterId ?? 0),
             forKey: AppStorageKey.organizationId
         )
-        defaults.set((latestRole?.roleType ?? .challenger).rawValue, forKey: AppStorageKey.memberRole)
+        defaults.set(resolvedRole.rawValue, forKey: AppStorageKey.memberRole)
         defaults.set(
             result.roles.map(\.roleType.rawValue),
             forKey: AppStorageKey.memberRoles
         )
+        defaults.set(isApproved, forKey: AppStorageKey.canAutoLogin)
+        container.resolve(UserSessionManager.self).updateRole(resolvedRole)
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
+    }
+
+    private func isApprovedProfile(_ result: HomeProfileResult) -> Bool {
+        if !result.generations.isEmpty {
+            return true
+        }
+
+        for seasonType in result.seasonTypes {
+            if case .gens(let generations) = seasonType, !generations.isEmpty {
+                return true
+            }
+        }
+
+        return false
     }
 
     /// 프로필 응답의 기수 데이터를 홈 화면 상태로 반영합니다.
@@ -165,12 +183,21 @@ final class HomeViewModel {
     /// 최근 공지 조회 (최신 기수 기준)
     @MainActor
     func fetchRecentNotices() async {
-        guard let latestRole = roles.max(by: { $0.gisu < $1.gisu })
-        else { return }
+        let latestRoleGisuId = roles.max(by: { $0.gisu < $1.gisu })?.gisuId
+        let fallbackGisuId = UserDefaults.standard.integer(
+            forKey: AppStorageKey.gisuId
+        )
+        let gisuId = latestRoleGisuId ?? fallbackGisuId
+
+        guard gisuId > 0 else {
+            recentNoticeData = .loaded([])
+            return
+        }
+
         recentNoticeData = .loading
         do {
             let query = NoticeListRequestDTO(
-                gisuId: latestRole.gisuId,
+                gisuId: gisuId,
                 size: 5
             )
             let result = try await useCaseProvider
@@ -197,3 +224,50 @@ final class HomeViewModel {
     }
 
 }
+
+#if DEBUG
+extension HomeViewModel {
+    static func emptyPreview(container: DIContainer) -> HomeViewModel {
+        let viewModel = HomeViewModel(container: container)
+        viewModel.roles = []
+        viewModel.seasonData = .loaded([
+            .days(0),
+            .gens([])
+        ])
+        viewModel.generationData = .loaded([])
+        viewModel.scheduleByDates = [:]
+        viewModel.recentNoticeData = .loaded([])
+        return viewModel
+    }
+
+    static func zeroPenaltyPreview(container: DIContainer) -> HomeViewModel {
+        let viewModel = HomeViewModel(container: container)
+        viewModel.roles = [
+            ChallengerRole(
+                challengerId: 1,
+                gisu: 6,
+                gisuId: 1,
+                roleType: .challenger,
+                responsiblePart: .front(type: .ios),
+                organizationType: .chapter,
+                organizationId: 1
+            )
+        ]
+        viewModel.seasonData = .loaded([
+            .days(12),
+            .gens([6])
+        ])
+        viewModel.generationData = .loaded([
+            GenerationData(
+                gisuId: 1,
+                gen: 6,
+                penaltyPoint: 0,
+                penaltyLogs: []
+            )
+        ])
+        viewModel.scheduleByDates = [:]
+        viewModel.recentNoticeData = .loaded([])
+        return viewModel
+    }
+}
+#endif

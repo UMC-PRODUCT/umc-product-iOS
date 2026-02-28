@@ -94,7 +94,7 @@ struct FailedVerificationUMC: View {
             }
             .alert("기존 챌린저 코드 입력", isPresented: $showCodeAlert) {
                 TextField("6자리 코드", text: $challengerCode)
-                    .keyboardType(.numberPad)
+                    .keyboardType(.asciiCapable)
                 Button("닫기", role: .cancel) {
                     challengerCode = ""
                 }
@@ -147,8 +147,8 @@ struct FailedVerificationUMC: View {
     /// 기존 챌린저 인증 코드를 서버에 전송합니다.
     private func submitChallengerCode() {
         let trimmedCode = challengerCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        let isDigitsOnly = trimmedCode.allSatisfy(\.isNumber)
-        guard trimmedCode.count == 6, isDigitsOnly else {
+        let isAlphanumeric = trimmedCode.unicodeScalars.allSatisfy(CharacterSet.alphanumerics.contains)
+        guard trimmedCode.count == 6, isAlphanumeric else {
             presentInvalidCodePrompt()
             return
         }
@@ -181,6 +181,10 @@ struct FailedVerificationUMC: View {
             message: "기존 챌린저로 인증되었습니다.",
             positiveBtnTitle: "확인",
             positiveBtnAction: {
+                UserDefaults.standard.set(
+                    true,
+                    forKey: AppStorageKey.canAutoLogin
+                )
                 appFlow.showMain()
             }
         )
@@ -190,7 +194,7 @@ struct FailedVerificationUMC: View {
     private func presentInvalidCodePrompt() {
         alertPrompt = AlertPrompt(
             title: "인증 실패",
-            message: "입력 코드 번호가 존재하지 않습니다.",
+            message: "입력 코드가 존재하지 않습니다.",
             positiveBtnTitle: "확인"
         )
     }

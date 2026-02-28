@@ -92,6 +92,10 @@ struct SignUpView: View {
             }
             .onChange(of: viewModel.registerState) { _, newState in
                 if case .loaded = newState {
+                    UserDefaults.standard.set(
+                        false,
+                        forKey: AppStorageKey.canAutoLogin
+                    )
                     appFlow.showPendingApproval()
                 }
             }

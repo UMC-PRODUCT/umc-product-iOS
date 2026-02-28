@@ -167,6 +167,7 @@ extension MyProfileResponseDTO {
 
     /// DTO → HomeProfileResult 변환 (기수 카드 + 역할 정보)
     func toHomeProfileResult(seasonTypes: [SeasonType]? = nil) -> HomeProfileResult {
+        let records = challengerRecords ?? []
         let challengerRoles = roles.map {
             ChallengerRole(
                 challengerId: $0.challengerId,
@@ -195,12 +196,16 @@ extension MyProfileResponseDTO {
             return record.toGenerationData(gisuId: gisuId)
         }
 
-        let latestRecord = (challengerRecords ?? [])
+        let latestRecord = records
             .max(by: { $0.gisu < $1.gisu })
+
+        let mergedGens = Set(roles.map(\.gisu) + records.map(\.gisu))
+            .filter { $0 > 0 }
+            .sorted()
 
         let resolvedSeasonTypes = seasonTypes ?? [
             .days(0),
-            .gens(Set(roles.map(\.gisu)).sorted())
+            .gens(mergedGens)
         ]
 
         return HomeProfileResult(
