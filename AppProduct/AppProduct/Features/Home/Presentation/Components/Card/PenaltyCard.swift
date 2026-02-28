@@ -276,17 +276,25 @@ fileprivate struct CardInfo: View {
     @ViewBuilder
     private func descripContent(items: [PenaltyInfoItem]) -> some View {
         if items.isEmpty {
-            ContentUnavailableView(
-                "등록된 패널티가 없습니다.",
-                systemImage: "exclamationmark.circle",
-                description: Text("현재 부과된 패널티 사유가 없습니다.")
-            )
+            emptyPenaltyState
         } else {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
                 ForEach(items.indices, id: \.self) { index in
                     descripCard(item: items[index])
                 }
             }
+        }
+    }
+
+    private var emptyPenaltyState: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundStyle(.green500)
+
+            Text("등록된 패널티가 없습니다.")
+                .appFont(.bodyEmphasis, color: .grey900)
+                .multilineTextAlignment(.leading)
         }
     }
     
