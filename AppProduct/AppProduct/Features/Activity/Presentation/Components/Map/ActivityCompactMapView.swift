@@ -122,6 +122,7 @@ fileprivate struct LocationStatusBarView: View {
     }
 }
 
+#if DEBUG
 #Preview(traits: .sizeThatFitsLayout) {
     ActivityCompactMapView(
         mapViewModel: BaseMapViewModel(
@@ -136,4 +137,4 @@ fileprivate struct LocationStatusBarView: View {
         LocationManager.shared.requestAuthorization()
     }
 }
-
+#endif

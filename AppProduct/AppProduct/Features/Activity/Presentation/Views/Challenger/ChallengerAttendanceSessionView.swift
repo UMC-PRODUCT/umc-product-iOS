@@ -245,6 +245,7 @@ struct ChallengerAttendanceSessionView: View {
     }
 }
 
+#if DEBUG
 #Preview("기본 (필터링 적용)") {
     ZStack {
         Color.grey100.ignoresSafeArea()
@@ -287,3 +288,4 @@ struct ChallengerAttendanceSessionView: View {
         )
     }
 }
+#endif

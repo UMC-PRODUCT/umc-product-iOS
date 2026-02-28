@@ -103,6 +103,7 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     }
 }
 
+#if DEBUG
 // MARK: - Preview
 
 #Preview(traits: .sizeThatFitsLayout) {
@@ -123,3 +124,4 @@ private struct MyAttendanceItemPresenter: View, Equatable {
     .frame(height: 200)
     .background(Color.grey100)
 }
+#endif

@@ -129,8 +129,10 @@ struct ChallengerMemberListView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ChallengerMemberListView(
         container: MissionPreviewData.container,
         errorHandler: MissionPreviewData.errorHandler)
-} 
+}
+#endif

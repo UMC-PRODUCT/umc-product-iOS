@@ -245,6 +245,7 @@ struct OperatorAttendanceSectionView: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview {
     OperatorAttendanceSectionView(
         container: AttendancePreviewData.container,
@@ -252,3 +253,4 @@ struct OperatorAttendanceSectionView: View {
         sessions: AttendancePreviewData.sessions
     )
 }
+#endif

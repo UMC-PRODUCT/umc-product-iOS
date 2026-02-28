@@ -125,6 +125,7 @@ fileprivate struct ChallengerMissionCardPresenter: View, Equatable {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview("ChallengerMissionCard - All Status") {
     struct PreviewWrapper: View {
         @FocusState private var focusedMissionID: UUID?
@@ -189,3 +190,4 @@ fileprivate struct ChallengerMissionCardPresenter: View, Equatable {
     }
     return PreviewWrapper()
 }
+#endif
