@@ -24,12 +24,14 @@ struct LoginView: View {
     init(
         loginUseCase: LoginUseCaseProtocol,
         fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol,
+        tokenStore: TokenStore,
         errorHandler: ErrorHandler
     ) {
         self._viewModel = .init(
             wrappedValue: LoginViewModel(
                 loginUseCase: loginUseCase,
                 fetchMyProfileUseCase: fetchMyProfileUseCase,
+                tokenStore: tokenStore,
                 errorHandler: errorHandler
             )
         )
@@ -126,10 +128,68 @@ fileprivate struct BottomSocialBtns: View {
                     }
                 }, label: {
                     btn.image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
                 })
                 .glassEffect(.regular.interactive())
                 .disabled(isLoading)
             }
         }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        .padding(.bottom, DefaultConstant.defaultSafeBottom)
     }
 }
+
+#if DEBUG
+#Preview("로그인 화면") {
+    LoginView(
+        loginUseCase: LoginViewPreviewLoginUseCase(),
+        fetchMyProfileUseCase: LoginViewPreviewFetchMyProfileUseCase(),
+        tokenStore: KeychainTokenStore(),
+        errorHandler: ErrorHandler()
+    )
+}
+
+private struct LoginViewPreviewLoginUseCase: LoginUseCaseProtocol {
+    func executeKakao(accessToken: String, email: String) async throws -> OAuthLoginResult {
+        .existingMember(
+            tokenPair: TokenPair(
+                accessToken: "preview_access_token",
+                refreshToken: "preview_refresh_token"
+            )
+        )
+    }
+
+    func executeApple(authorizationCode: String) async throws -> OAuthLoginResult {
+        .existingMember(
+            tokenPair: TokenPair(
+                accessToken: "preview_access_token",
+                refreshToken: "preview_refresh_token"
+            )
+        )
+    }
+}
+
+private struct LoginViewPreviewFetchMyProfileUseCase: FetchMyProfileUseCaseProtocol {
+    func execute() async throws -> HomeProfileResult {
+        HomeProfileResult(
+            memberId: 1,
+            schoolId: 1,
+            schoolName: "UMC University",
+            latestChallengerId: 1,
+            latestGisuId: 1,
+            chapterId: 1,
+            chapterName: "Preview",
+            part: .front(type: .ios),
+            seasonTypes: [
+                .days(1),
+                .gens([1])
+            ],
+            roles: [],
+            generations: [
+                GenerationData(gisuId: 1, gen: 1, penaltyPoint: 0, penaltyLogs: [])
+            ]
+        )
+    }
+}
+#endif
