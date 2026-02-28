@@ -225,6 +225,7 @@ final class HomeViewModel {
 
 }
 
+#if DEBUG
 extension HomeViewModel {
     static func emptyPreview(container: DIContainer) -> HomeViewModel {
         let viewModel = HomeViewModel(container: container)
@@ -269,3 +270,4 @@ extension HomeViewModel {
         return viewModel
     }
 }
+#endif
