@@ -139,12 +139,11 @@ struct OperatorMemberManagementView: View {
         }
     }
 }
-
-
-
+#if DEBUG
 #Preview {
     OperatorMemberManagementView(
         container: MissionPreviewData.container,
         errorHandler: MissionPreviewData.errorHandler
     )
 }
+#endif

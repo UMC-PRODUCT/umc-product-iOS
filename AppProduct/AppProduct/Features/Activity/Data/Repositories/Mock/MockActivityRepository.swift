@@ -7,6 +7,7 @@
 
 import Foundation
 
+#if DEBUG
 /// Activity Repository Mock 구현 (개발/테스트용)
 final class MockActivityRepository: ActivityRepositoryProtocol {
 
@@ -21,3 +22,4 @@ final class MockActivityRepository: ActivityRepositoryProtocol {
         return AttendancePreviewData.userId
     }
 }
+#endif

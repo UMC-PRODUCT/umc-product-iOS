@@ -157,6 +157,7 @@ struct OperatorPendingSheetView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         Text("Preview")
@@ -177,3 +178,4 @@ struct OperatorPendingSheetView: View {
         )
     }
 }
+#endif

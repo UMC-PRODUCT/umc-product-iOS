@@ -185,6 +185,7 @@ struct ChallengerAttendanceView: View, Equatable {
     }
 }
 
+#if DEBUG
 // MARK: - Previews
 
 #Preview("출석 전 상태") {
@@ -208,3 +209,4 @@ struct ChallengerAttendanceView: View, Equatable {
         session: AttendancePreviewData.pendingApprovalSession
     )
 }
+#endif

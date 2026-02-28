@@ -94,12 +94,14 @@ struct ChallengerSessionCard: View, Equatable {
     }
 }
 
+#if DEBUG
 #Preview(traits: .sizeThatFitsLayout) {
     ZStack {
         Color.grey100.frame(height: 300)
-        
+
         ChallengerSessionCard(
             session: AttendancePreviewData.sessions[1]
         )
     }
 }
+#endif
