@@ -41,8 +41,28 @@ BASE_URL[config=Release]=https:/$()/api.your-service.com
 | `BASE_URL_DEBUG` | Debug API 서버 주소 | `https://dev.api.umc-product.com` |
 | `BASE_URL_RELEASE` | Release API 서버 주소 | `https://api.umc-product.com` |
 | `BASE_URL` | 레거시 단일 API 주소(선택) | `https://api.umc-product.com` |
+| `TMAP_SECRET_KEY` | TMap Geocoding Secret Key | `your_tmap_secret_key` |
+| `GOOGLE_SERVICE_INFO_PLIST_BASE64` | `GoogleService-Info.plist`의 Base64 문자열 | `PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4...` |
 
 4. 환경 변수는 `ci_scripts/ci_post_clone.sh`에서 자동으로 `Secrets.xcconfig`에 주입됩니다
+
+5. Firebase 설정 파일(`GoogleService-Info.plist`)은 `GOOGLE_SERVICE_INFO_PLIST_BASE64`로 복원됩니다
+
+### GoogleService-Info.plist Base64 생성 방법
+
+로컬에서 아래 명령으로 Base64 문자열을 만든 뒤, App Store Connect의 Xcode Cloud 환경 변수에
+`GOOGLE_SERVICE_INFO_PLIST_BASE64`로 등록하세요.
+
+```bash
+# macOS
+base64 -i AppProduct/AppProduct/GoogleService-Info.plist | tr -d '\n'
+
+# Linux
+base64 -w 0 AppProduct/AppProduct/GoogleService-Info.plist
+```
+
+> 보안상 `GoogleService-Info.plist` 원본 파일은 저장소에 커밋하지 않고,
+> Xcode Cloud 환경 변수로만 주입하는 방식을 권장합니다.
 
 ### GitHub Actions (선택 사항)
 
@@ -55,6 +75,8 @@ GitHub Actions를 사용하는 경우:
    - `BASE_URL_DEBUG`
    - `BASE_URL_RELEASE`
    - `BASE_URL` (선택, 하위 호환)
+   - `TMAP_SECRET_KEY`
+   - `GOOGLE_SERVICE_INFO_PLIST_BASE64`
 
 ## 보안 주의사항
 
