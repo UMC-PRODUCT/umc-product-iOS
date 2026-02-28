@@ -428,7 +428,7 @@ private struct ScheduleCardPressStyle: ButtonStyle {
     let container = DIContainer()
     container.register(PathStore.self) { PathStore() }
 
-    return HomeView(
+    HomeView(
         container: container,
         viewModel: HomeViewModel.emptyPreview(container: container),
         shouldFetchOnTask: false
@@ -441,7 +441,7 @@ private struct ScheduleCardPressStyle: ButtonStyle {
     let container = DIContainer()
     container.register(PathStore.self) { PathStore() }
 
-    return HomeView(
+    HomeView(
         container: container,
         viewModel: HomeViewModel.zeroPenaltyPreview(container: container),
         shouldFetchOnTask: false

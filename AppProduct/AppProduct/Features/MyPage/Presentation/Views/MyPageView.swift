@@ -189,7 +189,7 @@ private let myPagePreviewProfileData = ProfileData(
 
 #Preview("Loaded") {
     let container = myPagePreviewContainer
-    return MyPageView(previewProfileData: myPagePreviewProfileData)
+    MyPageView(previewProfileData: myPagePreviewProfileData)
         .environment(\.di, container)
         .environment(ErrorHandler())
 }
