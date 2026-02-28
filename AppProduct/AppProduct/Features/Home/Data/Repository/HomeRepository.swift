@@ -110,8 +110,12 @@ final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
 
 private extension HomeRepository {
     func makeSeasonTypes(profile: MyProfileResponseDTO) async throws -> [SeasonType] {
-        let generations = Set(profile.roles.map(\.gisu)).sorted()
-        let gisuIds = Set(profile.roles.map(\.gisuId)).filter { $0 > 0 }
+        let records = profile.challengerRecords ?? []
+        let generations = Set(profile.roles.map(\.gisu) + records.map(\.gisu))
+            .filter { $0 > 0 }
+            .sorted()
+        let gisuIds = Set(profile.roles.map(\.gisuId) + records.map(\.gisuId))
+            .filter { $0 > 0 }
 
         guard !gisuIds.isEmpty else {
             return [

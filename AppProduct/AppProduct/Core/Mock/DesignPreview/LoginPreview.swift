@@ -12,6 +12,7 @@ import SwiftUI
     LoginView(
         loginUseCase: PreviewLoginUseCase(),
         fetchMyProfileUseCase: PreviewFetchMyProfileUseCase(),
+        tokenStore: KeychainTokenStore(),
         errorHandler: ErrorHandler()
     )
 }

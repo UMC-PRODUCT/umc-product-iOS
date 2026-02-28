@@ -246,7 +246,7 @@ struct HomeView: View {
                                systemImage: "calendar.badge.exclamationmark",
                                description: Text("선택한 날짜에 등록된 일정이 없습니다.")
         )
-        .glassEffect(.regular, in: .containerRelative)
+        .glassEffect(.regular, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
     }
 
     @MainActor
@@ -353,7 +353,12 @@ struct HomeView: View {
     @ViewBuilder
     private func recentView(_ recentNoticeData: [RecentNoticeData]) -> some View {
         if recentNoticeData.isEmpty {
-            LoadingView(.home(.recentNoticeLoading))
+            ContentUnavailableView(
+                "최근 공지가 없습니다.",
+                systemImage: "megaphone",
+                description: Text("아직 등록된 최근 공지 항목이 없습니다.")
+            )
+            .glassEffect(.regular, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
         } else {
             LazyVStack(spacing: DefaultSpacing.spacing8) {
                 ForEach(recentNoticeData.prefix(Constants.recentCardCount), id: \.id) { data in
@@ -417,4 +422,30 @@ private struct ScheduleCardPressStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.92 : 1.0)
             .animation(.spring(response: 0.22, dampingFraction: 0.8), value: configuration.isPressed)
     }
+}
+
+#Preview("홈 - Empty Data") {
+    let container = DIContainer()
+    container.register(PathStore.self) { PathStore() }
+
+    return HomeView(
+        container: container,
+        viewModel: HomeViewModel.emptyPreview(container: container),
+        shouldFetchOnTask: false
+    )
+    .environment(\.di, container)
+    .environment(ErrorHandler())
+}
+
+#Preview("홈 - 패널티 0점") {
+    let container = DIContainer()
+    container.register(PathStore.self) { PathStore() }
+
+    return HomeView(
+        container: container,
+        viewModel: HomeViewModel.zeroPenaltyPreview(container: container),
+        shouldFetchOnTask: false
+    )
+    .environment(\.di, container)
+    .environment(ErrorHandler())
 }

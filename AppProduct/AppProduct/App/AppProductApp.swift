@@ -90,7 +90,8 @@ extension AppProductApp {
                     networkClient: container.resolve(NetworkClient.self),
                     fetchMyProfileUseCase: container.resolve(
                         HomeUseCaseProviding.self
-                    ).fetchMyProfileUseCase
+                    ).fetchMyProfileUseCase,
+                    tokenStore: container.resolve(TokenStore.self)
                 )
                 .transition(rootTransition)
 
@@ -100,6 +101,7 @@ extension AppProductApp {
                     fetchMyProfileUseCase: container.resolve(
                         HomeUseCaseProviding.self
                     ).fetchMyProfileUseCase,
+                    tokenStore: container.resolve(TokenStore.self),
                     errorHandler: errorHandler
                 )
                 .transition(rootTransition)
@@ -167,6 +169,7 @@ extension AppProductApp {
     
     /// 세션 만료 시 캐시 초기화 후 로그인 화면으로 전환합니다.
     private func handleAuthSessionExpired() {
+        UserDefaults.standard.set(false, forKey: AppStorageKey.canAutoLogin)
         Task {
             try? await container.resolve(NetworkClient.self).logout()
         }
