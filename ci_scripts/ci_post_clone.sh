@@ -6,11 +6,30 @@ echo "Starting ci_post_clone.sh script..."
 
 # Secrets.xcconfig 파일 생성 경로
 CONFIG_PATH="${CI_WORKSPACE}/AppProduct/AppProduct/Core/Secret/Secrets.xcconfig"
+# Firebase 설정 파일 복원 경로
+FIREBASE_PLIST_PATH="${CI_WORKSPACE}/AppProduct/AppProduct/GoogleService-Info.plist"
 
 echo "Creating Secrets.xcconfig at: $CONFIG_PATH"
 
 # Core/Secret 디렉토리가 없을 경우 생성
 mkdir -p "${CI_WORKSPACE}/AppProduct/AppProduct/Core/Secret"
+
+# base64 디코드 호환 함수 (macOS: -D, GNU: --decode)
+decode_base64() {
+  input="$1"
+
+  if printf "%s" "$input" | base64 --decode >/dev/null 2>&1; then
+    printf "%s" "$input" | base64 --decode
+    return 0
+  fi
+
+  if printf "%s" "$input" | base64 -D >/dev/null 2>&1; then
+    printf "%s" "$input" | base64 -D
+    return 0
+  fi
+
+  return 1
+}
 
 # BASE_URL 하위 호환:
 # - 권장: BASE_URL_DEBUG / BASE_URL_RELEASE
@@ -41,5 +60,28 @@ TMAP_SECRET_KEY=${TMAP_SECRET_KEY}
 EOF
 
 echo "Secrets.xcconfig created successfully"
-echo "File contents:"
-cat "$CONFIG_PATH"
+echo "Secrets.xcconfig created successfully at: $CONFIG_PATH"
+
+# Firebase GoogleService-Info.plist 복원
+# - 권장: GOOGLE_SERVICE_INFO_PLIST_BASE64
+# - 대안: GOOGLE_SERVICE_INFO_PLIST_CONTENT (raw xml)
+if [ -n "$GOOGLE_SERVICE_INFO_PLIST_BASE64" ]; then
+  echo "Restoring GoogleService-Info.plist from GOOGLE_SERVICE_INFO_PLIST_BASE64..."
+  if ! decode_base64 "$GOOGLE_SERVICE_INFO_PLIST_BASE64" > "$FIREBASE_PLIST_PATH"; then
+    echo "ERROR: Failed to decode GOOGLE_SERVICE_INFO_PLIST_BASE64"
+    exit 1
+  fi
+elif [ -n "$GOOGLE_SERVICE_INFO_PLIST_CONTENT" ]; then
+  echo "Restoring GoogleService-Info.plist from GOOGLE_SERVICE_INFO_PLIST_CONTENT..."
+  printf "%s" "$GOOGLE_SERVICE_INFO_PLIST_CONTENT" > "$FIREBASE_PLIST_PATH"
+else
+  echo "ERROR: Firebase config is required. Set GOOGLE_SERVICE_INFO_PLIST_BASE64 in Xcode Cloud environment variables."
+  exit 1
+fi
+
+if ! grep -q "<plist" "$FIREBASE_PLIST_PATH"; then
+  echo "ERROR: Restored GoogleService-Info.plist does not look like a plist file."
+  exit 1
+fi
+
+echo "GoogleService-Info.plist restored successfully at: $FIREBASE_PLIST_PATH"
