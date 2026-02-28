@@ -87,9 +87,11 @@ struct BaseMapComponent: View, Equatable {
     }
 }
 
+#if DEBUG
 #Preview {
     BaseMapComponent(viewModel: .init(
         container: AttendancePreviewData.container,
         info: AttendancePreviewData.sessionInfo,
         errorHandler: AttendancePreviewData.errorHandler))
 }
+#endif

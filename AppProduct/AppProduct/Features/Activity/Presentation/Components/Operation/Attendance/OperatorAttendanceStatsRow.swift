@@ -94,6 +94,7 @@ struct OperatorAttendanceStatsRow: View, Equatable {
 
 }
 
+#if DEBUG
 #Preview(traits: .sizeThatFitsLayout) {
     ZStack {
         Color.grey100.frame(height: 300)
@@ -111,3 +112,4 @@ struct OperatorAttendanceStatsRow: View, Equatable {
         .padding()
     }
 }
+#endif

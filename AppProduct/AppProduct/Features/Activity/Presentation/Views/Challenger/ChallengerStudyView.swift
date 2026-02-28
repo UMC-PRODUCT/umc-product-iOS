@@ -89,8 +89,10 @@ struct ChallengerStudyView: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview {
     ChallengerStudyView(
         container: MissionPreviewData.container,
         errorHandler: MissionPreviewData.errorHandler)
 }
+#endif
