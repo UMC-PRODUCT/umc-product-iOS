@@ -287,10 +287,12 @@ fileprivate struct CardInfo: View {
     }
 
     private var emptyPenaltyState: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+        VStack(alignment: .leading) {
             Image(systemName: "checkmark.shield.fill")
                 .font(.system(size: 28, weight: .semibold))
                 .foregroundStyle(.green500)
+            
+            Spacer()
 
             Text("등록된 패널티가 없습니다.")
                 .appFont(.footnoteEmphasis, color: .grey900)
