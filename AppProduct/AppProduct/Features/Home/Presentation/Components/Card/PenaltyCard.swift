@@ -293,7 +293,7 @@ fileprivate struct CardInfo: View {
                 .foregroundStyle(.green500)
 
             Text("등록된 패널티가 없습니다.")
-                .appFont(.bodyEmphasis, color: .grey900)
+                .appFont(.footnoteEmphasis, color: .grey900)
                 .multilineTextAlignment(.leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
