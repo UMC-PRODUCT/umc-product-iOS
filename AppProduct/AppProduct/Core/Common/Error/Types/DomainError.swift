@@ -95,6 +95,11 @@ enum DomainError: Error, LocalizedError, Equatable {
     /// 미션 링크 입력 필요
     case missionLinkRequired
 
+    // MARK: - 커리큘럼
+
+    /// 현재 운영 중이 아닌 기수라 커리큘럼 조회 불가
+    case curriculumUnavailableForGeneration
+
     // MARK: - 커뮤니티
 
     /// 게시글을 찾을 수 없음
@@ -137,6 +142,8 @@ enum DomainError: Error, LocalizedError, Equatable {
             return "미션을 찾을 수 없습니다."
         case .missionLinkRequired:
             return "링크를 입력해주세요."
+        case .curriculumUnavailableForGeneration:
+            return "현재 운영중인 기수가 아니어서 커리큘럼을 조회할 수 없습니다."
         case .postNotFound:
             return "게시글을 찾을 수 없습니다."
         case .cannotDeletePost:

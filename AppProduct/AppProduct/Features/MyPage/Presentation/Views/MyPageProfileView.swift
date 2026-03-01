@@ -88,3 +88,28 @@ struct MyPageProfileView: View {
         }
     }
 }
+
+#if DEBUG
+// MARK: - Preview
+
+private var myPageProfilePreviewContainer: DIContainer {
+    let container = DIContainer()
+    container.register(PathStore.self) { PathStore() }
+    container.register(MyPageUseCaseProviding.self) {
+        MyPageUseCaseProvider(repository: MockMyPageRepository())
+    }
+    return container
+}
+
+#Preview("MyPage Profile") {
+    let container = myPageProfilePreviewContainer
+    return NavigationStack {
+        MyPageProfileView(
+            container: container,
+            profileData: MyPageMockData.profile
+        )
+    }
+    .environment(\.di, container)
+    .environment(ErrorHandler())
+}
+#endif

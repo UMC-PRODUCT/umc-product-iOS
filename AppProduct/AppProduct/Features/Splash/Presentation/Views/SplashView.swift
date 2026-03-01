@@ -12,14 +12,14 @@ import SwiftUI
 /// 앱 시작 시 로고를 표시하며 토큰 검사를 수행합니다.
 /// 검사 완료 시 `onComplete` 콜백으로 로그인 상태를 전달합니다.
 struct SplashView: View {
-
+    
     // MARK: - Property
-
+    
     @State private var viewModel: SplashViewModel
     @Environment(\.appFlow) private var appFlow
-
+    
     // MARK: - Init
-
+    
     init(
         networkClient: NetworkClient,
         fetchMyProfileUseCase: FetchMyProfileUseCaseProtocol,
@@ -33,9 +33,9 @@ struct SplashView: View {
             )
         )
     }
-
+    
     // MARK: - Body
-
+    
     var body: some View {
         VStack(spacing: 12) {
             Logo()
@@ -51,17 +51,25 @@ struct SplashView: View {
             #endif
         }
             .task {
-                await viewModel.checkAuthStatus()
+                await viewModel
+                    .checkAuthStatus()
             }
-            .onChange(of: viewModel.isCheckComplete) { _, isComplete in
+            .onChange(
+                of: viewModel.isCheckComplete
+            ) {
+                _,
+                isComplete in
                 if isComplete {
                     switch viewModel.authStatus {
                     case .approved:
-                        appFlow.showMain()
+                        appFlow
+                            .showMain()
                     case .pendingApproval:
-                        appFlow.showPendingApproval()
+                        appFlow
+                            .showPendingApproval()
                     case .notLoggedIn:
-                        appFlow.showLogin()
+                        appFlow
+                            .showLogin()
                     }
                 }
             }

@@ -423,3 +423,33 @@ private struct ScheduleCardPressStyle: ButtonStyle {
             .animation(.spring(response: 0.22, dampingFraction: 0.8), value: configuration.isPressed)
     }
 }
+
+#if DEBUG
+#Preview("홈 - 패널티 0점") {
+    ZeroPenaltyHomePreviewView()
+}
+
+private struct ZeroPenaltyHomePreviewView: View {
+    private let di: DIContainer
+    private let viewModel: HomeViewModel
+
+    init() {
+        let container = DIContainer()
+        container.register(PathStore.self) { PathStore() }
+        self.di = container
+        self.viewModel = HomeViewModel.zeroPenaltyPreview(container: container)
+    }
+
+    var body: some View {
+        NavigationStack {
+            HomeView(
+                container: di,
+                viewModel: viewModel,
+                shouldFetchOnTask: false
+            )
+        }
+        .environment(\.di, di)
+        .environment(ErrorHandler())
+    }
+}
+#endif

@@ -50,6 +50,6 @@ struct ConnectionSocial: View, Equatable {
         Text(social.rawValue)
             .appFont(.caption1Emphasis, color: social.fontColor)
             .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
-            .glassEffect(.clear.tint(social.color), in: .containerRelative)
+            .glassEffect(.clear.tint(social.color), in: .capsule)
     }
 }

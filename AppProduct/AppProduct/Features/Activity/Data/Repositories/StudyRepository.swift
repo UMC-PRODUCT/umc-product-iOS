@@ -39,12 +39,17 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
     // MARK: - Curriculum
 
     func fetchCurriculumData() async throws -> CurriculumData {
-        let progressResponse = try await adapter.request(StudyRouter.getMyProgress)
-        let progressAPIResponse = try decoder.decode(
-            APIResponse<ChallengerCurriculumProgressDTO>.self,
-            from: progressResponse.data
-        )
-        let progressDTO = try progressAPIResponse.unwrap()
+        let progressDTO: ChallengerCurriculumProgressDTO
+        do {
+            let progressResponse = try await adapter.request(StudyRouter.getMyProgress)
+            let progressAPIResponse = try decoder.decode(
+                APIResponse<ChallengerCurriculumProgressDTO>.self,
+                from: progressResponse.data
+            )
+            progressDTO = try progressAPIResponse.unwrap()
+        } catch let error as NetworkError {
+            throw Self.parseCurriculumProgressError(from: error) ?? error
+        }
 
         let scheduleByWeek: [Int: WorkbookSchedule]
         do {
@@ -1050,6 +1055,37 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
                 message: rawMessage
             )
         }
+        return nil
+    }
+
+    /// 커리큘럼 진행률 조회 실패를 도메인/리포지토리 에러로 변환합니다.
+    ///
+    /// `CHALLENGER-0001`은 과거 기수 소속 사용자 케이스로 간주해
+    /// 전용 안내 메시지로 표시할 수 있도록 매핑합니다.
+    private static func parseCurriculumProgressError(
+        from error: NetworkError
+    ) -> Error? {
+        guard case .requestFailed(_, let data) = error,
+              let data,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return nil
+        }
+
+        let code = json["code"] as? String
+        let rawMessage = (json["message"] as? String) ?? (json["result"] as? String) ?? ""
+
+        if code == "CHALLENGER-0001" {
+            return DomainError.curriculumUnavailableForGeneration
+        }
+
+        if !rawMessage.isEmpty {
+            return RepositoryError.serverError(
+                code: code,
+                message: rawMessage
+            )
+        }
+
         return nil
     }
 }
