@@ -75,14 +75,24 @@ struct ChallengerStudyView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    @ViewBuilder
     private func errorView(error: AppError, viewModel: ChallengerStudyViewModel) -> some View {
-        RetryContentUnavailableView(
-            title: "로딩 실패",
-            systemImage: "exclamationmark.triangle",
-            description: error.userMessage,
-            isRetrying: false
-        ) {
-            await viewModel.fetchCurriculum()
+        if case .domain(.curriculumUnavailableForGeneration) = error {
+            ContentUnavailableView {
+                Label("커리큘럼 조회 불가", systemImage: "info.circle")
+            } description: {
+                Text(error.userMessage)
+                    .multilineTextAlignment(.center)
+            }
+        } else {
+            RetryContentUnavailableView(
+                title: "로딩 실패",
+                systemImage: "exclamationmark.triangle",
+                description: error.userMessage,
+                isRetrying: false
+            ) {
+                await viewModel.fetchCurriculum()
+            }
         }
     }
 }
