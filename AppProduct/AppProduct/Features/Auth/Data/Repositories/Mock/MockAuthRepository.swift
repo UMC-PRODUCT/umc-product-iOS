@@ -29,7 +29,9 @@ final class MockAuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
     }
 
     func loginApple(
-        authorizationCode: String
+        authorizationCode: String,
+        email: String?,
+        fullName: String?
     ) async throws -> OAuthLoginResult {
         try await Task.sleep(for: .milliseconds(500))
 

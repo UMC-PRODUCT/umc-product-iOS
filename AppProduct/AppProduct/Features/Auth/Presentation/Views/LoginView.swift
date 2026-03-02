@@ -61,8 +61,8 @@ struct LoginView: View {
                 appFlow.showMain()
             case .pendingApproval:
                 appFlow.showPendingApproval()
-            case .signUp(let verificationToken):
-                appFlow.showSignUp(verificationToken)
+            case .signUp(let verificationToken, let email, let fullName):
+                appFlow.showSignUp(verificationToken, email, fullName)
             }
         }
     }
@@ -160,7 +160,11 @@ private struct LoginViewPreviewLoginUseCase: LoginUseCaseProtocol {
         )
     }
 
-    func executeApple(authorizationCode: String) async throws -> OAuthLoginResult {
+    func executeApple(
+        authorizationCode: String,
+        email: String?,
+        fullName: String?
+    ) async throws -> OAuthLoginResult {
         .existingMember(
             tokenPair: TokenPair(
                 accessToken: "preview_access_token",

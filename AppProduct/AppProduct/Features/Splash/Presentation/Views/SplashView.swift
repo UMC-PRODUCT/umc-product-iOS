@@ -37,19 +37,7 @@ struct SplashView: View {
     // MARK: - Body
     
     var body: some View {
-        VStack(spacing: 12) {
-            Logo()
-            #if DEBUG
-            VStack(alignment: .leading, spacing: 4) {
-                Text("accessToken: \(viewModel.debugAccessToken)")
-                Text("refreshToken: \(viewModel.debugRefreshToken)")
-            }
-            .appFont(.caption2, weight: .regular, color: .grey500)
-            .lineLimit(2)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 20)
-            #endif
-        }
+        Logo()
             .task {
                 await viewModel
                     .checkAuthStatus()

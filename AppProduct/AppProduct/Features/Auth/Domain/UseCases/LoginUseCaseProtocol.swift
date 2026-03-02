@@ -22,9 +22,14 @@ protocol LoginUseCaseProtocol {
     ) async throws -> OAuthLoginResult
 
     /// Apple 로그인 실행
-    /// - Parameter authorizationCode: Apple 인증 코드
+    /// - Parameters:
+    ///   - authorizationCode: Apple 인증 코드
+    ///   - email: Apple에서 제공한 이메일(최초 로그인 시)
+    ///   - fullName: Apple에서 제공한 이름(최초 로그인 시)
     /// - Returns: 로그인 결과
     func executeApple(
-        authorizationCode: String
+        authorizationCode: String,
+        email: String?,
+        fullName: String?
     ) async throws -> OAuthLoginResult
 }

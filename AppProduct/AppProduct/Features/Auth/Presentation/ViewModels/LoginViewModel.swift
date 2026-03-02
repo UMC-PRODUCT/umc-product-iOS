@@ -86,16 +86,22 @@ final class LoginViewModel {
         destination = nil
 
         appleLoginManager.onAuthorizationCompleted = {
-            [weak self] code, _, _ in
+            [weak self] code, email, fullName in
             guard let self else { return }
             Task { @MainActor in
                 do {
                     let result = try await self.loginUseCase.executeApple(
-                        authorizationCode: code
+                        authorizationCode: code,
+                        email: email,
+                        fullName: fullName
                     )
                     SocialType.addConnected(.apple)
                     self.loginState = .loaded(result)
-                    self.destination = try await self.resolveDestination(from: result)
+                    self.destination = try await self.resolveDestination(
+                        from: result,
+                        email: email,
+                        fullName: fullName
+                    )
                 } catch {
                     self.loginState = .idle
                     self.errorHandler.handle(
@@ -121,7 +127,9 @@ final class LoginViewModel {
 private extension LoginViewModel {
     /// 로그인 결과를 기반으로 최종 이동 목적지를 계산합니다.
     func resolveDestination(
-        from result: OAuthLoginResult
+        from result: OAuthLoginResult,
+        email: String? = nil,
+        fullName: String? = nil
     ) async throws -> LoginDestination {
         switch result {
         case .newMember(let verificationToken):
@@ -129,7 +137,11 @@ private extension LoginViewModel {
                 false,
                 forKey: AppStorageKey.canAutoLogin
             )
-            return .signUp(verificationToken: verificationToken)
+            return .signUp(
+                verificationToken: verificationToken,
+                email: email,
+                fullName: fullName
+            )
 
         case .existingMember(let tokenPair):
             try await ensureTokensStored(tokenPair)
@@ -189,5 +201,9 @@ private extension LoginViewModel {
 enum LoginDestination: Equatable {
     case main
     case pendingApproval
-    case signUp(verificationToken: String)
+    case signUp(
+        verificationToken: String,
+        email: String?,
+        fullName: String?
+    )
 }

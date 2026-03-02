@@ -17,7 +17,11 @@ enum AuthRouter: BaseTargetType {
     /// 카카오 소셜 로그인
     case loginKakao(accessToken: String, email: String)
     /// Apple 소셜 로그인
-    case loginApple(authorizationCode: String)
+    case loginApple(
+        authorizationCode: String,
+        email: String?,
+        fullName: String?
+    )
     /// 액세스 토큰 재발급
     case renewToken(refreshToken: String)
     /// 내 OAuth 연동 정보 조회
@@ -96,11 +100,18 @@ enum AuthRouter: BaseTargetType {
                 ],
                 encoding: JSONEncoding.default
             )
-        case .loginApple(let authorizationCode):
+        case .loginApple(let authorizationCode, let email, let fullName):
+            var parameters: [String: String] = [
+                "authorizationCode": authorizationCode
+            ]
+            if let email, !email.isEmpty {
+                parameters["email"] = email
+            }
+            if let fullName, !fullName.isEmpty {
+                parameters["fullName"] = fullName
+            }
             return .requestParameters(
-                parameters: [
-                    "authorizationCode": authorizationCode
-                ],
+                parameters: parameters,
                 encoding: JSONEncoding.default
             )
         case .renewToken(let refreshToken):
