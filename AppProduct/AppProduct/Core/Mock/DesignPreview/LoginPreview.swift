@@ -32,7 +32,9 @@ private struct PreviewLoginUseCase: LoginUseCaseProtocol {
     }
 
     func executeApple(
-        authorizationCode: String
+        authorizationCode: String,
+        email: String?,
+        fullName: String?
     ) async throws -> OAuthLoginResult {
         .existingMember(
             tokenPair: TokenPair(

@@ -41,10 +41,14 @@ final class LoginUseCase: LoginUseCaseProtocol {
     }
 
     func executeApple(
-        authorizationCode: String
+        authorizationCode: String,
+        email: String?,
+        fullName: String?
     ) async throws -> OAuthLoginResult {
         let result = try await repository.loginApple(
-            authorizationCode: authorizationCode
+            authorizationCode: authorizationCode,
+            email: email,
+            fullName: fullName
         )
         try await saveTokenIfNeeded(result)
         return result

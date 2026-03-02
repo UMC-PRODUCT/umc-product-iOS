@@ -36,7 +36,11 @@ struct AppProductApp: App {
         /// 로그인 화면
         case login
         /// 회원가입 화면
-        case signUp(verificationToken: String)
+        case signUp(
+            verificationToken: String,
+            email: String?,
+            fullName: String?
+        )
         /// 승인 대기 화면
         case pendingApproval
         /// 메인 화면 (탭)
@@ -106,9 +110,11 @@ extension AppProductApp {
                 )
                 .transition(rootTransition)
 
-            case .signUp(let verificationToken):
+            case .signUp(let verificationToken, let email, let fullName):
                 SignUpView(
                     oAuthVerificationToken: verificationToken,
+                    initialEmail: email,
+                    initialName: fullName,
                     sendEmailVerificationUseCase: authProvider
                         .sendEmailVerificationUseCase,
                     verifyEmailCodeUseCase: authProvider
@@ -182,8 +188,14 @@ extension AppProductApp {
         AppFlow(
             showLogin: { transition(to: .login) },
             showMain: { transition(to: .main) },
-            showSignUp: { verificationToken in
-                transition(to: .signUp(verificationToken: verificationToken))
+            showSignUp: { verificationToken, email, fullName in
+                transition(
+                    to: .signUp(
+                        verificationToken: verificationToken,
+                        email: email,
+                        fullName: fullName
+                    )
+                )
             },
             showPendingApproval: { transition(to: .pendingApproval) },
             logout: { handleAuthSessionExpired() }

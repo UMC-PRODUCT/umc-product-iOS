@@ -46,6 +46,8 @@ struct SignUpView: View {
 
     init(
         oAuthVerificationToken: String,
+        initialEmail: String? = nil,
+        initialName: String? = nil,
         sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol,
         verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol,
         registerUseCase: RegisterUseCaseProtocol,
@@ -54,6 +56,8 @@ struct SignUpView: View {
         self._viewModel = .init(
             wrappedValue: SignUpViewModel(
                 oAuthVerificationToken: oAuthVerificationToken,
+                initialEmail: initialEmail,
+                initialName: initialName,
                 sendEmailVerificationUseCase: sendEmailVerificationUseCase,
                 verifyEmailCodeUseCase: verifyEmailCodeUseCase,
                 registerUseCase: registerUseCase,

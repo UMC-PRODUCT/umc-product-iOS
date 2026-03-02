@@ -96,6 +96,8 @@ final class SignUpViewModel {
 
     init(
         oAuthVerificationToken: String,
+        initialEmail: String? = nil,
+        initialName: String? = nil,
         sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol,
         verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol,
         registerUseCase: RegisterUseCaseProtocol,
@@ -106,6 +108,12 @@ final class SignUpViewModel {
         self.verifyEmailCodeUseCase = verifyEmailCodeUseCase
         self.registerUseCase = registerUseCase
         self.fetchSignUpDataUseCase = fetchSignUpDataUseCase
+        self.email = initialEmail?.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ) ?? ""
+        self.name = initialName?.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ) ?? ""
     }
 
     // MARK: - Function

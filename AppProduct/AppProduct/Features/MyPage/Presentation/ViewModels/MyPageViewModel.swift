@@ -154,7 +154,9 @@ class MyPageViewModel {
         case .apple:
             let authorizationCode = try await fetchAppleAuthorizationCode()
             result = try await authProvider.loginUseCase.executeApple(
-                authorizationCode: authorizationCode
+                authorizationCode: authorizationCode,
+                email: nil,
+                fullName: nil
             )
         }
 
