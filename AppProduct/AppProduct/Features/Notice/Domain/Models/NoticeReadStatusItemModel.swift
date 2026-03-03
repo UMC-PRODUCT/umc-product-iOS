@@ -16,4 +16,14 @@ struct NoticeReadStatusItemModel: Equatable, Identifiable {
     let location: String
     let campus: String
     let isRead: Bool
+
+    var identityText: String {
+        let trimmedNickname = nickName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedName = userName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if !trimmedNickname.isEmpty, !trimmedName.isEmpty, trimmedNickname != trimmedName {
+            return "\(trimmedNickname)/\(trimmedName)"
+        }
+        return !trimmedNickname.isEmpty ? trimmedNickname : trimmedName
+    }
 }

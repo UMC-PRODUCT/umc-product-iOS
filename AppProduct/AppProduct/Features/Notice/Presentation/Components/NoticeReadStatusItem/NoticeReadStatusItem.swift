@@ -96,7 +96,7 @@ private struct UserInfoSection: View, Equatable {
         VStack(alignment: .leading, spacing: Constant.userInfoVSpacing) {
             // 이름 + 파트
             HStack(spacing: Constant.userInfoHSpacing) {
-                Text("\(model.userName)/\(model.nickName)")
+                Text(model.identityText)
                     .appFont(.subheadlineEmphasis, color: .grey900)
                 Text(model.part)
                     .appFont(.caption2, color: .gray)

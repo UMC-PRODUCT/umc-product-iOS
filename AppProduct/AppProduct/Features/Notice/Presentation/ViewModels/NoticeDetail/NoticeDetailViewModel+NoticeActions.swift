@@ -20,8 +20,9 @@ extension NoticeDetailViewModel {
 
         do {
             let noticeDetail = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
-            noticeState = .loaded(noticeDetail)
-            refreshAuthorDisplayName(for: noticeDetail)
+            let normalizedDetail = normalizeTargetGenerationIfNeeded(in: noticeDetail)
+            noticeState = .loaded(normalizedDetail)
+            refreshAuthorDisplayName(for: normalizedDetail)
             isDetailPreparedForEdit = true
         } catch let error as RepositoryError {
             noticeState = .failed(.repository(error))
@@ -355,8 +356,9 @@ extension NoticeDetailViewModel {
                 title: title,
                 content: content
             )
-            noticeState = .loaded(updatedNotice)
-            refreshAuthorDisplayName(for: updatedNotice)
+            let normalizedNotice = normalizeTargetGenerationIfNeeded(in: updatedNotice)
+            noticeState = .loaded(normalizedNotice)
+            refreshAuthorDisplayName(for: normalizedNotice)
 
         } catch let error as DomainError {
             noticeState = .failed(.domain(error))
@@ -393,8 +395,9 @@ extension NoticeDetailViewModel {
                 noticeId: noticeID,
                 links: links
             )
-            noticeState = .loaded(updatedNotice)
-            refreshAuthorDisplayName(for: updatedNotice)
+            let normalizedNotice = normalizeTargetGenerationIfNeeded(in: updatedNotice)
+            noticeState = .loaded(normalizedNotice)
+            refreshAuthorDisplayName(for: normalizedNotice)
         } catch let error as RepositoryError {
             noticeState = .failed(.repository(error))
             errorHandler.handle(
@@ -436,8 +439,9 @@ extension NoticeDetailViewModel {
                 noticeId: noticeID,
                 imageIds: imageIds
             )
-            noticeState = .loaded(updatedNotice)
-            refreshAuthorDisplayName(for: updatedNotice)
+            let normalizedNotice = normalizeTargetGenerationIfNeeded(in: updatedNotice)
+            noticeState = .loaded(normalizedNotice)
+            refreshAuthorDisplayName(for: normalizedNotice)
         } catch let error as RepositoryError {
             noticeState = .failed(.repository(error))
             errorHandler.handle(
@@ -501,8 +505,9 @@ extension NoticeDetailViewModel {
 
             // 서버 반영 결과(득표수/내 선택 상태)를 최신값으로 반영
             let refreshedNotice = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
-            noticeState = .loaded(refreshedNotice)
-            refreshAuthorDisplayName(for: refreshedNotice)
+            let normalizedNotice = normalizeTargetGenerationIfNeeded(in: refreshedNotice)
+            noticeState = .loaded(normalizedNotice)
+            refreshAuthorDisplayName(for: normalizedNotice)
         } catch let error as DomainError {
             isSubmittingVote = false
             errorHandler.handle(

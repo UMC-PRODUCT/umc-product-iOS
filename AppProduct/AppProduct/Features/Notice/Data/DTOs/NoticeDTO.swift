@@ -85,10 +85,42 @@ extension NoticeDTO {
 ///
 /// 숫자 필드는 서버 스펙에 맞춰 String으로 처리합니다.
 struct NoticeTargetInfoDTO: Codable {
+    let targetGisu: String?
     let targetGisuId: String
     let targetChapterId: String?
     let targetSchoolId: String?
     let targetParts: [UMCPartType]?
+
+    private enum CodingKeys: String, CodingKey {
+        case targetGisu
+        case targetGisuId
+        case targetChapterId
+        case targetSchoolId
+        case targetParts
+    }
+
+    init(
+        targetGisu: String? = nil,
+        targetGisuId: String,
+        targetChapterId: String?,
+        targetSchoolId: String?,
+        targetParts: [UMCPartType]?
+    ) {
+        self.targetGisu = targetGisu
+        self.targetGisuId = targetGisuId
+        self.targetChapterId = targetChapterId
+        self.targetSchoolId = targetSchoolId
+        self.targetParts = targetParts
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        targetGisu = container.decodeFlexibleOptionalString(forKey: .targetGisu)
+        targetGisuId = container.decodeFlexibleOptionalString(forKey: .targetGisuId) ?? "0"
+        targetChapterId = container.decodeFlexibleOptionalString(forKey: .targetChapterId)
+        targetSchoolId = container.decodeFlexibleOptionalString(forKey: .targetSchoolId)
+        targetParts = try container.decodeIfPresent([UMCPartType].self, forKey: .targetParts)
+    }
 }
 
 // MARK: - Helper
@@ -128,5 +160,18 @@ private extension KeyedDecodingContainer {
                 debugDescription: "Expected String/Int/Double for key '\(key.stringValue)'"
             )
         )
+    }
+
+    func decodeFlexibleOptionalString(forKey key: Key) -> String? {
+        if let value = try? decodeIfPresent(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return String(Int(value))
+        }
+        return nil
     }
 }
