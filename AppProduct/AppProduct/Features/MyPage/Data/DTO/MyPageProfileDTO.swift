@@ -101,7 +101,7 @@ struct MyPageRoleDTO: Codable {
     let challengerId: String
     let roleType: ManagementTeam
     let organizationType: OrganizationType
-    let organizationId: String
+    let organizationId: String?
     let responsiblePart: String?
     let gisu: String?
     let gisuId: String
@@ -123,7 +123,7 @@ struct MyPageRoleDTO: Codable {
         challengerId = try container.decodeMyPageFlexibleString(forKey: .challengerId)
         roleType = try container.decode(ManagementTeam.self, forKey: .roleType)
         organizationType = try container.decode(OrganizationType.self, forKey: .organizationType)
-        organizationId = try container.decodeMyPageFlexibleString(forKey: .organizationId)
+        organizationId = try container.decodeMyPageFlexibleStringIfPresent(forKey: .organizationId)
         responsiblePart = try container.decodeIfPresent(String.self, forKey: .responsiblePart)
         gisu = try container.decodeMyPageFlexibleStringIfPresent(forKey: .gisu)
         gisuId = try container.decodeMyPageFlexibleString(forKey: .gisuId)
