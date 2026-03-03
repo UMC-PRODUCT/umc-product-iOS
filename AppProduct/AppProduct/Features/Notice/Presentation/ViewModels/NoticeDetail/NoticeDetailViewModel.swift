@@ -32,6 +32,10 @@ final class NoticeDetailViewModel {
         container.resolve(AuthorizationUseCaseProtocol.self)
     }
 
+    var genRepository: ChallengerGenRepositoryProtocol {
+        container.resolve(ChallengerGenRepositoryProtocol.self)
+    }
+
     // MARK: - Core State
 
     /// 공지 상세 상태
@@ -191,9 +195,11 @@ final class NoticeDetailViewModel {
         self.noticeID = Int(model.id) ?? 0
         self.errorHandler = errorHandler
         self.noticeState = .loaded(model)
-        authorDisplayName = model.authorName
+        let normalizedModel = normalizeTargetGenerationIfNeeded(in: model)
+        noticeState = .loaded(normalizedModel)
+        authorDisplayName = normalizedModel.authorName
         Task { [weak self] in
-            self?.refreshAuthorDisplayName(for: model)
+            self?.refreshAuthorDisplayName(for: normalizedModel)
         }
     }
 
@@ -306,6 +312,65 @@ final class NoticeDetailViewModel {
             return "rd"
         default:
             return "th"
+        }
+    }
+
+    // MARK: - Generation Helper
+
+    /// targetAudience.generation 값이 gisu PK인 경우 로컬 매핑으로 실제 기수(gen)로 보정합니다.
+    ///
+    /// 서버가 `targetGisu`를 내려주면 DTO 매퍼에서 우선 적용되고,
+    /// 해당 값이 없거나 `targetGisuId`만 존재할 때만 이 보정 로직이 동작합니다.
+    func normalizeTargetGenerationIfNeeded(in detail: NoticeDetail) -> NoticeDetail {
+        let originalGeneration = detail.targetAudience.generation
+        let resolvedGeneration = resolveGeneration(from: originalGeneration)
+
+        guard resolvedGeneration != originalGeneration else {
+            return detail
+        }
+
+        let normalizedAudience = TargetAudience(
+            generation: resolvedGeneration,
+            scope: detail.targetAudience.scope,
+            parts: detail.targetAudience.parts,
+            branches: detail.targetAudience.branches,
+            schools: detail.targetAudience.schools
+        )
+
+        return NoticeDetail(
+            id: detail.id,
+            generation: resolvedGeneration,
+            scope: detail.scope,
+            category: detail.category,
+            isMustRead: detail.isMustRead,
+            title: detail.title,
+            content: detail.content,
+            authorID: detail.authorID,
+            authorMemberId: detail.authorMemberId,
+            authorName: detail.authorName,
+            authorImageURL: detail.authorImageURL,
+            createdAt: detail.createdAt,
+            updatedAt: detail.updatedAt,
+            targetAudience: normalizedAudience,
+            hasPermission: detail.hasPermission,
+            images: detail.images,
+            imageItems: detail.imageItems,
+            links: detail.links,
+            vote: detail.vote
+        )
+    }
+
+    /// 현재 값이 gisuId인지 판별하여 실제 기수(gen)를 반환합니다.
+    private func resolveGeneration(from value: Int) -> Int {
+        guard value > 0 else { return value }
+        do {
+            let pairs = try genRepository.fetchGenGisuIdPairs()
+            if let matchedGen = pairs.first(where: { $0.gisuId == value })?.gen {
+                return matchedGen
+            }
+            return value
+        } catch {
+            return value
         }
     }
 }

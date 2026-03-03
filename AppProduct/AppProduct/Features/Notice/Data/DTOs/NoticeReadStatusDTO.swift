@@ -47,6 +47,7 @@ struct NoticeReadStaticsDTO: Codable {
 struct NoticeReadStatusUserDTO: Codable {
     let challengerId: String
     let name: String
+    let nickname: String?
     let profileImageUrl: String?
     let part: String
     let schoolId: String
@@ -57,6 +58,7 @@ struct NoticeReadStatusUserDTO: Codable {
     private enum CodingKeys: String, CodingKey {
         case challengerId
         case name
+        case nickname
         case profileImageUrl
         case part
         case schoolId
@@ -65,16 +67,37 @@ struct NoticeReadStatusUserDTO: Codable {
         case chapterName
     }
 
+    private enum AlternateNicknameCodingKeys: String, CodingKey {
+        case nickName
+        case authorNickname
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.challengerId = container.decodeFlexibleString(forKey: .challengerId)
         self.name = try container.decode(String.self, forKey: .name)
+        self.nickname = try Self.decodeNickname(
+            from: decoder,
+            primaryContainer: container
+        )
         self.profileImageUrl = try? container.decodeIfPresent(String.self, forKey: .profileImageUrl)
         self.part = try container.decode(String.self, forKey: .part)
         self.schoolId = container.decodeFlexibleString(forKey: .schoolId)
         self.schoolName = try container.decode(String.self, forKey: .schoolName)
         self.chapterId = container.decodeFlexibleString(forKey: .chapterId)
         self.chapterName = try container.decode(String.self, forKey: .chapterName)
+    }
+
+    private static func decodeNickname(
+        from decoder: Decoder,
+        primaryContainer: KeyedDecodingContainer<CodingKeys>
+    ) throws -> String? {
+        if let nickname = primaryContainer.decodeFirstNonEmptyString(forKeys: [.nickname]) {
+            return nickname
+        }
+
+        let alternateContainer = try decoder.container(keyedBy: AlternateNicknameCodingKeys.self)
+        return alternateContainer.decodeFirstNonEmptyString(forKeys: [.nickName, .authorNickname])
     }
 }
 
@@ -106,11 +129,14 @@ extension NoticeReadStatusUserDTO {
     func toDomain(isRead: Bool) -> ReadStatusUser {
         // part String → UMCPartType enum 변환
         let userPart = UMCPartType(apiValue: part)
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNickname = nickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let resolvedNickname = trimmedNickname.isEmpty ? trimmedName : trimmedNickname
         
         return ReadStatusUser(
             id: challengerId,
-            name: name,
-            nickName: name, // TODO: 실제 닉네임 필드 추가되면 수정
+            name: trimmedName,
+            nickName: resolvedNickname,
             part: userPart?.name ?? "알 수 없음",
             branch: chapterName,
             campus: schoolName,
@@ -147,6 +173,17 @@ private extension KeyedDecodingContainer {
         }
         if let value = try? decode(Double.self, forKey: key) {
             return String(value)
+        }
+        return nil
+    }
+
+    func decodeFirstNonEmptyString(forKeys keys: [Key]) -> String? {
+        for key in keys {
+            guard let rawValue = decodeFlexibleOptionalString(forKey: key) else { continue }
+            let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                return trimmed
+            }
         }
         return nil
     }

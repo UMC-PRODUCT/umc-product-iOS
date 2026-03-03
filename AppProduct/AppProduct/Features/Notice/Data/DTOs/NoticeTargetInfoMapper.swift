@@ -13,7 +13,10 @@ extension NoticeTargetInfoDTO {
     // MARK: - Computed Property
     /// 기수 ID를 Int로 변환 (실패 시 0)
     var generationValue: Int {
-        Int(targetGisuId) ?? 0
+        if let targetGisu, let generation = Int(targetGisu), generation > 0 {
+            return generation
+        }
+        return Int(targetGisuId) ?? 0
     }
 
     /// targetInfo 기반으로 공지 출처(scope)를 추론합니다.
