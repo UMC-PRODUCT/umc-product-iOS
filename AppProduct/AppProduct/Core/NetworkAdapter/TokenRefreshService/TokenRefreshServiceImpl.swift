@@ -9,7 +9,7 @@ import Foundation
 
 /// TokenRefreshService 프로토콜의 실제 구현체입니다.
 ///
-/// 서버의 `/auth/reissue` 엔드포인트를 호출하여 리프레시 토큰으로 새로운 토큰 쌍을 발급받습니다.
+/// 서버의 `/api/v1/auth/token/renew` 엔드포인트를 호출하여 리프레시 토큰으로 새로운 토큰 쌍을 발급받습니다.
 ///
 /// - Important:
 ///   - **NetworkClient와 독립적**: NetworkClient를 사용하지 않음 (무한 루프 방지)
@@ -34,7 +34,7 @@ struct TokenRefreshServiceImpl: TokenRefreshService {
 
     /// API 서버 기본 URL
     ///
-    /// - Note: `/auth/reissue` 경로가 추가됩니다.
+    /// - Note: `/api/v1/auth/token/renew` 경로가 추가됩니다.
     private let baseURL: URL
 
     /// URLSession 인스턴스 (네트워크 요청 실행)
@@ -83,7 +83,7 @@ struct TokenRefreshServiceImpl: TokenRefreshService {
     /// ## 요청 형식
     ///
     /// ```
-    /// POST /auth/reissue
+    /// POST /api/v1/auth/token/renew
     /// Content-Type: application/json
     /// Authorization: Bearer {refreshToken}
     /// ```
@@ -103,7 +103,7 @@ struct TokenRefreshServiceImpl: TokenRefreshService {
     /// ```
     func refresh(_ refreshToken: String) async throws -> TokenPair {
         // 1. URL 생성
-        let url = baseURL.appending(path: "auth/reissue")
+        let url = baseURL.appending(path: "api/v1/auth/token/renew")
 
         // 2. URLRequest 구성
         var request = URLRequest(url: url)
