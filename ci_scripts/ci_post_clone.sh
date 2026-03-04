@@ -99,4 +99,14 @@ if ! grep -q "<plist" "$FIREBASE_PLIST_PATH"; then
   exit 1
 fi
 
+if ! plutil -lint "$FIREBASE_PLIST_PATH" >/dev/null 2>&1; then
+  echo "ERROR: GoogleService-Info.plist is not a valid plist file."
+  exit 1
+fi
+
+if ! grep -q "<key>GOOGLE_APP_ID</key>" "$FIREBASE_PLIST_PATH"; then
+  echo "ERROR: GOOGLE_APP_ID missing in GoogleService-Info.plist."
+  exit 1
+fi
+
 echo "GoogleService-Info.plist restored successfully at: $FIREBASE_PLIST_PATH"
