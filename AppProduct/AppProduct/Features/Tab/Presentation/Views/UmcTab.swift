@@ -104,11 +104,6 @@ struct UmcTab: View {
             return false
         }
 
-        // MyPage 탭에서는 항상 Accessory 숨김
-        if tabCase == .mypage {
-            return false
-        }
-
         // 현재 탭의 NavigationStack에 화면이 쌓여있으면 Accessory 숨김
         let currentPath: [NavigationDestination] = {
             switch tabCase {

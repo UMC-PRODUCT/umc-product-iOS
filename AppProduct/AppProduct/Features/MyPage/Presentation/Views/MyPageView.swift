@@ -139,8 +139,6 @@ struct MyPageView: View {
             MyActiveLogSection(sectionType: section)
         case .settings:
             SettingSection(sectionType: section)
-        case .helpSupport:
-            HelpSection(sectionType: section)
         case .laws:
             LawSection(sectionType: section)
         case .info:
