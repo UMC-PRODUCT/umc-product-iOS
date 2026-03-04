@@ -50,8 +50,14 @@ extension NoticeViewModel {
 
     /// 기수 목록 조회
     func fetchGisuList() {
+        guard !isFetchingGisuList else { return }
+        isFetchingGisuList = true
+        defer { isFetchingGisuList = false }
+
         do {
-            gisuPairs = try genRepository.fetchGenGisuIdPairs()
+            let fetchedPairs = try genRepository.fetchGenGisuIdPairs()
+            gisuPairs = fetchedPairs.filter { $0.gisuId > 0 }
+            isGisuListLoaded = !gisuPairs.isEmpty
 
             generations = gisuPairs.map { Generation(value: $0.gen) }
 
@@ -66,6 +72,7 @@ extension NoticeViewModel {
                     await fetchNotices()
                 }
             } else {
+                isGisuListLoaded = false
                 noticeItems = .failed(.domain(.custom(message: "기수 정보를 불러오지 못했습니다.")))
                 errorHandler?.handle(
                     DomainError.custom(message: "기수 정보를 불러오지 못했습니다."),
@@ -77,6 +84,7 @@ extension NoticeViewModel {
             }
         } catch {
             gisuPairs = []
+            isGisuListLoaded = false
             generations = []
             noticeItems = .failed(.domain(.custom(message: "기수 정보를 불러오지 못했습니다.")))
             errorHandler?.handle(
@@ -92,6 +100,7 @@ extension NoticeViewModel {
     /// 기수 선택
     /// - Parameter generation: 선택된 기수
     func selectGeneration(_ generation: Generation) {
+        guard gisuPairs.contains(where: { $0.gen == generation.value && $0.gisuId > 0 }) else { return }
         selectedGeneration = generation
         if generationStates[generation.value] == nil {
             generationStates[generation.value] = GenerationFilterState()
@@ -148,6 +157,7 @@ extension NoticeViewModel {
 
     /// 현재 선택된 gen에 매핑된 gisuId를 반환
     func currentSelectedGisuId() -> Int? {
-        gisuPairs.first(where: { $0.gen == selectedGeneration.value })?.gisuId
+        guard isGisuListLoaded else { return nil }
+        return gisuPairs.first(where: { $0.gen == selectedGeneration.value && $0.gisuId > 0 })?.gisuId
     }
 }

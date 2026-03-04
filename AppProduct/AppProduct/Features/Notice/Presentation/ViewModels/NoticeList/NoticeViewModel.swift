@@ -37,6 +37,10 @@ final class NoticeViewModel {
 
     /// 기수-기수ID 쌍 목록
     var gisuPairs: [(gen: Int, gisuId: Int)] = []
+    /// 기수 매핑 로딩 완료 여부
+    var isGisuListLoaded: Bool = false
+    /// 기수 매핑 로딩 진행 여부
+    var isFetchingGisuList: Bool = false
 
     var pagingState = NoticePagingState()
     var userContext: NoticeUserContext = .empty
