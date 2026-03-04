@@ -211,9 +211,25 @@ fileprivate struct CommunityAccessoryView: View {
 }
 // MARK: - MyPage
 
-/// 마이페이지 탭 하단 액세서리 (미구현)
+/// 마이페이지 탭 하단 액세서리 - 문의하기 버튼
 fileprivate struct MyPageAccessoryView: View {
+    private let kakaoPlusManager: KakaoPlusManager = .init()
+
     var body: some View {
-        Text("11")
+        Button(action: {
+            kakaoPlusManager.openKakaoChannel()
+        }) {
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Spacer()
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .foregroundStyle(.indigo500)
+
+                Text("문의하기")
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .foregroundStyle(.grey900)
+        }
     }
 }

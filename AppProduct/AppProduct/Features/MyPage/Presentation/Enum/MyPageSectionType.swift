@@ -17,8 +17,6 @@ enum MyPageSectionType: String, CaseIterable {
     case myActiveLogs = "내 활동"
     /// 알림 설정, 위치 설정 등
     case settings = "설정"
-    /// 고객 지원, 문의 등
-    case helpSupport = "지원"
     /// 개인정보처리 방침, 이용약관 등
     case laws = "법률"
     /// 앱 버전 등 앱 정보
