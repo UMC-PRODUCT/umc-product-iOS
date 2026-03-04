@@ -26,6 +26,23 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
     // MARK: - Function
 
+    /// GoogleService-Info.plist가 유효한 경우에만 Firebase를 초기화합니다.
+    ///
+    /// placeholder 값(`__FILL_IN__`)이 남아 있거나 이미 초기화된 경우 건너뜁니다.
+    private func configureFirebaseIfNeeded() {
+        guard FirebaseApp.app() == nil else { return }
+        guard let plistPath = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+              let plistData = NSDictionary(contentsOfFile: plistPath),
+              let googleAppID = plistData["GOOGLE_APP_ID"] as? String,
+              !googleAppID.isEmpty,
+              !googleAppID.hasPrefix("__")
+        else {
+            print("[Firebase] GoogleService-Info.plist missing or contains placeholder values. Skipping configure.")
+            return
+        }
+        FirebaseApp.configure()
+    }
+
     /// DIContainer와 ModelContext를 설정하고 FCM 토큰 동기화를 시도합니다.
     ///
     /// - Parameters:
@@ -40,9 +57,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     }
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        if FirebaseApp.app() == nil {
-            FirebaseApp.configure()
-        }
+        configureFirebaseIfNeeded()
         Messaging.messaging().delegate = self
         UNUserNotificationCenter.current().delegate = self
         logDeviceIdentifiers()
