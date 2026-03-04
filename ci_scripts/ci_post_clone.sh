@@ -42,6 +42,16 @@ if [ -z "$BASE_URL_DEBUG_VALUE" ] || [ -z "$BASE_URL_RELEASE_VALUE" ]; then
   exit 1
 fi
 
+if [ -z "$KAKAO_KEY" ]; then
+  echo "ERROR: KAKAO_KEY environment variable is required."
+  exit 1
+fi
+
+if [ -z "$TMAP_SECRET_KEY" ]; then
+  echo "ERROR: TMAP_SECRET_KEY environment variable is required."
+  exit 1
+fi
+
 # xcconfig에서는 '//'가 주석이므로 URL을 https:/$()/... 형식으로 변환
 to_xcconfig_url() {
   printf "%s" "$1" | sed 's#://#:/$()/#'
@@ -61,6 +71,11 @@ EOF
 
 echo "Secrets.xcconfig created successfully"
 echo "Secrets.xcconfig created successfully at: $CONFIG_PATH"
+
+if ! grep -q '^KAKAO_KEY=' "$CONFIG_PATH" || ! grep -q '^TMAP_SECRET_KEY=' "$CONFIG_PATH"; then
+  echo "ERROR: Secrets.xcconfig validation failed (missing required keys)"
+  exit 1
+fi
 
 # Firebase GoogleService-Info.plist 복원
 # - 권장: GOOGLE_SERVICE_INFO_PLIST_BASE64
