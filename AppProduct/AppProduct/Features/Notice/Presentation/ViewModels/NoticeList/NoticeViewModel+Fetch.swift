@@ -122,9 +122,17 @@ extension NoticeViewModel {
         if page == 0 {
             noticeItems = .loading
         }
+
+        guard isGisuListLoaded, !gisuPairs.isEmpty else {
+            if !isFetchingGisuList {
+                fetchGisuList()
+            }
+            return nil
+        }
+
         guard pagingState.begin(page: page) else { return nil }
 
-        guard let gisuId = currentSelectedGisuId() else {
+        guard let gisuId = resolveCurrentGisuIdWithFallback() else {
             handleFetchError(
                 .domain(.custom(message: "기수 정보를 불러오지 못했습니다.")),
                 page: page,
@@ -134,6 +142,26 @@ extension NoticeViewModel {
             return nil
         }
         return gisuId
+    }
+
+    /// 현재 선택 기수의 gisuId를 우선 사용하고, 없으면 최신 기수로 보정합니다.
+    @MainActor
+    private func resolveCurrentGisuIdWithFallback() -> Int? {
+        if let gisuId = currentSelectedGisuId(), gisuId > 0 {
+            return gisuId
+        }
+
+        guard let fallback = gisuPairs
+            .filter({ $0.gisuId > 0 })
+            .max(by: { $0.gen < $1.gen }) else {
+            return nil
+        }
+
+        selectedGeneration = Generation(value: fallback.gen)
+        if generationStates[fallback.gen] == nil {
+            generationStates[fallback.gen] = GenerationFilterState()
+        }
+        return fallback.gisuId
     }
 
     /// 페이지 응답을 목록 상태에 반영합니다.
