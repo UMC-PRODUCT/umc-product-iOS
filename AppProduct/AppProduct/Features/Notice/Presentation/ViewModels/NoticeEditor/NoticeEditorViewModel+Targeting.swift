@@ -39,7 +39,6 @@ extension NoticeEditorViewModel {
         let hasBranch = subCategorySelection.selectedBranch != nil
         let hasSchool = subCategorySelection.selectedSchool != nil
         let hasParts = !subCategorySelection.selectedParts.isEmpty
-        let hasPartChipSelected = subCategorySelection.selectedSubCategories.contains(.part)
         let canPickBranch = visibleSubCategories.contains(.branch)
         let canPickSchool = visibleSubCategories.contains(.school)
 
@@ -59,15 +58,6 @@ extension NoticeEditorViewModel {
                 return "전체 기수 대상에서는 지부/파트를 함께 지정할 수 없습니다."
             }
             return nil
-        }
-
-        if memberRole == .centralEducationTeamMember && !hasParts {
-            return "파트를 하나 이상 선택해주세요."
-        }
-
-        // 파트 칩을 활성화했으면 최소 1개는 반드시 선택해야 합니다.
-        if hasPartChipSelected && !hasParts {
-            return "하나 이상의 파트를 선택해주세요."
         }
 
         if hasBranch && hasSchool {
