@@ -4,15 +4,29 @@ set -e
 
 echo "Starting ci_post_clone.sh script..."
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$SCRIPT_DIR"
+
+while [ "$REPO_ROOT" != "/" ] && [ ! -d "$REPO_ROOT/.git" ]; do
+  REPO_ROOT="$(dirname "$REPO_ROOT")"
+done
+
+if [ "$REPO_ROOT" = "/" ]; then
+  REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+
+WORKSPACE_ROOT="${CI_WORKSPACE:-$REPO_ROOT}"
+echo "Using workspace root: $WORKSPACE_ROOT"
+
 # Secrets.xcconfig 파일 생성 경로
-CONFIG_PATH="${CI_WORKSPACE}/AppProduct/AppProduct/Core/Secret/Secrets.xcconfig"
+CONFIG_PATH="${WORKSPACE_ROOT}/AppProduct/AppProduct/Core/Secret/Secrets.xcconfig"
 # Firebase 설정 파일 복원 경로
-FIREBASE_PLIST_PATH="${CI_WORKSPACE}/AppProduct/AppProduct/GoogleService-Info.plist"
+FIREBASE_PLIST_PATH="${WORKSPACE_ROOT}/AppProduct/AppProduct/GoogleService-Info.plist"
 
 echo "Creating Secrets.xcconfig at: $CONFIG_PATH"
 
 # Core/Secret 디렉토리가 없을 경우 생성
-mkdir -p "${CI_WORKSPACE}/AppProduct/AppProduct/Core/Secret"
+mkdir -p "${WORKSPACE_ROOT}/AppProduct/AppProduct/Core/Secret"
 
 # base64 디코드 호환 함수 (macOS: -D, GNU: --decode)
 decode_base64() {
