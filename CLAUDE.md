@@ -348,6 +348,7 @@ Git Flow + **연속 브랜치 파생** 지원
 - 최소 1인 Approve 필수
 - main/develop 직접 푸시 금지
 - Squash and Merge 사용
+- **배포 PR 예외**: `testFlight`, `release` 브랜치로의 PR은 **Merge Commit** 사용 (커밋 히스토리 동기화를 위해)
 
 ## 프로젝트 구조
 
