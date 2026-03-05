@@ -14,9 +14,12 @@ struct AvailableAttendanceSchedule: Equatable, Identifiable {
     let id: UUID = .init()
     let scheduleId: Int
     let scheduleName: String
+    let icon: String
+    let week: Int
     let tags: [String]
     let startTime: String
     let endTime: String
+    let location: Coordinate
     let sheetId: Int
     let recordId: Int?
     let status: AttendanceStatus

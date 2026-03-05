@@ -43,16 +43,12 @@ final class ActivityRepository: ActivityRepositoryProtocol, @unchecked Sendable 
                     sessionId: SessionID(
                         value: String(schedule.scheduleId)
                     ),
-                    // TODO: 서버 API에 icon/week/location 필드 추가 후 하드코딩 제거 예정
-                    icon: .Activity.profile,
+                    icon: Self.mapIconResource(schedule.icon),
                     title: schedule.scheduleName,
-                    week: 0,
+                    week: schedule.week,
                     startTime: startTime,
                     endTime: endTime,
-                    location: Coordinate(
-                        latitude: 37.582967,
-                        longitude: 127.010527
-                    )
+                    location: schedule.location
                 ),
                 initialAttendance: Self.mapAttendance(
                     schedule: schedule
@@ -96,6 +92,16 @@ final class ActivityRepository: ActivityRepositoryProtocol, @unchecked Sendable 
                 locationVerification: nil,
                 reason: nil
             )
+        }
+    }
+
+    /// 서버 아이콘 문자열을 ImageResource로 변환
+    private static func mapIconResource(_ icon: String) -> ImageResource {
+        switch icon.lowercased() {
+        case "profile", "activity.profile", "activity/profile":
+            return .Activity.profile
+        default:
+            return .Activity.profile
         }
     }
 }

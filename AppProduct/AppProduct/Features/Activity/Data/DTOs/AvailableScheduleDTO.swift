@@ -14,14 +14,22 @@ import Foundation
 struct AvailableScheduleDTO: Codable, Sendable, Equatable {
     let scheduleId: String
     let scheduleName: String
+    let icon: String
+    let week: String
     let tags: [String]
     let startTime: String
     let endTime: String
+    let location: AvailableScheduleLocationDTO
     let sheetId: String
     let recordId: String?
     let status: String
     let statusDisplay: String
     let locationVerified: Bool?
+}
+
+struct AvailableScheduleLocationDTO: Codable, Sendable, Equatable {
+    let latitude: String
+    let longitude: String
 }
 
 // MARK: - toDomain
@@ -33,9 +41,15 @@ extension AvailableScheduleDTO {
         AvailableAttendanceSchedule(
             scheduleId: Int(scheduleId) ?? 0,
             scheduleName: scheduleName,
+            icon: icon,
+            week: Int(week) ?? 0,
             tags: tags,
             startTime: startTime,
             endTime: endTime,
+            location: Coordinate(
+                latitude: Double(location.latitude) ?? 0,
+                longitude: Double(location.longitude) ?? 0
+            ),
             sheetId: Int(sheetId) ?? 0,
             recordId: recordId.flatMap { Int($0) },
             status: AttendanceStatus(serverStatus: status),

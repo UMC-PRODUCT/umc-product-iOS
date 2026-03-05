@@ -74,9 +74,15 @@ final class MockAttendanceRepository: ChallengerAttendanceRepositoryProtocol,
             AvailableAttendanceSchedule(
                 scheduleId: 1,
                 scheduleName: "9기 OT",
+                icon: "profile",
+                week: 1,
                 tags: ["STUDY", "PROJECT"],
                 startTime: "10:00:00",
                 endTime: "12:00:00",
+                location: Coordinate(
+                    latitude: 37.582967,
+                    longitude: 127.010527
+                ),
                 sheetId: 1,
                 recordId: 1,
                 status: .beforeAttendance,
