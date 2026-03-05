@@ -320,6 +320,13 @@ Git Flow + **연속 브랜치 파생** 지원
 - **PR 대기 중 작업**: 승인 대기 중 이전 브랜치에서 다음 브랜치 생성 가능
 - **동기화**: develop에서 merge 대신 `fetch + rebase` 사용
 
+### 배포 브랜치 전략
+
+- **TestFlight 배포**: `testFlight/{번호}` 브랜치 생성 → `testFlight`으로 PR 머지
+- **Release 배포**: `release/{번호}` 브랜치 생성 → `release`로 PR 머지
+- 배포 브랜치는 `develop`에서 분기하여 번호를 순차적으로 매김
+- 직접 푸시 금지, 반드시 PR을 통해 머지
+
 ### 커밋 형식
 
 `[TYPE] 작업 내용`

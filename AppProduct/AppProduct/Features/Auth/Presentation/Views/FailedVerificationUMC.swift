@@ -259,6 +259,7 @@ struct FailedVerificationUMC: View {
     }
 }
 
+#if DEBUG
 #Preview {
     FailedVerificationUMC()
         .environment(\.di, failedVerificationPreviewContainer)
@@ -266,7 +267,6 @@ struct FailedVerificationUMC: View {
         .environment(ErrorHandler())
 }
 
-#if DEBUG
 private var failedVerificationPreviewContainer: DIContainer {
     let container = DIContainer()
     container.register(AuthUseCaseProviding.self) {
