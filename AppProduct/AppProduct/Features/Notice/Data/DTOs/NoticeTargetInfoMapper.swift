@@ -38,6 +38,16 @@ extension NoticeTargetInfoDTO {
         return .general
     }
 
+    /// 일반 공지(scope=branch) 칩 표기용 이름을 제공합니다.
+    var resolvedScopeDisplayName: String? {
+        switch resolvedScope {
+        case .branch:
+            return resolvedChapterName
+        case .central, .campus:
+            return nil
+        }
+    }
+
     var resolvedParts: [UMCPartType] {
         targetParts ?? []
     }

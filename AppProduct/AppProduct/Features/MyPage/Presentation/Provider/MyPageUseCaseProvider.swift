@@ -13,6 +13,7 @@ import Foundation
 /// Provider를 통해 관련 UseCase를 묶어서 제공합니다.
 protocol MyPageUseCaseProviding {
     var fetchMyPageProfileUseCase: FetchMyPageProfileUseCaseProtocol { get }
+    var addChallengerRecordUseCase: AddChallengerRecordUseCaseProtocol { get }
     var updateMyPageProfileImageUseCase: UpdateMyPageProfileImageUseCaseProtocol { get }
     /// 프로필 외부 링크 수정 UseCase
     var updateMyPageProfileLinksUseCase: UpdateMyPageProfileLinksUseCaseProtocol { get }
@@ -31,6 +32,7 @@ final class MyPageUseCaseProvider: MyPageUseCaseProviding {
     // MARK: - Property
 
     let fetchMyPageProfileUseCase: FetchMyPageProfileUseCaseProtocol
+    let addChallengerRecordUseCase: AddChallengerRecordUseCaseProtocol
     let updateMyPageProfileImageUseCase: UpdateMyPageProfileImageUseCaseProtocol
     let updateMyPageProfileLinksUseCase: UpdateMyPageProfileLinksUseCaseProtocol
     let deleteMemberUseCase: DeleteMemberUseCaseProtocol
@@ -44,6 +46,9 @@ final class MyPageUseCaseProvider: MyPageUseCaseProviding {
 
     init(repository: MyPageRepositoryProtocol) {
         self.fetchMyPageProfileUseCase = FetchMyPageProfileUseCase(
+            repository: repository
+        )
+        self.addChallengerRecordUseCase = AddChallengerRecordUseCase(
             repository: repository
         )
         self.updateMyPageProfileImageUseCase = UpdateMyPageProfileImageUseCase(

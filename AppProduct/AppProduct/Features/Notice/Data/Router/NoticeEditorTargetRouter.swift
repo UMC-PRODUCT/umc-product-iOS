@@ -20,6 +20,8 @@ enum NoticeEditorTargetRouter: BaseTargetType {
     case getAllSchools
     /// 기수별 지부 및 소속 학교 목록 조회
     case getChaptersWithSchools(gisuId: Int)
+    /// 지부 단건 조회
+    case getChapter(chapterId: Int)
 
     // MARK: - BaseTargetType
 
@@ -32,13 +34,15 @@ enum NoticeEditorTargetRouter: BaseTargetType {
             return "/api/v1/schools/all"
         case .getChaptersWithSchools:
             return "/api/v1/chapters/with-schools"
+        case .getChapter(let chapterId):
+            return "/api/v1/chapters/\(chapterId)"
         }
     }
 
     /// HTTP 메서드
     var method: Moya.Method {
         switch self {
-        case .getAllChapters, .getAllSchools, .getChaptersWithSchools:
+        case .getAllChapters, .getAllSchools, .getChaptersWithSchools, .getChapter:
             return .get
         }
     }
@@ -53,6 +57,8 @@ enum NoticeEditorTargetRouter: BaseTargetType {
                 parameters: ["gisuId": gisuId],
                 encoding: URLEncoding.queryString
             )
+        case .getChapter:
+            return .requestPlain
         }
     }
 }

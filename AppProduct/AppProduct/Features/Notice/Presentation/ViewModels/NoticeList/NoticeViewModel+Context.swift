@@ -41,7 +41,14 @@ extension NoticeViewModel {
         self.schoolId = schoolId
 
         let validMainFilters = mainFilterItems
-        if !validMainFilters.contains(selectedMainFilter) {
+        let isCurrentPartSelectionValid: Bool = {
+            if case .part = selectedMainFilter {
+                return canSelectPartFilter
+            }
+            return validMainFilters.contains(selectedMainFilter)
+        }()
+
+        if !isCurrentPartSelectionValid {
             var state = currentState
             state.mainFilter = validMainFilters.first ?? .all
             currentState = state

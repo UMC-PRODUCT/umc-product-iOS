@@ -56,10 +56,11 @@ struct NoticeDTO: Codable {
 // MARK: - Mapping
 extension NoticeDTO {
     /// NoticeDTO → NoticeItemModel 변환 (공지 목록용)
-    func toItemModel() -> NoticeItemModel {
+    func toItemModel(scopeDisplayNameOverride: String? = nil) -> NoticeItemModel {
         let generation = targetInfo.generationValue
         let scope = targetInfo.resolvedScope
         let category = targetInfo.resolvedCategory
+        let scopeDisplayName = scopeDisplayNameOverride ?? targetInfo.resolvedScopeDisplayName
         
         return NoticeItemModel(
             noticeId: id,
@@ -75,7 +76,8 @@ extension NoticeDTO {
             links: [],  // 기본 조회에는 없음
             images: [],  // 기본 조회에는 없음
             vote: nil,
-            viewCount: Int(viewCount) ?? 0
+            viewCount: Int(viewCount) ?? 0,
+            scopeDisplayName: scopeDisplayName
         )
     }
 }
@@ -89,6 +91,10 @@ struct NoticeTargetInfoDTO: Codable {
     let targetGisuId: String
     let targetChapterId: String?
     let targetSchoolId: String?
+    let targetChapterName: String?
+    let targetSchoolName: String?
+    let chapterName: String?
+    let schoolName: String?
     let targetParts: [UMCPartType]?
 
     private enum CodingKeys: String, CodingKey {
@@ -96,6 +102,10 @@ struct NoticeTargetInfoDTO: Codable {
         case targetGisuId
         case targetChapterId
         case targetSchoolId
+        case targetChapterName
+        case targetSchoolName
+        case chapterName
+        case schoolName
         case targetParts
     }
 
@@ -104,12 +114,20 @@ struct NoticeTargetInfoDTO: Codable {
         targetGisuId: String,
         targetChapterId: String?,
         targetSchoolId: String?,
+        targetChapterName: String? = nil,
+        targetSchoolName: String? = nil,
+        chapterName: String? = nil,
+        schoolName: String? = nil,
         targetParts: [UMCPartType]?
     ) {
         self.targetGisu = targetGisu
         self.targetGisuId = targetGisuId
         self.targetChapterId = targetChapterId
         self.targetSchoolId = targetSchoolId
+        self.targetChapterName = targetChapterName
+        self.targetSchoolName = targetSchoolName
+        self.chapterName = chapterName
+        self.schoolName = schoolName
         self.targetParts = targetParts
     }
 
@@ -119,7 +137,23 @@ struct NoticeTargetInfoDTO: Codable {
         targetGisuId = container.decodeFlexibleOptionalString(forKey: .targetGisuId) ?? "0"
         targetChapterId = container.decodeFlexibleOptionalString(forKey: .targetChapterId)
         targetSchoolId = container.decodeFlexibleOptionalString(forKey: .targetSchoolId)
+        targetChapterName = container.decodeFlexibleOptionalString(forKey: .targetChapterName)
+        targetSchoolName = container.decodeFlexibleOptionalString(forKey: .targetSchoolName)
+        chapterName = container.decodeFlexibleOptionalString(forKey: .chapterName)
+        schoolName = container.decodeFlexibleOptionalString(forKey: .schoolName)
         targetParts = try container.decodeIfPresent([UMCPartType].self, forKey: .targetParts)
+    }
+
+    var resolvedChapterName: String? {
+        let candidates = [targetChapterName, chapterName]
+        return candidates
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first(where: { !$0.isEmpty })
+    }
+
+    var targetChapterIdValue: Int? {
+        guard let targetChapterId else { return nil }
+        return Int(targetChapterId)
     }
 }
 

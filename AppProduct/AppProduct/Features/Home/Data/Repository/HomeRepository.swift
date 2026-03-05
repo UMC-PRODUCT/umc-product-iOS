@@ -114,36 +114,46 @@ private extension HomeRepository {
         let generations = Set(profile.roles.map(\.gisu) + records.map(\.gisu))
             .filter { $0 > 0 }
             .sorted()
-        let gisuIds = Set(profile.roles.map(\.gisuId) + records.map(\.gisuId))
+        let recordGisuIds = Set(records.map(\.gisuId))
             .filter { $0 > 0 }
+        let roleGisuIds = Set(profile.roles.map(\.gisuId))
+            .filter { $0 > 0 }
+        let targetGisuIds = recordGisuIds.isEmpty ? roleGisuIds : recordGisuIds
 
-        guard !gisuIds.isEmpty else {
+        guard !targetGisuIds.isEmpty else {
             return [
                 .days(0),
                 .gens(generations)
             ]
         }
 
-        var totalDays = 0
-        try await withThrowingTaskGroup(of: Int.self) { group in
-            for gisuId in gisuIds {
+        var earliestStartDate: Date?
+        try await withThrowingTaskGroup(of: Date?.self) { group in
+            for gisuId in targetGisuIds {
                 group.addTask {
-                    try await self.fetchActivityDays(gisuId: gisuId)
+                    try await self.fetchSeasonStartDate(gisuId: gisuId)
                 }
             }
 
-            for try await days in group {
-                totalDays += days
+            for try await startDate in group {
+                guard let startDate else { continue }
+                if let currentEarliest = earliestStartDate {
+                    earliestStartDate = min(currentEarliest, startDate)
+                } else {
+                    earliestStartDate = startDate
+                }
             }
         }
 
+        let activityDays = earliestStartDate.map { calculateActivityDays(from: $0) } ?? 0
+
         return [
-            .days(max(totalDays, 0)),
+            .days(activityDays),
             .gens(generations)
         ]
     }
 
-    func fetchActivityDays(gisuId: Int) async throws -> Int {
+    func fetchSeasonStartDate(gisuId: Int) async throws -> Date? {
         let response = try await adapter.request(
             HomeRouter.getGisuDetail(gisuId: gisuId)
         )
@@ -153,11 +163,25 @@ private extension HomeRepository {
         )
         let gisuDetail = try apiResponse.unwrap()
 
-        let calendar = Calendar.current
-        let start = calendar.startOfDay(for: gisuDetail.startAt)
-        let endSource = gisuDetail.isActive ? Date() : gisuDetail.endAt
-        let end = calendar.startOfDay(for: endSource)
+        guard gisuDetail.startAt != .distantPast else {
+            return nil
+        }
 
-        return max(calendar.dateComponents([.day], from: start, to: end).day ?? 0, 0)
+        return gisuDetail.startAt
+    }
+
+    func calculateActivityDays(from startDate: Date, to endDate: Date = Date()) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = ServerDateTimeConverter.kstTimeZone
+
+        let start = calendar.startOfDay(for: startDate)
+        let end = calendar.startOfDay(for: endDate)
+
+        guard start <= end else {
+            return 0
+        }
+
+        let elapsedDays = calendar.dateComponents([.day], from: start, to: end).day ?? 0
+        return max(elapsedDays + 1, 0)
     }
 }

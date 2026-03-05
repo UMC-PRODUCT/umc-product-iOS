@@ -11,6 +11,8 @@ import Foundation
 protocol NoticeEditorTargetRepositoryProtocol {
     /// 전체 지부 목록을 조회합니다.
     func fetchAllBranches() async throws -> [NoticeTargetOption]
+    /// 지부 ID로 지부명을 조회합니다.
+    func fetchBranchName(chapterId: Int) async throws -> String
     /// 전체 학교 목록을 조회합니다.
     func fetchAllSchools() async throws -> [NoticeTargetOption]
     /// 특정 지부(챕터)에 속한 학교 목록을 조회합니다.

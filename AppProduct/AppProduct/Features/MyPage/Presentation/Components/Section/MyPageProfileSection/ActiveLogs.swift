@@ -11,7 +11,7 @@ import SwiftUI
 ///
 /// 사용자의 UMC 활동 내역(스터디, 프로젝트 등)을 리스트 형태로 표시합니다.
 /// 각 이력은 ActiveLogRow 컴포넌트를 통해 렌더링됩니다.
-struct ActiveLogs: View, Equatable {
+struct ActiveLogs: View {
 
     // MARK: - Property
 
@@ -21,11 +21,24 @@ struct ActiveLogs: View, Equatable {
     /// 섹션 헤더 타이틀
     let header: String
 
+    /// 활동 이력 추가 버튼 탭 액션
+    let onAddTap: (() -> Void)?
+
+    /// 활동 이력 추가 처리 중 여부
+    let isAdding: Bool
+
     // MARK: - Init
 
-    init(rows: [ActivityLog], header: String) {
+    init(
+        rows: [ActivityLog],
+        header: String,
+        onAddTap: (() -> Void)? = nil,
+        isAdding: Bool = false
+    ) {
         self.rows = rows
         self.header = header
+        self.onAddTap = onAddTap
+        self.isAdding = isAdding
     }
 
     // MARK: - Body
@@ -39,7 +52,25 @@ struct ActiveLogs: View, Equatable {
                 }
             })
         }, header: {
-            SectionHeaderView(title: header)
+            HStack {
+                SectionHeaderView(title: header)
+                Spacer()
+                if let onAddTap {
+                    Button(action: onAddTap) {
+                        if isAdding {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Label("기록 추가", systemImage: "plus.circle")
+                                .labelStyle(.titleAndIcon)
+                                .labelIconToTitleSpacing(DefaultSpacing.spacing8)
+                                .appFont(.footnote, color: .indigo500)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isAdding)
+                }
+            }
         })
     }
 }

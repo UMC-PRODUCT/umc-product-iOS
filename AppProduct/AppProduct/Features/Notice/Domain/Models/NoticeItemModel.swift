@@ -28,6 +28,7 @@ struct NoticeItemModel: Equatable, Identifiable {
     let images: [String]
     let vote: NoticeVote?
     let viewCount: Int
+    let scopeDisplayName: String?
 
     init(
         noticeId: String = UUID().uuidString,
@@ -43,7 +44,8 @@ struct NoticeItemModel: Equatable, Identifiable {
         links: [String],
         images: [String],
         vote: NoticeVote?,
-        viewCount: Int
+        viewCount: Int,
+        scopeDisplayName: String? = nil
     ) {
         self.noticeId = noticeId
         self.generation = generation
@@ -59,11 +61,12 @@ struct NoticeItemModel: Equatable, Identifiable {
         self.images = images
         self.vote = vote
         self.viewCount = viewCount
+        self.scopeDisplayName = scopeDisplayName
     }
     
     /// UI 표시용 태그 (scope + category 조합)
     var tag: NoticeItemTag {
-        NoticeItemTag(scope: scope, category: category)
+        NoticeItemTag(scope: scope, category: category, scopeDisplayName: scopeDisplayName)
     }
     
     var hasLink: Bool { !links.isEmpty }
