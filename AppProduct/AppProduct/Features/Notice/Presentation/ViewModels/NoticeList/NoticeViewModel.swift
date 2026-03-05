@@ -156,27 +156,37 @@ final class NoticeViewModel {
         }
     }
 
+    /// 상단 메인 메뉴에 표시할 기본 조직 필터 목록(파트 제외)
+    var baseMainFilterItems: [NoticeMainFilterType] {
+        mainFilterItems.filter {
+            if case .part = $0 { return false }
+            return true
+        }
+    }
+
+    /// 파트 Nested Menu 노출 여부
+    var canSelectPartFilter: Bool {
+        memberRole != .superAdmin
+    }
+
+    /// 파트 Nested Menu 항목
+    var partFilterItems: [NoticePart] {
+        canSelectPartFilter ? NoticePart.allCases : []
+    }
+
     /// 현재 메인필터에 따라 노출할 하단 서브필터 칩 목록을 반환합니다.
     ///
     /// - 전체/파트: 칩 없음
     /// - 중앙/지부: 전체 + 파트
     /// - 학교: 학교 + 파트
     var subFilterChips: [NoticeListSubFilterChip] {
-        switch selectedMainFilter {
-        case .all, .part:
-            return []
-        case .central:
-            return [.all, .part]
-        case .branch:
-            return [.all, .part]
-        case .school:
-            return [.school, .part]
-        }
+        // iOS 공지 필터는 2계층(기수 + 조직/파트)만 사용합니다.
+        []
     }
 
     /// 서브필터 표시 여부 (중앙/지부/학교만)
     var showSubFilter: Bool {
-        !subFilterChips.isEmpty
+        false
     }
 
     var pageSize: Int {

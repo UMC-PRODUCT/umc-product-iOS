@@ -2,7 +2,7 @@
 //  AddChallengerRecordUseCase.swift
 //  AppProduct
 //
-//  Created by Codex on 3/6/26.
+//  Created by euijjang97 on 3/6/26.
 //
 
 import Foundation
