@@ -123,37 +123,10 @@ final class NoticeViewModel {
 
     /// 역할(memberRole) 기반으로 노출할 메인필터 항목 목록을 반환합니다.
     ///
-    /// 중앙 운영진은 전체/중앙/지부/학교/파트, 지부장은 지부 이하,
-    /// 학교 운영진/챌린저는 학교 이하만 노출됩니다.
+    /// 권한과 무관하게 상위 조직 필터는 UMC 공지/본인 지부/본인 학교를 노출합니다.
+    /// 파트 필터는 별도 Nested Menu에서 제공합니다.
     var mainFilterItems: [NoticeMainFilterType] {
-        let partItem: [NoticeMainFilterType] = {
-            guard let userPart = userContext.part else { return [] }
-            return [.part(userPart)]
-        }()
-
-        switch memberRole {
-        case .superAdmin:
-            return []
-        case .centralPresident, .centralVicePresident, .centralOperatingTeamMember, .centralEducationTeamMember:
-            return [.all, .central, .branch(userContext.branchName), .school(userContext.schoolName)] + partItem
-        case .chapterPresident:
-            return [.all, .branch(userContext.branchName), .school(userContext.schoolName)] + partItem
-        case .schoolPresident, .schoolVicePresident:
-            return [.all, .branch(userContext.branchName), .school(userContext.schoolName)] + partItem
-        case .schoolPartLeader, .schoolEtcAdmin, .challenger:
-            return [.all, .school(userContext.schoolName)] + partItem
-        case .none:
-            var items: [NoticeMainFilterType] = [.all]
-            if organizationType == .central {
-                items.append(.central)
-            }
-            items.append(.branch(userContext.branchName))
-            items.append(.school(userContext.schoolName))
-            if let userPart = userContext.part {
-                items.append(.part(userPart))
-            }
-            return items
-        }
+        [.central, .branch(userContext.branchName), .school(userContext.schoolName)]
     }
 
     /// 상단 메인 메뉴에 표시할 기본 조직 필터 목록(파트 제외)
