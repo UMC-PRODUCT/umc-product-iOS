@@ -41,6 +41,16 @@ struct NoticeEditorTargetRepository: NoticeEditorTargetRepositoryProtocol {
         }
     }
 
+    /// 지부 ID로 지부명을 조회합니다.
+    func fetchBranchName(chapterId: Int) async throws -> String {
+        let response = try await adapter.request(NoticeEditorTargetRouter.getChapter(chapterId: chapterId))
+        let apiResponse = try decoder.decode(
+            APIResponse<ChapterDTO>.self,
+            from: response.data
+        )
+        return try apiResponse.unwrap().name
+    }
+
     /// 전체 학교 목록 조회 API를 호출하고 학교명 배열을 반환합니다.
     func fetchAllSchools() async throws -> [NoticeTargetOption] {
         let response = try await adapter.requestWithoutAuth(NoticeEditorTargetRouter.getAllSchools)
