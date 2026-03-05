@@ -27,6 +27,11 @@ final class NoticeViewModel {
         container.resolve(ChallengerGenRepositoryProtocol.self)
     }
 
+    /// 공지 타겟(지부/학교) 조회 UseCase
+    var noticeEditorTargetUseCase: NoticeEditorTargetUseCaseProtocol {
+        container.resolve(NoticeEditorTargetUseCaseProtocol.self)
+    }
+
     /// ViewModel 기능을 extension 파일로 분리해 관리하므로,
     /// 동일 타입 extension에서도 상태 변경이 가능하도록 내부 공개합니다.
     var organizationType: OrganizationType?
@@ -37,6 +42,8 @@ final class NoticeViewModel {
 
     /// 기수-기수ID 쌍 목록
     var gisuPairs: [(gen: Int, gisuId: Int)] = []
+    /// 지부명 캐시 (chapterId -> chapterName)
+    var chapterNameCache: [Int: String] = [:]
     /// 기수 매핑 로딩 완료 여부
     var isGisuListLoaded: Bool = false
     /// 기수 매핑 로딩 진행 여부

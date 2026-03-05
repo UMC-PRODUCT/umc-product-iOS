@@ -97,7 +97,7 @@ extension NoticeViewModel {
         do {
             let request = buildNoticeListRequest(gisuId: gisuId, page: page)
             let response = try await requestAction(request)
-            applyPagedResponse(response, page: page)
+            await applyPagedResponse(response, page: page)
         } catch let error as RepositoryError {
             handleFetchError(.repository(error), page: page, action: "fetchNotices", failure: error)
         } catch let error as DomainError {
@@ -169,7 +169,7 @@ extension NoticeViewModel {
     ///   - response: 공지 페이징 응답 DTO
     ///   - page: 조회한 페이지 인덱스
     @MainActor
-    private func applyPagedResponse(_ response: NoticePageDTO<NoticeDTO>, page: Int) {
+    private func applyPagedResponse(_ response: NoticePageDTO<NoticeDTO>, page: Int) async {
         #if DEBUG
         print(
             "[NoticeViewModel] applyPagedResponse " +
@@ -196,7 +196,12 @@ extension NoticeViewModel {
             return
         }
 
-        let items = response.content.map { $0.toItemModel() }
+        let branchNameOverrides = await resolveBranchNameOverrides(from: response.content)
+        let items = response.content.map { dto in
+            let chapterId = dto.targetInfo.targetChapterIdValue
+            let scopeDisplayName = chapterId.flatMap { branchNameOverrides[$0] }
+            return dto.toItemModel(scopeDisplayNameOverride: scopeDisplayName)
+        }
         pagingState.applySuccess(page: page, hasNextPage: response.hasNext)
 
         if page == 0 {
@@ -205,6 +210,36 @@ extension NoticeViewModel {
             let mergedItems = (noticeItems.value ?? []) + items
             noticeItems = .loaded(mergedItems)
         }
+    }
+
+    @MainActor
+    private func resolveBranchNameOverrides(from notices: [NoticeDTO]) async -> [Int: String] {
+        let missingBranchIds = Set(
+            notices.compactMap { dto -> Int? in
+                guard dto.targetInfo.resolvedScope == .branch else { return nil }
+                guard dto.targetInfo.resolvedScopeDisplayName == nil else { return nil }
+                return dto.targetInfo.targetChapterIdValue
+            }
+        )
+
+        guard !missingBranchIds.isEmpty else { return [:] }
+
+        var resolved: [Int: String] = [:]
+        for chapterId in missingBranchIds {
+            if let cached = chapterNameCache[chapterId] {
+                resolved[chapterId] = cached
+                continue
+            }
+            do {
+                let chapterName = try await noticeEditorTargetUseCase.fetchBranchName(chapterId: chapterId)
+                chapterNameCache[chapterId] = chapterName
+                resolved[chapterId] = chapterName
+            } catch {
+                // 조회 실패 시 기본 칩 라벨(지부)로 fallback
+                continue
+            }
+        }
+        return resolved
     }
 
     /// 조회 실패 상태를 반영합니다.
