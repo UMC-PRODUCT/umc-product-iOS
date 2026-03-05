@@ -34,6 +34,9 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
     /// 프로필 이미지 수정 API 진행 상태
     var isUpdatingProfileImage: Bool = false
 
+    /// 활동 이력 추가 API 진행 상태
+    var isAddingActivityLog: Bool = false
+
     /// 최초 조회/수정 화면 진입 시 링크 스냅샷
     private var initialProfileLinkState: [SocialLinkType: String]
     
@@ -114,6 +117,21 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
         initialProfileLinkState = Self.makeProfileLinkState(from: updatedProfile.profileLink)
         selectedImageData = nil
         selectedPhotoItem = nil
+    }
+
+    /// 운영진 발급 코드로 활동 이력을 추가하고 프로필 정보를 갱신합니다.
+    @MainActor
+    func addActivityLog(code: String) async throws {
+        guard !isAddingActivityLog else {
+            return
+        }
+
+        isAddingActivityLog = true
+        defer { isAddingActivityLog = false }
+
+        try await useCaseProvider.addChallengerRecordUseCase.execute(code: code)
+        profileData = try await useCaseProvider.fetchMyPageProfileUseCase.execute()
+        initialProfileLinkState = Self.makeProfileLinkState(from: profileData.profileLink)
     }
 
     // MARK: - Private Method

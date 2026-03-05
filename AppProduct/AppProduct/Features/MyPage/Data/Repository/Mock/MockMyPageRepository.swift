@@ -28,6 +28,10 @@ final class MockMyPageRepository: MyPageRepositoryProtocol {
         )
     }
 
+    func addChallengerRecord(code: String) async throws {
+        _ = code
+    }
+
     func updateProfileImage(
         imageData: Data,
         fileName: String,
