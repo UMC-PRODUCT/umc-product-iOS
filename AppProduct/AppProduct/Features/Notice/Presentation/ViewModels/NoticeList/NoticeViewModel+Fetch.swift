@@ -232,8 +232,6 @@ extension NoticeViewModel {
             gisuId: gisuId,
             page: page,
             selectedMainFilter: selectedMainFilter,
-            selectedPart: selectedPart,
-            organizationType: organizationType,
             chapterId: chapterId,
             schoolId: schoolId,
             pageSize: pageSize,
