@@ -68,3 +68,6 @@ Derived/
 
 ### Tuist managed dependencies ###
 Tuist/.build
+
+### Tuist local derived data ###
+.local-derived-data-*
