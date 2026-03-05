@@ -63,6 +63,7 @@ struct ActiveLogs: View {
                         } else {
                             Label("기록 추가", systemImage: "plus.circle")
                                 .labelStyle(.titleAndIcon)
+                                .labelIconToTitleSpacing(DefaultSpacing.spacing8)
                                 .appFont(.footnote, color: .indigo500)
                         }
                     }
