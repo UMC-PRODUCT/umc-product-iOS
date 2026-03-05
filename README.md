@@ -31,6 +31,7 @@
 | 기수 | 기간 | 상태 | 리드 | 상세 |
 |------|------|------|------|------|
 | 1기 | 2025.12.27 - 2026.02.20 | 완료 | 리버/이재원 | [1기 상세](#-1기-20251227---20260220) |
+| 2기 | YYYY.MM.DD - YYYY.MM.DD | 예정 | 제옹/정의찬 | [2기 상세](#-2기-yyyyMMdd---yyyyMMdd) |
 | N기 | YYYY.MM.DD - YYYY.MM.DD | 진행/예정 | TBD | 아래 템플릿으로 추가 |
 
 ## 🧩 공통 정보
@@ -146,6 +147,31 @@ xcodebuild -project AppProduct/AppProduct.xcodeproj \
 
 - 디자인 시스템에서 iOS 26 Liquid Glass 가이드라인 반영
 - CoreML 기반 알림 분류 테스트 리소스 운영
+
+### 🥈 2기 (YYYY.MM.DD - YYYY.MM.DD)
+
+#### 팀 구성
+
+| 구분 | 이름/실명 | 역할 | GitHub |
+|------|------|------|------|
+| 리더 | 제옹/정의찬 | PL | [제옹](https://github.com/JEONG-J) |
+| 팀원 1 | 입력 필요 | 입력 필요 | [GitHub](https://github.com/) |
+| 팀원 2 | 입력 필요 | 입력 필요 | [GitHub](https://github.com/) |
+| 팀원 3 | 입력 필요 | 입력 필요 | [GitHub](https://github.com/) |
+| 팀원 4 | 입력 필요 | 입력 필요 | [GitHub](https://github.com/) |
+| 팀원 5 | 입력 필요 | 입력 필요 | [GitHub](https://github.com/) |
+| 팀원 6 | 입력 필요 | 입력 필요 | [GitHub](https://github.com/) |
+
+#### 2기 신규/강화 기능
+
+- [신규] 기능 A
+- [개선] 기능 B
+- [실험] 기능 C
+
+#### 2기 비고
+
+- 운영/기술 의사결정 요약
+- 다음 기수로 넘길 TODO
 
 ## 🧱 새 기수 추가 템플릿
 

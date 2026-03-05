@@ -276,18 +276,41 @@ struct NoticeView: View {
     /// 상단 툴바(기수 + 메인 필터)를 구성합니다.
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        if !viewModel.mainFilterItems.isEmpty {
-            ToolBarCollection.ToolBarCenterMenu(
-                items: viewModel.mainFilterItems,
-                selection: mainFilterBinding,
-                itemLabel: { $0.labelText },
-                itemIcon: { $0.labelIcon },
-                onSelect: { selected in
-                    #if DEBUG
-                    print("[Notice][MainFilter] tapped: \(selected.labelText)")
-                    #endif
+        if !viewModel.baseMainFilterItems.isEmpty {
+            ToolbarTitleMenu {
+                ForEach(viewModel.baseMainFilterItems) { item in
+                    Button {
+                        viewModel.selectMainFilter(item)
+                        #if DEBUG
+                        print("[Notice][MainFilter] tapped: \(item.labelText)")
+                        #endif
+                    } label: {
+                        Label(item.labelText, systemImage: item.labelIcon)
+                            .imageScale(.small)
+                            .font(.subheadline)
+                    }
                 }
-            )
+
+                if viewModel.canSelectPartFilter {
+                    Menu {
+                        ForEach(viewModel.partFilterItems) { part in
+                            Button {
+                                viewModel.selectMainFilter(.part(part))
+                                #if DEBUG
+                                print("[Notice][MainFilter] part tapped: \(part.displayName)")
+                                #endif
+                            } label: {
+                                Label(part.displayName, systemImage: part.iconName)
+                                    .font(.subheadline)
+                            }
+                        }
+                    } label: {
+                        Label("파트", systemImage: "person.3.fill")
+                            .imageScale(.small)
+                            .font(.subheadline)
+                    }
+                }
+            }
         }
 
         ToolBarCollection.GenerationFilter(
@@ -296,15 +319,6 @@ struct NoticeView: View {
             selection: generationBinding
         )
     }
-
-    /// 메인필터 선택 바인딩
-    private var mainFilterBinding: Binding<NoticeMainFilterType> {
-        Binding(
-            get: { viewModel.selectedMainFilter },
-            set: { viewModel.selectMainFilter($0) }
-        )
-    }
-
     /// 메인 필터 타입에 따라 노출되는 서브필터 영역입니다.
     @ViewBuilder
     private var topSafeAreaContent: some View {

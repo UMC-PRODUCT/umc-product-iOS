@@ -92,7 +92,7 @@ enum NoticeMainFilterType: Identifiable, Equatable, Hashable {
     var labelText: String {
         switch self {
         case .all: return "전체"
-        case .central: return "중앙운영사무국"
+        case .central: return "UMC 공지"
         case .branch(let name): return name
         case .school(let name): return name
         case .part(let part): return part.displayName

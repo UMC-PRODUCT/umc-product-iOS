@@ -289,10 +289,11 @@ extension FormEmailField {
         showError = false
 
         switch verificationState {
-        case .initial:
+        case .initial, .failed:
             // 1단계: 인증번호 요청
             Task {
                 do {
+                    verificationCode = ""
                     verificationState = .verifying
                     try await onVerificationRequested()
                     verificationState = .codeRequested
@@ -318,8 +319,8 @@ extension FormEmailField {
         case .verified:
             // 이미 인증 완료
             break
-        case .verifying, .failed:
-            // 처리 중이거나 실패 상태
+        case .verifying:
+            // 처리 중
             break
         }
     }

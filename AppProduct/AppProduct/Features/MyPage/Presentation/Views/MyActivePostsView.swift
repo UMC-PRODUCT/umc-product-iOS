@@ -198,6 +198,7 @@ private func myActivePostsPreview(
 
 private struct MyPageUseCaseProviderPreviewMock: MyPageUseCaseProviding {
     let fetchMyPageProfileUseCase: FetchMyPageProfileUseCaseProtocol = FetchMyPageProfilePreviewUseCase()
+    let addChallengerRecordUseCase: AddChallengerRecordUseCaseProtocol = AddChallengerRecordPreviewUseCase()
     let updateMyPageProfileImageUseCase: UpdateMyPageProfileImageUseCaseProtocol = UpdateMyPageProfileImagePreviewUseCase()
     let updateMyPageProfileLinksUseCase: UpdateMyPageProfileLinksUseCaseProtocol = UpdateMyPageProfileLinksPreviewUseCase()
     let deleteMemberUseCase: DeleteMemberUseCaseProtocol = DeleteMemberPreviewUseCase()
@@ -205,6 +206,12 @@ private struct MyPageUseCaseProviderPreviewMock: MyPageUseCaseProviding {
     let fetchMyCommentedPostsUseCase: FetchMyCommentedPostsUseCaseProtocol = FetchMyCommentedPostsPreviewUseCase()
     let fetchMyScrappedPostsUseCase: FetchMyScrappedPostsUseCaseProtocol = FetchMyScrappedPostsPreviewUseCase()
     let fetchTermsUseCase: FetchTermsUseCaseProtocol = FetchTermsPreviewUseCase()
+}
+
+private struct AddChallengerRecordPreviewUseCase: AddChallengerRecordUseCaseProtocol {
+    func execute(code: String) async throws {
+        _ = code
+    }
 }
 
 private struct FetchMyPageProfilePreviewUseCase: FetchMyPageProfileUseCaseProtocol {

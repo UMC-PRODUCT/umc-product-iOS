@@ -14,6 +14,7 @@ struct NoticeItemTag: Equatable {
 
     let scope: NoticeScope
     let category: NoticeCategory
+    let scopeDisplayName: String?
 
     // MARK: - Computed Property
 
@@ -23,8 +24,10 @@ struct NoticeItemTag: Equatable {
         case .general:
             switch scope {
             case .central: return "중앙"
-            case .branch: return "지부"
-            case .campus: return "학교"
+            case .branch:
+                let displayName = scopeDisplayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                return displayName.isEmpty ? "지부" : displayName
+            case .campus: return "교내"
             }
         case .part(let part):
             return NoticePart(umcPartType: part)?.displayName ?? "파트"

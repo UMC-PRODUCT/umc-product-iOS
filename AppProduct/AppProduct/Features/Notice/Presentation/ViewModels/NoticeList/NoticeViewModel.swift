@@ -27,6 +27,11 @@ final class NoticeViewModel {
         container.resolve(ChallengerGenRepositoryProtocol.self)
     }
 
+    /// 공지 타겟(지부/학교) 조회 UseCase
+    var noticeEditorTargetUseCase: NoticeEditorTargetUseCaseProtocol {
+        container.resolve(NoticeEditorTargetUseCaseProtocol.self)
+    }
+
     /// ViewModel 기능을 extension 파일로 분리해 관리하므로,
     /// 동일 타입 extension에서도 상태 변경이 가능하도록 내부 공개합니다.
     var organizationType: OrganizationType?
@@ -37,6 +42,8 @@ final class NoticeViewModel {
 
     /// 기수-기수ID 쌍 목록
     var gisuPairs: [(gen: Int, gisuId: Int)] = []
+    /// 지부명 캐시 (chapterId -> chapterName)
+    var chapterNameCache: [Int: String] = [:]
     /// 기수 매핑 로딩 완료 여부
     var isGisuListLoaded: Bool = false
     /// 기수 매핑 로딩 진행 여부
@@ -123,37 +130,28 @@ final class NoticeViewModel {
 
     /// 역할(memberRole) 기반으로 노출할 메인필터 항목 목록을 반환합니다.
     ///
-    /// 중앙 운영진은 전체/중앙/지부/학교/파트, 지부장은 지부 이하,
-    /// 학교 운영진/챌린저는 학교 이하만 노출됩니다.
+    /// 권한과 무관하게 상위 조직 필터는 UMC 공지/본인 지부/본인 학교를 노출합니다.
+    /// 파트 필터는 별도 Nested Menu에서 제공합니다.
     var mainFilterItems: [NoticeMainFilterType] {
-        let partItem: [NoticeMainFilterType] = {
-            guard let userPart = userContext.part else { return [] }
-            return [.part(userPart)]
-        }()
+        [.central, .branch(userContext.branchName), .school(userContext.schoolName)]
+    }
 
-        switch memberRole {
-        case .superAdmin:
-            return []
-        case .centralPresident, .centralVicePresident, .centralOperatingTeamMember, .centralEducationTeamMember:
-            return [.all, .central, .branch(userContext.branchName), .school(userContext.schoolName)] + partItem
-        case .chapterPresident:
-            return [.all, .branch(userContext.branchName), .school(userContext.schoolName)] + partItem
-        case .schoolPresident, .schoolVicePresident:
-            return [.all, .branch(userContext.branchName), .school(userContext.schoolName)] + partItem
-        case .schoolPartLeader, .schoolEtcAdmin, .challenger:
-            return [.all, .school(userContext.schoolName)] + partItem
-        case .none:
-            var items: [NoticeMainFilterType] = [.all]
-            if organizationType == .central {
-                items.append(.central)
-            }
-            items.append(.branch(userContext.branchName))
-            items.append(.school(userContext.schoolName))
-            if let userPart = userContext.part {
-                items.append(.part(userPart))
-            }
-            return items
+    /// 상단 메인 메뉴에 표시할 기본 조직 필터 목록(파트 제외)
+    var baseMainFilterItems: [NoticeMainFilterType] {
+        mainFilterItems.filter {
+            if case .part = $0 { return false }
+            return true
         }
+    }
+
+    /// 파트 Nested Menu 노출 여부
+    var canSelectPartFilter: Bool {
+        memberRole != .superAdmin
+    }
+
+    /// 파트 Nested Menu 항목
+    var partFilterItems: [NoticePart] {
+        canSelectPartFilter ? NoticePart.allCases : []
     }
 
     /// 현재 메인필터에 따라 노출할 하단 서브필터 칩 목록을 반환합니다.
@@ -162,21 +160,13 @@ final class NoticeViewModel {
     /// - 중앙/지부: 전체 + 파트
     /// - 학교: 학교 + 파트
     var subFilterChips: [NoticeListSubFilterChip] {
-        switch selectedMainFilter {
-        case .all, .part:
-            return []
-        case .central:
-            return [.all, .part]
-        case .branch:
-            return [.all, .part]
-        case .school:
-            return [.school, .part]
-        }
+        // iOS 공지 필터는 2계층(기수 + 조직/파트)만 사용합니다.
+        []
     }
 
     /// 서브필터 표시 여부 (중앙/지부/학교만)
     var showSubFilter: Bool {
-        !subFilterChips.isEmpty
+        false
     }
 
     var pageSize: Int {

@@ -53,6 +53,13 @@ final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().toMemberProfileSummary()
     }
 
+    /// 운영진 발급 코드로 기존 챌린저 기록을 추가합니다.
+    func addChallengerRecord(code: String) async throws {
+        _ = try await adapter.request(
+            MyPageRouter.addChallengerRecord(code: code)
+        )
+    }
+
     /// 프로필 이미지 업로드 3단계 플로우: prepare → upload → confirm → patch
     ///
     /// - Parameters:
