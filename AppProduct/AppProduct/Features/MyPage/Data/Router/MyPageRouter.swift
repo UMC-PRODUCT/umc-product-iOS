@@ -17,6 +17,8 @@ enum MyPageRouter {
     case getMyProfile
     /// 특정 멤버 프로필 조회
     case getMemberProfile(memberId: Int)
+    /// 기존 챌린저 기록 추가
+    case addChallengerRecord(code: String)
     /// 회원 정보 수정 (프로필 이미지 ID 반영)
     case patchMember(request: UpdateMemberProfileImageRequestDTO)
     /// 회원 정보 수정 (외부 링크 반영)
@@ -43,6 +45,8 @@ extension MyPageRouter: BaseTargetType {
             return "/api/v1/member/me"
         case .getMemberProfile(let memberId):
             return "/api/v1/member/profile/\(memberId)"
+        case .addChallengerRecord:
+            return "/api/v1/challenger-record/member"
         case .patchMember:
             return "/api/v1/member"
         case .patchMemberProfileLinks:
@@ -66,6 +70,8 @@ extension MyPageRouter: BaseTargetType {
             return .get
         case .getMemberProfile:
             return .get
+        case .addChallengerRecord:
+            return .post
         case .patchMember:
             return .patch
         case .patchMemberProfileLinks:
@@ -85,6 +91,10 @@ extension MyPageRouter: BaseTargetType {
             return .requestPlain
         case .getMemberProfile:
             return .requestPlain
+        case .addChallengerRecord(let code):
+            return .requestJSONEncodable(
+                AddChallengerRecordRequestDTO(code: code)
+            )
         case .patchMember(let request):
             return .requestJSONEncodable(request)
         case .patchMemberProfileLinks(let request):
