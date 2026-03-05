@@ -82,25 +82,25 @@ jobs:
     needs: build
     if: ${{ always() }}
     runs-on: ubuntu-latest
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      DISCORD_MENTION_ROLE_ID: ${{ secrets.DISCORD_MENTION_ROLE_ID }}
+      BUILD_RESULT: ${{ needs.build.result }}
+      REPOSITORY: ${{ github.repository }}
+      REF_NAME: ${{ github.ref_name }}
+      ACTOR: ${{ github.actor }}
+      COMMIT_SHA: ${{ github.sha }}
+      WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
 
     steps:
-      - name: Skip notification when webhook secret is missing
-        if: ${{ secrets.DISCORD_WEBHOOK_URL == '' }}
-        run: echo "DISCORD_WEBHOOK_URL is not configured. Skipping Discord notification."
-
       - name: Send build result to Discord
-        if: ${{ secrets.DISCORD_WEBHOOK_URL != '' }}
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          DISCORD_MENTION_ROLE_ID: ${{ secrets.DISCORD_MENTION_ROLE_ID }}
-          BUILD_RESULT: ${{ needs.build.result }}
-          REPOSITORY: ${{ github.repository }}
-          REF_NAME: ${{ github.ref_name }}
-          ACTOR: ${{ github.actor }}
-          COMMIT_SHA: ${{ github.sha }}
-          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
+          if [ -z "${DISCORD_WEBHOOK_URL:-}" ]; then
+            echo "DISCORD_WEBHOOK_URL is not configured. Skipping Discord notification."
+            exit 0
+          fi
+
           python3 - << 'PY' > payload.json
           import json
           import os
