@@ -22,6 +22,7 @@ struct FailedVerificationUMC: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.appFlow) private var appFlow
     @Environment(\.di) private var di
+    @Environment(ErrorHandler.self) private var errorHandler
 
     /// 카카오톡 채널 연동 매니저
     let kakaoPlusManager: KakaoPlusManager = .init()
@@ -32,6 +33,8 @@ struct FailedVerificationUMC: View {
     @State private var alertPrompt: AlertPrompt?
     /// 전송 중 상태
     @State private var isSubmitting: Bool = false
+    /// 계정 삭제 진행 상태
+    @State private var isDeletingAccount: Bool = false
     /// 입력된 챌린저 코드
     @State private var challengerCode: String = ""
     
@@ -61,7 +64,8 @@ struct FailedVerificationUMC: View {
         static let mainBtnText: String = "UMC 공식 홈페이지 방문"
         /// 기존 챌린저 인증 버튼 텍스트
         static let verifyBtnText: String = "기존 챌린저 코드 입력"
-
+        /// 상단 텍스트 버튼용 기존 챌린저 인증 문구
+        static let verifyTextButtonTitle: String = "기존 챌린저 인증하기"
         /// UMC 공식 홈페이지 URL
         static let homePageURL: String = "https://umc.it.kr"
     }
@@ -73,22 +77,24 @@ struct FailedVerificationUMC: View {
                 topWarningImage
                 Spacer().frame(maxHeight: Constants.mianVspacing)
                 warningTitle
+                existingChallengerTextButton
                 Spacer()
             }
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
             .toolbar {
                 ToolBarCollection.FailedVerificationBottomToolbar(
                     isSubmitting: isSubmitting,
+                    isDeletingAccount: isDeletingAccount,
                     onHome: {
                         if let url = URL(string: Constants.homePageURL) {
                             openURL(url)
                         }
                     },
-                    onCode: {
-                        showCodeAlert = true
-                    },
                     onInquiry: {
                         kakaoPlusManager.openKakaoChannel()
+                    },
+                    onDeleteAccount: {
+                        presentDeleteAccountPrompt()
                     }
                 )
             }
@@ -140,6 +146,19 @@ struct FailedVerificationUMC: View {
                 .appFont(.callout, weight: .medium, color: .grey600)
                 .multilineTextAlignment(.center)
         }
+    }
+
+    /// 제목/부제목 하단의 기존 챌린저 인증 텍스트 버튼
+    private var existingChallengerTextButton: some View {
+        Button {
+            showCodeAlert = true
+        } label: {
+            Text(Constants.verifyTextButtonTitle)
+                .underline()
+                .appFont(.callout, weight: .semibold, color: .indigo500)
+        }
+        .padding(.top, DefaultSpacing.spacing16)
+        .disabled(isSubmitting || isDeletingAccount)
     }
 
     // MARK: - Private Function
@@ -198,8 +217,86 @@ struct FailedVerificationUMC: View {
             positiveBtnTitle: "확인"
         )
     }
+
+    /// 계정 삭제 확인 프롬프트를 표시합니다.
+    private func presentDeleteAccountPrompt() {
+        alertPrompt = AlertPrompt(
+            title: "계정 삭제",
+            message: "계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까?",
+            positiveBtnTitle: "삭제",
+            positiveBtnAction: {
+                Task {
+                    await deleteAccount()
+                }
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
+    }
+
+    /// 승인 대기 화면에서 계정 삭제를 수행합니다.
+    @MainActor
+    private func deleteAccount() async {
+        guard !isDeletingAccount else { return }
+        isDeletingAccount = true
+        defer { isDeletingAccount = false }
+
+        do {
+            let provider = di.resolve(MyPageUseCaseProviding.self)
+            try await provider.deleteMemberUseCase.execute()
+            try await di.resolve(NetworkClient.self).logout()
+            di.resetCache()
+            appFlow.showLogin()
+        } catch {
+            errorHandler.handle(
+                error,
+                context: .init(
+                    feature: "Auth",
+                    action: "deleteMemberFromPendingApproval"
+                )
+            )
+        }
+    }
 }
 
 #Preview {
     FailedVerificationUMC()
+        .environment(\.di, failedVerificationPreviewContainer)
+        .environment(\.appFlow, .noop)
+        .environment(ErrorHandler())
 }
+
+#if DEBUG
+private var failedVerificationPreviewContainer: DIContainer {
+    let container = DIContainer()
+    container.register(AuthUseCaseProviding.self) {
+        AuthUseCaseProvider(
+            repositoryProvider: AuthRepositoryProvider.mock(),
+            tokenStore: KeychainTokenStore()
+        )
+    }
+    container.register(MyPageUseCaseProviding.self) {
+        MyPageUseCaseProvider(repository: MockMyPageRepository())
+    }
+    container.register(NetworkClient.self) {
+        AuthSystemFactory.makeTestNetworkClient(
+            tokenStore: FailedVerificationPreviewTokenStore(),
+            refreshService: FailedVerificationPreviewTokenRefreshService()
+        )
+    }
+    return container
+}
+
+private actor FailedVerificationPreviewTokenStore: TokenStore {
+    func getAccessToken() async -> String? { nil }
+    func getRefreshToken() async -> String? { nil }
+    func save(accessToken: String, refreshToken: String) async throws { }
+    func clear() async throws { }
+}
+
+private struct FailedVerificationPreviewTokenRefreshService: TokenRefreshService {
+    func refresh(_ refreshToken: String) async throws -> TokenPair {
+        TokenPair(accessToken: "preview_access", refreshToken: "preview_refresh")
+    }
+}
+#endif

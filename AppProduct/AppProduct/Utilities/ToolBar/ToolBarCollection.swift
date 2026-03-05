@@ -611,9 +611,10 @@ struct ToolBarCollection {
     /// 챌린저 인증 실패 화면 하단 툴바
     struct FailedVerificationBottomToolbar: ToolbarContent {
         let isSubmitting: Bool
+        let isDeletingAccount: Bool
         let onHome: () -> Void
-        let onCode: () -> Void
         let onInquiry: () -> Void
+        let onDeleteAccount: () -> Void
 
         private enum Constants {
             static let iconSize: CGFloat = 18
@@ -625,18 +626,8 @@ struct ToolBarCollection {
                     icon: "house.fill",
                     title: "홈페이지",
                     color: .indigo,
-                    disabled: false,
+                    disabled: isDeletingAccount,
                     action: onHome
-                )
-            }
-
-            ToolbarItem(placement: .bottomBar) {
-                actionButton(
-                    icon: "number.square.fill",
-                    title: "기존 챌린저",
-                    color: .orange,
-                    disabled: isSubmitting,
-                    action: onCode
                 )
             }
 
@@ -645,8 +636,18 @@ struct ToolBarCollection {
                     icon: "message.fill",
                     title: "문의하기",
                     color: .yellow,
-                    disabled: false,
+                    disabled: isDeletingAccount,
                     action: onInquiry
+                )
+            }
+
+            ToolbarItem(placement: .bottomBar) {
+                actionButton(
+                    icon: "person.crop.circle.badge.xmark",
+                    title: "계정 삭제",
+                    color: .red,
+                    disabled: isSubmitting || isDeletingAccount,
+                    action: onDeleteAccount
                 )
             }
         }
