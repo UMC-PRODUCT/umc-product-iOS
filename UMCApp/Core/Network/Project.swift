@@ -12,6 +12,7 @@ let project = Project(
             sources: ["Sources/**"],
             dependencies: [
                 .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
+                .external(name: "Moya"),
             ]
         )
     ]
