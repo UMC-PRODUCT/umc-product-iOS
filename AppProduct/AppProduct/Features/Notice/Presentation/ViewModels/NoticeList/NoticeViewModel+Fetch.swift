@@ -196,8 +196,9 @@ extension NoticeViewModel {
             return
         }
 
-        let branchNameOverrides = await resolveBranchNameOverrides(from: response.content)
-        let items = response.content.map { dto in
+        let filteredContent = filteredNoticeDTOs(from: response.content)
+        let branchNameOverrides = await resolveBranchNameOverrides(from: filteredContent)
+        let items = filteredContent.map { dto in
             let chapterId = dto.targetInfo.targetChapterIdValue
             let scopeDisplayName = chapterId.flatMap { branchNameOverrides[$0] }
             return dto.toItemModel(scopeDisplayNameOverride: scopeDisplayName)
@@ -209,6 +210,18 @@ extension NoticeViewModel {
         } else {
             let mergedItems = (noticeItems.value ?? []) + items
             noticeItems = .loaded(mergedItems)
+        }
+    }
+
+    /// 현재 선택된 조회 필터에 맞지 않는 공지를 클라이언트 측에서 정리합니다.
+    ///
+    /// iOS-01은 서버-01, 서버-03만 노출하도록 후처리합니다.
+    private func filteredNoticeDTOs(from notices: [NoticeDTO]) -> [NoticeDTO] {
+        switch selectedMainFilter {
+        case .central:
+            return notices.filter { $0.targetInfo.isUMCWideGeneralNotice }
+        case .all, .branch, .school, .part:
+            return notices
         }
     }
 

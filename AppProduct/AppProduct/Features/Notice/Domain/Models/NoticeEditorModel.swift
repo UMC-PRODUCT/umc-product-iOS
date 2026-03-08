@@ -31,7 +31,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     var labelText: String {
         switch self {
         case .all: return "전체 기수"
-        case .central: return "중앙"
+        case .central: return "특정 기수"
         case .branch: return "지부"
         case .school: return "학교"
         case .part(let part): return NoticePart(umcPartType: part)?.displayName ?? part.name
@@ -42,7 +42,7 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     var labelIcon: String {
         switch self {
         case .all: return "line.3.horizontal.decrease"
-        case .central: return "building.columns"
+        case .central: return "number.square"
         case .branch: return "mappin.and.ellipse"
         case .school: return "graduationcap"
         case .part: return "person.3.fill"
@@ -57,9 +57,9 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
         case .central:
             return [.all, .branch, .school, .part]
         case .branch:
-            return [.all, .school, .part]
-        case .school:
             return [.all, .part]
+        case .school:
+            return [.school, .part]
         case .part:
             return []
         }

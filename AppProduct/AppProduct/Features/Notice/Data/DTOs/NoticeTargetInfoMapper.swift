@@ -52,6 +52,13 @@ extension NoticeTargetInfoDTO {
         targetParts ?? []
     }
 
+    /// iOS-01 "UMC 공지" 필터에 포함되는지 여부를 반환합니다.
+    ///
+    /// 서버-01(전체 기수 전체 공지), 서버-03(특정 기수 전체 공지)만 허용합니다.
+    var isUMCWideGeneralNotice: Bool {
+        targetChapterId == nil && targetSchoolId == nil && resolvedParts.isEmpty
+    }
+
     // MARK: - Function
     /// TargetAudience 도메인 모델로 변환합니다.
     func toTargetAudience(scope: NoticeScope? = nil) -> TargetAudience {

@@ -412,11 +412,6 @@ struct NoticeEditorView: View {
             return "공지 수정"
         }
 
-        if isCentralCoreRole, viewModel.selectedCategory == .central {
-            let targetGisu = selectedGisuId ?? gisuId
-            return targetGisu > 0 ? "\(targetGisu)기" : "기수"
-        }
-
         return viewModel.selectedCategory.labelText
     }
 
@@ -438,13 +433,6 @@ struct NoticeEditorView: View {
         switch viewModel.selectedCategory {
         case .all:
             return ""
-        case .branch:
-            if currentRole == .chapterPresident {
-                return normalizedName(from: chapterName, fallback: "지부")
-            }
-            let targetGisu = selectedGisuId ?? gisuId
-            guard targetGisu > 0 else { return "" }
-            return "\(targetGisu)기"
         case .school:
             if currentRole == .schoolPresident
                 || currentRole == .schoolVicePresident
@@ -455,10 +443,12 @@ struct NoticeEditorView: View {
             let targetGisu = selectedGisuId ?? gisuId
             guard targetGisu > 0 else { return "" }
             return "\(targetGisu)기"
-        case .central, .part:
+        case .central:
             let targetGisu = selectedGisuId ?? gisuId
             guard targetGisu > 0 else { return "" }
             return "\(targetGisu)기"
+        case .branch, .part:
+            return ""
         }
     }
 
@@ -472,10 +462,6 @@ struct NoticeEditorView: View {
 
     /// 상단 메뉴 항목 라벨 (권한/선택 기수 반영)
     private func menuItemLabel(_ category: EditorMainCategory) -> String {
-        if isCentralCoreRole, category == .central {
-            let targetGisu = selectedGisuId ?? gisuId
-            return targetGisu > 0 ? "\(targetGisu)기" : "기수"
-        }
         return category.labelText
     }
 
@@ -640,14 +626,6 @@ struct NoticeEditorView: View {
     private func normalizedName(from rawValue: String, fallback: String) -> String {
         let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? fallback : trimmed
-    }
-
-    /// 중앙 총괄/부총괄 여부
-    private var isCentralCoreRole: Bool {
-        guard let role = ManagementTeam(rawValue: memberRoleRaw) else { return false }
-        return role == .centralPresident
-            || role == .centralVicePresident
-            || role == .centralEducationTeamMember
     }
 
 }

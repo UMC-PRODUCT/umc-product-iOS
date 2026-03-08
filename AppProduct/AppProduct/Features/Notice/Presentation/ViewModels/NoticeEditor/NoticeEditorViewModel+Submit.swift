@@ -69,7 +69,9 @@ extension NoticeEditorViewModel {
             handleError(error, action: "createNotice")
         } catch let error as RepositoryError {
             createState = .failed(.repository(error))
-            handleError(error, action: "createNotice")
+            if !presentNoticeServerErrorAlert(for: error) {
+                handleError(error, action: "createNotice")
+            }
         } catch let error as NetworkError {
             createState = .failed(.network(error))
             handleError(error, action: "createNotice")
@@ -152,7 +154,9 @@ extension NoticeEditorViewModel {
             handleError(error, action: "updateNotice")
         } catch let error as RepositoryError {
             createState = .failed(.repository(error))
-            handleError(error, action: "updateNotice")
+            if !presentNoticeServerErrorAlert(for: error) {
+                handleError(error, action: "updateNotice")
+            }
         } catch let error as NetworkError {
             createState = .failed(.network(error))
             handleError(error, action: "updateNotice")
@@ -184,54 +188,37 @@ extension NoticeEditorViewModel {
         let currentGeneration = resolvedGisuId > 0 ? resolvedGisuId : 0
         let selectedBranchId = subCategorySelection.selectedBranch?.id
         let selectedSchoolFromSheet = subCategorySelection.selectedSchool?.id
-        let mySchoolId = schoolId > 0 ? schoolId : nil
-        let isSchoolCoreRole = memberRole == .schoolPresident
-            || memberRole == .schoolVicePresident
-            || memberRole == .schoolPartLeader
-            || memberRole == .schoolEtcAdmin
-        var selectedParts = subCategorySelection.selectedParts.isEmpty
+        let selectedParts = subCategorySelection.selectedParts.isEmpty
             ? nil
             : Array(subCategorySelection.selectedParts)
 
-        // 기수 미선택 상태에서는 학교 + 파트 동시 지정을 허용하지 않습니다.
-        if currentGeneration <= 0, selectedSchoolFromSheet != nil {
-            selectedParts = nil
-        }
-
         switch selectedCategory {
         case .all:
-            // 전체 기수: targetGisuId = null, 지부/파트는 전체
-            // 학교 회장단은 학교를 본인 학교로 고정합니다.
             return TargetInfoDTO(
                 targetGisuId: 0,
                 targetChapterId: nil,
-                targetSchoolId: isSchoolCoreRole ? mySchoolId : selectedSchoolFromSheet,
+                targetSchoolId: selectedSchoolFromSheet,
                 targetParts: nil as [UMCPartType]?
             )
         case .central:
             return TargetInfoDTO(
                 targetGisuId: currentGeneration,
-                // 기수 + 지부 + 학교 동시 지정 금지: 학교 선택 시 지부는 제외
                 targetChapterId: selectedSchoolFromSheet == nil ? selectedBranchId : nil,
                 targetSchoolId: selectedSchoolFromSheet,
                 targetParts: selectedParts
             )
         case .branch:
-            let isChapterPresident = memberRole == .chapterPresident
             return TargetInfoDTO(
                 targetGisuId: currentGeneration,
-                // CHAPTER_PRESIDENT는 본인 지부로 고정합니다.
-                targetChapterId: isChapterPresident
-                    ? (resolvedChapterId > 0 ? resolvedChapterId : nil)
-                    : (selectedSchoolFromSheet == nil ? selectedBranchId : nil),
-                targetSchoolId: isChapterPresident ? nil : selectedSchoolFromSheet,
+                targetChapterId: selectedBranchId,
+                targetSchoolId: nil,
                 targetParts: selectedParts
             )
         case .school:
             return TargetInfoDTO(
                 targetGisuId: currentGeneration,
                 targetChapterId: nil,
-                targetSchoolId: isSchoolCoreRole ? mySchoolId : (selectedSchoolFromSheet ?? mySchoolId),
+                targetSchoolId: selectedSchoolFromSheet,
                 targetParts: selectedParts
             )
         case .part(let part):
@@ -342,6 +329,41 @@ extension NoticeEditorViewModel {
             error,
             context: ErrorContext(feature: "Notice", action: action)
         )
+    }
+
+    /// 공지 작성/수정 관련 서버 에러를 즉시 Alert로 표시합니다.
+    ///
+    /// 서버가 내려준 NOTICE 계열 메시지는 작성 화면에서 바로 노출해
+    /// 사용자가 저장 실패 원인을 즉시 이해할 수 있도록 합니다.
+    @discardableResult
+    func presentNoticeServerErrorAlert(for error: RepositoryError) -> Bool {
+        guard case let .serverError(code, message) = error else {
+            return false
+        }
+
+        guard let code, noticeAlertErrorCodes.contains(code) else {
+            return false
+        }
+
+        alertPrompt = AlertPrompt(
+            title: "공지 저장 실패",
+            message: message ?? error.userMessage,
+            positiveBtnTitle: "확인"
+        )
+        return true
+    }
+
+    var noticeAlertErrorCodes: Set<String> {
+        [
+            "NOTICE-0001",
+            "NOTICE-0003",
+            "NOTICE-0004",
+            "NOTICE-0007",
+            "NOTICE-0008",
+            "NOTICE-0009",
+            "NOTICE-0010",
+            "NOTICE-0011"
+        ]
     }
 
     /// 저장 시점에만 파일 업로드 플로우를 실행하고 fileId 배열을 반환합니다.
