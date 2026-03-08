@@ -27,7 +27,7 @@ extension CommentDTO {
             profileImage: challengerProfileImage,
             userName: challengerName,
             content: content,
-            createdAt: ISO8601DateFormatter().date(from: createdAt) ?? Date(),
+            createdAt: ServerDateTimeConverter.parseUTCDateTime(createdAt) ?? Date(),
             isAuthor: isAuthor
         )
     }
