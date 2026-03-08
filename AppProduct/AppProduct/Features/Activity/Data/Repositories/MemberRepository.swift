@@ -255,7 +255,8 @@ private extension MemberRepository {
                 guard item.memberId > 0 else { continue }
 
                 let part = UMCPartType(apiValue: item.part) ?? .pm
-                let managementTeam = item.roleTypes.max() ?? .challenger
+                let managementTeam = ManagementTeam.highestPriority(in: item.roleTypes)
+                    ?? .challenger
                 let generation = resolvedGeneration(
                     generation: item.generation,
                     gisu: item.gisu
@@ -547,12 +548,13 @@ private extension MemberRepository {
                 .filter { $0.challengerId == nil || $0.challengerId == challengerId }
                 .map(\.roleType)
 
-            if let highestMatchedRole = matchedRoles.max() {
+            if let highestMatchedRole = ManagementTeam.highestPriority(in: matchedRoles) {
                 return highestMatchedRole
             }
         }
 
-        return profile.roles.map(\.roleType).max() ?? fallback
+        return ManagementTeam.highestPriority(in: profile.roles.map(\.roleType))
+            ?? fallback
     }
 
     func resolvedGeneration(

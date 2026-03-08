@@ -97,7 +97,7 @@ final class HomeViewModel {
     /// 다른 Feature에서 `@AppStorage(AppStorageKey.xxx)`로 즉시 접근 가능합니다.
     private func saveProfileToStorage(_ result: HomeProfileResult) {
         let defaults = UserDefaults.standard
-        let latestRole = result.roles.max(by: { $0.gisu < $1.gisu })
+        let latestRole = result.roles.latestHighestPriorityRole
         let resolvedRole = latestRole?.roleType ?? .challenger
         let isApproved = isApprovedProfile(result)
 
@@ -223,6 +223,19 @@ final class HomeViewModel {
         return scheduleByDates[normalizedDate] ?? []
     }
 
+}
+
+extension Array where Element == ChallengerRole {
+    var latestHighestPriorityRole: ChallengerRole? {
+        guard let latestGisu = map(\.gisu).max() else {
+            return nil
+        }
+
+        return filter { $0.gisu == latestGisu }
+            .max { lhs, rhs in
+                lhs.roleType < rhs.roleType
+            }
+    }
 }
 
 extension HomeViewModel {

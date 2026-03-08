@@ -40,18 +40,21 @@ enum ManagementTeam: String, CaseIterable, Codable, Comparable {
     // MARK: - Level
 
     /// 권한 레벨 (높을수록 상위 권한)
+    ///
+    /// 이슈 #399 기준으로 복수 역할 보유 시 아래 순서를 우선 적용합니다.
+    /// superAdmin은 시스템 역할이므로 별도로 최상위에 둡니다.
     var level: Int {
         switch self {
-        case .superAdmin:                   return 100
-        case .centralPresident:             return 90
-        case .centralVicePresident:         return 85
+        case .superAdmin:                   return 110
+        case .centralPresident:             return 100
+        case .centralVicePresident:         return 90
         case .centralOperatingTeamMember:   return 80
-        case .centralEducationTeamMember:   return 80
-        case .chapterPresident:             return 70
-        case .schoolPresident:              return 60
-        case .schoolVicePresident:          return 55
-        case .schoolPartLeader:             return 40
-        case .schoolEtcAdmin:              return 30
+        case .centralEducationTeamMember:   return 70
+        case .chapterPresident:             return 60
+        case .schoolPresident:              return 50
+        case .schoolVicePresident:          return 40
+        case .schoolPartLeader:             return 30
+        case .schoolEtcAdmin:               return 20
         case .challenger:                   return 0
         }
     }
@@ -65,6 +68,10 @@ enum ManagementTeam: String, CaseIterable, Codable, Comparable {
 
     static func < (lhs: ManagementTeam, rhs: ManagementTeam) -> Bool {
         lhs.level < rhs.level
+    }
+
+    static func highestPriority<S: Sequence>(in roles: S) -> ManagementTeam? where S.Element == ManagementTeam {
+        roles.max()
     }
 
     // MARK: - Display
