@@ -70,10 +70,9 @@ private extension NavigationRoutingView {
             NoticeAlarmView()
         case .registrationSchedule:
             ScheduleRegistrationView(container: di, errorHandler: errorHandler)
-        case .detailSchedule(let scheduleId, let selectedDate):
+        case .detailSchedule(let scheduleId):
             ScheduleDetailView(
-                scheduleId: scheduleId,
-                selectedDate: selectedDate
+                scheduleId: scheduleId
             )
         case .detailNotice(let detailItem):
             NoticeDetailView(

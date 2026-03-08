@@ -23,9 +23,6 @@ class ScheduleDetailViewModel {
     var scheduleId: Int
     private(set) var data: Loadable<ScheduleDetailData> = .idle
 
-    /// 캘린더에서 선택한 날짜 (일시 표시에 사용)
-    var selectedDate: Date
-
     /// 역지오코딩으로 가져온 도로명 주소
     private(set) var roadAddress: String?
     /// 삭제 확인 Alert 데이터
@@ -38,9 +35,8 @@ class ScheduleDetailViewModel {
     var canDeleteSchedule: Bool = false
 
     // MARK: - Init
-    init(scheduleId: Int, selectedDate: Date = .now) {
+    init(scheduleId: Int) {
         self.scheduleId = scheduleId
-        self.selectedDate = selectedDate
     }
 
     // MARK: - Function
