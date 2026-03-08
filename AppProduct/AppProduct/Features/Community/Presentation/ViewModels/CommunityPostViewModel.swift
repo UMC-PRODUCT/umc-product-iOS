@@ -102,7 +102,7 @@ class CommunityPostViewModel {
         do {
             if selectedCategory == .lighting {
                 // 번개 모임 생성
-                let meetAtString = DateFormatter.serverLocalDateTime.string(from: selectedDate)
+                let meetAtString = ServerDateTimeConverter.toUTCDateTimeString(selectedDate)
 
                 let request = CreateLightningPostRequestDTO(
                     title: titleText,
@@ -159,7 +159,7 @@ class CommunityPostViewModel {
         do {
             if selectedCategory == .lighting {
                 // 번개 모임 수정
-                let meetAtString = DateFormatter.serverLocalDateTime.string(from: selectedDate)
+                let meetAtString = ServerDateTimeConverter.toUTCDateTimeString(selectedDate)
 
                 let request = CreateLightningPostRequestDTO(
                     title: titleText,
@@ -229,14 +229,4 @@ class CommunityPostViewModel {
         let location: String?
         let openChatUrl: String?
     }
-}
-
-private extension DateFormatter {
-    static let serverLocalDateTime: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone.current
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        return formatter
-    }()
 }

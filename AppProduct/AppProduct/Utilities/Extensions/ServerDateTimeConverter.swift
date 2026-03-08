@@ -35,6 +35,9 @@ enum ServerDateTimeConverter {
         }
 
         for format in [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
             "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
             "yyyy-MM-dd'T'HH:mm:ss.SSS",
             "yyyy-MM-dd'T'HH:mm:ss"
@@ -49,6 +52,16 @@ enum ServerDateTimeConverter {
         }
 
         return nil
+    }
+
+    static func toUTCDateTimeString(_ date: Date) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = utcTimeZone
+        formatter.formatOptions = [
+            .withInternetDateTime,
+            .withFractionalSeconds
+        ]
+        return formatter.string(from: date)
     }
 
     static func parseUTCDateTimeOrTime(
