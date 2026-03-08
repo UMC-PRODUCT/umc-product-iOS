@@ -2,7 +2,7 @@
 //  ServerDateTimeConverterTests.swift
 //  AppProductTests
 //
-//  Created by Codex on 3/8/26.
+//  Created by euijjang on 3/8/26.
 //
 
 import XCTest

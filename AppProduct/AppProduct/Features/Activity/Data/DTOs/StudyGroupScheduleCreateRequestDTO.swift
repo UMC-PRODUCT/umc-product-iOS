@@ -52,15 +52,12 @@ struct StudyGroupScheduleCreateRequestDTO: Encodable {
         try container.encode(gisuId, forKey: .gisuId)
         try container.encode(requiresApproval, forKey: .requiresApproval)
 
-        // Date → ISO 8601 문자열로 직접 인코딩 (서버가 밀리초 포함 포맷을 요구)
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         try container.encode(
-            formatter.string(from: startsAt),
+            ServerDateTimeConverter.toUTCDateTimeString(startsAt),
             forKey: .startsAt
         )
         try container.encode(
-            formatter.string(from: endsAt),
+            ServerDateTimeConverter.toUTCDateTimeString(endsAt),
             forKey: .endsAt
         )
     }

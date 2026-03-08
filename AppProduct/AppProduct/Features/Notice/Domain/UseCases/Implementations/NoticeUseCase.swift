@@ -126,12 +126,9 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
             throw DomainError.custom(message: "종료 시간은 시작 시간보다 늦어야 합니다")
         }
 
-        // 2. Date → ISO8601 String 변환 (서버 API가 fractionalSeconds 포함 형식을 요구)
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        let startsAtString = dateFormatter.string(from: startsAt)
-        let endsAtString = dateFormatter.string(from: endsAtExclusive)
+        // 2. Date → ISO8601 UTC String 변환
+        let startsAtString = ServerDateTimeConverter.toUTCDateTimeString(startsAt)
+        let endsAtString = ServerDateTimeConverter.toUTCDateTimeString(endsAtExclusive)
 
         // 3. DTO 생성
         let requestDTO = AddVoteRequestDTO(
