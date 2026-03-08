@@ -166,28 +166,9 @@ private var myPagePreviewContainer: DIContainer {
     return container
 }
 
-private let myPagePreviewProfileData = ProfileData(
-    challengeId: 123,
-    challangerInfo: ChallengerInfo(
-        memberId: 1,
-        gen: 8,
-        name: "홍길동",
-        nickname: "길동",
-        schoolName: "UMC University",
-        profileImage: nil,
-        part: .front(type: .ios)
-    ),
-    socialConnected: [.kakao, .apple],
-    activityLogs: [
-        .init(part: .front(type: .ios), generation: 8, role: .challenger),
-        .init(part: .server(type: .spring), generation: 7, role: .centralPresident)
-    ],
-    profileLink: []
-)
-
-#Preview("Loaded") {
+#Preview("MyPage") {
     let container = myPagePreviewContainer
-    MyPageView(previewProfileData: myPagePreviewProfileData)
+    MyPageView(previewProfileData: MyPageMockData.profile)
         .environment(\.di, container)
         .environment(ErrorHandler())
 }
