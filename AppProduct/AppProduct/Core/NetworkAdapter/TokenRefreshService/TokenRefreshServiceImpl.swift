@@ -14,7 +14,7 @@ import Foundation
 /// - Important:
 ///   - **NetworkClient와 독립적**: NetworkClient를 사용하지 않음 (무한 루프 방지)
 ///   - **CommonDTO 사용**: 서버의 공통 응답 포맷 사용
-///   - **Bearer 인증**: 리프레시 토큰을 Authorization 헤더에 전송
+///   - **JSON Body 전송**: 서버 문서 스펙에 맞춰 리프레시 토큰을 Request Body에 전송
 ///
 /// - Usage:
 /// ```swift
@@ -85,7 +85,10 @@ struct TokenRefreshServiceImpl: TokenRefreshService {
     /// ```
     /// POST /api/v1/auth/token/renew
     /// Content-Type: application/json
-    /// Authorization: Bearer {refreshToken}
+    ///
+    /// {
+    ///   "refreshToken": "..."
+    /// }
     /// ```
     ///
     /// ## 응답 형식
@@ -109,7 +112,9 @@ struct TokenRefreshServiceImpl: TokenRefreshService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(refreshToken)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try JSONEncoder().encode(
+            RefreshTokenRequestBody(refreshToken: refreshToken)
+        )
 
         // 3. 네트워크 요청 실행
         let (data, response) = try await session.data(for: request)
@@ -138,6 +143,12 @@ struct TokenRefreshServiceImpl: TokenRefreshService {
             refreshToken: result.refreshToken
         )
     }
+}
+
+// MARK: - RefreshTokenRequestBody
+
+private struct RefreshTokenRequestBody: Encodable {
+    let refreshToken: String
 }
 
 // MARK: - TokenResult
