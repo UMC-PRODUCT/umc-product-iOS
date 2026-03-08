@@ -262,8 +262,8 @@ class ScheduleRegistrationViewModel {
     func alertAction(gisuId: Int) {
         alertPrompt = AlertPrompt(
             title: "일정 생성",
-            message: "출석부도 함께 생성하시겠습니까?",
-            positiveBtnTitle: "출석부도 같이 생성할게요",
+            message: "출석을 체크하시겠습니까?",
+            positiveBtnTitle: "네, 출석부도 같이 생성할게요",
             positiveBtnAction: { [weak self] in
                 Task { @MainActor in
                     await self?.submitSchedule(
@@ -271,7 +271,7 @@ class ScheduleRegistrationViewModel {
                     )
                 }
             },
-            secondaryBtnTitle: "아니요 일정만 생성할게",
+            secondaryBtnTitle: "아니요, 일정만 생성할게요",
             secondaryBtnAction: { [weak self] in
                 Task { @MainActor in
                     await self?.submitSchedule(
