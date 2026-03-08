@@ -193,28 +193,11 @@ extension NoticeEditorViewModel {
     func toggleSubCategory(_ subCategory: EditorSubCategory) {
         guard visibleSubCategories.contains(subCategory) else { return }
 
-        if subCategory == .all {
-            if subCategorySelection.selectedSubCategories.contains(.all) {
-                subCategorySelection.selectedSubCategories.remove(.all)
-            } else {
-                subCategorySelection.selectedSubCategories = [.all]
-                subCategorySelection.selectedBranch = nil
-                subCategorySelection.selectedSchool = nil
-                subCategorySelection.selectedParts = []
-            }
+        if subCategorySelection.selectedSubCategories.contains(subCategory) {
+            subCategorySelection.selectedSubCategories.remove(subCategory)
+            clearFilterForSubCategory(subCategory)
         } else {
-            subCategorySelection.selectedSubCategories.remove(.all)
-
-            if subCategorySelection.selectedSubCategories.contains(subCategory) {
-                subCategorySelection.selectedSubCategories.remove(subCategory)
-                clearFilterForSubCategory(subCategory)
-            } else {
-                subCategorySelection.selectedSubCategories.insert(subCategory)
-            }
-
-            if subCategorySelection.selectedSubCategories.isEmpty {
-                subCategorySelection.selectedSubCategories = [.all]
-            }
+            subCategorySelection.selectedSubCategories.insert(subCategory)
         }
 
         normalizeSelectionForCurrentCategory()
@@ -230,13 +213,8 @@ extension NoticeEditorViewModel {
         } else {
             subCategorySelection.selectedBranch = branch
             subCategorySelection.selectedSchool = nil
-            subCategorySelection.selectedSubCategories.remove(.all)
             subCategorySelection.selectedSubCategories.remove(.school)
             subCategorySelection.selectedSubCategories.insert(.branch)
-        }
-
-        if subCategorySelection.selectedSubCategories.isEmpty {
-            subCategorySelection.selectedSubCategories = [.all]
         }
 
         normalizeSelectionForCurrentCategory()
@@ -252,13 +230,8 @@ extension NoticeEditorViewModel {
         } else {
             subCategorySelection.selectedSchool = school
             subCategorySelection.selectedBranch = nil
-            subCategorySelection.selectedSubCategories.remove(.all)
             subCategorySelection.selectedSubCategories.remove(.branch)
             subCategorySelection.selectedSubCategories.insert(.school)
-        }
-
-        if subCategorySelection.selectedSubCategories.isEmpty {
-            subCategorySelection.selectedSubCategories = [.all]
         }
 
         normalizeSelectionForCurrentCategory()
@@ -274,15 +247,10 @@ extension NoticeEditorViewModel {
             subCategorySelection.selectedParts.insert(part)
         }
 
-        subCategorySelection.selectedSubCategories.remove(.all)
         if subCategorySelection.selectedParts.isEmpty {
             subCategorySelection.selectedSubCategories.remove(.part)
         } else {
             subCategorySelection.selectedSubCategories.insert(.part)
-        }
-
-        if subCategorySelection.selectedSubCategories.isEmpty {
-            subCategorySelection.selectedSubCategories = [.all]
         }
 
         normalizeSelectionForCurrentCategory()
@@ -296,7 +264,7 @@ extension NoticeEditorViewModel {
     func isSubCategoryHighlighted(_ subCategory: EditorSubCategory) -> Bool {
         switch subCategory {
         case .all:
-            return subCategorySelection.selectedSubCategories.contains(.all)
+            return false
         case .branch:
             return subCategorySelection.selectedBranch != nil
         case .school:
@@ -448,9 +416,9 @@ private extension NoticeEditorViewModel {
         _ = memberRole
         switch category {
         case .all:
-            return [.all, .school]
+            return [.school]
         case .central:
-            return [.all, .branch, .school, .part]
+            return [.branch, .school, .part]
         case .branch:
             return [.all, .part]
         case .school:
@@ -505,19 +473,14 @@ private extension NoticeEditorViewModel {
             subCategorySelection.selectedSubCategories.remove(.school)
         }
 
-        // 전체 선택과 개별 필터는 동시 유지하지 않음
+        // 더 이상 숨겨진 "전체" 기본값을 사용하지 않습니다.
         if allowed.isEmpty {
             subCategorySelection.selectedSubCategories = []
             subCategorySelection.selectedBranch = nil
             subCategorySelection.selectedSchool = nil
             subCategorySelection.selectedParts = []
         } else if subCategorySelection.selectedSubCategories.contains(.all) {
-            subCategorySelection.selectedSubCategories = [.all]
-            subCategorySelection.selectedBranch = nil
-            subCategorySelection.selectedSchool = nil
-            subCategorySelection.selectedParts = []
-        } else if subCategorySelection.selectedSubCategories.isEmpty {
-            subCategorySelection.selectedSubCategories = [preferredDefaultSubCategory(from: allowed)]
+            subCategorySelection.selectedSubCategories.remove(.all)
         }
 
         // 기수 미선택 시 금지 조합 방지
@@ -538,22 +501,5 @@ private extension NoticeEditorViewModel {
             subCategorySelection.selectedSchool = nil
             subCategorySelection.selectedSubCategories.remove(.school)
         }
-
-        if !allowed.isEmpty && subCategorySelection.selectedSubCategories.isEmpty {
-            subCategorySelection.selectedSubCategories = [preferredDefaultSubCategory(from: allowed)]
-        }
-    }
-
-    func preferredDefaultSubCategory(from allowed: Set<EditorSubCategory>) -> EditorSubCategory {
-        if allowed.contains(.all) {
-            return .all
-        }
-        if allowed.contains(.school) {
-            return .school
-        }
-        if allowed.contains(.branch) {
-            return .branch
-        }
-        return .part
     }
 }
