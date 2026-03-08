@@ -61,11 +61,19 @@ struct InfoSection: View {
                     systemIcon: "square.and.arrow.up",
                     title: "앱 공유하기",
                     rightImage: "arrow.up.right",
-                    iconBackgroundColor: .blue
+                    iconBackgroundColor: .yellow
                 )
             }
         }, header: {
             SectionHeaderView(title: sectionType.rawValue)
         })
+    }
+}
+
+// MARK: - Preview
+
+#Preview("MyPage Info Section") {
+    Form {
+        InfoSection(sectionType: .info)
     }
 }
