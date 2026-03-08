@@ -48,18 +48,12 @@ struct MyPageProfileView: View {
                 await viewModel.loadSelectedImage()
             }
         }
-        .alert("기존 챌린저 코드 입력", isPresented: $showAddActivityLogAlert) {
-            TextField("6자리 코드", text: $challengerCode)
-                .keyboardType(.asciiCapable)
-            Button("닫기", role: .cancel) {
-                challengerCode = ""
-            }
-            Button("전송") {
-                submitChallengerCode()
-            }
-        } message: {
-            Text("운영진에게 발급받은 6자리 코드를 입력해주세요.")
-        }
+        .alert(
+            "챌린저 코드 입력",
+            isPresented: $showAddActivityLogAlert,
+            actions: challengerCodeAlertActions,
+            message: challengerCodeAlertMessage
+        )
     }
     
     /// 섹션 구현부
@@ -85,6 +79,25 @@ struct MyPageProfileView: View {
         )
         // 외부 프로필 링크 수정
         ProfileLinkSection(profileLink: profile.profileLink, header: "외부 프로링크")
+    }
+
+    @ViewBuilder
+    private func challengerCodeAlertActions() -> some View {
+        TextField("6자리 코드", text: $challengerCode)
+            .keyboardType(.asciiCapable)
+
+        Button("닫기", role: .cancel) {
+            challengerCode = ""
+        }
+
+        Button("전송") {
+            submitChallengerCode()
+        }
+    }
+
+    @ViewBuilder
+    private func challengerCodeAlertMessage() -> some View {
+        Text("운영진에게 발급받은 6자리 코드를 입력해주세요.")
     }
 
     /// 프로필 이미지 업데이트를 서버에 제출하고 완료 시 화면을 dismiss합니다.
