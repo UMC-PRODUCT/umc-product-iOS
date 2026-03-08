@@ -10,7 +10,7 @@ import PhotosUI
 
 /// 마이페이지 정보 Write & Read 화면입니다.
 ///
-/// 사용자의 프로필 이미지, 닉네임, 학교, 기수/파트, 활동 로그, 소셜 링크 등을 확인하고 수정할 수 있습니다.
+/// 사용자의 프로필 이미지, 닉네임, 학교, 활동 로그, 소셜 링크 등을 확인하고 수정할 수 있습니다.
 struct MyPageProfileView: View {
     /// 뷰모델 상태 객체
     @State var viewModel: MyPageProfileViewModel
@@ -68,8 +68,6 @@ struct MyPageProfileView: View {
         NameAndNickname(name: profile.challangerInfo.wrappedValue.name, nickaname: profile.challangerInfo.wrappedValue.nickname, header: "이름/닉네임")
         // 학교 (읽기 전용)
         SchoolSection(univ: profile.challangerInfo.wrappedValue.schoolName, header: "학교")
-        // 기수 및 파트 (읽기 전용)
-        GenAndPartSection(gen: profile.challangerInfo.wrappedValue.gen, part: profile.challangerInfo.wrappedValue.part, header: "기수/파트")
         // 활동 이력 목록
         ActiveLogs(
             rows: profile.activityLogs.wrappedValue,
