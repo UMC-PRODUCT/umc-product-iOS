@@ -46,13 +46,17 @@ struct UpdateScheduleRequestDTO: Encodable {
         try container.encodeIfPresent(tags, forKey: .tags)
         try container.encodeIfPresent(participantMemberIds, forKey: .participantMemberIds)
 
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         if let startsAt {
-            try container.encode(formatter.string(from: startsAt), forKey: .startsAt)
+            try container.encode(
+                ServerDateTimeConverter.toUTCDateTimeString(startsAt),
+                forKey: .startsAt
+            )
         }
         if let endsAt {
-            try container.encode(formatter.string(from: endsAt), forKey: .endsAt)
+            try container.encode(
+                ServerDateTimeConverter.toUTCDateTimeString(endsAt),
+                forKey: .endsAt
+            )
         }
     }
 }

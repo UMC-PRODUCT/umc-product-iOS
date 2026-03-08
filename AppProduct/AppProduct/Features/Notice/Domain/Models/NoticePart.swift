@@ -84,6 +84,8 @@ enum NoticePart: String, CaseIterable, Identifiable, Equatable, Hashable {
 
     init?(umcPartType: UMCPartType) {
         switch umcPartType {
+        case .admin:
+            return nil
         case .front(let type):
             switch type {
             case .web:

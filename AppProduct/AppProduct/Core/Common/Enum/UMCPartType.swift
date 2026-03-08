@@ -25,6 +25,9 @@ import SwiftUI
 enum UMCPartType: Codable, Equatable, Hashable {
     // MARK: - Cases
 
+    /// 운영진 파트
+    case admin
+
     /// 기획 파트 (Project Manager)
     case pm
 
@@ -52,6 +55,8 @@ enum UMCPartType: Codable, Equatable, Hashable {
     ///   - Front: "Web", "Android", "iOS"
     var name: String {
         switch self {
+        case .admin:
+            return "Admin"
         case .pm:
             return "PM"
         case .design:
@@ -68,6 +73,8 @@ enum UMCPartType: Codable, Equatable, Hashable {
     /// 정렬 순서: PM(0) > Design(1) > Web(2) > iOS(3) > Android(4) > Spring(5) > NodeJS(6)
     var sortOrder: Int {
         switch self {
+        case .admin:
+            return -1
         case .pm:
             return 0
         case .design:
@@ -94,6 +101,8 @@ enum UMCPartType: Codable, Equatable, Hashable {
     /// 파트별 고유 색상
     var color: Color {
         switch self {
+        case .admin:
+            return .indigo
         case .pm:
             return .purple
         case .design:
@@ -115,6 +124,7 @@ enum UMCPartType: Codable, Equatable, Hashable {
     /// 파트별 아이콘
     var icon: String {
         switch self {
+        case .admin: return "person.badge.key.fill"
         case .pm: return "doc.text.fill"
         case .design: return "paintpalette.fill"
         case .server(type: .spring): return "leaf.fill"
@@ -161,6 +171,7 @@ enum UMCPartType: Codable, Equatable, Hashable {
     /// 서버 API 쿼리 파라미터용 문자열
     var apiValue: String {
         switch self {
+        case .admin:                    return "ADMIN"
         case .pm:                       return "PLAN"
         case .design:                   return "DESIGN"
         case .server(let type):
@@ -180,6 +191,7 @@ enum UMCPartType: Codable, Equatable, Hashable {
     /// 서버 API 문자열로부터 생성
     init?(apiValue: String) {
         switch apiValue {
+        case "ADMIN":       self = .admin
         case "PLAN":        self = .pm
         case "DESIGN":      self = .design
         case "SPRINGBOOT":  self = .server(type: .spring)

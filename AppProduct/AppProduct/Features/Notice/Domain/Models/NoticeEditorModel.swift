@@ -53,9 +53,9 @@ enum EditorMainCategory: Identifiable, Equatable, Hashable {
     var subCategories: [EditorSubCategory] {
         switch self {
         case .all:
-            return [.school]
+            return [.all, .school]
         case .central:
-            return [.branch, .school, .part]
+            return [.all, .branch, .school, .part]
         case .branch:
             return [.all, .part]
         case .school:
@@ -117,7 +117,7 @@ enum EditorSubCategory: Identifiable, Equatable, Hashable {
 /// 서브카테고리 선택 상태
 struct EditorSubCategorySelection: Equatable {
     /// 선택된 서브카테고리 목록
-    var selectedSubCategories: Set<EditorSubCategory> = []
+    var selectedSubCategories: Set<EditorSubCategory> = [.all]
     /// 선택된 파트 목록
     var selectedParts: Set<UMCPartType> = []
     /// 선택된 지부
@@ -128,10 +128,6 @@ struct EditorSubCategorySelection: Equatable {
     /// 선택 요약 텍스트
     var summaryText: String {
         var items: [String] = []
-
-        if selectedSubCategories.isEmpty {
-            return "선택 안 함"
-        }
 
         for subCategory in selectedSubCategories.sorted(by: { $0.id < $1.id }) {
             switch subCategory {

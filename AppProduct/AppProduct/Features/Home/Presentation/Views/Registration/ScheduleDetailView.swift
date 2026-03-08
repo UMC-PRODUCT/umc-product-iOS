@@ -31,10 +31,9 @@ struct ScheduleDetailView: View {
 
     // MARK: - Init
 
-    init(scheduleId: Int, selectedDate: Date) {
+    init(scheduleId: Int) {
         self._viewModel = .init(initialValue: .init(
-            scheduleId: scheduleId,
-            selectedDate: selectedDate
+            scheduleId: scheduleId
         ))
     }
 
@@ -220,7 +219,6 @@ struct ScheduleDetailView: View {
 
             SchedulePlaceDateInfo(
                 data: data,
-                selectedDate: viewModel.selectedDate,
                 roadAddress: viewModel.roadAddress,
                 onMapLinkTapped: {
                     viewModel.mapLinkTapped(
@@ -253,7 +251,6 @@ private struct SchedulePlaceDateInfo: View, Equatable {
     // MARK: - Property
 
     let data: ScheduleDetailData
-    let selectedDate: Date
     let roadAddress: String?
     let onMapLinkTapped: () -> Void
 
@@ -265,7 +262,6 @@ private struct SchedulePlaceDateInfo: View, Equatable {
 
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.data == rhs.data
-        && lhs.selectedDate == rhs.selectedDate
         && lhs.roadAddress == rhs.roadAddress
     }
 
@@ -289,11 +285,11 @@ private struct SchedulePlaceDateInfo: View, Equatable {
     private var dateTimeSection: some View {
         infoSection(iconName: "calendar", tintColor: .orange) {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                Text(selectedDate.toYearMonthDayWithWeekday())
+                Text(dateText)
                     .appFont(.calloutEmphasis)
                     .foregroundStyle(.black)
 
-                Text(data.startsAt.timeRange(to: data.endsAt))
+                Text(timeText)
                     .appFont(.subheadline)
                     .foregroundStyle(.grey600)
             }
@@ -342,5 +338,25 @@ private struct SchedulePlaceDateInfo: View, Equatable {
             .padding()
             .background(tintColor.opacity(0.4), in: .circle)
             .glassEffect(.clear, in: .circle)
+    }
+
+    private var dateText: String {
+        if Calendar.current.isDate(data.startsAt, inSameDayAs: data.endsAt) {
+            return data.startsAt.toYearMonthDayWithWeekday()
+        }
+
+        return "\(data.startsAt.toYearMonthDayWithWeekday()) - \(data.endsAt.toYearMonthDayWithWeekday())"
+    }
+
+    private var timeText: String {
+        if data.isAllDay {
+            return "종일"
+        }
+
+        if Calendar.current.isDate(data.startsAt, inSameDayAs: data.endsAt) {
+            return data.startsAt.timeRange(to: data.endsAt)
+        }
+
+        return "\(data.startsAt.toMonthDayWeekDayWithTime()) - \(data.endsAt.toMonthDayWeekDayWithTime())"
     }
 }

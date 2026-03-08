@@ -162,7 +162,7 @@ enum MemberStatus: String, Codable {
 extension MyProfileResponseDTO {
     /// DTO → 최고 권한 역할 반환
     func highestRole() -> ManagementTeam {
-        roles.map(\.roleType).max() ?? .challenger
+        ManagementTeam.highestPriority(in: roles.map(\.roleType)) ?? .challenger
     }
 
     /// DTO → HomeProfileResult 변환 (기수 카드 + 역할 정보)

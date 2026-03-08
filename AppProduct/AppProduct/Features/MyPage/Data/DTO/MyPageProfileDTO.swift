@@ -237,12 +237,14 @@ struct MyPageChallengerPointDTO: Codable {
 extension MyPageProfileResponseDTO {
     func toProfileData() -> ProfileData {
         let records = challengerRecords ?? []
-        let latestRecord = records.max { $0.gisu.intValue < $1.gisu.intValue }
+        let visibleRecords = records.filter { UMCPartType(apiValue: $0.part) != .admin }
+        let latestRecord = visibleRecords.max { $0.gisu.intValue < $1.gisu.intValue }
+            ?? records.max { $0.gisu.intValue < $1.gisu.intValue }
         let latestRole = roles.max { ($0.gisu?.intValue ?? 0) < ($1.gisu?.intValue ?? 0) }
         let profileLinks = profileLinks()
 
         let fallbackPart = latestRole?.responsiblePart
-            .flatMap { UMCPartType(apiValue: $0) } ?? .pm
+            .flatMap { UMCPartType(apiValue: $0) } ?? .admin
 
         let challengerInfo = ChallengerInfo(
             memberId: id.intValue,
@@ -254,13 +256,7 @@ extension MyPageProfileResponseDTO {
             part: UMCPartType(apiValue: latestRecord?.part ?? "") ?? fallbackPart
         )
 
-        let logs = records.map { record in
-            ActivityLog(
-                part: UMCPartType(apiValue: record.part) ?? .pm,
-                generation: record.gisu.intValue,
-                role: .challenger
-            )
-        }
+        let logs = activityLogs(records: records)
 
         return ProfileData(
             challengeId: latestRecord?.challengerId.intValue ?? latestRole?.challengerId.intValue ?? 0,
@@ -269,6 +265,35 @@ extension MyPageProfileResponseDTO {
             activityLogs: logs,
             profileLink: profileLinks
         )
+    }
+
+    private func activityLogs(records: [MyPageChallengerRecordDTO]) -> [ActivityLog] {
+        let roleLogs = roles.map { role in
+            ActivityLog(
+                part: role.responsiblePart.flatMap { UMCPartType(apiValue: $0) } ?? .admin,
+                generation: role.gisu?.intValue ?? 0,
+                role: role.roleType
+            )
+        }
+
+        let challengerLogs = records.compactMap { record -> ActivityLog? in
+            guard let part = UMCPartType(apiValue: record.part), part != .admin else {
+                return nil
+            }
+
+            return ActivityLog(
+                part: part,
+                generation: record.gisu.intValue,
+                role: .challenger
+            )
+        }
+
+        return (roleLogs + challengerLogs).sorted { lhs, rhs in
+            if lhs.generation == rhs.generation {
+                return lhs.role > rhs.role
+            }
+            return lhs.generation > rhs.generation
+        }
     }
 
     /// 서버 응답의 외부 링크 필드를 `SocialLinkType` 기반 `[ProfileLink]` 배열로 변환합니다.

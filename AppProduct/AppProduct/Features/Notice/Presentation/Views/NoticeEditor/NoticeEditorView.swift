@@ -421,10 +421,8 @@ struct NoticeEditorView: View {
         return menuItemLabel(viewModel.selectedCategory)
     }
 
-    /// 메인 카테고리가 지부/학교일 때 본인 소속명을 서브타이틀로 노출합니다.
+    /// 메인 카테고리 서브타이틀
     private var navigationSubtitle: String {
-        let currentRole = ManagementTeam(rawValue: memberRoleRaw)
-
         if viewModel.isEditMode {
             switch viewModel.selectedCategory {
             case .branch:
@@ -437,19 +435,7 @@ struct NoticeEditorView: View {
         }
 
         switch viewModel.selectedCategory {
-        case .all:
-            return ""
-        case .central:
-            return ""
-        case .school:
-            if currentRole == .schoolPresident
-                || currentRole == .schoolVicePresident
-                || currentRole == .schoolPartLeader
-                || currentRole == .schoolEtcAdmin {
-                return normalizedName(from: schoolName, fallback: "학교")
-            }
-            return ""
-        case .branch, .part:
+        case .all, .central, .school, .branch, .part:
             return ""
         }
     }

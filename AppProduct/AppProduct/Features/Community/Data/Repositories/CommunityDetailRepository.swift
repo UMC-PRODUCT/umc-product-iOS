@@ -56,7 +56,14 @@ final class CommunityDetailRepository: CommunityDetailRepositoryProtocol {
             APIResponse<[CommentDTO]>.self,
             from: response.data
         )
-        return try apiResponse.unwrap().map { $0.toCommentModel() }
+        return try apiResponse.unwrap()
+            .map { $0.toCommentModel() }
+            .sorted {
+                if $0.createdAt == $1.createdAt {
+                    return $0.commentId < $1.commentId
+                }
+                return $0.createdAt < $1.createdAt
+            }
     }
     
     func getPostDetail(postId: Int) async throws -> CommunityItemModel {
