@@ -13,6 +13,12 @@ import SwiftUI
 struct InfoSection: View {
     // MARK: - Property
 
+    private enum Constants {
+        static let appStoreURLString = "https://apps.apple.com/us/app/umc/id6759412446"
+        static let appName = "UMC"
+        static let shareDescription = "UMC 동아리 운영을 한 곳에서 관리할 수 있는 앱이에요."
+    }
+
     /// 섹션의 타입 (헤더 타이틀로 사용됨)
     let sectionType: MyPageSectionType
 
@@ -20,6 +26,20 @@ struct InfoSection: View {
     /// - Returns: CFBundleShortVersionString 값, 없으면 "Unknown"
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+    }
+
+    /// 공유 시트에 전달할 App Store 링크
+    private var appStoreURL: URL {
+        URL(string: Constants.appStoreURLString)!
+    }
+
+    /// 앱 이름, 설명, 링크를 함께 포함한 공유용 텍스트
+    private var shareContent: String {
+        """
+        \(Constants.appName)
+        \(Constants.shareDescription)
+        \(appStoreURL.absoluteString)
+        """
     }
 
     // MARK: - Function
@@ -33,6 +53,17 @@ struct InfoSection: View {
     var body: some View {
         Section(content: {
             MyPageSectionRow(systemIcon: "info.circle", title: "버전", rightText: appVersion, iconBackgroundColor: .cyan)
+            ShareLink(
+                item: shareContent,
+                preview: SharePreview(Constants.appName)
+            ) {
+                MyPageSectionRow(
+                    systemIcon: "square.and.arrow.up",
+                    title: "앱 공유하기",
+                    rightImage: "arrow.up.right",
+                    iconBackgroundColor: .blue
+                )
+            }
         }, header: {
             SectionHeaderView(title: sectionType.rawValue)
         })
