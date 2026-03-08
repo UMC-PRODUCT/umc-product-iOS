@@ -212,9 +212,18 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
     func registerExistingChallenger(
         code: String
     ) async throws {
-        _ = try await adapter.request(
-            AuthRouter.registerExistingChallenger(code: code)
-        )
+        do {
+            let response = try await adapter.request(
+                AuthRouter.registerExistingChallenger(code: code)
+            )
+            let apiResponse = try decoder.decode(
+                APIResponse<EmptyResult>.self,
+                from: response.data
+            )
+            try apiResponse.validateSuccess()
+        } catch let error as NetworkError {
+            throw Self.parseServerError(from: error) ?? error
+        }
     }
 
     /// 학교 목록을 조회합니다.
@@ -271,6 +280,24 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
 // MARK: - Private Helpers
 
 private extension AuthRepository {
+    static func parseServerError(from error: NetworkError) -> Error? {
+        guard case .requestFailed(_, let data) = error,
+              let data,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return nil
+        }
+
+        let code = json["code"] as? String
+        let message = (json["message"] as? String) ?? (json["result"] as? String)
+
+        guard code != nil || message != nil else {
+            return nil
+        }
+
+        return RepositoryError.serverError(code: code, message: message)
+    }
+
     func describeDecodingError(_ error: DecodingError) -> String {
         switch error {
         case .keyNotFound(let key, let context):

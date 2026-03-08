@@ -14,10 +14,12 @@ import PhotosUI
 struct MyPageProfileView: View {
     /// 뷰모델 상태 객체
     @State var viewModel: MyPageProfileViewModel
+    @Environment(\.di) private var di
     @Environment(ErrorHandler.self) private var errorHandler
     @Environment(\.dismiss) private var dismiss
     @State private var showAddActivityLogAlert: Bool = false
     @State private var challengerCode: String = ""
+    @State private var alertPrompt: AlertPrompt?
 
     init(container: DIContainer, profileData: ProfileData) {
         let provider = container.resolve(MyPageUseCaseProviding.self)
@@ -54,6 +56,7 @@ struct MyPageProfileView: View {
             actions: challengerCodeAlertActions,
             message: challengerCodeAlertMessage
         )
+        .alertPrompt(item: $alertPrompt)
     }
     
     /// 섹션 구현부
@@ -138,6 +141,17 @@ struct MyPageProfileView: View {
                 await MainActor.run {
                     challengerCode = ""
                 }
+                let profile = try await di.resolve(HomeUseCaseProviding.self)
+                    .fetchMyProfileUseCase
+                    .execute()
+                await MainActor.run {
+                    syncProfileToStorage(profile)
+                }
+            } catch let error as RepositoryError {
+                await MainActor.run {
+                    challengerCode = ""
+                    presentCodeFailurePrompt(for: error)
+                }
             } catch {
                 await MainActor.run {
                     challengerCode = ""
@@ -148,6 +162,104 @@ struct MyPageProfileView: View {
                 )
             }
         }
+    }
+
+    private func presentCodeFailurePrompt(for error: RepositoryError) {
+        let message: String
+
+        switch error.code {
+        case "CHALLENGER-0002":
+            message = "이미 등록된 사용자입니다."
+        case "CHALLENGER-0012":
+            message = "이미 사용된 챌린저 기록 추가용 코드입니다."
+        case "CHALLENGER-0013":
+            message = "코드에 등록된 사용자 이름이 요청자와 일치하지 않습니다."
+        case "CHALLENGER-0014":
+            message = "코드에 등록된 학교가 요청자 소속과 일치하지 않습니다."
+        case "CHALLENGER-0016":
+            message = "챌린저 기록 코드를 먼저 입력해주세요."
+        default:
+            message = sanitizedErrorMessage(from: error.userMessage)
+        }
+
+        alertPrompt = AlertPrompt(
+            title: "인증 실패",
+            message: message,
+            positiveBtnTitle: "확인"
+        )
+    }
+
+    private func syncProfileToStorage(_ profile: HomeProfileResult) {
+        let defaults = UserDefaults.standard
+        let latestRole = latestHighestPriorityRole(in: profile.roles)
+        let resolvedRole = ManagementTeam.highestPriority(
+            in: profile.roles.map(\.roleType)
+        ) ?? latestRole?.roleType ?? .challenger
+
+        defaults.set(profile.memberId, forKey: AppStorageKey.memberId)
+        defaults.set(profile.schoolId, forKey: AppStorageKey.schoolId)
+        defaults.set(profile.schoolName, forKey: AppStorageKey.schoolName)
+        defaults.set(profile.latestGisuId ?? 0, forKey: AppStorageKey.gisuId)
+        defaults.set(profile.latestChallengerId ?? 0, forKey: AppStorageKey.challengerId)
+        defaults.set(profile.chapterId ?? 0, forKey: AppStorageKey.chapterId)
+        defaults.set(profile.chapterName, forKey: AppStorageKey.chapterName)
+        defaults.set(profile.part?.apiValue ?? "", forKey: AppStorageKey.responsiblePart)
+        defaults.set(
+            latestRole?.organizationType.rawValue ?? OrganizationType.chapter.rawValue,
+            forKey: AppStorageKey.organizationType
+        )
+        defaults.set(
+            latestRole?.organizationId ?? (profile.chapterId ?? 0),
+            forKey: AppStorageKey.organizationId
+        )
+        defaults.set(resolvedRole.rawValue, forKey: AppStorageKey.memberRole)
+        defaults.set(
+            profile.roles.map(\.roleType.rawValue),
+            forKey: AppStorageKey.memberRoles
+        )
+        defaults.set(isApprovedProfile(profile), forKey: AppStorageKey.canAutoLogin)
+
+        di.resolve(UserSessionManager.self).updateRole(resolvedRole)
+        NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
+    }
+
+    private func isApprovedProfile(_ profile: HomeProfileResult) -> Bool {
+        if !profile.generations.isEmpty {
+            return true
+        }
+
+        for seasonType in profile.seasonTypes {
+            if case .gens(let generations) = seasonType, !generations.isEmpty {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private func latestHighestPriorityRole(
+        in roles: [ChallengerRole]
+    ) -> ChallengerRole? {
+        guard let latestGisu = roles.map(\.gisu).max() else {
+            return nil
+        }
+
+        return roles
+            .filter { $0.gisu == latestGisu }
+            .max { lhs, rhs in
+                lhs.roleType < rhs.roleType
+            }
+    }
+
+    private func sanitizedErrorMessage(from message: String) -> String {
+        let pattern = #"^[A-Z]+-\d{4}\s*[:\-]?\s*"#
+        let sanitized = message.replacingOccurrences(
+            of: pattern,
+            with: "",
+            options: .regularExpression
+        )
+        let trimmed = sanitized.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "인증에 실패했습니다. 다시 시도해주세요." : trimmed
     }
 }
 

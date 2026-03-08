@@ -55,9 +55,18 @@ final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable {
 
     /// 운영진 발급 코드로 기존 챌린저 기록을 추가합니다.
     func addChallengerRecord(code: String) async throws {
-        _ = try await adapter.request(
-            MyPageRouter.addChallengerRecord(code: code)
-        )
+        do {
+            let response = try await adapter.request(
+                MyPageRouter.addChallengerRecord(code: code)
+            )
+            let apiResponse = try decoder.decode(
+                APIResponse<EmptyResult>.self,
+                from: response.data
+            )
+            try apiResponse.validateSuccess()
+        } catch let error as NetworkError {
+            throw Self.parseServerError(from: error) ?? error
+        }
     }
 
     /// 프로필 이미지 업로드 3단계 플로우: prepare → upload → confirm → patch
@@ -162,6 +171,28 @@ final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable {
             from: response.data
         )
         return try apiResponse.unwrap().toDomain()
+    }
+}
+
+// MARK: - Private Helpers
+
+private extension MyPageRepository {
+    static func parseServerError(from error: NetworkError) -> Error? {
+        guard case .requestFailed(_, let data) = error,
+              let data,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return nil
+        }
+
+        let code = json["code"] as? String
+        let message = (json["message"] as? String) ?? (json["result"] as? String)
+
+        guard code != nil || message != nil else {
+            return nil
+        }
+
+        return RepositoryError.serverError(code: code, message: message)
     }
 }
 

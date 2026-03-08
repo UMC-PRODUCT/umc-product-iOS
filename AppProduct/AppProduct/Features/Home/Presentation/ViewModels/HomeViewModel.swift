@@ -93,12 +93,14 @@ final class HomeViewModel {
 
     /// 프로필 정보를 AppStorage(UserDefaults)에 저장
     ///
-    /// 최신 기수(max gisu) 기준으로 역할 정보를 저장합니다.
+    /// 최신 기수 정보는 유지하되, 대표 역할은 최고 권한 기준으로 저장합니다.
     /// 다른 Feature에서 `@AppStorage(AppStorageKey.xxx)`로 즉시 접근 가능합니다.
     private func saveProfileToStorage(_ result: HomeProfileResult) {
         let defaults = UserDefaults.standard
         let latestRole = result.roles.latestHighestPriorityRole
-        let resolvedRole = latestRole?.roleType ?? .challenger
+        let resolvedRole = ManagementTeam.highestPriority(
+            in: result.roles.map(\.roleType)
+        ) ?? latestRole?.roleType ?? .challenger
         let isApproved = isApprovedProfile(result)
 
         defaults.set(result.memberId, forKey: AppStorageKey.memberId)
