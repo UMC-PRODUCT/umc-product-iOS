@@ -67,10 +67,8 @@ struct GenerateScheduleRequetDTO: Encodable {
         try container.encode(gisuId, forKey: .gisuId)
         try container.encode(requiresApproval, forKey: .requiresApproval)
 
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let startsAtString = formatter.string(from: startsAt)
-        let endsAtString = formatter.string(from: endsAt)
+        let startsAtString = ServerDateTimeConverter.toUTCDateTimeString(startsAt)
+        let endsAtString = ServerDateTimeConverter.toUTCDateTimeString(endsAt)
         try container.encode(startsAtString, forKey: .startsAt)
         try container.encode(endsAtString, forKey: .endsAt)
     }
