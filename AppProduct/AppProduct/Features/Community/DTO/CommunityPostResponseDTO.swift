@@ -78,40 +78,11 @@ struct LightningInfoDTO: Codable {
     
     func toModel() -> CommunityLightningInfo {
         return CommunityLightningInfo(
-            meetAt: DateParser.parse(meetAt),
+            meetAt: ServerDateTimeConverter.parseUTCDateTime(meetAt) ?? Date(),
             location: location,
             maxParticipants: Int(maxParticipants) ?? 0,
             openChatUrl: openChatUrl
         )
-    }
-}
-
-private enum DateParser {
-    static let iso8601WithFractional: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    static let iso8601: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter
-    }()
-
-    static let iso8601WithoutTimezone: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone.current
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        return formatter
-    }()
-
-    static func parse(_ string: String) -> Date {
-        iso8601WithFractional.date(from: string)
-            ?? iso8601.date(from: string)
-            ?? iso8601WithoutTimezone.date(from: string)
-            ?? Date()
     }
 }
 
@@ -127,7 +98,7 @@ extension PostListItemDTO {
             profileImage: authorProfileImage,
             userName: authorName,
             part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
-            createdAt: DateParser.parse(createdAt),
+            createdAt: ServerDateTimeConverter.parseUTCDateTime(createdAt) ?? Date(),
             likeCount: Int(likeCount) ?? 0,
             commentCount: Int(commentCount) ?? 0,
             scrapCount: 0,
@@ -150,7 +121,7 @@ extension PostDetailDTO {
             profileImage: authorProfileImage,
             userName: authorName,
             part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
-            createdAt: DateParser.parse(writeTime),
+            createdAt: ServerDateTimeConverter.parseUTCDateTime(writeTime) ?? Date(),
             likeCount: Int(likeCount) ?? 0,
             commentCount: Int(commentCount) ?? 0,
             scrapCount: Int(scrapCount) ?? 0,
