@@ -2,7 +2,7 @@
 //  MyPageProfileDTOTests.swift
 //  AppProductTests
 //
-//  Created by Codex on 3/9/26.
+//  Created by euijjang97 on 3/9/26.
 //
 
 import XCTest
