@@ -29,6 +29,8 @@ struct HomeScheduleResponseDTO: Codable {
         case name
         case startsAt
         case endsAt
+        case startTime
+        case endTime
         case status
         case dDay
     }
@@ -37,10 +39,26 @@ struct HomeScheduleResponseDTO: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         scheduleId = try container.decodeIntFlexibleIfPresent(forKey: .scheduleId) ?? 0
         name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
-        startsAt = try container.decodeIfPresent(String.self, forKey: .startsAt) ?? ""
-        endsAt = try container.decodeIfPresent(String.self, forKey: .endsAt) ?? ""
+        startsAt = container.decodeDateTimeString(
+            primaryKey: .startsAt,
+            fallbackKey: .startTime
+        )
+        endsAt = container.decodeDateTimeString(
+            primaryKey: .endsAt,
+            fallbackKey: .endTime
+        )
         status = try container.decodeIfPresent(String.self, forKey: .status) ?? ""
         dDay = try container.decodeIntFlexibleIfPresent(forKey: .dDay) ?? 0
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(scheduleId, forKey: .scheduleId)
+        try container.encode(name, forKey: .name)
+        try container.encode(startsAt, forKey: .startsAt)
+        try container.encode(endsAt, forKey: .endsAt)
+        try container.encode(status, forKey: .status)
+        try container.encode(dDay, forKey: .dDay)
     }
 }
 
@@ -95,5 +113,11 @@ private extension KeyedDecodingContainer {
             return nil
         }
         return try? decodeIntFlexible(forKey: key)
+    }
+
+    func decodeDateTimeString(primaryKey: Key, fallbackKey: Key) -> String {
+        (try? decodeIfPresent(String.self, forKey: primaryKey))
+        ?? (try? decodeIfPresent(String.self, forKey: fallbackKey))
+        ?? ""
     }
 }

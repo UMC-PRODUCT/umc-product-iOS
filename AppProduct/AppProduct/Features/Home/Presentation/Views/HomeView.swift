@@ -218,8 +218,7 @@ struct HomeView: View {
                             pathStore.homePath.append(
                                 .home(
                                     .detailSchedule(
-                                        scheduleId: schedule.scheduleId,
-                                        selectedDate: selectedDate
+                                        scheduleId: schedule.scheduleId
                                     )
                                 )
                             )
