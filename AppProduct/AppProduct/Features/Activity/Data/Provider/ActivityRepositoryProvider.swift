@@ -72,11 +72,13 @@ extension ActivityRepositoryProvider {
     ///
     /// 출석 Repository만 실제 구현체, 나머지는 Mock 유지
     static func real(
-        adapter: MoyaNetworkAdapter
+        adapter: MoyaNetworkAdapter,
+        homeRepository: HomeRepositoryProtocol
     ) -> ActivityRepositoryProvider {
         let attendanceRepo = AttendanceRepository(adapter: adapter)
         let activityRepository = ActivityRepository(
-            attendanceRepository: attendanceRepo
+            attendanceRepository: attendanceRepo,
+            homeRepository: homeRepository
         )
         let studyRepository = StudyRepository(adapter: adapter)
         let memberRepository = MemberRepository(
