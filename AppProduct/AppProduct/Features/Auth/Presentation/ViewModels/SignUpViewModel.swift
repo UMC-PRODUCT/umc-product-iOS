@@ -257,6 +257,26 @@ final class SignUpViewModel {
             print("[Auth] register 성공: memberId=\(memberId)")
             #endif
             registerState = .loaded(memberId)
+        } catch let error as AppError {
+            #if DEBUG
+            print("[Auth] register 실패: \(error)")
+            #endif
+            registerState = .failed(error)
+        } catch let error as RepositoryError {
+            #if DEBUG
+            print("[Auth] register 실패: \(error)")
+            #endif
+            registerState = .failed(.repository(error))
+        } catch let error as NetworkError {
+            #if DEBUG
+            print("[Auth] register 실패: \(error)")
+            #endif
+            registerState = .failed(.network(error))
+        } catch let error as AuthError {
+            #if DEBUG
+            print("[Auth] register 실패: \(error)")
+            #endif
+            registerState = .failed(.auth(error))
         } catch {
             #if DEBUG
             print("[Auth] register 실패: \(error)")

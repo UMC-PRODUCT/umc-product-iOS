@@ -155,32 +155,37 @@ final class ErrorHandler {
             return .network(networkError)
         }
 
-        // 3. ValidationError
+        // 3. RepositoryError
+        if let repositoryError = error as? RepositoryError {
+            return .repository(repositoryError)
+        }
+
+        // 4. ValidationError
         if let validationError = error as? ValidationError {
             return .validation(validationError)
         }
 
-        // 4. AuthError
+        // 5. AuthError
         if let authError = error as? AuthError {
             return .auth(authError)
         }
 
-        // 5. DomainError
+        // 6. DomainError
         if let domainError = error as? DomainError {
             return .domain(domainError)
         }
 
-        // 6. URLError → NetworkError 변환
+        // 7. URLError → NetworkError 변환
         if let urlError = error as? URLError {
             return .network(convertURLError(urlError))
         }
 
-        // 7. DecodingError → RepositoryError 변환
+        // 8. DecodingError → RepositoryError 변환
         if let decodingError = error as? DecodingError {
             return .repository(.decodingError(detail: describeDecodingError(decodingError)))
         }
 
-        // 8. 알 수 없는 에러
+        // 9. 알 수 없는 에러
         return .unknown(message: error.localizedDescription)
     }
 

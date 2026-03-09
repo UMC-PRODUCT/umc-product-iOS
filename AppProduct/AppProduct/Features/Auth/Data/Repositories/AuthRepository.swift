@@ -201,10 +201,11 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
                 print("[Auth] register 에러 응답(\(statusCode)): \(json)")
             }
             #endif
-            throw NetworkError.requestFailed(
+            let networkError = NetworkError.requestFailed(
                 statusCode: statusCode,
                 data: data
             )
+            throw Self.parseServerError(from: networkError) ?? networkError
         }
     }
 
