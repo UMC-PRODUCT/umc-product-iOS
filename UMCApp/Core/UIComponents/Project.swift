@@ -12,6 +12,7 @@ let project = Project(
             sources: ["Sources/**"],
             dependencies: [
                 .project(target: "CoreDesignSystem", path: .relativeToRoot("Core/DesignSystem")),
+                .external(name: "Kingfisher"),
             ]
         )
     ]
