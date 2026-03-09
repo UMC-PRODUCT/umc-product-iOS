@@ -41,7 +41,7 @@ final class ChallengerSearchRepository: ChallengerSearchRepositoryProtocol, @unc
         query: ChallengerSearchRequestDTO
     ) async throws -> ChallengerSearchResponseDTO {
         let response = try await adapter.request(
-            ChallengerSearchRouter.searchGlobal(query: query)
+            ChallengerSearchRouter.searchCursor(query: query)
         )
         let apiResponse = try decoder.decode(
             APIResponse<ChallengerSearchResponseDTO>.self,

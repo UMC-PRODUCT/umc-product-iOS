@@ -46,6 +46,22 @@ class SearchChallengerViewModel {
     /// 다음 페이지 존재 여부
     private(set) var hasNext: Bool = false
 
+    /// 현재 검색 컨텍스트의 키워드
+    private var currentKeyword: String = ""
+
+    /// 디바운스용 검색 태스크
+    private var searchTask: Task<Void, Never>?
+
+    /// 최신 검색 요청 식별자
+    private var latestRequestID: UUID = UUID()
+
+    /// 다음 페이지 중복 호출 방지 플래그
+    private var isFetchingNextPage: Bool = false
+
+    private enum Constants {
+        static let debounceNanoseconds: UInt64 = 400_000_000
+    }
+
     // MARK: - Init
 
     /// - Parameter container: 의존성 주입 컨테이너 (HomeUseCaseProviding에서 UseCase 해소)
@@ -56,21 +72,60 @@ class SearchChallengerViewModel {
 
     // MARK: - Function
 
-    /// searchText 기반으로 챌린저 목록을 서버에서 가져옵니다.
+    /// 화면 진입 또는 검색어 초기화 시 현재 검색 조건으로 첫 페이지를 로드합니다.
     @MainActor
-    func fetchChallengers() async {
+    func loadInitialChallengers() async {
+        await fetchChallengers(keyword: normalizedSearchText)
+    }
+
+    /// 검색어 변경 시 디바운스를 적용해 챌린저 목록을 다시 조회합니다.
+    @MainActor
+    func scheduleSearch() {
+        searchTask?.cancel()
+        let keyword = normalizedSearchText
+
+        searchTask = Task { [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: Constants.debounceNanoseconds)
+            } catch {
+                return
+            }
+
+            guard let self, !Task.isCancelled else { return }
+            await self.fetchChallengers(keyword: keyword)
+        }
+    }
+
+    /// 더 이상 필요 없는 검색 태스크를 정리합니다.
+    @MainActor
+    func cancelSearch() {
+        searchTask?.cancel()
+    }
+
+    /// 현재 검색 키워드 기준으로 첫 페이지를 조회합니다.
+    @MainActor
+    private func fetchChallengers(keyword: String) async {
+        let requestID = UUID()
+        latestRequestID = requestID
         loadState = .loading
+        currentKeyword = keyword
+        nextCursor = nil
+        hasNext = false
         do {
-            let trimmed = searchText.trimmingCharacters(in: .whitespaces)
             let query = ChallengerSearchRequestDTO(
-                name: trimmed.isEmpty ? nil : trimmed
+                keyword: keyword.nonEmpty
             )
             let (challengers, hasNext, nextCursor) = try await searchChallengersUseCase.execute(query: query)
+            guard latestRequestID == requestID else { return }
             self.allChallengers = challengers
             self.hasNext = hasNext
             self.nextCursor = nextCursor
             loadState = .loaded(true)
         } catch {
+            guard latestRequestID == requestID else { return }
+            allChallengers = []
+            nextCursor = nil
+            hasNext = false
             loadState = .failed(.unknown(message: "챌린저 검색 에러"))
         }
     }
@@ -78,14 +133,32 @@ class SearchChallengerViewModel {
     /// 다음 페이지 챌린저를 추가 로드합니다.
     @MainActor
     func fetchNextPage() async {
-        guard hasNext, let cursor = nextCursor else { return }
+        guard hasNext, let cursor = nextCursor, !isFetchingNextPage else { return }
+        isFetchingNextPage = true
+        defer { isFetchingNextPage = false }
         do {
-            let query = ChallengerSearchRequestDTO(cursor: cursor)
+            let query = ChallengerSearchRequestDTO(
+                cursor: cursor,
+                keyword: currentKeyword.nonEmpty
+            )
             let (challengers, hasNext, nextCursor) = try await searchChallengersUseCase.execute(query: query)
             self.allChallengers.append(contentsOf: challengers)
             self.hasNext = hasNext
             self.nextCursor = nextCursor
         } catch {}
+    }
+}
+
+// MARK: - Helpers
+private extension SearchChallengerViewModel {
+    var normalizedSearchText: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+private extension String {
+    var nonEmpty: String? {
+        isEmpty ? nil : self
     }
 }
 
