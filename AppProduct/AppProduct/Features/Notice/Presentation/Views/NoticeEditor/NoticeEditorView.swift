@@ -46,13 +46,19 @@ struct NoticeEditorView: View {
 
     // MARK: - Initializer
 
-    init(container: DIContainer, mode: NoticeEditorMode = .create, selectedGisuId: Int? = nil) {
+    init(
+        container: DIContainer,
+        mode: NoticeEditorMode = .create,
+        selectedGisuId: Int? = nil,
+        initialCategory: EditorMainCategory? = nil
+    ) {
         self.selectedGisuId = selectedGisuId
         self._viewModel = .init(
             wrappedValue: .init(
                 container: container,
                 mode: mode,
-                selectedGisuId: selectedGisuId
+                selectedGisuId: selectedGisuId,
+                initialCategory: initialCategory
             )
         )
     }
@@ -412,13 +418,11 @@ struct NoticeEditorView: View {
             return "공지 수정"
         }
 
-        return viewModel.selectedCategory.labelText
+        return menuItemLabel(viewModel.selectedCategory)
     }
 
-    /// 메인 카테고리가 지부/학교일 때 본인 소속명을 서브타이틀로 노출합니다.
+    /// 메인 카테고리 서브타이틀
     private var navigationSubtitle: String {
-        let currentRole = ManagementTeam(rawValue: memberRoleRaw)
-
         if viewModel.isEditMode {
             switch viewModel.selectedCategory {
             case .branch:
@@ -431,23 +435,7 @@ struct NoticeEditorView: View {
         }
 
         switch viewModel.selectedCategory {
-        case .all:
-            return ""
-        case .school:
-            if currentRole == .schoolPresident
-                || currentRole == .schoolVicePresident
-                || currentRole == .schoolPartLeader
-                || currentRole == .schoolEtcAdmin {
-                return normalizedName(from: schoolName, fallback: "학교")
-            }
-            let targetGisu = selectedGisuId ?? gisuId
-            guard targetGisu > 0 else { return "" }
-            return "\(targetGisu)기"
-        case .central:
-            let targetGisu = selectedGisuId ?? gisuId
-            guard targetGisu > 0 else { return "" }
-            return "\(targetGisu)기"
-        case .branch, .part:
+        case .all, .central, .school, .branch, .part:
             return ""
         }
     }
@@ -462,7 +450,14 @@ struct NoticeEditorView: View {
 
     /// 상단 메뉴 항목 라벨 (권한/선택 기수 반영)
     private func menuItemLabel(_ category: EditorMainCategory) -> String {
-        return category.labelText
+        switch category {
+        case .central:
+            let targetGisu = selectedGisuId ?? gisuId
+            guard targetGisu > 0 else { return category.labelText }
+            return "\(targetGisu)기"
+        default:
+            return category.labelText
+        }
     }
 
     /// 타겟 선택 시트 높이 설정

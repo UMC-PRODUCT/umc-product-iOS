@@ -189,15 +189,16 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     init(
         container: DIContainer,
         mode: NoticeEditorMode = .create,
-        selectedGisuId: Int? = nil
+        selectedGisuId: Int? = nil,
+        initialCategory: EditorMainCategory? = nil
     ) {
         self.container = container
         self.mode = mode
         self.userGisuId = selectedGisuId
 
-        let categories: [EditorMainCategory] = [.all, .central, .branch, .school]
+        let categories: [EditorMainCategory] = [.all, .central]
         availableCategories = categories
-        selectedCategory = categories.first ?? .all
+        selectedCategory = initialCategory.flatMap { categories.contains($0) ? $0 : nil } ?? categories.first ?? .all
 
         if case .edit(_, let notice) = mode {
             loadNoticeForEdit(notice)
