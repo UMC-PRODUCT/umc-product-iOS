@@ -21,6 +21,7 @@ struct SignUpView: View {
     /// 현재 포커스된 입력 필드
     @FocusState private var focusedField: SignUpFieldType?
     @State private var lastEmailSnapshot: String = ""
+    @State private var alertPrompt: AlertPrompt?
     @Environment(\.appFlow) private var appFlow
     @Environment(\.di) private var di
     @Environment(\.openURL) private var openURL
@@ -86,6 +87,7 @@ struct SignUpView: View {
                 .navigationSubtitle(Constants.naviSubTitle)
             }
             .keyboardToolbar(focusedField: $focusedField)
+            .alertPrompt(item: $alertPrompt)
             .safeAreaInset(edge: .bottom, content: {
                 mainBtn
             })
@@ -101,6 +103,11 @@ struct SignUpView: View {
                         forKey: AppStorageKey.canAutoLogin
                     )
                     appFlow.showPendingApproval()
+                    return
+                }
+
+                if case .failed(let error) = newState {
+                    handleRegisterFailure(error)
                 }
             }
         }
@@ -456,6 +463,54 @@ extension SignUpView {
 
             // 회원가입 API 호출
             await viewModel.register()
+        }
+    }
+
+    @MainActor
+    private func handleRegisterFailure(_ error: AppError) {
+        if error.isOAuthVerificationExpired {
+            alertPrompt = AlertPrompt(
+                title: "인증이 만료되었어요",
+                message: "회원가입을 계속하려면 다시 로그인해주세요.",
+                positiveBtnTitle: "로그인으로 이동",
+                positiveBtnAction: {
+                    appFlow.showLogin()
+                },
+                negativeBtnTitle: "닫기"
+            )
+            return
+        }
+
+        errorHandler.handle(
+            error,
+            context: .init(
+                feature: "Auth",
+                action: "register",
+                retryAction: {
+                    await viewModel.register()
+                }
+            )
+        )
+    }
+}
+
+// MARK: - Register Error
+
+private extension AppError {
+    var isOAuthVerificationExpired: Bool {
+        switch self {
+        case .repository(let error):
+            guard case .serverError(let code, let message) = error else {
+                return false
+            }
+            if code == "SECURITY-0001" {
+                return true
+            }
+            return message?.contains("만료된 JWT 토큰") == true
+        case .network(.requestFailed(let statusCode, _)):
+            return statusCode == 401
+        default:
+            return false
         }
     }
 }
