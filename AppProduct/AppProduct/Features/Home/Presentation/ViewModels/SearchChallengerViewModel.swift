@@ -75,7 +75,8 @@ class SearchChallengerViewModel {
     /// 화면 진입 또는 검색어 초기화 시 현재 검색 조건으로 첫 페이지를 로드합니다.
     @MainActor
     func loadInitialChallengers() async {
-        await fetchChallengers(keyword: normalizedSearchText)
+        let requestID = prepareSearch(keyword: normalizedSearchText)
+        await fetchChallengers(keyword: normalizedSearchText, requestID: requestID)
     }
 
     /// 검색어 변경 시 디바운스를 적용해 챌린저 목록을 다시 조회합니다.
@@ -83,6 +84,7 @@ class SearchChallengerViewModel {
     func scheduleSearch() {
         searchTask?.cancel()
         let keyword = normalizedSearchText
+        let requestID = prepareSearch(keyword: keyword)
 
         searchTask = Task { [weak self] in
             do {
@@ -92,7 +94,7 @@ class SearchChallengerViewModel {
             }
 
             guard let self, !Task.isCancelled else { return }
-            await self.fetchChallengers(keyword: keyword)
+            await self.fetchChallengers(keyword: keyword, requestID: requestID)
         }
     }
 
@@ -104,13 +106,7 @@ class SearchChallengerViewModel {
 
     /// 현재 검색 키워드 기준으로 첫 페이지를 조회합니다.
     @MainActor
-    private func fetchChallengers(keyword: String) async {
-        let requestID = UUID()
-        latestRequestID = requestID
-        loadState = .loading
-        currentKeyword = keyword
-        nextCursor = nil
-        hasNext = false
+    private func fetchChallengers(keyword: String, requestID: UUID) async {
         do {
             let query = ChallengerSearchRequestDTO(
                 keyword: keyword.nonEmpty
@@ -151,6 +147,17 @@ class SearchChallengerViewModel {
 
 // MARK: - Helpers
 private extension SearchChallengerViewModel {
+    @MainActor
+    func prepareSearch(keyword: String) -> UUID {
+        let requestID = UUID()
+        latestRequestID = requestID
+        loadState = .loading
+        currentKeyword = keyword
+        nextCursor = nil
+        hasNext = false
+        return requestID
+    }
+
     var normalizedSearchText: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
