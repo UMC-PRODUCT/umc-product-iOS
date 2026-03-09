@@ -222,7 +222,8 @@ extension DIContainer {
         // MARK: - Activity Feature
         container.register(ActivityRepositoryProviding.self) {
             ActivityRepositoryProvider.real(
-                adapter: container.resolve(MoyaNetworkAdapter.self)
+                adapter: container.resolve(MoyaNetworkAdapter.self),
+                homeRepository: container.resolve(HomeRepositoryProtocol.self)
             )
         }
         container.register(ActivityUseCaseProviding.self) {

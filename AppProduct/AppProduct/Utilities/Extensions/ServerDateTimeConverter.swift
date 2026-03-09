@@ -11,12 +11,12 @@ enum ServerDateTimeConverter {
 
     // MARK: - TimeZone
 
-    static let utcTimeZone: TimeZone = .init(secondsFromGMT: 0) ?? .current
-    static let kstTimeZone: TimeZone = .init(identifier: "Asia/Seoul") ?? .current
+    nonisolated static let utcTimeZone: TimeZone = .init(secondsFromGMT: 0) ?? .current
+    nonisolated static let kstTimeZone: TimeZone = .init(identifier: "Asia/Seoul") ?? .current
 
     // MARK: - Function
 
-    static func parseUTCDateTime(_ value: String) -> Date? {
+    nonisolated static func parseUTCDateTime(_ value: String) -> Date? {
         guard !value.isEmpty else { return nil }
 
         let formatterWithFraction = ISO8601DateFormatter()
@@ -54,7 +54,7 @@ enum ServerDateTimeConverter {
         return nil
     }
 
-    static func toUTCDateTimeString(_ date: Date) -> String {
+    nonisolated static func toUTCDateTimeString(_ date: Date) -> String {
         let formatter = ISO8601DateFormatter()
         formatter.timeZone = utcTimeZone
         formatter.formatOptions = [
@@ -64,7 +64,7 @@ enum ServerDateTimeConverter {
         return formatter.string(from: date)
     }
 
-    static func parseUTCDateTimeOrTime(
+    nonisolated static func parseUTCDateTimeOrTime(
         _ value: String,
         utcDate: String? = nil
     ) -> Date? {
@@ -74,7 +74,7 @@ enum ServerDateTimeConverter {
         return parseUTCTime(value, utcDate: utcDate)
     }
 
-    static func parseUTCTime(
+    nonisolated static func parseUTCTime(
         _ value: String,
         utcDate: String? = nil
     ) -> Date? {
@@ -113,7 +113,7 @@ enum ServerDateTimeConverter {
         return nil
     }
 
-    static func parseUTCDate(_ value: String) -> Date? {
+    nonisolated static func parseUTCDate(_ value: String) -> Date? {
         guard !value.isEmpty else { return nil }
 
         for format in ["yyyy-MM-dd", "yyyy.MM.dd"] {
@@ -129,7 +129,7 @@ enum ServerDateTimeConverter {
         return nil
     }
 
-    static func toKSTDateString(_ date: Date) -> String {
+    nonisolated static func toKSTDateString(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR_POSIX")
         formatter.timeZone = kstTimeZone
@@ -137,7 +137,7 @@ enum ServerDateTimeConverter {
         return formatter.string(from: date)
     }
 
-    static func toKSTTimeString(_ date: Date) -> String {
+    nonisolated static func toKSTTimeString(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR_POSIX")
         formatter.timeZone = kstTimeZone
@@ -147,7 +147,7 @@ enum ServerDateTimeConverter {
 
     // MARK: - Private
 
-    private static func makeUTCCalendar() -> Calendar {
+    nonisolated private static func makeUTCCalendar() -> Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = utcTimeZone
         return calendar
