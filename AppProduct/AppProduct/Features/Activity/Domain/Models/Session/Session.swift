@@ -69,14 +69,11 @@ final class Session: Identifiable, Equatable {
         && !hasSubmitted
     }
 
-    /// 사유 제출 가능 여부 (지각 시간대 전용)
+    /// 사유 제출 가능 여부
     ///
-    /// `.lateWindow` 시간대에만 사유를 제출할 수 있습니다.
-    func canSubmitReason(
-        timeWindow: AttendanceTimeWindow
-    ) -> Bool {
-        timeWindow == .lateWindow
-        && !isLoading
+    /// 아직 제출하지 않은 세션은 시간대와 무관하게 사유를 제출할 수 있습니다.
+    func canSubmitReason() -> Bool {
+        !isLoading
         && !hasSubmitted
     }
 
