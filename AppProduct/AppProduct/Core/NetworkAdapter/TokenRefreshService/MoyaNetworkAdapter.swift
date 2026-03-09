@@ -373,7 +373,10 @@ fileprivate struct AnyEncodable: Encodable {
     ///
     /// - Parameter wrapped: 원본 Encodable 객체
     init<T: Encodable>(_ wrapped: T) {
-        _encode = wrapped.encode(to:)
+        let wrappedValue = wrapped
+        _encode = { encoder in
+            try wrappedValue.encode(to: encoder)
+        }
     }
 
     /// Encodable 프로토콜 구현
