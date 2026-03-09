@@ -188,24 +188,114 @@ struct ChallengerAttendanceView: View, Equatable {
 #if DEBUG
 // MARK: - Previews
 
-#Preview("출석 전 상태") {
-    ChallengerAttendanceView(
-        container: AttendancePreviewData.container,
-        errorHandler: AttendancePreviewData.errorHandler,
-        mapViewModel: AttendancePreviewData.mapViewModel,
-        attendanceViewModel: AttendancePreviewData.attendanceViewModel,
-        userId: AttendancePreviewData.userId,
-        session: AttendancePreviewData.beforeAttendanceSession
+private struct ChallengerAttendanceScenarioPreview: View {
+    @State private var attendanceViewModel: ChallengerAttendanceViewModel
+    @State private var mapViewModel: BaseMapViewModel
+
+    private let session: Session
+    private let subtitle: String
+
+    init(
+        title: String,
+        subtitle: String,
+        timeWindow: AttendanceTimeWindow,
+        isInsideGeofence: Bool = true,
+        isLocationAuthorized: Bool = true,
+        session: Session? = nil
+    ) {
+        let previewSession = session ?? Self.makeSession(title: title)
+        let mockUseCase = MockChallengerAttendanceUseCase()
+        mockUseCase.mockTimeWindow = timeWindow
+        mockUseCase.mockIsInsideGeofence = isInsideGeofence
+        mockUseCase.mockIsLocationAuthorized = isLocationAuthorized
+        mockUseCase.responseDelay = 0
+
+        _attendanceViewModel = State(initialValue: ChallengerAttendanceViewModel(
+            container: AttendancePreviewData.container,
+            errorHandler: AttendancePreviewData.errorHandler,
+            challengeAttendanceUseCase: mockUseCase
+        ))
+        _mapViewModel = State(initialValue: BaseMapViewModel(
+            container: AttendancePreviewData.container,
+            info: previewSession.info,
+            errorHandler: AttendancePreviewData.errorHandler
+        ))
+
+        self.session = previewSession
+        self.subtitle = subtitle
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+            Text(subtitle)
+                .appFont(.footnote, color: .grey600)
+
+            ChallengerAttendanceView(
+                container: AttendancePreviewData.container,
+                errorHandler: AttendancePreviewData.errorHandler,
+                mapViewModel: mapViewModel,
+                attendanceViewModel: attendanceViewModel,
+                userId: AttendancePreviewData.userId,
+                session: session
+            )
+        }
+        .padding()
+        .background(Color.grey100)
+    }
+
+    private static func makeSession(title: String) -> Session {
+        Session(
+            info: SessionInfo(
+                sessionId: SessionID(value: "preview_\(title)"),
+                icon: .Activity.profile,
+                title: title,
+                week: 8,
+                startTime: .now,
+                endTime: .now.addingTimeInterval(7200),
+                location: AttendancePreviewData.hansungCoordinate
+            ),
+            initialAttendance: nil
+        )
+    }
+}
+
+#Preview("정시 출석 가능") {
+    ChallengerAttendanceScenarioPreview(
+        title: "정시 출석 가능 세션",
+        subtitle: "GPS 출석 버튼 활성화, 사유 제출 버튼도 활성화",
+        timeWindow: .onTime
+    )
+}
+
+#Preview("출석 전 사유 제출") {
+    ChallengerAttendanceScenarioPreview(
+        title: "출석 전 사유 제출 세션",
+        subtitle: "아직 출석 시간 전이어도 사유 제출 버튼은 활성화",
+        timeWindow: .tooEarly
+    )
+}
+
+#Preview("지각 사유 제출") {
+    ChallengerAttendanceScenarioPreview(
+        title: "지각 사유 제출 세션",
+        subtitle: "지각 시간대에서는 사유 제출 시 late reason 경로 사용",
+        timeWindow: .lateWindow
+    )
+}
+
+#Preview("마감 후 불참 사유") {
+    ChallengerAttendanceScenarioPreview(
+        title: "불참 사유 제출 세션",
+        subtitle: "출석 마감 후에도 사유 제출 가능, absent reason 경로 사용",
+        timeWindow: .expired
     )
 }
 
 #Preview("승인 대기 상태") {
-    ChallengerAttendanceView(
-        container: AttendancePreviewData.container,
-        errorHandler: AttendancePreviewData.errorHandler,
-        mapViewModel: AttendancePreviewData.mapViewModel,
-        attendanceViewModel: AttendancePreviewData.attendanceViewModel,
-        userId: AttendancePreviewData.userId,
+    ChallengerAttendanceScenarioPreview(
+        title: "승인 대기 세션",
+        subtitle: "이미 사유 제출 완료된 상태라 버튼 대신 승인 대기 카드 표시",
+        timeWindow: .lateWindow,
         session: AttendancePreviewData.pendingApprovalSession
     )
 }

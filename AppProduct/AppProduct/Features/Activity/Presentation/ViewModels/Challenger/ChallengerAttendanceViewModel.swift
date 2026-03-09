@@ -159,13 +159,17 @@ final class ChallengerAttendanceViewModel {
     ) async {
         let info = session.info
         let timeWindow = currentTimeWindow(for: info)
-        guard timeWindow == .lateWindow || timeWindow == .expired else { return }
 
         session.updateState(.loading)
 
         do {
-            let result = try await challengeAttendanceUseCase.submitLateReason(
-                sessionId: info.sessionId, userId: userId, reason: reason, sheetId: sheetId)
+            let result = try await submitReason(
+                timeWindow: timeWindow,
+                sessionId: info.sessionId,
+                userId: userId,
+                reason: reason,
+                sheetId: sheetId
+            )
             session.updateState(.loaded(result))
 
         } catch let error as DomainError {
@@ -203,10 +207,12 @@ final class ChallengerAttendanceViewModel {
     @MainActor
     func submitAttendanceReason(userId: UserID, session: Session, reason: String, sheetId: Int) async {
         let info = session.info
+        let timeWindow = currentTimeWindow(for: info)
         session.updateState(.loading)
 
         do {
-            let result = try await challengeAttendanceUseCase.submitLateReason(
+            let result = try await submitReason(
+                timeWindow: timeWindow,
                 sessionId: info.sessionId,
                 userId: userId,
                 reason: reason,
@@ -258,9 +264,7 @@ final class ChallengerAttendanceViewModel {
     }
 
     func isReasonSubmittable(for session: Session) -> Bool {
-        session.canSubmitReason(
-            timeWindow: currentTimeWindow(for: session.info)
-        )
+        session.canSubmitReason()
     }
 
     func buttonStyle(for session: Session) -> String {
@@ -275,6 +279,31 @@ final class ChallengerAttendanceViewModel {
 
     private func currentTimeWindow(for info: SessionInfo) -> AttendanceTimeWindow {
         challengeAttendanceUseCase.isWithinAttendanceTime(info: info)
+    }
+
+    private func submitReason(
+        timeWindow: AttendanceTimeWindow,
+        sessionId: SessionID,
+        userId: UserID,
+        reason: String,
+        sheetId: Int
+    ) async throws -> Attendance {
+        switch timeWindow {
+        case .tooEarly, .onTime, .lateWindow:
+            return try await challengeAttendanceUseCase.submitLateReason(
+                sessionId: sessionId,
+                userId: userId,
+                reason: reason,
+                sheetId: sheetId
+            )
+        case .expired:
+            return try await challengeAttendanceUseCase.submitAbsentReason(
+                sessionId: sessionId,
+                userId: userId,
+                reason: reason,
+                sheetId: sheetId
+            )
+        }
     }
 
     // MARK: - Cleanup
