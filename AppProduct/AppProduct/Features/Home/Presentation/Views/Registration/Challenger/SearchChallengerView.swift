@@ -149,17 +149,40 @@ struct SearchChallengerView: View {
     ///
     /// `selectedChallengersMap`에서 최종 선택된 챌린저 목록을 추출합니다.
     private func confirmSelection() {
-        selectedChallengers = Array(viewModel.selectedChallengersMap.values)
+        var orderedSelection: [ChallengerInfo] = []
+        var handledKeys: Set<String> = []
+
+        for challenger in selectedChallengers {
+            let key = challenger.selectionKey
+            guard let updatedChallenger = viewModel.selectedChallengersMap[key] else {
+                continue
+            }
+            guard handledKeys.insert(key).inserted else {
+                continue
+            }
+            orderedSelection.append(updatedChallenger)
+        }
+
+        let appendedSelection = viewModel.selectedChallengersMap
+            .values
+            .sorted { $0.selectionKey < $1.selectionKey }
+            .filter { handledKeys.insert($0.selectionKey).inserted }
+
+        selectedChallengers = orderedSelection + appendedSelection
     }
 
     /// 기존에 선택되어 있던 챌린저들을 memberId 기반으로 초기화
     ///
     /// 상위 뷰에서 전달받은 `selectedChallengers`를 ViewModel의 선택 상태에 반영합니다.
     private func initializeSelectedIds() {
-        viewModel.selectedKeys = Set(selectedChallengers.map(\.selectionKey))
-        for challenger in selectedChallengers {
-            viewModel.selectedChallengersMap[challenger.selectionKey] = challenger
-        }
+        let selectionMap = Dictionary(
+            uniqueKeysWithValues: selectedChallengers.map { challenger in
+                (challenger.selectionKey, challenger)
+            }
+        )
+
+        viewModel.selectedKeys = Set(selectionMap.keys)
+        viewModel.selectedChallengersMap = selectionMap
     }
     
     /// CSV 파일 가져오기 완료 후 처리 액션
