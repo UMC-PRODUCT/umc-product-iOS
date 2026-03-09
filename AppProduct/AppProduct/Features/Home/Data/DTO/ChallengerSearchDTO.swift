@@ -9,29 +9,25 @@ import Foundation
 
 // MARK: - Request
 
-/// 챌린저 전역 검색 요청 DTO
+/// 챌린저 커서 검색 요청 DTO
 ///
-/// `GET /api/v1/challenger/search/global` 엔드포인트의 Query Parameter
+/// `GET /api/v1/challenger/search/cursor` 엔드포인트의 Query Parameter
 struct ChallengerSearchRequestDTO {
     /// 이전 페이지의 마지막 챌린저 ID (첫 페이지 조회 시 nil)
     let cursor: Int?
     /// 한 페이지에 조회할 항목 수 (기본값 50, 최대 50)
     let size: Int
-    /// 이름으로 부분 검색
-    let name: String?
-    /// 닉네임으로 부분 검색
-    let nickname: String?
+    /// 이름 또는 닉네임 통합 검색 키워드
+    let keyword: String?
 
     init(
         cursor: Int? = nil,
         size: Int = 50,
-        name: String? = nil,
-        nickname: String? = nil
+        keyword: String? = nil
     ) {
         self.cursor = cursor
         self.size = size
-        self.name = name
-        self.nickname = nickname
+        self.keyword = keyword
     }
 
     /// Query Parameter Dictionary 변환
@@ -40,8 +36,7 @@ struct ChallengerSearchRequestDTO {
             "size": size
         ]
         if let cursor { params["cursor"] = cursor }
-        if let name { params["name"] = name }
-        if let nickname { params["nickname"] = nickname }
+        if let keyword { params["keyword"] = keyword }
         return params
     }
 }

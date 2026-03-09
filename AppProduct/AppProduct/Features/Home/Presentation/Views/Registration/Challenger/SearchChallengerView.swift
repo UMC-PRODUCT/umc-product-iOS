@@ -21,6 +21,13 @@ struct SearchChallengerView: View {
     
     /// 검색 화면의 상태 및 로직을 관리하는 뷰 모델
     @State var viewModel: SearchChallengerViewModel
+
+    private enum Constants {
+        static let loadingMessage: String = "챌린저 목록을 불러오는 중입니다."
+        static let failedTitle: String = "챌린저 검색에 실패했어요"
+        static let failedSystemImage: String = "exclamationmark.triangle"
+        static let failedRetryTitle: String = "다시 시도"
+    }
     
     // MARK: - Init
     
@@ -36,22 +43,7 @@ struct SearchChallengerView: View {
     // MARK: - Body
     
     var body: some View {
-        Group {
-            // 검색 결과 유무에 따른 분기 처리
-            if viewModel.allChallengers.isEmpty {
-                emptyResultView
-            } else {
-                ChallengerFormView(
-                    challenger: .constant(viewModel.allChallengers),
-                    showCheckBox: true,
-                    selectedIds: $viewModel.selectedKeys,
-                    tap: toggleSelection,
-                    onBottomReached: {
-                        Task { await viewModel.fetchNextPage() }
-                    }
-                )
-            }
-        }
+        stateContent
         .searchable(text: $viewModel.searchText, prompt: "챌린저를 검색해보세요")
         .searchPresentationToolbarBehavior(.avoidHidingContent)
         .navigation(naviTitle: .searchChallenger, displayMode: .inline)
@@ -82,14 +74,51 @@ struct SearchChallengerView: View {
         .alertPrompt(item: $viewModel.alertPrompt)
         .task {
             initializeSelectedIds()
-            await viewModel.fetchChallengers()
+            await viewModel.loadInitialChallengers()
         }
         .onChange(of: viewModel.searchText) {
-            Task { await viewModel.fetchChallengers() }
+            viewModel.scheduleSearch()
+        }
+        .onDisappear {
+            viewModel.cancelSearch()
         }
     }
     
     // MARK: - Computed Properties
+
+    @ViewBuilder
+    private var stateContent: some View {
+        switch viewModel.loadState {
+        case .idle, .loading:
+            Progress(message: Constants.loadingMessage, size: .regular)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .loaded:
+            if viewModel.allChallengers.isEmpty {
+                emptyResultView
+            } else {
+                ChallengerFormView(
+                    challenger: .constant(viewModel.allChallengers),
+                    showCheckBox: true,
+                    selectedIds: $viewModel.selectedKeys,
+                    tap: toggleSelection,
+                    onBottomReached: {
+                        Task { await viewModel.fetchNextPage() }
+                    }
+                )
+            }
+        case .failed(let error):
+            RetryContentUnavailableView(
+                title: Constants.failedTitle,
+                systemImage: Constants.failedSystemImage,
+                description: error.userMessage,
+                retryTitle: Constants.failedRetryTitle,
+                isRetrying: viewModel.loadState.isLoading
+            ) {
+                await viewModel.loadInitialChallengers()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
 
     /// 검색 결과가 없을 때 표시되는 뷰
     private var emptyResultView: some View {

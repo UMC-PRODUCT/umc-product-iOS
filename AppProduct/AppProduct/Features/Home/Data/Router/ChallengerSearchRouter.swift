@@ -15,8 +15,8 @@ import Moya
 ///
 /// - SeeAlso: ``ChallengerSearchRepository``, ``ChallengerSearchRequestDTO``
 enum ChallengerSearchRouter {
-    /// 챌린저 전역 검색 (Cursor 기반 페이지네이션)
-    case searchGlobal(query: ChallengerSearchRequestDTO)
+    /// 챌린저 커서 검색 (Cursor 기반 페이지네이션)
+    case searchCursor(query: ChallengerSearchRequestDTO)
 }
 
 extension ChallengerSearchRouter: BaseTargetType {
@@ -25,8 +25,8 @@ extension ChallengerSearchRouter: BaseTargetType {
 
     var path: String {
         switch self {
-        case .searchGlobal:
-            return "/api/v1/challenger/search/global"
+        case .searchCursor:
+            return "/api/v1/challenger/search/cursor"
         }
     }
 
@@ -34,7 +34,7 @@ extension ChallengerSearchRouter: BaseTargetType {
 
     var method: Moya.Method {
         switch self {
-        case .searchGlobal:
+        case .searchCursor:
             return .get
         }
     }
@@ -43,7 +43,7 @@ extension ChallengerSearchRouter: BaseTargetType {
 
     var task: Moya.Task {
         switch self {
-        case .searchGlobal(let query):
+        case .searchCursor(let query):
             return .requestParameters(
                 parameters: query.queryItems,
                 encoding: URLEncoding.queryString
