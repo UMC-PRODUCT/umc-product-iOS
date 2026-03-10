@@ -13,7 +13,7 @@ import Foundation
 struct ScheduleData: Equatable, Identifiable {
 
     /// 고유 식별자
-    var id: UUID = .init()
+    var id: Int { scheduleId }
 
     /// 일정 서버 ID
     let scheduleId: Int
