@@ -97,7 +97,8 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
             vote: vote,
             viewCount: 0,
             scopeDisplayName: targetAudience.branches.first,
-            targetsAllGenerations: targetAudience.generation <= 0
+            targetsAllGenerations: targetAudience.generation <= 0,
+            parts: targetAudience.parts
         ).tags
     }
 
