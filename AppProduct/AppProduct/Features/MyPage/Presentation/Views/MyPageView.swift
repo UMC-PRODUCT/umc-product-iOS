@@ -157,18 +157,3 @@ struct MyPageView: View {
         }
     }
 }
-
-// MARK: - Preview
-
-private var myPagePreviewContainer: DIContainer {
-    let container = DIContainer()
-    container.register(PathStore.self) { PathStore() }
-    return container
-}
-
-#Preview("MyPage") {
-    let container = myPagePreviewContainer
-    MyPageView(previewProfileData: MyPageMockData.profile)
-        .environment(\.di, container)
-        .environment(ErrorHandler())
-}
