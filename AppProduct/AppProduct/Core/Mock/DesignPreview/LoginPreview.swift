@@ -74,6 +74,7 @@ private struct PreviewFetchMyProfileUseCase: FetchMyProfileUseCaseProtocol {
             sendEmailVerificationUseCase: PreviewSendEmailUseCase(),
             verifyEmailCodeUseCase: PreviewVerifyCodeUseCase(),
             registerUseCase: PreviewRegisterUseCase(),
+            loginUseCase: PreviewLoginUseCase(),
             fetchSignUpDataUseCase: PreviewFetchSignUpDataUseCase()
         )
     }
@@ -98,6 +99,33 @@ private struct PreviewVerifyCodeUseCase: VerifyEmailCodeUseCaseProtocol {
 private struct PreviewRegisterUseCase: RegisterUseCaseProtocol {
     func execute(request: RegisterRequestDTO) async throws -> Int {
         1
+    }
+}
+
+private struct PreviewLoginUseCase: LoginUseCaseProtocol {
+    func executeKakao(
+        accessToken: String,
+        email: String
+    ) async throws -> OAuthLoginResult {
+        .existingMember(
+            tokenPair: TokenPair(
+                accessToken: "preview_access_token",
+                refreshToken: "preview_refresh_token"
+            )
+        )
+    }
+
+    func executeApple(
+        authorizationCode: String,
+        email: String?,
+        fullName: String?
+    ) async throws -> OAuthLoginResult {
+        .existingMember(
+            tokenPair: TokenPair(
+                accessToken: "preview_access_token",
+                refreshToken: "preview_refresh_token"
+            )
+        )
     }
 }
 

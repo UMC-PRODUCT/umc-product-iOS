@@ -49,9 +49,11 @@ struct SignUpView: View {
         oAuthVerificationToken: String,
         initialEmail: String? = nil,
         initialName: String? = nil,
+        postRegisterLoginContext: PostRegisterLoginContext? = nil,
         sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol,
         verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol,
         registerUseCase: RegisterUseCaseProtocol,
+        loginUseCase: LoginUseCaseProtocol,
         fetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol
     ) {
         self._viewModel = .init(
@@ -59,9 +61,11 @@ struct SignUpView: View {
                 oAuthVerificationToken: oAuthVerificationToken,
                 initialEmail: initialEmail,
                 initialName: initialName,
+                postRegisterLoginContext: postRegisterLoginContext,
                 sendEmailVerificationUseCase: sendEmailVerificationUseCase,
                 verifyEmailCodeUseCase: verifyEmailCodeUseCase,
                 registerUseCase: registerUseCase,
+                loginUseCase: loginUseCase,
                 fetchSignUpDataUseCase: fetchSignUpDataUseCase
             )
         )
@@ -532,6 +536,7 @@ private func signUpPreview(shouldFailTerms: Bool = false) -> some View {
             sendEmailVerificationUseCase: SignUpPreviewSendEmailUseCase(),
             verifyEmailCodeUseCase: SignUpPreviewVerifyCodeUseCase(),
             registerUseCase: SignUpPreviewRegisterUseCase(),
+            loginUseCase: SignUpPreviewLoginUseCase(),
             fetchSignUpDataUseCase: SignUpPreviewFetchSignUpDataUseCase(
                 shouldFailTerms: shouldFailTerms
             )
@@ -559,6 +564,33 @@ private struct SignUpPreviewVerifyCodeUseCase: VerifyEmailCodeUseCaseProtocol {
 private struct SignUpPreviewRegisterUseCase: RegisterUseCaseProtocol {
     func execute(request: RegisterRequestDTO) async throws -> Int {
         1
+    }
+}
+
+private struct SignUpPreviewLoginUseCase: LoginUseCaseProtocol {
+    func executeKakao(
+        accessToken: String,
+        email: String
+    ) async throws -> OAuthLoginResult {
+        .existingMember(
+            tokenPair: TokenPair(
+                accessToken: "preview_access_token",
+                refreshToken: "preview_refresh_token"
+            )
+        )
+    }
+
+    func executeApple(
+        authorizationCode: String,
+        email: String?,
+        fullName: String?
+    ) async throws -> OAuthLoginResult {
+        .existingMember(
+            tokenPair: TokenPair(
+                accessToken: "preview_access_token",
+                refreshToken: "preview_refresh_token"
+            )
+        )
     }
 }
 

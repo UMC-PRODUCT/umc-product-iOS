@@ -61,8 +61,18 @@ struct LoginView: View {
                 appFlow.showMain()
             case .pendingApproval:
                 appFlow.showPendingApproval()
-            case .signUp(let verificationToken, let email, let fullName):
-                appFlow.showSignUp(verificationToken, email, fullName)
+            case .signUp(
+                let verificationToken,
+                let email,
+                let fullName,
+                let postRegisterLoginContext
+            ):
+                appFlow.showSignUp(
+                    verificationToken,
+                    email,
+                    fullName,
+                    postRegisterLoginContext
+                )
             }
         }
     }

@@ -21,6 +21,9 @@ final class SignUpViewModel {
     /// OAuth 인증 토큰 (소셜 로그인 시 발급)
     private let oAuthVerificationToken: String
 
+    /// 회원가입 직후 세션 복구에 사용할 소셜 로그인 컨텍스트
+    private let postRegisterLoginContext: PostRegisterLoginContext?
+
     /// 이메일 인증 발송 UseCase
     private let sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol
 
@@ -29,6 +32,9 @@ final class SignUpViewModel {
 
     /// 회원가입 UseCase
     private let registerUseCase: RegisterUseCaseProtocol
+
+    /// 회원가입 직후 세션 복구용 로그인 UseCase
+    private let loginUseCase: LoginUseCaseProtocol
 
     /// 회원가입 데이터 조회 UseCase
     private let fetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol
@@ -98,15 +104,19 @@ final class SignUpViewModel {
         oAuthVerificationToken: String,
         initialEmail: String? = nil,
         initialName: String? = nil,
+        postRegisterLoginContext: PostRegisterLoginContext? = nil,
         sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol,
         verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol,
         registerUseCase: RegisterUseCaseProtocol,
+        loginUseCase: LoginUseCaseProtocol,
         fetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol
     ) {
         self.oAuthVerificationToken = oAuthVerificationToken
+        self.postRegisterLoginContext = postRegisterLoginContext
         self.sendEmailVerificationUseCase = sendEmailVerificationUseCase
         self.verifyEmailCodeUseCase = verifyEmailCodeUseCase
         self.registerUseCase = registerUseCase
+        self.loginUseCase = loginUseCase
         self.fetchSignUpDataUseCase = fetchSignUpDataUseCase
         self.email = initialEmail?.trimmingCharacters(
             in: .whitespacesAndNewlines
@@ -253,6 +263,7 @@ final class SignUpViewModel {
         do {
             let memberId = try await registerUseCase
                 .execute(request: request)
+            try await restoreSessionAfterRegisterIfNeeded()
             #if DEBUG
             print("[Auth] register 성공: memberId=\(memberId)")
             #endif
@@ -287,6 +298,34 @@ final class SignUpViewModel {
         }
 
         isLoading = false
+    }
+
+    /// 회원가입 직후 다시 로그인해 액세스 토큰을 저장합니다.
+    private func restoreSessionAfterRegisterIfNeeded() async throws {
+        guard let postRegisterLoginContext else { return }
+
+        let loginResult: OAuthLoginResult
+
+        switch postRegisterLoginContext {
+        case .kakao(let accessToken, let email):
+            loginResult = try await loginUseCase.executeKakao(
+                accessToken: accessToken,
+                email: email
+            )
+        case .apple(let authorizationCode, let email, let fullName):
+            loginResult = try await loginUseCase.executeApple(
+                authorizationCode: authorizationCode,
+                email: email,
+                fullName: fullName
+            )
+        }
+
+        guard case .existingMember = loginResult else {
+            throw AuthError.socialLoginFailed(
+                provider: "Auth",
+                reason: "회원가입 후 세션 복구에 실패했습니다."
+            )
+        }
     }
 
     /// 전체 약관 동의/해제 토글
