@@ -102,33 +102,6 @@ private struct PreviewRegisterUseCase: RegisterUseCaseProtocol {
     }
 }
 
-private struct PreviewLoginUseCase: LoginUseCaseProtocol {
-    func executeKakao(
-        accessToken: String,
-        email: String
-    ) async throws -> OAuthLoginResult {
-        .existingMember(
-            tokenPair: TokenPair(
-                accessToken: "preview_access_token",
-                refreshToken: "preview_refresh_token"
-            )
-        )
-    }
-
-    func executeApple(
-        authorizationCode: String,
-        email: String?,
-        fullName: String?
-    ) async throws -> OAuthLoginResult {
-        .existingMember(
-            tokenPair: TokenPair(
-                accessToken: "preview_access_token",
-                refreshToken: "preview_refresh_token"
-            )
-        )
-    }
-}
-
 private struct PreviewFetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol {
     func fetchSchools() async throws -> [School] {
         [
