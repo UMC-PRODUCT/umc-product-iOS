@@ -111,7 +111,7 @@ struct CommunityPostCard: View {
                     Text("오픈채팅방으로 이동")
                         .appFont(.subheadlineEmphasis, color: .black)
                     Text("참여 전 소통하기")
-                        .appFont(.footnote, color: .grey300)
+                        .appFont(.footnote, color: .black.opacity(0.72))
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
