@@ -32,16 +32,6 @@ extension NoticeEditorViewModel {
     /// 이미지 업로드 -> 공지 생성 -> 투표 첨부(선택) 순서로 진행됩니다.
     @MainActor
     func createNewNotice() async {
-        if let targetValidationMessage {
-            alertPrompt = AlertPrompt(
-                id: .init(),
-                title: "대상 설정 확인",
-                message: targetValidationMessage,
-                positiveBtnTitle: "확인"
-            )
-            return
-        }
-
         createState = .loading
 
         do {
@@ -345,7 +335,7 @@ extension NoticeEditorViewModel {
             return false
         }
 
-        guard let code, noticeAlertErrorCodes.contains(code) else {
+        guard let code, code.hasPrefix("NOTICE-") else {
             return false
         }
 
@@ -355,19 +345,6 @@ extension NoticeEditorViewModel {
             positiveBtnTitle: "확인"
         )
         return true
-    }
-
-    var noticeAlertErrorCodes: Set<String> {
-        [
-            "NOTICE-0001",
-            "NOTICE-0003",
-            "NOTICE-0004",
-            "NOTICE-0007",
-            "NOTICE-0008",
-            "NOTICE-0009",
-            "NOTICE-0010",
-            "NOTICE-0011"
-        ]
     }
 
     /// 권한 오류 등 HTTP 실패 응답의 서버 메시지를 작성 화면 Alert로 표시합니다.

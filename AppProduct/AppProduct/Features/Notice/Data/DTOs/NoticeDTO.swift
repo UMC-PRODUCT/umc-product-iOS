@@ -56,8 +56,11 @@ struct NoticeDTO: Codable {
 // MARK: - Mapping
 extension NoticeDTO {
     /// NoticeDTO → NoticeItemModel 변환 (공지 목록용)
-    func toItemModel(scopeDisplayNameOverride: String? = nil) -> NoticeItemModel {
-        let generation = targetInfo.generationValue
+    func toItemModel(
+        generationOverride: Int? = nil,
+        scopeDisplayNameOverride: String? = nil
+    ) -> NoticeItemModel {
+        let generation = generationOverride ?? targetInfo.generationValue
         let scope = targetInfo.resolvedScope
         let category = targetInfo.resolvedCategory
         let scopeDisplayName = scopeDisplayNameOverride ?? targetInfo.resolvedScopeDisplayName
@@ -78,7 +81,8 @@ extension NoticeDTO {
             vote: nil,
             viewCount: Int(viewCount) ?? 0,
             scopeDisplayName: scopeDisplayName,
-            targetsAllGenerations: targetInfo.targetsAllGenerations
+            targetsAllGenerations: targetInfo.targetsAllGenerations,
+            parts: targetInfo.resolvedParts
         )
     }
 }

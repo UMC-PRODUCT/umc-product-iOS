@@ -30,6 +30,7 @@ struct NoticeItemModel: Equatable, Identifiable {
     let viewCount: Int
     let scopeDisplayName: String?
     let targetsAllGenerations: Bool
+    let parts: [UMCPartType]
 
     init(
         noticeId: String = UUID().uuidString,
@@ -47,7 +48,8 @@ struct NoticeItemModel: Equatable, Identifiable {
         vote: NoticeVote?,
         viewCount: Int,
         scopeDisplayName: String? = nil,
-        targetsAllGenerations: Bool = false
+        targetsAllGenerations: Bool = false,
+        parts: [UMCPartType] = []
     ) {
         self.noticeId = noticeId
         self.generation = generation
@@ -65,6 +67,7 @@ struct NoticeItemModel: Equatable, Identifiable {
         self.viewCount = viewCount
         self.scopeDisplayName = scopeDisplayName
         self.targetsAllGenerations = targetsAllGenerations
+        self.parts = parts
     }
     
     /// UI 표시용 태그 목록
@@ -83,9 +86,7 @@ struct NoticeItemModel: Equatable, Identifiable {
             items.append(scopeTag)
         }
 
-        if let partTag {
-            items.append(partTag)
-        }
+        items.append(contentsOf: partTags)
 
         return items
     }
@@ -110,12 +111,38 @@ private extension NoticeItemModel {
         }
     }
 
-    var partTag: NoticeItemTag? {
-        guard case .part(let part) = category else { return nil }
-        return NoticeItemTag(
-            text: NoticePart(umcPartType: part)?.displayName ?? "파트",
-            backColor: part.color
-        )
+    var resolvedParts: [UMCPartType] {
+        if !parts.isEmpty {
+            return parts
+        }
+
+        if case .part(let part) = category {
+            return [part]
+        }
+
+        return []
+    }
+
+    var partTags: [NoticeItemTag] {
+        let visibleParts = Array(resolvedParts.prefix(2))
+        var items = visibleParts.map { part in
+            NoticeItemTag(
+                text: NoticePart(umcPartType: part)?.displayName ?? "파트",
+                backColor: part.color
+            )
+        }
+
+        let remainingCount = resolvedParts.count - visibleParts.count
+        if remainingCount > 0 {
+            items.append(
+                NoticeItemTag(
+                    text: "+\(remainingCount)",
+                    backColor: .grey500
+                )
+            )
+        }
+
+        return items
     }
 }
 
@@ -135,7 +162,13 @@ extension NoticeItemModel {
             authorImageURL: nil,
             createdAt: date,
             updatedAt: nil,
-            targetAudience: .all(generation: generation, scope: scope),
+            targetAudience: TargetAudience(
+                generation: generation,
+                scope: scope,
+                parts: parts,
+                branches: [],
+                schools: []
+            ),
             hasPermission: false,
             images: images,
             links: links,

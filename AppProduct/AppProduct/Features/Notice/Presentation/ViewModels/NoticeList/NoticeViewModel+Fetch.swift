@@ -201,7 +201,11 @@ extension NoticeViewModel {
         let items = filteredContent.map { dto in
             let chapterId = dto.targetInfo.targetChapterIdValue
             let scopeDisplayName = chapterId.flatMap { branchNameOverrides[$0] }
-            return dto.toItemModel(scopeDisplayNameOverride: scopeDisplayName)
+            let generation = resolvedGeneration(for: dto)
+            return dto.toItemModel(
+                generationOverride: generation,
+                scopeDisplayNameOverride: scopeDisplayName
+            )
         }
         pagingState.applySuccess(page: page, hasNextPage: response.hasNext)
 
@@ -253,6 +257,20 @@ extension NoticeViewModel {
             }
         }
         return resolved
+    }
+
+    private func resolvedGeneration(for dto: NoticeDTO) -> Int? {
+        if let targetGisu = dto.targetInfo.targetGisu,
+           let generation = Int(targetGisu),
+           generation > 0 {
+            return generation
+        }
+
+        guard let gisuId = Int(dto.targetInfo.targetGisuId), gisuId > 0 else {
+            return nil
+        }
+
+        return gisuPairs.first(where: { $0.gisuId == gisuId })?.gen
     }
 
     /// 조회 실패 상태를 반영합니다.

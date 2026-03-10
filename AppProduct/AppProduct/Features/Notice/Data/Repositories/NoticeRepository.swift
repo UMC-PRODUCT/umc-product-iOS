@@ -416,7 +416,8 @@ private extension NoticeDetail {
             images: images,
             vote: vote,
             viewCount: 0,
-            targetsAllGenerations: targetAudience.generation <= 0
+            targetsAllGenerations: targetAudience.generation <= 0,
+            parts: targetAudience.parts
         )
     }
 }

@@ -19,66 +19,8 @@ extension NoticeEditorViewModel {
         )
     }
 
-    /// 공지 생성 시 현재 타겟 조합의 유효성입니다.
-    var isTargetSelectionValid: Bool {
-        targetValidationMessage == nil
-    }
-
     var shouldShowTargetExclusivityHint: Bool {
         visibleSubCategories.contains(.branch) && visibleSubCategories.contains(.school)
-    }
-
-    /// 공지 생성 시 타겟 조합 검증 메시지입니다.
-    var targetValidationMessage: String? {
-        guard !isEditMode else { return nil }
-
-        if memberRole == .superAdmin {
-            return "시스템 관리자는 공지 작성 권한이 없습니다."
-        }
-
-        let hasGisu = resolvedGisuId > 0
-        let hasBranch = subCategorySelection.selectedBranch != nil
-        let hasSchool = subCategorySelection.selectedSchool != nil
-        let hasParts = !subCategorySelection.selectedParts.isEmpty
-        let selectedSubCategories = subCategorySelection.selectedSubCategories
-
-        if selectedSubCategories.contains(.branch) && !hasBranch {
-            return "지부를 선택해주세요."
-        }
-        if selectedSubCategories.contains(.school) && !hasSchool {
-            return "학교를 선택해주세요."
-        }
-        if hasBranch && hasSchool {
-            return "지부와 학교는 동시에 선택할 수 없습니다."
-        }
-
-        if selectedCategory == .all {
-            if hasBranch || hasParts {
-                return "전체 기수 대상에서는 지부/파트를 함께 지정할 수 없습니다."
-            }
-            return nil
-        }
-
-        if !hasGisu {
-            return "선택 기수를 먼저 선택해주세요."
-        }
-
-        switch selectedCategory {
-        case .branch:
-            if hasSchool {
-                return "지부 공지에서는 학교를 함께 지정할 수 없습니다."
-            }
-        case .school:
-            if hasBranch {
-                return "학교 공지에서는 지부를 함께 지정할 수 없습니다."
-            }
-        case .central, .part:
-            break
-        case .all:
-            return nil
-        }
-
-        return nil
     }
 
     // MARK: - Public Action
