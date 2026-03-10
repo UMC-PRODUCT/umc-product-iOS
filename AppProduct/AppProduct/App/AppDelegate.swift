@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os.log
 import UIKit
 import UserNotifications
 import FirebaseCore
@@ -23,6 +24,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     private(set) var container: DIContainer!
     private(set) var modelContext: ModelContext?
     private var lastFailedFCMUpload: (memberId: Int, token: String)?
+    private let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "AppProduct",
+        category: "Push"
+    )
 
     // MARK: - Function
 
@@ -37,7 +42,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
               !googleAppID.isEmpty,
               !googleAppID.hasPrefix("__")
         else {
-            print("[Firebase] GoogleService-Info.plist missing or contains placeholder values. Skipping configure.")
+            logger.error("[Firebase] GoogleService-Info.plist missing or contains placeholder values. Skipping configure.")
             return
         }
         FirebaseApp.configure()
@@ -115,6 +120,8 @@ extension AppDelegate: MessagingDelegate {
             Task { @MainActor in
                 await syncFCMTokenIfPossible(trigger: "messagingDelegate")
             }
+        } else {
+            logger.notice("[FCM] token unchanged=\(self.redacted(fcmToken), privacy: .public)")
         }
     }
 }
@@ -148,7 +155,10 @@ private extension AppDelegate {
     /// - Parameter trigger: 동기화를 트리거한 이벤트 이름 (디버그 로그용)
     @MainActor
     func syncFCMTokenIfPossible(trigger: String) async {
-        guard let container else { return }
+        guard let container else {
+            logger.notice("[FCM] skip upload trigger=\(trigger, privacy: .public) reason=containerMissing")
+            return
+        }
         let memberId = UserDefaults.standard.integer(forKey: AppStorageKey.memberId)
         let fcmToken = UserDefaults.standard.string(forKey: AppStorageKey.userFCMToken) ?? ""
         guard memberId != 0, !fcmToken.isEmpty else { return }
@@ -203,9 +213,13 @@ private extension AppDelegate {
     /// - Note: 권한이 미결정(notDetermined) 상태이면 권한 요청을 먼저 수행합니다.
     func registerRemoteNotificationsIfAuthorized() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
+            self.logger.notice(
+                "[Push] settings status=\(self.authorizationStatusDescription(settings.authorizationStatus), privacy: .public) alert=\(settings.alertSetting.rawValue, privacy: .public) badge=\(settings.badgeSetting.rawValue, privacy: .public) sound=\(settings.soundSetting.rawValue, privacy: .public)"
+            )
             switch settings.authorizationStatus {
             case .authorized, .provisional, .ephemeral:
                 DispatchQueue.main.async {
+                    self.logger.notice("[Push] registerForRemoteNotifications requested")
                     UIApplication.shared.registerForRemoteNotifications()
                 }
             case .notDetermined:
@@ -214,6 +228,7 @@ private extension AppDelegate {
                 ) { granted, _ in
                     guard granted else { return }
                     DispatchQueue.main.async {
+                        self.logger.notice("[Push] registerForRemoteNotifications requested after permission prompt")
                         UIApplication.shared.registerForRemoteNotifications()
                     }
                 }
