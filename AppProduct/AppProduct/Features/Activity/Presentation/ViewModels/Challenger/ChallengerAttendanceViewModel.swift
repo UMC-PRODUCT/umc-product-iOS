@@ -267,6 +267,10 @@ final class ChallengerAttendanceViewModel {
         session.canSubmitReason()
     }
 
+    func shouldShowReasonButton(for session: Session) -> Bool {
+        currentTimeWindow(for: session.info) != .expired
+    }
+
     func buttonStyle(for session: Session) -> String {
         session.buttonTitle(
             isLocationAuthorized: challengeAttendanceUseCase.isLocationAuthorized,
