@@ -16,7 +16,7 @@ struct TagListView: View {
     var body: some View {
         NavigationStack {
             Form {
-                ForEach(ScheduleIconCategory.allCases, id: \.self) { category in
+                ForEach(ScheduleIconCategory.selectableCases, id: \.self) { category in
                     TagRow(
                         category: category,
                         isSelected: tagList.contains(category),

@@ -22,7 +22,7 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
     /// 인메모리 캐시 저장소
     private var cache: [String: ScheduleIconCategory] = [:]
     /// 캐시 저장용 UserDefaults 키
-    private let userDefaultKey = "ScheduleClassifierCache.v4"
+    private let userDefaultKey = "ScheduleClassifierCache.v5"
     
     /// 생성자 - 캐시 및 모델 로드
     init() {
@@ -77,7 +77,7 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
     /// CoreML 라벨 문자열을 앱 카테고리로 변환합니다.
     ///
     /// 모델 라벨이 소문자(`project`)거나 별칭(`fee`, `review`, `celebration`)인 경우도 매핑합니다.
-    /// 유효하지 않은 라벨(`-`)은 nil을 반환해 키워드 분류로 fallback 합니다.
+    /// 레거시 테스트 라벨은 nil을 반환해 키워드 분류로 fallback 합니다.
     private func mapMLLabelToCategory(_ rawLabel: String) -> ScheduleIconCategory? {
         let normalized = rawLabel
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -113,7 +113,7 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
         case "orientation":
             return .orientation
         case "testing", "test", "qa":
-            return .testing
+            return nil
         case "general":
             return .general
         default:
@@ -209,12 +209,6 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
             return .orientation
         }
 
-        // Testing: 테스트/검증/QA
-        if lowercased.contains("테스트") || lowercased.contains("test") ||
-            lowercased.contains("qa") || lowercased.contains("검증") {
-            return .testing
-        }
-        
         // General (기본값)
         return .general
     }
@@ -236,7 +230,13 @@ final class ScheduleClassifierRepositoryImpl: ScheduleClassifierRepository {
     private func loadCacheFromDisk() {
         if let data = UserDefaults.standard.data(forKey: userDefaultKey),
            let decoded = try? JSONDecoder().decode([String: String].self, from: data) {
-            self.cache = decoded.compactMapValues { ScheduleIconCategory(rawValue: $0) }
+            self.cache = decoded.compactMapValues {
+                guard let category = ScheduleIconCategory(rawValue: $0),
+                      !category.isDeprecated else {
+                    return nil
+                }
+                return category
+            }
         }
     }
     
