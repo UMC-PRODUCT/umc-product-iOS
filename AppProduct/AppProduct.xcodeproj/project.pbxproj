@@ -39,6 +39,19 @@
 		1FEF7EC72F2C9D3200AB3DBB /* Documentation.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = Documentation.docc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1FA3B9F02F5FB1ED009CCF39 /* Exceptions for "AppleCreateML" folder in "AppProduct" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				NoticeAlarmHistory/NoticeClassifier.mlproj,
+				NoticeAlarmHistory/NoticeTrainingData.json,
+				ScheduleList/ScheduleListClassifierML.mlproj,
+				ScheduleList/ScheduleTrainingData.json,
+			);
+			target = 0E6380A82F02F1020060E4D9 /* AppProduct */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0E6380AB2F02F1020060E4D9 /* AppProduct */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -52,6 +65,9 @@
 		};
 		1FE63EEA2F20BDEF00D92F6A /* AppleCreateML */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1FA3B9F02F5FB1ED009CCF39 /* Exceptions for "AppleCreateML" folder in "AppProduct" target */,
+			);
 			path = AppleCreateML;
 			sourceTree = "<group>";
 		};
