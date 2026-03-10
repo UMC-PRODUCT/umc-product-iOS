@@ -14,6 +14,17 @@ enum SocialType: String, CaseIterable, Hashable {
     case kakao = "Kakao"
     /// 애플 로그인
     case apple = "Apple"
+    /// 구글 로그인
+    case google = "Google"
+
+    static var allCases: [SocialType] {
+        [.kakao, .apple, .google]
+    }
+
+    /// 앱에서 직접 로그인/연동 추가를 지원하는 소셜 목록입니다.
+    static var appConnectableCases: [SocialType] {
+        [.kakao, .apple]
+    }
 
     /// 소셜 타입에 해당하는 ImageResource를 반환합니다.
     var imageResource: ImageResource {
@@ -22,6 +33,8 @@ enum SocialType: String, CaseIterable, Hashable {
             return .kakaoIcon
         case .apple:
             return .appleIcon
+        case .google:
+            return .kakaoIcon
         }
     }
     
@@ -32,6 +45,8 @@ enum SocialType: String, CaseIterable, Hashable {
             return Image(.kakao) // 카카오 로고 에셋
         case .apple:
             return Image(.apple) // 애플 로고 에셋
+        case .google:
+            return Image(.kakao)
         }
     }
     
@@ -42,6 +57,8 @@ enum SocialType: String, CaseIterable, Hashable {
             return Color.kakao // 카카오 고유 노란색
         case .apple:
             return Color.black // 애플 고유 검정색
+        case .google:
+            return Color(red: 0.26, green: 0.52, blue: 0.96)
         }
     }
     
@@ -52,6 +69,8 @@ enum SocialType: String, CaseIterable, Hashable {
             return .black // 노란 배경엔 검은 글씨
         case .apple:
             return .white // 검은 배경엔 흰 글씨
+        case .google:
+            return .white
         }
     }
 
@@ -62,6 +81,8 @@ enum SocialType: String, CaseIterable, Hashable {
             self = .kakao
         case "APPLE":
             self = .apple
+        case "GOOGLE":
+            self = .google
         default:
             return nil
         }

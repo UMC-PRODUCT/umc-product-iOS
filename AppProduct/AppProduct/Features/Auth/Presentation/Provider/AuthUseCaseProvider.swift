@@ -15,6 +15,8 @@ protocol AuthUseCaseProviding {
     var fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol { get }
     /// OAuth 수단 추가 연동 UseCase
     var addMemberOAuthUseCase: AddMemberOAuthUseCaseProtocol { get }
+    /// OAuth 수단 연동 해제 UseCase
+    var deleteMemberOAuthUseCase: DeleteMemberOAuthUseCaseProtocol { get }
     /// 이메일 인증 발송 UseCase
     var sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol { get }
     /// 이메일 인증코드 검증 UseCase
@@ -37,6 +39,7 @@ final class AuthUseCaseProvider: AuthUseCaseProviding {
     let loginUseCase: LoginUseCaseProtocol
     let fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol
     let addMemberOAuthUseCase: AddMemberOAuthUseCaseProtocol
+    let deleteMemberOAuthUseCase: DeleteMemberOAuthUseCaseProtocol
     let sendEmailVerificationUseCase: SendEmailVerificationUseCaseProtocol
     let verifyEmailCodeUseCase: VerifyEmailCodeUseCaseProtocol
     let registerUseCase: RegisterUseCaseProtocol
@@ -59,6 +62,9 @@ final class AuthUseCaseProvider: AuthUseCaseProviding {
             repository: repository
         )
         self.addMemberOAuthUseCase = AddMemberOAuthUseCase(
+            repository: repository
+        )
+        self.deleteMemberOAuthUseCase = DeleteMemberOAuthUseCase(
             repository: repository
         )
         self.sendEmailVerificationUseCase = SendEmailVerificationUseCase(

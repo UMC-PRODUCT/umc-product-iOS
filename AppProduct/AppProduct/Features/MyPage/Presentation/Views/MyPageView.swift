@@ -53,8 +53,8 @@ struct MyPageView: View {
                 .navigationDestination(for: NavigationDestination.self) { destination in
                     NavigationRoutingView(destination: destination)
                 }
-                .task {
-                    guard shouldFetchOnAppear else { return }
+                .task(id: pathStore.mypagePath.count) {
+                    guard shouldFetchOnAppear, pathStore.mypagePath.isEmpty else { return }
                     await viewModel.fetchProfile(container: di)
                 }
         }

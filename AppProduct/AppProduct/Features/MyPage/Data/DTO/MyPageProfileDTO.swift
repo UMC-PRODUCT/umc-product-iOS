@@ -261,7 +261,7 @@ extension MyPageProfileResponseDTO {
         return ProfileData(
             challengeId: latestRecord?.challengerId.intValue ?? latestRole?.challengerId.intValue ?? 0,
             challangerInfo: challengerInfo,
-            socialConnected: [],
+            socialConnections: [],
             activityLogs: logs,
             profileLink: profileLinks
         )

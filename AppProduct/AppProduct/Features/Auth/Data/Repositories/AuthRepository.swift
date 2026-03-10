@@ -130,6 +130,31 @@ final class AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().map { $0.toDomain() }
     }
 
+    /// OAuth 수단 연동을 해제합니다.
+    ///
+    /// - Parameters:
+    ///   - memberOAuthId: 해제할 OAuth 연동 ID
+    ///   - googleAccessToken: Google 해제 검증용 액세스 토큰
+    ///   - kakaoAccessToken: Kakao 해제 검증용 액세스 토큰
+    func deleteMemberOAuth(
+        memberOAuthId: Int,
+        googleAccessToken: String?,
+        kakaoAccessToken: String?
+    ) async throws {
+        let response = try await adapter.request(
+            AuthRouter.deleteMemberOAuth(
+                memberOAuthId: memberOAuthId,
+                googleAccessToken: googleAccessToken,
+                kakaoAccessToken: kakaoAccessToken
+            )
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        )
+        try apiResponse.validateSuccess()
+    }
+
     /// 이메일 인증 코드를 발송합니다.
     ///
     /// - Parameter email: 인증할 이메일 주소

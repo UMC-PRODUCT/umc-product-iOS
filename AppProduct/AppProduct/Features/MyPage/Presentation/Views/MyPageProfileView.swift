@@ -23,10 +23,12 @@ struct MyPageProfileView: View {
 
     init(container: DIContainer, profileData: ProfileData) {
         let provider = container.resolve(MyPageUseCaseProviding.self)
+        let authProvider = container.resolve(AuthUseCaseProviding.self)
         self._viewModel = .init(
             initialValue: .init(
                 profileData: profileData,
-                useCaseProvider: provider
+                useCaseProvider: provider,
+                authUseCaseProvider: authProvider
             )
         )
     }
@@ -66,7 +68,12 @@ struct MyPageProfileView: View {
         // 프로필 이미지 수정
         ProfileImagePicker(selectedPhotoItem: $viewModel.selectedPhotoItem, selectedImage: viewModel.selectedImage, profileImage: viewModel.profileData.challangerInfo.profileImage)
         // 연동된 소셜 계정 정보
-        ConnectionSocial(socialConnected: profile.socialConnected.wrappedValue, header: "연동된 계정")
+        ConnectionSocial(
+            socialConnections: profile.socialConnections.wrappedValue,
+            disconnectingSocialType: viewModel.disconnectingSocialType,
+            header: "연동된 계정",
+            onDisconnect: presentDisconnectPrompt
+        )
         // 이름 및 닉네임 (읽기 전용)
         NameAndNickname(name: profile.challangerInfo.wrappedValue.name, nickaname: profile.challangerInfo.wrappedValue.nickname, header: "이름/닉네임")
         // 학교 (읽기 전용)
@@ -261,6 +268,30 @@ struct MyPageProfileView: View {
         let trimmed = sanitized.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "인증에 실패했습니다. 다시 시도해주세요." : trimmed
     }
+
+    private func presentDisconnectPrompt(_ connection: SocialConnection) {
+        alertPrompt = AlertPrompt(
+            title: "연동 해제",
+            message: "\(connection.socialType.rawValue) 계정 연동을 해제할까요?",
+            positiveBtnTitle: "해제",
+            positiveBtnAction: { disconnectSocial(connection) },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
+    }
+
+    private func disconnectSocial(_ connection: SocialConnection) {
+        Task {
+            do {
+                try await viewModel.disconnectSocial(connection)
+            } catch {
+                errorHandler.handle(
+                    error,
+                    context: .init(feature: "MyPage", action: "disconnectSocial")
+                )
+            }
+        }
+    }
 }
 
 #if DEBUG
@@ -271,6 +302,12 @@ private var myPageProfilePreviewContainer: DIContainer {
     container.register(PathStore.self) { PathStore() }
     container.register(MyPageUseCaseProviding.self) {
         MyPageUseCaseProvider(repository: MockMyPageRepository())
+    }
+    container.register(AuthUseCaseProviding.self) {
+        AuthUseCaseProvider(
+            repositoryProvider: AuthRepositoryProvider.mock(),
+            tokenStore: KeychainTokenStore()
+        )
     }
     return container
 }

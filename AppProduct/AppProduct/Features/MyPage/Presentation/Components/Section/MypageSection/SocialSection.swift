@@ -22,7 +22,7 @@ struct SocialSection: View {
     ///
     /// 전체 소셜 타입 중 이미 연동된 타입을 제외한 나머지를 반환합니다.
     private var availableSocialTypes: [SocialType] {
-        SocialType.allCases.filter { !socialType.contains($0) }
+        SocialType.appConnectableCases.filter { !socialType.contains($0) }
     }
 
     // MARK: - Body

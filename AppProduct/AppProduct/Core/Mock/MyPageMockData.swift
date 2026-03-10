@@ -20,7 +20,10 @@ enum MyPageMockData {
             profileImage: nil,
             part: .front(type: .ios)
         ),
-        socialConnected: [.kakao, .apple],
+        socialConnections: [
+            .init(memberOAuthId: 1, socialType: .kakao),
+            .init(memberOAuthId: 2, socialType: .apple)
+        ],
         activityLogs: [
             .init(
                 part: .front(type: .ios),

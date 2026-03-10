@@ -128,13 +128,15 @@ fileprivate struct BottomSocialBtns: View {
 
     var body: some View {
         VStack(spacing: Constants.btnSpacing) {
-            ForEach(SocialType.allCases, id: \.self) { btn in
+            ForEach(SocialType.appConnectableCases, id: \.self) { btn in
                 Button(action: {
                     switch btn {
                     case .kakao:
                         onKakaoTapped()
                     case .apple:
                         onAppleTapped()
+                    case .google:
+                        break
                     }
                 }, label: {
                     btn.image

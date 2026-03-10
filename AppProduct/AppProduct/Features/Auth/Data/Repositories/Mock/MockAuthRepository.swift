@@ -84,6 +84,14 @@ final class MockAuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         ]
     }
 
+    func deleteMemberOAuth(
+        memberOAuthId: Int,
+        googleAccessToken: String?,
+        kakaoAccessToken: String?
+    ) async throws {
+        try await Task.sleep(for: .milliseconds(300))
+    }
+
     func sendEmailVerification(
         email: String
     ) async throws -> String {

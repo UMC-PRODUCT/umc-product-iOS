@@ -55,10 +55,10 @@ class MyPageViewModel {
             var profile = try await provider.fetchMyPageProfileUseCase.execute()
 
             // 소셜 연동 노출 기준은 /member-oauth/me 응답만 사용합니다.
-            if let syncedSocials = await syncConnectedSocials(container: container) {
-                profile.socialConnected = syncedSocials
+            if let syncedConnections = await syncConnectedSocials(container: container) {
+                profile.socialConnections = syncedConnections
             } else {
-                profile.socialConnected = []
+                profile.socialConnections = []
             }
 
             profileData = .loaded(profile)
@@ -75,16 +75,13 @@ class MyPageViewModel {
     @MainActor
     private func syncConnectedSocials(
         container: DIContainer
-    ) async -> [SocialType]? {
+    ) async -> [SocialConnection]? {
         do {
             let authProvider = container.resolve(AuthUseCaseProviding.self)
             let oauths = try await authProvider.fetchMyOAuthUseCase.execute()
-            let set = Set(
-                oauths.compactMap { $0.provider.socialType }
-            )
-            let socials = SocialType.allCases.filter { set.contains($0) }
-            SocialType.saveConnected(socials)
-            return socials
+            let connections = oauths.compactMap(Self.makeSocialConnection(from:))
+            SocialType.saveConnected(connections.map(\.socialType))
+            return connections
         } catch {
             return nil
         }
@@ -115,14 +112,11 @@ class MyPageViewModel {
             oAuthVerificationToken: verificationToken
         )
 
-        let connectedSet = Set(
-            linked.compactMap { $0.provider.socialType }
-        )
-        let connected = SocialType.allCases.filter { connectedSet.contains($0) }
-        SocialType.saveConnected(connected)
+        let connected = linked.compactMap(Self.makeSocialConnection(from:))
+        SocialType.saveConnected(connected.map(\.socialType))
 
         if case .loaded(var profile) = profileData {
-            profile.socialConnected = connected
+            profile.socialConnections = connected
             profileData = .loaded(profile)
         }
     }
@@ -157,6 +151,11 @@ class MyPageViewModel {
                 authorizationCode: authorizationCode,
                 email: nil,
                 fullName: nil
+            )
+        case .google:
+            throw AuthError.socialLoginFailed(
+                provider: social.rawValue,
+                reason: "현재 앱에서는 Google 연동 추가를 지원하지 않습니다."
             )
         }
 
@@ -200,5 +199,18 @@ class MyPageViewModel {
                 reason: "이미 연동된 계정이거나 연동 가능한 검증 토큰이 없습니다."
             )
         }
+    }
+
+    private static func makeSocialConnection(
+        from memberOAuth: MemberOAuth
+    ) -> SocialConnection? {
+        guard let socialType = memberOAuth.provider.socialType else {
+            return nil
+        }
+
+        return SocialConnection(
+            memberOAuthId: memberOAuth.memberOAuthId,
+            socialType: socialType
+        )
     }
 }
