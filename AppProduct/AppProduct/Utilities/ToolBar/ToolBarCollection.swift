@@ -12,6 +12,23 @@ import SwiftUI
 ///
 /// 취소/확인/추가 등 공통 액션 버튼과 필터 메뉴를 제공합니다.
 struct ToolBarCollection {
+    
+    /// 뒤로 가기 버튼
+    struct BackBtn: ToolbarContent {
+        @Environment(\.dismiss) var dismiss
+        var action: () -> Void
+        
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .cancellationAction, content: {
+                Button(role: .cancel, action: {
+                    action()
+                    dismiss()
+                })
+            })
+        }
+    }
+    
+    
     /// 취소 버튼
     struct CancelBtn: ToolbarContent {
         @Environment(\.dismiss) var dismiss

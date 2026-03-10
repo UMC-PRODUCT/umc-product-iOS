@@ -49,11 +49,7 @@ struct SearchChallengerView: View {
         .searchable(text: $viewModel.searchText, prompt: "챌린저를 검색해보세요")
         .searchPresentationToolbarBehavior(.avoidHidingContent)
         .navigation(naviTitle: .searchChallenger, displayMode: .inline)
-        .navigationBarBackButtonHidden()
         .toolbar(content: {
-            ToolBarCollection.LeadingButton(image: "chevron.left", action: {
-                dismiss()
-            })
             ToolBarCollection.ConfirmBtn(action: {
                 confirmSelection()
             })
