@@ -34,7 +34,7 @@ struct SelectedChallengerView: View {
                 .navigationSubtitle("총 \(challenger.count)명")
                 .toolbar(content: {
                     // 취소 버튼 (현재 기능 없음)
-                    ToolBarCollection.CancelBtn(action: {})
+                    ToolBarCollection.BackBtn(action: {})
                     
                     // 챌린저 추가 버튼 (검색 화면으로 이동)
                     ToolBarCollection.AddBtn(action: {
