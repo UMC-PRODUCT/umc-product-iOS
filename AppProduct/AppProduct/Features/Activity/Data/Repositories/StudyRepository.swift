@@ -286,10 +286,11 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
             APIResponse<CurriculumWeeksDTO>.self,
             from: response.data
         )
-        let weeks = try apiResponse.unwrap()
-            .weeks
-            .compactMap { Int($0.weekNo) }
-            .sorted()
+        let weeks = Array(Set(
+            try apiResponse.unwrap()
+                .weeks
+                .compactMap { Int($0.weekNo) }
+        )).sorted()
 
         return weeks
     }
