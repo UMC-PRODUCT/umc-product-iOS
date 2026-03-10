@@ -629,8 +629,10 @@ struct ToolBarCollection {
     struct FailedVerificationBottomToolbar: ToolbarContent {
         let isSubmitting: Bool
         let isDeletingAccount: Bool
+        let isLoggingOut: Bool
         let onHome: () -> Void
         let onInquiry: () -> Void
+        let onLogout: () -> Void
         let onDeleteAccount: () -> Void
 
         private enum Constants {
@@ -659,13 +661,22 @@ struct ToolBarCollection {
             }
 
             ToolbarItem(placement: .bottomBar) {
-                actionButton(
-                    icon: "person.crop.circle.badge.xmark",
-                    title: "계정 삭제",
-                    color: .red,
-                    disabled: isSubmitting || isDeletingAccount,
-                    action: onDeleteAccount
-                )
+                Menu {
+                    Button(action: onLogout) {
+                        Label("로그아웃", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+
+                    Button(role: .destructive, action: onDeleteAccount) {
+                        Label("회원 탈퇴", systemImage: "person.crop.circle.badge.xmark")
+                    }
+                } label: {
+                    actionLabel(
+                        icon: "person.crop.circle.badge.xmark",
+                        title: "계정",
+                        color: .red
+                    )
+                }
+                .disabled(isSubmitting || isDeletingAccount || isLoggingOut)
             }
         }
 
@@ -690,6 +701,24 @@ struct ToolBarCollection {
                 .frame(maxWidth: .infinity)
             }
             .disabled(disabled)
+        }
+
+        private func actionLabel(
+            icon: String,
+            title: String,
+            color: Color
+        ) -> some View {
+            VStack(spacing: DefaultSpacing.spacing4) {
+                Image(systemName: icon)
+                    .font(.system(size: Constants.iconSize, weight: .semibold))
+                    .foregroundStyle(color)
+
+                Text(title)
+                    .appFont(.caption2, weight: .medium, color: .black)
+                    .lineLimit(1)
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
         }
     }
 }
