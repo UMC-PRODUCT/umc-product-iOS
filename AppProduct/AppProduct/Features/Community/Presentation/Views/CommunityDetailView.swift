@@ -19,6 +19,7 @@ struct CommunityDetailView: View {
     @State private var isCommentInputHidden: Bool = true
     @FocusState private var isCommentFieldFocused: Bool
     @Environment(\.di) private var di
+    @Environment(\.dismiss) private var dismiss
     @Environment(ErrorHandler.self) var errorHandler
 
     private var pathStore: PathStore {
@@ -57,6 +58,9 @@ struct CommunityDetailView: View {
         static let failedTitle: String = "불러오지 못했어요"
         static let failedSystemImage: String = "exclamationmark.triangle"
         static let failedDescription: String = "게시글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요."
+        static let unavailableTitle: String = "게시글을 확인할 수 없어요"
+        static let unavailableDescription: String = "삭제되었거나 작성자 정보를 확인할 수 없어\n이 게시글을 표시할 수 없습니다."
+        static let unavailableActionTitle: String = "목록으로 돌아가기"
         /// 재시도 버튼 문구/크기
         static let retryTitle: String = "다시 시도"
         static let retryMinimumWidth: CGFloat = 72
@@ -282,16 +286,34 @@ struct CommunityDetailView: View {
     /// Failed - 데이터 로드 실패
     /// 게시글 상세 로드 실패
     private func postDetailFailedContent() -> some View {
-        RetryContentUnavailableView(
-            title: Constant.failedTitle,
-            systemImage: Constant.failedSystemImage,
-            description: Constant.failedDescription,
-            retryTitle: Constant.retryTitle,
-            isRetrying: vm.postDetailState.isLoading,
-            minRetryButtonWidth: Constant.retryMinimumWidth,
-            minRetryButtonHeight: Constant.retryMinimumHeight
-        ) {
-            await vm.fetchPostDetail()
+        Group {
+            switch vm.postDetailFailureReason {
+            case .unavailable:
+                ContentUnavailableView {
+                    Label(
+                        Constant.unavailableTitle,
+                        systemImage: "text.page.slash"
+                    )
+                } description: {
+                    Text(Constant.unavailableDescription)
+                } actions: {
+                    Button(Constant.unavailableActionTitle) {
+                        dismiss()
+                    }
+                }
+            case .generic:
+                RetryContentUnavailableView(
+                    title: Constant.failedTitle,
+                    systemImage: Constant.failedSystemImage,
+                    description: Constant.failedDescription,
+                    retryTitle: Constant.retryTitle,
+                    isRetrying: vm.postDetailState.isLoading,
+                    minRetryButtonWidth: Constant.retryMinimumWidth,
+                    minRetryButtonHeight: Constant.retryMinimumHeight
+                ) {
+                    await vm.fetchPostDetail()
+                }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }

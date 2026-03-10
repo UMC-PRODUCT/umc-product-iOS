@@ -9,6 +9,11 @@ import Foundation
 
 @Observable
 class CommunityDetailViewModel {
+    enum PostDetailFailureReason: Equatable {
+        case unavailable
+        case generic
+    }
+
     // MARK: - Property
 
     private let useCaseProvider: CommunityUseCaseProviding
@@ -19,6 +24,7 @@ class CommunityDetailViewModel {
     private(set) var postItem: CommunityItemModel?
     private(set) var comments: Loadable<[CommunityCommentModel]> = .idle
     private(set) var postDetailState: Loadable<CommunityItemModel> = .idle
+    private(set) var postDetailFailureReason: PostDetailFailureReason = .generic
     private(set) var isDeleting: Bool = false
     private(set) var isDeletingComment: Bool = false
     private(set) var isScrapToggling: Bool = false
@@ -49,13 +55,18 @@ class CommunityDetailViewModel {
     @MainActor
     func fetchPostDetail() async {
         postDetailState = .loading
+        postDetailFailureReason = .generic
 
         do {
             let detail = try await useCaseProvider.fetchPostDetailUseCase.execute(postId: postId)
             postItem = detail
             postDetailState = .loaded(detail)
         } catch let error as AppError {
+            postDetailFailureReason = resolvePostDetailFailureReason(from: error)
             postDetailState = .failed(error)
+        } catch let error as NetworkError {
+            postDetailFailureReason = resolvePostDetailFailureReason(from: error)
+            postDetailState = .failed(.network(error))
         } catch {
             postDetailState = .failed(.unknown(message: error.localizedDescription))
         }
@@ -349,4 +360,31 @@ class CommunityDetailViewModel {
         }
     }
 
+}
+
+private extension CommunityDetailViewModel {
+    func resolvePostDetailFailureReason(
+        from error: AppError
+    ) -> PostDetailFailureReason {
+        guard case .network(let networkError) = error else {
+            return .generic
+        }
+
+        return resolvePostDetailFailureReason(from: networkError)
+    }
+
+    func resolvePostDetailFailureReason(
+        from error: NetworkError
+    ) -> PostDetailFailureReason {
+        guard case .requestFailed(404, let data) = error,
+              let data,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let code = json["code"] as? String,
+              code == "MEMBER-0001"
+        else {
+            return .generic
+        }
+
+        return .unavailable
+    }
 }
