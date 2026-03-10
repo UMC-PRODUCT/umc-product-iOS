@@ -59,8 +59,6 @@ class ScheduleRegistrationViewModel {
     /// 일정 생성 API 상태 (로딩 overlay + 성공 시 dismiss 제어)
     private(set) var submitState: Loadable<Bool> = .idle
 
-    /// 출석부 포함 여부 확인 Alert 데이터
-    var alertPrompt: AlertPrompt?
     /// 수정 모드일 때 대상 일정 ID
     private(set) var editingScheduleId: Int?
     /// 수정 모드 초기값 스냅샷
@@ -260,33 +258,5 @@ class ScheduleRegistrationViewModel {
                 }
             ))
         }
-    }
-    
-    /// 운영진용 일정 생성 Alert을 표시합니다.
-    ///
-    /// 출석부 동시 생성 여부를 선택하는 3버튼 Alert을 띄웁니다.
-    /// - Parameter gisuId: 기수 식별 ID
-    func alertAction(gisuId: Int) {
-        alertPrompt = AlertPrompt(
-            title: "일정 생성",
-            message: "출석을 체크하시겠습니까?",
-            positiveBtnTitle: "네, 출석부도 같이 생성할게요",
-            positiveBtnAction: { [weak self] in
-                Task { @MainActor in
-                    await self?.submitSchedule(
-                        gisuId: gisuId, requiresApproval: true
-                    )
-                }
-            },
-            secondaryBtnTitle: "아니요, 일정만 생성할게요",
-            secondaryBtnAction: { [weak self] in
-                Task { @MainActor in
-                    await self?.submitSchedule(
-                        gisuId: gisuId, requiresApproval: false
-                    )
-                }
-            },
-            negativeBtnTitle: "취소"
-        )
     }
 }
