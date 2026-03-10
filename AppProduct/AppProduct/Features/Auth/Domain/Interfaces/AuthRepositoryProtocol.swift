@@ -50,6 +50,17 @@ protocol AuthRepositoryProtocol: Sendable {
         oAuthVerificationToken: String
     ) async throws -> [MemberOAuth]
 
+    /// 로그인 OAuth 수단 연동 해제
+    /// - Parameters:
+    ///   - memberOAuthId: 해제할 OAuth 연동 ID
+    ///   - googleAccessToken: Google 해제 검증용 액세스 토큰
+    ///   - kakaoAccessToken: Kakao 해제 검증용 액세스 토큰
+    func deleteMemberOAuth(
+        memberOAuthId: Int,
+        googleAccessToken: String?,
+        kakaoAccessToken: String?
+    ) async throws
+
     /// 이메일 인증 발송
     /// - Parameter email: 인증할 이메일 주소
     /// - Returns: 이메일 인증 ID

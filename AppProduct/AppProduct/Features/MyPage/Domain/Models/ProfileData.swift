@@ -19,13 +19,29 @@ struct ProfileData: Identifiable, Equatable, Hashable {
     var challangerInfo: ChallengerInfo
     
     /// 현재 연동된 소셜 계정 목록
-    var socialConnected: [SocialType]
+    var socialConnections: [SocialConnection]
     
     /// 활동 이력 목록 (기수별, 역할별)
     var activityLogs: [ActivityLog]
     
     /// 외부 프로필 링크 목록 (Github, Blog 등)
     var profileLink: [ProfileLink]
+
+    /// 화면 표시용 연동 소셜 타입 목록
+    var socialConnected: [SocialType] {
+        socialConnections.map(\.socialType)
+    }
+}
+
+/// 연동된 소셜 계정의 서버 식별자와 타입을 나타내는 모델입니다.
+struct SocialConnection: Identifiable, Equatable, Hashable {
+    /// OAuth 연동 ID
+    let memberOAuthId: Int
+
+    /// 연동된 소셜 타입
+    let socialType: SocialType
+
+    var id: Int { memberOAuthId }
 }
 
 /// 특정 기수/파트에서의 활동 기록을 나타내는 모델입니다.
@@ -61,7 +77,6 @@ struct ProfileLink: Identifiable, Equatable, Hashable {
             .replacingOccurrences(of: "http://", with: "")
     }
 }
-
 
 
 

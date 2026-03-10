@@ -28,6 +28,12 @@ enum AuthRouter: BaseTargetType {
     case getMyOAuth
     /// 로그인 OAuth 수단 추가 연동
     case addMemberOAuth(oAuthVerificationToken: String)
+    /// 로그인 OAuth 수단 연동 해제
+    case deleteMemberOAuth(
+        memberOAuthId: Int,
+        googleAccessToken: String?,
+        kakaoAccessToken: String?
+    )
     /// 이메일 인증 발송
     case sendEmailVerification(email: String)
     /// 이메일 인증코드 검증
@@ -58,6 +64,8 @@ enum AuthRouter: BaseTargetType {
             return "/api/v1/member-oauth/me"
         case .addMemberOAuth:
             return "/api/v1/member-oauth"
+        case .deleteMemberOAuth(let memberOAuthId, _, _):
+            return "/api/v1/member-oauth/\(memberOAuthId)"
         case .sendEmailVerification:
             return "/api/v1/auth/email-verification"
         case .verifyEmailCode:
@@ -83,6 +91,8 @@ enum AuthRouter: BaseTargetType {
             return .post
         case .addMemberOAuth:
             return .post
+        case .deleteMemberOAuth:
+            return .delete
         case .getMyOAuth, .getSchools, .getTerms:
             return .get
         }
@@ -127,6 +137,17 @@ enum AuthRouter: BaseTargetType {
             return .requestJSONEncodable(
                 AddMemberOAuthRequestDTO(
                     oAuthVerificationToken: oAuthVerificationToken
+                )
+            )
+        case .deleteMemberOAuth(
+            _,
+            let googleAccessToken,
+            let kakaoAccessToken
+        ):
+            return .requestJSONEncodable(
+                DeleteMemberOAuthRequestDTO(
+                    googleAccessToken: googleAccessToken,
+                    kakaoAccessToken: kakaoAccessToken
                 )
             )
         case .sendEmailVerification(let email):

@@ -19,6 +19,8 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
     /// 프로파일 정보
     var profileData: ProfileData
     private let useCaseProvider: MyPageUseCaseProviding
+    private let authUseCaseProvider: AuthUseCaseProviding
+    private let kakaoLoginManager = KakaoLoginManager()
 
     // MARK: - 이미지 선택 관련
 
@@ -37,15 +39,20 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
     /// 활동 이력 추가 API 진행 상태
     var isAddingActivityLog: Bool = false
 
+    /// 소셜 연동 해제 API 진행 상태
+    var disconnectingSocialType: SocialType?
+
     /// 최초 조회/수정 화면 진입 시 링크 스냅샷
     private var initialProfileLinkState: [SocialLinkType: String]
     
     init(
         profileData: ProfileData,
-        useCaseProvider: MyPageUseCaseProviding
+        useCaseProvider: MyPageUseCaseProviding,
+        authUseCaseProvider: AuthUseCaseProviding
     ) {
         self.profileData = profileData
         self.useCaseProvider = useCaseProvider
+        self.authUseCaseProvider = authUseCaseProvider
         self.initialProfileLinkState = Self.makeProfileLinkState(from: profileData.profileLink)
     }
     
@@ -95,6 +102,7 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
         defer { isUpdatingProfileImage = false }
 
         var updatedProfile = profileData
+        let currentSocialConnections = profileData.socialConnections
 
         if hasImageUpdate, let imageData = selectedImageData {
             let fileName = "profile_\(Int(Date().timeIntervalSince1970)).jpg"
@@ -113,6 +121,7 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
                 .execute(profileLinks: normalizedProfileLinksForSubmit)
         }
 
+        updatedProfile.socialConnections = currentSocialConnections
         profileData = updatedProfile
         initialProfileLinkState = Self.makeProfileLinkState(from: updatedProfile.profileLink)
         selectedImageData = nil
@@ -129,9 +138,35 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
         isAddingActivityLog = true
         defer { isAddingActivityLog = false }
 
+        let currentSocialConnections = profileData.socialConnections
         try await useCaseProvider.addChallengerRecordUseCase.execute(code: code)
         profileData = try await useCaseProvider.fetchMyPageProfileUseCase.execute()
+        profileData.socialConnections = currentSocialConnections
         initialProfileLinkState = Self.makeProfileLinkState(from: profileData.profileLink)
+    }
+
+    /// 특정 소셜 연동을 해제하고 최신 연동 목록으로 갱신합니다.
+    @MainActor
+    func disconnectSocial(_ connection: SocialConnection) async throws {
+        guard disconnectingSocialType == nil else {
+            return
+        }
+
+        disconnectingSocialType = connection.socialType
+        defer { disconnectingSocialType = nil }
+
+        let verification = try await makeDeleteVerification(for: connection.socialType)
+
+        try await authUseCaseProvider.deleteMemberOAuthUseCase.execute(
+            memberOAuthId: connection.memberOAuthId,
+            googleAccessToken: verification.googleAccessToken,
+            kakaoAccessToken: verification.kakaoAccessToken
+        )
+
+        let oauths = try await authUseCaseProvider.fetchMyOAuthUseCase.execute()
+        let updatedConnections = oauths.compactMap(Self.makeSocialConnection(from:))
+        profileData.socialConnections = updatedConnections
+        SocialType.saveConnected(updatedConnections.map(\.socialType))
     }
 
     // MARK: - Private Method
@@ -164,6 +199,36 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
             uniqueKeysWithValues: SocialLinkType.allCases.map { type in
                 (type, mapped[type] ?? "")
             }
+        )
+    }
+
+    private func makeDeleteVerification(
+        for socialType: SocialType
+    ) async throws -> (googleAccessToken: String?, kakaoAccessToken: String?) {
+        switch socialType {
+        case .kakao:
+            let accessToken = try await kakaoLoginManager.fetchAccessToken()
+            return (nil, accessToken)
+        case .apple:
+            return (nil, nil)
+        case .google:
+            throw AuthError.socialLoginFailed(
+                provider: socialType.rawValue,
+                reason: "현재 앱에서는 Google 연동 해제를 지원하지 않습니다."
+            )
+        }
+    }
+
+    private static func makeSocialConnection(
+        from memberOAuth: MemberOAuth
+    ) -> SocialConnection? {
+        guard let socialType = memberOAuth.provider.socialType else {
+            return nil
+        }
+
+        return SocialConnection(
+            memberOAuthId: memberOAuth.memberOAuthId,
+            socialType: socialType
         )
     }
 }

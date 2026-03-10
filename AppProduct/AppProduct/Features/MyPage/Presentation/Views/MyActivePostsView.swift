@@ -227,7 +227,9 @@ private struct FetchMyPageProfilePreviewUseCase: FetchMyPageProfileUseCaseProtoc
                 profileImage: nil,
                 part: .front(type: .ios)
             ),
-            socialConnected: [.kakao],
+            socialConnections: [
+                .init(memberOAuthId: 1, socialType: .kakao)
+            ],
             activityLogs: [],
             profileLink: []
         )
