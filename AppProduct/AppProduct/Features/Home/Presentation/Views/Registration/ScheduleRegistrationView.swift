@@ -24,6 +24,7 @@ struct ScheduleRegistrationView: View {
 
     @AppStorage(AppStorageKey.gisuId) private var gisuId: Int = 0
     @AppStorage(AppStorageKey.memberRole) private var memberRole: ManagementTeam = .challenger
+    @State private var showApprovalConfirmationDialog: Bool = false
     private let mode: Mode
 
     enum Mode {
@@ -64,7 +65,33 @@ struct ScheduleRegistrationView: View {
         .scrollDismissesKeyboard(.immediately) // 스크롤 시 키보드 내림
         .navigation(naviTitle: navigationTitle, displayMode: .inline)
         .toolbar { toolbarContent }
-        .alertPrompt(item: $viewModel.alertPrompt)
+        .confirmationDialog(
+            "일정 생성",
+            isPresented: $showApprovalConfirmationDialog,
+            titleVisibility: .visible
+        ) {
+            Button("네, 출석부 생성합니다") {
+                Task {
+                    await viewModel.submitSchedule(
+                        gisuId: gisuId,
+                        requiresApproval: true
+                    )
+                }
+            }
+
+            Button("아니요, 일정만 생성할게요") {
+                Task {
+                    await viewModel.submitSchedule(
+                        gisuId: gisuId,
+                        requiresApproval: false
+                    )
+                }
+            }
+
+            Button("취소", role: .cancel) {}
+        } message: {
+            Text("출석을 체크하시겠습니까?")
+        }
         .overlay { submittingOverlay }
         // 생성 성공 시 화면 자동 닫기
         .onChange(of: viewModel.submitState) {
@@ -169,7 +196,7 @@ struct ScheduleRegistrationView: View {
                 )
             }
         } else {
-            viewModel.alertAction(gisuId: gisuId)
+            showApprovalConfirmationDialog = true
         }
     }
     
