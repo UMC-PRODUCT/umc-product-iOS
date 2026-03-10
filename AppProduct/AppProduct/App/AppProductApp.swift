@@ -39,7 +39,8 @@ struct AppProductApp: App {
         case signUp(
             verificationToken: String,
             email: String?,
-            fullName: String?
+            fullName: String?,
+            postRegisterLoginContext: PostRegisterLoginContext?
         )
         /// 승인 대기 화면
         case pendingApproval
@@ -110,16 +111,23 @@ extension AppProductApp {
                 )
                 .transition(rootTransition)
 
-            case .signUp(let verificationToken, let email, let fullName):
+            case .signUp(
+                let verificationToken,
+                let email,
+                let fullName,
+                let postRegisterLoginContext
+            ):
                 SignUpView(
                     oAuthVerificationToken: verificationToken,
                     initialEmail: email,
                     initialName: fullName,
+                    postRegisterLoginContext: postRegisterLoginContext,
                     sendEmailVerificationUseCase: authProvider
                         .sendEmailVerificationUseCase,
                     verifyEmailCodeUseCase: authProvider
                         .verifyEmailCodeUseCase,
                     registerUseCase: authProvider.registerUseCase,
+                    loginUseCase: authProvider.loginUseCase,
                     fetchSignUpDataUseCase: authProvider.fetchSignUpDataUseCase
                 )
                 .transition(rootTransition)
@@ -188,12 +196,17 @@ extension AppProductApp {
         AppFlow(
             showLogin: { transition(to: .login) },
             showMain: { transition(to: .main) },
-            showSignUp: { verificationToken, email, fullName in
+            showSignUp: {
+                verificationToken,
+                email,
+                fullName,
+                postRegisterLoginContext in
                 transition(
                     to: .signUp(
                         verificationToken: verificationToken,
                         email: email,
-                        fullName: fullName
+                        fullName: fullName,
+                        postRegisterLoginContext: postRegisterLoginContext
                     )
                 )
             },

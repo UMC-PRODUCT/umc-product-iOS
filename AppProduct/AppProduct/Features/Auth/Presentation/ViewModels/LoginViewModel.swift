@@ -66,7 +66,13 @@ final class LoginViewModel {
             print("[Auth] 서버 로그인 결과: \(result)")
             #endif
             loginState = .loaded(result)
-            destination = try await resolveDestination(from: result)
+            destination = try await resolveDestination(
+                from: result,
+                postRegisterLoginContext: .kakao(
+                    accessToken: accessToken,
+                    email: email
+                )
+            )
         } catch {
             loginState = .idle
             errorHandler.handle(error, context: ErrorContext(
@@ -100,7 +106,12 @@ final class LoginViewModel {
                     self.destination = try await self.resolveDestination(
                         from: result,
                         email: email,
-                        fullName: fullName
+                        fullName: fullName,
+                        postRegisterLoginContext: .apple(
+                            authorizationCode: code,
+                            email: email,
+                            fullName: fullName
+                        )
                     )
                 } catch {
                     self.loginState = .idle
@@ -129,7 +140,8 @@ private extension LoginViewModel {
     func resolveDestination(
         from result: OAuthLoginResult,
         email: String? = nil,
-        fullName: String? = nil
+        fullName: String? = nil,
+        postRegisterLoginContext: PostRegisterLoginContext? = nil
     ) async throws -> LoginDestination {
         switch result {
         case .newMember(let verificationToken):
@@ -140,7 +152,8 @@ private extension LoginViewModel {
             return .signUp(
                 verificationToken: verificationToken,
                 email: email,
-                fullName: fullName
+                fullName: fullName,
+                postRegisterLoginContext: postRegisterLoginContext
             )
 
         case .existingMember(let tokenPair):
@@ -204,6 +217,7 @@ enum LoginDestination: Equatable {
     case signUp(
         verificationToken: String,
         email: String?,
-        fullName: String?
+        fullName: String?,
+        postRegisterLoginContext: PostRegisterLoginContext?
     )
 }

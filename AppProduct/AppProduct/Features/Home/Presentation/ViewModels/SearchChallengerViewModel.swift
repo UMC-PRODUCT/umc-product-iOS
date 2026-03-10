@@ -12,7 +12,7 @@ import UniformTypeIdentifiers
 ///
 /// 챌린저 목록 로드, 검색 필터링, CSV 파일을 통한 일괄 선택 기능을 제공합니다.
 @Observable
-class SearchChallengerViewModel {
+final class SearchChallengerViewModel {
 
     // MARK: - Property
 
@@ -50,6 +50,9 @@ class SearchChallengerViewModel {
     private var currentKeyword: String = ""
 
     /// 디바운스용 검색 태스크
+    private var debounceTask: Task<Void, Never>?
+
+    /// 진행 중인 검색 요청 태스크
     private var searchTask: Task<Void, Never>?
 
     /// 최신 검색 요청 식별자
@@ -58,9 +61,8 @@ class SearchChallengerViewModel {
     /// 다음 페이지 중복 호출 방지 플래그
     private var isFetchingNextPage: Bool = false
 
-    private enum Constants {
-        static let debounceNanoseconds: UInt64 = 400_000_000
-    }
+    private let debounceNanoseconds: UInt64
+    private let sleep: @Sendable (UInt64) async throws -> Void
 
     // MARK: - Init
 
@@ -68,6 +70,22 @@ class SearchChallengerViewModel {
     init(container: DIContainer) {
         let provider = container.resolve(HomeUseCaseProviding.self)
         self.searchChallengersUseCase = provider.searchChallengersUseCase
+        self.debounceNanoseconds = 1_000_000_000
+        self.sleep = { nanoseconds in
+            try await Task.sleep(nanoseconds: nanoseconds)
+        }
+    }
+
+    init(
+        searchChallengersUseCase: SearchChallengersUseCaseProtocol,
+        debounceNanoseconds: UInt64 = 1_000_000_000,
+        sleep: @escaping @Sendable (UInt64) async throws -> Void = { nanoseconds in
+            try await Task.sleep(nanoseconds: nanoseconds)
+        }
+    ) {
+        self.searchChallengersUseCase = searchChallengersUseCase
+        self.debounceNanoseconds = debounceNanoseconds
+        self.sleep = sleep
     }
 
     // MARK: - Function
@@ -82,25 +100,29 @@ class SearchChallengerViewModel {
     /// 검색어 변경 시 디바운스를 적용해 챌린저 목록을 다시 조회합니다.
     @MainActor
     func scheduleSearch() {
-        searchTask?.cancel()
+        debounceTask?.cancel()
         let keyword = normalizedSearchText
         let requestID = prepareSearch(keyword: keyword)
 
-        searchTask = Task { [weak self] in
+        debounceTask = Task { [weak self] in
+            guard let self else { return }
             do {
-                try await Task.sleep(nanoseconds: Constants.debounceNanoseconds)
+                try await sleep(debounceNanoseconds)
             } catch {
                 return
             }
 
-            guard let self, !Task.isCancelled else { return }
-            await self.fetchChallengers(keyword: keyword, requestID: requestID)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                self.startSearchTask(keyword: keyword, requestID: requestID)
+            }
         }
     }
 
     /// 더 이상 필요 없는 검색 태스크를 정리합니다.
     @MainActor
     func cancelSearch() {
+        debounceTask?.cancel()
         searchTask?.cancel()
     }
 
@@ -147,6 +169,14 @@ class SearchChallengerViewModel {
 
 // MARK: - Helpers
 private extension SearchChallengerViewModel {
+    @MainActor
+    func startSearchTask(keyword: String, requestID: UUID) {
+        searchTask = Task { [weak self] in
+            guard let self else { return }
+            await self.fetchChallengers(keyword: keyword, requestID: requestID)
+        }
+    }
+
     @MainActor
     func prepareSearch(keyword: String) -> UUID {
         let requestID = UUID()
