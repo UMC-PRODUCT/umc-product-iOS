@@ -42,6 +42,16 @@ enum ScheduleIconCategory: String, Codable, CaseIterable {
     /// 일반 일정
     case general = "GENERAL"
 
+    /// 일정 등록 화면에서 노출할 카테고리 목록
+    static var selectableCases: [ScheduleIconCategory] {
+        allCases.filter { $0 != .testing }
+    }
+
+    /// 더 이상 신규 입력에 사용하지 않는 레거시 카테고리 여부
+    var isDeprecated: Bool {
+        self == .testing
+    }
+
     /// 카테고리별 시스템 심볼 이미지 이름
     var symbol: String {
         switch self {

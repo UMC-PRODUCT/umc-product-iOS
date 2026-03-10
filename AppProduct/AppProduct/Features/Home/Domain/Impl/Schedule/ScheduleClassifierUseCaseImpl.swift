@@ -58,17 +58,13 @@ final class ClassifyScheduleUseCaseImpl: ClassifyScheduleUseCase {
 
     /// 모델 예측보다 우선해야 하는 강한 규칙 카테고리
     ///
-    /// 예: OT/오리엔테이션/온보딩은 `orientation`, 테스트 관련은 `testing`으로 고정
+    /// 예: OT/오리엔테이션/온보딩은 `orientation`으로 고정
     private func forcedRuleCategory(for title: String) -> ScheduleIconCategory? {
         let normalized = title.lowercased()
         let orientationTokens = ["ot", "오티", "오리엔테이션", "온보딩"]
-        let testingTokens = ["테스트", "test", "qa", "검증"]
 
         if orientationTokens.contains(where: { normalized.contains($0) }) {
             return .orientation
-        }
-        if testingTokens.contains(where: { normalized.contains($0) }) {
-            return .testing
         }
         return nil
     }

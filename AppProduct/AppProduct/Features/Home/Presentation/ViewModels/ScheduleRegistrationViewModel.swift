@@ -92,7 +92,9 @@ class ScheduleRegistrationViewModel {
                 longitude: detail.longitude
             )
         )
-        tag = detail.tags.compactMap(Self.mapScheduleTag)
+        tag = detail.tags
+            .compactMap(Self.mapScheduleTag)
+            .filter { !$0.isDeprecated }
         initialEditSnapshot = currentEditSnapshot
     }
 
@@ -120,7 +122,7 @@ class ScheduleRegistrationViewModel {
         case "회고": return .review
         case "뒷풀이": return .celebration
         case "오리엔테이션": return .orientation
-        case "테스트": return .testing
+        case "테스트": return nil
         case "일반": return .general
         default: return nil
         }
@@ -154,7 +156,7 @@ class ScheduleRegistrationViewModel {
             longitude: place.coordinate.longitude,
             description: memo,
             participantMemberIds: memberIds,
-            tags: tag,
+            tags: sanitizedTags,
             gisuId: gisuId,
             requiresApproval: requiresApproval
         )
@@ -194,8 +196,13 @@ class ScheduleRegistrationViewModel {
             endDate: dataRange.endDate,
             memo: memo,
             participantMemberIds: Array(Set(participatn.map(\.memberId))).sorted(),
-            tags: tag.map(\.rawValue).sorted()
+            tags: sanitizedTags.map(\.rawValue).sorted()
         )
+    }
+
+    /// 레거시 테스트 태그를 제거한 현재 태그 목록
+    private var sanitizedTags: [ScheduleIconCategory] {
+        tag.filter { !$0.isDeprecated }
     }
 
     /// 수정 모드에서 변경 감지를 위한 폼 상태 스냅샷
@@ -234,7 +241,7 @@ class ScheduleRegistrationViewModel {
             latitude: place.coordinate.latitude,
             longitude: place.coordinate.longitude,
             description: memo,
-            tags: tag,
+            tags: sanitizedTags,
             participantMemberIds: participantMemberIds
         )
         do {
