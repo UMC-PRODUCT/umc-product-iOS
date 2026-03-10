@@ -29,6 +29,9 @@ struct SearchChallengerView: View {
         static let failedTitle: String = "챌린저 검색에 실패했어요"
         static let failedSystemImage: String = "exclamationmark.triangle"
         static let failedRetryTitle: String = "다시 시도"
+        static let initialEmptyTitle: String = "검색된 챌린저가 없습니다"
+        static let initialEmptyDescription: String = "이름, 닉네임, 학교명으로 챌린저를 검색해보세요."
+        static let initialEmptySystemImage: String = "magnifyingglass"
     }
     
     // MARK: - Init
@@ -69,7 +72,6 @@ struct SearchChallengerView: View {
         .alertPrompt(item: $viewModel.alertPrompt)
         .task {
             initializeSelectedIds()
-            await viewModel.loadInitialChallengers()
         }
         .onChange(of: viewModel.searchText) {
             viewModel.scheduleSearch()
@@ -84,7 +86,10 @@ struct SearchChallengerView: View {
     @ViewBuilder
     private var stateContent: some View {
         switch viewModel.loadState {
-        case .idle, .loading:
+        case .idle:
+            initialEmptyView
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .loading:
             Progress(message: Constants.loadingMessage, size: .regular)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .loaded:
@@ -113,6 +118,14 @@ struct SearchChallengerView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+    }
+
+    private var initialEmptyView: some View {
+        ContentUnavailableView(
+            Constants.initialEmptyTitle,
+            systemImage: Constants.initialEmptySystemImage,
+            description: Text(Constants.initialEmptyDescription)
+        )
     }
 
     /// 검색 결과가 없을 때 표시되는 뷰

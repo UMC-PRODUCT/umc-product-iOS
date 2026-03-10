@@ -10,6 +10,29 @@ import Testing
 
 struct SearchChallengerViewModelTests {
 
+    @Test("검색어 없이 초기 진입하면 챌린저 검색 요청을 보내지 않는다")
+    func initialLoadWithoutKeywordDoesNotRequestSearch() async throws {
+        let useCase = MockSearchChallengersUseCase()
+        let viewModel = await MainActor.run {
+            SearchChallengerViewModel(searchChallengersUseCase: useCase)
+        }
+
+        await MainActor.run {
+            viewModel.searchText = "   "
+        }
+        await viewModel.loadInitialChallengers()
+
+        let snapshot = await useCase.snapshot()
+        #expect(snapshot.keywords.isEmpty)
+        let isIdle = await MainActor.run {
+            if case .idle = viewModel.loadState {
+                return true
+            }
+            return false
+        }
+        #expect(isIdle)
+    }
+
     @Test("챌린저 검색은 1초 디바운스 후 마지막 입력만 요청한다")
     func searchUsesOneSecondDebounce() async throws {
         let useCase = MockSearchChallengersUseCase()

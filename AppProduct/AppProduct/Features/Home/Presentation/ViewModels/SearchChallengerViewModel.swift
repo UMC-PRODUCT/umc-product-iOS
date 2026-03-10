@@ -93,8 +93,14 @@ final class SearchChallengerViewModel {
     /// 화면 진입 또는 검색어 초기화 시 현재 검색 조건으로 첫 페이지를 로드합니다.
     @MainActor
     func loadInitialChallengers() async {
-        let requestID = prepareSearch(keyword: normalizedSearchText)
-        await fetchChallengers(keyword: normalizedSearchText, requestID: requestID)
+        let keyword = normalizedSearchText
+        guard !keyword.isEmpty else {
+            resetSearchState()
+            return
+        }
+
+        let requestID = prepareSearch(keyword: keyword)
+        await fetchChallengers(keyword: keyword, requestID: requestID)
     }
 
     /// 검색어 변경 시 디바운스를 적용해 챌린저 목록을 다시 조회합니다.
@@ -102,6 +108,13 @@ final class SearchChallengerViewModel {
     func scheduleSearch() {
         debounceTask?.cancel()
         let keyword = normalizedSearchText
+        guard !keyword.isEmpty else {
+            searchTask?.cancel()
+            latestRequestID = UUID()
+            resetSearchState()
+            return
+        }
+
         let requestID = prepareSearch(keyword: keyword)
 
         debounceTask = Task { [weak self] in
@@ -190,6 +203,16 @@ private extension SearchChallengerViewModel {
 
     var normalizedSearchText: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    @MainActor
+    func resetSearchState() {
+        allChallengers = []
+        currentKeyword = ""
+        nextCursor = nil
+        hasNext = false
+        isFetchingNextPage = false
+        loadState = .idle
     }
 }
 
