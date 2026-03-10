@@ -63,7 +63,9 @@ struct ChallengerAttendanceView: View, Equatable {
                 mapPlaceholder
             }
             attendanceActionView
-            lateReasonButton
+            if attendanceViewModel.shouldShowReasonButton(for: session) {
+                lateReasonButton
+            }
         }
         .animation(.smooth, value: session.attendanceStatus)
         .animation(.easeInOut(duration: 0.2), value: isMapReady)
@@ -286,7 +288,7 @@ private struct ChallengerAttendanceScenarioPreview: View {
 #Preview("마감 후 불참 사유") {
     ChallengerAttendanceScenarioPreview(
         title: "불참 사유 제출 세션",
-        subtitle: "출석 마감 후에도 사유 제출 가능, absent reason 경로 사용",
+        subtitle: "출석 마감 후에는 사유 제출 버튼이 숨김 처리됨",
         timeWindow: .expired
     )
 }
