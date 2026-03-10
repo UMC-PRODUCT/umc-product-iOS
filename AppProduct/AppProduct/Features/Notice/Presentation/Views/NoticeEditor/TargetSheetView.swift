@@ -154,14 +154,18 @@ struct TargetSheetView: View {
     /// 학교 대상 선택 섹션
     private var schoolFilterSection: some View {
         selectionSection {
-            FlowLayout(spacing: Constants.chipSpacing) {
-                ForEach(viewModel.schoolOptions, id: \.self) { school in
-                    ChipButton(school.name, isSelected: viewModel.isSchoolSelected(school)) {
-                        viewModel.toggleSchool(school)
+            ScrollView(.vertical) {
+                FlowLayout(spacing: Constants.chipSpacing) {
+                    ForEach(viewModel.schoolOptions, id: \.self) { school in
+                        ChipButton(school.name, isSelected: viewModel.isSchoolSelected(school)) {
+                            viewModel.toggleSchool(school)
+                        }
+                        .buttonSize(.medium)
                     }
-                    .buttonSize(.medium)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .scrollIndicators(.hidden)
         }
     }
     
