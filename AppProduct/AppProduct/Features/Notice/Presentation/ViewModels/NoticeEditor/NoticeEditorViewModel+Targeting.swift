@@ -24,6 +24,10 @@ extension NoticeEditorViewModel {
         targetValidationMessage == nil
     }
 
+    var shouldShowTargetExclusivityHint: Bool {
+        visibleSubCategories.contains(.branch) && visibleSubCategories.contains(.school)
+    }
+
     /// 공지 생성 시 타겟 조합 검증 메시지입니다.
     var targetValidationMessage: String? {
         guard !isEditMode else { return nil }
@@ -95,6 +99,7 @@ extension NoticeEditorViewModel {
     func updateUserContext(gisuId: Int, chapterId: Int) {
         userGisuId = gisuId
         userChapterId = chapterId
+        refreshSelectedGenerationValue()
 
         normalizeSelectionForCurrentCategory()
         Task { @MainActor in
@@ -120,25 +125,42 @@ extension NoticeEditorViewModel {
             case .central:
                 let canSelectBranch = visibleSubCategories.contains(.branch)
                 let canSelectSchool = visibleSubCategories.contains(.school)
+                let hasResolvedGisu = resolvedGisuId > 0
 
                 if canSelectBranch, canSelectSchool {
-                    async let branches = targetUseCase.fetchAllBranches()
-                    async let schools = targetUseCase.fetchAllSchools()
+                    async let branches = hasResolvedGisu
+                        ? targetUseCase.fetchBranches(gisuId: resolvedGisuId)
+                        : targetUseCase.fetchAllBranches()
+                    async let schools = hasResolvedGisu
+                        ? targetUseCase.fetchSchools(gisuId: resolvedGisuId)
+                        : targetUseCase.fetchAllSchools()
                     branchOptions = try await branches
                     schoolOptions = try await schools
                 } else if canSelectBranch {
-                    branchOptions = try await targetUseCase.fetchAllBranches()
+                    branchOptions = try await (
+                        hasResolvedGisu
+                        ? targetUseCase.fetchBranches(gisuId: resolvedGisuId)
+                        : targetUseCase.fetchAllBranches()
+                    )
                     schoolOptions = []
                 } else if canSelectSchool {
                     branchOptions = []
-                    schoolOptions = try await targetUseCase.fetchAllSchools()
+                    schoolOptions = try await (
+                        hasResolvedGisu
+                        ? targetUseCase.fetchSchools(gisuId: resolvedGisuId)
+                        : targetUseCase.fetchAllSchools()
+                    )
                 } else {
                     branchOptions = []
                     schoolOptions = []
                 }
             case .branch:
                 if visibleSubCategories.contains(.branch) {
-                    branchOptions = try await targetUseCase.fetchAllBranches()
+                    branchOptions = try await (
+                        resolvedGisuId > 0
+                        ? targetUseCase.fetchBranches(gisuId: resolvedGisuId)
+                        : targetUseCase.fetchAllBranches()
+                    )
                 } else {
                     branchOptions = []
                 }
@@ -153,7 +175,11 @@ extension NoticeEditorViewModel {
             case .school:
                 branchOptions = []
                 if visibleSubCategories.contains(.school) {
-                    schoolOptions = try await targetUseCase.fetchAllSchools()
+                    schoolOptions = try await (
+                        resolvedGisuId > 0
+                        ? targetUseCase.fetchSchools(gisuId: resolvedGisuId)
+                        : targetUseCase.fetchAllSchools()
+                    )
                 } else {
                     schoolOptions = []
                 }

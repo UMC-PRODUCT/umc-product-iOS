@@ -26,12 +26,20 @@ final class NoticeEditorTargetUseCase: NoticeEditorTargetUseCaseProtocol {
         try await repository.fetchAllBranches()
     }
 
+    func fetchBranches(gisuId: Int) async throws -> [NoticeTargetOption] {
+        try await repository.fetchBranches(gisuId: gisuId)
+    }
+
     func fetchBranchName(chapterId: Int) async throws -> String {
         try await repository.fetchBranchName(chapterId: chapterId)
     }
 
     func fetchAllSchools() async throws -> [NoticeTargetOption] {
         try await repository.fetchAllSchools()
+    }
+
+    func fetchSchools(gisuId: Int) async throws -> [NoticeTargetOption] {
+        try await repository.fetchSchools(gisuId: gisuId)
     }
 
     func fetchSchools(inChapterId chapterId: Int, gisuId: Int) async throws -> [NoticeTargetOption] {

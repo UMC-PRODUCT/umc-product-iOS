@@ -62,12 +62,13 @@ extension NoticeTargetInfoDTO {
     // MARK: - Function
     /// TargetAudience 도메인 모델로 변환합니다.
     func toTargetAudience(scope: NoticeScope? = nil) -> TargetAudience {
-        TargetAudience(
+        let targetScope = scope ?? resolvedScope
+        return TargetAudience(
             generation: generationValue,
-            scope: scope ?? resolvedScope,
+            scope: targetScope,
             parts: resolvedParts,
-            branches: [],
-            schools: []
+            branches: targetScope == .branch ? [resolvedChapterName].compactMap { $0 } : [],
+            schools: targetScope == .campus ? [resolvedSchoolName].compactMap { $0 } : []
         )
     }
 }

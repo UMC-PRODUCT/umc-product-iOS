@@ -226,6 +226,11 @@ final class NoticeDetailViewModel {
         let fallback = detail.defaultAuthorDisplayName
         authorDisplayName = fallback
 
+        let normalizedFallback = fallback.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalizedFallback != "알 수 없음" else {
+            return
+        }
+
         guard
             let rawMemberId = detail.authorMemberId,
             let memberId = Int(rawMemberId),

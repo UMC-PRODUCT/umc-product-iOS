@@ -74,7 +74,9 @@ extension NoticeEditorViewModel {
             }
         } catch let error as NetworkError {
             createState = .failed(.network(error))
-            handleError(error, action: "createNotice")
+            if !presentNoticeRequestErrorAlert(for: error) {
+                handleError(error, action: "createNotice")
+            }
         } catch {
             createState = .failed(.unknown(message: error.localizedDescription))
             handleError(error, action: "createNotice")
@@ -159,7 +161,9 @@ extension NoticeEditorViewModel {
             }
         } catch let error as NetworkError {
             createState = .failed(.network(error))
-            handleError(error, action: "updateNotice")
+            if !presentNoticeRequestErrorAlert(for: error) {
+                handleError(error, action: "updateNotice")
+            }
         } catch {
             createState = .failed(.unknown(message: error.localizedDescription))
             handleError(error, action: "updateNotice")
@@ -364,6 +368,46 @@ extension NoticeEditorViewModel {
             "NOTICE-0010",
             "NOTICE-0011"
         ]
+    }
+
+    /// 권한 오류 등 HTTP 실패 응답의 서버 메시지를 작성 화면 Alert로 표시합니다.
+    @discardableResult
+    func presentNoticeRequestErrorAlert(for error: NetworkError) -> Bool {
+        guard case let .requestFailed(statusCode, data) = error else {
+            return false
+        }
+
+        guard let serverMessage = parseServerMessage(from: data) else {
+            return false
+        }
+
+        let alertTitle = statusCode == 403 ? "권한 없음" : "공지 저장 실패"
+        alertPrompt = AlertPrompt(
+            title: alertTitle,
+            message: serverMessage,
+            positiveBtnTitle: "확인"
+        )
+        return true
+    }
+
+    func parseServerMessage(from data: Data?) -> String? {
+        guard let data,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return nil
+        }
+
+        if let message = (json["message"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !message.isEmpty {
+            return message
+        }
+
+        if let result = (json["result"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !result.isEmpty {
+            return result
+        }
+
+        return nil
     }
 
     /// 저장 시점에만 파일 업로드 플로우를 실행하고 fileId 배열을 반환합니다.

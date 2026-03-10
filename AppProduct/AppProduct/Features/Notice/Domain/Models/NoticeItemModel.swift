@@ -29,6 +29,7 @@ struct NoticeItemModel: Equatable, Identifiable {
     let vote: NoticeVote?
     let viewCount: Int
     let scopeDisplayName: String?
+    let targetsAllGenerations: Bool
 
     init(
         noticeId: String = UUID().uuidString,
@@ -45,7 +46,8 @@ struct NoticeItemModel: Equatable, Identifiable {
         images: [String],
         vote: NoticeVote?,
         viewCount: Int,
-        scopeDisplayName: String? = nil
+        scopeDisplayName: String? = nil,
+        targetsAllGenerations: Bool = false
     ) {
         self.noticeId = noticeId
         self.generation = generation
@@ -62,15 +64,59 @@ struct NoticeItemModel: Equatable, Identifiable {
         self.vote = vote
         self.viewCount = viewCount
         self.scopeDisplayName = scopeDisplayName
+        self.targetsAllGenerations = targetsAllGenerations
     }
     
-    /// UI 표시용 태그 (scope + category 조합)
-    var tag: NoticeItemTag {
-        NoticeItemTag(scope: scope, category: category, scopeDisplayName: scopeDisplayName)
+    /// UI 표시용 태그 목록
+    var tags: [NoticeItemTag] {
+        if targetsAllGenerations {
+            return [
+                NoticeItemTag(text: "모든 기수", backColor: .blue)
+            ]
+        }
+
+        var items: [NoticeItemTag] = [
+            NoticeItemTag(text: "\(generation)기", backColor: .blue)
+        ]
+
+        if let scopeTag {
+            items.append(scopeTag)
+        }
+
+        if let partTag {
+            items.append(partTag)
+        }
+
+        return items
     }
     
     var hasLink: Bool { !links.isEmpty }
     var hasVote: Bool { vote != nil }
+}
+
+private extension NoticeItemModel {
+    var scopeTag: NoticeItemTag? {
+        switch scope {
+        case .central:
+            return nil
+        case .branch:
+            let displayName = scopeDisplayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return NoticeItemTag(
+                text: displayName.isEmpty ? "지부" : displayName,
+                backColor: .orange500
+            )
+        case .campus:
+            return NoticeItemTag(text: "교내", backColor: .green500)
+        }
+    }
+
+    var partTag: NoticeItemTag? {
+        guard case .part(let part) = category else { return nil }
+        return NoticeItemTag(
+            text: NoticePart(umcPartType: part)?.displayName ?? "파트",
+            backColor: part.color
+        )
+    }
 }
 
 extension NoticeItemModel {
