@@ -62,7 +62,7 @@ class CommunityPostViewModel {
             category: selectedCategory,
             meetAt: selectedCategory == .lighting ? selectedDate : nil,
             maxParticipants: selectedCategory == .lighting ? maxParticipants : nil,
-            location: selectedCategory == .lighting ? selectedPlace.address : nil,
+            location: selectedCategory == .lighting ? Self.serializePlace(selectedPlace) : nil,
             openChatUrl: selectedCategory == .lighting ? linkText : nil
         )
     }
@@ -87,6 +87,7 @@ class CommunityPostViewModel {
         if let lightningInfo = post.lightningInfo {
             selectedDate = lightningInfo.meetAt
             maxParticipants = lightningInfo.maxParticipants
+            selectedPlace = Self.makePlaceSearchInfo(from: lightningInfo.location)
             linkText = lightningInfo.openChatUrl
         }
 
@@ -108,7 +109,7 @@ class CommunityPostViewModel {
                     title: titleText,
                     content: contentText,
                     meetAt: meetAtString,
-                    location: "\(selectedPlace.address), \(selectedPlace.name)",
+                    location: Self.serializePlace(selectedPlace),
                     maxParticipants: maxParticipants,
                     openChatUrl: linkText
                 )
@@ -165,7 +166,7 @@ class CommunityPostViewModel {
                     title: titleText,
                     content: contentText,
                     meetAt: meetAtString,
-                    location: selectedPlace.address,
+                    location: Self.serializePlace(selectedPlace),
                     maxParticipants: maxParticipants,
                     openChatUrl: linkText
                 )
@@ -228,5 +229,31 @@ class CommunityPostViewModel {
         let maxParticipants: Int?
         let location: String?
         let openChatUrl: String?
+    }
+
+    // MARK: - Place Helpers
+
+    static func makePlaceSearchInfo(from location: String) -> PlaceSearchInfo {
+        let components = location
+            .split(separator: ",", maxSplits: 1, omittingEmptySubsequences: true)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+        let address = components.first ?? ""
+        let name = components.count > 1 ? components[1] : address
+
+        return PlaceSearchInfo(
+            name: name,
+            address: address,
+            coordinate: .init(latitude: 0.0, longitude: 0.0)
+        )
+    }
+
+    static func serializePlace(_ place: PlaceSearchInfo) -> String {
+        let trimmedAddress = place.address.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedName = place.name.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedAddress.isEmpty else { return trimmedName }
+        guard !trimmedName.isEmpty, trimmedName != trimmedAddress else { return trimmedAddress }
+        return "\(trimmedAddress), \(trimmedName)"
     }
 }
