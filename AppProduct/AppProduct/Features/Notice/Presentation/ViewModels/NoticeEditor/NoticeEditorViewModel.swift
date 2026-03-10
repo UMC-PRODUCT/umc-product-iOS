@@ -28,6 +28,10 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
         container.resolve(NoticeEditorTargetUseCaseProtocol.self)
     }
 
+    var genRepository: ChallengerGenRepositoryProtocol {
+        container.resolve(ChallengerGenRepositoryProtocol.self)
+    }
+
     var errorHandler: ErrorHandler?
 
     // MARK: - Mode
@@ -58,6 +62,7 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
     /// 뷰에서 전달받는 사용자 컨텍스트(우선 적용)
     var userGisuId: Int?
     var userChapterId: Int?
+    var selectedGenerationValue: Int?
 
     var resolvedGisuId: Int {
         userGisuId ?? gisuId
@@ -65,6 +70,11 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
 
     var resolvedChapterId: Int {
         userChapterId ?? organizationId
+    }
+
+    var selectedGenerationTitle: String? {
+        guard let selectedGenerationValue else { return nil }
+        return "\(selectedGenerationValue)기"
     }
 
     // MARK: - View State
@@ -202,6 +212,29 @@ final class NoticeEditorViewModel: MultiplePhotoPickerManageable {
 
         if case .edit(_, let notice) = mode {
             loadNoticeForEdit(notice)
+        }
+
+        refreshSelectedGenerationValue()
+    }
+
+    // MARK: - Helper
+
+    /// 선택된 gisuId를 사용자 표시용 기수 값으로 역매핑합니다.
+    func refreshSelectedGenerationValue() {
+        let currentGisuId = resolvedGisuId
+        guard currentGisuId > 0 else {
+            selectedGenerationValue = nil
+            return
+        }
+
+        do {
+            let selectedGeneration = try genRepository
+                .fetchGenGisuIdPairs()
+                .first(where: { $0.gisuId == currentGisuId })?
+                .gen
+            selectedGenerationValue = selectedGeneration ?? currentGisuId
+        } catch {
+            selectedGenerationValue = currentGisuId
         }
     }
 }

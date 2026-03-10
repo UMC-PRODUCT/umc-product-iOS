@@ -77,7 +77,8 @@ extension NoticeDTO {
             images: [],  // 기본 조회에는 없음
             vote: nil,
             viewCount: Int(viewCount) ?? 0,
-            scopeDisplayName: scopeDisplayName
+            scopeDisplayName: scopeDisplayName,
+            targetsAllGenerations: targetInfo.targetsAllGenerations
         )
     }
 }
@@ -151,9 +152,20 @@ struct NoticeTargetInfoDTO: Codable {
             .first(where: { !$0.isEmpty })
     }
 
+    var resolvedSchoolName: String? {
+        let candidates = [targetSchoolName, schoolName]
+        return candidates
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first(where: { !$0.isEmpty })
+    }
+
     var targetChapterIdValue: Int? {
         guard let targetChapterId else { return nil }
         return Int(targetChapterId)
+    }
+
+    var targetsAllGenerations: Bool {
+        generationValue <= 0
     }
 }
 

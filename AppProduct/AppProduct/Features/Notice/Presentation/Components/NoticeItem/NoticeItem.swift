@@ -85,7 +85,9 @@ private struct TopSection: View, Equatable {
 
     var body: some View {
         HStack(spacing: Constant.topHSpacing) {
-            tag(model.tag.text, color: model.tag.backColor)
+            ForEach(Array(model.tags.enumerated()), id: \.offset) { _, tagItem in
+                tag(tagItem.text, color: tagItem.backColor)
+            }
             
             if model.mustRead {
                 tag("필독", color: .red)

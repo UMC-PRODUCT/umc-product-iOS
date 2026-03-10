@@ -79,6 +79,28 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
         }
     }
 
+    /// 목록/상세에서 공통으로 사용할 태그 목록
+    var tags: [NoticeItemTag] {
+        NoticeItemModel(
+            noticeId: id,
+            generation: generation,
+            scope: scope,
+            category: category,
+            mustRead: isMustRead,
+            isAlert: false,
+            date: createdAt,
+            title: title,
+            content: content,
+            writer: authorName,
+            links: links,
+            images: images,
+            vote: vote,
+            viewCount: 0,
+            scopeDisplayName: targetAudience.branches.first,
+            targetsAllGenerations: targetAudience.generation <= 0
+        ).tags
+    }
+
     init(
         id: String,
         generation: Int,
@@ -139,35 +161,32 @@ struct TargetAudience: Equatable, Hashable {
     let branches: [String]
     let schools: [String]
     
-    /// 수신 대상 표시 텍스트 (예: "12기 / 전체")
+    /// 수신 대상 표시 텍스트
+    ///
+    /// 레거시 호환용 속성입니다. 신규 UI는 `NoticeDetail.tags`를 사용합니다.
     var displayText: String {
-        var components: [String] = ["\(generation)기"]
-        
-        switch scope {
-        case .central:
-            if parts.isEmpty {
-                components.append("전체")
-            } else {
-                components.append(
-                    parts.map { NoticePart(umcPartType: $0)?.displayName ?? $0.name }
-                        .joined(separator: ", ")
-                )
-            }
-        case .branch:
-            if branches.isEmpty {
-                components.append("전체 지부")
-            } else {
-                components.append(branches.joined(separator: ", "))
-            }
-        case .campus:
-            if schools.isEmpty {
-                components.append("전체")
-            } else {
-                components.append(schools.joined(separator: ", "))
-            }
-        }
-        
-        return components.joined(separator: " / ")
+        NoticeDetail(
+            id: "",
+            generation: generation,
+            scope: scope,
+            category: parts.first.map { .part($0) } ?? .general,
+            isMustRead: false,
+            title: "",
+            content: "",
+            authorID: "",
+            authorName: "",
+            authorImageURL: nil,
+            createdAt: .now,
+            updatedAt: nil,
+            targetAudience: self,
+            hasPermission: false,
+            images: [],
+            links: [],
+            vote: nil
+        )
+        .tags
+        .map(\.text)
+        .joined(separator: " / ")
     }
 }
 

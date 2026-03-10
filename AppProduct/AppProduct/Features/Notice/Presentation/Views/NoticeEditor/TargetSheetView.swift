@@ -28,8 +28,8 @@ struct TargetSheetView: View {
         static let topPadding: CGFloat = DefaultSpacing.spacing16
         static let bottomPadding: CGFloat = DefaultSpacing.spacing24
         
-        static let branchGuideMessage: String = "지부를 한 개 선택해주세요."
-        static let schoolGuideMessage: String = "학교를 한 개 선택해주세요."
+        static let branchGuideMessage: String = "선택하지 않으면 전체 대상 공지로 발송됩니다."
+        static let schoolGuideMessage: String = "선택하지 않으면 전체 학교로 발송됩니다."
         static let partGuideMessage: String = "선택하지 않으면 전체 파트 대상 공지로 발송됩니다."
         static let failedTitle: String = "대상 목록을 불러오지 못했습니다."
         static let failedDescription: String = "일시적인 오류가 발생했습니다. 다시 시도해주세요."

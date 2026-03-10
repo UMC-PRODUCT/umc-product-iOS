@@ -169,7 +169,7 @@ struct NoticeEditorView: View {
 
     // MARK: - Top Safe Area
 
-    /// 상단 안전 영역: 게시판 분류 칩
+    /// 상단 안전 영역: 공지 대상 선택 칩
     @ViewBuilder
     private func topSafeAreaContent() -> some View {
         if viewModel.selectedCategory.hasSubCategories
@@ -179,15 +179,17 @@ struct NoticeEditorView: View {
         }
     }
 
-    /// 게시판 분류 칩 섹션
+    /// 공지 대상 선택 칩 섹션
     private var subCategorySection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             HStack(alignment: .center) {
-                Text("게시판 분류")
+                Text("공지 대상 선택")
                     .appFont(.calloutEmphasis)
 
-                Text("중복 선택 가능")
-                    .appFont(.footnote, color: .grey400)
+                if viewModel.shouldShowTargetExclusivityHint {
+                    Text("지부와 학교는 동시에 선택할 수 없습니다.")
+                        .appFont(.footnote, color: .grey400)
+                }
             }
 
             HStack(spacing: Constants.chipSpacing) {
@@ -452,9 +454,7 @@ struct NoticeEditorView: View {
     private func menuItemLabel(_ category: EditorMainCategory) -> String {
         switch category {
         case .central:
-            let targetGisu = selectedGisuId ?? gisuId
-            guard targetGisu > 0 else { return category.labelText }
-            return "\(targetGisu)기"
+            return viewModel.selectedGenerationTitle ?? category.labelText
         default:
             return category.labelText
         }

@@ -32,6 +32,8 @@ struct NoticeDetailView: View {
         static let horizontalPadding: CGFloat = DefaultConstant.defaultSafeHorizon
         static let topSectionSpacing: CGFloat = DefaultSpacing.spacing16
         static let subInfoSpacing: CGFloat = DefaultSpacing.spacing8
+        static let tagSpacing: CGFloat = DefaultSpacing.spacing8
+        static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
         static let contentToImageSpacing: CGFloat = 20
         static let contentToLinkSpacing: CGFloat = 20
         static let imageToLinkSpacing: CGFloat = 10
@@ -45,8 +47,6 @@ struct NoticeDetailView: View {
         static let noticeDeleteTitle: String = "삭제하기"
         static let editIcon: String = "pencil"
         static let deleteIcon: String = "trash"
-        static let audienceLabelPrefix: String = "수신대상:"
-        static let audienceSystemImage: String = "paperplane"
         static let collapsedButtonSize: CGFloat = 60
         static let collapsedButtonIcon: String = "chart.bar.xaxis"
         static let collapsedButtonIconSize: CGFloat = 22
@@ -159,9 +159,25 @@ struct NoticeDetailView: View {
                 Text(data.createdAt.toYearMonthDay())
             }
             .appFont(.subheadline, color: .grey700)
-            Label("\(Constants.audienceLabelPrefix) \(data.targetAudience.displayText)", systemImage: Constants.audienceSystemImage)
-                .appFont(.footnote, color: .grey500)
+
+            FlowLayout(spacing: Constants.tagSpacing) {
+                ForEach(Array(data.tags.enumerated()), id: \.offset) { _, tag in
+                    detailTag(tag)
+                }
+            }
         }
+    }
+
+    private func detailTag(_ tag: NoticeItemTag) -> some View {
+        Text(tag.text)
+            .foregroundStyle(.grey000)
+            .appFont(.caption1Emphasis, weight: .regular)
+            .padding(Constants.tagPadding)
+            .background {
+                RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+                    .fill(tag.backColor)
+            }
+            .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
 
     // MARK: - Bottom Section
