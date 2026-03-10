@@ -15,6 +15,8 @@ import UniformTypeIdentifiers
 struct SearchChallengerView: View {
     
     // MARK: - Properties
+
+    @Environment(\.dismiss) private var dismiss
     
     /// 상위 뷰와 공유되는 선택된 챌린저 리스트 바인딩
     @Binding var selectedChallengers: [ChallengerInfo]
@@ -47,14 +49,11 @@ struct SearchChallengerView: View {
         .searchable(text: $viewModel.searchText, prompt: "챌린저를 검색해보세요")
         .searchPresentationToolbarBehavior(.avoidHidingContent)
         .navigation(naviTitle: .searchChallenger, displayMode: .inline)
+        .navigationBarBackButtonHidden()
         .toolbar(content: {
-            // FIXME: - 수정 사항
-            /*
-            ToolBarCollection.LeadingButton(image: "doc.text.fill", action: {
-                // CSV 파일 가져오기 모달 표시
-                viewModel.showCSVImporter = true
+            ToolBarCollection.LeadingButton(image: "chevron.left", action: {
+                dismiss()
             })
-             */
             ToolBarCollection.ConfirmBtn(action: {
                 confirmSelection()
             })
