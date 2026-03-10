@@ -86,13 +86,6 @@ struct CommunityView: View {
                     break
                 }
             }
-            .onChange(of: pathStore.communityPath.count) { oldCount, newCount in
-                if newCount < oldCount {
-                    Task {
-                        await vm.refresh()
-                    }
-                }
-            }
             .umcDefaultBackground()
         }
     }

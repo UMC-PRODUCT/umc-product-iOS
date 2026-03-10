@@ -50,6 +50,8 @@ public actor KeychainTokenStore: TokenStore {
         
         #if DEBUG
         print("토큰 저장 완료")
+        print("[Auth] saved accessToken: \(accessToken)")
+        print("[Auth] saved refreshToken: \(refreshToken)")
         #endif
     }
     

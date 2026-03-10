@@ -112,7 +112,7 @@ struct HomeView: View {
             // 화면 진입 시 홈 화면에 필요한 모든 데이터를 한 번에 로드합니다.
             .task {
                 guard shouldFetchOnTask else { return }
-                await viewModel.fetchAll()
+                await viewModel.fetchAllIfNeeded()
             }
         }
     }

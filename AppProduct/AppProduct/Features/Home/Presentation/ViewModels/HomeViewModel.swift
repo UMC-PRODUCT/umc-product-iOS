@@ -41,6 +41,9 @@ final class HomeViewModel {
     /// 최근 공지사항 데이터 (로딩 상태 포함)
     private(set) var recentNoticeData: Loadable<[RecentNoticeData]> = .idle
 
+    /// 홈 초기 데이터를 한 번이라도 로드했는지 여부
+    private var hasFetchedInitialData: Bool = false
+
     /// 일정이 등록된 날짜들의 집합
     var scheduleDates: Set<Date> {
         Set(scheduleByDates.keys)
@@ -64,6 +67,14 @@ final class HomeViewModel {
         async let scheduleTask: () = fetchSchedules()
         async let noticeTask: () = fetchRecentNotices()
         _ = await (scheduleTask, noticeTask)
+        hasFetchedInitialData = true
+    }
+
+    /// 홈 초기 데이터를 아직 로드하지 않은 경우에만 조회합니다.
+    @MainActor
+    func fetchAllIfNeeded() async {
+        guard !hasFetchedInitialData else { return }
+        await fetchAll()
     }
 
     /// 프로필 조회 (기수 카드 + 역할 정보 + AppStorage 저장)

@@ -284,6 +284,24 @@ struct MyPageProfileView: View {
         Task {
             do {
                 try await viewModel.disconnectSocial(connection)
+            } catch let error as RepositoryError {
+                await MainActor.run {
+                    presentDisconnectFailurePrompt(for: error)
+                }
+            } catch let error as NetworkError {
+                if let disconnectError = parseDisconnectNetworkError(error) {
+                    await MainActor.run {
+                        presentDisconnectFailurePrompt(
+                            code: disconnectError.code,
+                            message: disconnectError.message
+                        )
+                    }
+                } else {
+                    errorHandler.handle(
+                        error,
+                        context: .init(feature: "MyPage", action: "disconnectSocial")
+                    )
+                }
             } catch {
                 errorHandler.handle(
                     error,
@@ -291,6 +309,46 @@ struct MyPageProfileView: View {
                 )
             }
         }
+    }
+
+    private func presentDisconnectFailurePrompt(for error: RepositoryError) {
+        presentDisconnectFailurePrompt(
+            code: error.code,
+            message: error.userMessage
+        )
+    }
+
+    private func presentDisconnectFailurePrompt(code: String?, message: String) {
+        let resolvedMessage: String
+
+        switch code {
+        case "AUTHENTICATION-0016":
+            resolvedMessage = "연동된 계정이 하나뿐이면 연동을 해제할 수 없습니다. 회원 탈퇴를 이용해주세요."
+        default:
+            resolvedMessage = sanitizedErrorMessage(from: message)
+        }
+
+        alertPrompt = AlertPrompt(
+            title: "연동 해제 불가",
+            message: resolvedMessage,
+            positiveBtnTitle: "확인"
+        )
+    }
+
+    private func parseDisconnectNetworkError(
+        _ error: NetworkError
+    ) -> (code: String?, message: String)? {
+        guard case .requestFailed(_, let data) = error,
+              let data,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return nil
+        }
+
+        return (
+            code: json["code"] as? String,
+            message: (json["message"] as? String) ?? error.userMessage
+        )
     }
 }
 

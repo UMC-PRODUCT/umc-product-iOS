@@ -48,6 +48,7 @@ class MyPageViewModel {
             return
         }
 
+        let previousState = profileData
         profileData = .loading
 
         do {
@@ -62,8 +63,12 @@ class MyPageViewModel {
             }
 
             profileData = .loaded(profile)
+        } catch is CancellationError {
+            profileData = previousState
         } catch let error as AppError {
             profileData = .failed(error)
+        } catch let error as NSError where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
+            profileData = previousState
         } catch {
             profileData = .failed(
                 .unknown(message: error.localizedDescription)
