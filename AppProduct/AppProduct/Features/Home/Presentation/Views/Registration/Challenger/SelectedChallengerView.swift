@@ -14,6 +14,8 @@ struct SelectedChallengerView: View {
     
     // MARK: - Properties
 
+    @Environment(\.dismiss) private var dismiss
+
     /// DI 컨테이너
     @Environment(\.di) private var container
 
@@ -33,8 +35,10 @@ struct SelectedChallengerView: View {
                 .navigation(naviTitle: .participant, displayMode: .inline)
                 .navigationSubtitle("총 \(challenger.count)명")
                 .toolbar(content: {
-                    // 취소 버튼 (현재 기능 없음)
-                    ToolBarCollection.BackBtn(action: {})
+                    ToolBarCollection.LeadingButton(
+                        image: "chevron.left",
+                        action: { dismiss() }
+                    )
                     
                     // 챌린저 추가 버튼 (검색 화면으로 이동)
                     ToolBarCollection.AddBtn(action: {
