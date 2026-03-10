@@ -15,8 +15,7 @@ struct FailedVerificationUMC: View {
 
     // MARK: - Property
 
-    /// 경고 아이콘 애니메이션 활성화 상태
-    @State var showWarning: Bool = false
+    @State private var viewModel = FailedVerificationUMCViewModel()
 
     /// URL을 외부 브라우저로 여는 환경 값
     @Environment(\.openURL) private var openURL
@@ -26,17 +25,6 @@ struct FailedVerificationUMC: View {
 
     /// 카카오톡 채널 연동 매니저
     let kakaoPlusManager: KakaoPlusManager = .init()
-
-    /// 코드 입력 얼럿 표시 상태
-    @State private var showCodeAlert: Bool = false
-    /// 공통 알럿 프롬프트 상태
-    @State private var alertPrompt: AlertPrompt?
-    /// 전송 중 상태
-    @State private var isSubmitting: Bool = false
-    /// 계정 삭제 진행 상태
-    @State private var isDeletingAccount: Bool = false
-    /// 입력된 챌린저 코드
-    @State private var challengerCode: String = ""
     
     // MARK: - Constant
 
@@ -83,8 +71,9 @@ struct FailedVerificationUMC: View {
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
             .toolbar {
                 ToolBarCollection.FailedVerificationBottomToolbar(
-                    isSubmitting: isSubmitting,
-                    isDeletingAccount: isDeletingAccount,
+                    isSubmitting: viewModel.isSubmitting,
+                    isDeletingAccount: viewModel.isDeletingAccount,
+                    isLoggingOut: viewModel.isLoggingOut,
                     onHome: {
                         if let url = URL(string: Constants.homePageURL) {
                             openURL(url)
@@ -93,24 +82,40 @@ struct FailedVerificationUMC: View {
                     onInquiry: {
                         kakaoPlusManager.openKakaoChannel()
                     },
+                    onLogout: {
+                        viewModel.presentLogoutPrompt(
+                            container: di,
+                            appFlow: appFlow,
+                            errorHandler: errorHandler
+                        )
+                    },
                     onDeleteAccount: {
-                        presentDeleteAccountPrompt()
+                        viewModel.presentDeleteAccountPrompt(
+                            container: di,
+                            appFlow: appFlow,
+                            errorHandler: errorHandler
+                        )
                     }
                 )
             }
-            .alert("기존 챌린저 코드 입력", isPresented: $showCodeAlert) {
-                TextField("6자리 코드", text: $challengerCode)
+            .alert("기존 챌린저 코드 입력", isPresented: $viewModel.showCodeAlert) {
+                TextField("6자리 코드", text: $viewModel.challengerCode)
                     .keyboardType(.asciiCapable)
                 Button("닫기", role: .cancel) {
-                    challengerCode = ""
+                    viewModel.dismissCodeAlert()
                 }
                 Button("전송") {
-                    submitChallengerCode()
+                    Task {
+                        await viewModel.submitChallengerCode(
+                            container: di,
+                            appFlow: appFlow
+                        )
+                    }
                 }
             } message: {
                 Text("운영진에게 발급받은 6자리 코드를 입력해주세요.")
             }
-            .alertPrompt(item: $alertPrompt)
+            .alertPrompt(item: $viewModel.alertPrompt)
         }
     }
     
@@ -126,9 +131,9 @@ struct FailedVerificationUMC: View {
             .aspectRatio(contentMode: .fit)
             .frame(width: Constants.warningIconSize, height: Constants.warningIconSize)
             .foregroundStyle(.red)
-            .symbolEffect(.pulse, isActive: showWarning)
+            .symbolEffect(.pulse, isActive: viewModel.showWarning)
             .task {
-                showWarning.toggle()
+                viewModel.showWarning.toggle()
             }
     }
 
@@ -151,220 +156,18 @@ struct FailedVerificationUMC: View {
     /// 제목/부제목 하단의 기존 챌린저 인증 텍스트 버튼
     private var existingChallengerTextButton: some View {
         Button {
-            showCodeAlert = true
+            viewModel.presentCodeAlert()
         } label: {
             Text(Constants.verifyTextButtonTitle)
                 .underline()
                 .appFont(.callout, weight: .semibold, color: .indigo500)
         }
         .padding(.top, DefaultSpacing.spacing16)
-        .disabled(isSubmitting || isDeletingAccount)
-    }
-
-    // MARK: - Private Function
-
-    /// 기존 챌린저 인증 코드를 서버에 전송합니다.
-    private func submitChallengerCode() {
-        let trimmedCode = challengerCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        let isAlphanumeric = trimmedCode.unicodeScalars.allSatisfy(CharacterSet.alphanumerics.contains)
-        guard trimmedCode.count == 6, isAlphanumeric else {
-            presentInvalidCodePrompt()
-            return
-        }
-
-        isSubmitting = true
-        Task {
-            do {
-                try await di.resolve(AuthUseCaseProviding.self)
-                    .registerExistingChallengerUseCase
-                    .execute(code: trimmedCode)
-                let profile = try await di.resolve(HomeUseCaseProviding.self)
-                    .fetchMyProfileUseCase
-                    .execute()
-                await MainActor.run {
-                    syncProfileToStorage(profile)
-                    isSubmitting = false
-                    challengerCode = ""
-                    presentSuccessPrompt()
-                }
-            } catch let error as RepositoryError {
-                await MainActor.run {
-                    isSubmitting = false
-                    challengerCode = ""
-                    presentCodeFailurePrompt(for: error)
-                }
-            } catch {
-                await MainActor.run {
-                    isSubmitting = false
-                    challengerCode = ""
-                    presentInvalidCodePrompt()
-                }
-            }
-        }
-    }
-
-    /// 인증 성공 안내 프롬프트를 표시합니다.
-    private func presentSuccessPrompt() {
-        alertPrompt = AlertPrompt(
-            title: "인증 완료",
-            message: "기존 챌린저로 인증되었습니다.",
-            positiveBtnTitle: "확인",
-            positiveBtnAction: {
-                UserDefaults.standard.set(
-                    true,
-                    forKey: AppStorageKey.canAutoLogin
-                )
-                appFlow.showMain()
-            }
+        .disabled(
+            viewModel.isSubmitting ||
+            viewModel.isDeletingAccount ||
+            viewModel.isLoggingOut
         )
-    }
-
-    /// 인증 실패 안내 프롬프트를 표시합니다.
-    private func presentInvalidCodePrompt() {
-        alertPrompt = AlertPrompt(
-            title: "인증 실패",
-            message: "입력 코드가 존재하지 않습니다.",
-            positiveBtnTitle: "확인"
-        )
-    }
-
-    /// 서버 에러 코드에 맞는 인증 실패 안내 프롬프트를 표시합니다.
-    private func presentCodeFailurePrompt(for error: RepositoryError) {
-        let message: String
-
-        switch error.code {
-        case "CHALLENGER-0002":
-            message = "이미 등록된 사용자입니다."
-        case "CHALLENGER-0012":
-            message = "이미 사용된 챌린저 기록 추가용 코드입니다."
-        case "CHALLENGER-0013":
-            message = "코드에 등록된 사용자 이름이 요청자와 일치하지 않습니다."
-        case "CHALLENGER-0014":
-            message = "코드에 등록된 학교가 요청자 소속과 일치하지 않습니다."
-        case "CHALLENGER-0016":
-            message = "챌린저 기록 코드를 먼저 입력해주세요."
-        default:
-            message = sanitizedErrorMessage(from: error.userMessage)
-        }
-
-        alertPrompt = AlertPrompt(
-            title: "인증 실패",
-            message: message,
-            positiveBtnTitle: "확인"
-        )
-    }
-
-    /// 계정 삭제 확인 프롬프트를 표시합니다.
-    private func presentDeleteAccountPrompt() {
-        alertPrompt = AlertPrompt(
-            title: "계정 삭제",
-            message: "계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까?",
-            positiveBtnTitle: "삭제",
-            positiveBtnAction: {
-                Task {
-                    await deleteAccount()
-                }
-            },
-            negativeBtnTitle: "취소",
-            isPositiveBtnDestructive: true
-        )
-    }
-
-    /// 승인 대기 화면에서 계정 삭제를 수행합니다.
-    @MainActor
-    private func deleteAccount() async {
-        guard !isDeletingAccount else { return }
-        isDeletingAccount = true
-        defer { isDeletingAccount = false }
-
-        do {
-            let provider = di.resolve(MyPageUseCaseProviding.self)
-            try await provider.deleteMemberUseCase.execute()
-            try await di.resolve(NetworkClient.self).logout()
-            di.resetCache()
-            appFlow.showLogin()
-        } catch {
-            errorHandler.handle(
-                error,
-                context: .init(
-                    feature: "Auth",
-                    action: "deleteMemberFromPendingApproval"
-                )
-            )
-        }
-    }
-
-    private func syncProfileToStorage(_ profile: HomeProfileResult) {
-        let defaults = UserDefaults.standard
-        let latestRole = latestHighestPriorityRole(in: profile.roles)
-        let resolvedRole = ManagementTeam.highestPriority(
-            in: profile.roles.map(\.roleType)
-        ) ?? latestRole?.roleType ?? .challenger
-
-        defaults.set(profile.memberId, forKey: AppStorageKey.memberId)
-        defaults.set(profile.schoolId, forKey: AppStorageKey.schoolId)
-        defaults.set(profile.schoolName, forKey: AppStorageKey.schoolName)
-        defaults.set(profile.latestGisuId ?? 0, forKey: AppStorageKey.gisuId)
-        defaults.set(profile.latestChallengerId ?? 0, forKey: AppStorageKey.challengerId)
-        defaults.set(profile.chapterId ?? 0, forKey: AppStorageKey.chapterId)
-        defaults.set(profile.chapterName, forKey: AppStorageKey.chapterName)
-        defaults.set(profile.part?.apiValue ?? "", forKey: AppStorageKey.responsiblePart)
-        defaults.set(
-            latestRole?.organizationType.rawValue ?? OrganizationType.chapter.rawValue,
-            forKey: AppStorageKey.organizationType
-        )
-        defaults.set(
-            latestRole?.organizationId ?? (profile.chapterId ?? 0),
-            forKey: AppStorageKey.organizationId
-        )
-        defaults.set(resolvedRole.rawValue, forKey: AppStorageKey.memberRole)
-        defaults.set(
-            profile.roles.map(\.roleType.rawValue),
-            forKey: AppStorageKey.memberRoles
-        )
-        defaults.set(isApprovedProfile(profile), forKey: AppStorageKey.canAutoLogin)
-
-        di.resolve(UserSessionManager.self).updateRole(resolvedRole)
-        NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
-    }
-
-    private func isApprovedProfile(_ profile: HomeProfileResult) -> Bool {
-        if !profile.generations.isEmpty {
-            return true
-        }
-
-        for seasonType in profile.seasonTypes {
-            if case .gens(let generations) = seasonType, !generations.isEmpty {
-                return true
-            }
-        }
-
-        return false
-    }
-
-    private func latestHighestPriorityRole(
-        in roles: [ChallengerRole]
-    ) -> ChallengerRole? {
-        guard let latestGisu = roles.map(\.gisu).max() else {
-            return nil
-        }
-
-        return roles
-            .filter { $0.gisu == latestGisu }
-            .max { lhs, rhs in
-                lhs.roleType < rhs.roleType
-            }
-    }
-
-    private func sanitizedErrorMessage(from message: String) -> String {
-        let pattern = #"^[A-Z]+-\d{4}\s*[:\-]?\s*"#
-        let sanitized = message.replacingOccurrences(
-            of: pattern,
-            with: "",
-            options: .regularExpression
-        )
-        let trimmed = sanitized.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "인증에 실패했습니다. 다시 시도해주세요." : trimmed
     }
 }
 
