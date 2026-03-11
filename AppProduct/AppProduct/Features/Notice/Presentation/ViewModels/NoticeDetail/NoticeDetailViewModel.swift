@@ -36,6 +36,10 @@ final class NoticeDetailViewModel {
         container.resolve(ChallengerGenRepositoryProtocol.self)
     }
 
+    var userSessionManager: UserSessionManager {
+        container.resolve(UserSessionManager.self)
+    }
+
     // MARK: - Core State
 
     /// 공지 상세 상태
@@ -117,6 +121,11 @@ final class NoticeDetailViewModel {
 
     /// 수정 화면 진입에 필요한 상세 데이터 준비 완료 여부
     var isDetailPreparedForEdit: Bool = false
+
+    /// 수신 확인 현황 접근 가능 여부 (운영진 이상)
+    var canViewReadStatus: Bool {
+        resolvedMemberRole.canAccessAdminMode
+    }
 
     // MARK: - Read Status Computed
 
@@ -217,9 +226,9 @@ final class NoticeDetailViewModel {
 
     // MARK: - Author Profile
 
-    /// 공지 작성자의 멤버 프로필을 조회하여 "닉네임/이름-기수TH UMC 직책" 형식의 표시명을 갱신합니다.
+    /// 공지 작성자의 챌린저 프로필을 조회하여 "닉네임/이름-기수TH UMC 직책" 형식의 표시명을 갱신합니다.
     ///
-    /// `authorMemberId`가 유효한 경우 비동기로 프로필 API를 호출하고,
+    /// 현재 서버 응답의 `authorMemberId`는 작성자 `challengerId`로 해석하여 조회하며,
     /// 실패 시 `defaultAuthorDisplayName`을 폴백으로 사용합니다.
     @MainActor
     func refreshAuthorDisplayName(for detail: NoticeDetail) {
@@ -232,23 +241,23 @@ final class NoticeDetailViewModel {
         }
 
         guard
-            let rawMemberId = detail.authorMemberId,
-            let memberId = Int(rawMemberId),
-            memberId > 0
+            let rawChallengerId = detail.authorMemberId,
+            let challengerId = Int(rawChallengerId),
+            challengerId > 0
         else {
             return
         }
 
         Task {
-            await loadAuthorDisplayName(memberId: memberId, fallback: fallback)
+            await loadAuthorDisplayName(challengerId: challengerId, fallback: fallback)
         }
     }
 
-    /// 멤버 프로필 API를 호출하여 작성자 표시명을 비동기 로드합니다.
+    /// 챌린저 프로필 API를 호출하여 작성자 표시명을 비동기 로드합니다.
     @MainActor
-    private func loadAuthorDisplayName(memberId: Int, fallback: String) async {
+    private func loadAuthorDisplayName(challengerId: Int, fallback: String) async {
         do {
-            let profile = try await myPageRepository.fetchMemberProfile(memberId: memberId)
+            let profile = try await myPageRepository.fetchChallengerProfile(challengerId: challengerId)
             authorDisplayName = buildAuthorDisplayName(
                 nickname: profile.nickname,
                 name: profile.name,
@@ -261,7 +270,7 @@ final class NoticeDetailViewModel {
                 error,
                 context: ErrorContext(
                     feature: "Notice",
-                    action: "loadAuthorDisplayName(memberId:\(memberId))"
+                    action: "loadAuthorDisplayName(challengerId:\(challengerId))"
                 )
             )
             authorDisplayName = fallback
@@ -377,5 +386,16 @@ final class NoticeDetailViewModel {
         } catch {
             return value
         }
+    }
+
+    private var resolvedMemberRole: ManagementTeam {
+        let storedRole = UserDefaults.standard.string(forKey: AppStorageKey.memberRole)
+            .flatMap(ManagementTeam.init(rawValue:))
+
+        guard let storedRole else {
+            return userSessionManager.currentRole
+        }
+
+        return max(userSessionManager.currentRole, storedRole)
     }
 }

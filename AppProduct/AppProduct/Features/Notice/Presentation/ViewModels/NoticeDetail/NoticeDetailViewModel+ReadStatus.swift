@@ -14,6 +14,7 @@ extension NoticeDetailViewModel {
     /// 공지 열람 현황 Sheet 표시
     @MainActor
     func openReadStatusSheet() {
+        guard canViewReadStatus else { return }
         showReadStatusSheet = true
         if readStatusState.isIdle {
             Task { await fetchReadStatus() }
@@ -26,6 +27,7 @@ extension NoticeDetailViewModel {
     /// 상세 목록(read-status)은 시트 진입 시점에만 로드합니다.
     @MainActor
     func prefetchReadStaticsIfNeeded(forceReload: Bool = false) async {
+        guard canViewReadStatus else { return }
         guard forceReload || !hasPrefetchedReadStatics else { return }
         guard noticeID > 0 else { return }
         if forceReload == false, readStatics != nil { return }
@@ -83,6 +85,7 @@ extension NoticeDetailViewModel {
     /// 공지 열람 현황 데이터 로드 (통계 + 상세)
     @MainActor
     func fetchReadStatus(showLoadingState: Bool = true) async {
+        guard canViewReadStatus else { return }
         if showLoadingState {
             readStatusState = .loading
         }

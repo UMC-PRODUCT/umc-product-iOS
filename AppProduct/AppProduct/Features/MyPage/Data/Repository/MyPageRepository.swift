@@ -53,6 +53,18 @@ final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable {
         return try apiResponse.unwrap().toMemberProfileSummary()
     }
 
+    /// 특정 챌린저 프로필 조회
+    func fetchChallengerProfile(challengerId: Int) async throws -> MemberProfileSummary {
+        let response = try await adapter.request(
+            MyPageRouter.getChallengerProfile(challengerId: challengerId)
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<ChallengerMemberDTO>.self,
+            from: response.data
+        )
+        return try apiResponse.unwrap().toMemberProfileSummary()
+    }
+
     /// 운영진 발급 코드로 기존 챌린저 기록을 추가합니다.
     func addChallengerRecord(code: String) async throws {
         do {

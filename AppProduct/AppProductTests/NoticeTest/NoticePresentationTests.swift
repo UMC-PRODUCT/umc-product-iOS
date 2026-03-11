@@ -11,6 +11,8 @@ import Testing
 
 struct NoticePresentationTests {
 
+    // MARK: - Tag Tests
+
     @Test("전체 기수 공지는 모든 기수 태그만 노출한다")
     func allGenerationNoticeUsesSingleTag() {
         let model = NoticeItemModel(
@@ -91,5 +93,46 @@ struct NoticePresentationTests {
         )
 
         #expect(detail.tags.map { $0.text } == ["9기", "Ain", "iOS"])
+    }
+
+    // MARK: - Detail Mapping Tests
+
+    @Test("공지 상세 작성자명은 authorName이 비어 있으면 authorNickname으로 폴백한다")
+    func noticeDetailUsesNicknameFallbackWhenAuthorNameIsMissing() throws {
+        let json = """
+        {
+          "id": "1",
+          "title": "공지",
+          "content": "내용",
+          "shouldSendNotification": true,
+          "viewCount": "0",
+          "createdAt": "2026-03-11T10:00:00Z",
+          "updatedAt": null,
+          "targetInfo": {
+            "targetGisu": "9",
+            "targetGisuId": "3",
+            "targetChapterId": null,
+            "targetSchoolId": null,
+            "targetParts": []
+          },
+          "authorChallengerId": "11",
+          "authorMemberId": "22",
+          "authorNickname": "제옹",
+          "authorName": "   ",
+          "authorProfileImageUrl": null,
+          "vote": null,
+          "images": [],
+          "links": [],
+          "scope": "CENTRAL",
+          "category": "GENERAL",
+          "isMustRead": false,
+          "hasPermission": false
+        }
+        """
+
+        let dto = try JSONDecoder().decode(NoticeDetailDTO.self, from: Data(json.utf8))
+        let detail = dto.toDomain()
+
+        #expect(detail.authorName == "제옹")
     }
 }

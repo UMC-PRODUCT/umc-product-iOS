@@ -40,6 +40,8 @@ struct ChallengerMemberDTO: Codable {
     let schoolName: String
     /// 프로필 이미지 URL
     let profileImageLink: String?
+    /// 챌린저 역할 목록
+    let roles: [ChallengerRoleDTO]
     /// 멤버 상태 (ACTIVE / INACTIVE / WITHDRAWN)
     let status: MemberStatus
 
@@ -58,6 +60,7 @@ struct ChallengerMemberDTO: Codable {
         case schoolId
         case schoolName
         case profileImageLink
+        case roles
         case status
     }
 
@@ -82,10 +85,45 @@ struct ChallengerMemberDTO: Codable {
         schoolId = try container.decodeIntFlexibleIfPresent(forKey: .schoolId) ?? 0
         schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
         profileImageLink = try container.decodeIfPresent(String.self, forKey: .profileImageLink)
+        roles = try container.decodeIfPresent([ChallengerRoleDTO].self, forKey: .roles) ?? []
         let fallbackContainer = try decoder.container(keyedBy: FallbackCodingKeys.self)
         status = try container.decodeIfPresent(MemberStatus.self, forKey: .status)
             ?? (try fallbackContainer.decodeIfPresent(MemberStatus.self, forKey: .memberStatus))
             ?? .inactive
+    }
+}
+
+struct ChallengerRoleDTO: Codable {
+    let challengerRoleId: String
+    let challengerId: String
+    let roleType: ManagementTeam
+    let organizationType: OrganizationType
+    let organizationId: String?
+    let responsiblePart: String?
+    let gisuId: String
+    let gisu: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case challengerRoleId
+        case challengerId
+        case roleType
+        case organizationType
+        case organizationId
+        case responsiblePart
+        case gisuId
+        case gisu
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        challengerRoleId = try container.decodeFlexibleString(forKey: .challengerRoleId)
+        challengerId = try container.decodeFlexibleString(forKey: .challengerId)
+        roleType = try container.decode(ManagementTeam.self, forKey: .roleType)
+        organizationType = try container.decode(OrganizationType.self, forKey: .organizationType)
+        organizationId = try container.decodeFlexibleStringIfPresent(forKey: .organizationId)
+        responsiblePart = try container.decodeIfPresent(String.self, forKey: .responsiblePart)
+        gisuId = try container.decodeFlexibleString(forKey: .gisuId)
+        gisu = try container.decodeFlexibleStringIfPresent(forKey: .gisu)
     }
 }
 
@@ -176,6 +214,32 @@ enum PointType: String, Codable {
 }
 
 private extension KeyedDecodingContainer {
+    func decodeFlexibleString(forKey key: Key) throws -> String {
+        if let value = try? decode(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return String(Int(value))
+        }
+        throw DecodingError.typeMismatch(
+            String.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected String/Int/Double for key '\(key.stringValue)'"
+            )
+        )
+    }
+
+    func decodeFlexibleStringIfPresent(forKey key: Key) throws -> String? {
+        if (try? decodeNil(forKey: key)) == true {
+            return nil
+        }
+        return try? decodeFlexibleString(forKey: key)
+    }
+
     func decodeIntFlexible(forKey key: Key) throws -> Int {
         if let value = try? decode(Int.self, forKey: key) {
             return value
@@ -207,6 +271,19 @@ private extension KeyedDecodingContainer {
 // MARK: - toDomain
 
 extension ChallengerMemberDTO {
+    func toMemberProfileSummary() -> MemberProfileSummary {
+        let resolvedRoleName = ManagementTeam.highestPriority(in: roles.map(\.roleType))?.korean ?? "챌린저"
+
+        return MemberProfileSummary(
+            memberId: String(memberId),
+            name: name,
+            nickname: nickname,
+            generation: gisu,
+            roleName: resolvedRoleName,
+            profileImageURL: profileImageLink
+        )
+    }
+
     /// DTO → GenerationData 변환 (홈 화면 패널티 카드용)
     ///
     /// - Parameter gisuId: MyProfileDTO의 RoleDTO에서 전달받은 기수 식별 ID
