@@ -54,6 +54,8 @@ final class NoticeViewModel {
 
     /// 기수별 필터 상태 저장소
     var generationStates: [Int: GenerationFilterState] = [:]
+    /// 기수별 지부/학교 필터 옵션 저장소
+    var generationTargetStates: [Int: NoticeGenerationTargetState] = [:]
 
     /// 기수 목록
     var generations: [Generation] = []
@@ -128,12 +130,17 @@ final class NoticeViewModel {
         currentMainFilterState.selectedPart
     }
 
+    /// 현재 선택 기수에 매핑된 지부/학교 타겟 옵션
+    var currentTargetState: NoticeGenerationTargetState {
+        generationTargetStates[selectedGeneration.value] ?? NoticeGenerationTargetState()
+    }
+
     /// 역할(memberRole) 기반으로 노출할 메인필터 항목 목록을 반환합니다.
     ///
     /// 권한과 무관하게 상위 조직 필터는 UMC 공지/본인 지부/본인 학교를 노출합니다.
     /// 파트 필터는 별도 Nested Menu에서 제공합니다.
     var mainFilterItems: [NoticeMainFilterType] {
-        [.central, .branch(userContext.branchName), .school(userContext.schoolName)]
+        [.central, .branch(currentBranchFilterTitle), .school(currentSchoolFilterTitle)]
     }
 
     /// 상단 메인 메뉴에 표시할 기본 조직 필터 목록(파트 제외)
@@ -175,5 +182,17 @@ final class NoticeViewModel {
 
     var pageSort: [String] {
         Pagination.sort
+    }
+
+    private var currentBranchFilterTitle: String {
+        currentTargetState.branches
+            .first(where: { $0.id == chapterId })?
+            .name ?? NoticeUserContext.empty.branchName
+    }
+
+    private var currentSchoolFilterTitle: String {
+        currentTargetState.schools
+            .first(where: { $0.id == schoolId })?
+            .name ?? NoticeUserContext.empty.schoolName
     }
 }

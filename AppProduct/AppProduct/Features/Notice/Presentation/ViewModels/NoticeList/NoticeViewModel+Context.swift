@@ -9,6 +9,10 @@ import Foundation
 
 extension NoticeViewModel {
 
+    private enum GenerationFilterDefaults {
+        static let mainFilter: NoticeMainFilterType = .central
+    }
+
     // MARK: - Context & Filter
 
     /// 공지 탭 메뉴에 쓰이는 사용자 컨텍스트를 반영합니다.
@@ -72,11 +76,13 @@ extension NoticeViewModel {
                 selectedGeneration = latestGen
 
                 if generationStates[latestGen.value] == nil {
-                    generationStates[latestGen.value] = GenerationFilterState()
+                    generationStates[latestGen.value] = GenerationFilterState(
+                        mainFilter: GenerationFilterDefaults.mainFilter
+                    )
                 }
 
-                Task {
-                    await fetchNotices()
+                Task { @MainActor in
+                    await refreshSelectedGenerationContext(resetFilters: true)
                 }
             } else {
                 isGisuListLoaded = false
@@ -109,11 +115,8 @@ extension NoticeViewModel {
     func selectGeneration(_ generation: Generation) {
         guard gisuPairs.contains(where: { $0.gen == generation.value && $0.gisuId > 0 }) else { return }
         selectedGeneration = generation
-        if generationStates[generation.value] == nil {
-            generationStates[generation.value] = GenerationFilterState()
-        }
-        Task {
-            await fetchNotices()
+        Task { @MainActor in
+            await refreshSelectedGenerationContext(resetFilters: true)
         }
     }
 
@@ -166,5 +169,52 @@ extension NoticeViewModel {
     func currentSelectedGisuId() -> Int? {
         guard isGisuListLoaded else { return nil }
         return gisuPairs.first(where: { $0.gen == selectedGeneration.value && $0.gisuId > 0 })?.gisuId
+    }
+
+    /// 선택 기수 기준으로 필터 옵션을 다시 불러오고 목록을 재조회합니다.
+    @MainActor
+    func refreshSelectedGenerationContext(resetFilters: Bool) async {
+        if resetFilters {
+            resetSelectionStateForCurrentGeneration()
+        } else if generationStates[selectedGeneration.value] == nil {
+            generationStates[selectedGeneration.value] = GenerationFilterState(
+                mainFilter: GenerationFilterDefaults.mainFilter
+            )
+        }
+
+        await loadTargetStateForCurrentGeneration()
+        await fetchNotices()
+    }
+
+    /// 기수 전환 시 필터 선택 상태를 기본값으로 되돌립니다.
+    @MainActor
+    func resetSelectionStateForCurrentGeneration() {
+        generationStates[selectedGeneration.value] = GenerationFilterState(
+            mainFilter: GenerationFilterDefaults.mainFilter
+        )
+        pagingState.reset()
+        isSearchMode = false
+        searchQuery = ""
+    }
+
+    /// 현재 선택 기수의 지부/학교 필터 옵션을 조회합니다.
+    @MainActor
+    func loadTargetStateForCurrentGeneration() async {
+        guard let gisuId = currentSelectedGisuId(), gisuId > 0 else {
+            generationTargetStates[selectedGeneration.value] = NoticeGenerationTargetState()
+            return
+        }
+
+        async let branchesTask = try? noticeEditorTargetUseCase.fetchBranches(gisuId: gisuId)
+        async let schoolsTask = try? noticeEditorTargetUseCase.fetchSchools(gisuId: gisuId)
+
+        let branches = await branchesTask ?? []
+        let schools = await schoolsTask ?? []
+
+        branches.forEach { chapterNameCache[$0.id] = $0.name }
+        generationTargetStates[selectedGeneration.value] = NoticeGenerationTargetState(
+            branches: branches,
+            schools: schools
+        )
     }
 }
