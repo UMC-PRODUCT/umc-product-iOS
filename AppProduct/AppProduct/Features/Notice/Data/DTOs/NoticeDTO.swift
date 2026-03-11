@@ -64,6 +64,7 @@ extension NoticeDTO {
         let scope = targetInfo.resolvedScope
         let category = targetInfo.resolvedCategory
         let scopeDisplayName = scopeDisplayNameOverride ?? targetInfo.resolvedScopeDisplayName
+        let targetsAllGenerations = generation <= 0 && targetInfo.targetsAllGenerations
         
         return NoticeItemModel(
             noticeId: id,
@@ -83,7 +84,7 @@ extension NoticeDTO {
             vote: nil,
             viewCount: Int(viewCount) ?? 0,
             scopeDisplayName: scopeDisplayName,
-            targetsAllGenerations: targetInfo.targetsAllGenerations,
+            targetsAllGenerations: targetsAllGenerations,
             parts: targetInfo.resolvedParts
         )
     }

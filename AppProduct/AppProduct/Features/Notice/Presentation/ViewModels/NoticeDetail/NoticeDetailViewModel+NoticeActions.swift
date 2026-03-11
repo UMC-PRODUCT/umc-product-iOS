@@ -20,7 +20,7 @@ extension NoticeDetailViewModel {
 
         do {
             let noticeDetail = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
-            let mergedDetail = mergeAuthorDisplayIfNeeded(
+            let mergedDetail = Self.mergeFetchedNoticeDetail(
                 fetched: noticeDetail,
                 fallback: noticeState.value
             )
@@ -80,13 +80,17 @@ extension NoticeDetailViewModel {
         }
     }
 
-    private func mergeAuthorDisplayIfNeeded(
+    static func mergeFetchedNoticeDetail(
         fetched: NoticeDetail,
         fallback: NoticeDetail?
     ) -> NoticeDetail {
         guard let fallback else { return fetched }
 
         let resolvedGeneration = fetched.generation > 0 ? fetched.generation : fallback.generation
+        let resolvedTargetAudience = resolvedTargetAudience(
+            primary: fetched.targetAudience,
+            fallback: fallback.targetAudience
+        )
         let resolvedNickname = resolvedAuthorField(
             primary: fetched.authorNickname,
             fallback: fallback.authorNickname
@@ -111,7 +115,7 @@ extension NoticeDetailViewModel {
             authorImageURL: fetched.authorImageURL,
             createdAt: fetched.createdAt,
             updatedAt: fetched.updatedAt,
-            targetAudience: fetched.targetAudience,
+            targetAudience: resolvedTargetAudience,
             hasPermission: fetched.hasPermission,
             images: fetched.images,
             imageItems: fetched.imageItems,
@@ -120,7 +124,24 @@ extension NoticeDetailViewModel {
         )
     }
 
-    private func resolvedAuthorField(primary: String?, fallback: String?) -> String? {
+    private static func resolvedTargetAudience(
+        primary: TargetAudience,
+        fallback: TargetAudience
+    ) -> TargetAudience {
+        let resolvedGeneration = primary.generation > 0 ? primary.generation : fallback.generation
+
+        return TargetAudience(
+            generation: resolvedGeneration,
+            scope: primary.scope,
+            parts: primary.parts,
+            chapterId: primary.chapterId,
+            schoolId: primary.schoolId,
+            branches: primary.branches,
+            schools: primary.schools
+        )
+    }
+
+    private static func resolvedAuthorField(primary: String?, fallback: String?) -> String? {
         let trimmedPrimary = primary?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !trimmedPrimary.isEmpty, trimmedPrimary != "알 수 없음" {
             return trimmedPrimary

@@ -13,8 +13,8 @@ struct NoticePresentationTests {
 
     // MARK: - Tag Tests
 
-    @Test("전체 기수 공지는 모든 기수 태그만 노출한다")
-    func allGenerationNoticeUsesSingleTag() {
+    @Test("전체 기수 중앙 공지는 모든 기수 태그만 노출한다")
+    func allGenerationCentralNoticeShowsOnlyGenerationTag() {
         let model = NoticeItemModel(
             generation: 0,
             scope: .central,
@@ -55,6 +55,59 @@ struct NoticePresentationTests {
         )
 
         #expect(model.tags.map { $0.text } == ["9기", "Ain", "iOS"])
+    }
+
+    @Test("지부 공지는 targetGisu 없이 targetGisuId만 있어도 모든 기수로 표시하지 않는다")
+    func branchNoticeUsesResolvedGenerationInsteadOfAllGenerationsTag() throws {
+        let json = """
+        {
+          "id": "1",
+          "title": "공지",
+          "content": "내용",
+          "shouldSendNotification": false,
+          "viewCount": "0",
+          "createdAt": "2026-03-11T10:00:00Z",
+          "targetInfo": {
+            "targetGisu": null,
+            "targetGisuId": "3",
+            "targetChapterId": "14",
+            "targetSchoolId": null,
+            "targetChapterName": "Ain",
+            "targetParts": []
+          },
+          "authorChallengerId": null,
+          "authorMemberId": null,
+          "authorNickname": "닉네임",
+          "authorName": "작성자"
+        }
+        """
+        let dto = try JSONDecoder().decode(NoticeDTO.self, from: Data(json.utf8))
+
+        let item = dto.toItemModel(generationOverride: 9)
+
+        #expect(item.tags.map { $0.text } == ["9기", "Ain"])
+    }
+
+    @Test("전체 기수 교내 공지는 모든 기수와 교내 태그를 함께 노출한다")
+    func allGenerationCampusNoticeShowsGenerationAndCampusTags() {
+        let model = NoticeItemModel(
+            generation: 0,
+            scope: .campus,
+            category: .general,
+            mustRead: false,
+            isAlert: false,
+            date: Date(),
+            title: "공지",
+            content: "내용",
+            writer: "작성자",
+            links: [],
+            images: [],
+            vote: nil,
+            viewCount: 0,
+            targetsAllGenerations: true
+        )
+
+        #expect(model.tags.map { $0.text } == ["모든 기수", "교내"])
     }
 
     @Test("공지 상세 태그는 targetInfo의 지부명을 사용한다")
@@ -233,6 +286,77 @@ struct NoticePresentationTests {
         )
 
         #expect(mergedDetail.defaultAuthorDisplayName == "하늘카카오/박경운-9th")
+    }
+
+    @Test("상세 재조회 시 targetAudience 기수가 비어 있으면 목록 기수를 이어받아 태그를 유지한다")
+    func noticeDetailKeepsFallbackTargetAudienceGeneration() {
+        let fallback = NoticeDetail(
+            id: "32",
+            generation: 9,
+            scope: .branch,
+            category: .general,
+            isMustRead: false,
+            title: "공지",
+            content: "내용",
+            authorID: "11",
+            authorMemberId: "22",
+            authorNickname: "하늘카카오",
+            authorName: "박경운",
+            authorImageURL: nil,
+            createdAt: Date(),
+            updatedAt: nil,
+            targetAudience: TargetAudience(
+                generation: 9,
+                scope: .branch,
+                parts: [],
+                chapterId: 14,
+                schoolId: nil,
+                branches: ["Ain"],
+                schools: []
+            ),
+            hasPermission: false,
+            images: [],
+            links: [],
+            vote: nil
+        )
+
+        let fetched = NoticeDetail(
+            id: "32",
+            generation: 0,
+            scope: .branch,
+            category: .general,
+            isMustRead: false,
+            title: "공지",
+            content: "내용",
+            authorID: "11",
+            authorMemberId: "22",
+            authorNickname: nil,
+            authorName: "알 수 없음",
+            authorImageURL: nil,
+            createdAt: Date(),
+            updatedAt: nil,
+            targetAudience: TargetAudience(
+                generation: 0,
+                scope: .branch,
+                parts: [],
+                chapterId: 14,
+                schoolId: nil,
+                branches: ["Ain"],
+                schools: []
+            ),
+            hasPermission: false,
+            images: [],
+            links: [],
+            vote: nil
+        )
+
+        let merged = NoticeDetailViewModel.mergeFetchedNoticeDetail(
+            fetched: fetched,
+            fallback: fallback
+        )
+
+        #expect(merged.targetAudience.generation == 9)
+        #expect(merged.tags.map { $0.text } == ["9기", "Ain"])
     }
 
     // MARK: - Read Status Permission Tests
