@@ -24,7 +24,7 @@ struct AppProductApp: App {
     @State private var container: DIContainer
     @State private var didConfigureAppDelegate: Bool = false
     @State private var errorHandler: ErrorHandler = .init()
-    @State private var appState: AppState = .pendingApproval
+    @State private var appState: AppState = .splash
     private let sharedModelContainer: ModelContainer
     
     // MARK: - AppState
