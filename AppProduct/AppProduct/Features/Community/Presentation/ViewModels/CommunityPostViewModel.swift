@@ -11,6 +11,11 @@ import Foundation
 class CommunityPostViewModel {
     // MARK: - Properties
 
+    private enum Constants {
+        static let openChatURLPrefix = "https://open.kakao.com/"
+        static let openChatValidationMessage = "오픈채팅 링크는 https://open.kakao.com/ 로 시작해야 합니다."
+    }
+
     private let useCaseProvider: CommunityUseCaseProviding
     private let errorHandler: ErrorHandler
 
@@ -38,14 +43,21 @@ class CommunityPostViewModel {
     }
 
     var isValid: Bool {
-        let hasBasicInfo = !titleText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !contentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasBasicInfo = !trimmedTitleText.isEmpty && !trimmedContentText.isEmpty
         if selectedCategory == .lighting {
             let hasPlace = !selectedPlace.name.isEmpty
-            let hasLink = !linkText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            let hasLink = !trimmedLinkText.isEmpty
 
-            return hasBasicInfo && hasPlace && hasLink
+            return hasBasicInfo && hasPlace && hasLink && isOpenChatURLValid
         }
         return hasBasicInfo
+    }
+
+    var openChatValidationMessage: String? {
+        guard selectedCategory == .lighting else { return nil }
+        guard !trimmedLinkText.isEmpty else { return nil }
+        guard !isOpenChatURLValid else { return nil }
+        return Constants.openChatValidationMessage
     }
 
     /// 수정 모드에서 초기값 대비 변경 사항이 있는지 확인합니다.
@@ -57,13 +69,13 @@ class CommunityPostViewModel {
     /// 현재 폼 상태의 스냅샷을 생성합니다.
     private var currentEditSnapshot: EditFormSnapshot {
         EditFormSnapshot(
-            title: titleText,
-            content: contentText,
+            title: trimmedTitleText,
+            content: trimmedContentText,
             category: selectedCategory,
             meetAt: selectedCategory == .lighting ? selectedDate : nil,
             maxParticipants: selectedCategory == .lighting ? maxParticipants : nil,
             location: selectedCategory == .lighting ? Self.serializePlace(selectedPlace) : nil,
-            openChatUrl: selectedCategory == .lighting ? linkText : nil
+            openChatUrl: selectedCategory == .lighting ? trimmedLinkText : nil
         )
     }
 
@@ -106,12 +118,12 @@ class CommunityPostViewModel {
                 let meetAtString = ServerDateTimeConverter.toUTCDateTimeString(selectedDate)
 
                 let request = CreateLightningPostRequestDTO(
-                    title: titleText,
-                    content: contentText,
+                    title: trimmedTitleText,
+                    content: trimmedContentText,
                     meetAt: meetAtString,
                     location: Self.serializePlace(selectedPlace),
                     maxParticipants: maxParticipants,
-                    openChatUrl: linkText
+                    openChatUrl: trimmedLinkText
                 )
 
                 try await useCaseProvider.createLightningUseCase.execute(request: request)
@@ -119,8 +131,8 @@ class CommunityPostViewModel {
             } else {
                 // 일반 게시글 생성 (질문/자유)
                 let request = PostRequestDTO(
-                    title: titleText,
-                    content: contentText,
+                    title: trimmedTitleText,
+                    content: trimmedContentText,
                     category: selectedCategory.rawValue
                 )
 
@@ -163,12 +175,12 @@ class CommunityPostViewModel {
                 let meetAtString = ServerDateTimeConverter.toUTCDateTimeString(selectedDate)
 
                 let request = CreateLightningPostRequestDTO(
-                    title: titleText,
-                    content: contentText,
+                    title: trimmedTitleText,
+                    content: trimmedContentText,
                     meetAt: meetAtString,
                     location: Self.serializePlace(selectedPlace),
                     maxParticipants: maxParticipants,
-                    openChatUrl: linkText
+                    openChatUrl: trimmedLinkText
                 )
 
                 try await useCaseProvider.updateLightningUseCase.execute(
@@ -179,8 +191,8 @@ class CommunityPostViewModel {
             } else {
                 // 일반 게시글 수정 (질문/자유)
                 let request = PostRequestDTO(
-                    title: titleText,
-                    content: contentText,
+                    title: trimmedTitleText,
+                    content: trimmedContentText,
                     category: selectedCategory.rawValue
                 )
 
@@ -213,6 +225,10 @@ class CommunityPostViewModel {
 
     @MainActor
     func submit() async {
+        guard isValid else {
+            return
+        }
+
         if editingPostId != nil {
             await updatePost()
         } else {
@@ -255,5 +271,23 @@ class CommunityPostViewModel {
         guard !trimmedAddress.isEmpty else { return trimmedName }
         guard !trimmedName.isEmpty, trimmedName != trimmedAddress else { return trimmedAddress }
         return "\(trimmedAddress), \(trimmedName)"
+    }
+
+    // MARK: - Validation Helpers
+
+    private var trimmedTitleText: String {
+        titleText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var trimmedContentText: String {
+        contentText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var trimmedLinkText: String {
+        linkText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var isOpenChatURLValid: Bool {
+        trimmedLinkText.hasPrefix(Constants.openChatURLPrefix)
     }
 }

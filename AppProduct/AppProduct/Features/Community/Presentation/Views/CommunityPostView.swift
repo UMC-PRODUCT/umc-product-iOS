@@ -146,11 +146,20 @@ struct CommunityPostView: View {
     }
 
     private func linkSection(vm: CommunityPostViewModel) -> some View {
-        TextField("오픈채팅 링크를 입력하세요.", text: $vm.linkText)
-            .appFont(.callout)
-            .keyboardType(.URL)
-            .autocapitalization(.none)
-            .autocorrectionDisabled()
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+            TextField("오픈채팅 링크를 입력하세요.", text: $vm.linkText)
+                .appFont(.callout)
+                .keyboardType(.URL)
+                .autocapitalization(.none)
+                .autocorrectionDisabled()
+                .tint(vm.openChatValidationMessage == nil ? .indigo500 : .red500)
+
+            if let validationMessage = vm.openChatValidationMessage {
+                Text(validationMessage)
+                    .appFont(.footnote, color: .red500)
+                    .padding(.leading, DefaultSpacing.spacing4)
+            }
+        }
     }
     
     @ViewBuilder
