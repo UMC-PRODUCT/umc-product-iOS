@@ -12,7 +12,7 @@ import Foundation
 protocol SubmitMissionUseCaseProtocol {
     /// 미션 제출
     /// - Parameters:
-    ///   - missionId: 챌린저 워크북 ID
+    ///   - missionId: original workbook ID
     ///   - type: 제출 타입 (링크 또는 완료만)
     ///   - link: 링크 URL (링크 타입일 경우)
     func execute(missionId: Int, type: MissionSubmissionType, link: String?) async throws

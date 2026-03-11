@@ -15,6 +15,7 @@ struct MissionCardModel: Equatable, Identifiable {
     // MARK: - Property
 
     let id: UUID
+    let originalWorkbookId: Int?
     let challengerWorkbookId: Int?
     let week: Int
     let platform: String
@@ -27,6 +28,7 @@ struct MissionCardModel: Equatable, Identifiable {
 
     init(
         id: UUID = UUID(),
+        originalWorkbookId: Int? = nil,
         challengerWorkbookId: Int? = nil,
         week: Int,
         platform: String,
@@ -36,6 +38,7 @@ struct MissionCardModel: Equatable, Identifiable {
         status: MissionStatus
     ) {
         self.id = id
+        self.originalWorkbookId = originalWorkbookId
         self.challengerWorkbookId = challengerWorkbookId
         self.week = week
         self.platform = platform

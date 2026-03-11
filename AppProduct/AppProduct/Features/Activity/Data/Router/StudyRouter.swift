@@ -26,7 +26,7 @@ enum StudyRouter {
     )
     case getMyProgress
     case getWorkbookSubmission(challengerWorkbookId: Int)
-    case submitWorkbook(challengerWorkbookId: Int, body: WorkbookSubmissionRequestDTO)
+    case submitWorkbook(body: WorkbookSubmissionRequestDTO)
     case reviewWorkbook(challengerWorkbookId: Int, body: WorkbookReviewRequestDTO)
     case selectBestWorkbook(challengerWorkbookId: Int, body: BestWorkbookSelectionRequestDTO)
     case createStudyGroup(body: StudyGroupCreateRequestDTO)
@@ -64,8 +64,8 @@ extension StudyRouter: BaseTargetType {
             return "/api/v1/curriculums/challengers/me/progress"
         case .getWorkbookSubmission(let challengerWorkbookId):
             return "/api/v1/workbooks/challenger/\(challengerWorkbookId)/submissions"
-        case .submitWorkbook(let challengerWorkbookId, _):
-            return "/api/v1/challenger-workbooks/\(challengerWorkbookId)/submissions"
+        case .submitWorkbook:
+            return "/api/v1/challenger-workbooks/submissions"
         case .reviewWorkbook(let challengerWorkbookId, _):
             return "/api/v1/workbooks/challenger/\(challengerWorkbookId)/review"
         case .selectBestWorkbook(let challengerWorkbookId, _):
@@ -169,7 +169,7 @@ extension StudyRouter: BaseTargetType {
              .getMyProgress,
              .getWorkbookSubmission:
             return .requestPlain
-        case .submitWorkbook(_, let body):
+        case .submitWorkbook(let body):
             return .requestJSONEncodable(body)
         case .reviewWorkbook(_, let body):
             return .requestJSONEncodable(body)

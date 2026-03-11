@@ -98,8 +98,10 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
         do {
             let response = try await adapter.request(
                 StudyRouter.submitWorkbook(
-                    challengerWorkbookId: missionId,
-                    body: WorkbookSubmissionRequestDTO(submission: submissionPayload)
+                    body: WorkbookSubmissionRequestDTO(
+                        originalWorkbookId: missionId,
+                        submission: submissionPayload
+                    )
                 )
             )
             let apiResponse = try decoder.decode(

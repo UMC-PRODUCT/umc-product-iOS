@@ -90,10 +90,8 @@ struct CommunityPostCard: View {
             RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileSize)
 
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                Text(model.userName)
+                Text("\(model.displayUserName) • \(model.part.name)")
                     .appFont(.subheadlineEmphasis, color: .black)
-                Text(model.part.name)
-                    .appFont(.footnote, color: .grey500)
             }
         }
     }

@@ -12,7 +12,7 @@ import SwiftUI
 /// 게시글 상세 정보, 댓글 목록, 좋아요/스크랩 기능을 제공합니다.
 /// 본인 게시글인 경우 수정/삭제, 타인 게시글인 경우 신고 기능이 툴바에 표시됩니다.
 struct CommunityDetailView: View {
-    // MARK: - Properties
+    // MARK: - Property
 
     @State private var vm: CommunityDetailViewModel
     @State private var isCommentInputExpanded: Bool = false
@@ -22,6 +22,10 @@ struct CommunityDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(ErrorHandler.self) var errorHandler
 
+    /// 커뮤니티 상세에서 사용하는 내비게이션 경로 저장소입니다.
+    ///
+    /// 상세 화면에서 수정 화면으로 이동하거나, 삭제 후 목록 스택을 조정할 때
+    /// `DIContainer`를 통해 주입된 `PathStore`를 사용합니다.
     private var pathStore: PathStore {
         di.resolve(PathStore.self)
     }
@@ -39,8 +43,8 @@ struct CommunityDetailView: View {
         static let commentsCountTitle: String = "댓글 %d개"
         static let commentLoadFailedTitle: String = "댓글을 불러오지 못했어요"
         static let commentLoadFailedDescription: String = "댓글을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요."
-        static let collapsedButtonSize: CGFloat = 64
-        static let inputHorizontalPadding: CGFloat = 20
+        static let collapsedButtonSize: CGFloat = 58
+        static let inputHorizontalPadding: CGFloat = 26
         static let inputBottomOffset: CGFloat = 10
         static let commentInputAnimation: Animation = .easeInOut(duration: 0.2)
         static let commentSectionBottomSpacing: CGFloat = 6
@@ -69,7 +73,14 @@ struct CommunityDetailView: View {
         static let loadingMessage: String = "게시글을 불러오는 중입니다..."
     }
 
-    // MARK: - Init
+    // MARK: - Initializer
+
+    /// 게시글 식별자에 해당하는 상세 화면을 구성합니다.
+    ///
+    /// - Parameters:
+    ///   - container: ViewModel과 경로 저장소를 해석하는 의존성 컨테이너입니다.
+    ///   - errorHandler: 전역 에러 처리를 담당하는 핸들러입니다.
+    ///   - postId: 조회할 게시글의 서버 식별자입니다.
     init(container: DIContainer,
          errorHandler: ErrorHandler,
          postId: Int
@@ -107,6 +118,10 @@ struct CommunityDetailView: View {
         .umcDefaultBackground()
     }
 
+    /// 게시글 상세 로딩 상태에 따라 적절한 루트 콘텐츠를 선택합니다.
+    ///
+    /// 상세 본문이 준비되지 않았을 때는 전체 화면 로딩 또는 실패 UI를 표시하고,
+    /// 로드가 완료되면 게시글/댓글 조합 화면으로 전환합니다.
     @ViewBuilder
     private var rootContent: some View {
         switch vm.postDetailState {
@@ -120,6 +135,10 @@ struct CommunityDetailView: View {
         }
     }
 
+    /// 게시글 본문과 댓글 영역을 함께 구성하는 상세 화면의 본체입니다.
+    ///
+    /// 스크롤 상태에 따라 댓글 입력창을 접거나 펼치며, 하단 safe area에
+    /// 댓글 입력 UI를 고정해 상세 읽기 흐름을 유지합니다.
     @ViewBuilder
     private func detailContent() -> some View {
         ScrollView {
@@ -138,6 +157,10 @@ struct CommunityDetailView: View {
 
     // MARK: - Toolbar Actions
 
+    /// 게시글 소유 여부에 맞는 툴바 메뉴 액션을 생성합니다.
+    ///
+    /// - Parameter postItem: 현재 상세 화면에 표시 중인 게시글 모델입니다.
+    /// - Returns: 작성자 본인일 때는 수정/삭제, 타인일 때는 신고 액션 목록입니다.
     private func toolbarActions(for postItem: CommunityItemModel) -> [ToolBarCollection.ToolbarTrailingMenu.ActionItem] {
         if postItem.isAuthor {
             // 본인 게시글: 수정/삭제
@@ -196,14 +219,23 @@ struct CommunityDetailView: View {
 
     // MARK: - Comment
 
+    /// 전송 가능한 댓글 텍스트를 계산합니다.
+    ///
+    /// 공백만 입력된 경우 전송을 막기 위해 앞뒤 공백과 줄바꿈을 제거한 값을 사용합니다.
     private var normalizedCommentText: String {
         vm.commentText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// 댓글 전송 버튼 활성화 여부를 판단합니다.
+    ///
+    /// 입력값이 비어 있지 않고, 현재 전송 중이 아닐 때만 활성화됩니다.
     private var canSendComment: Bool {
         !normalizedCommentText.isEmpty && !vm.isPostingComment
     }
 
+    /// 댓글 목록 섹션을 렌더링합니다.
+    ///
+    /// - Parameter comments: 현재 게시글에 연결된 댓글 모델 배열입니다.
     private func commentSection(_ comments: [CommunityCommentModel]) -> some View {
         VStack(alignment: .leading, spacing: Constant.commentsSectionSpacing) {
             Text(String(format: Constant.commentsCountTitle, comments.count))
@@ -215,6 +247,7 @@ struct CommunityDetailView: View {
         }
     }
 
+    /// 게시글 본문 카드와 번개 전용 보조 카드를 조합합니다.
     private var postSection: some View {
         Group {
             if let postItem = vm.postItem {
@@ -237,6 +270,7 @@ struct CommunityDetailView: View {
         }
     }
 
+    /// 댓글 로딩 상태에 따라 댓글 섹션의 실제 UI를 선택합니다.
     @ViewBuilder
     private var commentStateSection: some View {
         switch vm.comments {
@@ -249,6 +283,7 @@ struct CommunityDetailView: View {
         }
     }
 
+    /// 댓글 입력창의 펼침/접힘 상태에 맞는 하단 inset 콘텐츠를 제공합니다.
     @ViewBuilder
     private var commentInputInset: some View {
         if !isCommentInputHidden {
@@ -260,6 +295,9 @@ struct CommunityDetailView: View {
         }
     }
 
+    /// 단일 댓글 셀을 구성합니다.
+    ///
+    /// 현재 사용자가 삭제 가능한 댓글인지 판단해 `CommunityCommentItem`에 전달합니다.
     private func commentItemView(_ comment: CommunityCommentModel) -> some View {
         let canDelete = vm.canDeleteComment(commentId: comment.commentId)
         return CommunityCommentItem(
@@ -274,6 +312,10 @@ struct CommunityDetailView: View {
         )
     }
 
+    /// 스크롤 상태 변화에 따라 댓글 입력창 노출 상태를 조정합니다.
+    ///
+    /// 사용자가 스크롤을 멈추면 펼쳐진 입력창 상태를 유지하고,
+    /// 스크롤 중에는 입력창을 접어 읽기 영역을 우선합니다.
     private func handleScrollPhaseChange(_ phase: ScrollPhase) {
         if phase == .idle {
             guard isCommentInputExpanded else { return }
@@ -336,6 +378,7 @@ struct CommunityDetailView: View {
 
     // MARK: - Comment Input
 
+    /// 펼쳐진 댓글 입력창 전체 레이아웃입니다.
     private var commentInputSection: some View {
         VStack(spacing: Constant.commentSectionBottomSpacing) {
             commentTextEditor
@@ -350,6 +393,7 @@ struct CommunityDetailView: View {
         .padding(.bottom, Constant.inputBottomOffset)
     }
 
+    /// 댓글 입력창이 닫힌 상태에서 표시되는 축약 버튼입니다.
     private var collapsedCommentInputButton: some View {
         Button {
             setCommentInputVisibility(hidden: false, expanded: true, focused: true)
@@ -367,6 +411,7 @@ struct CommunityDetailView: View {
         .padding(.bottom, Constant.inputBottomOffset)
     }
 
+    /// 댓글 입력용 `TextField`와 placeholder를 조합한 입력 영역입니다.
     private var commentTextEditor: some View {
         ZStack(alignment: .topLeading) {
             TextField(
@@ -375,15 +420,15 @@ struct CommunityDetailView: View {
                 axis: .vertical
             )
             .focused($isCommentFieldFocused)
-            .appFont(.body)
+            .appFont(.callout)
             .lineLimit(Constant.commentTextLineLimit)
+            .frame(minHeight: Constant.textFieldMinHeight, alignment: .topLeading)
             .padding(.horizontal, Constant.commentTextFieldHorizontalPadding)
             .padding(.vertical, Constant.commentTextFieldVerticalPadding)
-            .frame(minHeight: Constant.textFieldMinHeight, alignment: .topLeading)
 
             if vm.commentText.isEmpty && !isCommentFieldFocused {
                 Text(Constant.commentPrompt)
-                    .appFont(.body, color: .grey400)
+                    .appFont(.callout, color: Color(.placeholderText))
                     .padding(.horizontal, Constant.commentTextFieldHorizontalPadding)
                     .padding(.vertical, Constant.commentTextFieldVerticalPadding)
                     .allowsHitTesting(false)
@@ -391,10 +436,12 @@ struct CommunityDetailView: View {
         }
     }
 
+    /// 댓글 로딩 중 상태를 나타내는 인디케이터입니다.
     private var commentLoadingIndicator: some View {
         Progress(message: Constant.commentLoadingMessage, size: .regular)
     }
 
+    /// 댓글 전송 버튼이 포함된 입력창 하단 액션 행입니다.
     private var commentInputActionRow: some View {
         HStack(spacing: Constant.commentInputActionRowSpacing) {
             Spacer()
@@ -418,8 +465,11 @@ struct CommunityDetailView: View {
         }
     }
 
-    // MARK: - Actions
+    // MARK: - Private Function
 
+    /// 현재 입력된 댓글을 전송하고 입력창을 닫습니다.
+    ///
+    /// 공백만 있는 입력은 무시하며, 실제 전송에는 정규화된 댓글 텍스트를 사용합니다.
     private func sendComment() async {
         let content = normalizedCommentText
         guard !content.isEmpty else { return }
@@ -429,15 +479,23 @@ struct CommunityDetailView: View {
         closeCommentInput()
     }
 
+    /// 스크롤 중 댓글 입력창을 숨깁니다.
     private func hideCommentInputByScroll() {
         guard !isCommentInputHidden else { return }
         setCommentInputVisibility(hidden: true, expanded: false, focused: false)
     }
 
+    /// 댓글 입력창을 닫고 포커스를 해제합니다.
     private func closeCommentInput() {
         setCommentInputVisibility(hidden: true, expanded: false, focused: false)
     }
 
+    /// 댓글 입력창의 시각 상태와 포커스를 한 번에 갱신합니다.
+    ///
+    /// - Parameters:
+    ///   - hidden: 입력창을 숨길지 여부입니다.
+    ///   - expanded: 펼쳐진 입력창 상태를 유지할지 여부입니다.
+    ///   - focused: 텍스트 필드 포커스를 적용할지 여부입니다.
     private func setCommentInputVisibility(hidden: Bool, expanded: Bool, focused: Bool) {
         withAnimation(Constant.commentInputAnimation) {
             isCommentInputHidden = hidden

@@ -20,6 +20,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
     /// iOS 파트 실제 커리큘럼 (7기 기준)
     private var missions: [MissionCardModel] = [
         .init(
+            originalWorkbookId: 1,
             challengerWorkbookId: 1,
             week: 1,
             platform: "iOS",
@@ -28,6 +29,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            originalWorkbookId: 2,
             challengerWorkbookId: 2,
             week: 2,
             platform: "iOS",
@@ -36,6 +38,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            originalWorkbookId: 3,
             challengerWorkbookId: 3,
             week: 3,
             platform: "iOS",
@@ -44,6 +47,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            originalWorkbookId: 4,
             challengerWorkbookId: 4,
             week: 4,
             platform: "iOS",
@@ -52,6 +56,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .fail
         ),
         .init(
+            originalWorkbookId: 5,
             challengerWorkbookId: 5,
             week: 5,
             platform: "iOS",
@@ -60,6 +65,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            originalWorkbookId: 6,
             challengerWorkbookId: 6,
             week: 6,
             platform: "iOS",
@@ -68,6 +74,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            originalWorkbookId: 7,
             challengerWorkbookId: 7,
             week: 7,
             platform: "iOS",
@@ -76,6 +83,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .pass
         ),
         .init(
+            originalWorkbookId: 8,
             challengerWorkbookId: 8,
             week: 8,
             platform: "iOS",
@@ -84,6 +92,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .inProgress
         ),
         .init(
+            originalWorkbookId: 9,
             challengerWorkbookId: 9,
             week: 9,
             platform: "iOS",
@@ -92,6 +101,7 @@ final class MockStudyRepository: StudyRepositoryProtocol {
             status: .locked
         ),
         .init(
+            originalWorkbookId: 10,
             challengerWorkbookId: 10,
             week: 10,
             platform: "iOS",
@@ -139,7 +149,9 @@ final class MockStudyRepository: StudyRepositoryProtocol {
         // 네트워크 지연 시뮬레이션
         try await Task.sleep(for: .milliseconds(500))
 
-        guard let index = missions.firstIndex(where: { $0.challengerWorkbookId == missionId }) else {
+        guard let index = missions.firstIndex(where: {
+            ($0.originalWorkbookId ?? $0.challengerWorkbookId) == missionId
+        }) else {
             throw DomainError.missionNotFound
         }
 

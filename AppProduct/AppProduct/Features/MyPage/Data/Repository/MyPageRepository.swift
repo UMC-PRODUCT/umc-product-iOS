@@ -279,6 +279,7 @@ private extension MyPagePostResponseDTO {
             content: content,
             profileImage: authorProfileImage,
             userName: authorName,
+            userNickname: nil,
             part: authorPart,
             createdAt: parsedCreatedAt,
             likeCount: Int(likeCount) ?? 0,

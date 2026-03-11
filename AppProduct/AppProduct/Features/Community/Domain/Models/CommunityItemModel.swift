@@ -16,6 +16,7 @@ struct CommunityItemModel: Equatable, Identifiable, Hashable {
     let content: String
     let profileImage: String?
     let userName: String
+    let userNickname: String?
     let part: UMCPartType
     let createdAt: Date
     var likeCount: Int
@@ -25,4 +26,9 @@ struct CommunityItemModel: Equatable, Identifiable, Hashable {
     var isScrapped: Bool = false
     let isAuthor: Bool
     let lightningInfo: CommunityLightningInfo?
+
+    var displayUserName: String {
+        let trimmedNickname = userNickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmedNickname.isEmpty ? userName : "\(userName)/\(trimmedNickname)"
+    }
 }

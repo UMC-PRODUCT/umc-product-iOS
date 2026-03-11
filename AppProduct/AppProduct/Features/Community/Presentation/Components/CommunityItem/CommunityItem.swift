@@ -93,8 +93,8 @@ struct CommunityItem: View, Equatable {
             // 프로필 이미지
             RemoteImage(urlString: model.profileImage ?? "", size: Constant.profileSize)
             
-            // 이름 + 파트
-            Text("\(model.userName) • \(model.part.name)")
+            // 이름/닉네임 + 파트
+            Text("\(model.displayUserName) • \(model.part.name)")
 
             Spacer()
 

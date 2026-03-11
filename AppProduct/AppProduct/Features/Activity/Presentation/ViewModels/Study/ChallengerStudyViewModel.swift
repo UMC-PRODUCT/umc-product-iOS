@@ -83,12 +83,12 @@ final class ChallengerStudyViewModel {
         link: String?
     ) async {
         do {
-            guard let challengerWorkbookId = mission.challengerWorkbookId else {
+            guard let originalWorkbookId = mission.originalWorkbookId else {
                 throw DomainError.missionNotFound
             }
 
             try await submitMissionUseCase.execute(
-                missionId: challengerWorkbookId,
+                missionId: originalWorkbookId,
                 type: type,
                 link: link
             )

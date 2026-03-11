@@ -23,7 +23,7 @@ protocol StudyRepositoryProtocol {
 
     /// 미션을 제출합니다.
     /// - Parameters:
-    ///   - missionId: 제출할 챌린저 워크북 ID
+    ///   - missionId: 제출할 original workbook ID
     ///   - type: 미션 제출 타입 (링크 또는 체크)
     ///   - link: 제출 링크 (타입이 링크인 경우 필수)
     /// - Throws: 네트워크 오류, 파싱 오류, 또는 유효성 검증 오류

@@ -21,6 +21,7 @@ struct ChallengerCurriculumProgressDTO: Codable, Sendable, Equatable {
 
 /// 챌린저 워크북 진행 항목 DTO
 struct ChallengerWorkbookProgressDTO: Codable, Sendable, Equatable {
+    let originalWorkbookId: String?
     let challengerWorkbookId: String?
     let weekNo: String
     let title: String
@@ -76,6 +77,8 @@ private extension ChallengerWorkbookProgressDTO {
         let missionTitle = description.trimmingCharacters(in: .whitespacesAndNewlines)
         let week = Int(weekNo) ?? 0
         return MissionCardModel(
+            originalWorkbookId: originalWorkbookId.flatMap(Int.init)
+                ?? challengerWorkbookId.flatMap(Int.init),
             challengerWorkbookId: challengerWorkbookId.flatMap(Int.init),
             week: week,
             platform: platform,

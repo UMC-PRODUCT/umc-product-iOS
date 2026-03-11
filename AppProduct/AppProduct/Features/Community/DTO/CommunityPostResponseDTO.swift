@@ -15,6 +15,7 @@ struct PostDetailDTO: Codable {
     let category: String
     let authorId: String
     let authorName: String
+    let authorNickname: String?
     let authorProfileImage: String?
     let authorPart: String?
     let lightningInfo: LightningInfoDTO?
@@ -37,6 +38,7 @@ struct PostListItemDTO: Codable {
     let authorChallengerId: String
     let authorMemberId: String?
     let authorName: String
+    let authorNickname: String?
     let authorProfileImage: String?
     let authorPart: String?
     let createdAt: String
@@ -97,6 +99,7 @@ extension PostListItemDTO {
             content: content,
             profileImage: authorProfileImage,
             userName: authorName,
+            userNickname: authorNickname,
             part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
             createdAt: ServerDateTimeConverter.parseUTCDateTime(createdAt) ?? Date(),
             likeCount: Int(likeCount) ?? 0,
@@ -120,6 +123,7 @@ extension PostDetailDTO {
             content: content,
             profileImage: authorProfileImage,
             userName: authorName,
+            userNickname: authorNickname,
             part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
             createdAt: ServerDateTimeConverter.parseUTCDateTime(writeTime) ?? Date(),
             likeCount: Int(likeCount) ?? 0,
