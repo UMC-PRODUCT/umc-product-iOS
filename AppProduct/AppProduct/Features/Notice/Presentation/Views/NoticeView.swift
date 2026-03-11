@@ -75,7 +75,6 @@ struct NoticeView: View {
             .onChange(of: search) { _, newValue in
                 handleSearchChanged(newValue)
             }
-            .onSubmit(of: .search, submitSearch)
             .toolbar { toolbarContent }
             .safeAreaBar(edge: .top) { topSafeAreaContent }
             .navigationBarTitleDisplayMode(.inline)
@@ -228,23 +227,12 @@ struct NoticeView: View {
     }
 
     // MARK: - Search
-    /// 검색어를 비웠을 때만 검색 모드를 해제합니다.
+    /// 검색어 변경 시 1초 디바운스 후 실시간 검색합니다.
     private func handleSearchChanged(_ newValue: String) {
-        // 실시간 검색 비활성화:
-        // 검색 API는 onSubmit(.search)에서만 호출합니다.
-        guard newValue.isEmpty else { return }
-        searchTask?.cancel()
-        searchTask = Task {
-            guard !Task.isCancelled else { return }
-            await viewModel.clearSearch()
-        }
-    }
-
-    /// 검색 submit 시에만 API를 호출합니다.
-    private func submitSearch() {
         searchTask?.cancel()
         let keyword = search.trimmingCharacters(in: .whitespacesAndNewlines)
         searchTask = Task {
+            try? await Task.sleep(for: .seconds(1))
             guard !Task.isCancelled else { return }
             if keyword.isEmpty {
                 await viewModel.clearSearch()

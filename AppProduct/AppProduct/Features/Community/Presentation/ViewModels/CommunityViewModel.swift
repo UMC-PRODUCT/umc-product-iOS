@@ -115,7 +115,7 @@ class CommunityViewModel {
         }
     }
 
-    /// 검색어 변경 시 호출 (디바운스 적용)
+    /// 검색어 변경 시 호출 (1초 디바운스 적용)
     @MainActor
     func onSearchTextChanged() {
         searchTask?.cancel()
@@ -126,7 +126,7 @@ class CommunityViewModel {
         }
 
         searchTask = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(400))
+            try? await Task.sleep(for: .seconds(1))
             guard !Task.isCancelled, let self else { return }
             await self.fetchSearchFirstPage()
         }
