@@ -16,34 +16,10 @@ struct ProfileLinkSection: View, Equatable {
 
     private enum Constants {
         static let iconSize: CGFloat = 24
-        static let minimumLinks: Int = 3
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.header == rhs.header
-    }
-
-    /// 최소 3개의 링크 필드를 보장하는 정규화된 프로필 링크 배열
-    ///
-    /// 사용자가 입력한 링크가 3개 미만일 경우, 부족한 개수만큼
-    /// 빈 값을 가진 링크 필드를 자동으로 추가하여 반환합니다.
-    private var normalizedProfileLinks: [ProfileLink] {
-        var links = profileLink
-
-        // SocialLinkType의 모든 케이스를 순회하며 부족한 만큼 추가
-        let allTypes = SocialLinkType.allCases
-
-        // 현재 존재하는 타입들
-        let existingTypes = Set(links.map { $0.type })
-
-        // 없는 타입들을 빈 값으로 추가 (최소 3개 유지)
-        for type in allTypes {
-            if !existingTypes.contains(type) && links.count < Constants.minimumLinks {
-                links.append(ProfileLink(type: type, url: ""))
-            }
-        }
-
-        return links
     }
 
     // MARK: - Body
@@ -51,23 +27,11 @@ struct ProfileLinkSection: View, Equatable {
     var body: some View {
         Section(content: {
             Group {
-                ForEach(normalizedProfileLinks.indices, id: \.self) { index in
-                    let link = normalizedProfileLinks[index]
+                ForEach(SocialLinkType.allCases, id: \.self) { type in
                     generateTextField(
-                        binding: Binding(
-                            get: { link.url },
-                            set: { newValue in
-                                // 원본 배열에서 해당 타입의 링크를 찾아서 업데이트
-                                if let originalIndex = profileLink.firstIndex(where: { $0.type == link.type }) {
-                                    profileLink[originalIndex].url = newValue
-                                } else {
-                                    // 원본에 없으면 새로 추가
-                                    profileLink.append(ProfileLink(type: link.type, url: newValue))
-                                }
-                            }
-                        ),
-                        placeholder: link.type.placeholder,
-                        image: link.type.icon
+                        binding: binding(for: type),
+                        placeholder: type.placeholder,
+                        image: type.icon
                     )
                 }
             }
@@ -77,6 +41,21 @@ struct ProfileLinkSection: View, Equatable {
     }
 
     // MARK: - Private Method
+
+    private func binding(for type: SocialLinkType) -> Binding<String> {
+        Binding(
+            get: {
+                profileLink.first(where: { $0.type == type })?.url ?? ""
+            },
+            set: { newValue in
+                if let originalIndex = profileLink.firstIndex(where: { $0.type == type }) {
+                    profileLink[originalIndex].url = newValue
+                } else {
+                    profileLink.append(ProfileLink(type: type, url: newValue))
+                }
+            }
+        )
+    }
 
     /// URL 입력 필드를 생성합니다.
     ///

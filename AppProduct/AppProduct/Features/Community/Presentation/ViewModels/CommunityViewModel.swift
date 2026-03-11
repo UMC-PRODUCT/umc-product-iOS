@@ -19,10 +19,12 @@ class CommunityViewModel {
 
     // 게시글 목록 상태
     private(set) var items: Loadable<[CommunityItemModel]> = .idle
+    private(set) var isFetchingFirstPage: Bool = false
     private(set) var isLoadingMore: Bool = false
 
     // 검색 결과 상태
     private(set) var searchState: Loadable<[CommunityItemModel]> = .idle
+    private(set) var isFetchingSearchFirstPage: Bool = false
     private(set) var isSearchLoadingMore: Bool = false
 
     /// 게시글 목록 페이지네이션
@@ -137,7 +139,14 @@ class CommunityViewModel {
 private extension CommunityViewModel {
     @MainActor
     func fetchFirstPage() async {
-        items = .loading
+        guard !isFetchingFirstPage else { return }
+        isFetchingFirstPage = true
+        defer { isFetchingFirstPage = false }
+
+        let previousState = items
+        if previousState.value == nil {
+            items = .loading
+        }
         currentPage = 0
         hasNext = true
 
@@ -153,6 +162,10 @@ private extension CommunityViewModel {
             currentPage = 0
             hasNext = nextPageExists
             items = .loaded(fetchedItems)
+        } catch is CancellationError {
+            items = previousState
+        } catch let error as NSError where isRequestCancellation(error) {
+            items = previousState
         } catch let error as AppError {
             items = .failed(error)
         } catch {
@@ -185,6 +198,10 @@ private extension CommunityViewModel {
             currentPage = nextPage
             hasNext = nextPageExists
             items = .loaded(allItems + newItems)
+        } catch is CancellationError {
+            return
+        } catch let error as NSError where isRequestCancellation(error) {
+            return
         } catch let error as AppError {
             items = .failed(error)
         } catch {
@@ -194,7 +211,14 @@ private extension CommunityViewModel {
 
     @MainActor
     func fetchSearchFirstPage() async {
-        searchState = .loading
+        guard !isFetchingSearchFirstPage else { return }
+        isFetchingSearchFirstPage = true
+        defer { isFetchingSearchFirstPage = false }
+
+        let previousState = searchState
+        if previousState.value == nil {
+            searchState = .loading
+        }
         searchCurrentPage = 0
         searchHasNext = true
 
@@ -205,6 +229,10 @@ private extension CommunityViewModel {
             searchCurrentPage = 0
             searchHasNext = nextPageExists
             searchState = .loaded(fetchedItems)
+        } catch is CancellationError {
+            searchState = previousState
+        } catch let error as NSError where isRequestCancellation(error) {
+            searchState = previousState
         } catch let error as AppError {
             searchState = .failed(error)
         } catch {
@@ -232,10 +260,18 @@ private extension CommunityViewModel {
             searchCurrentPage = nextPage
             searchHasNext = nextPageExists
             searchState = .loaded(currentItems + newItems)
+        } catch is CancellationError {
+            return
+        } catch let error as NSError where isRequestCancellation(error) {
+            return
         } catch let error as AppError {
             searchState = .failed(error)
         } catch {
             searchState = .failed(.unknown(message: error.localizedDescription))
         }
+    }
+
+    func isRequestCancellation(_ error: NSError) -> Bool {
+        error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled
     }
 }

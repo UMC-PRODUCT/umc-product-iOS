@@ -57,13 +57,8 @@ struct CommunityView: View {
                     CommunityFameView(container: di)
                 }
             }
-            .task {
-                switch vm.selectedMenu {
-                case .all, .party, .question, .information, .habit, .free:
-                    await vm.fetchInitialIfNeeded()
-                case .fame:
-                    break
-                }
+            .task(id: vm.selectedMenu) {
+                await refreshContentIfNeeded(for: vm.selectedMenu)
             }
             .navigationTitle(vm.selectedMenu.rawValue)
             .navigationBarTitleDisplayMode(.inline)
@@ -78,12 +73,11 @@ struct CommunityView: View {
             .navigationDestination(for: NavigationDestination.self) { destination in
                 NavigationRoutingView(destination: destination)
             }
-            .onChange(of: vm.selectedMenu) { _, newMenu in
-                switch newMenu {
-                case .all, .party, .question, .information, .habit, .free:
-                    Task { await vm.refresh() }
-                case .fame:
-                    break
+            .onChange(of: pathStore.communityPath.count) { oldCount, newCount in
+                guard newCount < oldCount, newCount == 0 else { return }
+
+                Task {
+                    await refreshContentIfNeeded(for: vm.selectedMenu)
                 }
             }
             .umcDefaultBackground()
@@ -133,6 +127,10 @@ struct CommunityView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .tint(.indigo500)
+        .refreshable {
+            await refreshContentWithMinimumDuration(for: vm.selectedMenu)
+        }
     }
 
     private func postRow(_ item: CommunityItemModel) -> some View {
@@ -193,5 +191,26 @@ struct CommunityView: View {
             await vm.refresh()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+
+    @MainActor
+    private func refreshContentIfNeeded(for menu: CommunityMenu) async {
+        switch menu {
+        case .all, .party, .question, .information, .habit, .free:
+            await vm.refresh()
+        case .fame:
+            break
+        }
+    }
+
+    @MainActor
+    private func refreshContentWithMinimumDuration(for menu: CommunityMenu) async {
+        async let refreshTask: Void = refreshContentIfNeeded(for: menu)
+        async let delayTask: Void = waitForMinimumRefreshDuration()
+        _ = await (refreshTask, delayTask)
+    }
+
+    private func waitForMinimumRefreshDuration() async {
+        try? await Task.sleep(for: .seconds(2))
     }
 }

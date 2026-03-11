@@ -86,6 +86,13 @@ struct NoticeView: View {
                 viewModel.updateErrorHandler(errorHandler)
                 viewModel.fetchGisuList()
             }
+            .onChange(of: pathStore.noticePath.count) { oldCount, newCount in
+                guard newCount < oldCount, newCount == 0 else { return }
+
+                Task {
+                    await reloadNoticesAfterReturningFromDetail()
+                }
+            }
             .onChange(of: viewModel.selectedGeneration) { _, _ in
                 syncSelectedGisuIdForNoticeEditor()
             }
@@ -152,6 +159,10 @@ struct NoticeView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .tint(.indigo500)
+        .refreshable {
+            await reloadCurrentNoticeListWithMinimumDuration()
+        }
     }
     
     
@@ -188,6 +199,32 @@ struct NoticeView: View {
         isRetryingNotices = true
         defer { isRetryingNotices = false }
         await viewModel.retryCurrentRequest()
+    }
+
+    @MainActor
+    private func reloadNoticesAfterReturningFromDetail() async {
+        if viewModel.isSearchMode,
+           !viewModel.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            await viewModel.searchNotices(keyword: viewModel.searchQuery)
+        } else {
+            await viewModel.fetchNotices()
+        }
+    }
+
+    @MainActor
+    private func reloadCurrentNoticeList() async {
+        await reloadNoticesAfterReturningFromDetail()
+    }
+
+    @MainActor
+    private func reloadCurrentNoticeListWithMinimumDuration() async {
+        async let reloadTask: Void = reloadCurrentNoticeList()
+        async let delayTask: Void = waitForMinimumRefreshDuration()
+        _ = await (reloadTask, delayTask)
+    }
+
+    private func waitForMinimumRefreshDuration() async {
+        try? await Task.sleep(for: .seconds(2))
     }
 
     // MARK: - Search

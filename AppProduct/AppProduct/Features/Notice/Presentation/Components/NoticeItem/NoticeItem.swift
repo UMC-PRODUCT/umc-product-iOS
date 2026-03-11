@@ -19,7 +19,6 @@ private enum Constant {
     static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
     static let mustReadIconSpacing: CGFloat = 4
     static let mustReadIconSize: CGFloat = 12
-    static let alertCircleSize: CGSize = .init(width: 8, height: 8)
     // content
     static let contentSpacing: CGFloat = 4
     // bottom
@@ -94,15 +93,6 @@ private struct TopSection: View, Equatable {
             }
 
             Spacer()
-
-            if model.isAlert {
-                Circle()
-                    .fill(.red)
-                    .frame(width: Constant.alertCircleSize.width)
-            }
-
-            Text(model.date.toYearMonthDay())
-                .appFont(.footnote, color: .grey500)
         }
     }
     
@@ -156,6 +146,13 @@ private struct BottomSection: View, Equatable {
                 Image(systemName: "chart.bar.fill")
                     .font(.system(size: Constant.bottomIconSize))
             }
+
+            if model.isAlert {
+                Image(systemName: "bell.fill")
+                    .font(.system(size: Constant.bottomIconSize))
+            }
+
+            Text(model.date.toYearMonthDay())
 
             Text("조회 \(model.viewCount)")
         }

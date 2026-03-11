@@ -92,12 +92,27 @@ extension NoticeViewModel {
         page: Int,
         requestAction: (NoticeListRequestDTO) async throws -> NoticePageDTO<NoticeDTO>
     ) async {
+        if page == 0 {
+            guard !isFetchingFirstPage else { return }
+            isFetchingFirstPage = true
+        }
+        defer {
+            if page == 0 {
+                isFetchingFirstPage = false
+            }
+        }
+
+        let previousState = noticeItems
         guard let gisuId = preparePagingAndResolveGisuId(page: page) else { return }
 
         do {
             let request = buildNoticeListRequest(gisuId: gisuId, page: page)
             let response = try await requestAction(request)
             await applyPagedResponse(response, page: page)
+        } catch is CancellationError {
+            handleCancelledFetch(page: page, previousState: previousState)
+        } catch let error as NSError where isRequestCancellation(error) {
+            handleCancelledFetch(page: page, previousState: previousState)
         } catch let error as RepositoryError {
             handleFetchError(.repository(error), page: page, action: "fetchNotices", failure: error)
         } catch let error as DomainError {
@@ -119,7 +134,7 @@ extension NoticeViewModel {
     /// - Returns: 조회 가능한 gisuId. 없으면 `nil`
     @MainActor
     private func preparePagingAndResolveGisuId(page: Int) -> Int? {
-        if page == 0 {
+        if page == 0, noticeItems.value == nil {
             noticeItems = .loading
         }
 
@@ -290,6 +305,18 @@ extension NoticeViewModel {
                 action: action
             )
         )
+    }
+
+    @MainActor
+    private func handleCancelledFetch(page: Int, previousState: Loadable<[NoticeItemModel]>) {
+        if page == 0 {
+            noticeItems = previousState
+        }
+        pagingState.applyFailure()
+    }
+
+    private func isRequestCancellation(_ error: NSError) -> Bool {
+        error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled
     }
 
     /// NoticeListRequestDTO 생성

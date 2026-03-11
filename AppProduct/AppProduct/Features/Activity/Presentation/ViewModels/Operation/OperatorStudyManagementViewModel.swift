@@ -442,6 +442,8 @@ final class OperatorStudyManagementViewModel {
         leader: ChallengerInfo,
         members: [ChallengerInfo]
     ) async -> Bool {
+        print("createGroup start")
+        print(name)
         let trimmedName = name.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
@@ -489,54 +491,15 @@ final class OperatorStudyManagementViewModel {
                 leaderId: leaderId,
                 memberIds: memberIds
             )
-
-            if let updatedGroups = try? await useCase.fetchStudyGroups() {
-                studyGroups = normalizeStudyGroups(updatedGroups)
-            }
-
-            if let updatedDetails = try? await useCase.fetchStudyGroupDetails(),
-               !updatedDetails.isEmpty {
-                studyGroupDetails = updatedDetails
-                studyGroupDetailsState = .loaded(updatedDetails)
-                studyGroupDetailsNextCursor = nil
-                studyGroupDetailsHasNext = false
-                hasLoadedStudyGroupDetails = true
-            } else {
-                studyGroupDetails.append(
-                    StudyGroupInfo(
-                        serverID: "new_\(UUID().uuidString)",
-                        name: trimmedName,
-                        part: part,
-                        createdDate: Date(),
-                        leader: StudyGroupMember(
-                            serverID: String(leader.memberId),
-                            challengerID: leaderId,
-                            memberID: leader.memberId,
-                            name: leader.name,
-                            nickname: leader.nickname,
-                            university: leader.schoolName,
-                            profileImageURL: leader.profileImage,
-                            role: .leader
-                        ),
-                        members: members.compactMap {
-                            $0.memberId != leader.memberId ? StudyGroupMember(
-                                serverID: String($0.memberId),
-                                challengerID: resolvedChallengerIDs[$0.selectionKey],
-                                memberID: $0.memberId,
-                                name: $0.name,
-                                nickname: $0.nickname,
-                                university: $0.schoolName,
-                                profileImageURL: $0.profileImage
-                            ) : nil
-                        }
-                    )
-                )
-                studyGroupDetailsState = .loaded(studyGroupDetails)
-                studyGroupDetailsNextCursor = nil
-                studyGroupDetailsHasNext = false
-            }
-
-            hasLoadedStudyGroupDetails = true
+            appendCreatedGroupToLocalState(
+                name: trimmedName,
+                part: part,
+                leader: leader,
+                leaderId: leaderId,
+                members: members,
+                resolvedChallengerIDs: resolvedChallengerIDs
+            )
+            refreshStudyGroupManagementDataInBackground()
 
             return true
         } catch let error as DomainError {
@@ -552,6 +515,99 @@ final class OperatorStudyManagementViewModel {
                 action: "createStudyGroup"
             ))
             return false
+        }
+    }
+
+    private func appendCreatedGroupToLocalState(
+        name: String,
+        part: UMCPartType,
+        leader: ChallengerInfo,
+        leaderId: Int,
+        members: [ChallengerInfo],
+        resolvedChallengerIDs: [String: Int]
+    ) {
+        let localServerID = "new_\(UUID().uuidString)"
+        let localGroup = StudyGroupInfo(
+            serverID: localServerID,
+            name: name,
+            part: part,
+            createdDate: Date(),
+            leader: StudyGroupMember(
+                serverID: String(leader.memberId),
+                challengerID: leaderId,
+                memberID: leader.memberId,
+                name: leader.name,
+                nickname: leader.nickname,
+                university: leader.schoolName,
+                profileImageURL: leader.profileImage,
+                role: .leader
+            ),
+            members: members.compactMap {
+                $0.memberId != leader.memberId ? StudyGroupMember(
+                    serverID: String($0.memberId),
+                    challengerID: resolvedChallengerIDs[$0.selectionKey],
+                    memberID: $0.memberId,
+                    name: $0.name,
+                    nickname: $0.nickname,
+                    university: $0.schoolName,
+                    profileImageURL: $0.profileImage
+                ) : nil
+            }
+        )
+
+        let localItem = StudyGroupItem(
+            serverID: localServerID,
+            name: name,
+            iconName: "person.2.fill",
+            part: nil
+        )
+
+        if !studyGroups.contains(localItem) {
+            var updatedGroups = studyGroups.filter { $0 != .all }
+            updatedGroups.insert(localItem, at: 0)
+            studyGroups = normalizeStudyGroups(updatedGroups)
+        }
+
+        switch studyGroupDetailsState {
+        case .loaded:
+            studyGroupDetails.insert(localGroup, at: 0)
+            studyGroupDetailsState = .loaded(studyGroupDetails)
+            hasLoadedStudyGroupDetails = true
+        case .idle:
+            studyGroupDetails = [localGroup]
+            studyGroupDetailsState = .loaded(studyGroupDetails)
+            hasLoadedStudyGroupDetails = true
+        case .loading, .failed:
+            break
+        }
+    }
+
+    private func refreshStudyGroupManagementDataInBackground() {
+        Task { [weak self] in
+            guard let self else { return }
+
+            if let updatedGroups = try? await self.useCase.fetchStudyGroups() {
+                await MainActor.run {
+                    self.studyGroups = self.normalizeStudyGroups(updatedGroups)
+                    if !self.studyGroups.contains(self.selectedStudyGroup) {
+                        self.selectedStudyGroup = .all
+                    }
+                    self.hasLoadedSubmissionFilters = false
+                }
+            }
+
+            if let firstPage = try? await self.useCase.fetchStudyGroupDetailsPage(
+                cursor: nil,
+                size: Constants.groupManagementPageSize
+            ) {
+                await MainActor.run {
+                    self.studyGroupDetails = firstPage.content
+                    self.studyGroupDetailsNextCursor = firstPage.nextCursor
+                    self.studyGroupDetailsHasNext = firstPage.hasNext
+                    self.studyGroupDetailsState = .loaded(firstPage.content)
+                    self.hasLoadedStudyGroupDetails = true
+                }
+            }
         }
     }
 

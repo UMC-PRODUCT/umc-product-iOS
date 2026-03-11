@@ -57,6 +57,11 @@ struct MyPageView: View {
                     guard shouldFetchOnAppear, pathStore.mypagePath.isEmpty else { return }
                     await viewModel.fetchProfile(container: di)
                 }
+                .onReceive(NotificationCenter.default.publisher(for: .memberProfileUpdated)) { _ in
+                    Task {
+                        await viewModel.fetchProfile(container: di)
+                    }
+                }
         }
     }
 

@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 
 /// 챌린저 검색 및 선택을 위한 뷰입니다.
 ///
-/// 사용자는 이름, 닉네임, 학교명 등을 통해 챌린저를 검색하고 선택할 수 있습니다.
+/// 사용자는 이름 또는 닉네임으로 챌린저를 검색하고 선택할 수 있습니다.
 /// 또한 CSV 파일을 통해 대량으로 챌린저를 선택하는 기능도 제공합니다.
 struct SearchChallengerView: View {
     
@@ -30,7 +30,7 @@ struct SearchChallengerView: View {
         static let failedSystemImage: String = "exclamationmark.triangle"
         static let failedRetryTitle: String = "다시 시도"
         static let initialEmptyTitle: String = "검색된 챌린저가 없습니다"
-        static let initialEmptyDescription: String = "이름, 닉네임, 학교명으로 챌린저를 검색해보세요."
+        static let initialEmptyDescription: String = "이름 또는 닉네임으로 챌린저를 검색해보세요."
         static let initialEmptySystemImage: String = "magnifyingglass"
     }
     
@@ -49,7 +49,7 @@ struct SearchChallengerView: View {
     
     var body: some View {
         stateContent
-        .searchable(text: $viewModel.searchText, prompt: "챌린저를 검색해보세요")
+        .searchable(text: $viewModel.searchText, prompt: "이름 또는 닉네임으로 검색해보세요")
         .searchPresentationToolbarBehavior(.avoidHidingContent)
         .navigation(naviTitle: .searchChallenger, displayMode: .inline)
         .toolbar(content: {

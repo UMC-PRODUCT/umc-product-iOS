@@ -79,6 +79,8 @@ struct CommunityCommentItem: View, Equatable {
                 } label: {
                     Image(systemName: "ellipsis")
                         .foregroundStyle(.grey500)
+                        .padding(8)
+                        .contentShape(Rectangle())
                 }
             }
             Text(model.content)

@@ -31,6 +31,12 @@ struct OperatorStudyGroupCreateView: View {
     /// 저장 완료 콜백 (이름, 파트, 리더, 멤버 목록 전달)
     let onSave: (String, UMCPartType, ChallengerInfo, [ChallengerInfo]) async -> Bool
 
+    init(
+        onSave: @escaping (String, UMCPartType, ChallengerInfo, [ChallengerInfo]) async -> Bool
+    ) {
+        self.onSave = onSave
+    }
+
     // MARK: - Constants
 
     fileprivate enum Constants {

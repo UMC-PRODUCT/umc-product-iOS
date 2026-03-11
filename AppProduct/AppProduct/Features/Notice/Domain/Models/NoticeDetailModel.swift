@@ -66,6 +66,10 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
         let trimmedName = authorName.trimmingCharacters(in: .whitespacesAndNewlines)
         let generationText = generationOrdinalText
 
+        if trimmedNickname.isEmpty && (trimmedName.isEmpty || trimmedName == "알 수 없음") {
+            return "알 수 없음"
+        }
+
         if !trimmedNickname.isEmpty && !trimmedName.isEmpty {
             return "\(trimmedNickname)/\(trimmedName)\(generationText)"
         }

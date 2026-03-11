@@ -84,16 +84,22 @@ extension NoticeViewModel {
             generations = gisuPairs.map { Generation(value: $0.gen) }
 
             if let latestGen = generations.max(by: { $0.value < $1.value }) {
-                selectedGeneration = latestGen
+                let hasValidSelectedGeneration = generations.contains {
+                    $0.value == selectedGeneration.value
+                }
+                let targetGeneration = hasValidSelectedGeneration ? selectedGeneration : latestGen
+                selectedGeneration = targetGeneration
 
-                if generationStates[latestGen.value] == nil {
-                    generationStates[latestGen.value] = GenerationFilterState(
+                if generationStates[targetGeneration.value] == nil {
+                    generationStates[targetGeneration.value] = GenerationFilterState(
                         mainFilter: GenerationFilterDefaults.mainFilter
                     )
                 }
 
                 Task { @MainActor in
-                    await refreshSelectedGenerationContext(resetFilters: true)
+                    await refreshSelectedGenerationContext(
+                        resetFilters: !hasValidSelectedGeneration
+                    )
                 }
             } else {
                 isGisuListLoaded = false
