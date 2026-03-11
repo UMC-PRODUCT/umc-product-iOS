@@ -15,7 +15,7 @@ private enum Constant {
     static let mainPadding: EdgeInsets = .init(top: 12, leading: 24, bottom: 12, trailing: 24)
     static let mainBoxRadius: CGFloat = 24
     // top
-    static let topHSpacing: CGFloat = 8
+    static let topHSpacing: CGFloat = 4
     static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
     static let mustReadIconSpacing: CGFloat = 4
     static let mustReadIconSize: CGFloat = 12

@@ -92,6 +92,9 @@ struct NoticeView: View {
             .onChange(of: userContextSignature) { _, _ in
                 applyUserContext()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .generationMappingsUpdated)) { _ in
+                viewModel.fetchGisuList()
+            }
             .onDisappear {
                 searchTask?.cancel()
             }

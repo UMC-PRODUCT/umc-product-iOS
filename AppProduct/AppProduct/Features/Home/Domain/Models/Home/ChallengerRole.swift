@@ -25,6 +25,15 @@ struct ChallengerRole: Equatable {
     let organizationId: Int?
 }
 
+/// 기수별 사용자 소속 조직 정보를 저장/복원하기 위한 모델입니다.
+struct GenerationOrganizationContext: Codable, Equatable {
+    let gen: Int
+    let chapterId: Int?
+    let chapterName: String?
+    let schoolId: Int?
+    let schoolName: String?
+}
+
 /// 홈 프로필 조회 결과
 ///
 /// 프로필 API 한 번 호출로 기수 카드용 데이터와 역할 정보를 함께 반환합니다.
@@ -52,5 +61,33 @@ struct HomeProfileResult: Equatable {
     /// 프로필 응답에서 파생한 기수별 패널티 데이터
     let generations: [GenerationData]
     /// 기수별 사용자 소속 조직 정보
-    let generationOrganizations: [GenerationOrganizationContext] = []
+    let generationOrganizations: [GenerationOrganizationContext]
+
+    init(
+        memberId: Int,
+        schoolId: Int,
+        schoolName: String,
+        latestChallengerId: Int?,
+        latestGisuId: Int?,
+        chapterId: Int?,
+        chapterName: String,
+        part: UMCPartType?,
+        seasonTypes: [SeasonType],
+        roles: [ChallengerRole],
+        generations: [GenerationData],
+        generationOrganizations: [GenerationOrganizationContext] = []
+    ) {
+        self.memberId = memberId
+        self.schoolId = schoolId
+        self.schoolName = schoolName
+        self.latestChallengerId = latestChallengerId
+        self.latestGisuId = latestGisuId
+        self.chapterId = chapterId
+        self.chapterName = chapterName
+        self.part = part
+        self.seasonTypes = seasonTypes
+        self.roles = roles
+        self.generations = generations
+        self.generationOrganizations = generationOrganizations
+    }
 }

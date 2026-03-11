@@ -135,6 +135,8 @@ extension Notification.Name {
     static let fcmTokenReceived = Notification.Name("fcmTokenReceived")
     /// 멤버 프로필 업데이트 알림 (FCM 토큰 재동기화 트리거)
     static let memberProfileUpdated = Notification.Name("memberProfileUpdated")
+    /// 기수 매핑 로컬 저장소 갱신 알림
+    static let generationMappingsUpdated = Notification.Name("generationMappingsUpdated")
 }
 
 // MARK: - Private Function

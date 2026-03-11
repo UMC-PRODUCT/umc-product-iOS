@@ -179,6 +179,7 @@ final class HomeViewModel {
         let pairs = generations.map { (gen: $0.gen, gisuId: $0.gisuId) }
         do {
             try genRepository.replaceMappings(pairs)
+            NotificationCenter.default.post(name: .generationMappingsUpdated, object: nil)
         } catch {
             // 매핑 저장 실패는 홈 화면 표시에 치명적이지 않으므로 상태를 깨지 않습니다.
             print("[Home] failed to sync generation mappings: \(error)")

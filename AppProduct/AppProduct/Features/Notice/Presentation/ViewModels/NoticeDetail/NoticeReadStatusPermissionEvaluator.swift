@@ -2,7 +2,7 @@
 //  NoticeReadStatusPermissionEvaluator.swift
 //  AppProduct
 //
-//  Created by Codex on 3/11/26.
+//  Created by euijjang97 on 3/11/26.
 //
 
 import Foundation

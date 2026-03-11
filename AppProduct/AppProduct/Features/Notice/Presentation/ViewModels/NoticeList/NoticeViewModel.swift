@@ -187,14 +187,14 @@ final class NoticeViewModel {
 
     private var currentBranchFilterTitle: String {
         let resolvedChapterId = selectedGenerationOrganization?.chapterId ?? 0
-        currentTargetState.branches
+        return currentTargetState.branches
             .first(where: { $0.id == resolvedChapterId })?
             .name ?? selectedGenerationOrganization?.chapterName ?? NoticeUserContext.empty.branchName
     }
 
     private var currentSchoolFilterTitle: String {
         let resolvedSchoolId = selectedGenerationOrganization?.schoolId ?? 0
-        currentTargetState.schools
+        return currentTargetState.schools
             .first(where: { $0.id == resolvedSchoolId })?
             .name ?? selectedGenerationOrganization?.schoolName ?? NoticeUserContext.empty.schoolName
     }

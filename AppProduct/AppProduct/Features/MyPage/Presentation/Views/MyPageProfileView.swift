@@ -224,10 +224,35 @@ struct MyPageProfileView: View {
             profile.roles.map(\.roleType.rawValue),
             forKey: AppStorageKey.memberRoles
         )
+        defaults.set(
+            encodeGenerationOrganizations(profile.generationOrganizations),
+            forKey: AppStorageKey.generationOrganizations
+        )
         defaults.set(isApprovedProfile(profile), forKey: AppStorageKey.canAutoLogin)
+        syncGenerationMappings(profile.generations)
 
         di.resolve(UserSessionManager.self).updateRole(resolvedRole)
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
+    }
+
+    private func encodeGenerationOrganizations(_ contexts: [GenerationOrganizationContext]) -> String {
+        guard let data = try? JSONEncoder().encode(contexts),
+              let json = String(data: data, encoding: .utf8) else {
+            return "[]"
+        }
+        return json
+    }
+
+    private func syncGenerationMappings(_ generations: [GenerationData]) {
+        let pairs = generations.map { (gen: $0.gen, gisuId: $0.gisuId) }
+
+        do {
+            let repository = di.resolve(ChallengerGenRepositoryProtocol.self)
+            try repository.replaceMappings(pairs)
+            NotificationCenter.default.post(name: .generationMappingsUpdated, object: nil)
+        } catch {
+            print("[MyPage] failed to sync generation mappings: \(error)")
+        }
     }
 
     private func isApprovedProfile(_ profile: HomeProfileResult) -> Bool {

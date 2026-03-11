@@ -127,25 +127,23 @@ private extension NoticeItemModel {
     }
 
     var partTags: [NoticeItemTag] {
-        let visibleParts = Array(resolvedParts.prefix(2))
-        var items = visibleParts.map { part in
+        guard !resolvedParts.isEmpty else { return [] }
+
+        if resolvedParts.count >= 4 {
+            return [
+                NoticeItemTag(
+                    text: "여러 파트",
+                    backColor: .grey500
+                )
+            ]
+        }
+
+        return resolvedParts.prefix(3).map { part in
             NoticeItemTag(
                 text: NoticePart(umcPartType: part)?.displayName ?? "파트",
                 backColor: part.color
             )
         }
-
-        let remainingCount = resolvedParts.count - visibleParts.count
-        if remainingCount > 0 {
-            items.append(
-                NoticeItemTag(
-                    text: "+\(remainingCount)",
-                    backColor: .grey500
-                )
-            )
-        }
-
-        return items
     }
 }
 
