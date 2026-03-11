@@ -135,4 +135,111 @@ struct NoticePresentationTests {
 
         #expect(detail.authorName == "제옹")
     }
+
+    // MARK: - Read Status Permission Tests
+
+    @Test("총괄단은 모든 공지의 수신 확인 현황을 볼 수 있다")
+    func executivesCanViewAllReadStatuses() {
+        let audience = TargetAudience.all(generation: 0, scope: .central)
+
+        let result = NoticeReadStatusPermissionEvaluator.canViewReadStatus(
+            roles: [.centralPresident],
+            userChapterId: nil,
+            userSchoolId: nil,
+            targetAudience: audience
+        )
+
+        #expect(result == true)
+    }
+
+    @Test("지부 공지는 동일 지부의 지부장만 수신 확인 현황을 볼 수 있다")
+    func chapterNoticeRequiresMatchingChapterPresident() {
+        let audience = TargetAudience(
+            generation: 9,
+            scope: .branch,
+            parts: [],
+            chapterId: 14,
+            branches: ["Ain"],
+            schools: []
+        )
+
+        let allowed = NoticeReadStatusPermissionEvaluator.canViewReadStatus(
+            roles: [.chapterPresident],
+            userChapterId: 14,
+            userSchoolId: nil,
+            targetAudience: audience
+        )
+        let denied = NoticeReadStatusPermissionEvaluator.canViewReadStatus(
+            roles: [.chapterPresident],
+            userChapterId: 15,
+            userSchoolId: nil,
+            targetAudience: audience
+        )
+
+        #expect(allowed == true)
+        #expect(denied == false)
+    }
+
+    @Test("학교 공지는 동일 학교 운영진만 수신 확인 현황을 볼 수 있다")
+    func campusNoticeRequiresMatchingSchoolAdmin() {
+        let audience = TargetAudience(
+            generation: 9,
+            scope: .campus,
+            parts: [],
+            schoolId: 23,
+            branches: [],
+            schools: ["가천대학교"]
+        )
+
+        let allowed = NoticeReadStatusPermissionEvaluator.canViewReadStatus(
+            roles: [.schoolVicePresident],
+            userChapterId: nil,
+            userSchoolId: 23,
+            targetAudience: audience
+        )
+        let denied = NoticeReadStatusPermissionEvaluator.canViewReadStatus(
+            roles: [.schoolVicePresident],
+            userChapterId: nil,
+            userSchoolId: 99,
+            targetAudience: audience
+        )
+
+        #expect(allowed == true)
+        #expect(denied == false)
+    }
+
+    @Test("기수 대상 공지는 중앙 운영진만 수신 확인 현황을 볼 수 있다")
+    func generationNoticeRequiresCentralOperationRole() {
+        let audience = TargetAudience.all(generation: 9, scope: .central)
+
+        let allowed = NoticeReadStatusPermissionEvaluator.canViewReadStatus(
+            roles: [.centralOperatingTeamMember],
+            userChapterId: nil,
+            userSchoolId: nil,
+            targetAudience: audience
+        )
+        let denied = NoticeReadStatusPermissionEvaluator.canViewReadStatus(
+            roles: [.chapterPresident],
+            userChapterId: 14,
+            userSchoolId: nil,
+            targetAudience: audience
+        )
+
+        #expect(allowed == true)
+        #expect(denied == false)
+    }
+
+    @Test("모든 기수 공지는 총괄단이 아니면 수신 확인 현황을 볼 수 없다")
+    func allGenerationNoticeDeniesNonExecutiveRoles() {
+        let audience = TargetAudience.all(generation: 0, scope: .central)
+
+        let result = NoticeReadStatusPermissionEvaluator.canViewReadStatus(
+            roles: [.centralEducationTeamMember],
+            userChapterId: nil,
+            userSchoolId: nil,
+            targetAudience: audience
+        )
+
+        #expect(result == false)
+    }
 }

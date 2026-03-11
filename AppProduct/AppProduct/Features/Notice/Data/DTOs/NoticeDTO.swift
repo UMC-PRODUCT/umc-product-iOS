@@ -168,6 +168,11 @@ struct NoticeTargetInfoDTO: Codable {
         return Int(targetChapterId)
     }
 
+    var targetSchoolIdValue: Int? {
+        guard let targetSchoolId else { return nil }
+        return Int(targetSchoolId)
+    }
+
     var targetsAllGenerations: Bool {
         generationValue <= 0
     }

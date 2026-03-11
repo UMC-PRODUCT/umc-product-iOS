@@ -159,8 +159,28 @@ struct TargetAudience: Equatable, Hashable {
     let generation: Int
     let scope: NoticeScope
     let parts: [UMCPartType]
+    let chapterId: Int?
+    let schoolId: Int?
     let branches: [String]
     let schools: [String]
+
+    init(
+        generation: Int,
+        scope: NoticeScope,
+        parts: [UMCPartType],
+        chapterId: Int? = nil,
+        schoolId: Int? = nil,
+        branches: [String],
+        schools: [String]
+    ) {
+        self.generation = generation
+        self.scope = scope
+        self.parts = parts
+        self.chapterId = chapterId
+        self.schoolId = schoolId
+        self.branches = branches
+        self.schools = schools
+    }
     
     /// 수신 대상 표시 텍스트
     ///
@@ -198,6 +218,8 @@ extension TargetAudience {
             generation: generation,
             scope: scope,
             parts: [],
+            chapterId: nil,
+            schoolId: nil,
             branches: [],
             schools: []
         )
