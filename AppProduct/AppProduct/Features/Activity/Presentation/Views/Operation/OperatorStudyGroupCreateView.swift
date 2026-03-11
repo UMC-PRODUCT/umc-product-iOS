@@ -28,13 +28,17 @@ struct OperatorStudyGroupCreateView: View {
     @State private var showMemberSheet = false
     @State private var isSaving = false
 
-    /// 저장 완료 콜백 (이름, 파트, 리더, 멤버 목록 전달)
-    let onSave: (String, UMCPartType, ChallengerInfo, [ChallengerInfo]) async -> Bool
+    private let viewModel: OperatorStudyManagementViewModel
 
-    init(
-        onSave: @escaping (String, UMCPartType, ChallengerInfo, [ChallengerInfo]) async -> Bool
-    ) {
-        self.onSave = onSave
+    private var alertPromptBinding: Binding<AlertPrompt?> {
+        Binding(
+            get: { viewModel.alertPrompt },
+            set: { viewModel.alertPrompt = $0 }
+        )
+    }
+
+    init(viewModel: OperatorStudyManagementViewModel) {
+        self.viewModel = viewModel
     }
 
     // MARK: - Constants
@@ -63,6 +67,7 @@ struct OperatorStudyGroupCreateView: View {
         .scrollDismissesKeyboard(.interactively)
         .navigationTitle("스터디 그룹 생성")
         .navigationBarTitleDisplayMode(.inline)
+        .alertPrompt(item: alertPromptBinding)
         .toolbar {
             ToolBarCollection.AddBtn(
                 action: { save() },
@@ -192,14 +197,29 @@ struct OperatorStudyGroupCreateView: View {
               !selectedMembers.isEmpty
         else { return }
 
-        Task {
+        print("save start")
+        print("raw name count:", name.count)
+        print("leader memberId:", leader.memberId)
+        print("members count:", selectedMembers.count)
+
+        let nameToSave = NSString(string: trimmedName) as String
+        let partToSave = selectedPart
+        let leaderToSave = leader
+        let membersToSave = selectedMembers
+
+        print("save snapshot ready")
+        print("trimmed name count:", nameToSave.count)
+
+        Task { @MainActor in
+            print("save task start")
             isSaving = true
-            let didSave = await onSave(
-                trimmedName,
-                selectedPart,
-                leader,
-                selectedMembers
+            let didSave = await viewModel.createGroup(
+                name: nameToSave,
+                part: partToSave,
+                leader: leaderToSave,
+                members: membersToSave
             )
+            print("save task finished:", didSave)
             isSaving = false
 
             if didSave {

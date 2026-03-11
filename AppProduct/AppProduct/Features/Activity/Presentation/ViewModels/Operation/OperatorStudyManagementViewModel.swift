@@ -443,10 +443,11 @@ final class OperatorStudyManagementViewModel {
         members: [ChallengerInfo]
     ) async -> Bool {
         print("createGroup start")
-        print(name)
+        print("createGroup raw name count:", name.count)
         let trimmedName = name.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
+        print("createGroup trimmed name count:", trimmedName.count)
         guard !trimmedName.isEmpty else {
             alertPrompt = AlertPrompt(
                 title: "그룹 생성 실패",
@@ -456,9 +457,11 @@ final class OperatorStudyManagementViewModel {
             return false
         }
 
+        print("createGroup before resolve ids")
         let resolvedChallengerIDs = await resolveChallengerIDs(
             from: [leader] + members
         )
+        print("createGroup resolved ids count:", resolvedChallengerIDs.count)
         guard let leaderId = resolvedChallengerIDs[leader.selectionKey] else {
             alertPrompt = AlertPrompt(
                 title: "그룹 생성 실패",
@@ -483,14 +486,17 @@ final class OperatorStudyManagementViewModel {
         let memberIds = members
             .compactMap { resolvedChallengerIDs[$0.selectionKey] }
             .filter { $0 != leaderId }
+        print("createGroup memberIds count:", memberIds.count)
 
         do {
+            print("createGroup before api")
             try await useCase.createStudyGroup(
                 name: trimmedName,
                 part: part,
                 leaderId: leaderId,
                 memberIds: memberIds
             )
+            print("createGroup api success")
             appendCreatedGroupToLocalState(
                 name: trimmedName,
                 part: part,
@@ -499,7 +505,9 @@ final class OperatorStudyManagementViewModel {
                 members: members,
                 resolvedChallengerIDs: resolvedChallengerIDs
             )
+            print("createGroup local append success")
             refreshStudyGroupManagementDataInBackground()
+            print("createGroup background refresh scheduled")
 
             return true
         } catch let error as DomainError {
@@ -509,6 +517,24 @@ final class OperatorStudyManagementViewModel {
                 positiveBtnTitle: "확인"
             )
             return false
+        } catch let error as NetworkError {
+            if presentStudyGroupCreateAlert(from: error) {
+                return false
+            }
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Activity",
+                action: "createStudyGroup"
+            ))
+            return false
+        } catch let error as RepositoryError {
+            if presentStudyGroupCreateAlert(from: error) {
+                return false
+            }
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Activity",
+                action: "createStudyGroup"
+            ))
+            return false
         } catch {
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Activity",
@@ -516,6 +542,48 @@ final class OperatorStudyManagementViewModel {
             ))
             return false
         }
+    }
+
+    private func presentStudyGroupCreateAlert(from error: NetworkError) -> Bool {
+        guard case .requestFailed(_, let data) = error,
+              let message = decodeServerMessage(from: data) else {
+            return false
+        }
+
+        alertPrompt = AlertPrompt(
+            title: "그룹 생성 실패",
+            message: message,
+            positiveBtnTitle: "확인"
+        )
+        return true
+    }
+
+    private func presentStudyGroupCreateAlert(from error: RepositoryError) -> Bool {
+        guard case .serverError(_, let message) = error,
+              let message,
+              !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
+
+        alertPrompt = AlertPrompt(
+            title: "그룹 생성 실패",
+            message: message,
+            positiveBtnTitle: "확인"
+        )
+        return true
+    }
+
+    private func decodeServerMessage(from data: Data?) -> String? {
+        guard let data,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+
+        let message = (json["message"] as? String)
+            ?? (json["result"] as? String)
+            ?? (json["error"] as? String)
+        let trimmed = message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : trimmed
     }
 
     private func appendCreatedGroupToLocalState(

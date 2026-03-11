@@ -165,14 +165,7 @@ struct OperatorStudyManagementView: View {
             )
         }
         .navigationDestination(isPresented: $showCreateView) {
-            OperatorStudyGroupCreateView { name, part, leader, members in
-                await viewModel.createGroup(
-                    name: name,
-                    part: part,
-                    leader: leader,
-                    members: members
-                )
-            }
+            OperatorStudyGroupCreateView(viewModel: viewModel)
         }
         .alertPrompt(item: $viewModel.alertPrompt)
     }
