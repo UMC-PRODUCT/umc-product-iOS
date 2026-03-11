@@ -107,4 +107,17 @@ final class BaseMapViewModel {
                 error, context: .init(feature: "Activity", action: "updateAddressForSession"))
         }
     }
+
+    /// Apple Maps에서 세션 위치를 엽니다.
+    func openSessionLocationInMaps() {
+        let mapItem = MKMapItem(
+            location: CLLocation(
+                latitude: sessionLocation.latitude,
+                longitude: sessionLocation.longitude
+            ),
+            address: nil
+        )
+        mapItem.name = sessionAddress
+        mapItem.openInMaps()
+    }
 }

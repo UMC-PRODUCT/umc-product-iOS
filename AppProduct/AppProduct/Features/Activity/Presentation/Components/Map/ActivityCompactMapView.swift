@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 /// 활동 상세 화면에서 사용하는 컴팩트 지도 뷰
 ///
@@ -64,6 +65,8 @@ fileprivate struct LocationStatusBarView: View {
         static let statusBarPadding: CGFloat = 16
         static let verifyIconSize: CGFloat = 12
         static let statusBarSpacing: CGFloat = 4
+        static let contextMenuIconSize: CGFloat = 12
+        static let addressVerticalPadding: CGFloat = 4
         static let animationOffset: CGFloat = 240
         static let animationDuration: Double = 8
     }
@@ -71,14 +74,26 @@ fileprivate struct LocationStatusBarView: View {
     var body: some View {
         HStack(spacing: Constants.statusBarSpacing) {
             verifyLocationStatus
-
-            Spacer(minLength: 0)
-
             address
         }
         .padding(DefaultConstant.defaultBtnPadding)
         .glassEffect()
         .safeAreaPadding(DefaultConstant.defaultSafeHorizon)
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button("클립보드로 복사", systemImage: "doc.on.doc") {
+                copyAddress()
+            }
+
+            Button("애플 지도로 검색", systemImage: "map") {
+                mapViewModel.openSessionLocationInMaps()
+            }
+        } preview: {
+            LocationStatusBarContextPreview(
+                isUserInsideGeofence: mapViewModel.isUserInsideGeofence,
+                sessionAddress: mapViewModel.sessionAddress ?? "주소를 알 수 없습니다."
+            )
+        }
     }
     
     /// 지오펜스 내 위치 인증 상태 표시
@@ -99,26 +114,86 @@ fileprivate struct LocationStatusBarView: View {
     }
     
     /// 세션 위치의 주소 (역지오코딩 결과)
-    /// - Note: animation modifier 분리로 뷰 재등장 시 애니메이션 중첩 방지
     private var address: some View {
-        Text(mapViewModel.sessionAddress ?? "주소를 알 수 없습니다.")
-            .appFont(.caption1, color: .grey600)
-            .offset(x: animate ? -Constants.animationOffset : 0)
-            .animation(
-                animate
-                    ? .linear(duration: Constants.animationDuration)
-                        .repeatForever(autoreverses: false)
-                    : .linear(duration: 0),
-                value: animate
-            )
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .clipped()
-            .onAppear {
-                animate = true
+        HStack(spacing: DefaultSpacing.spacing4) {
+            Spacer(minLength: 0)
+
+            Text(mapViewModel.sessionAddress ?? "주소를 알 수 없습니다.")
+                .appFont(.caption1, color: .grey600)
+                .offset(x: animate ? -Constants.animationOffset : 0)
+                .animation(
+                    animate
+                        ? .linear(duration: Constants.animationDuration)
+                            .repeatForever(autoreverses: false)
+                        : .linear(duration: 0),
+                    value: animate
+                )
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .clipped()
+                .onAppear {
+                    animate = true
+                }
+                .onDisappear {
+                    animate = false
+                }
+
+            Image(systemName: "ellipsis.circle")
+                .font(.system(size: Constants.contextMenuIconSize))
+                .foregroundStyle(.grey500)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.vertical, Constants.addressVerticalPadding)
+        .padding(.leading, DefaultSpacing.spacing8)
+        .accessibilityHint("길게 눌러 주소 관련 메뉴를 엽니다")
+    }
+
+    private func copyAddress() {
+        guard let address = mapViewModel.sessionAddress?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !address.isEmpty else { return }
+
+        UIPasteboard.general.string = address
+        triggerCopyHaptic()
+    }
+
+    private func triggerCopyHaptic() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+    }
+}
+
+private struct LocationStatusBarContextPreview: View {
+    let isUserInsideGeofence: Bool
+    let sessionAddress: String
+
+    private enum Constants {
+        static let verifyIconSize: CGFloat = 12
+        static let spacing: CGFloat = 4
+        static let previewWidth: CGFloat = 320
+    }
+
+    var body: some View {
+        HStack(spacing: Constants.spacing) {
+            HStack(spacing: Constants.spacing) {
+                Image(.Map.verifyLocation)
+                    .resizable()
+                    .frame(width: Constants.verifyIconSize, height: Constants.verifyIconSize)
+
+                Text(isUserInsideGeofence ? "위치 인증됨" : "위치 미인증")
+                    .appFont(.caption1, color: isUserInsideGeofence ? .indigo500 : .red)
             }
-            .onDisappear {
-                animate = false
-            }
+
+            Spacer(minLength: 0)
+
+            Text(sessionAddress)
+                .appFont(.caption1, color: .grey600)
+                .lineLimit(1)
+
+            Image(systemName: "ellipsis.circle")
+                .foregroundStyle(.grey500)
+        }
+        .padding(DefaultConstant.defaultBtnPadding)
+        .frame(width: Constants.previewWidth)
+        .glassEffect()
     }
 }
 
