@@ -34,6 +34,13 @@ struct NoticeUserContext {
 
 }
 
+// MARK: - NoticeGenerationTargetState
+/// 선택 기수별 지부/학교 필터 옵션 캐시입니다.
+struct NoticeGenerationTargetState: Equatable {
+    var branches: [NoticeTargetOption] = []
+    var schools: [NoticeTargetOption] = []
+}
+
 // MARK: - NoticePagingState
 /// 공지 목록/검색 공통 페이징 상태입니다.
 struct NoticePagingState {

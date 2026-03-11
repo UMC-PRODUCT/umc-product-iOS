@@ -159,7 +159,7 @@ extension NoticeViewModel {
 
         selectedGeneration = Generation(value: fallback.gen)
         if generationStates[fallback.gen] == nil {
-            generationStates[fallback.gen] = GenerationFilterState()
+            generationStates[fallback.gen] = GenerationFilterState(mainFilter: .central)
         }
         return fallback.gisuId
     }
