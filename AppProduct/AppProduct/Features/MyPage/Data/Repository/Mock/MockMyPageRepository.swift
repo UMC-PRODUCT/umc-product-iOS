@@ -28,6 +28,21 @@ final class MockMyPageRepository: MyPageRepositoryProtocol {
         )
     }
 
+    func fetchChallengerProfile(challengerId: Int) async throws -> MemberProfileSummary {
+        let profile = MyPageMockData.profile
+        let latestRole = profile.activityLogs
+            .sorted { $0.role > $1.role }
+            .first
+        return MemberProfileSummary(
+            memberId: "\(challengerId)",
+            name: profile.challangerInfo.name,
+            nickname: profile.challangerInfo.nickname,
+            generation: profile.challangerInfo.gen,
+            roleName: latestRole?.role.korean ?? "챌린저",
+            profileImageURL: profile.challangerInfo.profileImage
+        )
+    }
+
     func addChallengerRecord(code: String) async throws {
         _ = code
     }

@@ -445,6 +445,7 @@ struct NoticeDetailView: View {
 
     /// 상세 로드 실패/로딩 상태에서는 하단 수신 확인 inset을 숨깁니다.
     private var shouldShowReadStatusInset: Bool {
+        guard viewModel.canViewReadStatus else { return false }
         if case .loaded = viewModel.noticeState {
             return true
         }

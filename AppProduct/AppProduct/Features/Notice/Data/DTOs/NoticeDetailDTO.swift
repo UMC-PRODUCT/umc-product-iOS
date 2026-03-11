@@ -137,6 +137,7 @@ extension NoticeDetailDTO {
         let mappedImages = images.map { NoticeAttachmentImage(id: $0.id, url: $0.url) }
         let imageURLs = mappedImages.map(\.url)
         let linkURLs = links.map(\.url)
+        let resolvedAuthorName = resolvedAuthorName()
 
         return NoticeDetail(
             id: id,
@@ -148,7 +149,7 @@ extension NoticeDetailDTO {
             content: content,
             authorID: authorChallengerId ?? "0",
             authorMemberId: authorMemberId,
-            authorName: authorName ?? "알 수 없음",
+            authorName: resolvedAuthorName,
             authorImageURL: authorProfileImageUrl,
             createdAt: createdAt.toISO8601Date(),
             updatedAt: updatedAt?.toISO8601Date(),
@@ -159,6 +160,12 @@ extension NoticeDetailDTO {
             links: linkURLs,
             vote: mappedVote
         )
+    }
+
+    private func resolvedAuthorName() -> String {
+        [authorName, authorNickname]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first(where: { !$0.isEmpty }) ?? "알 수 없음"
     }
 }
 
