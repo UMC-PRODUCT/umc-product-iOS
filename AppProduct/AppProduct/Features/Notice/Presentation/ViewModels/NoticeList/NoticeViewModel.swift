@@ -27,6 +27,10 @@ final class NoticeViewModel {
         container.resolve(ChallengerGenRepositoryProtocol.self)
     }
 
+    var noticeReadRepository: NoticeReadRepositoryProtocol {
+        container.resolve(NoticeReadRepositoryProtocol.self)
+    }
+
     /// 공지 타겟(지부/학교) 조회 UseCase
     var noticeEditorTargetUseCase: NoticeEditorTargetUseCaseProtocol {
         container.resolve(NoticeEditorTargetUseCaseProtocol.self)
@@ -211,5 +215,9 @@ final class NoticeViewModel {
 
     var selectedGenerationSchoolId: Int {
         selectedGenerationOrganization?.schoolId ?? 0
+    }
+
+    var currentMemberId: Int {
+        UserDefaults.standard.integer(forKey: AppStorageKey.memberId)
     }
 }

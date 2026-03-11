@@ -291,6 +291,9 @@ extension DIContainer {
                 adapter: container.resolve(MoyaNetworkAdapter.self)
             )
         }
+        container.register(NoticeReadRepositoryProtocol.self) {
+            NoticeReadRepository(modelContext: modelContext)
+        }
         container.register(NoticeUseCaseProtocol.self) {
             NoticeUseCase(
                 repository: container.resolve(NoticeRepositoryProtocol.self),

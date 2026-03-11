@@ -139,7 +139,8 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
             viewCount: 0,
             scopeDisplayName: targetAudience.branches.first,
             targetsAllGenerations: targetAudience.generation <= 0,
-            parts: targetAudience.parts
+            parts: targetAudience.parts,
+            isRead: false
         ).tags
     }
 

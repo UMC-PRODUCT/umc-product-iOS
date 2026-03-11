@@ -85,7 +85,8 @@ extension NoticeDTO {
             viewCount: Int(viewCount) ?? 0,
             scopeDisplayName: scopeDisplayName,
             targetsAllGenerations: targetsAllGenerations,
-            parts: targetInfo.resolvedParts
+            parts: targetInfo.resolvedParts,
+            isRead: false
         )
     }
 }

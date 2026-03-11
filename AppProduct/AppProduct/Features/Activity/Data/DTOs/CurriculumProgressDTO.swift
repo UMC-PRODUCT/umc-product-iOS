@@ -17,6 +17,25 @@ struct ChallengerCurriculumProgressDTO: Codable, Sendable, Equatable {
     let completedCount: String
     let totalCount: String
     let workbooks: [ChallengerWorkbookProgressDTO]
+
+    private enum CodingKeys: String, CodingKey {
+        case curriculumId
+        case curriculumTitle
+        case part
+        case completedCount
+        case totalCount
+        case workbooks
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        curriculumId = try container.decodeFlexibleString(forKey: .curriculumId)
+        curriculumTitle = try container.decode(String.self, forKey: .curriculumTitle)
+        part = try container.decode(String.self, forKey: .part)
+        completedCount = try container.decodeFlexibleString(forKey: .completedCount)
+        totalCount = try container.decodeFlexibleString(forKey: .totalCount)
+        workbooks = try container.decode([ChallengerWorkbookProgressDTO].self, forKey: .workbooks)
+    }
 }
 
 /// 챌린저 워크북 진행 항목 DTO
@@ -30,6 +49,31 @@ struct ChallengerWorkbookProgressDTO: Codable, Sendable, Equatable {
     let status: String?
     let isReleased: Bool
     let isInProgress: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case originalWorkbookId
+        case challengerWorkbookId
+        case weekNo
+        case title
+        case description
+        case missionType
+        case status
+        case isReleased
+        case isInProgress
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        originalWorkbookId = container.decodeFlexibleOptionalString(forKey: .originalWorkbookId)
+        challengerWorkbookId = container.decodeFlexibleOptionalString(forKey: .challengerWorkbookId)
+        weekNo = try container.decodeFlexibleString(forKey: .weekNo)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+        missionType = try container.decode(String.self, forKey: .missionType)
+        status = try container.decodeIfPresent(String.self, forKey: .status)
+        isReleased = try container.decode(Bool.self, forKey: .isReleased)
+        isInProgress = try container.decode(Bool.self, forKey: .isInProgress)
+    }
 }
 
 // MARK: - toDomain
@@ -144,5 +188,41 @@ private extension ChallengerWorkbookProgressDTO {
             return .inProgress
         }
         return .locked
+    }
+}
+
+// MARK: - Flexible Decoding Helper
+
+private extension KeyedDecodingContainer {
+    func decodeFlexibleString(forKey key: Key) throws -> String {
+        if let value = try? decode(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return String(Int(value))
+        }
+        throw DecodingError.typeMismatch(
+            String.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected String/Int/Double for key '\(key.stringValue)'"
+            )
+        )
+    }
+
+    func decodeFlexibleOptionalString(forKey key: Key) -> String? {
+        if let value = try? decodeIfPresent(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return String(Int(value))
+        }
+        return nil
     }
 }

@@ -77,7 +77,7 @@ struct ChallengerMissionCardHeader: View, Equatable {
     }
 
     private var titleText: some View {
-        Text(model.title)
+        Text(wrappedTitle)
             .appFont(.calloutEmphasis)
             .multilineTextAlignment(.leading)
             .lineLimit(3)
@@ -99,6 +99,16 @@ struct ChallengerMissionCardHeader: View, Equatable {
         }
         .font(.system(size: Constants.chevronIconSize))
         .foregroundStyle(.grey400)
+    }
+
+    /// `-` 뒤에 zero-width space를 넣어 제목이 더 자연스럽게 줄바꿈되도록 조정합니다.
+    ///
+    /// 예: `1주차 - Spring Boot 시작하기`는 `-` 뒤에서 먼저 줄바꿈될 수 있어
+    /// `Spring`과 `Boot`가 불필요하게 분리되는 경우를 줄입니다.
+    private var wrappedTitle: String {
+        model.title
+            .replacingOccurrences(of: " - ", with: " - \u{200B}")
+            .replacingOccurrences(of: "Spring Boot", with: "Spring\u{00A0}Boot")
     }
 }
 

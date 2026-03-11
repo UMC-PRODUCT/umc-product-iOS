@@ -31,8 +31,16 @@ final class NoticeDetailViewModel {
         container.resolve(ChallengerGenRepositoryProtocol.self)
     }
 
+    var noticeReadRepository: NoticeReadRepositoryProtocol {
+        container.resolve(NoticeReadRepositoryProtocol.self)
+    }
+
     var userSessionManager: UserSessionManager {
         container.resolve(UserSessionManager.self)
+    }
+
+    var currentMemberId: Int {
+        UserDefaults.standard.integer(forKey: AppStorageKey.memberId)
     }
 
     // MARK: - Core State

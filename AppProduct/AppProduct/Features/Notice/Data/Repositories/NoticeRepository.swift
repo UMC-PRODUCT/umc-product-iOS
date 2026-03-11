@@ -419,7 +419,8 @@ private extension NoticeDetail {
             vote: vote,
             viewCount: 0,
             targetsAllGenerations: targetAudience.generation <= 0,
-            parts: targetAudience.parts
+            parts: targetAudience.parts,
+            isRead: false
         )
     }
 }

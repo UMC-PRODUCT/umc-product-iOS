@@ -19,7 +19,7 @@ struct ProfileLinkSection: View, Equatable {
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.header == rhs.header
+        lhs.header == rhs.header && lhs.profileLink == rhs.profileLink
     }
 
     // MARK: - Body

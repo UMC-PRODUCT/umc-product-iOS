@@ -213,13 +213,41 @@ extension NoticeViewModel {
 
         let filteredContent = filteredNoticeDTOs(from: response.content)
         let branchNameOverrides = await resolveBranchNameOverrides(from: filteredContent)
+        let readNoticeIDs = resolvedReadNoticeIDs()
         let items = filteredContent.map { dto in
             let chapterId = dto.targetInfo.targetChapterIdValue
             let scopeDisplayName = chapterId.flatMap { branchNameOverrides[$0] }
             let generation = resolvedGeneration(for: dto)
-            return dto.toItemModel(
+            let baseItem = dto.toItemModel(
                 generationOverride: generation,
                 scopeDisplayNameOverride: scopeDisplayName
+            )
+
+            guard readNoticeIDs.contains(dto.id) else {
+                return baseItem
+            }
+
+            return NoticeItemModel(
+                noticeId: baseItem.noticeId,
+                generation: baseItem.generation,
+                scope: baseItem.scope,
+                category: baseItem.category,
+                mustRead: baseItem.mustRead,
+                isAlert: baseItem.isAlert,
+                date: baseItem.date,
+                title: baseItem.title,
+                content: baseItem.content,
+                writer: baseItem.writer,
+                authorNickname: baseItem.authorNickname,
+                authorName: baseItem.authorName,
+                links: baseItem.links,
+                images: baseItem.images,
+                vote: baseItem.vote,
+                viewCount: baseItem.viewCount,
+                scopeDisplayName: baseItem.scopeDisplayName,
+                targetsAllGenerations: baseItem.targetsAllGenerations,
+                parts: baseItem.parts,
+                isRead: true
             )
         }
         pagingState.applySuccess(page: page, hasNextPage: response.hasNext)
@@ -286,6 +314,11 @@ extension NoticeViewModel {
         }
 
         return gisuPairs.first(where: { $0.gisuId == gisuId })?.gen
+    }
+
+    private func resolvedReadNoticeIDs() -> Set<String> {
+        guard currentMemberId > 0 else { return [] }
+        return (try? noticeReadRepository.fetchReadNoticeIDs(memberId: currentMemberId)) ?? []
     }
 
     /// 조회 실패 상태를 반영합니다.

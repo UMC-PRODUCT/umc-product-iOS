@@ -222,7 +222,8 @@ extension AppProductApp {
     private static func makeModelContainer() -> ModelContainer {
         let schema = Schema([
             NoticeHistoryData.self,
-            GenerationMappingRecord.self
+            GenerationMappingRecord.self,
+            NoticeReadRecord.self
         ])
         
         do {

@@ -23,6 +23,7 @@ private enum Constant {
     static let contentSpacing: CGFloat = 4
     // bottom
     static let bottomIconSize: CGFloat = 12
+    static let unreadDotSize: CGFloat = 8
 }
 
 // MARK: - NoticeItem
@@ -150,6 +151,13 @@ private struct BottomSection: View, Equatable {
             if model.isAlert {
                 Image(systemName: "bell.fill")
                     .font(.system(size: Constant.bottomIconSize))
+            }
+
+            if !model.isRead {
+                Circle()
+                    .fill(.red)
+                    .glassEffect(.clear.tint(.red), in: .circle)
+                    .frame(width: Constant.unreadDotSize, height: Constant.unreadDotSize)
             }
 
             Text(model.date.toYearMonthDay())

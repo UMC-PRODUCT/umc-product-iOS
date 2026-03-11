@@ -13,8 +13,8 @@ struct PostDetailDTO: Codable {
     let title: String
     let content: String
     let category: String
-    let authorId: String
-    let authorName: String
+    let authorId: String?
+    let authorName: String?
     let authorNickname: String?
     let authorProfileImage: String?
     let authorPart: String?
@@ -26,6 +26,47 @@ struct PostDetailDTO: Codable {
     let isAuthor: Bool
     let scrapCount: String
     let isScrapped: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case postId
+        case title
+        case content
+        case category
+        case authorId
+        case authorName
+        case authorNickname
+        case authorProfileImage
+        case authorPart
+        case lightningInfo
+        case commentCount
+        case writeTime
+        case likeCount
+        case isLiked
+        case isAuthor
+        case scrapCount
+        case isScrapped
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        postId = try container.decodeFlexibleString(forKey: .postId)
+        title = try container.decode(String.self, forKey: .title)
+        content = try container.decode(String.self, forKey: .content)
+        category = try container.decode(String.self, forKey: .category)
+        authorId = container.decodeFlexibleOptionalString(forKey: .authorId)
+        authorName = try container.decodeIfPresent(String.self, forKey: .authorName)
+        authorNickname = try container.decodeIfPresent(String.self, forKey: .authorNickname)
+        authorProfileImage = try container.decodeIfPresent(String.self, forKey: .authorProfileImage)
+        authorPart = try container.decodeIfPresent(String.self, forKey: .authorPart)
+        lightningInfo = try container.decodeIfPresent(LightningInfoDTO.self, forKey: .lightningInfo)
+        commentCount = try container.decodeFlexibleString(forKey: .commentCount)
+        writeTime = try container.decode(String.self, forKey: .writeTime)
+        likeCount = try container.decodeFlexibleString(forKey: .likeCount)
+        isLiked = try container.decode(Bool.self, forKey: .isLiked)
+        isAuthor = try container.decode(Bool.self, forKey: .isAuthor)
+        scrapCount = try container.decodeFlexibleString(forKey: .scrapCount)
+        isScrapped = try container.decode(Bool.self, forKey: .isScrapped)
+    }
 }
 
 // MARK: - 2. 리스트 내 개별 항목 DTO
@@ -34,10 +75,10 @@ struct PostListItemDTO: Codable {
     let title: String
     let content: String
     let category: String
-    let authorId: String
-    let authorChallengerId: String
+    let authorId: String?
+    let authorChallengerId: String?
     let authorMemberId: String?
-    let authorName: String
+    let authorName: String?
     let authorNickname: String?
     let authorProfileImage: String?
     let authorPart: String?
@@ -47,6 +88,47 @@ struct PostListItemDTO: Codable {
     let isLiked: Bool
     let isAuthor: Bool
     let lightningInfo: LightningInfoDTO?
+
+    private enum CodingKeys: String, CodingKey {
+        case postId
+        case title
+        case content
+        case category
+        case authorId
+        case authorChallengerId
+        case authorMemberId
+        case authorName
+        case authorNickname
+        case authorProfileImage
+        case authorPart
+        case createdAt
+        case commentCount
+        case likeCount
+        case isLiked
+        case isAuthor
+        case lightningInfo
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        postId = try container.decodeFlexibleString(forKey: .postId)
+        title = try container.decode(String.self, forKey: .title)
+        content = try container.decode(String.self, forKey: .content)
+        category = try container.decode(String.self, forKey: .category)
+        authorId = container.decodeFlexibleOptionalString(forKey: .authorId)
+        authorChallengerId = container.decodeFlexibleOptionalString(forKey: .authorChallengerId)
+        authorMemberId = container.decodeFlexibleOptionalString(forKey: .authorMemberId)
+        authorName = try container.decodeIfPresent(String.self, forKey: .authorName)
+        authorNickname = try container.decodeIfPresent(String.self, forKey: .authorNickname)
+        authorProfileImage = try container.decodeIfPresent(String.self, forKey: .authorProfileImage)
+        authorPart = try container.decodeIfPresent(String.self, forKey: .authorPart)
+        createdAt = try container.decode(String.self, forKey: .createdAt)
+        commentCount = try container.decodeFlexibleString(forKey: .commentCount)
+        likeCount = try container.decodeFlexibleString(forKey: .likeCount)
+        isLiked = try container.decode(Bool.self, forKey: .isLiked)
+        isAuthor = try container.decode(Bool.self, forKey: .isAuthor)
+        lightningInfo = try container.decodeIfPresent(LightningInfoDTO.self, forKey: .lightningInfo)
+    }
 }
 
 // MARK: - 3. 공통 번개 정보
@@ -91,14 +173,16 @@ struct LightningInfoDTO: Codable {
 // 리스트 항목 변환
 extension PostListItemDTO {
     func toCommunityItemModel() -> CommunityItemModel {
+        let resolvedAuthorName = resolvedDisplayName(authorId: authorId, authorName: authorName)
+
         return CommunityItemModel(
             postId: Int(postId) ?? 0,
-            userId: Int(authorId) ?? 0,
+            userId: authorId.flatMap(Int.init) ?? 0,
             category: CommunityItemCategory(apiValue: category) ?? .free,
             title: title,
             content: content,
             profileImage: authorProfileImage,
-            userName: authorName,
+            userName: resolvedAuthorName,
             userNickname: authorNickname,
             part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
             createdAt: ServerDateTimeConverter.parseUTCDateTime(createdAt) ?? Date(),
@@ -115,14 +199,16 @@ extension PostListItemDTO {
 // 상세 정보 변환
 extension PostDetailDTO {
     func toCommunityItemModel() -> CommunityItemModel {
+        let resolvedAuthorName = resolvedDisplayName(authorId: authorId, authorName: authorName)
+
         return CommunityItemModel(
             postId: Int(postId) ?? 0,
-            userId: Int(authorId) ?? 0,
+            userId: authorId.flatMap(Int.init) ?? 0,
             category: CommunityItemCategory(apiValue: category) ?? .free,
             title: title,
             content: content,
             profileImage: authorProfileImage,
-            userName: authorName,
+            userName: resolvedAuthorName,
             userNickname: authorNickname,
             part: UMCPartType(apiValue: authorPart ?? "PM") ?? .pm,
             createdAt: ServerDateTimeConverter.parseUTCDateTime(writeTime) ?? Date(),
@@ -146,4 +232,51 @@ struct CommunityLikeDTO: Codable {
 struct CommunityScrapDTO: Codable {
     let scrapped: Bool
     let scrapCount: String
+}
+
+// MARK: - Helper
+
+private func resolvedDisplayName(authorId: String?, authorName: String?) -> String {
+    let trimmedAuthorId = authorId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    let trimmedAuthorName = authorName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+    guard !trimmedAuthorId.isEmpty, trimmedAuthorId != "0", !trimmedAuthorName.isEmpty else {
+        return "알 수 없음"
+    }
+
+    return trimmedAuthorName
+}
+
+private extension KeyedDecodingContainer {
+    func decodeFlexibleString(forKey key: Key) throws -> String {
+        if let value = try? decode(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return String(Int(value))
+        }
+        throw DecodingError.typeMismatch(
+            String.self,
+            DecodingError.Context(
+                codingPath: codingPath + [key],
+                debugDescription: "Expected String/Int/Double for key '\(key.stringValue)'"
+            )
+        )
+    }
+
+    func decodeFlexibleOptionalString(forKey key: Key) -> String? {
+        if let value = try? decodeIfPresent(String.self, forKey: key) {
+            return value
+        }
+        if let value = try? decode(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try? decode(Double.self, forKey: key) {
+            return String(Int(value))
+        }
+        return nil
+    }
 }

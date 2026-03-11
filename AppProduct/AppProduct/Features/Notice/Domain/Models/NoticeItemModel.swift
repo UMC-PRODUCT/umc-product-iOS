@@ -33,6 +33,7 @@ struct NoticeItemModel: Equatable, Identifiable {
     let scopeDisplayName: String?
     let targetsAllGenerations: Bool
     let parts: [UMCPartType]
+    let isRead: Bool
 
     init(
         noticeId: String = UUID().uuidString,
@@ -53,7 +54,8 @@ struct NoticeItemModel: Equatable, Identifiable {
         viewCount: Int,
         scopeDisplayName: String? = nil,
         targetsAllGenerations: Bool = false,
-        parts: [UMCPartType] = []
+        parts: [UMCPartType] = [],
+        isRead: Bool = false
     ) {
         self.noticeId = noticeId
         self.generation = generation
@@ -74,6 +76,7 @@ struct NoticeItemModel: Equatable, Identifiable {
         self.scopeDisplayName = scopeDisplayName
         self.targetsAllGenerations = targetsAllGenerations
         self.parts = parts
+        self.isRead = isRead
     }
     
     /// UI 표시용 태그 목록

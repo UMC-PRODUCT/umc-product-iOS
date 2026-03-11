@@ -232,6 +232,7 @@ extension NoticeDetailViewModel {
 
         do {
             try await noticeUseCase.readNotice(noticeId: noticeID)
+            persistReadStateIfPossible()
             hasMarkedAsRead = true
             return true
         } catch let error as RepositoryError {
@@ -274,6 +275,19 @@ extension NoticeDetailViewModel {
             )
             // 읽음 처리 실패는 상세 진입을 막지 않습니다.
             return false
+        }
+    }
+
+    private func persistReadStateIfPossible() {
+        guard currentMemberId > 0 else { return }
+
+        do {
+            try noticeReadRepository.markAsRead(
+                noticeId: String(noticeID),
+                memberId: currentMemberId
+            )
+        } catch {
+            // 로컬 읽음 상태 저장 실패는 화면 흐름을 막지 않습니다.
         }
     }
 
