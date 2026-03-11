@@ -8,42 +8,57 @@
 import Foundation
 
 /// UMC 챌린저 인증 실패 화면의 상태와 액션을 관리하는 ViewModel
+///
+/// 기존 챌린저 코드 재인증, 승인 대기 상태에서의 로그아웃, 계정 삭제 흐름을
+/// 한 곳에서 조율하며, 화면에 필요한 얼럿 상태도 함께 제공합니다.
 @Observable
 final class FailedVerificationUMCViewModel {
 
     // MARK: - Property
 
-    /// 경고 아이콘 애니메이션 활성화 상태
+    /// 상단 경고 아이콘의 pulse 애니메이션 활성화 상태입니다.
     var showWarning: Bool = false
 
-    /// 코드 입력 얼럿 표시 상태
+    /// 기존 챌린저 코드 입력 얼럿 표시 상태입니다.
     var showCodeAlert: Bool = false
 
-    /// 공통 알럿 프롬프트 상태
+    /// 화면 전반에서 재사용하는 `AlertPrompt` 상태입니다.
     var alertPrompt: AlertPrompt?
 
-    /// 전송 중 상태
+    /// 기존 챌린저 코드 인증 요청 진행 상태입니다.
     var isSubmitting: Bool = false
 
-    /// 계정 삭제 진행 상태
+    /// 회원 탈퇴 요청 진행 상태입니다.
     var isDeletingAccount: Bool = false
 
-    /// 로그아웃 진행 상태
+    /// 로그아웃 요청 진행 상태입니다.
     var isLoggingOut: Bool = false
 
-    /// 입력된 챌린저 코드
+    /// 사용자가 입력한 기존 챌린저 코드입니다.
     var challengerCode: String = ""
 
     // MARK: - Function
 
+    /// 기존 챌린저 코드 입력 얼럿을 표시합니다.
     func presentCodeAlert() {
         showCodeAlert = true
     }
 
+    /// 코드 입력 얼럿을 닫기 전 입력값을 초기화합니다.
+    ///
+    /// 잘못 입력한 코드가 다음 시도에 남지 않도록 문자열을 비웁니다.
     func dismissCodeAlert() {
         challengerCode = ""
     }
 
+    /// 입력된 기존 챌린저 코드를 검증하고 재인증을 수행합니다.
+    ///
+    /// 성공 시 프로필을 다시 조회해 로컬 세션 저장소와 역할 정보를 동기화하고,
+    /// 메인 화면으로 이동할 수 있는 성공 프롬프트를 준비합니다.
+    ///
+    /// - Parameters:
+    ///   - container: 인증, 홈, 세션 관련 의존성을 조회하는 DI 컨테이너입니다.
+    ///   - appFlow: 인증 성공 후 루트 화면 전환에 사용하는 앱 플로우입니다.
     @MainActor
     func submitChallengerCode(
         container: DIContainer,
@@ -86,6 +101,15 @@ final class FailedVerificationUMCViewModel {
         }
     }
 
+    /// 회원 탈퇴 확인 프롬프트를 구성합니다.
+    ///
+    /// 사용자가 삭제를 확정하면 비동기 탈퇴 로직을 실행하도록 `AlertPrompt`에
+    /// 후속 액션을 연결합니다.
+    ///
+    /// - Parameters:
+    ///   - container: 마이페이지/네트워크 의존성을 조회하는 DI 컨테이너입니다.
+    ///   - appFlow: 탈퇴 완료 후 로그인 화면으로 복귀시키는 앱 플로우입니다.
+    ///   - errorHandler: 탈퇴 실패 시 전역 에러 처리를 담당합니다.
     func presentDeleteAccountPrompt(
         container: DIContainer,
         appFlow: AppFlow,
@@ -110,6 +134,15 @@ final class FailedVerificationUMCViewModel {
         )
     }
 
+    /// 로그아웃 확인 프롬프트를 구성합니다.
+    ///
+    /// 사용자가 로그아웃을 확정하면 토큰 정리와 화면 전환을 수행하는 비동기 작업을
+    /// `AlertPrompt`의 확인 액션에 연결합니다.
+    ///
+    /// - Parameters:
+    ///   - container: 네트워크 의존성을 조회하고 캐시를 초기화할 DI 컨테이너입니다.
+    ///   - appFlow: 로그아웃 완료 후 로그인 화면으로 전환하는 앱 플로우입니다.
+    ///   - errorHandler: 로그아웃 실패 시 전역 에러 처리를 담당합니다.
     func presentLogoutPrompt(
         container: DIContainer,
         appFlow: AppFlow,
@@ -136,6 +169,9 @@ final class FailedVerificationUMCViewModel {
 
     // MARK: - Private Function
 
+    /// 기존 챌린저 재인증 성공 프롬프트를 표시합니다.
+    ///
+    /// 확인 버튼을 누르면 자동 로그인 플래그를 활성화하고 메인 화면으로 이동합니다.
     private func presentSuccessPrompt(appFlow: AppFlow) {
         alertPrompt = AlertPrompt(
             title: "인증 완료",
@@ -151,6 +187,7 @@ final class FailedVerificationUMCViewModel {
         )
     }
 
+    /// 코드 형식이 유효하지 않거나 조회되지 않을 때의 실패 프롬프트를 표시합니다.
     private func presentInvalidCodePrompt() {
         alertPrompt = AlertPrompt(
             title: "인증 실패",
@@ -159,6 +196,9 @@ final class FailedVerificationUMCViewModel {
         )
     }
 
+    /// 서버 비즈니스 에러를 사용자 메시지로 변환해 실패 프롬프트를 표시합니다.
+    ///
+    /// - Parameter error: 코드 재인증 API에서 반환된 `RepositoryError`입니다.
     private func presentCodeFailurePrompt(for error: RepositoryError) {
         let message: String
 
@@ -184,6 +224,15 @@ final class FailedVerificationUMCViewModel {
         )
     }
 
+    /// 승인 대기 상태 화면에서 로그아웃을 수행합니다.
+    ///
+    /// 토큰과 DI 캐시를 정리한 뒤 로그인 화면으로 복귀시키며,
+    /// 실패 시 `ErrorHandler`로 전역 에러를 전달합니다.
+    ///
+    /// - Parameters:
+    ///   - container: `NetworkClient` 조회와 캐시 초기화에 사용하는 DI 컨테이너입니다.
+    ///   - appFlow: 로그인 화면 전환에 사용하는 앱 플로우입니다.
+    ///   - errorHandler: 실패 시 에러 컨텍스트를 기록할 핸들러입니다.
     @MainActor
     private func logout(
         container: DIContainer,
@@ -211,6 +260,15 @@ final class FailedVerificationUMCViewModel {
         }
     }
 
+    /// 승인 대기 상태 화면에서 회원 탈퇴를 수행합니다.
+    ///
+    /// 계정 삭제 완료 후 서버 로그아웃과 DI 캐시 초기화를 함께 수행하며,
+    /// 실패 시 `ErrorHandler`로 위임합니다.
+    ///
+    /// - Parameters:
+    ///   - container: 삭제 UseCase와 `NetworkClient`를 조회할 DI 컨테이너입니다.
+    ///   - appFlow: 완료 후 로그인 화면으로 전환하는 앱 플로우입니다.
+    ///   - errorHandler: 실패 시 에러 컨텍스트를 기록할 핸들러입니다.
     @MainActor
     private func deleteAccount(
         container: DIContainer,
@@ -238,6 +296,16 @@ final class FailedVerificationUMCViewModel {
         }
     }
 
+    // MARK: - Helper
+
+    /// 재조회한 프로필을 로컬 저장소와 세션 상태에 반영합니다.
+    ///
+    /// 승인 여부, 역할, 조직 정보, 기수/챌린저 식별자를 `UserDefaults`에 저장하고
+    /// `UserSessionManager`와 프로필 갱신 알림까지 함께 동기화합니다.
+    ///
+    /// - Parameters:
+    ///   - profile: 재인증 직후 서버에서 조회한 최신 프로필입니다.
+    ///   - container: 세션 관리자 조회에 사용하는 DI 컨테이너입니다.
     private func syncProfileToStorage(
         _ profile: HomeProfileResult,
         container: DIContainer
@@ -275,6 +343,10 @@ final class FailedVerificationUMCViewModel {
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
     }
 
+    /// 프로필이 승인 완료 상태인지 판별합니다.
+    ///
+    /// 기수 정보가 직접 존재하거나 `seasonTypes` 안에 기수 데이터가 하나라도 있으면
+    /// 승인된 사용자로 간주합니다.
     private func isApprovedProfile(_ profile: HomeProfileResult) -> Bool {
         if !profile.generations.isEmpty {
             return true
@@ -289,6 +361,10 @@ final class FailedVerificationUMCViewModel {
         return false
     }
 
+    /// 가장 최신 기수에서 우선순위가 가장 높은 역할을 찾습니다.
+    ///
+    /// - Parameter roles: 서버에서 전달받은 사용자 역할 목록입니다.
+    /// - Returns: 최신 기수 기준 최고 우선순위 역할. 역할이 없으면 `nil`을 반환합니다.
     private func latestHighestPriorityRole(
         in roles: [ChallengerRole]
     ) -> ChallengerRole? {
@@ -303,6 +379,10 @@ final class FailedVerificationUMCViewModel {
             }
     }
 
+    /// 서버 메시지 앞에 붙은 에러 코드를 제거해 사용자 노출 문구를 정리합니다.
+    ///
+    /// - Parameter message: 서버 원본 에러 메시지입니다.
+    /// - Returns: 코드 접두어와 불필요한 공백을 제거한 사용자 표시용 문자열입니다.
     private func sanitizedErrorMessage(from message: String) -> String {
         let pattern = #"^[A-Z]+-\d{4}\s*[:\-]?\s*"#
         let sanitized = message.replacingOccurrences(
