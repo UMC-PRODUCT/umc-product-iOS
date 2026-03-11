@@ -38,7 +38,8 @@ struct NoticeViewModelTests {
                 organizationTypeRawValue: "CENTRAL",
                 chapterId: 14,
                 schoolId: 1,
-                memberRoleRawValue: "CHALLENGER"
+                memberRoleRawValue: "CHALLENGER",
+                generationOrganizationsJSON: "[]"
             )
             viewModel.gisuPairs = [(gen: 9, gisuId: 3), (gen: 8, gisuId: 2)]
             viewModel.generations = [Generation(value: 9), Generation(value: 8)]
@@ -76,6 +77,74 @@ struct NoticeViewModelTests {
         #expect(latestRequest?.chapterId == nil)
         #expect(latestRequest?.schoolId == nil)
         #expect(latestRequest?.part == nil)
+    }
+
+    @Test("기수별 조직 정보가 저장돼 있으면 상단 라벨과 필터 요청이 선택 기수 기준으로 바뀐다")
+    func useGenerationScopedOrganizationWhenGenerationChanges() async throws {
+        let targetUseCase = MockNoticeListTargetUseCase(
+            branchesByGisu: [
+                2: [NoticeTargetOption(id: 21, name: "Ain")]
+            ],
+            schoolsByGisu: [
+                2: [NoticeTargetOption(id: 7, name: "중앙대학교")]
+            ]
+        )
+        let noticeUseCase = MockNoticeUseCase()
+        let contexts = [
+            GenerationOrganizationContext(
+                gen: 8,
+                chapterId: 21,
+                chapterName: "Ain",
+                schoolId: 7,
+                schoolName: "중앙대학교"
+            )
+        ]
+        let contextsData = try JSONEncoder().encode(contexts)
+        let contextsJSON = String(decoding: contextsData, as: UTF8.self)
+
+        let viewModel = await MainActor.run {
+            makeSUT(
+                noticeUseCase: noticeUseCase,
+                targetUseCase: targetUseCase
+            )
+        }
+
+        await MainActor.run {
+            viewModel.applyUserContext(
+                schoolName: "가천대학교",
+                chapterName: "Xenon",
+                responsiblePart: "IOS",
+                organizationTypeRawValue: "CENTRAL",
+                chapterId: 14,
+                schoolId: 1,
+                memberRoleRawValue: "CHALLENGER",
+                generationOrganizationsJSON: contextsJSON
+            )
+            viewModel.gisuPairs = [(gen: 9, gisuId: 3), (gen: 8, gisuId: 2)]
+            viewModel.generations = [Generation(value: 9), Generation(value: 8)]
+            viewModel.isGisuListLoaded = true
+            viewModel.selectedGeneration = Generation(value: 8)
+            viewModel.generationStates[8] = GenerationFilterState(mainFilter: .branch("지부"))
+        }
+
+        await MainActor.run {
+            viewModel.selectMainFilter(.branch("지부"))
+        }
+
+        await waitUntil {
+            let latestRequest = await noticeUseCase.latestRequestSummary()
+            return latestRequest?.gisuId == 2 && latestRequest?.chapterId == 21
+        }
+
+        let labels = await MainActor.run {
+            viewModel.mainFilterItems.map(\.labelText)
+        }
+        let latestRequest = await noticeUseCase.latestRequestSummary()
+
+        #expect(labels == ["UMC 공지", "Ain", "중앙대학교"])
+        #expect(latestRequest?.gisuId == 2)
+        #expect(latestRequest?.chapterId == 21)
+        #expect(latestRequest?.schoolId == nil)
     }
 
     @MainActor

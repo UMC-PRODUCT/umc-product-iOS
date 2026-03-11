@@ -298,8 +298,8 @@ extension NoticeViewModel {
             gisuId: gisuId,
             page: page,
             selectedMainFilter: selectedMainFilter,
-            chapterId: chapterId,
-            schoolId: schoolId,
+            chapterId: selectedGenerationChapterId,
+            schoolId: selectedGenerationSchoolId,
             pageSize: pageSize,
             sort: pageSort
         )

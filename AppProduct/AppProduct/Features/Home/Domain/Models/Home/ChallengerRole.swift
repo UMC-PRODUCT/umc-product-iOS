@@ -51,4 +51,6 @@ struct HomeProfileResult: Equatable {
     let roles: [ChallengerRole]
     /// 프로필 응답에서 파생한 기수별 패널티 데이터
     let generations: [GenerationData]
+    /// 기수별 사용자 소속 조직 정보
+    let generationOrganizations: [GenerationOrganizationContext] = []
 }

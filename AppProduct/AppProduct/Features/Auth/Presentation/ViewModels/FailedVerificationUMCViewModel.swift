@@ -337,10 +337,22 @@ final class FailedVerificationUMCViewModel {
             profile.roles.map(\.roleType.rawValue),
             forKey: AppStorageKey.memberRoles
         )
+        defaults.set(
+            encodeGenerationOrganizations(profile.generationOrganizations),
+            forKey: AppStorageKey.generationOrganizations
+        )
         defaults.set(isApprovedProfile(profile), forKey: AppStorageKey.canAutoLogin)
 
         container.resolve(UserSessionManager.self).updateRole(resolvedRole)
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
+    }
+
+    private func encodeGenerationOrganizations(_ contexts: [GenerationOrganizationContext]) -> String {
+        guard let data = try? JSONEncoder().encode(contexts),
+              let json = String(data: data, encoding: .utf8) else {
+            return "[]"
+        }
+        return json
     }
 
     /// 프로필이 승인 완료 상태인지 판별합니다.

@@ -21,6 +21,7 @@ struct NoticeView: View {
     @AppStorage(AppStorageKey.memberRole) private var memberRoleRaw: String = ""
     @AppStorage(AppStorageKey.chapterId) private var chapterId: Int = 0
     @AppStorage(AppStorageKey.schoolId) private var schoolId: Int = 0
+    @AppStorage(AppStorageKey.generationOrganizations) private var generationOrganizationsJSON: String = "[]"
     @AppStorage(AppStorageKey.noticeSelectedGisuId) private var noticeSelectedGisuId: Int = 0
     @State private var viewModel: NoticeViewModel
     @State private var search: String = ""
@@ -235,7 +236,8 @@ struct NoticeView: View {
             organizationTypeRawValue: organizationType,
             chapterId: chapterId,
             schoolId: schoolId,
-            memberRoleRawValue: memberRoleRaw
+            memberRoleRawValue: memberRoleRaw,
+            generationOrganizationsJSON: generationOrganizationsJSON
         )
     }
 
@@ -246,7 +248,16 @@ struct NoticeView: View {
 
     /// 사용자 컨텍스트 변경 감지를 위한 서명 문자열입니다.
     private var userContextSignature: String {
-        [schoolName, chapterName, responsiblePart, organizationType, memberRoleRaw, String(chapterId), String(schoolId)]
+        [
+            schoolName,
+            chapterName,
+            responsiblePart,
+            organizationType,
+            memberRoleRaw,
+            String(chapterId),
+            String(schoolId),
+            generationOrganizationsJSON
+        ]
             .joined(separator: Constants.userContextSeparator)
     }
     

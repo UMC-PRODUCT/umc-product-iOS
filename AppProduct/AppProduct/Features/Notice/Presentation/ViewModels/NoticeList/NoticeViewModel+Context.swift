@@ -32,7 +32,8 @@ extension NoticeViewModel {
         organizationTypeRawValue: String,
         chapterId: Int,
         schoolId: Int,
-        memberRoleRawValue: String
+        memberRoleRawValue: String,
+        generationOrganizationsJSON: String
     ) {
         self.userContext = NoticeUserContext(
             schoolName: schoolName,
@@ -43,6 +44,7 @@ extension NoticeViewModel {
         self.memberRole = ManagementTeam(rawValue: memberRoleRawValue)
         self.chapterId = chapterId
         self.schoolId = schoolId
+        self.generationOrganizations = decodeGenerationOrganizations(from: generationOrganizationsJSON)
 
         let validMainFilters = mainFilterItems
         let isCurrentPartSelectionValid: Bool = {
@@ -57,6 +59,15 @@ extension NoticeViewModel {
             state.mainFilter = validMainFilters.first ?? .all
             currentState = state
         }
+    }
+
+    private func decodeGenerationOrganizations(from json: String) -> [Int: GenerationOrganizationContext] {
+        guard let data = json.data(using: .utf8),
+              let contexts = try? JSONDecoder().decode([GenerationOrganizationContext].self, from: data) else {
+            return [:]
+        }
+
+        return Dictionary(uniqueKeysWithValues: contexts.map { ($0.gen, $0) })
     }
 
     /// 기수 목록 조회
