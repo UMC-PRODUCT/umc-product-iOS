@@ -122,9 +122,15 @@ final class NoticeDetailViewModel {
     /// 수정 화면 진입에 필요한 상세 데이터 준비 완료 여부
     var isDetailPreparedForEdit: Bool = false
 
-    /// 수신 확인 현황 접근 가능 여부 (운영진 이상)
+    /// 수신 확인 현황 접근 가능 여부
     var canViewReadStatus: Bool {
-        resolvedMemberRole.canAccessAdminMode
+        guard let detail = noticeState.value else { return false }
+        return NoticeReadStatusPermissionEvaluator.canViewReadStatus(
+            roles: resolvedMemberRoles,
+            userChapterId: resolvedChapterId,
+            userSchoolId: resolvedSchoolId,
+            targetAudience: detail.targetAudience
+        )
     }
 
     // MARK: - Read Status Computed
@@ -347,6 +353,8 @@ final class NoticeDetailViewModel {
             generation: resolvedGeneration,
             scope: detail.targetAudience.scope,
             parts: detail.targetAudience.parts,
+            chapterId: detail.targetAudience.chapterId,
+            schoolId: detail.targetAudience.schoolId,
             branches: detail.targetAudience.branches,
             schools: detail.targetAudience.schools
         )
@@ -388,14 +396,24 @@ final class NoticeDetailViewModel {
         }
     }
 
-    private var resolvedMemberRole: ManagementTeam {
-        let storedRole = UserDefaults.standard.string(forKey: AppStorageKey.memberRole)
+    private var resolvedMemberRoles: [ManagementTeam] {
+        let storedRoles = (UserDefaults.standard.array(forKey: AppStorageKey.memberRoles) as? [String] ?? [])
+            .compactMap(ManagementTeam.init(rawValue:))
+        let storedHighestRole = UserDefaults.standard.string(forKey: AppStorageKey.memberRole)
             .flatMap(ManagementTeam.init(rawValue:))
+        let combinedRoles = storedRoles + [userSessionManager.currentRole] + [storedHighestRole].compactMap { $0 }
 
-        guard let storedRole else {
-            return userSessionManager.currentRole
-        }
-
-        return max(userSessionManager.currentRole, storedRole)
+        return Array(Set(combinedRoles))
     }
+
+    private var resolvedChapterId: Int? {
+        let chapterId = UserDefaults.standard.integer(forKey: AppStorageKey.chapterId)
+        return chapterId > 0 ? chapterId : nil
+    }
+
+    private var resolvedSchoolId: Int? {
+        let schoolId = UserDefaults.standard.integer(forKey: AppStorageKey.schoolId)
+        return schoolId > 0 ? schoolId : nil
+    }
+
 }

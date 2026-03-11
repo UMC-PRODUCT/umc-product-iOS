@@ -90,6 +90,8 @@ struct NoticeRepository: NoticeRepositoryProtocol {
                 generation: generation,
                 scope: scope,
                 parts: body.targetInfo.targetParts ?? [],
+                chapterId: body.targetInfo.targetChapterId,
+                schoolId: body.targetInfo.targetSchoolId,
                 branches: [],
                 schools: []
             ),

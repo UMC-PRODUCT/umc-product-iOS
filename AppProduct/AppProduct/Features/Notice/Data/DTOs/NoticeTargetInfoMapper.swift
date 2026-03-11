@@ -67,6 +67,8 @@ extension NoticeTargetInfoDTO {
             generation: generationValue,
             scope: targetScope,
             parts: resolvedParts,
+            chapterId: targetChapterIdValue,
+            schoolId: targetSchoolIdValue,
             branches: targetScope == .branch ? [resolvedChapterName].compactMap { $0 } : [],
             schools: targetScope == .campus ? [resolvedSchoolName].compactMap { $0 } : []
         )
