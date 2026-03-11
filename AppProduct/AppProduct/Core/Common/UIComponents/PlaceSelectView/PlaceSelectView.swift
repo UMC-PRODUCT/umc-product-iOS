@@ -17,11 +17,11 @@ struct PlaceSelectView: View {
     @Binding var place: PlaceSearchInfo
     
     /// 지도 검색 모달 표시 여부
-    @State var showSearchMap: Bool = false
+    @State private var showSearchMap: Bool = false
     
     /// 에러 핸들러 (지도 검색 중 에러 발생 시 처리)
     @Environment(ErrorHandler.self) var errorHandler
-    
+
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.place == rhs.place
     }
@@ -34,13 +34,12 @@ struct PlaceSelectView: View {
         }, label: {
             HStack(spacing: DefaultSpacing.spacing8) {
                 if place.name.isEmpty {
-                    emptyPlace // 장소 미선택 시 뷰
+                    emptyPlace
                 } else {
-                    selectedPlace // 장소 선택 시 정보 뷰
+                    selectedPlace
                 }
                 Spacer()
-                
-                // 장소 선택 취소 버튼
+
                 if !place.name.isEmpty {
                     clearButton
                 }
