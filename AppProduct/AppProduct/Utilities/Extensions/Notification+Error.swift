@@ -26,4 +26,5 @@ extension Notification.Name {
     /// 운영진이 출석을 승인/반려하면 발송됩니다.
     /// 챌린저 ViewModel이 수신하여 `myHistory`를 갱신합니다.
     static let attendanceStatusChanged = Notification.Name("attendanceStatusChanged")
+
 }

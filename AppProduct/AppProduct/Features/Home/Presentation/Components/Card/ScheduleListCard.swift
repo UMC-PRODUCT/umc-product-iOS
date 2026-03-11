@@ -104,6 +104,9 @@ struct ScheduleListCard: View, Equatable {
     }
 
     private var dDayText: String {
+        if data.dDay < 0 {
+            return "D-\(abs(data.dDay))"
+        }
         if data.dDay > 0 {
             return "D+\(data.dDay)"
         }

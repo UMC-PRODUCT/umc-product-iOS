@@ -114,6 +114,11 @@ struct HomeView: View {
                 guard shouldFetchOnTask else { return }
                 await viewModel.fetchAllIfNeeded()
             }
+            .task(id: pathStore.homePath.count) {
+                guard shouldFetchOnTask else { return }
+                guard pathStore.homePath.isEmpty else { return }
+                await reloadVisibleScheduleMonth()
+            }
         }
     }
     
@@ -289,6 +294,15 @@ struct HomeView: View {
         schedules
             .map { "\($0.scheduleId):\($0.title)" }
             .joined(separator: "|")
+    }
+
+    @MainActor
+    private func reloadVisibleScheduleMonth() async {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = ServerDateTimeConverter.kstTimeZone
+        let year = calendar.component(.year, from: currentMonth)
+        let month = calendar.component(.month, from: currentMonth)
+        await viewModel.fetchSchedules(year: year, month: month)
     }
     
     // MARK: - Recent Notices
