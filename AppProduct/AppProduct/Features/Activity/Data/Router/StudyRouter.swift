@@ -65,7 +65,7 @@ extension StudyRouter: BaseTargetType {
         case .getWorkbookSubmission(let challengerWorkbookId):
             return "/api/v1/workbooks/challenger/\(challengerWorkbookId)/submissions"
         case .submitWorkbook:
-            return "/api/v1/challenger-workbooks/submissions"
+            return "/api/v1/workbooks/submission"
         case .reviewWorkbook(let challengerWorkbookId, _):
             return "/api/v1/workbooks/challenger/\(challengerWorkbookId)/review"
         case .selectBestWorkbook(let challengerWorkbookId, _):

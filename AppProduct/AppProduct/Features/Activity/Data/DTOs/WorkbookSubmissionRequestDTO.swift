@@ -9,7 +9,7 @@ import Foundation
 
 /// 워크북 제출 요청 DTO
 ///
-/// `POST /api/v1/challenger-workbooks/submissions`
+/// `POST /api/v1/workbooks/submission`
 struct WorkbookSubmissionRequestDTO: Encodable, Sendable, Equatable {
     let originalWorkbookId: Int
     let submission: String
