@@ -12,39 +12,44 @@ import SwiftUI
 ///
 /// 취소/확인/추가 등 공통 액션 버튼과 필터 메뉴를 제공합니다.
 struct ToolBarCollection {
+
+    // MARK: - Primary Action Buttons
     
-    /// 뒤로 가기 버튼
+    /// 기본 시스템 뒤로 가기 동작과 추가 후처리를 함께 수행하는 툴바 버튼입니다.
     struct BackBtn: ToolbarContent {
         @Environment(\.dismiss) var dismiss
         var action: () -> Void
         
         var body: some ToolbarContent {
-            ToolbarItem(placement: .cancellationAction, content: {
+            ToolbarItem(placement: .cancellationAction) {
                 Button(role: .cancel, action: {
                     action()
                     dismiss()
                 })
-            })
+            }
         }
     }
     
     
-    /// 취소 버튼
+    /// 시트나 편집 화면에서 취소 동작을 제공하는 툴바 버튼입니다.
     struct CancelBtn: ToolbarContent {
         @Environment(\.dismiss) var dismiss
         var action: () -> Void
         
         var body: some ToolbarContent {
-            ToolbarItem(placement: .cancellationAction, content: {
+            ToolbarItem(placement: .cancellationAction) {
                 Button(role: .cancel, action: {
                     action()
                     dismiss()
                 })
-            })
+            }
         }
     }
     
-    /// 확인 버튼
+    /// 저장, 완료 같은 확인 액션에 사용하는 공용 툴바 버튼입니다.
+    ///
+    /// `isLoading`이 `true`이면 체크 아이콘 대신 `ProgressView`를 노출하고,
+    /// 탭 입력도 함께 막아 중복 제출을 방지합니다.
     struct ConfirmBtn: ToolbarContent {
         @Environment(\.dismiss) var dismiss
         let action: () -> Void
@@ -68,7 +73,7 @@ struct ToolBarCollection {
         }
         
         var body: some ToolbarContent {
-            ToolbarItem(placement: .confirmationAction, content: {
+            ToolbarItem(placement: .confirmationAction) {
                 Button(role: .confirm, action: {
                     guard !isLoading, !disable else { return }
                     action()
@@ -89,11 +94,11 @@ struct ToolBarCollection {
                 })
                 .tint((disable || isLoading) ? .grey300 : tintColor)
                 .disabled(disable || isLoading)
-            })
+            }
         }
     }
     
-    /// 반려 버튼
+    /// 파괴적이거나 취소 성격이 강한 좌측 상단 액션에 사용하는 버튼입니다.
     struct RejectBtn: ToolbarContent {
         @Environment(\.dismiss) var dismiss
         let action: () -> Void
@@ -118,7 +123,9 @@ struct ToolBarCollection {
         }
     }
     
-    /// 추가 버튼
+    /// 생성, 추가 같은 우측 상단 액션에 사용하는 공용 버튼입니다.
+    ///
+    /// 타이틀 없이 사용하면 시스템 아이콘 버튼으로, `title`을 전달하면 텍스트 버튼으로 동작합니다.
     struct AddBtn: ToolbarContent {
         @Environment(\.dismiss) private var dismiss
         let action: () -> Void
@@ -148,88 +155,98 @@ struct ToolBarCollection {
         }
         
         var body: some ToolbarContent {
-            ToolbarItem(placement: .topBarTrailing, content: {
-                Button(action: {
-                    guard !disable, !isLoading else { return }
-                    action()
-                    if dismissOnTap {
-                        dismiss()
-                    }
-                }, label: {
-                    ZStack {
-                        if let title {
-                            Text(title)
-                                .opacity(isLoading ? 0 : 1)
-                        } else {
-                            Image(systemName: imageSystemName)
-                                .opacity(isLoading ? 0 : 1)
-                        }
+            ToolbarItem(placement: .topBarTrailing) {
+                baseButton
+            }
+        }
 
-                        if isLoading {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(.indigo500)
-                        }
+        private var baseButton: some View {
+            Button(action: {
+                guard !disable, !isLoading else { return }
+                action()
+                if dismissOnTap {
+                    dismiss()
+                }
+            }, label: {
+                ZStack {
+                    if let title {
+                        Text(title)
+                            .opacity(isLoading ? 0 : 1)
+                    } else {
+                        Image(systemName: imageSystemName)
+                            .opacity(isLoading ? 0 : 1)
                     }
-                })
-                .tint(disable ? .grey300 : tintColor)
-                .disabled(disable)
+
+                    if isLoading {
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(.indigo500)
+                    }
+                }
             })
+            .tint((disable || isLoading) ? .grey300 : tintColor)
+            .disabled(disable || isLoading)
         }
     }
+
+    // MARK: - Icon Buttons
     
-    /// 좌측 커스텀 아이콘 버튼
+    /// 좌측 상단에 임의의 SF Symbol 액션을 배치하는 버튼입니다.
     struct LeadingButton: ToolbarContent {
         let image: String
         let action: () -> Void
         
         var body: some ToolbarContent {
-            ToolbarItem(placement: .topBarLeading, content: {
+            ToolbarItem(placement: .topBarLeading) {
                 Button(action: {
                     action()
                 }, label: {
                     Image(systemName: image)
                 })
-            })
+            }
         }
     }
     
-    /// 상단 알림 히스토리 버튼
+    /// 알림함 진입 버튼입니다.
+    ///
+    /// `recentPush`가 `true`이면 배지 포함 심볼을 사용해 새 알림 존재를 표현합니다.
     struct BellBtn: ToolbarContent {
         let action: () -> Void
         var tintColor: Color = .grey900
         let recentPush: Bool = false
         
         var body: some ToolbarContent {
-            ToolbarItem(placement: .topBarTrailing, content: {
+            ToolbarItem(placement: .topBarTrailing) {
                 Button(action: { action() }, label: {
                     Image(systemName: recentPush ? "bell.badge" : "bell")
                 })
                 .tint(tintColor)
-            })
+            }
         }
     }
     
-    /// 상단 로고 툴바
+    /// 앱 브랜딩용 로고를 상단 좌측에 배치하는 툴바입니다.
     struct Logo: ToolbarContent {
         let image: ImageResource
         @Namespace var namespace
         
         var body: some ToolbarContent {
-            ToolbarItem(placement: .topBarLeading, content: {
+            ToolbarItem(placement: .topBarLeading) {
                 Image(image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 80, height: 40)
                     .padding(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
                     .disabled(true)
-            })
+            }
             .sharedBackgroundVisibility(.hidden)
             .matchedTransitionSource(id: "logo", in: namespace)
         }
     }
+
+    // MARK: - Filters
     
-    /// 기수 필터
+    /// 기수 선택 메뉴를 상단 좌측에 배치하는 필터 툴바입니다.
     struct GenerationFilter: ToolbarContent {
         let title: String
         let generations: [Generation]
@@ -245,6 +262,7 @@ struct ToolBarCollection {
             }
         }
         
+        /// 등록된 기수 목록을 inline 스타일로 보여주는 Picker입니다.
         private var generationPicker: some View {
             Picker("기수 선택", selection: $selection) {
                 ForEach(generations) { generation in
@@ -254,6 +272,7 @@ struct ToolBarCollection {
             .pickerStyle(.inline)
         }
         
+        /// 현재 필터 타이틀을 표시하는 메뉴 라벨입니다.
         private var menuLabel: some View {
             Text(title)
                 .font(.callout)
@@ -261,7 +280,7 @@ struct ToolBarCollection {
         }
     }
     
-    /// 커뮤니티 주차별 필터
+    /// 커뮤니티 화면에서 주차를 선택하는 필터 툴바입니다.
     struct CommunityWeekFilter: ToolbarContent {
         let weeks: [Int]
         @Binding var selection: Int
@@ -277,6 +296,7 @@ struct ToolBarCollection {
             }
         }
         
+        /// 주차 값을 선택하는 inline Picker입니다.
         private var weekPicker: some View {
             Picker("주차 선택", selection: $selection) {
                 ForEach(weeks, id: \.self) { week in
@@ -288,7 +308,7 @@ struct ToolBarCollection {
         }
     }
     
-    /// 커뮤니티 학교 필터
+    /// 커뮤니티 목록을 학교 기준으로 좁혀보는 필터 툴바입니다.
     struct CommunityUnivFilter: ToolbarContent {
         @Binding var selectedUniversity: String
         let universities: [String]
@@ -304,6 +324,7 @@ struct ToolBarCollection {
             }
         }
 
+        /// 학교 목록을 선택 가능한 메뉴 형태로 구성한 Picker입니다.
         private var universityPicker: some View {
             Picker("학교 선택", selection: $selectedUniversity) {
                 Text("전체")
@@ -318,7 +339,7 @@ struct ToolBarCollection {
         }
     }
     
-    /// 커뮤니티 파트 필터
+    /// 커뮤니티 목록을 파트 기준으로 좁혀보는 필터 툴바입니다.
     struct CommunityPartFilter: ToolbarContent {
         @Binding var selectedPart: UMCPartType?
         let parts: [UMCPartType]
@@ -334,6 +355,7 @@ struct ToolBarCollection {
             }
         }
 
+        /// 파트 목록을 inline 메뉴로 렌더링하는 Picker입니다.
         private var partPicker: some View {
             Picker("파트 선택", selection: $selectedPart) {
                 Label("전체", systemImage: "person.2.fill")
@@ -347,6 +369,8 @@ struct ToolBarCollection {
             .pickerStyle(.inline)
         }
     }
+
+    // MARK: - Menus
     
     /// 상단 중앙 섹션 메뉴 툴바 (시스템 ToolbarTitleMenu 기반)
     ///
@@ -397,10 +421,11 @@ struct ToolBarCollection {
         }
     }
     
-    /// 상단 오른쪽 섹션 메뉴 툴바 (•••)
+    /// 우측 상단의 `ellipsis` 메뉴를 공통 액션 목록으로 렌더링합니다.
     struct ToolbarTrailingMenu: ToolbarContent {
         let actions: [ActionItem]
         
+        /// `ToolbarTrailingMenu`가 노출할 단일 메뉴 액션 모델입니다.
         struct ActionItem: Identifiable {
             let id = UUID()
             let title: String
@@ -466,6 +491,7 @@ struct ToolBarCollection {
         
         // MARK: - View Components
         
+        /// 선택 모드에서 승인/거절 관련 액션을 묶어 보여주는 메뉴입니다.
         private var approvalMenu: some View {
             Menu {
                 Section {
@@ -495,6 +521,7 @@ struct ToolBarCollection {
             }
         }
         
+        /// 선택 모드를 종료하고 기본 표시 상태로 복귀시키는 버튼입니다.
         private var closeButton: some View {
             Button {
                 withAnimation(.snappy(duration: DefaultConstant.animationTime)) {
@@ -507,6 +534,7 @@ struct ToolBarCollection {
             }
         }
         
+        /// 일반 모드에서 선택 모드로 진입시키는 버튼입니다.
         private var selectButton: some View {
             Button {
                 withAnimation(.snappy(duration: DefaultConstant.animationTime)) {
@@ -522,7 +550,7 @@ struct ToolBarCollection {
     
     // MARK: - Study Management Filters
     
-    /// 스터디 주차 필터
+    /// 스터디 관리 화면의 주차 선택 메뉴입니다.
     struct StudyWeekFilter: ToolbarContent {
         let weeks: [Int]
         @Binding var selection: Int
@@ -539,6 +567,7 @@ struct ToolBarCollection {
             }
         }
         
+        /// 주차 변경 시 외부 `onChange`까지 연결하는 Picker입니다.
         private var weekPicker: some View {
             Picker("주차", selection: $selection) {
                 ForEach(weeks, id: \.self) { week in
@@ -552,7 +581,7 @@ struct ToolBarCollection {
         }
     }
     
-    /// 스터디 그룹 필터
+    /// 스터디 그룹별 세부 목록을 전환하는 우측 상단 필터입니다.
     struct StudyGroupFilter: ToolbarContent {
         let studyGroups: [StudyGroupItem]
         @Binding var selection: StudyGroupItem
@@ -572,6 +601,7 @@ struct ToolBarCollection {
             }
         }
         
+        /// 스터디 그룹 선택과 변경 이벤트 전달을 담당하는 Picker입니다.
         private var groupPicker: some View {
             Picker("스터디 그룹", selection: $selection) {
                 ForEach(studyGroups, id: \.self) { group in
@@ -585,7 +615,7 @@ struct ToolBarCollection {
         }
     }
     
-    /// 공지 열람 현황 필터 (학교/지부)
+    /// 공지 열람 현황 화면의 학교/지부 필터 메뉴입니다.
     struct ReadStatusFilter<Item: Identifiable & Hashable>: ToolbarContent {
         let items: [Item]
         @Binding var selection: Item
@@ -625,7 +655,11 @@ struct ToolBarCollection {
         }
     }
 
-    /// 챌린저 인증 실패 화면 하단 툴바
+    // MARK: - Specialized Bottom Toolbar
+
+    /// 챌린저 인증 실패 화면 전용 하단 툴바입니다.
+    ///
+    /// 홈페이지 이동, 문의하기, 계정 관련 액션을 하단 바에 고정된 형태로 제공합니다.
     struct FailedVerificationBottomToolbar: ToolbarContent {
         let isSubmitting: Bool
         let isDeletingAccount: Bool
@@ -680,6 +714,7 @@ struct ToolBarCollection {
             }
         }
 
+        /// 단일 하단 바 액션 버튼을 렌더링합니다.
         private func actionButton(
             icon: String,
             title: String,
@@ -703,6 +738,7 @@ struct ToolBarCollection {
             .disabled(disabled)
         }
 
+        /// 계정 메뉴의 커스텀 라벨을 구성합니다.
         private func actionLabel(
             icon: String,
             title: String,
