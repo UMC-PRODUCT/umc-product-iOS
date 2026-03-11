@@ -49,4 +49,10 @@ final class OperatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol {
             longitude: longitude
         )
     }
+
+    func fetchScheduleStats() async throws
+        -> [ScheduleAttendanceStats]
+    {
+        try await repository.getScheduleStats()
+    }
 }

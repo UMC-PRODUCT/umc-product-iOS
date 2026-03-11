@@ -54,6 +54,19 @@ final class OperatorAttendanceViewModel {
         sessionsState = .loading
         var updatedSessions: [OperatorSessionAttendance] = []
 
+        // 출석 통계 조회 (실패 시 빈 딕셔너리)
+        let statsMap: [Int: ScheduleAttendanceStats]
+        do {
+            let statsList = try await useCase
+                .fetchScheduleStats()
+            statsMap = Dictionary(
+                statsList.map { ($0.scheduleId, $0) },
+                uniquingKeysWith: { _, last in last }
+            )
+        } catch {
+            statsMap = [:]
+        }
+
         for session in sessions {
             let scheduleIdString = session.id.value
             var pendingMembers: [OperatorPendingMember] = []
@@ -72,16 +85,36 @@ final class OperatorAttendanceViewModel {
                 }
             }
 
-            // TODO: 서버에서 출석 집계(total/attended/rate) 제공 시 해당 값으로 교체
-            let sessionStatus = OperatorSessionStatus.from(
-                startTime: session.info.startTime,
-                endTime: session.info.endTime
-            )
-            let totalCount = sessionStatus == .beforeStart ? 0 : 40
-            let attendedCount = max(0, totalCount - pendingMembers.count)
-            let attendanceRate = totalCount > 0
-                ? Double(attendedCount) / Double(totalCount)
-                : 0
+            // 서버 출석 통계 사용
+            let scheduleId = Int(scheduleIdString)
+            let stats = scheduleId.flatMap { statsMap[$0] }
+
+            let totalCount: Int
+            let attendedCount: Int
+            let attendanceRate: Double
+
+            if let stats {
+                totalCount = stats.totalCount
+                attendedCount = stats.presentCount
+                attendanceRate = stats.attendanceRate
+            } else {
+                // Fallback: API 실패 시 pending 기반 추정
+                let sessionStatus = OperatorSessionStatus.from(
+                    startTime: session.info.startTime,
+                    endTime: session.info.endTime
+                )
+                if sessionStatus != .beforeStart,
+                   !pendingMembers.isEmpty
+                {
+                    totalCount = pendingMembers.count
+                    attendedCount = 0
+                    attendanceRate = 0
+                } else {
+                    totalCount = 0
+                    attendedCount = 0
+                    attendanceRate = 0
+                }
+            }
 
             updatedSessions.append(OperatorSessionAttendance(
                 serverID: scheduleIdString,
