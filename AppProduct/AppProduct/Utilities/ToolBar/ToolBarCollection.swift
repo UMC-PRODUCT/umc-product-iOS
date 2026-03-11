@@ -661,6 +661,8 @@ struct ToolBarCollection {
     ///
     /// 홈페이지 이동, 문의하기, 계정 관련 액션을 하단 바에 고정된 형태로 제공합니다.
     struct FailedVerificationBottomToolbar: ToolbarContent {
+        @State private var isAccountDialogPresented: Bool = false
+
         let isSubmitting: Bool
         let isDeletingAccount: Bool
         let isLoggingOut: Bool
@@ -695,23 +697,27 @@ struct ToolBarCollection {
             }
 
             ToolbarItem(placement: .bottomBar) {
-                Menu {
-                    Button(action: onLogout) {
-                        Label("로그아웃", systemImage: "rectangle.portrait.and.arrow.right")
-                    }
-
-                    Button(role: .destructive, action: onDeleteAccount) {
-                        Label("회원 탈퇴", systemImage: "person.crop.circle.badge.xmark")
-                    }
-                } label: {
+                Button(action: onAccountAction) {
                     actionLabel(
                         icon: "person.crop.circle.badge.xmark",
                         title: "계정",
                         color: .red
                     )
                 }
+                .confirmationDialog(
+                    "계정 관리",
+                    isPresented: $isAccountDialogPresented,
+                    titleVisibility: .hidden
+                ) {
+                    Button("로그아웃", action: onLogout)
+                    Button("탈퇴하기", role: .destructive, action: onDeleteAccount)
+                }
                 .disabled(isSubmitting || isDeletingAccount || isLoggingOut)
             }
+        }
+
+        private func onAccountAction() {
+            isAccountDialogPresented = true
         }
 
         /// 단일 하단 바 액션 버튼을 렌더링합니다.
