@@ -153,7 +153,7 @@ struct NoticeDetailView: View {
                     Image(data.authorImageURL ?? Constants.defaultProfileImageName)
                         .resizable()
                         .frame(width: Constants.profileSize.width, height: Constants.profileSize.height)
-                    Text(viewModel.authorDisplayName.isEmpty ? data.authorName : viewModel.authorDisplayName)
+                    Text(viewModel.displayedAuthorName(for: data))
                 }
                 Spacer()
                 Text(data.createdAt.toYearMonthDay())

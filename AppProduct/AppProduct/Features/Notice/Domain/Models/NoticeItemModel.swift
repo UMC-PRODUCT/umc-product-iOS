@@ -24,6 +24,8 @@ struct NoticeItemModel: Equatable, Identifiable {
     let title: String
     let content: String
     let writer: String
+    let authorNickname: String?
+    let authorName: String?
     let links: [String]
     let images: [String]
     let vote: NoticeVote?
@@ -43,6 +45,8 @@ struct NoticeItemModel: Equatable, Identifiable {
         title: String,
         content: String,
         writer: String,
+        authorNickname: String? = nil,
+        authorName: String? = nil,
         links: [String],
         images: [String],
         vote: NoticeVote?,
@@ -61,6 +65,8 @@ struct NoticeItemModel: Equatable, Identifiable {
         self.title = title
         self.content = content
         self.writer = writer
+        self.authorNickname = authorNickname
+        self.authorName = authorName
         self.links = links
         self.images = images
         self.vote = vote
@@ -158,7 +164,8 @@ extension NoticeItemModel {
             title: title,
             content: content,
             authorID: "temp-\(id)",
-            authorName: writer,
+            authorNickname: authorNickname,
+            authorName: authorName ?? writer,
             authorImageURL: nil,
             createdAt: date,
             updatedAt: nil,

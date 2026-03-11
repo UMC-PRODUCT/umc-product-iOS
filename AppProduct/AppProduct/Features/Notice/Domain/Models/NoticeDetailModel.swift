@@ -33,6 +33,8 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
     let authorID: String
     /// 작성자 멤버 ID (authorMemberId)
     let authorMemberId: String?
+    /// 작성자 닉네임
+    let authorNickname: String?
     /// 작성자 이름
     let authorName: String
     /// 작성자 프로필 이미지 URL
@@ -58,8 +60,43 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
     /// 첨부 투표
     let vote: NoticeVote?
 
-    /// 작성자 표기 기본값 (닉네임/이름-기수TH UMC 직책)
-    var defaultAuthorDisplayName: String { authorName }
+    /// 작성자 표기 기본값 (닉네임/이름-xxth)
+    var defaultAuthorDisplayName: String {
+        let trimmedNickname = authorNickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let trimmedName = authorName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let generationText = generationOrdinalText
+
+        if !trimmedNickname.isEmpty && !trimmedName.isEmpty {
+            return "\(trimmedNickname)/\(trimmedName)\(generationText)"
+        }
+        if !trimmedNickname.isEmpty {
+            return "\(trimmedNickname)\(generationText)"
+        }
+        return "\(trimmedName)\(generationText)"
+    }
+
+    private var generationOrdinalText: String {
+        guard generation > 0 else { return "" }
+        return "-\(generation)\(generationOrdinalSuffix)"
+    }
+
+    private var generationOrdinalSuffix: String {
+        let suffixBase = generation % 100
+        if (11...13).contains(suffixBase) {
+            return "th"
+        }
+
+        switch generation % 10 {
+        case 1:
+            return "st"
+        case 2:
+            return "nd"
+        case 3:
+            return "rd"
+        default:
+            return "th"
+        }
+    }
 
     /// NoticeChip에 표시할 공지 타입
     var noticeType: NoticeType {
@@ -112,6 +149,7 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
         content: String,
         authorID: String,
         authorMemberId: String? = nil,
+        authorNickname: String? = nil,
         authorName: String,
         authorImageURL: String?,
         createdAt: Date,
@@ -132,6 +170,7 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
         self.content = content
         self.authorID = authorID
         self.authorMemberId = authorMemberId
+        self.authorNickname = authorNickname
         self.authorName = authorName
         self.authorImageURL = authorImageURL
         self.createdAt = createdAt
@@ -195,6 +234,7 @@ struct TargetAudience: Equatable, Hashable {
             title: "",
             content: "",
             authorID: "",
+            authorNickname: nil,
             authorName: "",
             authorImageURL: nil,
             createdAt: .now,
