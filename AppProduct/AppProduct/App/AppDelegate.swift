@@ -237,4 +237,38 @@ private extension AppDelegate {
             }
         }
     }
+
+    /// 민감한 토큰 문자열을 로그용으로 일부만 노출합니다.
+    ///
+    /// - Parameter value: 원본 토큰 문자열
+    /// - Returns: 앞 6자리와 뒤 4자리만 남긴 마스킹 문자열
+    func redacted(_ value: String) -> String {
+        guard value.count > 10 else { return "***" }
+        let prefix = value.prefix(6)
+        let suffix = value.suffix(4)
+        return "\(prefix)...\(suffix)"
+    }
+
+    /// 알림 권한 상태를 사람이 읽기 쉬운 문자열로 변환합니다.
+    ///
+    /// - Parameter status: 시스템 알림 권한 상태
+    /// - Returns: 디버그 로그용 권한 상태 문자열
+    func authorizationStatusDescription(
+        _ status: UNAuthorizationStatus
+    ) -> String {
+        switch status {
+        case .notDetermined:
+            return "notDetermined"
+        case .denied:
+            return "denied"
+        case .authorized:
+            return "authorized"
+        case .provisional:
+            return "provisional"
+        case .ephemeral:
+            return "ephemeral"
+        @unknown default:
+            return "unknown"
+        }
+    }
 }
