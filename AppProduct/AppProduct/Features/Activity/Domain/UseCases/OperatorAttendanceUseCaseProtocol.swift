@@ -24,4 +24,7 @@ protocol OperatorAttendanceUseCaseProtocol {
         latitude: Double,
         longitude: Double
     ) async throws
+
+    /// 일정별 출석 통계 조회
+    func fetchScheduleStats() async throws -> [ScheduleAttendanceStats]
 }

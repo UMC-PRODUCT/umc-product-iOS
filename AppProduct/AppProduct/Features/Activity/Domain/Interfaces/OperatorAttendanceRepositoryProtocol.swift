@@ -24,6 +24,9 @@ protocol OperatorAttendanceRepositoryProtocol {
         challengerId: Int
     ) async throws -> [AttendanceHistoryItem]
 
+    /// 일정별 출석 통계 조회 (관리자)
+    func getScheduleStats() async throws -> [ScheduleAttendanceStats]
+
     // MARK: - 액션
 
     /// 출석 승인 (관리자)

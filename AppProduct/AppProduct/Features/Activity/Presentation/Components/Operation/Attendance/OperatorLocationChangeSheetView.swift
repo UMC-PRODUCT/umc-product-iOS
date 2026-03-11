@@ -72,7 +72,7 @@ struct OperatorLocationChangeSheetView: View {
             .navigationTitle("위치 변경")
             .navigationBarTitleDisplayMode(.inline)
             .presentationDetents([.height(320)])
-            .presentationDragIndicator(.hidden)
+            .presentationDragIndicator(.visible)
             .toolbar {
                 ToolBarCollection.CancelBtn {
                     onDismiss()

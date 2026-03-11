@@ -68,6 +68,19 @@ final class MockAttendanceRepository: ChallengerAttendanceRepositoryProtocol,
         try await getMyHistory()
     }
 
+    func getScheduleStats(
+    ) async throws -> [ScheduleAttendanceStats] {
+        [
+            ScheduleAttendanceStats(
+                scheduleId: 1,
+                totalCount: 40,
+                presentCount: 34,
+                pendingCount: 6,
+                attendanceRate: 0.85
+            )
+        ]
+    }
+
     func getAvailableSchedules(
     ) async throws -> [AvailableAttendanceSchedule] {
         [

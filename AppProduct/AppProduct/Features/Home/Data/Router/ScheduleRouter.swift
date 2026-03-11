@@ -19,6 +19,8 @@ enum ScheduleRouter {
     case patchUpdateSchedule(scheduleId: Int, schedule: UpdateScheduleRequestDTO)
     /// 일정 + 출석부 통합 삭제
     case deleteScheduleWithAttendance(scheduleId: Int)
+    /// 일정별 출석 통계 목록 조회 (관리자)
+    case getScheduleList
 }
 
 extension ScheduleRouter: BaseTargetType {
@@ -33,6 +35,8 @@ extension ScheduleRouter: BaseTargetType {
             return "/api/v1/schedules/\(scheduleId)"
         case .deleteScheduleWithAttendance(let scheduleId):
             return "/api/v1/schedules/\(scheduleId)/with-attendance"
+        case .getScheduleList:
+            return "/api/v1/schedules"
         }
     }
 
@@ -46,6 +50,8 @@ extension ScheduleRouter: BaseTargetType {
             return .patch
         case .deleteScheduleWithAttendance:
             return .delete
+        case .getScheduleList:
+            return .get
         }
     }
 
@@ -57,7 +63,7 @@ extension ScheduleRouter: BaseTargetType {
             return .requestJSONEncodable(schedule)
         case .patchUpdateSchedule(_, let schedule):
             return .requestJSONEncodable(schedule)
-        case .deleteScheduleWithAttendance:
+        case .deleteScheduleWithAttendance, .getScheduleList:
             return .requestPlain
         }
     }
