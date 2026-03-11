@@ -56,7 +56,7 @@ class ScheduleRegistrationViewModel {
     /// 선택된 카테고리 태그 목록
     var tag: [ScheduleIconCategory] = .init()
 
-    /// 일정 생성 API 상태 (로딩 overlay + 성공 시 dismiss 제어)
+    /// 일정 생성/수정 API 상태 (툴바 로딩 + 성공 시 dismiss 제어)
     private(set) var submitState: Loadable<Bool> = .idle
 
     /// 수정 모드일 때 대상 일정 ID

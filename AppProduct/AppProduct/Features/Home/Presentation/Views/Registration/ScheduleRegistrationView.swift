@@ -18,28 +18,35 @@ struct ScheduleRegistrationView: View {
     /// 일정 등록 뷰 모델
     @State var viewModel: ScheduleRegistrationViewModel
 
-    /// 전역 에러 핸들러
-    @Environment(ErrorHandler.self) var errorHandler
     @Environment(\.dismiss) var dismiss
 
+    /// 일정 생성 요청에 필요한 현재 기수 식별자입니다.
     @AppStorage(AppStorageKey.gisuId) private var gisuId: Int = 0
+    /// 현재 로그인 사용자의 역할입니다.
     @AppStorage(AppStorageKey.memberRole) private var memberRole: ManagementTeam = .challenger
+    /// 운영진 생성 플로우에서 출석부 생성 여부 확인 다이얼로그 표시 상태입니다.
     @State private var showApprovalConfirmationDialog: Bool = false
+    /// 화면이 생성 모드인지 수정 모드인지 구분합니다.
     private let mode: Mode
 
+    /// 일정 등록 화면의 동작 모드입니다.
     enum Mode {
         case create
         case edit
     }
 
-    private enum Constants {
-        static let createLoadingMessage: String = "일정 생성 중입니다."
-        static let editLoadingMessage: String = "일정 수정 중입니다."
-    }
+    // MARK: - Initializer
 
-    // MARK: - Init
-
-    /// 초기화 메서드
+    /// 일정 등록 화면을 초기화합니다.
+    ///
+    /// 수정 모드에서는 `prefill` 값을 즉시 반영해 기존 일정을 편집 가능한 상태로 구성합니다.
+    ///
+    /// - Parameters:
+    ///   - container: Home Feature 의존성을 조립한 `DIContainer`입니다.
+    ///   - errorHandler: 화면에서 사용할 전역 `ErrorHandler`입니다.
+    ///   - mode: 화면의 동작 모드입니다.
+    ///   - prefill: 수정 모드에서 사용할 기존 일정 정보입니다.
+    ///   - prefillRoadAddress: 장소 프리필 시 우선 노출할 도로명 주소입니다.
     init(
         container: DIContainer,
         errorHandler: ErrorHandler,
@@ -60,49 +67,22 @@ struct ScheduleRegistrationView: View {
     
     // MARK: - Body
 
+    /// 일정 등록 폼과 상단 툴바를 조합한 화면 본문입니다.
     var body: some View {
         formContent
-        .scrollDismissesKeyboard(.immediately) // 스크롤 시 키보드 내림
-        .navigation(naviTitle: navigationTitle, displayMode: .inline)
-        .toolbar { toolbarContent }
-        .confirmationDialog(
-            "일정 생성",
-            isPresented: $showApprovalConfirmationDialog,
-            titleVisibility: .visible
-        ) {
-            Button("네, 출석부 생성합니다") {
-                Task {
-                    await viewModel.submitSchedule(
-                        gisuId: gisuId,
-                        requiresApproval: true
-                    )
+            .scrollDismissesKeyboard(.immediately)
+            .navigation(naviTitle: navigationTitle, displayMode: .inline)
+            .toolbar { toolbarContent }
+            .onChange(of: viewModel.submitState) {
+                if case .loaded = viewModel.submitState {
+                    dismiss()
                 }
             }
-
-            Button("아니요, 일정만 생성할게요") {
-                Task {
-                    await viewModel.submitSchedule(
-                        gisuId: gisuId,
-                        requiresApproval: false
-                    )
-                }
-            }
-
-            Button("취소", role: .cancel) {}
-        } message: {
-            Text("출석을 체크하시겠습니까?")
-        }
-        .overlay { submittingOverlay }
-        // 생성 성공 시 화면 자동 닫기
-        .onChange(of: viewModel.submitState) {
-            if case .loaded = viewModel.submitState {
-                dismiss()
-            }
-        }
     }
 
-    // MARK: - Content
+    // MARK: - Private Function
 
+    /// 입력 섹션을 순서대로 배치한 기본 폼입니다.
     private var formContent: some View {
         Form {
             section(.title, .place)
@@ -113,6 +93,7 @@ struct ScheduleRegistrationView: View {
         }
     }
 
+    /// 모드에 따라 상단 툴바 구성을 분기합니다.
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         if mode == .edit {
@@ -124,36 +105,110 @@ struct ScheduleRegistrationView: View {
                     }
                 },
                 disable: isActionDisabled,
+                isLoading: isSubmitting,
                 dismissOnTap: false,
             )
         } else {
-            ToolBarCollection.AddBtn(
-                action: { submitCreateAction() },
-                disable: isActionDisabled
-            )
-        }
-    }
-
-    @ViewBuilder
-    private var submittingOverlay: some View {
-        if isSubmitting {
-            ZStack {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                Progress(
-                    progressColor: .white,
-                    message: mode == .edit ? Constants.editLoadingMessage : Constants.createLoadingMessage,
-                    messageColor: .white,
-                    size: .regular
-                )
-                .padding(24)
+            ToolbarItem(placement: .topBarTrailing) {
+                createToolbarButton
             }
-            .allowsHitTesting(true)
         }
     }
 
-    // MARK: - Section Builder
+    // MARK: - Helper
 
+    /// 현재 모드에 맞는 내비게이션 타이틀입니다.
+    private var navigationTitle: NavigationModifier.Navititle {
+        mode == .create ? .registration : .registrationEdit
+    }
+
+    /// 생성 모드에서 노출되는 우측 상단 추가 버튼입니다.
+    ///
+    /// 로딩 중에는 아이콘 대신 `ProgressView`를 노출하고, 운영진인 경우
+    /// 탭 시 출석부 생성 여부를 확인하는 `confirmationDialog`를 띄웁니다.
+    private var createToolbarButton: some View {
+        Button {
+            guard !isActionDisabled, !isSubmitting else { return }
+            submitCreateAction()
+        } label: {
+            ZStack {
+                Image(systemName: "plus")
+                    .opacity(isSubmitting ? 0 : 1)
+
+                if isSubmitting {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.indigo500)
+                }
+            }
+        }
+        .tint((isActionDisabled || isSubmitting) ? .grey300 : .indigo500)
+        .disabled(isActionDisabled || isSubmitting)
+        .confirmationDialog(
+            "일정 생성",
+            isPresented: $showApprovalConfirmationDialog,
+            titleVisibility: .visible
+        ) {
+            approvalConfirmationActions()
+        } message: {
+            approvalConfirmationMessage()
+        }
+    }
+
+    /// 운영진 생성 플로우에서 표시할 확인 다이얼로그 액션 목록입니다.
+    @ViewBuilder
+    private func approvalConfirmationActions() -> some View {
+        if memberRole != .challenger {
+            Button("출석부 생성합니다", role: .destructive) {
+                Task {
+                    await viewModel.submitSchedule(
+                        gisuId: gisuId,
+                        requiresApproval: true
+                    )
+                }
+            }
+
+            Button("일정만 생성할게요") {
+                Task {
+                    await viewModel.submitSchedule(
+                        gisuId: gisuId,
+                        requiresApproval: false
+                    )
+                }
+            }
+        }
+    }
+
+    /// 출석부 생성 여부를 묻는 확인 다이얼로그 안내 문구입니다.
+    @ViewBuilder
+    private func approvalConfirmationMessage() -> some View {
+        if memberRole != .challenger {
+            Text("출석을 체크하시겠습니까?")
+        }
+    }
+
+    /// 일정 생성 또는 수정 요청이 진행 중인지 여부입니다.
+    private var isSubmitting: Bool {
+        if case .loading = viewModel.submitState {
+            return true
+        }
+        return false
+    }
+
+    /// 현재 입력 상태에서 저장 액션을 비활성화해야 하는지 계산합니다.
+    ///
+    /// 생성 모드는 필수값 충족 여부만 확인하고, 수정 모드는 변경 사항 존재 여부를 함께 확인합니다.
+    private var isActionDisabled: Bool {
+        let hasRequired = !viewModel.title.isEmpty && !viewModel.tag.isEmpty
+        if mode == .edit {
+            return !hasRequired || !viewModel.hasChangesInEditMode || isSubmitting
+        }
+        return !hasRequired || isSubmitting
+    }
+
+    /// 전달된 섹션 타입 배열을 하나의 `Section`으로 묶어 렌더링합니다.
+    ///
+    /// - Parameter types: 동일 섹션에 포함할 `ScheduleGenerationType` 목록입니다.
     @ViewBuilder
     private func section(_ types: ScheduleGenerationType...) -> some View {
         Section {
@@ -163,31 +218,12 @@ struct ScheduleRegistrationView: View {
         }
     }
 
-    // MARK: - Helper
+    // MARK: - Function
 
-    private var navigationTitle: NavigationModifier.Navititle {
-        mode == .create ? .registration : .registrationEdit
-    }
-
-    private var isSubmitting: Bool {
-        if case .loading = viewModel.submitState {
-            return true
-        }
-        return false
-    }
-
-    private var isActionDisabled: Bool {
-        let hasRequired = !viewModel.title.isEmpty && !viewModel.tag.isEmpty
-        if mode == .edit {
-            return !hasRequired || !viewModel.hasChangesInEditMode || isSubmitting
-        }
-        return !hasRequired || isSubmitting
-    }
-
-    // MARK: - Action
-
+    /// 생성 모드의 추가 버튼 탭 동작을 처리합니다.
+    ///
+    /// 챌린저는 출석부 없이 바로 일정을 생성하고, 운영진은 출석부 동시 생성 여부를 먼저 확인합니다.
     private func submitCreateAction() {
-        // 챌린저: 출석부 없이 바로 생성, 운영진: Alert으로 출석부 포함 여부 선택
         if memberRole == .challenger {
             Task {
                 await viewModel.submitSchedule(
@@ -199,11 +235,12 @@ struct ScheduleRegistrationView: View {
             showApprovalConfirmationDialog = true
         }
     }
-    
+
     // MARK: - Section Components
     
-    /// 각 섹션 타입에 맞는 뷰를 반환합니다.
-    /// - Parameter type: 일정 생성 화면의 섹션 타입 (제목, 장소, 시간 등)
+    /// 섹션 타입에 대응하는 입력 뷰를 반환합니다.
+    ///
+    /// - Parameter type: 일정 생성 화면의 섹션 타입입니다.
     @ViewBuilder
     private func sectionView(_ type: ScheduleGenerationType) -> some View {
         switch type {
@@ -228,7 +265,7 @@ struct ScheduleRegistrationView: View {
             Memo(memo: $viewModel.memo)
                 .equatable()
         case .participation:
-            PariticipantSection(challenger: $viewModel.participatn)
+            ParticipantSection(challenger: $viewModel.participatn)
         case .tag:
             TagSection(tag: $viewModel.tag)
         }
@@ -248,14 +285,14 @@ fileprivate struct TitleView: View, Equatable {
     }
     
     var body: some View {
-        TextField("", text: $text, prompt: placeholer)
-            .submitLabel(.return) // 키보드 'return' 버튼
-            .tint(.indigo500)     // 커서 색상
+        TextField("", text: $text, prompt: placeholder)
+            .submitLabel(.return)
+            .tint(.indigo500)
             .appFont(.body, color: .black)
     }
     
     /// 플레이스홀더 텍스트 뷰
-    private var placeholer: Text {
+    private var placeholder: Text {
         Text(ScheduleGenerationType.title.placeholder ?? "")
             .font(ScheduleGenerationType.title.placeholderFont)
             .foregroundStyle(ScheduleGenerationType.title.placeholderColor)
@@ -296,13 +333,14 @@ fileprivate struct DateTimeSection: View {
     @Binding var startDate: Date
     @Binding var endDate: Date
     
-    // Picker 표시 상태 바인딩 (하나가 열리면 나머지는 닫히는 로직을 상위에서 제어)
+    /// 하나의 Picker만 열리도록 상위 화면에서 제어하는 표시 상태 바인딩입니다.
     @Binding var showStartDatePicker: Bool
     @Binding var showStartTimePicker: Bool
     @Binding var showEndDatePicker: Bool
     @Binding var showEndTimePicker: Bool
     
-    @ViewBuilder
+    // MARK: - Body
+
     var body: some View {
         Group {
             startDateRow
@@ -332,6 +370,8 @@ fileprivate struct DateTimeSection: View {
         }
     }
     
+    // MARK: - Helper
+
     /// 시작 날짜/시간 표시 행
     private var startDateRow: some View {
         DateTimeRow(
@@ -436,7 +476,7 @@ fileprivate struct TagSection: View {
     @Binding var tag: [ScheduleIconCategory]
     
     /// 태그 선택 시트 표시 여부
-    @State var showTagList: Bool = false
+    @State private var showTagList: Bool = false
   
     private enum Constants {
         static let tagText: String = "태그"
@@ -444,21 +484,21 @@ fileprivate struct TagSection: View {
     }
     
     var body: some View {
-        Button(action: {
+        Button {
             showTagList.toggle()
-        }, label: {
+        } label: {
             HStack {
                 Text(Constants.tagText)
                     .foregroundStyle(.black)
                 Spacer()
                 tagCount
             }
-        })
-        .sheet(isPresented: $showTagList, content: {
+        }
+        .sheet(isPresented: $showTagList) {
             TagListView(tagList: $tag)
                 .presentationDragIndicator(.visible)
                 .interactiveDismissDisabled()
-        })
+        }
     }
     
     /// 선택된 태그 개수 표시
@@ -478,13 +518,13 @@ fileprivate struct TagSection: View {
 // MARK: - Participant Section
 
 /// 참여자(챌린저) 선택 및 관리 섹션
-fileprivate struct PariticipantSection: View {
+fileprivate struct ParticipantSection: View {
     
     /// 선택된 참여자 리스트 바인딩
     @Binding var challenger: [ChallengerInfo]
     
     /// 참여자 선택 시트 표시 여부
-    @State var showPariticipant: Bool = false
+    @State private var showParticipantSheet: Bool = false
     
     private enum Constants {
         static let challengerText: String = "초대받은 챌린저"
@@ -492,20 +532,20 @@ fileprivate struct PariticipantSection: View {
     }
     
     var body: some View {
-        Button(action: {
-            showPariticipant.toggle()
-        }, label: {
+        Button {
+            showParticipantSheet.toggle()
+        } label: {
             HStack {
                 Text(Constants.challengerText)
                     .foregroundStyle(.black)
                 Spacer()
                 participant
             }
-        })
-        .sheet(isPresented: $showPariticipant, content: {
+        }
+        .sheet(isPresented: $showParticipantSheet) {
             SelectedChallengerView(challenger: $challenger)
                 .interactiveDismissDisabled()
-        })
+        }
     }
     
     /// 선택된 참여자 수 표시
@@ -536,26 +576,19 @@ fileprivate struct Memo: View, Equatable {
     
     private enum Constants {
         static let textEditorHeight: CGFloat = 200
-        static let editorPadding: CGFloat = 4
         static let placeholderPadding: EdgeInsets = .init(top: 8, leading: 4, bottom: 8, trailing: 4)
     }
     
     var body: some View {
         TextEditor(text: $memo)
-            .overlay(alignment: .topLeading, content: {
-                // 메모가 비어있을 때 플레이스홀더 표시
+            .overlay(alignment: .topLeading) {
                 if memo.isEmpty {
                     Text(ScheduleGenerationType.memo.placeholder ?? "")
                         .font(ScheduleGenerationType.memo.placeholderFont)
                         .foregroundStyle(ScheduleGenerationType.memo.placeholderColor)
                         .padding(Constants.placeholderPadding)
                 }
-            })
+            }
             .frame(height: Constants.textEditorHeight)
     }
-}
-
-#Preview {
-    ScheduleRegistrationView(container: DIContainer(), errorHandler: ErrorHandler())
-        .environment(ErrorHandler())
 }
