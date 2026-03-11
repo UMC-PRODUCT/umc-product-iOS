@@ -136,7 +136,7 @@ struct NoticePresentationTests {
         #expect(detail.authorName == "제옹")
     }
 
-    @Test("공지 상세 기본 작성자 표기는 목록에서 전달한 닉네임과 이름을 사용한다")
+    @Test("공지 상세 기본 작성자 표기는 목록에서 전달한 닉네임과 이름에 선택 기수 서수를 붙인다")
     func noticeDetailDefaultAuthorDisplayUsesNicknameAndName() {
         let detail = NoticeDetail(
             id: "1",
@@ -160,7 +160,79 @@ struct NoticePresentationTests {
             vote: nil
         )
 
-        #expect(detail.defaultAuthorDisplayName == "하늘카카오/박경운")
+        #expect(detail.defaultAuthorDisplayName == "하늘카카오/박경운-9th")
+    }
+
+    @Test("모든 기수 공지는 상세 재조회 후에도 목록에서 선택한 기수 서수를 유지한다")
+    func noticeDetailKeepsSelectedGenerationWhenFetchedDetailTargetsAllGenerations() {
+        let initialDetail = NoticeDetail(
+            id: "32",
+            generation: 9,
+            scope: .central,
+            category: .general,
+            isMustRead: false,
+            title: "공지",
+            content: "내용",
+            authorID: "11",
+            authorMemberId: "22",
+            authorNickname: "하늘카카오",
+            authorName: "박경운",
+            authorImageURL: nil,
+            createdAt: Date(),
+            updatedAt: nil,
+            targetAudience: .all(generation: 9, scope: .central),
+            hasPermission: false,
+            images: [],
+            links: [],
+            vote: nil
+        )
+
+        let fetchedDetail = NoticeDetail(
+            id: "32",
+            generation: 0,
+            scope: .central,
+            category: .general,
+            isMustRead: false,
+            title: "공지",
+            content: "내용",
+            authorID: "0",
+            authorMemberId: "22",
+            authorNickname: nil,
+            authorName: "알 수 없음",
+            authorImageURL: nil,
+            createdAt: Date(),
+            updatedAt: nil,
+            targetAudience: .all(generation: 0, scope: .central),
+            hasPermission: false,
+            images: [],
+            links: [],
+            vote: nil
+        )
+
+        let resolvedGeneration = fetchedDetail.generation > 0 ? fetchedDetail.generation : initialDetail.generation
+        let mergedDetail = NoticeDetail(
+            id: fetchedDetail.id,
+            generation: resolvedGeneration,
+            scope: fetchedDetail.scope,
+            category: fetchedDetail.category,
+            isMustRead: fetchedDetail.isMustRead,
+            title: fetchedDetail.title,
+            content: fetchedDetail.content,
+            authorID: fetchedDetail.authorID,
+            authorMemberId: fetchedDetail.authorMemberId,
+            authorNickname: initialDetail.authorNickname,
+            authorName: initialDetail.authorName,
+            authorImageURL: fetchedDetail.authorImageURL,
+            createdAt: fetchedDetail.createdAt,
+            updatedAt: fetchedDetail.updatedAt,
+            targetAudience: fetchedDetail.targetAudience,
+            hasPermission: fetchedDetail.hasPermission,
+            images: fetchedDetail.images,
+            links: fetchedDetail.links,
+            vote: fetchedDetail.vote
+        )
+
+        #expect(mergedDetail.defaultAuthorDisplayName == "하늘카카오/박경운-9th")
     }
 
     // MARK: - Read Status Permission Tests

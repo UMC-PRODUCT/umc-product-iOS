@@ -86,6 +86,7 @@ extension NoticeDetailViewModel {
     ) -> NoticeDetail {
         guard let fallback else { return fetched }
 
+        let resolvedGeneration = fetched.generation > 0 ? fetched.generation : fallback.generation
         let resolvedNickname = resolvedAuthorField(
             primary: fetched.authorNickname,
             fallback: fallback.authorNickname
@@ -97,7 +98,7 @@ extension NoticeDetailViewModel {
 
         return NoticeDetail(
             id: fetched.id,
-            generation: fetched.generation,
+            generation: resolvedGeneration,
             scope: fetched.scope,
             category: fetched.category,
             isMustRead: fetched.isMustRead,

@@ -60,18 +60,42 @@ struct NoticeDetail: Equatable, Identifiable, Hashable {
     /// 첨부 투표
     let vote: NoticeVote?
 
-    /// 작성자 표기 기본값 (닉네임/이름)
+    /// 작성자 표기 기본값 (닉네임/이름-xxth)
     var defaultAuthorDisplayName: String {
         let trimmedNickname = authorNickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let trimmedName = authorName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let generationText = generationOrdinalText
 
         if !trimmedNickname.isEmpty && !trimmedName.isEmpty {
-            return "\(trimmedNickname)/\(trimmedName)"
+            return "\(trimmedNickname)/\(trimmedName)\(generationText)"
         }
         if !trimmedNickname.isEmpty {
-            return trimmedNickname
+            return "\(trimmedNickname)\(generationText)"
         }
-        return trimmedName
+        return "\(trimmedName)\(generationText)"
+    }
+
+    private var generationOrdinalText: String {
+        guard generation > 0 else { return "" }
+        return "-\(generation)\(generationOrdinalSuffix)"
+    }
+
+    private var generationOrdinalSuffix: String {
+        let suffixBase = generation % 100
+        if (11...13).contains(suffixBase) {
+            return "th"
+        }
+
+        switch generation % 10 {
+        case 1:
+            return "st"
+        case 2:
+            return "nd"
+        case 3:
+            return "rd"
+        default:
+            return "th"
+        }
     }
 
     /// NoticeChip에 표시할 공지 타입
