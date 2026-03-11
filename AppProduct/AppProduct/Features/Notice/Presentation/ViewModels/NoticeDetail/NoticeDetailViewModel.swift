@@ -23,11 +23,6 @@ final class NoticeDetailViewModel {
         container.resolve(NoticeUseCaseProtocol.self)
     }
 
-    /// 작성자 프로필 조회용 MyPage Repository
-    var myPageRepository: MyPageRepositoryProtocol {
-        container.resolve(MyPageRepositoryProtocol.self)
-    }
-
     var authorizationUseCase: AuthorizationUseCaseProtocol {
         container.resolve(AuthorizationUseCaseProtocol.self)
     }
@@ -212,10 +207,7 @@ final class NoticeDetailViewModel {
         self.noticeState = .loaded(model)
         let normalizedModel = normalizeTargetGenerationIfNeeded(in: model)
         noticeState = .loaded(normalizedModel)
-        authorDisplayName = normalizedModel.authorName
-        Task { [weak self] in
-            self?.refreshAuthorDisplayName(for: normalizedModel)
-        }
+        authorDisplayName = normalizedModel.defaultAuthorDisplayName
     }
 
     // MARK: - Function
@@ -232,107 +224,15 @@ final class NoticeDetailViewModel {
 
     // MARK: - Author Profile
 
-    /// 공지 작성자의 챌린저 프로필을 조회하여 "닉네임/이름-기수TH UMC 직책" 형식의 표시명을 갱신합니다.
-    ///
-    /// 현재 서버 응답의 `authorMemberId`는 작성자 `challengerId`로 해석하여 조회하며,
-    /// 실패 시 `defaultAuthorDisplayName`을 폴백으로 사용합니다.
+    /// 공지 작성자 표기명을 목록/상세 응답에 포함된 닉네임/이름 값으로 갱신합니다.
     @MainActor
     func refreshAuthorDisplayName(for detail: NoticeDetail) {
-        let fallback = detail.defaultAuthorDisplayName
-        authorDisplayName = fallback
-
-        let normalizedFallback = fallback.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard normalizedFallback != "알 수 없음" else {
-            return
-        }
-
-        guard
-            let rawChallengerId = detail.authorMemberId,
-            let challengerId = Int(rawChallengerId),
-            challengerId > 0
-        else {
-            return
-        }
-
-        Task {
-            await loadAuthorDisplayName(challengerId: challengerId, fallback: fallback)
-        }
+        authorDisplayName = detail.defaultAuthorDisplayName
     }
 
-    /// 챌린저 프로필 API를 호출하여 작성자 표시명을 비동기 로드합니다.
-    @MainActor
-    private func loadAuthorDisplayName(challengerId: Int, fallback: String) async {
-        do {
-            let profile = try await myPageRepository.fetchChallengerProfile(challengerId: challengerId)
-            authorDisplayName = buildAuthorDisplayName(
-                nickname: profile.nickname,
-                name: profile.name,
-                generation: profile.generation,
-                roleName: profile.roleName,
-                fallback: fallback
-            )
-        } catch {
-            errorHandler.handle(
-                error,
-                context: ErrorContext(
-                    feature: "Notice",
-                    action: "loadAuthorDisplayName(challengerId:\(challengerId))"
-                )
-            )
-            authorDisplayName = fallback
-        }
-    }
-
-    /// "닉네임/이름-기수TH UMC 직책" 형식의 작성자 표시명을 조합합니다.
-    private func buildAuthorDisplayName(
-        nickname: String,
-        name: String,
-        generation: Int,
-        roleName: String,
-        fallback: String
-    ) -> String {
-        let cleanedNickname = nickname.trimmingCharacters(in: .whitespacesAndNewlines)
-        let cleanedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !cleanedNickname.isEmpty || !cleanedName.isEmpty else {
-            return fallback
-        }
-
-        let identity = "\(cleanedNickname)/\(cleanedName)"
-        let generationText = authorGenerationText(from: generation)
-        let roleText = roleName.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if roleText.isEmpty {
-            return identity.isEmpty ? fallback : "\(identity)-\(generationText) 참여자"
-        }
-        return identity.isEmpty ? fallback : "\(identity)-\(generationText) \(roleText)"
-    }
-
-    /// 기수 숫자를 "NTH UMC" 형식의 문자열로 변환합니다.
-    private func authorGenerationText(from generation: Int) -> String {
-        guard generation > 0 else {
-            return "UMC"
-        }
-        return "\(generation)\(generationOrdinalSuffix(generation)) UMC"
-    }
-
-    /// 영어 서수 접미사를 반환합니다 (1st, 2nd, 3rd, 4th...).
-    private func generationOrdinalSuffix(_ value: Int) -> String {
-        let suffixBase = value % 100
-        if (11...13).contains(suffixBase) {
-            return "th"
-        }
-
-        switch value % 10 {
-        case 1:
-            return "st"
-        case 2:
-            return "nd"
-        case 3:
-            return "rd"
-        default:
-            return "th"
-        }
+    /// 화면에 즉시 노출할 작성자명을 반환합니다.
+    func displayedAuthorName(for detail: NoticeDetail) -> String {
+        authorDisplayName.isEmpty ? detail.defaultAuthorDisplayName : authorDisplayName
     }
 
     // MARK: - Generation Helper
@@ -369,6 +269,7 @@ final class NoticeDetailViewModel {
             content: detail.content,
             authorID: detail.authorID,
             authorMemberId: detail.authorMemberId,
+            authorNickname: detail.authorNickname,
             authorName: detail.authorName,
             authorImageURL: detail.authorImageURL,
             createdAt: detail.createdAt,

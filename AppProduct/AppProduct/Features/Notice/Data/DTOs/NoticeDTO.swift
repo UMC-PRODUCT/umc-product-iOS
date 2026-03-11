@@ -76,6 +76,8 @@ extension NoticeDTO {
             title: title,
             content: content,
             writer: authorName.isEmpty ? authorNickname : authorName,
+            authorNickname: authorNickname.isEmpty ? nil : authorNickname,
+            authorName: authorName.isEmpty ? nil : authorName,
             links: [],  // 기본 조회에는 없음
             images: [],  // 기본 조회에는 없음
             vote: nil,

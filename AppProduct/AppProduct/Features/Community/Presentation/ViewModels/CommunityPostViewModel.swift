@@ -13,7 +13,7 @@ class CommunityPostViewModel {
 
     private enum Constants {
         static let openChatURLPrefix = "https://open.kakao.com/"
-        static let openChatValidationMessage = "오픈채팅 링크는 https://open.kakao.com/ 로 시작해야 합니다."
+        static let openChatValidationMessage = "https://open.kakao.com/ 로 시작해야 합니다."
     }
 
     private let useCaseProvider: CommunityUseCaseProviding

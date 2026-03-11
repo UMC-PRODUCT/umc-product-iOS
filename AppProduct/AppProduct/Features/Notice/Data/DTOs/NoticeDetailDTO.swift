@@ -149,6 +149,7 @@ extension NoticeDetailDTO {
             content: content,
             authorID: authorChallengerId ?? "0",
             authorMemberId: authorMemberId,
+            authorNickname: authorNickname,
             authorName: resolvedAuthorName,
             authorImageURL: authorProfileImageUrl,
             createdAt: createdAt.toISO8601Date(),

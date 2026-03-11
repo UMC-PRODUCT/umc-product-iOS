@@ -136,6 +136,33 @@ struct NoticePresentationTests {
         #expect(detail.authorName == "제옹")
     }
 
+    @Test("공지 상세 기본 작성자 표기는 목록에서 전달한 닉네임과 이름을 사용한다")
+    func noticeDetailDefaultAuthorDisplayUsesNicknameAndName() {
+        let detail = NoticeDetail(
+            id: "1",
+            generation: 9,
+            scope: .central,
+            category: .general,
+            isMustRead: false,
+            title: "공지",
+            content: "내용",
+            authorID: "11",
+            authorMemberId: "22",
+            authorNickname: "하늘카카오",
+            authorName: "박경운",
+            authorImageURL: nil,
+            createdAt: Date(),
+            updatedAt: nil,
+            targetAudience: .all(generation: 9, scope: .central),
+            hasPermission: false,
+            images: [],
+            links: [],
+            vote: nil
+        )
+
+        #expect(detail.defaultAuthorDisplayName == "하늘카카오/박경운")
+    }
+
     // MARK: - Read Status Permission Tests
 
     @Test("총괄단은 모든 공지의 수신 확인 현황을 볼 수 있다")

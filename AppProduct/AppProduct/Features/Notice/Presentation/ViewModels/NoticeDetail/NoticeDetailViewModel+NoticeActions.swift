@@ -20,7 +20,11 @@ extension NoticeDetailViewModel {
 
         do {
             let noticeDetail = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
-            let normalizedDetail = normalizeTargetGenerationIfNeeded(in: noticeDetail)
+            let mergedDetail = mergeAuthorDisplayIfNeeded(
+                fetched: noticeDetail,
+                fallback: noticeState.value
+            )
+            let normalizedDetail = normalizeTargetGenerationIfNeeded(in: mergedDetail)
             noticeState = .loaded(normalizedDetail)
             refreshAuthorDisplayName(for: normalizedDetail)
             isDetailPreparedForEdit = true
@@ -74,6 +78,55 @@ extension NoticeDetailViewModel {
                 )
             )
         }
+    }
+
+    private func mergeAuthorDisplayIfNeeded(
+        fetched: NoticeDetail,
+        fallback: NoticeDetail?
+    ) -> NoticeDetail {
+        guard let fallback else { return fetched }
+
+        let resolvedNickname = resolvedAuthorField(
+            primary: fetched.authorNickname,
+            fallback: fallback.authorNickname
+        )
+        let resolvedName = resolvedAuthorField(
+            primary: fetched.authorName,
+            fallback: fallback.authorName
+        ) ?? ""
+
+        return NoticeDetail(
+            id: fetched.id,
+            generation: fetched.generation,
+            scope: fetched.scope,
+            category: fetched.category,
+            isMustRead: fetched.isMustRead,
+            title: fetched.title,
+            content: fetched.content,
+            authorID: fetched.authorID,
+            authorMemberId: fetched.authorMemberId,
+            authorNickname: resolvedNickname,
+            authorName: resolvedName,
+            authorImageURL: fetched.authorImageURL,
+            createdAt: fetched.createdAt,
+            updatedAt: fetched.updatedAt,
+            targetAudience: fetched.targetAudience,
+            hasPermission: fetched.hasPermission,
+            images: fetched.images,
+            imageItems: fetched.imageItems,
+            links: fetched.links,
+            vote: fetched.vote
+        )
+    }
+
+    private func resolvedAuthorField(primary: String?, fallback: String?) -> String? {
+        let trimmedPrimary = primary?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !trimmedPrimary.isEmpty, trimmedPrimary != "알 수 없음" {
+            return trimmedPrimary
+        }
+
+        let trimmedFallback = fallback?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmedFallback.isEmpty ? nil : trimmedFallback
     }
 
     /// 공지 리소스 권한 조회
