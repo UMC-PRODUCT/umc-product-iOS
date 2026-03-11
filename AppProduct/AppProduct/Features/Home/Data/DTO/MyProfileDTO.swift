@@ -207,6 +207,7 @@ extension MyProfileResponseDTO {
             .days(0),
             .gens(mergedGens)
         ]
+        let generationOrganizations = buildGenerationOrganizations(records: records, roles: roles)
 
         return HomeProfileResult(
             memberId: id,
@@ -219,8 +220,42 @@ extension MyProfileResponseDTO {
             part: latestRecord.flatMap { UMCPartType(apiValue: $0.part) },
             seasonTypes: resolvedSeasonTypes,
             roles: challengerRoles,
-            generations: generations
+            generations: generations,
+            generationOrganizations: generationOrganizations
         )
+    }
+
+    private func buildGenerationOrganizations(
+        records: [ChallengerMemberDTO],
+        roles: [RoleDTO]
+    ) -> [GenerationOrganizationContext] {
+        var byGen: [Int: GenerationOrganizationContext] = [:]
+
+        for record in records where record.gisu > 0 {
+            byGen[record.gisu] = GenerationOrganizationContext(
+                gen: record.gisu,
+                chapterId: record.chapterId,
+                chapterName: record.chapterName,
+                schoolId: record.schoolId > 0 ? record.schoolId : nil,
+                schoolName: record.schoolName.isEmpty ? nil : record.schoolName
+            )
+        }
+
+        for role in roles where role.gisu > 0 {
+            let existing = byGen[role.gisu]
+            let chapterId = role.organizationType == .chapter ? role.organizationId : existing?.chapterId
+            let schoolId = role.organizationType == .school ? role.organizationId : existing?.schoolId
+
+            byGen[role.gisu] = GenerationOrganizationContext(
+                gen: role.gisu,
+                chapterId: chapterId,
+                chapterName: existing?.chapterName,
+                schoolId: schoolId,
+                schoolName: existing?.schoolName
+            )
+        }
+
+        return byGen.values.sorted { $0.gen < $1.gen }
     }
 }
 

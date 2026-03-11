@@ -39,6 +39,7 @@ final class NoticeViewModel {
     var memberRole: ManagementTeam?
     var chapterId: Int = 0
     var schoolId: Int = 0
+    var generationOrganizations: [Int: GenerationOrganizationContext] = [:]
 
     /// 기수-기수ID 쌍 목록
     var gisuPairs: [(gen: Int, gisuId: Int)] = []
@@ -185,14 +186,28 @@ final class NoticeViewModel {
     }
 
     private var currentBranchFilterTitle: String {
+        let resolvedChapterId = selectedGenerationOrganization?.chapterId ?? 0
         currentTargetState.branches
-            .first(where: { $0.id == chapterId })?
-            .name ?? NoticeUserContext.empty.branchName
+            .first(where: { $0.id == resolvedChapterId })?
+            .name ?? selectedGenerationOrganization?.chapterName ?? NoticeUserContext.empty.branchName
     }
 
     private var currentSchoolFilterTitle: String {
+        let resolvedSchoolId = selectedGenerationOrganization?.schoolId ?? 0
         currentTargetState.schools
-            .first(where: { $0.id == schoolId })?
-            .name ?? NoticeUserContext.empty.schoolName
+            .first(where: { $0.id == resolvedSchoolId })?
+            .name ?? selectedGenerationOrganization?.schoolName ?? NoticeUserContext.empty.schoolName
+    }
+
+    var selectedGenerationOrganization: GenerationOrganizationContext? {
+        generationOrganizations[selectedGeneration.value]
+    }
+
+    var selectedGenerationChapterId: Int {
+        selectedGenerationOrganization?.chapterId ?? 0
+    }
+
+    var selectedGenerationSchoolId: Int {
+        selectedGenerationOrganization?.schoolId ?? 0
     }
 }

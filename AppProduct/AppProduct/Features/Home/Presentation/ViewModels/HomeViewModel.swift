@@ -135,9 +135,21 @@ final class HomeViewModel {
             result.roles.map(\.roleType.rawValue),
             forKey: AppStorageKey.memberRoles
         )
+        defaults.set(
+            encodeGenerationOrganizations(result.generationOrganizations),
+            forKey: AppStorageKey.generationOrganizations
+        )
         defaults.set(isApproved, forKey: AppStorageKey.canAutoLogin)
         container.resolve(UserSessionManager.self).updateRole(resolvedRole)
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
+    }
+
+    private func encodeGenerationOrganizations(_ contexts: [GenerationOrganizationContext]) -> String {
+        guard let data = try? JSONEncoder().encode(contexts),
+              let json = String(data: data, encoding: .utf8) else {
+            return "[]"
+        }
+        return json
     }
 
     private func isApprovedProfile(_ result: HomeProfileResult) -> Bool {

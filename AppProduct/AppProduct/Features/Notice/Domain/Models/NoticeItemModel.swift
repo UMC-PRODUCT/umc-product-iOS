@@ -78,14 +78,11 @@ struct NoticeItemModel: Equatable, Identifiable {
     
     /// UI 표시용 태그 목록
     var tags: [NoticeItemTag] {
-        if targetsAllGenerations {
-            return [
-                NoticeItemTag(text: "모든 기수", backColor: .blue)
-            ]
-        }
-
         var items: [NoticeItemTag] = [
-            NoticeItemTag(text: "\(generation)기", backColor: .blue)
+            NoticeItemTag(
+                text: targetsAllGenerations ? "모든 기수" : "\(generation)기",
+                backColor: .blue
+            )
         ]
 
         if let scopeTag {
