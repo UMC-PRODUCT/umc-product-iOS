@@ -545,10 +545,16 @@ final class OperatorStudyManagementViewModel {
     }
 
     private func presentStudyGroupCreateAlert(from error: NetworkError) -> Bool {
-        guard case .requestFailed(_, let data) = error,
-              let message = decodeServerMessage(from: data) else {
+        guard case .requestFailed(let statusCode, let data) = error else {
             return false
         }
+
+        let message = studyGroupCreateFailureMessage(
+            statusCode: statusCode,
+            data: data
+        ) ?? decodeServerMessage(from: data)
+
+        guard let message else { return false }
 
         alertPrompt = AlertPrompt(
             title: "그룹 생성 실패",
@@ -573,17 +579,42 @@ final class OperatorStudyManagementViewModel {
         return true
     }
 
-    private func decodeServerMessage(from data: Data?) -> String? {
-        guard let data,
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+    private func studyGroupCreateFailureMessage(
+        statusCode: Int,
+        data: Data?
+    ) -> String? {
+        guard statusCode == 403 else { return nil }
+
+        let payload = decodeServerErrorPayload(from: data)
+        let errorCode = payload?.code?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        guard errorCode == "AUTHORIZATION-0002" || !errorCode.isEmpty else {
             return nil
         }
 
-        let message = (json["message"] as? String)
-            ?? (json["result"] as? String)
-            ?? (json["error"] as? String)
+        return "현재 계정 권한으로는 스터디 그룹을 생성할 수 없습니다.\n서버 권한 수정 전까지 총괄 계정에서는 생성이 제한될 수 있습니다."
+    }
+
+    private func decodeServerMessage(from data: Data?) -> String? {
+        let payload = decodeServerErrorPayload(from: data)
+        let message = payload?.message ?? payload?.result ?? payload?.error
         let trimmed = message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private func decodeServerErrorPayload(from data: Data?) -> ServerErrorPayload? {
+        guard let data,
+              let payload = try? JSONDecoder().decode(ServerErrorPayload.self, from: data) else {
+            return nil
+        }
+        return payload
+    }
+
+    private struct ServerErrorPayload: Decodable {
+        let code: String?
+        let message: String?
+        let result: String?
+        let error: String?
     }
 
     private func appendCreatedGroupToLocalState(
