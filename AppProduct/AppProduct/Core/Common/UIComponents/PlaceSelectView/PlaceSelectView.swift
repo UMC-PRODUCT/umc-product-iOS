@@ -46,9 +46,13 @@ struct PlaceSelectView: View {
             }
         })
         .sheet(isPresented: $showSearchMap, content: {
-            SearchMapView(errorHandler: errorHandler, placeSelected: { place in
-                self.place = place
-            })
+            SearchMapView(
+                initialPlace: place.name.isEmpty ? nil : place,
+                errorHandler: errorHandler,
+                placeSelected: { place in
+                    self.place = place
+                }
+            )
             .presentationDragIndicator(.visible)
         })
     }
