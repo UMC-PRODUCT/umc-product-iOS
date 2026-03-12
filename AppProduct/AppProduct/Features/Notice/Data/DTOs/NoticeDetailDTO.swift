@@ -164,9 +164,8 @@ extension NoticeDetailDTO {
     }
 
     private func resolvedAuthorName() -> String {
-        [authorName, authorNickname]
-            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .first(where: { !$0.isEmpty }) ?? "알 수 없음"
+        let trimmedAuthorName = authorName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmedAuthorName.isEmpty ? "알 수 없음" : trimmedAuthorName
     }
 }
 

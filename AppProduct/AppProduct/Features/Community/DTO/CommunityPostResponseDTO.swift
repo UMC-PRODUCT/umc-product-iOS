@@ -16,6 +16,7 @@ struct PostDetailDTO: Codable {
     let authorId: String?
     let authorName: String?
     let authorNickname: String?
+    let challengerNickname: String?
     let authorProfileImage: String?
     let authorPart: String?
     let lightningInfo: LightningInfoDTO?
@@ -35,6 +36,7 @@ struct PostDetailDTO: Codable {
         case authorId
         case authorName
         case authorNickname
+        case challengerNickname
         case authorProfileImage
         case authorPart
         case lightningInfo
@@ -55,7 +57,10 @@ struct PostDetailDTO: Codable {
         category = try container.decode(String.self, forKey: .category)
         authorId = container.decodeFlexibleOptionalString(forKey: .authorId)
         authorName = try container.decodeIfPresent(String.self, forKey: .authorName)
-        authorNickname = try container.decodeIfPresent(String.self, forKey: .authorNickname)
+        authorNickname = container.decodeFirstNonEmptyString(
+            forKeys: [.authorNickname, .challengerNickname]
+        )
+        challengerNickname = try container.decodeIfPresent(String.self, forKey: .challengerNickname)
         authorProfileImage = try container.decodeIfPresent(String.self, forKey: .authorProfileImage)
         authorPart = try container.decodeIfPresent(String.self, forKey: .authorPart)
         lightningInfo = try container.decodeIfPresent(LightningInfoDTO.self, forKey: .lightningInfo)
@@ -80,6 +85,7 @@ struct PostListItemDTO: Codable {
     let authorMemberId: String?
     let authorName: String?
     let authorNickname: String?
+    let challengerNickname: String?
     let authorProfileImage: String?
     let authorPart: String?
     let createdAt: String
@@ -99,6 +105,7 @@ struct PostListItemDTO: Codable {
         case authorMemberId
         case authorName
         case authorNickname
+        case challengerNickname
         case authorProfileImage
         case authorPart
         case createdAt
@@ -119,7 +126,10 @@ struct PostListItemDTO: Codable {
         authorChallengerId = container.decodeFlexibleOptionalString(forKey: .authorChallengerId)
         authorMemberId = container.decodeFlexibleOptionalString(forKey: .authorMemberId)
         authorName = try container.decodeIfPresent(String.self, forKey: .authorName)
-        authorNickname = try container.decodeIfPresent(String.self, forKey: .authorNickname)
+        authorNickname = container.decodeFirstNonEmptyString(
+            forKeys: [.authorNickname, .challengerNickname]
+        )
+        challengerNickname = try container.decodeIfPresent(String.self, forKey: .challengerNickname)
         authorProfileImage = try container.decodeIfPresent(String.self, forKey: .authorProfileImage)
         authorPart = try container.decodeIfPresent(String.self, forKey: .authorPart)
         createdAt = try container.decode(String.self, forKey: .createdAt)
@@ -247,6 +257,13 @@ private func resolvedDisplayName(authorName: String?) -> String {
 }
 
 private extension KeyedDecodingContainer {
+    func decodeFirstNonEmptyString(forKeys keys: [Key]) -> String? {
+        keys
+            .compactMap { try? decodeIfPresent(String.self, forKey: $0) }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first(where: { !$0.isEmpty })
+    }
+
     func decodeFlexibleString(forKey key: Key) throws -> String {
         if let value = try? decode(String.self, forKey: key) {
             return value

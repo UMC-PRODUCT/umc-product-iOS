@@ -36,7 +36,7 @@ struct ScheduleDetailDTO: Codable, Sendable, Equatable {
     let longitude: Double
     /// 참여 상태 (예: "참여 예정")
     let status: String
-    /// D-Day 값 (음수: 미래, 양수: 과거)
+    /// D-Day 값 (양수: 미래, 음수: 과거)
     let dDay: Int
     /// 출석 승인 필요 여부
     let requiresAttendanceApproval: Bool
