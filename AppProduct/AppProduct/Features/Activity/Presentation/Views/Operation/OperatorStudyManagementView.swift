@@ -23,6 +23,13 @@ struct OperatorStudyManagementView: View {
         container.resolve(PathStore.self)
     }
 
+    private var userSession: UserSessionManager {
+        container.resolve(UserSessionManager.self)
+    }
+
+    @AppStorage(AppStorageKey.organizationType)
+    private var organizationType: String = ""
+
     @State private var selectedTab: ManagementTab = .submission
     @State private var showCreateView = false
 
@@ -100,7 +107,7 @@ struct OperatorStudyManagementView: View {
                     selection: $viewModel.selectedStudyGroup,
                     onChange: viewModel.selectStudyGroup
                 )
-            } else {
+            } else if canCreateStudyGroup {
                 ToolBarCollection.AddBtn {
                     showCreateView = true
                 }
@@ -168,6 +175,14 @@ struct OperatorStudyManagementView: View {
             OperatorStudyGroupCreateView(viewModel: viewModel)
         }
         .alertPrompt(item: $viewModel.alertPrompt)
+    }
+
+    // MARK: - Function
+
+    /// 스터디 그룹 생성 권한 확인 (역할 + 조직 타입)
+    private var canCreateStudyGroup: Bool {
+        userSession.currentRole.canCreateStudyGroup
+            && OrganizationType(rawValue: organizationType) == .school
     }
 
     // MARK: - Submission Content View

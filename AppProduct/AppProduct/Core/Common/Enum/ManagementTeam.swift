@@ -64,6 +64,11 @@ enum ManagementTeam: String, CaseIterable, Codable, Comparable {
         level >= Self.schoolEtcAdmin.level
     }
 
+    /// 스터디 그룹 생성 가능 여부 (교내 회장/부회장만 가능)
+    var canCreateStudyGroup: Bool {
+        self == .schoolPresident || self == .schoolVicePresident
+    }
+
     // MARK: - Comparable
 
     static func < (lhs: ManagementTeam, rhs: ManagementTeam) -> Bool {
