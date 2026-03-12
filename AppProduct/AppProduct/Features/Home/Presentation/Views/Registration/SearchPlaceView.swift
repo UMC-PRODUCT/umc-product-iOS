@@ -9,18 +9,28 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
+/// 일정 등록 화면에서 장소를 검색하거나 지도에서 선택하도록 돕는 시트입니다.
+///
+/// 검색 탭에서는 키워드 검색과 최근 검색 기록을 제공하고,
+/// 지도 탭에서는 핀을 이동한 뒤 확인 버튼으로 위치를 확정합니다.
 struct SearchMapView: View {
     // MARK: - Property
 
+    /// 시트 닫힘을 제어합니다.
     @Environment(\.dismiss) var dismiss
+    /// 검색어 입력, 검색 결과, 최근 검색 기록을 관리합니다.
     @State var viewModel: SearchPlaceViewModel
+    /// 검색창 포커스 상태를 제어합니다.
     @FocusState var isFocused: Bool
+    /// 검색 UI와 지도 UI 사이의 현재 탭 상태입니다.
     @State private var searchMode: SearchMode = .search
+    /// 지도 선택 임시 상태를 유지합니다.
     @State private var mapPickerState: InlineMapPickerState = .init()
 
     /// 장소가 선택되었을 때 호출되는 클로저
     var placeSelected: (PlaceSearchInfo) -> Void
 
+    /// 장소 선택 시트의 상단 모드 전환 값입니다.
     enum SearchMode: String, CaseIterable, Identifiable {
         case search = "검색"
         case map = "지도"
@@ -30,6 +40,7 @@ struct SearchMapView: View {
 
     // MARK: - Header
 
+    /// 검색 섹션 헤더의 제목 종류입니다.
     enum MapHeaderType: String {
         case recent = "최근 검색"
         case search = "검색 위치"
@@ -37,24 +48,68 @@ struct SearchMapView: View {
 
     // MARK: - Constant
 
+    /// 검색 화면에서 사용하는 문자열 및 시스템 아이콘 상수입니다.
     enum Constants {
         static let placeholder: String = "Apple 지도"
         static let magnifyingglass: String = "magnifyingglass"
         static let currentLocation: String = "location.fill"
+        static let subTitle: String = "핀을 눌러 위치를 선택하세요"
+        static let confirmButtonTitle: String = "이 위치로 선택"
+        static let confirmingTitle: String = "확인 중"
+        static let confirmButtonIcon: String = "checkmark.circle.fill"
     }
 
     // MARK: - Init
 
+    /// 장소 선택 시트를 초기 상태와 함께 생성합니다.
+    ///
+    /// - Parameters:
+    ///   - initialPlace: 기존에 선택된 장소입니다. 지도 탭 진입 시 해당 좌표를 초기 핀으로 사용합니다.
+    ///   - errorHandler: 검색 및 현재 위치 조회 실패를 처리할 `ErrorHandler`입니다.
+    ///   - placeSelected: 최종 선택된 장소를 상위 폼에 반영하는 클로저입니다.
     init(
+        initialPlace: PlaceSearchInfo? = nil,
         errorHandler: ErrorHandler,
         placeSelected: @escaping (PlaceSearchInfo) -> Void
     ) {
         self._viewModel = .init(wrappedValue: .init(errorHandler: errorHandler))
+        self._mapPickerState = .init(
+            wrappedValue: .init(initialPlace: initialPlace)
+        )
         self.placeSelected = placeSelected
     }
 
+    // MARK: - Body
+
+    /// 검색 시트의 기본 내비게이션과 툴바를 조합한 본문입니다.
     var body: some View {
         NavigationStack {
+            navigationContent
+        }
+    }
+
+    /// 공통 내비게이션 구성을 적용한 뒤, 지도 모드에서만 서브타이틀을 추가합니다.
+    @ViewBuilder
+    private var navigationContent: some View {
+        if searchMode == .map {
+            content
+                .navigation(naviTitle: .placeSearch, displayMode: .inline)
+                .navigationSubtitle(Constants.subTitle)
+                .toolbar(content: {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        modeToggleButton
+                        currnetLocation
+                    }
+                    
+                    ToolbarItem(placement: .bottomBar) {
+                        mapConfirmButton
+                    }
+                })
+                .task {
+                    viewModel.loadRecentPlaces()
+                }
+                .backgroundExtensionEffect()
+        } else {
             content
                 .navigation(naviTitle: .placeSearch, displayMode: .inline)
                 .toolbar(content: {
@@ -69,6 +124,7 @@ struct SearchMapView: View {
         }
     }
 
+    /// 현재 모드에 따라 검색 폼 또는 지도 선택 뷰를 렌더링합니다.
     @ViewBuilder
     private var content: some View {
         switch searchMode {
@@ -92,12 +148,7 @@ struct SearchMapView: View {
             .searchPresentationToolbarBehavior(.avoidHidingContent)
 
         case .map:
-            InlineMapPlacePicker(
-                state: mapPickerState,
-                placeSelected: { place in
-                    self.placeSelected(place)
-                }
-            )
+            InlineMapPlacePicker(state: mapPickerState)
             .umcDefaultBackground()
         }
     }
@@ -141,7 +192,46 @@ struct SearchMapView: View {
         .accessibilityLabel(searchMode == .search ? "지도로 보기" : "검색으로 보기")
     }
 
-    /// 최근 검색 위치 섹션 뷰
+    /// 지도 모드에서 하단 toolbar에 노출되는 위치 확정 버튼입니다.
+    private var mapConfirmButton: some View {
+        let canConfirmSelection = mapPickerState.selectedPlace != nil && !mapPickerState.isResolvingPlace
+
+        return Button(action: {
+            guard let selectedPlace = mapPickerState.selectedPlace else {
+                return
+            }
+
+            placeSelected(selectedPlace)
+            dismiss()
+        }, label: {
+            HStack(spacing: DefaultSpacing.spacing8) {
+                if mapPickerState.isResolvingPlace {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.indigo700)
+                } else {
+                    Image(systemName: Constants.confirmButtonIcon)
+                        .font(.body.weight(.semibold))
+                }
+
+                Text(
+                    mapPickerState.isResolvingPlace
+                    ? Constants.confirmingTitle
+                    : Constants.confirmButtonTitle
+                )
+                .font(.headline.weight(.semibold))
+                .lineLimit(1)
+            }
+            .foregroundStyle(canConfirmSelection ? .indigo700 : .grey400)
+            .padding(.horizontal, DefaultSpacing.spacing16)
+            .padding(.vertical, DefaultSpacing.spacing12)
+            .frame(minWidth: 180)
+        })
+        .buttonStyle(.plain)
+        .disabled(!canConfirmSelection)
+    }
+
+    /// 검색어가 비어 있을 때 최근 검색 기록 섹션을 노출합니다.
     @ViewBuilder
     private var recentSearches: some View {
         if viewModel.searchPlace.isEmpty {
@@ -169,7 +259,7 @@ struct SearchMapView: View {
         }
     }
 
-    /// 위치 검색 결과 섹션 뷰
+    /// 검색 결과가 있을 때만 검색 위치 섹션을 노출합니다.
     @ViewBuilder
     private var mapSearchResult: some View {
         if !viewModel.searchResult.isEmpty {
@@ -196,15 +286,19 @@ struct SearchMapView: View {
     }
 }
 
-// MARK: - Extension
+// MARK: - Helper
 
 extension SearchMapView {
+    /// 최근 검색 셀에 사용하는 돋보기 아이콘입니다.
     private var labelIcon: some View {
         Image(systemName: Constants.magnifyingglass)
             .renderingMode(.template)
             .foregroundStyle(.grey700)
     }
 
+    /// 최근 검색어를 검색창에 다시 채워 넣는 버튼을 생성합니다.
+    ///
+    /// - Parameter place: 다시 검색할 최근 장소 정보입니다.
     private func recentBtn(_ place: RecentPlace) -> some View {
         Button(action: {
             viewModel.searchPlace = place.name
@@ -217,17 +311,26 @@ extension SearchMapView {
         })
     }
 
+    /// 검색어 변경 또는 제출 시 장소 검색을 시작합니다.
+    ///
+    /// - Parameter query: MapKit 검색에 전달할 자연어 검색어입니다.
     private func searchAction(_ query: String) {
         Task {
             await viewModel.search(query: query)
         }
     }
 
+    /// 최근 검색 셀의 제목 텍스트 스타일을 통일합니다.
     private func labelTitle(_ title: String) -> some View {
         Text(title)
             .appFont(.body, color: .black)
     }
 
+    /// 최근 검색과 검색 결과 섹션에서 공통으로 사용하는 헤더를 생성합니다.
+    ///
+    /// - Parameters:
+    ///   - type: 헤더 제목에 사용할 섹션 종류입니다.
+    ///   - isShowBtn: 최근 검색 전체 삭제 버튼 노출 여부입니다.
     private func generateHeader(
         _ type: MapHeaderType,
         isShowBtn: Bool = false
@@ -251,278 +354,11 @@ extension SearchMapView {
         }
     }
 
+    /// 최근 검색 기록 목록에서 선택한 인덱스를 제거합니다.
+    ///
+    /// - Parameter index: 삭제할 최근 검색 항목의 인덱스 집합입니다.
     private func rencetDataDelete(index: IndexSet) {
         viewModel.recentPlaces.remove(atOffsets: index)
-    }
-}
-
-// MARK: - SearchContent
-
-fileprivate struct SearchContent: View, Equatable {
-    let place: PlaceSearchResult
-    let tapAction: () -> Void
-
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.place == rhs.place
-    }
-
-    var body: some View {
-        Button(action: {
-            tapAction()
-        }, label: {
-            HStack(spacing: DefaultSpacing.spacing8, content: {
-                MapMarkerIcon(category: place.category)
-                    .equatable()
-
-                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4, content: {
-                    Text(place.name)
-                        .appFont(.calloutEmphasis, color: .black)
-                    Text(place.address ?? "주소 정보 없음")
-                        .appFont(.subheadline, color: .grey600)
-                })
-            })
-        })
-    }
-}
-
-fileprivate struct MapMarkerIcon: View, Equatable {
-    let category: MKPointOfInterestCategory?
-
-    enum Constants {
-        static let circleSize: CGFloat = 40
-        static let circleIcon: String = "mappin"
-    }
-
-    var body: some View {
-        Circle()
-            .fill(category?.backgroundColor ?? .gray)
-            .frame(width: Constants.circleSize, height: Constants.circleSize)
-            .overlay {
-                Image(systemName: category?.systemIconName ?? Constants.circleIcon)
-                    .renderingMode(.template)
-                    .font(.default)
-                    .foregroundStyle(.white)
-            }
-            .glassEffect(.clear, in: .circle)
-    }
-}
-
-// MARK: - InlineMapPlacePicker
-
-@Observable
-private final class InlineMapPickerState {
-    private static let defaultCenter = CLLocationCoordinate2D(
-        latitude: 37.5665,
-        longitude: 126.9780
-    )
-    private static let defaultSpan = MKCoordinateSpan(
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02
-    )
-
-    var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: defaultCenter,
-            span: defaultSpan
-        )
-    )
-    var selectedCoordinate: CLLocationCoordinate2D?
-    var selectedPlace: PlaceSearchInfo?
-    var isResolvingPlace: Bool = false
-    private var hasInitializedState: Bool = false
-
-    @MainActor
-    func configureInitialStateIfNeeded() async {
-        guard !hasInitializedState else { return }
-        hasInitializedState = true
-
-        LocationManager.shared.requestAuthorization()
-        if let currentLocation = try? await LocationManager.shared.getCurrentLocation() {
-            moveCamera(to: currentLocation)
-        }
-    }
-
-    @MainActor
-    func moveToCurrentLocation() async {
-        do {
-            let coordinate = try await LocationManager.shared.getCurrentLocation()
-            await selectCoordinate(coordinate)
-        } catch {
-            LocationManager.shared.requestAuthorization()
-        }
-    }
-
-    @MainActor
-    func selectCoordinate(_ coordinate: CLLocationCoordinate2D) async {
-        selectedCoordinate = coordinate
-        isResolvingPlace = true
-        selectedPlace = await reverseGeocodePlaceInfo(for: coordinate)
-        isResolvingPlace = false
-    }
-
-    @MainActor
-    private func moveCamera(to coordinate: CLLocationCoordinate2D) {
-        cameraPosition = .region(
-            MKCoordinateRegion(
-                center: coordinate,
-                span: Self.defaultSpan
-            )
-        )
-    }
-
-    private func reverseGeocodePlaceInfo(
-        for coordinate: CLLocationCoordinate2D
-    ) async -> PlaceSearchInfo {
-        let location = CLLocation(
-            latitude: coordinate.latitude,
-            longitude: coordinate.longitude
-        )
-
-        guard let request = MKReverseGeocodingRequest(location: location) else {
-            return fallbackPlaceInfo(for: coordinate)
-        }
-
-        do {
-            let mapItems = try await request.mapItems
-            guard let first = mapItems.first else {
-                return fallbackPlaceInfo(for: coordinate)
-            }
-
-            let address =
-                first.address?.shortAddress
-                ?? first.address?.fullAddress
-                ?? first.addressRepresentations?.fullAddress(
-                    includingRegion: false,
-                    singleLine: true
-                )
-                ?? fallbackAddress(for: coordinate)
-
-            return PlaceSearchInfo(
-                name: first.name ?? address,
-                address: address,
-                coordinate: Coordinate(
-                    latitude: coordinate.latitude,
-                    longitude: coordinate.longitude
-                )
-            )
-        } catch {
-            return fallbackPlaceInfo(for: coordinate)
-        }
-    }
-
-    private func fallbackPlaceInfo(
-        for coordinate: CLLocationCoordinate2D
-    ) -> PlaceSearchInfo {
-        let address = fallbackAddress(for: coordinate)
-        return PlaceSearchInfo(
-            name: "지도에서 선택한 위치",
-            address: address,
-            coordinate: Coordinate(
-                latitude: coordinate.latitude,
-                longitude: coordinate.longitude
-            )
-        )
-    }
-
-    private func fallbackAddress(
-        for coordinate: CLLocationCoordinate2D
-    ) -> String {
-        String(
-            format: "%.5f, %.5f",
-            coordinate.latitude,
-            coordinate.longitude
-        )
-    }
-}
-
-private struct InlineMapPlacePicker: View {
-
-    @Bindable var state: InlineMapPickerState
-    private let placeSelected: (PlaceSearchInfo) -> Void
-
-    init(
-        state: InlineMapPickerState,
-        placeSelected: @escaping (PlaceSearchInfo) -> Void
-    ) {
-        self.state = state
-        self.placeSelected = placeSelected
-    }
-
-    var body: some View {
-        ZStack(alignment: .bottom) {
-            MapReader { proxy in
-                Map(position: $state.cameraPosition) {
-                    if let selectedCoordinate = state.selectedCoordinate {
-                        Annotation(
-                            state.selectedPlace?.name ?? "선택한 위치",
-                            coordinate: selectedCoordinate,
-                            anchor: .bottom
-                        ) {
-                            SelectedPlaceAnnotation(place: state.selectedPlace)
-                        }
-                    }
-                    UserAnnotation()
-                }
-                .mapStyle(.standard)
-                .mapControls {
-                    MapCompass()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .simultaneousGesture(
-                    SpatialTapGesture()
-                        .onEnded { value in
-                            guard let coordinate = proxy.convert(
-                                value.location,
-                                from: .local
-                            ) else {
-                                return
-                            }
-
-                            Task {
-                                await state.selectCoordinate(coordinate)
-                            }
-                        }
-                )
-            }
-        }
-        .task {
-            await state.configureInitialStateIfNeeded()
-        }
-        .onChange(of: state.selectedPlace) { _, newValue in
-            guard let newValue else { return }
-            placeSelected(newValue)
-        }
-    }
-}
-
-private struct SelectedPlaceAnnotation: View {
-    let place: PlaceSearchInfo?
-
-    var body: some View {
-        VStack(spacing: DefaultSpacing.spacing8) {
-            if let place {
-                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                    Text(place.name)
-                        .appFont(.caption1Emphasis, color: .black)
-                        .lineLimit(1)
-                    Text(place.address)
-                        .appFont(.caption2, color: .grey600)
-                        .lineLimit(2)
-                }
-                .padding(.horizontal, DefaultSpacing.spacing12)
-                .padding(.vertical, DefaultSpacing.spacing8)
-                .background(
-                    Capsule(style: .continuous)
-                        .fill(.white)
-                        .glass()
-                )
-            }
-
-            Image(.Map.mapPin)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 28, height: 28)
-        }
     }
 }
 
