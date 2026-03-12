@@ -30,6 +30,9 @@ struct OperatorStudyManagementView: View {
     @AppStorage(AppStorageKey.organizationType)
     private var organizationType: String = ""
 
+    @AppStorage(AppStorageKey.challengerId)
+    private var currentChallengerId: Int = 0
+
     @State private var selectedTab: ManagementTab = .submission
     @State private var showCreateView = false
 
@@ -252,6 +255,14 @@ struct OperatorStudyManagementView: View {
                             )
                         },
                         onSchedule: {
+                            guard group.leader.challengerID == currentChallengerId else {
+                                viewModel.alertPrompt = AlertPrompt(
+                                    title: "권한 없음",
+                                    message: "그룹 리더만 일정을 등록할 수 있습니다.",
+                                    positiveBtnTitle: "확인"
+                                )
+                                return
+                            }
                             guard let studyGroupId = Int(group.serverID) else {
                                 return
                             }
