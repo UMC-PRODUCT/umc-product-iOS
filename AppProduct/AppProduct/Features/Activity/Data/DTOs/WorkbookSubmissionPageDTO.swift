@@ -84,10 +84,11 @@ struct WorkbookSubmissionItemDTO: Codable, Sendable, Equatable {
 }
 
 extension WorkbookSubmissionItemDTO {
-    func toDomain(week: Int) -> StudyMemberItem {
+    func toDomain(week: Int, studyGroupId: Int?) -> StudyMemberItem {
         StudyMemberItem(
             serverID: String(challengerId),
             challengerWorkbookId: challengerWorkbookId,
+            studyGroupId: studyGroupId,
             name: challengerName,
             nickname: challengerName,
             part: part.toStudyPart,

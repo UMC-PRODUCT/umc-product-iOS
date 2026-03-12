@@ -785,6 +785,7 @@ final class OperatorStudyManagementViewModel {
                     id: member.id,
                     serverID: member.serverID,
                     challengerWorkbookId: member.challengerWorkbookId,
+                    studyGroupId: member.studyGroupId,
                     name: member.name,
                     nickname: member.nickname,
                     part: member.part,
@@ -843,6 +844,27 @@ final class OperatorStudyManagementViewModel {
         await submitBestWorkbook(
             member: member,
             recommendation: recommendation
+        )
+    }
+
+    /// 해당 멤버의 스터디 그룹에 이미 베스트 워크북이 선정되었는지 확인
+    /// - Parameter member: 확인 대상 멤버
+    /// - Returns: 같은 그룹에 이미 베스트 워크북이 있으면 true
+    func isBestSelectionDisabled(for member: StudyMemberItem) -> Bool {
+        guard let groupId = member.studyGroupId else { return false }
+        return allMembers.contains { other in
+            other.studyGroupId == groupId
+                && other.isBestWorkbook
+                && other.id != member.id
+        }
+    }
+
+    /// 베스트 워크북 선정 불가 안내 AlertPrompt 표시
+    func showBestSelectionDisabledAlert() {
+        alertPrompt = AlertPrompt(
+            title: "베스트 워크북 선정 불가",
+            message: "이 스터디 그룹에는 이미 베스트 워크북이 선정되었습니다.",
+            positiveBtnTitle: "확인"
         )
     }
 

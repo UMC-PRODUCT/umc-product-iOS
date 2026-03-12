@@ -50,6 +50,9 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
     /// 챌린저 워크북 식별자
     let challengerWorkbookId: Int?
 
+    /// 스터디 그룹 식별자
+    let studyGroupId: Int?
+
     /// 이름
     let name: String
 
@@ -84,6 +87,7 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
         id: UUID = UUID(),
         serverID: String,
         challengerWorkbookId: Int? = nil,
+        studyGroupId: Int? = nil,
         name: String,
         nickname: String,
         part: StudyPart,
@@ -97,6 +101,7 @@ struct StudyMemberItem: Identifiable, Equatable, Hashable {
         self.id = id
         self.serverID = serverID
         self.challengerWorkbookId = challengerWorkbookId
+        self.studyGroupId = studyGroupId
         self.name = name
         self.nickname = nickname
         self.part = part
