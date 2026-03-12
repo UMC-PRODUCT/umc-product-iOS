@@ -14,12 +14,8 @@ struct OperatorLocationChangeSheetView: View {
 
     // MARK: - Property
 
-    @Environment(\.dismiss) private var dismiss
-
-    private let session: Session?
+    @Bindable private var viewModel: OperatorAttendanceViewModel
     private let errorHandler: ErrorHandler
-    private let onDismiss: () -> Void
-    private let onConfirm: (PlaceSearchInfo) async -> Bool
 
     @State private var selectedPlace: PlaceSearchInfo = .init(
         name: "",
@@ -40,15 +36,11 @@ struct OperatorLocationChangeSheetView: View {
     // MARK: - Init
 
     init(
-        session: Session?,
+        viewModel: OperatorAttendanceViewModel,
         errorHandler: ErrorHandler,
-        onDismiss: @escaping () -> Void,
-        onConfirm: @escaping (PlaceSearchInfo) async -> Bool
     ) {
-        self.session = session
+        self.viewModel = viewModel
         self.errorHandler = errorHandler
-        self.onDismiss = onDismiss
-        self.onConfirm = onConfirm
     }
 
     // MARK: - Body
@@ -56,7 +48,7 @@ struct OperatorLocationChangeSheetView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-                if let session = session {
+                if let session = viewModel.selectedSession {
                     sessionInfoCard(session: session)
                     placeSelectionCard
                 } else {
@@ -75,7 +67,7 @@ struct OperatorLocationChangeSheetView: View {
             .presentationDragIndicator(.visible)
             .toolbar {
                 ToolBarCollection.CancelBtn {
-                    onDismiss()
+                    viewModel.showLocationSheet = false
                 }
 
                 ToolBarCollection.ConfirmBtn(
@@ -98,13 +90,13 @@ struct OperatorLocationChangeSheetView: View {
     private func submitChange() {
         guard !isSubmitting else { return }
         isSubmitting = true
-        Task {
-            let isSuccess = await onConfirm(selectedPlace)
+        let placeSnapshot = selectedPlace
+        Task { @MainActor in
+            let isSuccess = await viewModel.confirmLocationChange(to: placeSnapshot)
             isSubmitting = false
 
             if isSuccess {
-                onDismiss()
-                dismiss()
+                viewModel.showLocationSheet = false
             }
         }
     }
@@ -173,23 +165,3 @@ struct OperatorLocationChangeSheetView: View {
         }
     }
 }
-
-// MARK: - Preview
-
-#if DEBUG
-#Preview {
-    NavigationStack {
-        Text("1")
-    }
-    .sheet(isPresented: .constant(true)) {
-        OperatorLocationChangeSheetView(
-            session: OperatorAttendancePreviewData.sessions.first?.session,
-            errorHandler: AttendancePreviewData.errorHandler,
-            onDismiss: {},
-            onConfirm: { _ in
-                true
-            }
-        )
-    }
-}
-#endif

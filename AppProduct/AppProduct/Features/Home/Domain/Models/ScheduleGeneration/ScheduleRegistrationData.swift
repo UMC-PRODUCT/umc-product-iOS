@@ -9,7 +9,7 @@ import Foundation
 
 /// 일정 생성 시작 및 종료 날짜 범위
 /// 일정 생성 시작 및 종료 날짜 범위
-struct DateRange {
+struct DateRange: Sendable {
     /// 시작 날짜 및 시간
     var startDate: Date
     /// 종료 날짜 및 시간
@@ -19,7 +19,7 @@ struct DateRange {
 /// 장소 검색 정보
 ///
 /// 사용자가 선택한 장소의 이름, 주소, 좌표 정보를 포함합니다.
-struct PlaceSearchInfo: Equatable {
+struct PlaceSearchInfo: Equatable, Sendable {
     /// 장소 이름
     var name: String
     /// 상세 주소

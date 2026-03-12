@@ -181,7 +181,7 @@ final class NoticeDetailViewModel {
     /// 읽음 비율(0.0 ~ 1.0)
     var readRate: Double {
         if let readStatics {
-            return Double(readStatics.readRate) ?? 0
+            return Self.normalizedReadRate(from: readStatics.readRate)
         }
 
         guard totalCount > 0 else { return 0 }
@@ -325,4 +325,16 @@ final class NoticeDetailViewModel {
         return schoolId > 0 ? schoolId : nil
     }
 
+}
+
+private extension NoticeDetailViewModel {
+    static func normalizedReadRate(from rawValue: String) -> Double {
+        let parsedRate = Double(rawValue) ?? 0
+
+        if parsedRate > 1 {
+            return min(max(parsedRate / 100, 0), 1)
+        }
+
+        return min(max(parsedRate, 0), 1)
+    }
 }

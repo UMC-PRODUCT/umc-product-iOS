@@ -28,8 +28,6 @@ struct CommunityItemModel: Equatable, Identifiable, Hashable {
     let lightningInfo: CommunityLightningInfo?
 
     var displayUserName: String {
-        guard userId > 0 else { return "알 수 없음" }
-
         let trimmedNickname = userNickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let trimmedName = userName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty, trimmedName != "알 수 없음" else { return "알 수 없음" }

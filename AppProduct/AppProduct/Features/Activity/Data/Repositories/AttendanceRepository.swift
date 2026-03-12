@@ -139,6 +139,27 @@ final class AttendanceRepository: ChallengerAttendanceRepositoryProtocol,
         latitude: Double,
         longitude: Double
     ) async throws {
+        #if DEBUG
+        let payload: [String: Any] = [
+            "locationName": locationName,
+            "latitude": latitude,
+            "longitude": longitude
+        ]
+        print("===== UPDATE SCHEDULE LOCATION REQUEST =====")
+        print("scheduleId:", scheduleId)
+        print("locationName:", locationName)
+        print("latitude:", latitude, "isFinite:", latitude.isFinite)
+        print("longitude:", longitude, "isFinite:", longitude.isFinite)
+        print("isValidJSONObject:", JSONSerialization.isValidJSONObject(payload))
+        if let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted]),
+           let json = String(data: data, encoding: .utf8) {
+            print("payload JSON:\n\(json)")
+        } else {
+            print("payload JSON serialization failed before request")
+        }
+        print("===========================================")
+        #endif
+
         let response = try await adapter.request(
             AttendanceRouter.patchScheduleLocation(
                 scheduleId: scheduleId,

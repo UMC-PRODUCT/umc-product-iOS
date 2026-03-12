@@ -100,7 +100,14 @@ extension AttendanceRouter: BaseTargetType {
         case .check(let body):
             return .requestJSONEncodable(body)
         case .patchScheduleLocation(_, let body):
-            return .requestJSONEncodable(body)
+            return .requestParameters(
+                parameters: [
+                    "locationName": body.locationName,
+                    "latitude": body.latitude,
+                    "longitude": body.longitude
+                ],
+                encoding: JSONEncoding.default
+            )
         }
     }
 }

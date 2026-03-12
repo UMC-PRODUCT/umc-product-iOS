@@ -173,7 +173,7 @@ struct LightningInfoDTO: Codable {
 // 리스트 항목 변환
 extension PostListItemDTO {
     func toCommunityItemModel() -> CommunityItemModel {
-        let resolvedAuthorName = resolvedDisplayName(authorId: authorId, authorName: authorName)
+        let resolvedAuthorName = resolvedDisplayName(authorName: authorName)
 
         return CommunityItemModel(
             postId: Int(postId) ?? 0,
@@ -199,7 +199,7 @@ extension PostListItemDTO {
 // 상세 정보 변환
 extension PostDetailDTO {
     func toCommunityItemModel() -> CommunityItemModel {
-        let resolvedAuthorName = resolvedDisplayName(authorId: authorId, authorName: authorName)
+        let resolvedAuthorName = resolvedDisplayName(authorName: authorName)
 
         return CommunityItemModel(
             postId: Int(postId) ?? 0,
@@ -236,11 +236,10 @@ struct CommunityScrapDTO: Codable {
 
 // MARK: - Helper
 
-private func resolvedDisplayName(authorId: String?, authorName: String?) -> String {
-    let trimmedAuthorId = authorId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+private func resolvedDisplayName(authorName: String?) -> String {
     let trimmedAuthorName = authorName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-    guard !trimmedAuthorId.isEmpty, trimmedAuthorId != "0", !trimmedAuthorName.isEmpty else {
+    guard !trimmedAuthorName.isEmpty else {
         return "알 수 없음"
     }
 

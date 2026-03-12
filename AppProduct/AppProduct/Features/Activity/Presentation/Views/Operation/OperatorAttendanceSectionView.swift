@@ -64,14 +64,8 @@ struct OperatorAttendanceSectionView: View {
         .alertPrompt(item: $viewModel.alertPrompt)
         .sheet(isPresented: $viewModel.showLocationSheet) {
             OperatorLocationChangeSheetView(
-                session: viewModel.selectedSession,
+                viewModel: viewModel,
                 errorHandler: errorHandler,
-                onDismiss: {
-                    viewModel.showLocationSheet = false
-                },
-                onConfirm: { place in
-                    await viewModel.confirmLocationChange(to: place)
-                }
             )
         }
         .sheet(isPresented: Binding(

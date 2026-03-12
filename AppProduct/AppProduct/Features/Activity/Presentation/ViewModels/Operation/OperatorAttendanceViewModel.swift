@@ -156,6 +156,20 @@ final class OperatorAttendanceViewModel {
             return false
         }
 
+        let latitude = place.coordinate.latitude
+        let longitude = place.coordinate.longitude
+
+        guard latitude.isFinite, longitude.isFinite,
+              (-90.0...90.0).contains(latitude),
+              (-180.0...180.0).contains(longitude) else {
+            alertPrompt = AlertPrompt(
+                title: "위치 변경 실패",
+                message: "유효한 위치 좌표를 선택해 주세요.",
+                positiveBtnTitle: "확인"
+            )
+            return false
+        }
+
         guard let scheduleId = Int(selectedSession.id.value) else {
             alertPrompt = AlertPrompt(
                 title: "위치 변경 실패",
@@ -169,8 +183,8 @@ final class OperatorAttendanceViewModel {
             try await useCase.updateScheduleLocation(
                 scheduleId: scheduleId,
                 locationName: place.name,
-                latitude: place.coordinate.latitude,
-                longitude: place.coordinate.longitude
+                latitude: latitude,
+                longitude: longitude
             )
             return true
         } catch {

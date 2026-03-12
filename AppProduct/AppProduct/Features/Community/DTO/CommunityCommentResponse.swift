@@ -12,6 +12,7 @@ struct CommentDTO: Codable {
     let postId: String
     let challengerId: String?
     let challengerName: String?
+    let challengerNickname: String?
     let challengerProfileImage: String?
     let challengerPart: String?
     let content: String
@@ -23,6 +24,7 @@ struct CommentDTO: Codable {
         case postId
         case challengerId
         case challengerName
+        case challengerNickname
         case challengerProfileImage
         case challengerPart
         case content
@@ -36,6 +38,7 @@ struct CommentDTO: Codable {
         postId = try container.decodeFlexibleString(forKey: .postId)
         challengerId = container.decodeFlexibleOptionalString(forKey: .challengerId)
         challengerName = try container.decodeIfPresent(String.self, forKey: .challengerName)
+        challengerNickname = try container.decodeIfPresent(String.self, forKey: .challengerNickname)
         challengerProfileImage = try container.decodeIfPresent(String.self, forKey: .challengerProfileImage)
         challengerPart = try container.decodeIfPresent(String.self, forKey: .challengerPart)
         content = try container.decode(String.self, forKey: .content)
@@ -50,7 +53,8 @@ extension CommentDTO {
             commentId: Int(commentId) ?? 0,
             userId: challengerId.flatMap(Int.init) ?? 0,
             profileImage: challengerProfileImage,
-            userName: resolvedCommentAuthorName(challengerId: challengerId, challengerName: challengerName),
+            userName: resolvedCommentAuthorName(challengerName: challengerName),
+            userNickname: challengerNickname,
             content: content,
             createdAt: ServerDateTimeConverter.parseUTCDateTime(createdAt) ?? Date(),
             isAuthor: isAuthor
@@ -58,11 +62,10 @@ extension CommentDTO {
     }
 }
 
-private func resolvedCommentAuthorName(challengerId: String?, challengerName: String?) -> String {
-    let trimmedChallengerId = challengerId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+private func resolvedCommentAuthorName(challengerName: String?) -> String {
     let trimmedChallengerName = challengerName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-    guard !trimmedChallengerId.isEmpty, trimmedChallengerId != "0", !trimmedChallengerName.isEmpty else {
+    guard !trimmedChallengerName.isEmpty else {
         return "알 수 없음"
     }
 

@@ -199,11 +199,10 @@ struct ScheduleRegistrationView: View {
     ///
     /// 생성 모드는 필수값 충족 여부만 확인하고, 수정 모드는 변경 사항 존재 여부를 함께 확인합니다.
     private var isActionDisabled: Bool {
-        let hasRequired = !viewModel.title.isEmpty && !viewModel.tag.isEmpty
         if mode == .edit {
-            return !hasRequired || !viewModel.hasChangesInEditMode || isSubmitting
+            return !viewModel.canSubmit || !viewModel.hasChangesInEditMode || isSubmitting
         }
-        return !hasRequired || isSubmitting
+        return !viewModel.canSubmit || isSubmitting
     }
 
     /// 전달된 섹션 타입 배열을 하나의 `Section`으로 묶어 렌더링합니다.
@@ -270,6 +269,7 @@ struct ScheduleRegistrationView: View {
             TagSection(tag: $viewModel.tag)
         }
     }
+
 }
 
 // MARK: - Subviews

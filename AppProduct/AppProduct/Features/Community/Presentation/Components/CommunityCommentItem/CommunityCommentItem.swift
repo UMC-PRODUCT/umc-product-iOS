@@ -57,7 +57,7 @@ struct CommunityCommentItem: View, Equatable {
     private var bubbleSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             HStack(spacing: DefaultSpacing.spacing8) {
-                Text(model.userName)
+                Text(model.displayUserName)
                     .appFont(.subheadlineEmphasis, color: .black)
                 Text(model.createdAt.timeAgoText)
                     .appFont(.footnote, color: .grey500)
@@ -126,5 +126,17 @@ struct CommunityCommentItem: View, Equatable {
 }
 
 #Preview {
-    CommunityCommentItem(model: .init(commentId: 1, userId: 1, profileImage: nil, userName: "김미주", content: "안녕하세요", createdAt: Date(), isAuthor: true), canDelete: true)
+    CommunityCommentItem(
+        model: .init(
+            commentId: 1,
+            userId: 1,
+            profileImage: nil,
+            userName: "김미주",
+            userNickname: "miju",
+            content: "안녕하세요",
+            createdAt: Date(),
+            isAuthor: true
+        ),
+        canDelete: true
+    )
 }

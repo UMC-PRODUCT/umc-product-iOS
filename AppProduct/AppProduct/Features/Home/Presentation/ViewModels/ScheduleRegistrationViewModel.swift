@@ -59,6 +59,12 @@ class ScheduleRegistrationViewModel {
     /// 일정 생성/수정 API 상태 (툴바 로딩 + 성공 시 dismiss 제어)
     private(set) var submitState: Loadable<Bool> = .idle
 
+    /// 장소를 포함한 필수 입력 충족 여부
+    var canSubmit: Bool {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmedTitle.isEmpty && !tag.isEmpty && hasValidPlace
+    }
+
     /// 수정 모드일 때 대상 일정 ID
     private(set) var editingScheduleId: Int?
     /// 수정 모드 초기값 스냅샷
@@ -179,6 +185,19 @@ class ScheduleRegistrationViewModel {
     var hasChangesInEditMode: Bool {
         guard initialEditSnapshot != nil else { return true }
         return initialEditSnapshot != currentEditSnapshot
+    }
+
+    /// 선택된 장소 정보가 실제 제출 가능한 상태인지 확인합니다.
+    var hasValidPlace: Bool {
+        let trimmedPlaceName = place.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let latitude = place.coordinate.latitude
+        let longitude = place.coordinate.longitude
+
+        guard !trimmedPlaceName.isEmpty else { return false }
+        guard latitude.isFinite, longitude.isFinite else { return false }
+        guard (-90.0...90.0).contains(latitude) else { return false }
+        guard (-180.0...180.0).contains(longitude) else { return false }
+        return !(latitude == 0 && longitude == 0)
     }
 
     /// 현재 폼 상태의 스냅샷을 생성합니다.
