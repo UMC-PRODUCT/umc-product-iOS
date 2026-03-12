@@ -110,14 +110,17 @@ struct TargetSheetView: View {
 
     @ViewBuilder
     private var sheetContent: some View {
-        switch sheetType {
-        case .part:
-            partFilterSection
-        case .branch:
-            branchFilterSection
-        case .school:
-            schoolFilterSection
+        Group {
+            switch sheetType {
+            case .part:
+                partFilterSection
+            case .branch:
+                branchFilterSection
+            case .school:
+                schoolFilterSection
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     // MARK: - Retry
@@ -192,6 +195,6 @@ struct TargetSheetView: View {
         VStack(alignment: .leading, spacing: Constants.sectionSpacing) {
             content()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }

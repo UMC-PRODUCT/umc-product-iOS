@@ -25,6 +25,8 @@ struct RemoteImage: View {
     typealias ContentMode = SwiftUI.ContentMode
     
     // MARK: - Properties
+
+    @Environment(\.displayScale) private var displayScale
     
     /// 이미지 로드 실패 상태 (true일 경우 실패)
     @State private var isError: Bool = false
@@ -81,7 +83,11 @@ struct RemoteImage: View {
         Group {
             if let url = URL(string: urlString), !isError {
                 KFImage(url)
-                    .setProcessor(DownsamplingImageProcessor(size: size))
+                    .downsampling(size: CGSize(
+                        width: size.width * displayScale,
+                        height: size.height * displayScale
+                    ))
+                    .scaleFactor(displayScale)
                     .fade(duration: 0.25)
                     .onSuccess { _ in
                         isLoading = false
@@ -91,6 +97,8 @@ struct RemoteImage: View {
                         isError = true // 실패 시 상태 변경
                     }
                     .resizable()
+                    .interpolation(.high)
+                    .antialiased(true)
                     .onAppear {
                         isLoading = true
                     }

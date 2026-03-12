@@ -131,6 +131,7 @@ final class MemberListViewModel {
             )
 
             try await reloadMembersAndReselect(member: member)
+            NotificationCenter.default.post(name: .memberPenaltyUpdated, object: nil)
             return true
         } catch let error as DomainError {
             alertPrompt = AlertPrompt(
@@ -188,7 +189,8 @@ final class MemberListViewModel {
                 badge: member.badge,
                 managementTeam: member.managementTeam,
                 attendanceRecords: records,
-                penaltyHistory: member.penaltyHistory
+                penaltyHistory: member.penaltyHistory,
+                canViewPenaltyHistory: member.canViewPenaltyHistory
             )
         } catch {
             selectedMember = member
@@ -223,6 +225,7 @@ final class MemberListViewModel {
                 challengerPointId: challengerPointId
             )
             try await reloadMembersAndReselect(member: member)
+            NotificationCenter.default.post(name: .memberPenaltyUpdated, object: nil)
             return true
         } catch let error as DomainError {
             alertPrompt = AlertPrompt(
@@ -305,7 +308,8 @@ final class MemberListViewModel {
             badge: updated.badge,
             managementTeam: updated.managementTeam,
             attendanceRecords: updated.attendanceRecords,
-            penaltyHistory: updated.penaltyHistory
+            penaltyHistory: updated.penaltyHistory,
+            canViewPenaltyHistory: updated.canViewPenaltyHistory
         )
     }
 

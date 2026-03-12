@@ -99,6 +99,21 @@ struct NoticeItemModel: Equatable, Identifiable {
     
     var hasLink: Bool { !links.isEmpty }
     var hasVote: Bool { vote != nil }
+    var displayWriter: String {
+        let trimmedName = (authorName ?? writer).trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNickname = authorNickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if !trimmedName.isEmpty && !trimmedNickname.isEmpty {
+            return "\(trimmedName)/\(trimmedNickname)"
+        }
+        if !trimmedName.isEmpty {
+            return trimmedName
+        }
+        if !trimmedNickname.isEmpty {
+            return trimmedNickname
+        }
+        return writer
+    }
 }
 
 private extension NoticeItemModel {

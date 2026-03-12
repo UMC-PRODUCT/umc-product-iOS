@@ -414,6 +414,8 @@ private extension NoticeDetail {
             title: title,
             content: content,
             writer: authorName,
+            authorNickname: authorNickname,
+            authorName: authorName,
             links: links,
             images: images,
             vote: vote,

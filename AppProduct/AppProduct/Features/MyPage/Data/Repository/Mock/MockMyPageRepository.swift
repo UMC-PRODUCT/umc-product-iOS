@@ -23,6 +23,7 @@ final class MockMyPageRepository: MyPageRepositoryProtocol {
             name: profile.challangerInfo.name,
             nickname: profile.challangerInfo.nickname,
             generation: profile.challangerInfo.gen,
+            organizationName: nil,
             roleName: latestRole?.role.korean ?? "챌린저",
             profileImageURL: profile.challangerInfo.profileImage
         )
@@ -38,6 +39,7 @@ final class MockMyPageRepository: MyPageRepositoryProtocol {
             name: profile.challangerInfo.name,
             nickname: profile.challangerInfo.nickname,
             generation: profile.challangerInfo.gen,
+            organizationName: nil,
             roleName: latestRole?.role.korean ?? "챌린저",
             profileImageURL: profile.challangerInfo.profileImage
         )

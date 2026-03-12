@@ -26,6 +26,8 @@ struct ActiveLogs: View {
 
     /// 활동 이력 추가 처리 중 여부
     let isAdding: Bool
+    /// 활동 이력 추가 성공 직후 여부
+    let didRecentlyAdd: Bool
 
     // MARK: - Init
 
@@ -33,12 +35,14 @@ struct ActiveLogs: View {
         rows: [ActivityLog],
         header: String,
         onAddTap: (() -> Void)? = nil,
-        isAdding: Bool = false
+        isAdding: Bool = false,
+        didRecentlyAdd: Bool = false
     ) {
         self.rows = rows
         self.header = header
         self.onAddTap = onAddTap
         self.isAdding = isAdding
+        self.didRecentlyAdd = didRecentlyAdd
     }
 
     // MARK: - Body
@@ -61,10 +65,13 @@ struct ActiveLogs: View {
                             ProgressView()
                                 .controlSize(.small)
                         } else {
-                            Label("기록 추가", systemImage: "plus.circle")
+                            Label(
+                                didRecentlyAdd ? "추가되었습니다" : "기록 추가",
+                                systemImage: didRecentlyAdd ? "checkmark.circle.fill" : "plus.circle"
+                            )
                                 .labelStyle(.titleAndIcon)
                                 .labelIconToTitleSpacing(DefaultSpacing.spacing8)
-                                .appFont(.footnote, color: .indigo500)
+                                .appFont(.footnote, color: didRecentlyAdd ? .green : .indigo500)
                         }
                     }
                     .buttonStyle(.plain)

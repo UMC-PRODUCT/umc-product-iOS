@@ -50,6 +50,12 @@ final class NoticeDetailViewModel {
 
     /// 작성자 표시 텍스트 (닉네임/이름-기수TH UMC 직책)
     var authorDisplayName: String = ""
+    /// 작성자 상세 프로필 요약 정보
+    var authorProfileSummary: MemberProfileSummary?
+    /// 작성자 프로필 추가 조회 진행 상태
+    var isAuthorProfileLoading: Bool = false
+    /// 작성자 프로필 추가 조회 완료 여부
+    var hasResolvedAuthorProfile: Bool = false
 
     /// 액션 메뉴 표시 여부
     var showingActionMenu: Bool = false
@@ -241,6 +247,76 @@ final class NoticeDetailViewModel {
     /// 화면에 즉시 노출할 작성자명을 반환합니다.
     func displayedAuthorName(for detail: NoticeDetail) -> String {
         authorDisplayName.isEmpty ? detail.defaultAuthorDisplayName : authorDisplayName
+    }
+
+    /// 화면에 노출할 작성자 이름/닉네임 텍스트를 반환합니다.
+    func displayedAuthorIdentity(for detail: NoticeDetail) -> String {
+        if let authorProfileSummary {
+            let name = authorProfileSummary.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let nickname = authorProfileSummary.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if !name.isEmpty && !nickname.isEmpty {
+                return "\(nickname)/\(name)"
+            }
+            return !nickname.isEmpty ? nickname : name
+        }
+
+        let fallbackName = detail.authorName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fallbackNickname = detail.authorNickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if !fallbackName.isEmpty && !fallbackNickname.isEmpty {
+            return "\(fallbackNickname)/\(fallbackName)"
+        }
+        return displayedAuthorName(for: detail)
+    }
+
+    /// 화면에 노출할 작성자 프로필 한 줄 텍스트를 반환합니다.
+    func displayedAuthorProfileLine(for detail: NoticeDetail) -> String {
+        let identity = displayedAuthorIdentity(for: detail)
+        let generation: Int
+        let roleName: String
+
+        if let authorProfileSummary {
+            generation = authorProfileSummary.generation
+            roleName = authorProfileSummary.roleName.trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            generation = detail.generation
+            roleName = ""
+        }
+
+        var components: [String] = []
+        if generation > 0 {
+            components.append("\(generation)\(ordinalSuffix(for: generation))")
+        }
+        if !roleName.isEmpty && roleName != ManagementTeam.challenger.korean {
+            components.append(roleName)
+        }
+        components.append(identity)
+
+        return components.joined(separator: " ")
+    }
+
+    /// 화면에 노출할 작성자 프로필 이미지 URL을 반환합니다.
+    func displayedAuthorImageURL(for detail: NoticeDetail) -> String? {
+        authorProfileSummary?.profileImageURL ?? detail.authorImageURL
+    }
+
+    private func ordinalSuffix(for generation: Int) -> String {
+        let suffixBase = generation % 100
+        if (11...13).contains(suffixBase) {
+            return "th"
+        }
+
+        switch generation % 10 {
+        case 1:
+            return "st"
+        case 2:
+            return "nd"
+        case 3:
+            return "rd"
+        default:
+            return "th"
+        }
     }
 
     // MARK: - Generation Helper

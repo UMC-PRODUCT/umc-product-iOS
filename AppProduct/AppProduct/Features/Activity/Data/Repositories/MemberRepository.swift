@@ -29,6 +29,10 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
         self.studyRepository = studyRepository
     }
 
+    private var currentMemberID: Int {
+        UserDefaults.standard.integer(forKey: AppStorageKey.memberId)
+    }
+
     // MARK: - Function
 
     /// 학교 단위 멤버 전체 목록을 조회합니다.
@@ -97,7 +101,8 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
                     fallback: descriptor.managementTeam
                 ),
                 attendanceRecords: [],
-                penaltyHistory: penaltyHistories
+                penaltyHistory: penaltyHistories,
+                canViewPenaltyHistory: descriptor.memberId == currentMemberID
             )
         }
 
@@ -472,6 +477,15 @@ private extension MemberRepository {
     func fetchMemberProfile(
         memberId: Int
     ) async throws -> MemberManagementProfileDTO {
+        if memberId == currentMemberID, currentMemberID > 0 {
+            let response = try await adapter.request(MyPageRouter.getMyProfile)
+            let apiResponse = try decoder.decode(
+                APIResponse<MyPageProfileResponseDTO>.self,
+                from: response.data
+            )
+            return MemberManagementProfileDTO(myProfileDTO: try apiResponse.unwrap())
+        }
+
         let response = try await adapter.request(
             StudyRouter.getMemberProfile(memberId: memberId)
         )

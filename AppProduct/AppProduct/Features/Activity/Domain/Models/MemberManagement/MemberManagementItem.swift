@@ -64,6 +64,9 @@ struct MemberManagementItem: Identifiable, Equatable {
     
     /// 경고 히스토리
     let penaltyHistory: [OperatorMemberPenaltyHistory]
+    
+    /// 아웃 히스토리 열람 가능 여부
+    let canViewPenaltyHistory: Bool
 
     init(
         id: UUID = .init(),
@@ -80,7 +83,8 @@ struct MemberManagementItem: Identifiable, Equatable {
         badge: Bool,
         managementTeam: ManagementTeam,
         attendanceRecords: [MemberAttendanceRecord],
-        penaltyHistory: [OperatorMemberPenaltyHistory]
+        penaltyHistory: [OperatorMemberPenaltyHistory],
+        canViewPenaltyHistory: Bool = true
     ) {
         self.id = id
         self.memberID = memberID
@@ -97,5 +101,6 @@ struct MemberManagementItem: Identifiable, Equatable {
         self.managementTeam = managementTeam
         self.attendanceRecords = attendanceRecords
         self.penaltyHistory = penaltyHistory
+        self.canViewPenaltyHistory = canViewPenaltyHistory
     }
 }

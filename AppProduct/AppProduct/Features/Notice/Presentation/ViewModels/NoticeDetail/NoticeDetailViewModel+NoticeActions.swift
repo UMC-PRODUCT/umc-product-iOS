@@ -27,6 +27,7 @@ extension NoticeDetailViewModel {
             let normalizedDetail = normalizeTargetGenerationIfNeeded(in: mergedDetail)
             noticeState = .loaded(normalizedDetail)
             refreshAuthorDisplayName(for: normalizedDetail)
+            await fetchAuthorProfileIfNeeded(for: normalizedDetail)
             isDetailPreparedForEdit = true
         } catch let error as RepositoryError {
             noticeState = .failed(.repository(error))
@@ -77,6 +78,34 @@ extension NoticeDetailViewModel {
                     }
                 )
             )
+        }
+    }
+
+    /// 공지 작성자의 멤버 프로필을 조회해 이름/닉네임/기수/역할 표시용 상태를 갱신합니다.
+    @MainActor
+    func fetchAuthorProfileIfNeeded(for detail: NoticeDetail) async {
+        hasResolvedAuthorProfile = false
+
+        guard let rawMemberId = detail.authorMemberId,
+              let memberId = Int(rawMemberId) else {
+            isAuthorProfileLoading = false
+            authorProfileSummary = nil
+            hasResolvedAuthorProfile = true
+            return
+        }
+
+        isAuthorProfileLoading = true
+        defer {
+            isAuthorProfileLoading = false
+            hasResolvedAuthorProfile = true
+        }
+
+        do {
+            authorProfileSummary = try await container
+                .resolve(MyPageRepositoryProtocol.self)
+                .fetchMemberProfile(memberId: memberId)
+        } catch {
+            authorProfileSummary = nil
         }
     }
 

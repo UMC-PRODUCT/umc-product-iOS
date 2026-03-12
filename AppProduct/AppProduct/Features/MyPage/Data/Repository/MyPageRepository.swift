@@ -46,11 +46,19 @@ final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable {
         let response = try await adapter.request(
             MyPageRouter.getMemberProfile(memberId: memberId)
         )
-        let apiResponse = try decoder.decode(
+        if let apiResponse = try? decoder.decode(
             APIResponse<MyPageProfileResponseDTO>.self,
             from: response.data
+        ),
+           let wrapped = try? apiResponse.unwrap() {
+            return wrapped.toMemberProfileSummary()
+        }
+
+        let profile = try decoder.decode(
+            MyPageProfileResponseDTO.self,
+            from: response.data
         )
-        return try apiResponse.unwrap().toMemberProfileSummary()
+        return profile.toMemberProfileSummary()
     }
 
     /// 특정 챌린저 프로필 조회

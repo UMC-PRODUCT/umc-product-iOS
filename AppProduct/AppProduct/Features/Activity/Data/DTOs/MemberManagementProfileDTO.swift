@@ -66,6 +66,11 @@ struct MemberManagementRoleDTO: Codable, Sendable {
             forKey: .roleType
         ) ?? .challenger
     }
+
+    init(challengerId: Int?, roleType: ManagementTeam) {
+        self.challengerId = challengerId
+        self.roleType = roleType
+    }
 }
 
 struct MemberManagementChallengerRecordDTO: Codable, Sendable {
@@ -107,6 +112,24 @@ struct MemberManagementChallengerRecordDTO: Codable, Sendable {
     var resolvedPoints: [MemberManagementPointDTO] {
         challengerPoints.isEmpty ? fallbackPoints : challengerPoints
     }
+
+    init(
+        challengerId: Int,
+        memberId: Int,
+        gisu: Int,
+        gisuId: Int,
+        part: String,
+        challengerPoints: [MemberManagementPointDTO],
+        fallbackPoints: [MemberManagementPointDTO]
+    ) {
+        self.challengerId = challengerId
+        self.memberId = memberId
+        self.gisu = gisu
+        self.gisuId = gisuId
+        self.part = part
+        self.challengerPoints = challengerPoints
+        self.fallbackPoints = fallbackPoints
+    }
 }
 
 struct MemberManagementPointDTO: Codable, Sendable {
@@ -131,6 +154,55 @@ struct MemberManagementPointDTO: Codable, Sendable {
         point = try container.decodeDoubleFlexibleIfPresent(forKey: .point) ?? 0
         description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
         createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt) ?? ""
+    }
+
+    init(
+        id: Int,
+        pointType: String,
+        point: Double,
+        description: String,
+        createdAt: String
+    ) {
+        self.id = id
+        self.pointType = pointType
+        self.point = point
+        self.description = description
+        self.createdAt = createdAt
+    }
+}
+
+extension MemberManagementProfileDTO {
+    init(myProfileDTO: MyPageProfileResponseDTO) {
+        id = Int(myProfileDTO.id) ?? 0
+        name = myProfileDTO.name
+        nickname = myProfileDTO.nickname
+        schoolName = myProfileDTO.schoolName
+        profileImageLink = myProfileDTO.profileImageLink
+        roles = myProfileDTO.roles.map {
+            MemberManagementRoleDTO(
+                challengerId: Int($0.challengerId),
+                roleType: $0.roleType
+            )
+        }
+        challengerRecords = (myProfileDTO.challengerRecords ?? []).map { record in
+            MemberManagementChallengerRecordDTO(
+                challengerId: Int(record.challengerId) ?? 0,
+                memberId: Int(record.memberId) ?? 0,
+                gisu: Int(record.gisu) ?? 0,
+                gisuId: 0,
+                part: record.part,
+                challengerPoints: record.challengerPoints.map {
+                    MemberManagementPointDTO(
+                        id: Int($0.id) ?? 0,
+                        pointType: $0.pointType,
+                        point: $0.point,
+                        description: $0.description,
+                        createdAt: $0.createdAt
+                    )
+                },
+                fallbackPoints: []
+            )
+        }
     }
 }
 

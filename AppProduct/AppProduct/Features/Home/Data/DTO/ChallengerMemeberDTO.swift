@@ -279,6 +279,7 @@ extension ChallengerMemberDTO {
             name: name,
             nickname: nickname,
             generation: gisu,
+            organizationName: chapterName ?? schoolName,
             roleName: resolvedRoleName,
             profileImageURL: profileImageLink
         )

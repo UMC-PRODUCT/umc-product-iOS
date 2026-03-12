@@ -31,6 +31,6 @@ struct CommunityItemModel: Equatable, Identifiable, Hashable {
         let trimmedNickname = userNickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let trimmedName = userName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty, trimmedName != "알 수 없음" else { return "알 수 없음" }
-        return trimmedNickname.isEmpty ? trimmedName : "\(trimmedName)/\(trimmedNickname)"
+        return trimmedNickname.isEmpty ? trimmedName : "\(trimmedNickname)/\(trimmedName)"
     }
 }

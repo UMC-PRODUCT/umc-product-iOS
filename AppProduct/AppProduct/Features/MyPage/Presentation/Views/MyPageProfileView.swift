@@ -75,7 +75,10 @@ struct MyPageProfileView: View {
             onDisconnect: presentDisconnectPrompt
         )
         // 이름 및 닉네임 (읽기 전용)
-        NameAndNickname(name: profile.challangerInfo.wrappedValue.name, nickaname: profile.challangerInfo.wrappedValue.nickname, header: "이름/닉네임")
+        NameAndNickname(
+            name: profile.challangerInfo.wrappedValue.name,
+            nickaname: profile.challangerInfo.wrappedValue.nickname
+        )
         // 학교 (읽기 전용)
         SchoolSection(univ: profile.challangerInfo.wrappedValue.schoolName, header: "학교")
         // 활동 이력 목록
@@ -83,7 +86,8 @@ struct MyPageProfileView: View {
             rows: profile.activityLogs.wrappedValue,
             header: "활동 이력",
             onAddTap: { showAddActivityLogAlert = true },
-            isAdding: viewModel.isAddingActivityLog
+            isAdding: viewModel.isAddingActivityLog,
+            didRecentlyAdd: viewModel.didRecentlyAddActivityLog
         )
         // 외부 프로필 링크 수정
         ProfileLinkSection(profileLink: profile.profileLink, header: "외부 프로링크")

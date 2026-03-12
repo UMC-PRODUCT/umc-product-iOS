@@ -119,6 +119,12 @@ struct HomeView: View {
                 guard pathStore.homePath.isEmpty else { return }
                 await reloadVisibleScheduleMonth()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .memberPenaltyUpdated)) { _ in
+                guard shouldFetchOnTask else { return }
+                Task {
+                    await viewModel.fetchProfile()
+                }
+            }
         }
     }
     
