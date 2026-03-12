@@ -8,7 +8,7 @@
 import Foundation
 
 /// 일정 상세 도메인 모델
-struct ScheduleDetailData: Equatable, Identifiable {
+struct ScheduleDetailData: Equatable, Identifiable, ScheduleDDayDisplayable {
     // MARK: - Property
 
     var id: UUID = .init()
@@ -23,6 +23,7 @@ struct ScheduleDetailData: Equatable, Identifiable {
     let latitude: Double
     let longitude: Double
     let status: String
+    /// D-Day 값 (양수: 미래, 음수: 과거)
     let dDay: Int
     let requiresAttendanceApproval: Bool
 }

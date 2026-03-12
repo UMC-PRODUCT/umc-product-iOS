@@ -21,7 +21,7 @@ struct HomeScheduleResponseDTO: Codable {
     let endsAt: String
     /// 참여 상태 (예: "참여 예정")
     let status: String
-    /// D-Day 값 (음수: 지남, 양수: 남음)
+    /// D-Day 값 (양수: 미래, 음수: 과거)
     let dDay: Int
 
     private enum CodingKeys: String, CodingKey {

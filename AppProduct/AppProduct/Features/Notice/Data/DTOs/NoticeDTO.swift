@@ -49,7 +49,7 @@ struct NoticeDTO: Codable {
         authorChallengerId = try? container.decode(String.self, forKey: .authorChallengerId)
         authorMemberId = try? container.decode(String.self, forKey: .authorMemberId)
         authorNickname = try container.decodeIfPresent(String.self, forKey: .authorNickname) ?? ""
-        authorName = try container.decodeIfPresent(String.self, forKey: .authorName) ?? authorNickname
+        authorName = try container.decodeIfPresent(String.self, forKey: .authorName) ?? ""
     }
 }
 
@@ -66,6 +66,8 @@ extension NoticeDTO {
         let scopeDisplayName = scopeDisplayNameOverride ?? targetInfo.resolvedScopeDisplayName
         let targetsAllGenerations = generation <= 0 && targetInfo.targetsAllGenerations
         
+        let resolvedAuthorName = resolvedAuthorName(authorName)
+
         return NoticeItemModel(
             noticeId: id,
             generation: generation,
@@ -76,9 +78,9 @@ extension NoticeDTO {
             date: createdAt.toISO8601Date(),
             title: title,
             content: content,
-            writer: authorName.isEmpty ? authorNickname : authorName,
+            writer: resolvedAuthorName,
             authorNickname: authorNickname.isEmpty ? nil : authorNickname,
-            authorName: authorName.isEmpty ? nil : authorName,
+            authorName: resolvedAuthorName == "알 수 없음" ? nil : resolvedAuthorName,
             links: [],  // 기본 조회에는 없음
             images: [],  // 기본 조회에는 없음
             vote: nil,
@@ -89,6 +91,11 @@ extension NoticeDTO {
             isRead: false
         )
     }
+}
+
+private func resolvedAuthorName(_ authorName: String) -> String {
+    let trimmedAuthorName = authorName.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmedAuthorName.isEmpty ? "알 수 없음" : trimmedAuthorName
 }
 
 // MARK: - TargetInfo DTO

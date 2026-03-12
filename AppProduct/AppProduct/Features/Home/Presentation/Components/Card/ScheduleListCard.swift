@@ -104,13 +104,7 @@ struct ScheduleListCard: View, Equatable {
     }
 
     private var dDayText: String {
-        if data.dDay < 0 {
-            return "D-\(abs(data.dDay))"
-        }
-        if data.dDay > 0 {
-            return "D+\(data.dDay)"
-        }
-        return "D-Day"
+        data.dDayText
     }
     
     private var chevron: some View {
@@ -129,7 +123,7 @@ struct ScheduleListCard: View, Equatable {
         ))
         ScheduleListCard(data: .init(
             scheduleId: 2, title: "데모데이",
-            startsAt: .now, endsAt: .now, status: "참여 예정", dDay: 14
+            startsAt: .now, endsAt: .now, status: "참여 예정", dDay: -14
         ))
     }
     .safeAreaPadding(.horizontal, 16)
