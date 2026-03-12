@@ -21,6 +21,8 @@ enum AttendanceRouter {
     case getDetail(recordId: Int)
     /// 승인 대기 목록 조회 (관리자)
     case getPending(scheduleId: Int)
+    /// 승인 대기 목록 일괄 조회 (관리자)
+    case getAllPending
     /// 내 출석 이력 조회
     case getMyHistory
     /// 챌린저 출석 이력 조회
@@ -54,6 +56,8 @@ extension AttendanceRouter: BaseTargetType {
             return "/api/v1/attendances/\(recordId)"
         case .getPending(let scheduleId):
             return "/api/v1/attendances/pending/\(scheduleId)"
+        case .getAllPending:
+            return "/api/v1/attendances/pending"
         case .getMyHistory:
             return "/api/v1/attendances/history"
         case .getChallengerHistory(let challengerId):
@@ -77,7 +81,7 @@ extension AttendanceRouter: BaseTargetType {
 
     var method: Moya.Method {
         switch self {
-        case .getDetail, .getPending, .getMyHistory,
+        case .getDetail, .getPending, .getAllPending, .getMyHistory,
              .getChallengerHistory, .getAvailable:
             return .get
         case .reject, .approve, .submitReason, .check:
@@ -91,7 +95,7 @@ extension AttendanceRouter: BaseTargetType {
 
     var task: Moya.Task {
         switch self {
-        case .getDetail, .getPending, .getMyHistory,
+        case .getDetail, .getPending, .getAllPending, .getMyHistory,
              .getChallengerHistory, .getAvailable,
              .reject, .approve:
             return .requestPlain
