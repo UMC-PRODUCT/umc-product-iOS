@@ -14,6 +14,14 @@ struct WorkbookSubmissionPageDTO: Codable, Sendable, Equatable {
     let content: [WorkbookSubmissionItemDTO]
     let nextCursor: Int?
     let hasNext: Bool
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        content = try container.decode([WorkbookSubmissionItemDTO].self, forKey: .content)
+        hasNext = try container.decode(Bool.self, forKey: .hasNext)
+        let cursorStr = try container.decodeIfPresent(String.self, forKey: .nextCursor)
+        nextCursor = cursorStr.flatMap { Int($0) }
+    }
 }
 
 struct WorkbookSubmissionItemDTO: Codable, Sendable, Equatable {
@@ -44,8 +52,10 @@ struct WorkbookSubmissionItemDTO: Codable, Sendable, Equatable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        challengerWorkbookId = try container.decode(Int.self, forKey: .challengerWorkbookId)
-        challengerId = try container.decode(Int.self, forKey: .challengerId)
+        let workbookIdStr = try container.decode(String.self, forKey: .challengerWorkbookId)
+        challengerWorkbookId = Int(workbookIdStr) ?? 0
+        let challengerIdStr = try container.decode(String.self, forKey: .challengerId)
+        challengerId = Int(challengerIdStr) ?? 0
         challengerName = try container.decode(String.self, forKey: .challengerName)
         profileImageUrl = try container.decodeIfPresent(String.self, forKey: .profileImageUrl)
         schoolName = try container.decode(String.self, forKey: .schoolName)
