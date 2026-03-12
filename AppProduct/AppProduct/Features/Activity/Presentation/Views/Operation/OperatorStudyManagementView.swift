@@ -355,11 +355,17 @@ struct OperatorStudyManagementView: View {
                         .tint(.indigo500)
 
                         Button {
-                            viewModel.selectedMemberForBest = member
+                            if viewModel.isBestSelectionDisabled(for: member) {
+                                viewModel.showBestSelectionDisabledAlert()
+                            } else {
+                                viewModel.selectedMemberForBest = member
+                            }
                         } label: {
                             Label("베스트", systemImage: "trophy")
                         }
-                        .tint(.orange)
+                        .tint(
+                            viewModel.isBestSelectionDisabled(for: member) ? .gray : .orange
+                        )
                     }
             }
         }

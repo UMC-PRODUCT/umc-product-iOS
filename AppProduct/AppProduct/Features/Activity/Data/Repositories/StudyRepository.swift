@@ -665,7 +665,8 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
                 )
             }
 
-            members.append(contentsOf: page.content.map { $0.toDomain(week: week) })
+            members.append(contentsOf: page.content.map {
+                $0.toDomain(week: week, studyGroupId: studyGroupId) })
             hasNext = page.hasNext
             cursor = page.nextCursor
         }
