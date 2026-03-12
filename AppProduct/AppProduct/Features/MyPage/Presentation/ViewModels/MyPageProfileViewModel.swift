@@ -38,12 +38,16 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
 
     /// 활동 이력 추가 API 진행 상태
     var isAddingActivityLog: Bool = false
+    /// 활동 이력 추가 성공 후 버튼 성공 문구 노출 상태
+    var didRecentlyAddActivityLog: Bool = false
 
     /// 소셜 연동 해제 API 진행 상태
     var disconnectingSocialType: SocialType?
 
     /// 최초 조회/수정 화면 진입 시 링크 스냅샷
     private var initialProfileLinkState: [SocialLinkType: String]
+    /// 활동 이력 추가 성공 문구 자동 복귀 제어 태스크
+    private var activityLogAddedResetTask: Task<Void, Never>?
     
     init(
         profileData: ProfileData,
@@ -143,6 +147,7 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
         profileData = try await useCaseProvider.fetchMyPageProfileUseCase.execute()
         profileData.socialConnections = currentSocialConnections
         initialProfileLinkState = Self.makeProfileLinkState(from: profileData.profileLink)
+        showRecentActivityLogAddedState()
     }
 
     /// 특정 소셜 연동을 해제하고 최신 연동 목록으로 갱신합니다.
@@ -230,5 +235,18 @@ class MyPageProfileViewModel: SinglePhotoPickerManageable {
             memberOAuthId: memberOAuth.memberOAuthId,
             socialType: socialType
         )
+    }
+
+    /// 활동 이력 추가 성공 문구를 잠시 노출한 뒤 기본 상태로 복귀합니다.
+    @MainActor
+    private func showRecentActivityLogAddedState() {
+        activityLogAddedResetTask?.cancel()
+        didRecentlyAddActivityLog = true
+
+        activityLogAddedResetTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            self?.didRecentlyAddActivityLog = false
+        }
     }
 }

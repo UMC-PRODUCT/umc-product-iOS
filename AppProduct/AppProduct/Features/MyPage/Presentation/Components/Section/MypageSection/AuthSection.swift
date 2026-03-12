@@ -24,6 +24,8 @@ struct AuthSection: View {
     var body: some View {
         Section(content: {
             sectionContent
+        }, header: {
+            SectionHeaderView(title: sectionType.rawValue)
         })
     }
 

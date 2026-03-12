@@ -134,7 +134,7 @@ private struct BottomSection: View, Equatable {
 
     var body: some View {
         HStack(spacing: 8) {
-            Text(model.writer)
+            Text(model.displayWriter)
 
             Spacer()
 

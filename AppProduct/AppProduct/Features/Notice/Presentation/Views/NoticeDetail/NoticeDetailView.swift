@@ -150,10 +150,9 @@ struct NoticeDetailView: View {
         VStack(alignment: .leading, spacing: Constants.subInfoSpacing) {
             HStack {
                 HStack {
-                    Image(data.authorImageURL ?? Constants.defaultProfileImageName)
-                        .resizable()
-                        .frame(width: Constants.profileSize.width, height: Constants.profileSize.height)
-                    Text(viewModel.displayedAuthorName(for: data))
+                    authorProfileImage(data)
+                    Text(viewModel.displayedAuthorProfileLine(for: data))
+                        .lineLimit(1)
                 }
                 Spacer()
                 Text(data.createdAt.toYearMonthDay())
@@ -165,6 +164,33 @@ struct NoticeDetailView: View {
                     detailTag(tag)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func authorProfileImage(_ data: NoticeDetail) -> some View {
+        if let imageURL = viewModel.displayedAuthorImageURL(for: data),
+           !imageURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            RemoteImage(
+                urlString: imageURL,
+                size: Constants.profileSize,
+                cornerRadius: Constants.profileSize.width / 2,
+                placeholderImage: Constants.defaultProfileImageName
+            )
+        } else if !viewModel.hasResolvedAuthorProfile || viewModel.isAuthorProfileLoading {
+            Circle()
+                .fill(.grey100)
+                .frame(width: Constants.profileSize.width, height: Constants.profileSize.height)
+                .overlay {
+                    ProgressView()
+                        .scaleEffect(0.6)
+                        .tint(.grey500)
+                }
+        } else {
+            Image(.defaultProfile)
+                .resizable()
+                .frame(width: Constants.profileSize.width, height: Constants.profileSize.height)
+                .clipShape(.circle)
         }
     }
 

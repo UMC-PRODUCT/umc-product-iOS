@@ -37,9 +37,9 @@ struct OperatorMemberDetailSheetView: View {
         static let baseHeight: CGFloat = 340
         static let emptyHistoryHeight: CGFloat = 150
         static let historyRowHeight: CGFloat = 50
-        static let maxVisibleHistory: Int = 5
+        static let maxVisibleHistory: Int = 7
         static let minSheetHeight: CGFloat = 420
-        static let maxSheetHeight: CGFloat = 700
+        static let maxSheetHeight: CGFloat = 820
         static let badgePadding: EdgeInsets = .init(top: 6, leading: 8, bottom: 6, trailing: 8)
         static let bgOpacity: Double = 0.2
         static let animation: Animation = .spring(response: 0.34, dampingFraction: 0.86)
@@ -188,7 +188,7 @@ struct OperatorMemberDetailSheetView: View {
     private var memberMetadataView: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             Text("\(member.name)/\(member.nickname)")
-                .appFont(.title2Emphasis)
+                .appFont(.bodyEmphasis)
             statusChip(title: member.part.name, style: .accent)
             statusChip(title: member.school, style: .plain)
         }
@@ -249,7 +249,9 @@ struct OperatorMemberDetailSheetView: View {
     }
     
     private var historyDeleteHint: some View {
-        Text("히스토리 항목을 왼쪽으로 밀어서 삭제할 수 있습니다.")
+        Text(member.canViewPenaltyHistory
+             ? "히스토리 항목을 왼쪽으로 밀어서 삭제할 수 있습니다."
+             : "본인이 아닌 경우 아웃 히스토리를 확인할 수 없습니다.")
             .appFont(.footnote, color: .grey500)
             .padding(.top, DefaultSpacing.spacing8)
     }
@@ -271,7 +273,7 @@ struct OperatorMemberDetailSheetView: View {
         VStack(spacing: DefaultSpacing.spacing8) {
             Image(systemName: "exclamationmark.bubble.fill")
                 .appFont(.title1, color: .grey500)
-            Text("아웃 기록이 없습니다")
+            Text(member.canViewPenaltyHistory ? "아웃 기록이 없습니다" : "타인의 아웃 히스토리를 확인할 수 없습니다")
                 .appFont(.subheadline, color: .grey500)
         }
         .frame(maxWidth: .infinity)
@@ -294,7 +296,7 @@ struct OperatorMemberDetailSheetView: View {
                             Label("삭제", systemImage: "trash")
                         }
                     }
-                    .disabled(isDeletingOutPoint)
+                    .disabled(isDeletingOutPoint || !member.canViewPenaltyHistory)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     .listRowInsets(.init())
@@ -333,6 +335,7 @@ struct OperatorMemberDetailSheetView: View {
     /// 아웃 부여하기
     @MainActor
     private func addPenalty() async {
+        guard member.canViewPenaltyHistory else { return }
         guard !penaltyReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
@@ -359,6 +362,7 @@ struct OperatorMemberDetailSheetView: View {
     /// 히스토리 삭제하기
     @MainActor
     private func deletePenalty(_ history: OperatorMemberPenaltyHistory) async {
+        guard member.canViewPenaltyHistory else { return }
         let isSuccess = await onDeleteOut(history)
         guard isSuccess else { return }
 
