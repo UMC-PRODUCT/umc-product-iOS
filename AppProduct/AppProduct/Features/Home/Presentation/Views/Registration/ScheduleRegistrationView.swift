@@ -244,7 +244,17 @@ struct ScheduleRegistrationView: View {
     private func sectionView(_ type: ScheduleGenerationType) -> some View {
         switch type {
         case .title:
-            TitleView(text: $viewModel.title)
+            TitleView(
+                text: Binding(
+                    get: { viewModel.title },
+                    set: { newValue in
+                        viewModel.title = newValue
+                        Task { @MainActor in
+                            await viewModel.titleDidChange(to: newValue)
+                        }
+                    }
+                )
+            )
                 .equatable()
         case .place:
             PlaceSelectView(place: $viewModel.place)
@@ -266,7 +276,14 @@ struct ScheduleRegistrationView: View {
         case .participation:
             ParticipantSection(challenger: $viewModel.participatn)
         case .tag:
-            TagSection(tag: $viewModel.tag)
+            TagSection(
+                tag: Binding(
+                    get: { viewModel.tag },
+                    set: { newValue in
+                        viewModel.updateTagsFromUser(newValue)
+                    }
+                )
+            )
         }
     }
 

@@ -18,6 +18,8 @@ class ScheduleRegistrationViewModel {
     private let generateScheduleUseCase: GenerateScheduleUseCaseProtocol
     /// 일정 수정 UseCase
     private let updateScheduleUseCase: UpdateScheduleUseCaseProtocol
+    /// 일정 제목 기반 태그 자동 추천 UseCase
+    private let classifyScheduleUseCase: ClassifyScheduleUseCase
 
     /// 전역 에러 핸들러 (실패 시 Alert 표시용)
     private let errorHandler: ErrorHandler
@@ -69,13 +71,30 @@ class ScheduleRegistrationViewModel {
     private(set) var editingScheduleId: Int?
     /// 수정 모드 초기값 스냅샷
     private var initialEditSnapshot: EditFormSnapshot?
+    /// 사용자가 태그를 직접 조정했는지 여부
+    private var isTagManuallyOverridden: Bool = false
 
     // MARK: - Init
 
-    init(container: DIContainer, errorHandler: ErrorHandler) {
+    convenience init(container: DIContainer, errorHandler: ErrorHandler) {
         let provider = container.resolve(HomeUseCaseProviding.self)
-        self.generateScheduleUseCase = provider.generateScheduleUseCase
-        self.updateScheduleUseCase = provider.updateScheduleUseCase
+        self.init(
+            generateScheduleUseCase: provider.generateScheduleUseCase,
+            updateScheduleUseCase: provider.updateScheduleUseCase,
+            classifyScheduleUseCase: provider.classifyScheduleUseCase,
+            errorHandler: errorHandler
+        )
+    }
+
+    init(
+        generateScheduleUseCase: GenerateScheduleUseCaseProtocol,
+        updateScheduleUseCase: UpdateScheduleUseCaseProtocol,
+        classifyScheduleUseCase: ClassifyScheduleUseCase,
+        errorHandler: ErrorHandler
+    ) {
+        self.generateScheduleUseCase = generateScheduleUseCase
+        self.updateScheduleUseCase = updateScheduleUseCase
+        self.classifyScheduleUseCase = classifyScheduleUseCase
         self.errorHandler = errorHandler
     }
 
@@ -99,6 +118,7 @@ class ScheduleRegistrationViewModel {
         tag = detail.tags
             .compactMap(Self.mapScheduleTag)
             .filter { !$0.isDeprecated }
+        isTagManuallyOverridden = !tag.isEmpty
         initialEditSnapshot = currentEditSnapshot
     }
 
@@ -133,6 +153,54 @@ class ScheduleRegistrationViewModel {
     }
 
     // MARK: - Function
+
+    /// 제목 변경 시 자동 태그 추천을 반영합니다.
+    ///
+    /// 사용자가 태그를 직접 변경한 이후에는 자동 추천이 기존 선택을 덮어쓰지 않습니다.
+    @MainActor
+    func titleDidChange(to newTitle: String) async {
+        title = newTitle
+
+        let trimmedTitle = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty else {
+            if !isTagManuallyOverridden {
+                tag.removeAll()
+            }
+            return
+        }
+
+        guard !isTagManuallyOverridden else {
+            return
+        }
+
+        let suggestedTag = await classifyScheduleUseCase.execute(title: trimmedTitle)
+        let latestTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard latestTitle == trimmedTitle else {
+            return
+        }
+        guard !isTagManuallyOverridden else {
+            return
+        }
+
+        tag = [suggestedTag]
+    }
+
+    /// 태그 선택을 사용자 입력으로 반영합니다.
+    ///
+    /// 사용자가 태그를 비우면 이후 제목 변경 시 자동 추천이 다시 동작합니다.
+    func updateTagsFromUser(_ tags: [ScheduleIconCategory]) {
+        let sanitized = Array(Set(tags.filter { !$0.isDeprecated })).sorted {
+            $0.rawValue < $1.rawValue
+        }
+
+        if tag == sanitized {
+            return
+        }
+
+        tag = sanitized
+        isTagManuallyOverridden = !sanitized.isEmpty
+    }
 
     /// 일정을 서버에 생성합니다.
     ///
