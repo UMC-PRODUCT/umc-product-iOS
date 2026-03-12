@@ -67,26 +67,25 @@ final class OperatorAttendanceViewModel {
             statsMap = [:]
         }
 
+        // 승인 대기 목록 일괄 조회 (1번)
+        let pendingBySchedule: [Int: [PendingAttendanceRecord]]
+        do {
+            pendingBySchedule = try await useCase.fetchAllPendingAttendances()
+        } catch {
+            pendingBySchedule = [:]
+        }
+
         for session in sessions {
             let scheduleIdString = session.id.value
-            var pendingMembers: [OperatorPendingMember] = []
-
-            if let scheduleId = Int(scheduleIdString) {
-                do {
-                    let records = try await useCase
-                        .fetchPendingAttendances(
-                            scheduleId: scheduleId
-                        )
-                    pendingMembers = records.map {
-                        OperatorPendingMember(from: $0)
-                    }
-                } catch {
-                    // API 실패 시 빈 목록으로 진행
-                }
+            let scheduleId = Int(scheduleIdString)
+            let records = scheduleId.flatMap {
+                pendingBySchedule[$0]
+            } ?? []
+            let pendingMembers = records.map {
+                OperatorPendingMember(from: $0)
             }
 
             // 서버 출석 통계 사용
-            let scheduleId = Int(scheduleIdString)
             let stats = scheduleId.flatMap { statsMap[$0] }
 
             let totalCount: Int

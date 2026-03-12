@@ -19,6 +19,10 @@ protocol OperatorAttendanceRepositoryProtocol {
         scheduleId: Int
     ) async throws -> [PendingAttendanceRecord]
 
+    /// 전체 승인 대기 출석 목록 일괄 조회 (관리자)
+    /// - Returns: scheduleId별로 그룹핑된 Dictionary
+    func getAllPendingAttendances() async throws -> [Int: [PendingAttendanceRecord]]
+
     /// 챌린저 출석 이력 조회
     func getChallengerHistory(
         challengerId: Int

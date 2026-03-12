@@ -28,6 +28,10 @@ final class OperatorAttendanceUseCase: OperatorAttendanceUseCaseProtocol {
         try await repository.getPendingAttendances(scheduleId: scheduleId)
     }
 
+    func fetchAllPendingAttendances() async throws -> [Int: [PendingAttendanceRecord]] {
+        try await repository.getAllPendingAttendances()
+    }
+
     func approveAttendance(recordId: Int) async throws {
         try await repository.approveAttendance(recordId: recordId)
     }

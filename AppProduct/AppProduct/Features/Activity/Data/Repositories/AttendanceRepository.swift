@@ -59,6 +59,24 @@ final class AttendanceRepository: ChallengerAttendanceRepositoryProtocol,
         return try apiResponse.unwrap().map { $0.toDomain() }
     }
 
+    func getAllPendingAttendances(
+    ) async throws -> [Int: [PendingAttendanceRecord]] {
+        let response = try await adapter.request(
+            AttendanceRouter.getAllPending
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<[SchedulePendingGroupDTO]>.self,
+            from: response.data
+        )
+        let groups = try apiResponse.unwrap()
+        var result: [Int: [PendingAttendanceRecord]] = [:]
+        for group in groups {
+            let (scheduleId, records) = group.toDomainEntry()
+            result[scheduleId] = records
+        }
+        return result
+    }
+
     func getMyHistory() async throws -> [AttendanceHistoryItem] {
         let response = try await adapter.request(
             AttendanceRouter.getMyHistory
