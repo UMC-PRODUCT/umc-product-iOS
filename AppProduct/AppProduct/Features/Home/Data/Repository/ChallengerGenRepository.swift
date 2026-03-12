@@ -31,26 +31,35 @@ final class ChallengerGenRepository: ChallengerGenRepositoryProtocol, @unchecked
     ///
     /// - Note: CloudKit Sync에서 `@Attribute(.unique)` 사용 불가하므로
     ///   gen 기준 fetch 후 수동 upsert 방식으로 처리합니다.
+    ///   이미 같은 gen 레코드가 여러 개 존재하면 최신 레코드만 남기고 정리합니다.
     func replaceMappings(_ pairs: [(gen: Int, gisuId: Int)]) throws {
-        let incomingGens = Set(pairs.map(\.gen))
         let existingDescriptor = FetchDescriptor<GenerationMappingRecord>()
         let existing = try modelContext.fetch(existingDescriptor)
-        let existingByGen = Dictionary(uniqueKeysWithValues: existing.map { ($0.gen, $0) })
+        let incomingPairs = pairs.reduce(into: [Int: Int]()) { partialResult, pair in
+            partialResult[pair.gen] = pair.gisuId
+        }
+        let incomingGens = Set(incomingPairs.keys)
+        let dedupedExisting = deduplicateExistingRecords(existing)
+        let existingByGen = dedupedExisting.recordsByGen
 
-        for pair in pairs {
-            if let record = existingByGen[pair.gen] {
-                record.gisuId = pair.gisuId
+        for (gen, gisuId) in incomingPairs {
+            if let record = existingByGen[gen] {
+                record.gisuId = gisuId
                 record.updatedAt = .now
             } else {
                 let record = GenerationMappingRecord(
-                    gisuId: pair.gisuId,
-                    gen: pair.gen
+                    gisuId: gisuId,
+                    gen: gen
                 )
                 modelContext.insert(record)
             }
         }
 
-        for record in existing where !incomingGens.contains(record.gen) {
+        for record in dedupedExisting.duplicates {
+            modelContext.delete(record)
+        }
+
+        for record in existingByGen.values where !incomingGens.contains(record.gen) {
             modelContext.delete(record)
         }
 
@@ -73,5 +82,25 @@ final class ChallengerGenRepository: ChallengerGenRepositoryProtocol, @unchecked
             }
             return (gen: $0.gen, gisuId: $0.gisuId)
         }
+    }
+
+    private func deduplicateExistingRecords(
+        _ records: [GenerationMappingRecord]
+    ) -> (
+        recordsByGen: [Int: GenerationMappingRecord],
+        duplicates: [GenerationMappingRecord]
+    ) {
+        var recordsByGen: [Int: GenerationMappingRecord] = [:]
+        var duplicates: [GenerationMappingRecord] = []
+
+        for record in records.sorted(by: { $0.updatedAt > $1.updatedAt }) {
+            if recordsByGen[record.gen] == nil {
+                recordsByGen[record.gen] = record
+            } else {
+                duplicates.append(record)
+            }
+        }
+
+        return (recordsByGen, duplicates)
     }
 }

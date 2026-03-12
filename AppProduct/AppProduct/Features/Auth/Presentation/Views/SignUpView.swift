@@ -485,6 +485,15 @@ extension SignUpView {
             return
         }
 
+        if error.isSocialConnectionConflict {
+            alertPrompt = AlertPrompt(
+                title: "소셜 계정을 확인해주세요",
+                message: error.userMessage,
+                positiveBtnTitle: "확인"
+            )
+            return
+        }
+
         errorHandler.handle(
             error,
             context: .init(
@@ -501,6 +510,19 @@ extension SignUpView {
 // MARK: - Register Error
 
 private extension AppError {
+    var isSocialConnectionConflict: Bool {
+        switch self {
+        case .repository(let error):
+            let message = error.userMessage
+            return message.contains("이미 다른 소셜") ||
+                message.contains("이미 연동")
+        case .auth(let error):
+            return error.userMessage.contains("이미 연동")
+        default:
+            return false
+        }
+    }
+
     var isOAuthVerificationExpired: Bool {
         switch self {
         case .repository(let error):
