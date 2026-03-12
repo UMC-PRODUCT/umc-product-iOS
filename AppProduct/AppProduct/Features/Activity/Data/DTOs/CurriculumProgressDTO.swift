@@ -154,40 +154,25 @@ private extension ChallengerWorkbookProgressDTO {
             return .pendingApproval
         case "IN_PROGRESS", "PROGRESS":
             return .inProgress
+        case "NOT_STARTED", "NOT_STARTED_YET", "READY":
+            return releasedStatusFallback
         case "LOCKED":
-            return .locked
+            return releasedStatusFallback
         case "PENDING":
-            return pendingStatus(schedule: schedule, now: now)
+            return releasedStatusFallback
         case nil:
             // status가 내려오지 않으면 기존 플래그 기준으로 보정
             if isInProgress {
                 return .inProgress
             }
-            return pendingStatus(schedule: schedule, now: now)
+            return releasedStatusFallback
         default:
-            return .locked
+            return releasedStatusFallback
         }
     }
 
-    private func pendingStatus(
-        schedule: WorkbookSchedule?,
-        now: Date
-    ) -> MissionStatus {
-        guard let schedule else {
-            return isInProgress ? .inProgress : .locked
-        }
-        if let startDate = schedule.startDate, now < startDate {
-            return .locked
-        }
-        if let startDate = schedule.startDate,
-           let endDate = schedule.endDate,
-           now >= startDate && now <= endDate {
-            return .inProgress
-        }
-        if let startDate = schedule.startDate, now >= startDate {
-            return .inProgress
-        }
-        return .locked
+    var releasedStatusFallback: MissionStatus {
+        .inProgress
     }
 }
 
