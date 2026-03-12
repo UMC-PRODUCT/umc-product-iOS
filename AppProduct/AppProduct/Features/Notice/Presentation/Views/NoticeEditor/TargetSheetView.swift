@@ -68,13 +68,9 @@ struct TargetSheetView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: Constants.rootContentSpacing) {
-                statefulSheetContent
-                Spacer(minLength: 0)
-            }
+            statefulSheetContent
             .padding(.horizontal, Constants.horizontalPadding)
             .padding(.top, Constants.topPadding)
-            .padding(.bottom, Constants.bottomPadding)
             .navigation(naviTitle: navigationTitle, displayMode: .inline)
             .navigationSubtitle(navigationSubtitle)
             .task {
