@@ -64,7 +64,7 @@ struct InfoSection: View {
             }, label: {
                 MyPageSectionRow(
                     systemIcon: "person.3.fill",
-                    title: "프로덕트 팀 소개",
+                    title: "UMC PRODUCT 소개",
                     rightImage: "chevron.right",
                     iconBackgroundColor: .orange
                 )
