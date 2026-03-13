@@ -13,6 +13,8 @@ import SwiftUI
 struct InfoSection: View {
     // MARK: - Property
 
+    @Environment(\.di) private var di
+
     private enum Constants {
         static let appStoreURLString = "https://apps.apple.com/us/app/umc/id6759412446"
         static let appName = "UMC"
@@ -42,6 +44,10 @@ struct InfoSection: View {
         """
     }
 
+    private var pathStore: PathStore {
+        di.resolve(PathStore.self)
+    }
+
     // MARK: - Function
 
     init(sectionType: MyPageSectionType) {
@@ -53,6 +59,17 @@ struct InfoSection: View {
     var body: some View {
         Section(content: {
             MyPageSectionRow(systemIcon: "info.circle", title: "버전", rightText: appVersion, iconBackgroundColor: .cyan)
+            Button(action: {
+                pathStore.mypagePath.append(.myPage(.productTeamIntroduction))
+            }, label: {
+                MyPageSectionRow(
+                    systemIcon: "person.3.fill",
+                    title: "프로덕트 팀 소개",
+                    rightImage: "chevron.right",
+                    iconBackgroundColor: .orange
+                )
+            })
+            .buttonStyle(.plain)
             ShareLink(
                 item: shareContent,
                 preview: SharePreview(Constants.appName)

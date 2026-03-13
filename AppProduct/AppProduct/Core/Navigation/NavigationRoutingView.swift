@@ -122,6 +122,8 @@ private extension NavigationRoutingView {
             MyPageProfileView(container: di, profileData: profileData)
         case .myActivePosts(let type):
             MyActivePostsView(container: di, logType: type)
+        case .productTeamIntroduction:
+            ProductTeamIntroductionView()
         }
     }
 
