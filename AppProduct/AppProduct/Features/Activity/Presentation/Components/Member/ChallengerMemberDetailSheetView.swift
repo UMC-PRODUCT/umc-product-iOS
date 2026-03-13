@@ -109,7 +109,7 @@ struct ChallengerMemberDetailSheetView: View {
             RemoteImage(urlString: member.profile ?? "", size: Constants.profileSize)
             
             HStack (spacing: DefaultSpacing.spacing8) {
-                Text("\(member.name)/\(member.nickname)")
+                Text("\(member.nickname)/\(member.name)")
                     .appFont(.title2Emphasis)
                 Text(member.part.name)
                     .appFont(.callout, color: .gray)

@@ -47,4 +47,12 @@ final class FetchMembersUseCase: FetchMembersUseCaseProtocol {
             challengerId: challengerId
         )
     }
+
+    func fetchOutPenaltyHistory(
+        challengerId: Int
+    ) async throws -> [OperatorMemberPenaltyHistory] {
+        try await repository.fetchOutPenaltyHistory(
+            challengerId: challengerId
+        )
+    }
 }

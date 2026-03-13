@@ -17,11 +17,13 @@ struct OperatorMemberDetailSheetView: View {
     let isSubmittingOutPoint: Bool
     let isDeletingOutPoint: Bool
     let onGrantOut: @Sendable (String) async -> Bool
-    let onDeleteOut: @Sendable (OperatorMemberPenaltyHistory) async -> Bool
+    let onDeleteOut: @Sendable (OperatorMemberPenaltyHistory) async -> String?
     @State private var showPenaltyAlert: Bool = false
     @State private var penaltyReason: String = ""
     @State private var penaltyHistory: [OperatorMemberPenaltyHistory] = []
     @State private var totalPenalty: Double = 0
+    @State private var transientHistoryMessage: String?
+    @State private var transientHistoryMessageTask: Task<Void, Never>?
     
     // MARK: - Constant
     
@@ -38,6 +40,7 @@ struct OperatorMemberDetailSheetView: View {
         static let emptyHistoryHeight: CGFloat = 150
         static let historyRowHeight: CGFloat = 50
         static let maxVisibleHistory: Int = 7
+        static let minimumVisibleHistoryHeight: CGFloat = 180
         static let minSheetHeight: CGFloat = 420
         static let maxSheetHeight: CGFloat = 820
         static let badgePadding: EdgeInsets = .init(top: 6, leading: 8, bottom: 6, trailing: 8)
@@ -63,12 +66,18 @@ struct OperatorMemberDetailSheetView: View {
         var calculatedHeight: CGFloat = Constants.baseHeight
         
         if historyCount == 0 {
-            calculatedHeight += Constants.emptyHistoryHeight
+            calculatedHeight += max(
+                Constants.emptyHistoryHeight,
+                Constants.minimumVisibleHistoryHeight
+            )
         } else {
             let visibleHistory = min(historyCount, Constants.maxVisibleHistory)
             let historyHeight = (CGFloat(visibleHistory) * Constants.historyRowHeight)
                 + (CGFloat(max(0, visibleHistory - 1)) * DefaultSpacing.spacing8)
-            calculatedHeight += historyHeight
+            calculatedHeight += max(
+                historyHeight,
+                Constants.minimumVisibleHistoryHeight
+            )
         }
         
         return max(Constants.minSheetHeight, min(calculatedHeight, Constants.maxSheetHeight))
@@ -79,14 +88,20 @@ struct OperatorMemberDetailSheetView: View {
         let recordCount = penaltyHistory.count
         
         if recordCount == 0 {
-            return Constants.emptyHistoryHeight
+            return max(
+                Constants.emptyHistoryHeight,
+                Constants.minimumVisibleHistoryHeight
+            )
         }
         
         let visibleHistory = min(recordCount, Constants.maxVisibleHistory)
         let historyHeight = (CGFloat(visibleHistory) * Constants.historyRowHeight)
             + (CGFloat(max(0, visibleHistory - 1)) * DefaultSpacing.spacing8)
         
-        return historyHeight
+        return max(
+            historyHeight,
+            Constants.minimumVisibleHistoryHeight
+        )
     }
     
     // MARK: - Body
@@ -187,7 +202,7 @@ struct OperatorMemberDetailSheetView: View {
     
     private var memberMetadataView: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            Text("\(member.name)/\(member.nickname)")
+            Text("\(member.nickname)/\(member.name)")
                 .appFont(.bodyEmphasis)
             statusChip(title: member.part.name, style: .accent)
             statusChip(title: member.school, style: .plain)
@@ -220,10 +235,10 @@ struct OperatorMemberDetailSheetView: View {
     }
     
     private var historyView: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             historyHeader
+            historyDescription
             historyListContainer
-            historyDeleteHint
         }
     }
     
@@ -247,13 +262,13 @@ struct OperatorMemberDetailSheetView: View {
             }
         }
     }
-    
-    private var historyDeleteHint: some View {
-        Text(member.canViewPenaltyHistory
-             ? "히스토리 항목을 왼쪽으로 밀어서 삭제할 수 있습니다."
-             : "본인이 아닌 경우 아웃 히스토리를 확인할 수 없습니다.")
-            .appFont(.footnote, color: .grey500)
-            .padding(.top, DefaultSpacing.spacing8)
+
+    private var historyDescription: some View {
+        Text(resolvedHistoryDescription)
+            .appFont(
+                .footnote,
+                color: transientHistoryMessage == nil ? .grey500 : .red
+            )
     }
     
     /// 누적 경고 뱃지
@@ -363,14 +378,41 @@ struct OperatorMemberDetailSheetView: View {
     @MainActor
     private func deletePenalty(_ history: OperatorMemberPenaltyHistory) async {
         guard member.canViewPenaltyHistory else { return }
-        let isSuccess = await onDeleteOut(history)
-        guard isSuccess else { return }
+        if let message = await onDeleteOut(history) {
+            showTransientHistoryMessage(message)
+            return
+        }
 
         if let index = penaltyHistory.firstIndex(where: { $0.id == history.id }) {
             let deletedScore = penaltyHistory[index].penaltyScore
             withAnimation(Constants.animation) {
                 penaltyHistory.remove(at: index)
                 totalPenalty -= deletedScore
+            }
+        }
+    }
+
+    private var resolvedHistoryDescription: String {
+        if let transientHistoryMessage,
+           !transientHistoryMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return transientHistoryMessage
+        }
+
+        if member.canViewPenaltyHistory {
+            return "히스토리 항목을 왼쪽으로 밀어서 삭제할 수 있습니다."
+        }
+        return "본인이 아닌 경우 아웃 히스토리를 확인할 수 없습니다."
+    }
+
+    private func showTransientHistoryMessage(_ message: String) {
+        transientHistoryMessageTask?.cancel()
+        transientHistoryMessage = message
+        transientHistoryMessageTask = Task {
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                transientHistoryMessage = nil
+                transientHistoryMessageTask = nil
             }
         }
     }
@@ -384,7 +426,7 @@ struct OperatorMemberDetailSheetView: View {
                 isSubmittingOutPoint: false,
                 isDeletingOutPoint: false,
                 onGrantOut: { _ in true },
-                onDeleteOut: { _ in true }
+                onDeleteOut: { _ in nil }
             )
         })
 }

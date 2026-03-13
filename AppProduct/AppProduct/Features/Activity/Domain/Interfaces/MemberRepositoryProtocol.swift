@@ -27,4 +27,9 @@ protocol MemberRepositoryProtocol {
     func fetchAttendanceRecords(
         challengerId: Int
     ) async throws -> [MemberAttendanceRecord]
+
+    /// 특정 챌린저의 아웃 히스토리를 조회합니다.
+    func fetchOutPenaltyHistory(
+        challengerId: Int
+    ) async throws -> [OperatorMemberPenaltyHistory]
 }

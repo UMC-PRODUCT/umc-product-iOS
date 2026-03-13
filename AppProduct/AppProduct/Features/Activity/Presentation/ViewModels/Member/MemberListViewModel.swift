@@ -170,31 +170,37 @@ final class MemberListViewModel {
         isLoadingMemberDetail = true
         defer { isLoadingMemberDetail = false }
 
-        do {
-            let records = try await fetchMembersUseCase.fetchAttendanceRecords(
-                challengerId: challengerId
-            )
-            selectedMember = MemberManagementItem(
-                id: member.id,
-                memberID: member.memberID,
-                challengerID: member.challengerID,
-                profile: member.profile,
-                name: member.name,
-                nickname: member.nickname,
-                generation: member.generation,
-                school: member.school,
-                position: member.position,
-                part: member.part,
-                penalty: member.penalty,
-                badge: member.badge,
-                managementTeam: member.managementTeam,
-                attendanceRecords: records,
-                penaltyHistory: member.penaltyHistory,
-                canViewPenaltyHistory: member.canViewPenaltyHistory
-            )
-        } catch {
-            selectedMember = member
-        }
+        async let recordsTask = try? fetchMembersUseCase.fetchAttendanceRecords(
+            challengerId: challengerId
+        )
+        async let penaltyHistoryTask = try? fetchMembersUseCase.fetchOutPenaltyHistory(
+            challengerId: challengerId
+        )
+
+        let records = await recordsTask ?? member.attendanceRecords
+        let penaltyHistory = await penaltyHistoryTask ?? member.penaltyHistory
+        let totalPenalty = penaltyHistory.isEmpty
+            ? member.penalty
+            : penaltyHistory.reduce(0) { $0 + $1.penaltyScore }
+
+        selectedMember = MemberManagementItem(
+            id: member.id,
+            memberID: member.memberID,
+            challengerID: member.challengerID,
+            profile: member.profile,
+            name: member.name,
+            nickname: member.nickname,
+            generation: member.generation,
+            school: member.school,
+            position: member.position,
+            part: member.part,
+            penalty: totalPenalty,
+            badge: member.badge,
+            managementTeam: member.managementTeam,
+            attendanceRecords: records,
+            penaltyHistory: penaltyHistory,
+            canViewPenaltyHistory: true
+        )
     }
 
     /// 아웃 포인트 기록을 삭제합니다.
@@ -207,14 +213,9 @@ final class MemberListViewModel {
     func deleteOutPoint(
         member: MemberManagementItem,
         history: OperatorMemberPenaltyHistory
-    ) async -> Bool {
+    ) async -> String? {
         guard let challengerPointId = history.challengerPointId else {
-            alertPrompt = AlertPrompt(
-                title: "아웃 삭제 실패",
-                message: "삭제할 아웃 포인트 ID를 찾을 수 없습니다.",
-                positiveBtnTitle: "확인"
-            )
-            return false
+            return "삭제할 아웃 포인트 ID를 찾을 수 없습니다."
         }
 
         isDeletingOutPoint = true
@@ -226,14 +227,13 @@ final class MemberListViewModel {
             )
             try await reloadMembersAndReselect(member: member)
             NotificationCenter.default.post(name: .memberPenaltyUpdated, object: nil)
-            return true
+            return nil
         } catch let error as DomainError {
-            alertPrompt = AlertPrompt(
-                title: "아웃 삭제 실패",
-                message: error.userMessage,
-                positiveBtnTitle: "확인"
-            )
-            return false
+            return error.userMessage
+        } catch let error as RepositoryError {
+            return deleteOutPointFailureMessage(from: error)
+        } catch let error as NetworkError {
+            return deleteOutPointFailureMessage(from: error)
         } catch {
             errorHandler.handle(
                 error,
@@ -242,7 +242,7 @@ final class MemberListViewModel {
                     action: "deleteOutPoint"
                 )
             )
-            return false
+            return "아웃 삭제에 실패했습니다. 잠시 후 다시 시도해주세요."
         }
     }
 
@@ -309,8 +309,41 @@ final class MemberListViewModel {
             managementTeam: updated.managementTeam,
             attendanceRecords: updated.attendanceRecords,
             penaltyHistory: updated.penaltyHistory,
-            canViewPenaltyHistory: updated.canViewPenaltyHistory
+            canViewPenaltyHistory: base.canViewPenaltyHistory || updated.canViewPenaltyHistory
         )
     }
 
+    private func deleteOutPointFailureMessage(from error: RepositoryError) -> String {
+        if case .serverError(_, let message) = error,
+           let message,
+           !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return message
+        }
+        return error.userMessage
+    }
+
+    private func deleteOutPointFailureMessage(from error: NetworkError) -> String {
+        guard case .requestFailed(_, let data) = error else {
+            return error.userMessage
+        }
+        return decodeServerMessage(from: data) ?? error.userMessage
+    }
+
+    private func decodeServerMessage(from data: Data?) -> String? {
+        guard let data,
+              let payload = try? JSONDecoder().decode(ServerErrorPayload.self, from: data) else {
+            return nil
+        }
+
+        let candidates = [payload.message, payload.result]
+        return candidates
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first(where: { !$0.isEmpty })
+    }
+
+}
+
+private struct ServerErrorPayload: Decodable {
+    let message: String?
+    let result: String?
 }

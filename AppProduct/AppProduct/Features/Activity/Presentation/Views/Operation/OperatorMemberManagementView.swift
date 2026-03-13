@@ -58,6 +58,14 @@ struct OperatorMemberManagementView: View {
         }
         .searchable(text: $viewModel.searchText)
         .searchToolbarBehavior(.minimize)
+        .overlay {
+            if viewModel.isLoadingMemberDetail {
+                ProgressView()
+                    .controlSize(.regular)
+                    .padding()
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+        }
         .sheet(item: $viewModel.selectedMember) { member in
             OperatorMemberDetailSheetView(
                 member: member,
@@ -110,7 +118,9 @@ struct OperatorMemberManagementView: View {
                 Section {
                     ForEach(group.members) { item in
                         Button(action: {
-                            viewModel.selectedMember = item
+                            Task {
+                                await viewModel.openChallengerMemberDetail(item)
+                            }
                         }) {
                             CoreMemberManagementList(memberManagementItem: item, mode: .management)
                         }

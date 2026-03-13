@@ -76,7 +76,7 @@ struct CoreMemberTextPresenter: View {
     
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            Text("\(name)/\(nickname)")
+            Text("\(nickname)/\(name)")
                 .appFont(.calloutEmphasis, color: .black)
             
             Text(part.name)

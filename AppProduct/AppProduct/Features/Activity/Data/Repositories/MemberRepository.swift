@@ -197,6 +197,35 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
             )
         }
     }
+
+    /// 챌린저 상세에서 아웃 히스토리를 조회합니다.
+    ///
+    /// `GET /api/v1/challenger/{challengerId}` 응답의 `challengerPoints`
+    /// 또는 `points` 중 `OUT` 타입만 추려 반환합니다.
+    func fetchOutPenaltyHistory(
+        challengerId: Int
+    ) async throws -> [OperatorMemberPenaltyHistory] {
+        let response = try await adapter.request(
+            MyPageRouter.getChallengerProfile(challengerId: challengerId)
+        )
+        let apiResponse = try decoder.decode(
+            APIResponse<ChallengerMemberDTO>.self,
+            from: response.data
+        )
+        let challenger = try apiResponse.unwrap()
+        let outPoints = challenger.challengerPoints.filter { $0.pointType == .out }
+
+        return outPoints.map { point in
+            OperatorMemberPenaltyHistory(
+                challengerPointId: point.id > 0 ? point.id : nil,
+                date: ServerDateTimeConverter.parseUTCDateTimeOrTime(point.createdAt)
+                    ?? Date(),
+                reason: point.description.nonEmpty ?? "아웃",
+                penaltyScore: abs(point.point)
+            )
+        }
+        .sorted { $0.date > $1.date }
+    }
 }
 
 // MARK: - Private Helper

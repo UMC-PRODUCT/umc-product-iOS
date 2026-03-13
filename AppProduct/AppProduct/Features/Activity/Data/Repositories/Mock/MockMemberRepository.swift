@@ -165,6 +165,14 @@ final class MockMemberRepository: MemberRepositoryProtocol {
         try await Task.sleep(for: .milliseconds(150))
         return MockAttendanceRecords.good
     }
+
+    func fetchOutPenaltyHistory(
+        challengerId: Int
+    ) async throws -> [OperatorMemberPenaltyHistory] {
+        _ = challengerId
+        try await Task.sleep(for: .milliseconds(150))
+        return MockPenaltyHistory.oneOut
+    }
 }
 
 // MARK: - Mock Attendance Records
