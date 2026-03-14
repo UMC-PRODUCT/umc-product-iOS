@@ -24,5 +24,5 @@ enum MyPageSectionType: String, CaseIterable {
     /// Apple, Kakao 등 소셜 계정 연동 상태
     case socialConnect = "소셜계정 연동"
     /// 회원 정보 처리
-    case auth = "회원 탈퇼 및 로그아웃"
+    case auth = "회원 관리"
 }
