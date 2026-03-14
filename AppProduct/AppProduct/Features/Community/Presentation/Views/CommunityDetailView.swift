@@ -98,6 +98,7 @@ struct CommunityDetailView: View {
         .navigation(naviTitle: .communityDetail, displayMode: .inline)
         .task {
             await vm.fetchPostDetail()
+            await vm.fetchPostPermission()
             await vm.fetchComments()
         }
         .onChange(of: pathStore.communityPath.count) { oldCount, newCount in
@@ -105,6 +106,7 @@ struct CommunityDetailView: View {
                 Task {
                     try? await Task.sleep(nanoseconds: 300_000_000) // 0.3초
                     await vm.fetchPostDetail()
+                    await vm.fetchPostPermission()
                     await vm.fetchComments()
                 }
             }
@@ -162,24 +164,27 @@ struct CommunityDetailView: View {
     /// - Parameter postItem: 현재 상세 화면에 표시 중인 게시글 모델입니다.
     /// - Returns: 작성자 본인일 때는 수정/삭제, 타인일 때는 신고 액션 목록입니다.
     private func toolbarActions(for postItem: CommunityItemModel) -> [ToolBarCollection.ToolbarTrailingMenu.ActionItem] {
-        if postItem.isAuthor {
-            // 본인 게시글: 수정/삭제
-            return [
-                .init(title: "수정하기", icon: "pencil") {
-                    pathStore.communityPath.append(.community(.post(editItem: postItem)))
-                },
-                .init(title: "삭제하기", icon: "trash", role: .destructive) {
-                    showDeletePostAlert()
-                }
-            ]
-        } else {
-            // 타인 게시글: 신고
-            return [
-                .init(title: "신고하기", icon: "light.beacon.max.fill", role: .destructive) {
-                    showReportPostAlert()
-                }
-            ]
+        var actions: [ToolBarCollection.ToolbarTrailingMenu.ActionItem] = []
+
+        if vm.canEditPost {
+            actions.append(.init(title: "수정하기", icon: "pencil") {
+                pathStore.communityPath.append(.community(.post(editItem: postItem)))
+            })
         }
+
+        if vm.canDeletePost {
+            actions.append(.init(title: "삭제하기", icon: "trash", role: .destructive) {
+                showDeletePostAlert()
+            })
+        }
+
+        if !vm.canEditPost && !vm.canDeletePost {
+            actions.append(.init(title: "신고하기", icon: "light.beacon.max.fill", role: .destructive) {
+                showReportPostAlert()
+            })
+        }
+
+        return actions
     }
 
     // MARK: - Alert Functions
