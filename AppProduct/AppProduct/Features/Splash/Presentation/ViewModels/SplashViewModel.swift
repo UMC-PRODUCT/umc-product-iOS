@@ -102,9 +102,10 @@ final class SplashViewModel {
 
     // MARK: - Private Function
 
-    /// App Store Lookup API를 호출하여 업데이트가 필요한지 확인합니다.
+    /// App Store Lookup API를 호출하여 강제 업데이트가 필요한지 확인합니다.
     ///
-    /// App Store 버전이 현재 앱 버전보다 높으면 `true`를 반환합니다.
+    /// Major.Minor 버전만 비교하여 마이너 버전 이상 변경 시에만 `true`를 반환합니다.
+    /// (예: 1.2 → 1.3 강제 업데이트, 1.2.0 → 1.2.1 허용)
     /// API 호출 실패 시에는 `false`를 반환하여 앱 진입을 차단하지 않습니다.
     private func checkAppStoreVersion() async -> Bool {
         guard let url = URL(string: Constants.lookupURLString) else {
@@ -124,13 +125,26 @@ final class SplashViewModel {
                 "CFBundleShortVersionString"
             ] as? String ?? "0.0.0"
 
-            return storeVersion.compare(
-                currentVersion,
+            let storeMajorMinor = majorMinor(from: storeVersion)
+            let currentMajorMinor = majorMinor(from: currentVersion)
+
+            return storeMajorMinor.compare(
+                currentMajorMinor,
                 options: .numeric
             ) == .orderedDescending
         } catch {
             return false
         }
+    }
+
+    /// 버전 문자열에서 Major.Minor 부분만 추출합니다.
+    ///
+    /// - Parameter version: 전체 버전 문자열 (예: "1.2.3")
+    /// - Returns: Major.Minor 문자열 (예: "1.2")
+    private func majorMinor(from version: String) -> String {
+        let components = version.split(separator: ".")
+        guard components.count >= 2 else { return version }
+        return "\(components[0]).\(components[1])"
     }
 
     /// 토큰/프로필 기반으로 스플래시 인증 상태를 판정합니다.
