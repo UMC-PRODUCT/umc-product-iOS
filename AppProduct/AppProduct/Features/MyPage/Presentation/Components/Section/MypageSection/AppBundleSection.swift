@@ -5,6 +5,7 @@
 //  Created by euijjang97 on 1/28/26.
 //
 
+import StoreKit
 import SwiftUI
 
 /// MyPage에서 앱 정보(버전 등)를 표시하는 Section 컴포넌트
@@ -14,6 +15,7 @@ struct InfoSection: View {
     // MARK: - Property
 
     @Environment(\.di) private var di
+    @Environment(\.requestReview) private var requestReview
 
     private enum Constants {
         static let appStoreURLString = "https://apps.apple.com/us/app/umc/id6759412446"
@@ -57,31 +59,46 @@ struct InfoSection: View {
     // MARK: - Body
 
     var body: some View {
-        Section(content: {
-            MyPageSectionRow(systemIcon: "info.circle", title: "버전", rightText: appVersion, iconBackgroundColor: .cyan)
-            Button(action: {
-                pathStore.mypagePath.append(.myPage(.productTeamIntroduction))
-            }, label: {
-                MyPageSectionRow(
-                    systemIcon: "person.3.fill",
-                    title: "UMC PRODUCT 소개",
-                    rightImage: "chevron.right",
-                    iconBackgroundColor: .orange
-                )
-            })
-            .buttonStyle(.plain)
-            ShareLink(
-                item: shareContent,
-                preview: SharePreview(Constants.appName)
-            ) {
-                MyPageSectionRow(
-                    systemIcon: "square.and.arrow.up",
-                    title: "앱 공유하기",
-                    rightImage: "arrow.up.right",
-                    iconBackgroundColor: .yellow
-                )
-            }
-        }, header: {
+        Section(
+            content: {
+                
+                MyPageSectionRow(systemIcon: "info.circle", title: "버전", rightText: appVersion, iconBackgroundColor: .cyan)
+               
+                Button {
+                    requestReview()
+                } label: {
+                    MyPageSectionRow(
+                        systemIcon: "star.fill",
+                        title: "앱 평가 및 리뷰",
+                        rightImage: "arrow.up.right",
+                        iconBackgroundColor: .pink
+                    )
+                }
+                .buttonStyle(.plain)
+                ShareLink(
+                    item: shareContent,
+                    preview: SharePreview(Constants.appName)
+                ) {
+                    MyPageSectionRow(
+                        systemIcon: "square.and.arrow.up",
+                        title: "앱 공유하기",
+                        rightImage: "arrow.up.right",
+                        iconBackgroundColor: .yellow
+                    )
+                }
+                Button(action: {
+                    pathStore.mypagePath.append(.myPage(.productTeamIntroduction))
+                }, label: {
+                    MyPageSectionRow(
+                        systemIcon: "person.3.fill",
+                        title: "UMC PRODUCT 소개",
+                        rightImage: "chevron.right",
+                        iconBackgroundColor: .orange
+                    )
+                })
+                .buttonStyle(.plain)
+            },
+            header: {
             SectionHeaderView(title: sectionType.rawValue)
         })
     }

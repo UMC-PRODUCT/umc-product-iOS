@@ -140,7 +140,10 @@ final class HomeViewModel {
             forKey: AppStorageKey.generationOrganizations
         )
         defaults.set(isApproved, forKey: AppStorageKey.canAutoLogin)
-        container.resolve(UserSessionManager.self).updateRole(resolvedRole)
+        container.resolve(UserSessionManager.self).updateRole(
+            resolvedRole,
+            allRoles: result.roles.map(\.roleType)
+        )
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
     }
 
@@ -170,7 +173,7 @@ final class HomeViewModel {
     @MainActor
     private func applyGenerationsFromProfile(_ generations: [GenerationData]) {
         generationData = .loading
-        generationData = .loaded(generations.sorted { $0.gen < $1.gen })
+        generationData = .loaded(generations.sorted { $0.gen > $1.gen })
     }
 
     /// 챌린저 이력 기반 (gen, gisuId) 매핑을 SwiftData(CloudKit)에 동기화합니다.

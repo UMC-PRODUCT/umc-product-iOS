@@ -16,6 +16,7 @@ enum AuthorizationResourceType: String, CaseIterable, Hashable {
     case workbookSubmission = "WORKBOOK_SUBMISSION"
     case attendanceSheet = "ATTENDANCE_SHEET"
     case attendanceRecord = "ATTENDANCE_RECORD"
+    case communityPost = "COMMUNITY_POST"
     case comment = "COMMUNITY_COMMENT"
 }
 

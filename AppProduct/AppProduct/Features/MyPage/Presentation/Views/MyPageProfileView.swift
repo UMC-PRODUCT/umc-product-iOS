@@ -235,7 +235,10 @@ struct MyPageProfileView: View {
         defaults.set(isApprovedProfile(profile), forKey: AppStorageKey.canAutoLogin)
         syncGenerationMappings(profile.generations)
 
-        di.resolve(UserSessionManager.self).updateRole(resolvedRole)
+        di.resolve(UserSessionManager.self).updateRole(
+            resolvedRole,
+            allRoles: profile.roles.map(\.roleType)
+        )
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
     }
 

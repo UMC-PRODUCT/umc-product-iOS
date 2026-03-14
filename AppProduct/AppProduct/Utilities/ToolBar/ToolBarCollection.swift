@@ -338,7 +338,7 @@ struct ToolBarCollection {
             .pickerStyle(.inline)
         }
     }
-    
+
     /// 커뮤니티 목록을 파트 기준으로 좁혀보는 필터 툴바입니다.
     struct CommunityPartFilter: ToolbarContent {
         @Binding var selectedPart: UMCPartType?
@@ -367,6 +367,53 @@ struct ToolBarCollection {
                 }
             }
             .pickerStyle(.inline)
+        }
+    }
+
+    /// 커뮤니티 명예의 전당에서 학교/파트 필터를 하나의 메뉴로 통합한 툴바입니다.
+    struct CommunityFameFilter: ToolbarContent {
+        @Binding var selectedUniversity: String
+        let universities: [String]
+        @Binding var selectedPart: UMCPartType?
+        let parts: [UMCPartType]
+
+        var body: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Menu {
+                        Picker("학교 선택", selection: $selectedUniversity) {
+                            Text("전체")
+                                .tag("전체")
+
+                            ForEach(universities.filter { $0 != "전체" }, id: \.self) { university in
+                                Text(university)
+                                    .tag(university)
+                            }
+                        }
+                        .pickerStyle(.inline)
+                    } label: {
+                        Label("\(selectedUniversity)", systemImage: "graduationcap.fill")
+                    }
+
+                    Menu {
+                        Picker("파트 선택", selection: $selectedPart) {
+                            Label("전체", systemImage: "person.2.fill")
+                                .tag(nil as UMCPartType?)
+
+                            ForEach(parts, id: \.self) { part in
+                                Label(part.name, systemImage: part.icon)
+                                    .tag(part)
+                            }
+                        }
+                        .pickerStyle(.inline)
+                    } label: {
+                        Label("\(selectedPart?.name ?? "전체")", systemImage: "building.columns.fill")
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                        .appFont(.subheadline)
+                }
+            }
         }
     }
 

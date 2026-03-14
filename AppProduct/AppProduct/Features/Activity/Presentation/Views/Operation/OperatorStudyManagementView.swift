@@ -182,10 +182,9 @@ struct OperatorStudyManagementView: View {
 
     // MARK: - Function
 
-    /// 스터디 그룹 생성 권한 확인 (역할 + 조직 타입)
+    /// 스터디 그룹 생성 권한 확인 (보유 역할 중 회장/부회장 포함 여부)
     private var canCreateStudyGroup: Bool {
-        userSession.currentRole.canCreateStudyGroup
-            && OrganizationType(rawValue: organizationType) == .school
+        userSession.hasAnyRole { $0.canCreateStudyGroup }
     }
 
     // MARK: - Submission Content View

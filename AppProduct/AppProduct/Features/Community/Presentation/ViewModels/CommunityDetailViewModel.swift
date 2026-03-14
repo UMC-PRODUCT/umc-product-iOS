@@ -32,6 +32,7 @@ class CommunityDetailViewModel {
     private(set) var isPostingComment: Bool = false
     private(set) var commentDeletePermissions: [Int: Bool] = [:]
     private(set) var isPermissionsLoaded: Bool = false
+    private(set) var postPermission: ResourcePermission?
 
     var commentText: String = ""
     var alertPrompt: AlertPrompt?
@@ -70,6 +71,29 @@ class CommunityDetailViewModel {
         } catch {
             postDetailState = .failed(.unknown(message: error.localizedDescription))
         }
+    }
+
+    /// 게시글 권한 조회
+    @MainActor
+    func fetchPostPermission() async {
+        do {
+            postPermission = try await authorizationUseCase.getResourcePermission(
+                resourceType: .communityPost,
+                resourceId: postId
+            )
+        } catch {
+            postPermission = nil
+        }
+    }
+
+    /// 게시글 수정 권한 여부
+    var canEditPost: Bool {
+        postPermission?.has(.edit) ?? false
+    }
+
+    /// 게시글 삭제 권한 여부
+    var canDeletePost: Bool {
+        postPermission?.has(.delete) ?? false
     }
 
     /// 댓글 목록 조회

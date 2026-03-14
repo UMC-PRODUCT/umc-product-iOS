@@ -343,7 +343,10 @@ final class FailedVerificationUMCViewModel {
         )
         defaults.set(isApprovedProfile(profile), forKey: AppStorageKey.canAutoLogin)
 
-        container.resolve(UserSessionManager.self).updateRole(resolvedRole)
+        container.resolve(UserSessionManager.self).updateRole(
+            resolvedRole,
+            allRoles: profile.roles.map(\.roleType)
+        )
         NotificationCenter.default.post(name: .memberProfileUpdated, object: nil)
     }
 
