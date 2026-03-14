@@ -14,9 +14,10 @@ import SwiftUI
 struct SplashView: View {
     
     // MARK: - Property
-    
+
     @State private var viewModel: SplashViewModel
     @Environment(\.appFlow) private var appFlow
+    @Environment(\.scenePhase) private var scenePhase
     
     // MARK: - Init
     
@@ -59,6 +60,12 @@ struct SplashView: View {
                         appFlow
                             .showLogin()
                     }
+                }
+            }
+            .alertPrompt(item: $viewModel.updateAlertPrompt)
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active, viewModel.needsUpdate {
+                    viewModel.showUpdateAlert()
                 }
             }
     }
