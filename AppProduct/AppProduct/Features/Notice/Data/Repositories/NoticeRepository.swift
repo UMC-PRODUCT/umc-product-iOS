@@ -203,6 +203,19 @@ struct NoticeRepository: NoticeRepositoryProtocol {
         )
         _ = try apiResponse.unwrap()
     }
+
+    /// 투표 응답 수정
+    func updateVoteResponse(voteId: Int, optionIds: [Int]) async throws {
+        let response = try await adapter.request(
+            NoticeRouter.updateVoteResponse(voteId: voteId, optionIds: optionIds)
+        )
+
+        let apiResponse = try JSONDecoder().decode(
+            APIResponse<EmptyResult>.self,
+            from: response.data
+        )
+        _ = try apiResponse.unwrap()
+    }
     
     // MARK: - 공지 수정
     

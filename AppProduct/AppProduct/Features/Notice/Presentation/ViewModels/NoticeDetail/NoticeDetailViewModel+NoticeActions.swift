@@ -658,6 +658,37 @@ extension NoticeDetailViewModel {
             )
         } catch let error as NetworkError {
             isSubmittingVote = false
+            if case .requestFailed(_, let data) = error,
+               let data,
+               let parsed = try? JSONDecoder().decode(
+                   APIResponse<EmptyResult>.self, from: data
+               ) {
+                alertPrompt = AlertPrompt(
+                    id: .init(),
+                    title: "투표 실패",
+                    message: parsed.message ?? error.userMessage,
+                    positiveBtnTitle: "확인"
+                )
+            } else {
+                errorHandler.handle(
+                    error,
+                    context: ErrorContext(
+                        feature: "Notice",
+                        action: "handleVote",
+                        retryAction: { [weak self] in
+                            guard let self = self else { return }
+                            Task {
+                                await self.handleVote(
+                                    voteId: voteId,
+                                    optionIds: optionIds
+                                )
+                            }
+                        }
+                    )
+                )
+            }
+        } catch {
+            isSubmittingVote = false
             errorHandler.handle(
                 error,
                 context: ErrorContext(
@@ -671,17 +702,107 @@ extension NoticeDetailViewModel {
                     }
                 )
             )
+        }
+    }
+
+    /// 투표 응답 수정 처리
+    ///
+    /// 기존 투표를 수정(PUT)한 뒤 공지 상세를 재조회하여 최신 투표 상태를 반영합니다.
+    @MainActor
+    func handleUpdateVote(voteId: String, optionIds: [String]) async {
+        guard case .loaded = noticeState else { return }
+        guard !isSubmittingVote else { return }
+
+        do {
+            isSubmittingVote = true
+            defer { isSubmittingVote = false }
+
+            guard let resolvedVoteId = Int(voteId) else {
+                throw DomainError.custom(message: "유효하지 않은 투표 ID입니다.")
+            }
+
+            let resolvedOptionIds = optionIds.compactMap(Int.init)
+
+            try await noticeUseCase.updateVoteResponse(
+                voteId: resolvedVoteId,
+                optionIds: resolvedOptionIds
+            )
+
+            let refreshedNotice = try await noticeUseCase.getDetailNotice(noticeId: noticeID)
+            let normalizedNotice = normalizeTargetGenerationIfNeeded(in: refreshedNotice)
+            noticeState = .loaded(normalizedNotice)
+            refreshAuthorDisplayName(for: normalizedNotice)
+        } catch let error as DomainError {
+            isSubmittingVote = false
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "handleUpdateVote",
+                    retryAction: { [weak self] in
+                        guard let self else { return }
+                        Task { await self.handleUpdateVote(voteId: voteId, optionIds: optionIds) }
+                    }
+                )
+            )
+        } catch let error as RepositoryError {
+            isSubmittingVote = false
+            errorHandler.handle(
+                error,
+                context: ErrorContext(
+                    feature: "Notice",
+                    action: "handleUpdateVote",
+                    retryAction: { [weak self] in
+                        guard let self else { return }
+                        Task { await self.handleUpdateVote(voteId: voteId, optionIds: optionIds) }
+                    }
+                )
+            )
+        } catch let error as NetworkError {
+            isSubmittingVote = false
+            if case .requestFailed(_, let data) = error,
+               let data,
+               let parsed = try? JSONDecoder().decode(
+                   APIResponse<EmptyResult>.self, from: data
+               ) {
+                alertPrompt = AlertPrompt(
+                    id: .init(),
+                    title: "투표 실패",
+                    message: parsed.message ?? error.userMessage,
+                    positiveBtnTitle: "확인"
+                )
+            } else {
+                errorHandler.handle(
+                    error,
+                    context: ErrorContext(
+                        feature: "Notice",
+                        action: "handleUpdateVote",
+                        retryAction: { [weak self] in
+                            guard let self else { return }
+                            Task {
+                                await self.handleUpdateVote(
+                                    voteId: voteId,
+                                    optionIds: optionIds
+                                )
+                            }
+                        }
+                    )
+                )
+            }
         } catch {
             isSubmittingVote = false
             errorHandler.handle(
                 error,
                 context: ErrorContext(
                     feature: "Notice",
-                    action: "handleVote",
+                    action: "handleUpdateVote",
                     retryAction: { [weak self] in
-                        guard let self = self else { return }
+                        guard let self else { return }
                         Task {
-                            await self.handleVote(voteId: voteId, optionIds: optionIds)
+                            await self.handleUpdateVote(
+                                voteId: voteId,
+                                optionIds: optionIds
+                            )
                         }
                     }
                 )

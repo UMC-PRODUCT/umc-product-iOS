@@ -58,11 +58,13 @@ struct NoticeDetailVoteOptionDTO: Codable {
     let optionId: String
     let content: String
     let voteCount: String
+    let selectedMemberIds: [String]
 
     private enum CodingKeys: String, CodingKey {
         case optionId
         case content
         case voteCount
+        case selectedMemberIds
     }
 
     init(from decoder: Decoder) throws {
@@ -70,10 +72,16 @@ struct NoticeDetailVoteOptionDTO: Codable {
         self.optionId = try container.decodeStringFlexible(forKey: .optionId)
         self.content = try container.decode(String.self, forKey: .content)
         self.voteCount = try container.decodeStringFlexible(forKey: .voteCount)
+        self.selectedMemberIds = (try? container.decodeStringArrayFlexible(forKey: .selectedMemberIds)) ?? []
     }
 
     func toDomain() -> VoteOption {
-        VoteOption(id: optionId, title: content, voteCount: Int(voteCount) ?? 0)
+        VoteOption(
+            id: optionId,
+            title: content,
+            voteCount: Int(voteCount) ?? 0,
+            selectedMemberIds: selectedMemberIds
+        )
     }
 }
 

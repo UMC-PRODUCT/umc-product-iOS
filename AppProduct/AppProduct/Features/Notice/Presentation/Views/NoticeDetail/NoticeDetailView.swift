@@ -223,11 +223,24 @@ struct NoticeDetailView: View {
             }
 
             if let vote = data.vote {
-                NoticeVoteCard(vote: vote, isSubmitting: viewModel.isSubmittingVote) { optionIds in
-                    Task {
-                        await viewModel.handleVote(voteId: vote.id, optionIds: optionIds)
+                NoticeVoteCard(
+                    vote: vote,
+                    isSubmitting: viewModel.isSubmittingVote,
+                    container: di,
+                    onVote: { optionIds in
+                        Task {
+                            await viewModel.handleVote(voteId: vote.id, optionIds: optionIds)
+                        }
+                    },
+                    onUpdateVote: { optionIds in
+                        Task {
+                            await viewModel.handleUpdateVote(
+                                voteId: vote.id,
+                                optionIds: optionIds
+                            )
+                        }
                     }
-                }
+                )
                 .padding(
                     .top,
                     (data.images.isEmpty && data.links.isEmpty)

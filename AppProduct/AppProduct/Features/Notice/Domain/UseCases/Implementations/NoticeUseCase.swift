@@ -180,6 +180,14 @@ final class NoticeUseCase: NoticeUseCaseProtocol {
         }
         try await repository.submitVoteResponse(voteId: voteId, optionIds: optionIds)
     }
+
+    /// 투표 응답 수정 (빈 배열 전송 시 투표 해제)
+    func updateVoteResponse(voteId: Int, optionIds: [Int]) async throws {
+        guard voteId > 0 else {
+            throw DomainError.custom(message: "유효하지 않은 투표입니다")
+        }
+        try await repository.updateVoteResponse(voteId: voteId, optionIds: optionIds)
+    }
     
     /// 미확인 대상에게 공지 리마인더 발송
     func sendReminder(noticeId: Int, targetIds: [Int]) async throws {
