@@ -40,6 +40,8 @@ struct ScheduleDetailDTO: Codable, Sendable, Equatable {
     let dDay: Int
     /// 출석 승인 필요 여부
     let requiresAttendanceApproval: Bool
+    /// 참여자 멤버 ID 목록
+    let participantMemberIds: [Int]
 
     private enum CodingKeys: String, CodingKey {
         case scheduleId
@@ -57,6 +59,7 @@ struct ScheduleDetailDTO: Codable, Sendable, Equatable {
         case status
         case dDay
         case requiresAttendanceApproval
+        case participantMemberIds
     }
 
     init(from decoder: Decoder) throws {
@@ -80,6 +83,7 @@ struct ScheduleDetailDTO: Codable, Sendable, Equatable {
         status = try container.decodeIfPresent(String.self, forKey: .status) ?? ""
         dDay = try container.decodeIntFlexibleIfPresent(forKey: .dDay) ?? 0
         requiresAttendanceApproval = try container.decodeBoolFlexibleIfPresent(forKey: .requiresAttendanceApproval) ?? false
+        participantMemberIds = try container.decodeIfPresent([Int].self, forKey: .participantMemberIds) ?? []
     }
 
     func encode(to encoder: Encoder) throws {
@@ -97,6 +101,7 @@ struct ScheduleDetailDTO: Codable, Sendable, Equatable {
         try container.encode(status, forKey: .status)
         try container.encode(dDay, forKey: .dDay)
         try container.encode(requiresAttendanceApproval, forKey: .requiresAttendanceApproval)
+        try container.encode(participantMemberIds, forKey: .participantMemberIds)
     }
 }
 
@@ -121,7 +126,8 @@ extension ScheduleDetailDTO {
             longitude: longitude,
             status: status,
             dDay: dDay,
-            requiresAttendanceApproval: requiresAttendanceApproval
+            requiresAttendanceApproval: requiresAttendanceApproval,
+            participantMemberIds: participantMemberIds
         )
     }
 

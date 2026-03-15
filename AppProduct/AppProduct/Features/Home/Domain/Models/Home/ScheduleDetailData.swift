@@ -26,4 +26,6 @@ struct ScheduleDetailData: Equatable, Identifiable, ScheduleDDayDisplayable {
     /// D-Day 값 (양수: 미래, 음수: 과거)
     let dDay: Int
     let requiresAttendanceApproval: Bool
+    /// 참여자 멤버 ID 목록
+    let participantMemberIds: [Int]
 }
