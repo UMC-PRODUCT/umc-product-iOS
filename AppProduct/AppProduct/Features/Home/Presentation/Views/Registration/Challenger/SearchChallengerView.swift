@@ -17,12 +17,18 @@ struct SearchChallengerView: View {
     // MARK: - Properties
 
     @Environment(\.dismiss) private var dismiss
-    
+
     /// 상위 뷰와 공유되는 선택된 챌린저 리스트 바인딩
     @Binding var selectedChallengers: [ChallengerInfo]
-    
+
     /// 검색 화면의 상태 및 로직을 관리하는 뷰 모델
     @State var viewModel: SearchChallengerViewModel
+
+    /// 검색창 입력 텍스트 (로컬 상태로 관리하여 바인딩 지연 방지)
+    @State private var searchText = ""
+
+    /// 디바운스용 검색 Task
+    @State private var searchTask: Task<Void, Never>?
 
     private enum Constants {
         static let loadingMessage: String = "챌린저 목록을 불러오는 중입니다."
@@ -49,7 +55,7 @@ struct SearchChallengerView: View {
     
     var body: some View {
         stateContent
-        .searchable(text: $viewModel.searchText, prompt: "이름 또는 닉네임으로 검색해보세요")
+        .searchable(text: $searchText, prompt: "이름 또는 닉네임으로 검색해보세요")
         .searchPresentationToolbarBehavior(.avoidHidingContent)
         .navigation(naviTitle: .searchChallenger, displayMode: .inline)
         .toolbar(content: {
@@ -73,11 +79,11 @@ struct SearchChallengerView: View {
         .task {
             initializeSelectedIds()
         }
-        .onChange(of: viewModel.searchText) {
-            viewModel.scheduleSearch()
+        .onChange(of: searchText) { _, newValue in
+            handleSearchChanged(newValue)
         }
         .onDisappear {
-            viewModel.cancelSearch()
+            searchTask?.cancel()
         }
     }
     
@@ -114,7 +120,7 @@ struct SearchChallengerView: View {
                 retryTitle: Constants.failedRetryTitle,
                 isRetrying: viewModel.loadState.isLoading
             ) {
-                await viewModel.loadInitialChallengers()
+                await viewModel.retrySearch()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -133,7 +139,7 @@ struct SearchChallengerView: View {
         ContentUnavailableView(
             "검색 결과가 없습니다",
             systemImage: "magnifyingglass",
-            description: Text("'\(viewModel.searchText)'에 대한 검색 결과를 찾을 수 없습니다.\n다른 검색어를 입력해보세요.")
+            description: Text("'\(searchText)'에 대한 검색 결과를 찾을 수 없습니다.\n다른 검색어를 입력해보세요.")
         )
     }
     
@@ -193,6 +199,22 @@ struct SearchChallengerView: View {
         viewModel.selectedChallengersMap = selectionMap
     }
     
+    /// 검색어 변경 시 디바운스 적용 후 검색 실행
+    private func handleSearchChanged(_ newValue: String) {
+        searchTask?.cancel()
+        let keyword = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !keyword.isEmpty else {
+            viewModel.clearSearch()
+            return
+        }
+        viewModel.showLoading()
+        searchTask = Task {
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            await viewModel.performSearch(keyword: keyword)
+        }
+    }
+
     /// CSV 파일 가져오기 완료 후 처리 액션
     private func csvImportAction(result: Result<[URL], Error>) {
         switch result {

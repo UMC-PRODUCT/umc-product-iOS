@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import UniformTypeIdentifiers
 
 /// 챌린저 검색 화면의 비즈니스 로직을 담당하는 뷰 모델입니다.
 ///
@@ -28,9 +27,6 @@ final class SearchChallengerViewModel {
     /// 선택된 챌린저 정보를 별도 보관 (검색 결과 교체 시에도 유지)
     var selectedChallengersMap: [String: ChallengerInfo] = [:]
 
-    /// 검색창 입력 텍스트
-    var searchText: String = ""
-
     /// CSV 파일 가져오기 문서 피커 표시 여부
     var showCSVImporter: Bool = false
 
@@ -49,20 +45,11 @@ final class SearchChallengerViewModel {
     /// 현재 검색 컨텍스트의 키워드
     private var currentKeyword: String = ""
 
-    /// 디바운스용 검색 태스크
-    private var debounceTask: Task<Void, Never>?
-
-    /// 진행 중인 검색 요청 태스크
-    private var searchTask: Task<Void, Never>?
-
     /// 최신 검색 요청 식별자
     private var latestRequestID: UUID = UUID()
 
     /// 다음 페이지 중복 호출 방지 플래그
     private var isFetchingNextPage: Bool = false
-
-    private let debounceNanoseconds: UInt64
-    private let sleep: @Sendable (UInt64) async throws -> Void
 
     // MARK: - Init
 
@@ -70,73 +57,42 @@ final class SearchChallengerViewModel {
     init(container: DIContainer) {
         let provider = container.resolve(HomeUseCaseProviding.self)
         self.searchChallengersUseCase = provider.searchChallengersUseCase
-        self.debounceNanoseconds = 1_000_000_000
-        self.sleep = { nanoseconds in
-            try await Task.sleep(nanoseconds: nanoseconds)
-        }
     }
 
-    init(
-        searchChallengersUseCase: SearchChallengersUseCaseProtocol,
-        debounceNanoseconds: UInt64 = 1_000_000_000,
-        sleep: @escaping @Sendable (UInt64) async throws -> Void = { nanoseconds in
-            try await Task.sleep(nanoseconds: nanoseconds)
-        }
-    ) {
+    init(searchChallengersUseCase: SearchChallengersUseCaseProtocol) {
         self.searchChallengersUseCase = searchChallengersUseCase
-        self.debounceNanoseconds = debounceNanoseconds
-        self.sleep = sleep
     }
 
     // MARK: - Function
 
-    /// 화면 진입 또는 검색어 초기화 시 현재 검색 조건으로 첫 페이지를 로드합니다.
+    /// 현재 검색 키워드로 재검색합니다 (재시도 용도).
     @MainActor
-    func loadInitialChallengers() async {
-        let keyword = normalizedSearchText
-        guard !keyword.isEmpty else {
+    func retrySearch() async {
+        guard !currentKeyword.isEmpty else {
             resetSearchState()
             return
         }
+        let requestID = prepareSearch(keyword: currentKeyword)
+        await fetchChallengers(keyword: currentKeyword, requestID: requestID)
+    }
 
+    /// 키워드로 챌린저를 검색합니다.
+    @MainActor
+    func performSearch(keyword: String) async {
         let requestID = prepareSearch(keyword: keyword)
         await fetchChallengers(keyword: keyword, requestID: requestID)
     }
 
-    /// 검색어 변경 시 디바운스를 적용해 챌린저 목록을 다시 조회합니다.
+    /// 검색 상태를 초기화합니다.
     @MainActor
-    func scheduleSearch() {
-        debounceTask?.cancel()
-        let keyword = normalizedSearchText
-        guard !keyword.isEmpty else {
-            searchTask?.cancel()
-            latestRequestID = UUID()
-            resetSearchState()
-            return
-        }
-
-        let requestID = prepareSearch(keyword: keyword)
-
-        debounceTask = Task { [weak self] in
-            guard let self else { return }
-            do {
-                try await sleep(debounceNanoseconds)
-            } catch {
-                return
-            }
-
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                self.startSearchTask(keyword: keyword, requestID: requestID)
-            }
-        }
+    func clearSearch() {
+        resetSearchState()
     }
 
-    /// 더 이상 필요 없는 검색 태스크를 정리합니다.
+    /// 로딩 상태로 전환합니다.
     @MainActor
-    func cancelSearch() {
-        debounceTask?.cancel()
-        searchTask?.cancel()
+    func showLoading() {
+        loadState = .loading
     }
 
     /// 현재 검색 키워드 기준으로 첫 페이지를 조회합니다.
@@ -153,6 +109,7 @@ final class SearchChallengerViewModel {
             self.nextCursor = nextCursor
             loadState = .loaded(true)
         } catch {
+            guard !Task.isCancelled else { return }
             guard latestRequestID == requestID else { return }
             allChallengers = []
             nextCursor = nil
@@ -183,14 +140,6 @@ final class SearchChallengerViewModel {
 // MARK: - Helpers
 private extension SearchChallengerViewModel {
     @MainActor
-    func startSearchTask(keyword: String, requestID: UUID) {
-        searchTask = Task { [weak self] in
-            guard let self else { return }
-            await self.fetchChallengers(keyword: keyword, requestID: requestID)
-        }
-    }
-
-    @MainActor
     func prepareSearch(keyword: String) -> UUID {
         let requestID = UUID()
         latestRequestID = requestID
@@ -199,10 +148,6 @@ private extension SearchChallengerViewModel {
         nextCursor = nil
         hasNext = false
         return requestID
-    }
-
-    var normalizedSearchText: String {
-        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     @MainActor
