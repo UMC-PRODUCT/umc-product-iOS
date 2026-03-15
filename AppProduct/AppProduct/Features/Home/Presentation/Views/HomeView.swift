@@ -5,6 +5,7 @@
 //  Created by euijjang97 on 1/19/26.
 //
 
+import StoreKit
 import SwiftUI
 import ClockKit
 
@@ -19,6 +20,8 @@ struct HomeView: View {
     @Environment(\.di) var di
     /// 에러 핸들러 객체
     @Environment(ErrorHandler.self) var errorHandler
+    /// 앱 리뷰 요청
+    @Environment(\.requestReview) private var requestReview
 
     /// 홈 화면의 비즈니스 로직을 담당하는 뷰 모델
     @State private var viewModel: HomeViewModel
@@ -113,6 +116,7 @@ struct HomeView: View {
             .task {
                 guard shouldFetchOnTask else { return }
                 await viewModel.fetchAllIfNeeded()
+                requestReviewIfNeeded()
             }
             .task(id: pathStore.homePath.count) {
                 guard shouldFetchOnTask else { return }
@@ -344,6 +348,20 @@ struct HomeView: View {
                 Task { await retryRecentNoticeSection() }
             }
         }
+    }
+
+    /// 마지막 리뷰 요청으로부터 4주 경과 시 앱 리뷰를 요청합니다.
+    private func requestReviewIfNeeded() {
+        let key = "lastReviewRequestDate"
+        let fourWeeks: TimeInterval = 60 * 60 * 24 * 28
+
+        if let lastDate = UserDefaults.standard.object(forKey: key) as? Date,
+           Date().timeIntervalSince(lastDate) < fourWeeks {
+            return
+        }
+
+        UserDefaults.standard.set(Date(), forKey: key)
+        requestReview()
     }
 
     /// 프로필 섹션(기수 카드 + 패널티) 재시도

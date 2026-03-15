@@ -5,7 +5,6 @@
 //  Created by euijjang97 on 1/28/26.
 //
 
-import StoreKit
 import SwiftUI
 
 /// MyPage에서 앱 정보(버전 등)를 표시하는 Section 컴포넌트
@@ -15,10 +14,10 @@ struct InfoSection: View {
     // MARK: - Property
 
     @Environment(\.di) private var di
-    @Environment(\.requestReview) private var requestReview
 
     private enum Constants {
         static let appStoreURLString = "https://apps.apple.com/us/app/umc/id6759412446"
+        static let appStoreReviewURLString = "https://apps.apple.com/app/id6759412446?action=write-review"
         static let appName = "UMC"
         static let shareDescription = "UMC 동아리 운영을 한 곳에서 관리할 수 있는 앱이에요."
     }
@@ -65,7 +64,9 @@ struct InfoSection: View {
                 MyPageSectionRow(systemIcon: "info.circle", title: "버전", rightText: appVersion, iconBackgroundColor: .cyan)
                
                 Button {
-                    requestReview()
+                    if let url = URL(string: Constants.appStoreReviewURLString) {
+                        UIApplication.shared.open(url)
+                    }
                 } label: {
                     MyPageSectionRow(
                         systemIcon: "star.fill",
