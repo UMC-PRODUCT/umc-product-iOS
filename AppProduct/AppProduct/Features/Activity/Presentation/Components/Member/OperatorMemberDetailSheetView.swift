@@ -206,6 +206,9 @@ struct OperatorMemberDetailSheetView: View {
                 .appFont(.bodyEmphasis)
             statusChip(title: member.part.name, style: .accent)
             statusChip(title: member.school, style: .plain)
+            if member.managementTeam != .challenger {
+                ManagementTeamBadgePresenter(managementTeam: member.managementTeam)
+            }
         }
     }
     

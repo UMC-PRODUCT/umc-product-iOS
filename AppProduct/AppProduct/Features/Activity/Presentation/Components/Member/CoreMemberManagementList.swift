@@ -47,7 +47,8 @@ struct CoreMemberManagementList: View {
             
             switch mode {
             case .management:
-                // 운영진 모드: 페널티 뱃지 (0이 아닐 때만)
+                // 운영진 모드: 직책 뱃지 + 페널티 뱃지
+                ManagementTeamBadgePresenter(managementTeam: memberManagementItem.managementTeam)
                 if memberManagementItem.penalty != 0 {
                     PenaltyBadgePresenter(penalty: memberManagementItem.penalty)
                 }
