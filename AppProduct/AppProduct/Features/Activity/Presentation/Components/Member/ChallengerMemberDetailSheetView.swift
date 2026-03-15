@@ -102,10 +102,10 @@ struct ChallengerMemberDetailSheetView: View {
         HStack(spacing: DefaultSpacing.spacing12) {
             RemoteImage(urlString: member.profile ?? "", size: Constants.profileSize)
 
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
                 Text("\(member.nickname)/\(member.name)")
                     .appFont(.bodyEmphasis)
-                HStack(spacing: DefaultSpacing.spacing4) {
+                HStack(spacing: DefaultSpacing.spacing8) {
                     Text(member.part.name)
                         .appFont(.callout, color: member.part.color)
                         .padding(Constants.tagPadding)
@@ -211,7 +211,7 @@ struct ChallengerMemberDetailSheetView: View {
                     profile: nil,
                     name: "김미주",
                     nickname: "마티",
-                    generation: "9기",
+                    generation: "7기, 8기, 9기",
                     school: "덕성여자대학교",
                     position: "Challenger",
                     part: .front(type: .ios),

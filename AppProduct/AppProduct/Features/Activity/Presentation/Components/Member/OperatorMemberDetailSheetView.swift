@@ -200,10 +200,10 @@ struct OperatorMemberDetailSheetView: View {
     }
     
     private var memberMetadataView: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Text("\(member.nickname)/\(member.name)")
                 .appFont(.bodyEmphasis)
-            HStack(spacing: DefaultSpacing.spacing4) {
+            HStack(spacing: DefaultSpacing.spacing8) {
                 statusChip(title: member.part.name, style: .accent)
                 statusChip(title: member.school, style: .plain)
                 if member.managementTeam != .challenger {
