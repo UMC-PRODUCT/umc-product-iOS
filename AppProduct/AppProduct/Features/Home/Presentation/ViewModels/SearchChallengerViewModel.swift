@@ -211,11 +211,14 @@ extension SearchChallengerViewModel {
             let searchName = columns[0]
             let searchNickname = columns.count > 1 ? columns[1] : ""
 
-            // 이름 또는 닉네임으로 챌린저 찾기
+            // 이름 또는 닉네임으로 챌린저 찾기 (동일 memberId 전체 선택)
             if let matched = findChallenger(name: searchName, nickname: searchNickname) {
-                let key = matched.selectionKey
-                selectedKeys.insert(key)
-                selectedChallengersMap[key] = matched
+                let siblings = allChallengers.filter { $0.memberId == matched.memberId }
+                for sibling in siblings {
+                    let key = sibling.selectionKey
+                    selectedKeys.insert(key)
+                    selectedChallengersMap[key] = sibling
+                }
                 matchedCount += 1
             } else {
                 unmatchedNames.append("\(searchName)/\(searchNickname)")
