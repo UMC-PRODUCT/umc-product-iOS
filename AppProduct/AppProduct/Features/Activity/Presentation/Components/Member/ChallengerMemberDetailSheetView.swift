@@ -107,9 +107,13 @@ struct ChallengerMemberDetailSheetView: View {
                     .appFont(.bodyEmphasis)
                 HStack(spacing: DefaultSpacing.spacing4) {
                     Text(member.part.name)
-                        .appFont(.callout, color: .gray)
+                        .appFont(.calloutEmphasis, color: member.part.color)
                         .padding(Constants.tagPadding)
-                        .background(.white, in: Capsule())
+                        .background(member.part.color.opacity(0.14), in: Capsule())
+                        .overlay {
+                            Capsule()
+                                .stroke(member.part.color.opacity(0.4), lineWidth: 1)
+                        }
                     Text(member.school)
                         .appFont(.callout, color: .black)
                         .padding(Constants.tagPadding)

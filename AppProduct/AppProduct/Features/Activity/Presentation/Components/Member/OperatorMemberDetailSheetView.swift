@@ -33,7 +33,7 @@ struct OperatorMemberDetailSheetView: View {
         static let fixedPenaltyScore: Double = 1.0
         static let contentHorizontalPadding: CGFloat = 16
         static let contentTopPadding: CGFloat = 8
-        static let contentBottomPadding: CGFloat = 16
+        static let contentBottomPadding: CGFloat = 0
         static let contentSpacing: CGFloat = 24
         
         static let baseHeight: CGFloat = 340
@@ -115,7 +115,6 @@ struct OperatorMemberDetailSheetView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .toolbar { toolbarItems }
             .padding(.horizontal, Constants.contentHorizontalPadding)
-            .padding(.top, Constants.contentTopPadding)
             .padding(.bottom, Constants.contentBottomPadding)
             .scrollContentBackground(.hidden)
             .presentationDetents([.height(dynamicSheetHeight)])
