@@ -31,6 +31,9 @@ struct ChallengerFormView: View {
 
     /// 마지막 아이템이 화면에 나타났을 때 호출 (페이지네이션용)
     let onBottomReached: (() -> Void)?
+
+    /// 삭제 불가능한 멤버 ID 집합 (생성자 보호 등)
+    let nonDeletableMemberIds: Set<Int>
     
     // MARK: - Init
     
@@ -48,7 +51,8 @@ struct ChallengerFormView: View {
         showCheckBox: Bool = false,
         selectedIds: Binding<Set<String>> = .constant([]),
         tap: ((ChallengerInfo) -> Void)? = nil,
-        onBottomReached: (() -> Void)? = nil
+        onBottomReached: (() -> Void)? = nil,
+        nonDeletableMemberIds: Set<Int> = []
     ) {
         self._challenger = challenger
         self.isDeletAction = isDeletAction
@@ -56,6 +60,7 @@ struct ChallengerFormView: View {
         self._selectedIds = selectedIds
         self.tap = tap
         self.onBottomReached = onBottomReached
+        self.nonDeletableMemberIds = nonDeletableMemberIds
     }
     
     // MARK: - Body
@@ -83,6 +88,7 @@ struct ChallengerFormView: View {
                 )
                 .equatable()
                 .contentShape(Rectangle()) // 터치 영역 확장
+                .deleteDisabled(nonDeletableMemberIds.contains(participant.memberId))
                 .onTapGesture {
                     tap?(participant)
                 }

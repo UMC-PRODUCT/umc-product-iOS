@@ -315,7 +315,12 @@ class ScheduleRegistrationViewModel {
         submitState = .loading
         var participantMemberIds: [Int]? = nil
         if !participatn.isEmpty {
-            participantMemberIds = Array(Set(participatn.map(\.memberId))).sorted()
+            var memberIds = Array(Set(participatn.map(\.memberId))).sorted()
+            let myMemberId = UserDefaults.standard.integer(forKey: AppStorageKey.memberId)
+            if myMemberId != 0, !memberIds.contains(myMemberId) {
+                memberIds.append(myMemberId)
+            }
+            participantMemberIds = memberIds
         }
         let dto = UpdateScheduleRequestDTO(
             name: title,

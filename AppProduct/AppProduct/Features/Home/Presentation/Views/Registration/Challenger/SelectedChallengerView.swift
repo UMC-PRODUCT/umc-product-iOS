@@ -26,6 +26,12 @@ struct SelectedChallengerView: View {
 
     /// 챌린저 검색 화면으로의 네비게이션 활성화 여부
     @State var searchNavi: Bool = false
+
+    /// 현재 사용자의 memberId (삭제 방지용)
+    private var myMemberIdSet: Set<Int> {
+        let id = UserDefaults.standard.integer(forKey: AppStorageKey.memberId)
+        return id != 0 ? [id] : []
+    }
     
     // MARK: - Body
     
@@ -65,7 +71,11 @@ struct SelectedChallengerView: View {
             unSelectedContent
         } else {
             // 선택된 인원이 있으면 리스트 폼 표시 (삭제 가능 모드)
-            ChallengerFormView(challenger: $challenger, isDeletAction: true)
+            ChallengerFormView(
+                challenger: $challenger,
+                isDeletAction: true,
+                nonDeletableMemberIds: myMemberIdSet
+            )
         }
     }
     
