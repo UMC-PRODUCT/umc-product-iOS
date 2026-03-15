@@ -145,17 +145,25 @@ struct SearchChallengerView: View {
     
     // MARK: - Actions
     
-    /// 챌린저 선택/해제 토글 (행 식별 키 기반)
+    /// 챌린저 선택/해제 토글 (memberId 기준 동시 선택)
     ///
+    /// 동일 memberId를 가진 모든 기수 챌린저를 함께 선택/해제합니다.
     /// 선택 시 `selectedChallengersMap`에 보관하여 검색 결과가 바뀌어도 선택 정보 유지
     private func toggleSelection(participant: ChallengerInfo) {
         let key = participant.selectionKey
-        if viewModel.selectedKeys.contains(key) {
-            viewModel.selectedKeys.remove(key)
-            viewModel.selectedChallengersMap.removeValue(forKey: key)
-        } else {
-            viewModel.selectedKeys.insert(key)
-            viewModel.selectedChallengersMap[key] = participant
+        let isSelected = viewModel.selectedKeys.contains(key)
+        let siblings = viewModel.allChallengers.filter {
+            $0.memberId == participant.memberId
+        }
+        for sibling in siblings {
+            let siblingKey = sibling.selectionKey
+            if isSelected {
+                viewModel.selectedKeys.remove(siblingKey)
+                viewModel.selectedChallengersMap.removeValue(forKey: siblingKey)
+            } else {
+                viewModel.selectedKeys.insert(siblingKey)
+                viewModel.selectedChallengersMap[siblingKey] = sibling
+            }
         }
     }
 
