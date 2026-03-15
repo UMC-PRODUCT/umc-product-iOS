@@ -71,6 +71,12 @@ struct ScheduleRegistrationView: View {
     var body: some View {
         formContent
             .scrollDismissesKeyboard(.immediately)
+            .onTapGesture {
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder),
+                    to: nil, from: nil, for: nil
+                )
+            }
             .navigation(naviTitle: navigationTitle, displayMode: .inline)
             .toolbar { toolbarContent }
             .onChange(of: viewModel.submitState) {
