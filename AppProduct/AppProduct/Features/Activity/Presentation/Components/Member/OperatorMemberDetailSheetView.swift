@@ -223,7 +223,7 @@ struct OperatorMemberDetailSheetView: View {
         switch style {
         case .accent:
             Text(title)
-                .appFont(.calloutEmphasis, color: partTint)
+                .appFont(.callout, color: partTint)
                 .padding(Constants.tagPadding)
                 .background(partTint.opacity(0.14), in: Capsule())
                 .overlay {
