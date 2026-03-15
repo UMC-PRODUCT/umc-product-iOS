@@ -201,13 +201,15 @@ struct OperatorMemberDetailSheetView: View {
     }
     
     private var memberMetadataView: some View {
-        HStack(spacing: DefaultSpacing.spacing8) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             Text("\(member.nickname)/\(member.name)")
                 .appFont(.bodyEmphasis)
-            statusChip(title: member.part.name, style: .accent)
-            statusChip(title: member.school, style: .plain)
-            if member.managementTeam != .challenger {
-                ManagementTeamBadgePresenter(managementTeam: member.managementTeam)
+            HStack(spacing: DefaultSpacing.spacing4) {
+                statusChip(title: member.part.name, style: .accent)
+                statusChip(title: member.school, style: .plain)
+                if member.managementTeam != .challenger {
+                    ManagementTeamBadgePresenter(managementTeam: member.managementTeam)
+                }
             }
         }
     }
