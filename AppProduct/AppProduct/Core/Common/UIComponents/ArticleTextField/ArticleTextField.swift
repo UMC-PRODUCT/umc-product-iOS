@@ -8,15 +8,17 @@
 import SwiftUI
 
 struct ArticleTextField: View {
-    
+
     // MARK: - Property
+
     let placeholder: ArticleTextFieldType
     @Binding var text: String
     private let focused: FocusState<Bool>.Binding?
     private let submitLabel: SubmitLabel
     private let onSubmit: (() -> Void)?
-    
+
     // MARK: - Initializer
+
     init(
         placeholder: ArticleTextFieldType,
         text: Binding<String>,
@@ -30,9 +32,21 @@ struct ArticleTextField: View {
         self.submitLabel = submitLabel
         self.onSubmit = onSubmit
     }
-    
+
     // MARK: - Body
+
     var body: some View {
+        switch placeholder {
+        case .title:
+            titleField
+        case .content:
+            contentEditor
+        }
+    }
+
+    // MARK: - Function
+
+    private var titleField: some View {
         let field = TextField(
             "",
             text: $text,
@@ -46,15 +60,43 @@ struct ArticleTextField: View {
             onSubmit?()
         }
 
-        if let focused {
-            field.focused(focused)
-        } else {
-            field
+        return Group {
+            if let focused {
+                field.focused(focused)
+            } else {
+                field
+            }
+        }
+    }
+
+    private var contentEditor: some View {
+        let editor = TextEditor(text: $text)
+            .font(.app(placeholder.placeholderFont))
+            .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
+            .overlay(alignment: .topLeading) {
+                if text.isEmpty && focused?.wrappedValue != true {
+                    Text(placeholder.placeholderLabel)
+                        .font(.app(placeholder.placeholderFont))
+                        .foregroundStyle(.placeholder)
+                        .padding(.top, 8)
+                        .padding(.leading, 5)
+                        .allowsHitTesting(false)
+                }
+            }
+
+        return Group {
+            if let focused {
+                editor.focused(focused)
+            } else {
+                editor
+            }
         }
     }
 }
 
 // MARK: - Preview
+
 #Preview {
     @Previewable @State var text = ""
     ArticleTextField(placeholder: .title, text: $text)

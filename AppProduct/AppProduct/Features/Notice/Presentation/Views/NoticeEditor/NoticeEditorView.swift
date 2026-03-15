@@ -44,6 +44,14 @@ struct NoticeEditorView: View {
     @FocusState private var isTitleFieldFocused: Bool
     @FocusState private var isContentFieldFocused: Bool
 
+    /// ScrollView 높이 (본문 영역이 남은 공간을 채우기 위해 사용)
+    @State private var scrollViewHeight: CGFloat = 0
+
+    /// 본문이 화면을 꽉 채우도록 최소 높이 계산
+    private var editorMinHeight: CGFloat {
+        max(scrollViewHeight, 400)
+    }
+
     // MARK: - Initializer
 
     init(
@@ -77,7 +85,7 @@ struct NoticeEditorView: View {
         static let targetSheetSmallDetentFraction: CGFloat = 0.38
 
         /// 하단 액세서리와 본문이 겹치지 않도록 확보하는 여백
-        static let contentBottomInset: CGFloat = 30
+        static let contentBottomInset: CGFloat = 0
 
         /// 링크 카드와 하단 액세서리 사이 추가 간격
         static let linkSectionBottomPadding: CGFloat = DefaultSpacing.spacing8
@@ -96,6 +104,7 @@ struct NoticeEditorView: View {
         ScrollViewReader { proxy in
             ScrollView(.vertical) {
                 editorMainContent
+                    .frame(minHeight: editorMinHeight)
             }
             .onChange(of: viewModel.noticeLinks.count) { oldValue, newValue in
                 handleNoticeLinksCountChanged(oldValue: oldValue, newValue: newValue, proxy: proxy)
@@ -107,7 +116,12 @@ struct NoticeEditorView: View {
                 handleVoteConfirmStateChanged(oldValue: oldValue, newValue: newValue, proxy: proxy)
             }
         }
-        .scrollDismissesKeyboard(.immediately)
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.height
+        } action: { newValue in
+            scrollViewHeight = newValue
+        }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle(navigationTitle)
         .navigationSubtitle(navigationSubtitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -289,7 +303,7 @@ struct NoticeEditorView: View {
                 text: $viewModel.content,
                 focused: $isContentFieldFocused
             )
-            .frame(minHeight: 200, alignment: .top)
+            .frame(maxHeight: .infinity, alignment: .top)
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         .padding(.top, DefaultSpacing.spacing24)
