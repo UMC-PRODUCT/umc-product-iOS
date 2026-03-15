@@ -226,6 +226,11 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
         }
         .sorted { $0.date > $1.date }
     }
+
+    func fetchAllGenerations(memberId: Int) async throws -> String {
+        let profile = try await fetchMemberProfile(memberId: memberId)
+        return allGenerationsText(from: profile, fallback: "")
+    }
 }
 
 // MARK: - Private Helper

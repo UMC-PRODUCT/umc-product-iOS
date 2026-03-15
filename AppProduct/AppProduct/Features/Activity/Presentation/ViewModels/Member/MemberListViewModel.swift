@@ -176,9 +176,13 @@ final class MemberListViewModel {
         async let penaltyHistoryTask = try? fetchMembersUseCase.fetchOutPenaltyHistory(
             challengerId: challengerId
         )
+        async let generationsTask = try? fetchMembersUseCase.fetchAllGenerations(
+            memberId: member.memberID ?? 0
+        )
 
         let records = await recordsTask ?? member.attendanceRecords
         let penaltyHistory = await penaltyHistoryTask ?? member.penaltyHistory
+        let generations = await generationsTask ?? member.generation
         let totalPenalty = penaltyHistory.isEmpty
             ? member.penalty
             : penaltyHistory.reduce(0) { $0 + $1.penaltyScore }
@@ -190,7 +194,7 @@ final class MemberListViewModel {
             profile: member.profile,
             name: member.name,
             nickname: member.nickname,
-            generation: member.generation,
+            generation: generations.isEmpty ? member.generation : generations,
             school: member.school,
             position: member.position,
             part: member.part,

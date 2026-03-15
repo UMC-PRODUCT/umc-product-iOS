@@ -32,4 +32,7 @@ protocol FetchMembersUseCaseProtocol {
     func fetchOutPenaltyHistory(
         challengerId: Int
     ) async throws -> [OperatorMemberPenaltyHistory]
+
+    /// 멤버 프로필에서 모든 활동 기수 텍스트를 조회합니다.
+    func fetchAllGenerations(memberId: Int) async throws -> String
 }
