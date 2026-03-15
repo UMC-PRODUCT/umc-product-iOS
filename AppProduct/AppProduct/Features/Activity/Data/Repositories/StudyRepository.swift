@@ -51,22 +51,7 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
             throw Self.parseCurriculumProgressError(from: error) ?? error
         }
 
-        let scheduleByWeek: [Int: WorkbookSchedule]
-        do {
-            let curriculumResponse = try await adapter.request(
-                StudyRouter.getCurriculum(part: progressDTO.part)
-            )
-            let curriculumAPIResponse = try decoder.decode(
-                APIResponse<CurriculumDTO>.self,
-                from: curriculumResponse.data
-            )
-            scheduleByWeek = try curriculumAPIResponse.unwrap().scheduleByWeek
-        } catch {
-            // 진행 상황 API만으로도 화면은 구성 가능하도록 보조 API 실패는 폴백 처리
-            scheduleByWeek = [:]
-        }
-
-        return progressDTO.toDomain(scheduleByWeek: scheduleByWeek)
+        return progressDTO.toDomain()
     }
 
     func fetchCurriculumProgress() async throws -> CurriculumProgressModel {

@@ -20,6 +20,8 @@ class ScheduleRegistrationViewModel {
     private let updateScheduleUseCase: UpdateScheduleUseCaseProtocol
     /// 일정 제목 기반 태그 자동 추천 UseCase
     private let classifyScheduleUseCase: ClassifyScheduleUseCase
+    /// 챌린저 검색 UseCase (수정 모드 참여자 조회용)
+    private let searchChallengersUseCase: SearchChallengersUseCaseProtocol
 
     /// 전역 에러 핸들러 (실패 시 Alert 표시용)
     private let errorHandler: ErrorHandler
@@ -73,6 +75,8 @@ class ScheduleRegistrationViewModel {
     private var initialEditSnapshot: EditFormSnapshot?
     /// 사용자가 태그를 직접 조정했는지 여부
     private var isTagManuallyOverridden: Bool = false
+    /// 수정 모드 프리필 시 서버에서 받은 참여자 멤버 ID 목록
+    private var prefillMemberIds: Set<Int> = []
 
     // MARK: - Init
 
@@ -82,6 +86,7 @@ class ScheduleRegistrationViewModel {
             generateScheduleUseCase: provider.generateScheduleUseCase,
             updateScheduleUseCase: provider.updateScheduleUseCase,
             classifyScheduleUseCase: provider.classifyScheduleUseCase,
+            searchChallengersUseCase: provider.searchChallengersUseCase,
             errorHandler: errorHandler
         )
     }
@@ -90,11 +95,13 @@ class ScheduleRegistrationViewModel {
         generateScheduleUseCase: GenerateScheduleUseCaseProtocol,
         updateScheduleUseCase: UpdateScheduleUseCaseProtocol,
         classifyScheduleUseCase: ClassifyScheduleUseCase,
+        searchChallengersUseCase: SearchChallengersUseCaseProtocol,
         errorHandler: ErrorHandler
     ) {
         self.generateScheduleUseCase = generateScheduleUseCase
         self.updateScheduleUseCase = updateScheduleUseCase
         self.classifyScheduleUseCase = classifyScheduleUseCase
+        self.searchChallengersUseCase = searchChallengersUseCase
         self.errorHandler = errorHandler
     }
 
@@ -119,6 +126,33 @@ class ScheduleRegistrationViewModel {
             .compactMap(Self.mapScheduleTag)
             .filter { !$0.isDeprecated }
         isTagManuallyOverridden = !tag.isEmpty
+        prefillMemberIds = Set(detail.participantMemberIds)
+        initialEditSnapshot = currentEditSnapshot
+    }
+
+    /// 수정 모드에서 서버의 참여자 멤버 ID를 기반으로 챌린저 정보를 조회하여 참여자 목록을 채웁니다.
+    @MainActor
+    func fetchPrefillParticipants() async {
+        guard !prefillMemberIds.isEmpty else { return }
+        var remainingIds = prefillMemberIds
+        var matched: [ChallengerInfo] = []
+        var cursor: Int? = nil
+        var hasNext = true
+
+        while hasNext, !remainingIds.isEmpty {
+            let query = ChallengerSearchRequestDTO(cursor: cursor)
+            guard let (challengers, nextHasNext, nextCursor) = try? await searchChallengersUseCase.execute(query: query) else {
+                break
+            }
+            for challenger in challengers where remainingIds.contains(challenger.memberId) {
+                matched.append(challenger)
+                remainingIds.remove(challenger.memberId)
+            }
+            hasNext = nextHasNext
+            cursor = nextCursor
+        }
+
+        participatn = matched
         initialEditSnapshot = currentEditSnapshot
     }
 

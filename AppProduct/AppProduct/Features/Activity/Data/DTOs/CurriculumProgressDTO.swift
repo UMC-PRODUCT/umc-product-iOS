@@ -86,7 +86,9 @@ extension ChallengerCurriculumProgressDTO {
         let missions = workbooks
             .map { $0.toDomain(platform: part, scheduleByWeek: scheduleByWeek, now: now) }
             .sorted { $0.week < $1.week }
-        let completed = Int(completedCount) ?? missions.filter { $0.status == .pass }.count
+        let serverCompleted = Int(completedCount) ?? 0
+        let localCompleted = missions.filter { $0.status == .pass }.count
+        let completed = max(serverCompleted, localCompleted)
         let total = Int(totalCount) ?? workbooks.count
         let currentTitle = currentCurriculumTitle
 

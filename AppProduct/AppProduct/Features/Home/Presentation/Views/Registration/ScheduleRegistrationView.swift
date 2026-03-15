@@ -78,6 +78,11 @@ struct ScheduleRegistrationView: View {
                     dismiss()
                 }
             }
+            .task {
+                if mode == .edit {
+                    await viewModel.fetchPrefillParticipants()
+                }
+            }
     }
 
     // MARK: - Private Function
