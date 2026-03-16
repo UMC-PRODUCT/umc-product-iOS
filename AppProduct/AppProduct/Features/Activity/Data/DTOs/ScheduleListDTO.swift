@@ -37,6 +37,11 @@ extension ScheduleListDTO {
     func toDomain() -> ScheduleAttendanceStats {
         ScheduleAttendanceStats(
             scheduleId: Int(scheduleId) ?? 0,
+            name: name,
+            date: date,
+            startTime: startTime,
+            endTime: endTime,
+            locationName: locationName,
             totalCount: Int(totalCount) ?? 0,
             presentCount: Int(presentCount) ?? 0,
             pendingCount: Int(pendingCount) ?? 0,

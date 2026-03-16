@@ -67,6 +67,7 @@ struct OperatorAttendancePreviewData {
                 attendanceRate: 0.85,
                 attendedCount: 34,
                 totalCount: 40,
+                pendingCount: pendingMembers.count,
                 pendingMembers: pendingMembers
             ),
             // 종료됨 - 모두 승인 완료
@@ -76,7 +77,7 @@ struct OperatorAttendancePreviewData {
                 attendanceRate: 1.0,
                 attendedCount: 40,
                 totalCount: 40,
-                pendingMembers: []
+                pendingCount: 0
             ),
             // 진행전 - 미래 세션
             OperatorSessionAttendance(
@@ -85,7 +86,7 @@ struct OperatorAttendancePreviewData {
                 attendanceRate: 0.0,
                 attendedCount: 0,
                 totalCount: 40,
-                pendingMembers: []
+                pendingCount: 0
             )
         ]
     }

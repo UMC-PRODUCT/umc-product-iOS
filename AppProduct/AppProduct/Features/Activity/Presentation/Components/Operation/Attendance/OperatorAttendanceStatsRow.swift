@@ -106,7 +106,7 @@ struct OperatorAttendanceStatsRow: View, Equatable {
                 attendanceRate: 0.85,
                 attendedCount: 34,
                 totalCount: 40,
-                pendingMembers: []
+                pendingCount: 0
             )
         )
         .padding()

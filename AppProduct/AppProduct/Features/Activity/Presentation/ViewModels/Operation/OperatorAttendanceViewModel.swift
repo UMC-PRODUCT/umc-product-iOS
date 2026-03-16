@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// 운영진 출석 관리 ViewModel
 ///
@@ -48,84 +49,97 @@ final class OperatorAttendanceViewModel {
 
     // MARK: - Action
 
-    /// 세션 목록에서 pending 출석 조회
+    /// 일정 목록 + pending 출석 조회
+    ///
+    /// `/api/v1/schedules` 응답을 기반으로 세션 목록을 구성합니다.
     @MainActor
-    func fetchSessions(from sessions: [Session]) async {
+    func fetchSessions() async {
         sessionsState = .loading
         var updatedSessions: [OperatorSessionAttendance] = []
 
-        // 출석 통계 조회 (실패 시 빈 딕셔너리)
-        let statsMap: [Int: ScheduleAttendanceStats]
+        // 일정 목록 조회 (/api/v1/schedules)
+        let statsList: [ScheduleAttendanceStats]
         do {
-            let statsList = try await useCase
-                .fetchScheduleStats()
-            statsMap = Dictionary(
-                statsList.map { ($0.scheduleId, $0) },
-                uniquingKeysWith: { _, last in last }
-            )
+            statsList = try await useCase.fetchScheduleStats()
         } catch {
-            statsMap = [:]
+            sessionsState = .failed(.unknown(
+                message: error.localizedDescription
+            ))
+            return
         }
 
-        // 승인 대기 목록 일괄 조회 (1번)
-        let pendingBySchedule: [Int: [PendingAttendanceRecord]]
-        do {
-            pendingBySchedule = try await useCase.fetchAllPendingAttendances()
-        } catch {
-            pendingBySchedule = [:]
-        }
-
-        for session in sessions {
-            let scheduleIdString = session.id.value
-            let scheduleId = Int(scheduleIdString)
-            let records = scheduleId.flatMap {
-                pendingBySchedule[$0]
-            } ?? []
-            let pendingMembers = records.map {
-                OperatorPendingMember(from: $0)
-            }
-
-            // 서버 출석 통계 사용
-            let stats = scheduleId.flatMap { statsMap[$0] }
-
-            let totalCount: Int
-            let attendedCount: Int
-            let attendanceRate: Double
-
-            if let stats {
-                totalCount = stats.totalCount
-                attendedCount = stats.presentCount
-                attendanceRate = stats.attendanceRate
-            } else {
-                // Fallback: API 실패 시 pending 기반 추정
-                let sessionStatus = OperatorSessionStatus.from(
-                    startTime: session.info.startTime,
-                    endTime: session.info.endTime
-                )
-                if sessionStatus != .beforeStart,
-                   !pendingMembers.isEmpty
-                {
-                    totalCount = pendingMembers.count
-                    attendedCount = 0
-                    attendanceRate = 0
-                } else {
-                    totalCount = 0
-                    attendedCount = 0
-                    attendanceRate = 0
-                }
-            }
+        for stats in statsList {
+            let session = Self.makeSession(from: stats)
 
             updatedSessions.append(OperatorSessionAttendance(
-                serverID: scheduleIdString,
+                serverID: String(stats.scheduleId),
                 session: session,
-                attendanceRate: attendanceRate,
-                attendedCount: attendedCount,
-                totalCount: totalCount,
-                pendingMembers: pendingMembers
+                attendanceRate: stats.attendanceRate,
+                attendedCount: stats.presentCount,
+                totalCount: stats.totalCount,
+                pendingCount: stats.pendingCount
             ))
         }
 
         sessionsState = .loaded(updatedSessions)
+    }
+
+    /// ScheduleAttendanceStats → Session 변환
+    @MainActor
+    private static func makeSession(
+        from stats: ScheduleAttendanceStats
+    ) -> Session {
+        let startTime = ServerDateTimeConverter.parseUTCDateTimeOrTime(
+            stats.startTime, utcDate: stats.date
+        ) ?? Date()
+        var endTime = ServerDateTimeConverter.parseUTCDateTimeOrTime(
+            stats.endTime, utcDate: stats.date
+        ) ?? Date()
+
+        if endTime < startTime {
+            endTime = Calendar.current.date(
+                byAdding: .day, value: 1, to: endTime
+            ) ?? endTime
+        }
+
+        return Session(
+            info: SessionInfo(
+                sessionId: SessionID(value: String(stats.scheduleId)),
+                icon: .Activity.profile,
+                title: stats.name,
+                week: 0,
+                startTime: startTime,
+                endTime: endTime,
+                location: Coordinate(latitude: 0, longitude: 0)
+            )
+        )
+    }
+
+    /// 승인 대기 명단 조회 (on-demand)
+    ///
+    /// `/api/v1/attendances/pending/{scheduleId}` 호출 후 해당 세션에 멤버 목록을 채웁니다.
+    @MainActor
+    func loadPendingMembers(for sessionId: UUID) async {
+        guard case .loaded(var sessions) = sessionsState,
+              let index = sessions.firstIndex(where: { $0.id == sessionId }),
+              let scheduleId = Int(sessions[index].serverID ?? "")
+        else { return }
+
+        do {
+            let records = try await useCase.fetchPendingAttendances(
+                scheduleId: scheduleId
+            )
+            let members = records.map { OperatorPendingMember(from: $0) }
+            sessions[index] = sessions[index].copyWith(
+                pendingMembers: members
+            )
+            sessionsState = .loaded(sessions)
+        } catch {
+            errorHandler.handle(error, context: .init(
+                feature: "Activity",
+                action: "loadPendingMembers"
+            ))
+        }
     }
 
     /// 위치 변경 버튼 탭

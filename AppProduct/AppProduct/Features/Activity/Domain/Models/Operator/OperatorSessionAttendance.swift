@@ -17,6 +17,7 @@ struct OperatorSessionAttendance: Identifiable, Equatable {
     let attendanceRate: Double
     let attendedCount: Int
     let totalCount: Int
+    let pendingCount: Int
     let pendingMembers: [OperatorPendingMember]
 
     init(
@@ -26,7 +27,8 @@ struct OperatorSessionAttendance: Identifiable, Equatable {
         attendanceRate: Double,
         attendedCount: Int,
         totalCount: Int,
-        pendingMembers: [OperatorPendingMember]
+        pendingCount: Int,
+        pendingMembers: [OperatorPendingMember] = []
     ) {
         self.id = id
         self.serverID = serverID
@@ -34,16 +36,13 @@ struct OperatorSessionAttendance: Identifiable, Equatable {
         self.attendanceRate = attendanceRate
         self.attendedCount = attendedCount
         self.totalCount = totalCount
+        self.pendingCount = pendingCount
         self.pendingMembers = pendingMembers
-    }
-
-    var pendingCount: Int {
-        pendingMembers.count
     }
 
     /// 모든 출석이 승인 완료되었는지 여부
     var isAllApproved: Bool {
-        pendingMembers.isEmpty
+        pendingCount == 0
     }
 }
 
@@ -60,12 +59,17 @@ extension OperatorSessionAttendance {
     /// - Note: `attendedCount` 변경 시 `attendanceRate`가 자동 재계산됩니다.
     func copyWith(
         attendedCount: Int? = nil,
+        pendingCount: Int? = nil,
         pendingMembers: [OperatorPendingMember]? = nil
     ) -> OperatorSessionAttendance {
         let newAttendedCount = attendedCount ?? self.attendedCount
         let newAttendanceRate = totalCount > 0
             ? Double(newAttendedCount) / Double(totalCount)
             : 0.0
+        let newPendingMembers = pendingMembers ?? self.pendingMembers
+        let newPendingCount = pendingCount
+            ?? pendingMembers?.count
+            ?? self.pendingCount
 
         return OperatorSessionAttendance(
             id: self.id,
@@ -74,7 +78,8 @@ extension OperatorSessionAttendance {
             attendanceRate: newAttendanceRate,
             attendedCount: newAttendedCount,
             totalCount: self.totalCount,
-            pendingMembers: pendingMembers ?? self.pendingMembers
+            pendingCount: newPendingCount,
+            pendingMembers: newPendingMembers
         )
     }
 }

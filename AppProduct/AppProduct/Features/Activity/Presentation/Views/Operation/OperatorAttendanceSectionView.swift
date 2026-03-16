@@ -20,14 +20,12 @@ struct OperatorAttendanceSectionView: View {
 
     private let container: DIContainer
     private let errorHandler: ErrorHandler
-    private let sessions: [Session]
 
     // MARK: - Init
 
-    init(container: DIContainer, errorHandler: ErrorHandler, sessions: [Session]) {
+    init(container: DIContainer, errorHandler: ErrorHandler) {
         self.container = container
         self.errorHandler = errorHandler
-        self.sessions = sessions
 
         let useCase = container.resolve(ActivityUseCaseProviding.self)
         let attendanceViewModel = OperatorAttendanceViewModel(
@@ -58,7 +56,7 @@ struct OperatorAttendanceSectionView: View {
         .task {
             // 상위 컨테이너에서 한 번만 호출 (View 교체로 인한 Task 취소 방지)
             if viewModel.sessionsState.isIdle {
-                await viewModel.fetchSessions(from: sessions)
+                await viewModel.fetchSessions()
             }
         }
         .alertPrompt(item: $viewModel.alertPrompt)
@@ -214,7 +212,12 @@ struct OperatorAttendanceSectionView: View {
     ) -> OperatorSessionCard.Actions {
         .init(
             onLocationTap: { viewModel.locationButtonTapped(session: sessionAttendance.session) },
-            onPendingListTap: { selectedPendingSessionId = sessionAttendance.id },
+            onPendingListTap: {
+                Task {
+                    await viewModel.loadPendingMembers(for: sessionAttendance.id)
+                    selectedPendingSessionId = sessionAttendance.id
+                }
+            },
             onReasonTap: { viewModel.reasonButtonTapped(member: $0) },
             onRejectTap: { viewModel.rejectButtonTapped(member: $0, sessionId: sessionAttendance.id) },
             onApproveTap: { viewModel.approveButtonTapped(member: $0, sessionId: sessionAttendance.id) }
@@ -231,7 +234,7 @@ struct OperatorAttendanceSectionView: View {
             isRetrying: false,
             topPadding: DefaultSpacing.spacing32
         ) {
-            await viewModel.fetchSessions(from: sessions)
+            await viewModel.fetchSessions()
         }
     }
 
@@ -243,8 +246,7 @@ struct OperatorAttendanceSectionView: View {
 #Preview {
     OperatorAttendanceSectionView(
         container: AttendancePreviewData.container,
-        errorHandler: AttendancePreviewData.errorHandler,
-        sessions: AttendancePreviewData.sessions
+        errorHandler: AttendancePreviewData.errorHandler
     )
 }
 #endif

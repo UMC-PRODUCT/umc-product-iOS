@@ -119,33 +119,14 @@ struct ActivityView: View {
         }
     }
 
-    /// 운영진 출석 관리 섹션 (ViewModel 상태에 따라 표시)
-    @ViewBuilder
+    /// 운영진 출석 관리 섹션
+    ///
+    /// 운영진 뷰는 자체적으로 `/api/v1/schedules` 데이터를 조회합니다.
     private var operatorAttendanceContent: some View {
-        if let vm = viewModel {
-            switch vm.sessionsState {
-            case .idle, .loading:
-                ProgressView("세션 로딩 중...")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            case .loaded(let sessions):
-                OperatorAttendanceSectionView(
-                    container: di,
-                    errorHandler: errorHandler,
-                    sessions: sessions
-                )
-            case .failed(let error):
-                RetryContentUnavailableView(
-                    title: "로딩 실패",
-                    systemImage: "exclamationmark.triangle",
-                    description: error.userMessage,
-                    isRetrying: false
-                ) {
-                    await vm.fetchSessions()
-                }
-            }
-        } else {
-            ProgressView()
-        }
+        OperatorAttendanceSectionView(
+            container: di,
+            errorHandler: errorHandler
+        )
     }
 
     /// 출석 확인 섹션 (ViewModel 상태에 따라 표시)

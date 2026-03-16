@@ -13,6 +13,11 @@ import Foundation
 /// `attendanceRate`는 0.0-1.0 범위 (DTO에서 변환 완료).
 struct ScheduleAttendanceStats: Equatable, Sendable {
     let scheduleId: Int
+    let name: String
+    let date: String
+    let startTime: String
+    let endTime: String
+    let locationName: String
     let totalCount: Int
     let presentCount: Int
     let pendingCount: Int

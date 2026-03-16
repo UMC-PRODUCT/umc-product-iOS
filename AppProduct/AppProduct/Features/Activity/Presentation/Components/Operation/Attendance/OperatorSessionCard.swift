@@ -133,7 +133,7 @@ struct OperatorSessionCard: View, Equatable {
                     .foregroundStyle(style.color)
 
                 if style.isEnabled {
-                    Text("\(sessionAttendance.pendingMembers.count)명의 \(style.text)")
+                    Text("\(sessionAttendance.pendingCount)명의 \(style.text)")
                         .appFont(.calloutEmphasis, color: style.color)
                 } else {
                     Text(style.text)
