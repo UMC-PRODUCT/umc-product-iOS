@@ -39,19 +39,16 @@ final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable {
     // MARK: - Curriculum
 
     func fetchCurriculumData() async throws -> CurriculumData {
-        let progressDTO: ChallengerCurriculumProgressDTO
         do {
-            let progressResponse = try await adapter.request(StudyRouter.getMyProgress)
-            let progressAPIResponse = try decoder.decode(
+            let response = try await adapter.request(StudyRouter.getMyProgress)
+            let apiResponse = try decoder.decode(
                 APIResponse<ChallengerCurriculumProgressDTO>.self,
-                from: progressResponse.data
+                from: response.data
             )
-            progressDTO = try progressAPIResponse.unwrap()
+            return try apiResponse.unwrap().toDomain()
         } catch let error as NetworkError {
             throw Self.parseCurriculumProgressError(from: error) ?? error
         }
-
-        return progressDTO.toDomain()
     }
 
     func fetchCurriculumProgress() async throws -> CurriculumProgressModel {

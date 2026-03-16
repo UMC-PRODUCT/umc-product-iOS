@@ -79,12 +79,9 @@ struct ChallengerWorkbookProgressDTO: Codable, Sendable, Equatable {
 // MARK: - toDomain
 
 extension ChallengerCurriculumProgressDTO {
-    func toDomain(
-        scheduleByWeek: [Int: WorkbookSchedule] = [:],
-        now: Date = .now
-    ) -> CurriculumData {
+    func toDomain() -> CurriculumData {
         let missions = workbooks
-            .map { $0.toDomain(platform: part, scheduleByWeek: scheduleByWeek, now: now) }
+            .map { $0.toDomain(platform: part) }
             .sorted { $0.week < $1.week }
         let serverCompleted = Int(completedCount) ?? 0
         let localCompleted = missions.filter { $0.status == .pass }.count
@@ -115,11 +112,7 @@ extension ChallengerCurriculumProgressDTO {
 }
 
 private extension ChallengerWorkbookProgressDTO {
-    func toDomain(
-        platform: String,
-        scheduleByWeek: [Int: WorkbookSchedule],
-        now: Date
-    ) -> MissionCardModel {
+    func toDomain(platform: String) -> MissionCardModel {
         let missionTitle = description.trimmingCharacters(in: .whitespacesAndNewlines)
         let week = Int(weekNo) ?? 0
         return MissionCardModel(
@@ -131,17 +124,11 @@ private extension ChallengerWorkbookProgressDTO {
             title: title,
             missionTitle: missionTitle.isEmpty ? title : missionTitle,
             missionType: MissionType(rawValue: missionType),
-            status: missionStatus(
-                schedule: scheduleByWeek[week],
-                now: now
-            )
+            status: missionStatus()
         )
     }
 
-    func missionStatus(
-        schedule: WorkbookSchedule?,
-        now: Date
-    ) -> MissionStatus {
+    func missionStatus() -> MissionStatus {
         if !isReleased {
             return .locked
         }

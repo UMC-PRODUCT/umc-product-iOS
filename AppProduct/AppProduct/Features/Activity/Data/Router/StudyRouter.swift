@@ -11,7 +11,6 @@ import Moya
 
 /// Study Feature API 라우터
 enum StudyRouter {
-    case getCurriculum(part: String)
     case getCurriculumWeeks(part: String)
     case createStudyGroupSchedule(body: StudyGroupScheduleCreateRequestDTO)
     case getMyStudyGroups(cursor: Int?, size: Int)
@@ -44,8 +43,6 @@ extension StudyRouter: BaseTargetType {
 
     var path: String {
         switch self {
-        case .getCurriculum:
-            return "/api/v1/curriculums"
         case .getCurriculumWeeks:
             return "/api/v1/curriculums/weeks"
         case .createStudyGroupSchedule:
@@ -113,8 +110,7 @@ extension StudyRouter: BaseTargetType {
             return .patch
         case .deleteStudyGroup:
             return .delete
-        case .getCurriculum,
-             .getCurriculumWeeks,
+        case .getCurriculumWeeks,
              .getMyStudyGroups,
              .getStudyGroupNames,
              .getStudyGroupDetail,
@@ -130,7 +126,7 @@ extension StudyRouter: BaseTargetType {
 
     var task: Task {
         switch self {
-        case .getCurriculum(let part), .getCurriculumWeeks(let part):
+        case .getCurriculumWeeks(let part):
             return .requestParameters(
                 parameters: ["part": part],
                 encoding: URLEncoding.queryString
