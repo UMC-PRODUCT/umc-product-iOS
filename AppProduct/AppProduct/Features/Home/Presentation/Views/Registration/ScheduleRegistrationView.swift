@@ -73,6 +73,11 @@ struct ScheduleRegistrationView: View {
             .scrollDismissesKeyboard(.immediately)
             .navigation(naviTitle: navigationTitle, displayMode: .inline)
             .toolbar { toolbarContent }
+            .onChange(of: viewModel.showStartDatePicker) { dismissKeyboard() }
+            .onChange(of: viewModel.showStartTimePicker) { dismissKeyboard() }
+            .onChange(of: viewModel.showEndDatePicker) { dismissKeyboard() }
+            .onChange(of: viewModel.showEndTimePicker) { dismissKeyboard() }
+            .onChange(of: viewModel.isAllDay) { dismissKeyboard() }
             .onChange(of: viewModel.submitState) {
                 if case .loaded = viewModel.submitState {
                     dismiss()
@@ -238,6 +243,13 @@ struct ScheduleRegistrationView: View {
         } else {
             showApprovalConfirmationDialog = true
         }
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil, from: nil, for: nil
+        )
     }
 
     // MARK: - Section Components

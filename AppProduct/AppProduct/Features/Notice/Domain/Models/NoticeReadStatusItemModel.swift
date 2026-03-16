@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NoticeReadStatusItemModel: Equatable, Identifiable {
     let id = UUID()
-    let profileImage: Image?
+    let profileImageURL: String?
     let userName: String
     let nickName: String
     let part: String

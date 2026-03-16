@@ -327,6 +327,14 @@ struct VoteOption: Equatable, Identifiable, Hashable {
     let id: String
     let title: String
     let voteCount: Int
+    let selectedMemberIds: [String]
+
+    init(id: String, title: String, voteCount: Int, selectedMemberIds: [String] = []) {
+        self.id = id
+        self.title = title
+        self.voteCount = voteCount
+        self.selectedMemberIds = selectedMemberIds
+    }
 
     /// 투표율 계산
     func percentage(totalVotes: Int) -> Double {
@@ -396,7 +404,7 @@ struct ReadStatusUser: Equatable, Identifiable {
     /// NoticeReadStatusItemModel로 변환
     func toItemModel() -> NoticeReadStatusItemModel {
         NoticeReadStatusItemModel(
-            profileImage: nil,
+            profileImageURL: profileImageURL,
             userName: name,
             nickName: nickName,
             part: part,

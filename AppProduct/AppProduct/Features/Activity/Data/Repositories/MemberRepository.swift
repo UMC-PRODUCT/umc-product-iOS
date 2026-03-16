@@ -86,8 +86,8 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
                 profile: profile?.profileImageLink ?? descriptor.profileImageURL,
                 name: profile?.name.nonEmpty ?? descriptor.name,
                 nickname: profile?.nickname.nonEmpty ?? descriptor.name,
-                generation: generationText(
-                    from: record,
+                generation: allGenerationsText(
+                    from: profile,
                     fallback: descriptor.generation
                 ),
                 school: profile?.schoolName.nonEmpty ?? descriptor.schoolName,
@@ -225,6 +225,11 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
             )
         }
         .sorted { $0.date > $1.date }
+    }
+
+    func fetchAllGenerations(memberId: Int) async throws -> String {
+        let profile = try await fetchMemberProfile(memberId: memberId)
+        return allGenerationsText(from: profile, fallback: "")
     }
 }
 
@@ -567,6 +572,19 @@ private extension MemberRepository {
             return fallback
         }
         return "\(gisu)기"
+    }
+
+    /// 프로필의 모든 challengerRecords에서 중복 없는 기수 목록을 반환합니다.
+    func allGenerationsText(
+        from profile: MemberManagementProfileDTO?,
+        fallback: String
+    ) -> String {
+        guard let records = profile?.challengerRecords, !records.isEmpty else {
+            return fallback
+        }
+        let uniqueGisu = Set(records.map(\.gisu)).filter { $0 > 0 }.sorted()
+        guard !uniqueGisu.isEmpty else { return fallback }
+        return uniqueGisu.map { "\($0)기" }.joined(separator: ", ")
     }
 
     func resolvedChallengerID(

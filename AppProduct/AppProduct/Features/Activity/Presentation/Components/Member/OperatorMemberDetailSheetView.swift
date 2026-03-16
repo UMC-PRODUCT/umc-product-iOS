@@ -33,7 +33,7 @@ struct OperatorMemberDetailSheetView: View {
         static let fixedPenaltyScore: Double = 1.0
         static let contentHorizontalPadding: CGFloat = 16
         static let contentTopPadding: CGFloat = 8
-        static let contentBottomPadding: CGFloat = 16
+        static let contentBottomPadding: CGFloat = 0
         static let contentSpacing: CGFloat = 24
         
         static let baseHeight: CGFloat = 340
@@ -115,7 +115,6 @@ struct OperatorMemberDetailSheetView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .toolbar { toolbarItems }
             .padding(.horizontal, Constants.contentHorizontalPadding)
-            .padding(.top, Constants.contentTopPadding)
             .padding(.bottom, Constants.contentBottomPadding)
             .scrollContentBackground(.hidden)
             .presentationDetents([.height(dynamicSheetHeight)])
@@ -201,11 +200,16 @@ struct OperatorMemberDetailSheetView: View {
     }
     
     private var memberMetadataView: some View {
-        HStack(spacing: DefaultSpacing.spacing8) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Text("\(member.nickname)/\(member.name)")
                 .appFont(.bodyEmphasis)
-            statusChip(title: member.part.name, style: .accent)
-            statusChip(title: member.school, style: .plain)
+            HStack(spacing: DefaultSpacing.spacing8) {
+                statusChip(title: member.part.name, style: .accent)
+                statusChip(title: member.school, style: .plain)
+                if member.managementTeam != .challenger {
+                    ManagementTeamBadgePresenter(managementTeam: member.managementTeam)
+                }
+            }
         }
     }
     
@@ -219,7 +223,7 @@ struct OperatorMemberDetailSheetView: View {
         switch style {
         case .accent:
             Text(title)
-                .appFont(.calloutEmphasis, color: partTint)
+                .appFont(.callout, color: partTint)
                 .padding(Constants.tagPadding)
                 .background(partTint.opacity(0.14), in: Capsule())
                 .overlay {

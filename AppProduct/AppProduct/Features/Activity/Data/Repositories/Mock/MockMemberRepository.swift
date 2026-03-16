@@ -173,6 +173,10 @@ final class MockMemberRepository: MemberRepositoryProtocol {
         try await Task.sleep(for: .milliseconds(150))
         return MockPenaltyHistory.oneOut
     }
+
+    func fetchAllGenerations(memberId: Int) async throws -> String {
+        "8기, 9기"
+    }
 }
 
 // MARK: - Mock Attendance Records

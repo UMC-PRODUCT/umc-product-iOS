@@ -55,4 +55,8 @@ final class FetchMembersUseCase: FetchMembersUseCaseProtocol {
             challengerId: challengerId
         )
     }
+
+    func fetchAllGenerations(memberId: Int) async throws -> String {
+        try await repository.fetchAllGenerations(memberId: memberId)
+    }
 }

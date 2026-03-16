@@ -89,15 +89,9 @@ struct ChallengerMemberDetailSheetView: View {
                 
                 recordView
             }
-            .toolbar {
-                ToolBarCollection.CancelBtn(action: {
-                    dismiss()
-                })
-            }
-            .padding()
+            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
             .scrollContentBackground(.hidden)
             .presentationDetents([.height(dynamicSheetHeight)])
-            .interactiveDismissDisabled()
         }
     }
     
@@ -107,19 +101,26 @@ struct ChallengerMemberDetailSheetView: View {
     private var memberInfoView: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             RemoteImage(urlString: member.profile ?? "", size: Constants.profileSize)
-            
-            HStack (spacing: DefaultSpacing.spacing8) {
+
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
                 Text("\(member.nickname)/\(member.name)")
-                    .appFont(.title2Emphasis)
-                Text(member.part.name)
-                    .appFont(.callout, color: .gray)
-                    .padding(Constants.tagPadding)
-                    .background(.white, in: Capsule())
-                if member.managementTeam != .challenger {
-                    Text(member.managementTeam.korean)
-                        .appFont(.callout, color: member.managementTeam.textColor)
+                    .appFont(.bodyEmphasis)
+                HStack(spacing: DefaultSpacing.spacing8) {
+                    Text(member.part.name)
+                        .appFont(.callout, color: member.part.color)
                         .padding(Constants.tagPadding)
-                        .background(member.managementTeam.backgroundColor, in: Capsule())
+                        .background(member.part.color.opacity(0.14), in: Capsule())
+                        .overlay {
+                            Capsule()
+                                .stroke(member.part.color.opacity(0.4), lineWidth: 1)
+                        }
+                    Text(member.school)
+                        .appFont(.callout, color: .black)
+                        .padding(Constants.tagPadding)
+                        .background(.white, in: Capsule())
+                    if member.managementTeam != .challenger {
+                        ManagementTeamBadgePresenter(managementTeam: member.managementTeam)
+                    }
                 }
             }
         }
@@ -210,7 +211,7 @@ struct ChallengerMemberDetailSheetView: View {
                     profile: nil,
                     name: "김미주",
                     nickname: "마티",
-                    generation: "9기",
+                    generation: "7기, 8기, 9기",
                     school: "덕성여자대학교",
                     position: "Challenger",
                     part: .front(type: .ios),

@@ -83,7 +83,7 @@ struct ScheduleDetailDTO: Codable, Sendable, Equatable {
         status = try container.decodeIfPresent(String.self, forKey: .status) ?? ""
         dDay = try container.decodeIntFlexibleIfPresent(forKey: .dDay) ?? 0
         requiresAttendanceApproval = try container.decodeBoolFlexibleIfPresent(forKey: .requiresAttendanceApproval) ?? false
-        participantMemberIds = try container.decodeIfPresent([Int].self, forKey: .participantMemberIds) ?? []
+        participantMemberIds = Self.decodeFlexibleIntArray(container: container, forKey: .participantMemberIds)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -135,6 +135,20 @@ extension ScheduleDetailDTO {
     private static func parseISO8601(_ string: String) -> Date {
         ServerDateTimeConverter.parseUTCDateTime(string)
             ?? .now
+    }
+
+    /// `[Int]` 또는 `[String]` 배열을 `[Int]`로 유연하게 디코딩합니다.
+    private static func decodeFlexibleIntArray(
+        container: KeyedDecodingContainer<CodingKeys>,
+        forKey key: CodingKeys
+    ) -> [Int] {
+        if let intArray = try? container.decodeIfPresent([Int].self, forKey: key) {
+            return intArray
+        }
+        if let stringArray = try? container.decodeIfPresent([String].self, forKey: key) {
+            return stringArray.compactMap(Int.init)
+        }
+        return []
     }
 }
 

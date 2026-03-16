@@ -58,14 +58,12 @@ private struct NoticeReadStatusItemPresenter: View, Equatable {
     var body: some View {
         HStack(spacing: Constant.mainHSpacing) {
             // 프로필 이미지
-            if model.profileImage != nil {
-                model.profileImage
-            } else {
-                Text(model.userName.prefix(1))
-                    .appFont(.caption1Emphasis, color: .grey900)
-                    .frame(width: Constant.profileSize.width, height: Constant.profileSize.height)
-                    .background(.white, in: Circle())
-            }
+            RemoteImage(
+                urlString: model.profileImageURL ?? "",
+                size: Constant.profileSize,
+                cornerRadius: Constant.profileSize.width / 2,
+                placeholderImage: "defaultProfile"
+            )
 
             UserInfoSection(model: model)
 
@@ -116,7 +114,7 @@ private struct UserInfoSection: View, Equatable {
     VStack {
         NoticeReadStatusItem(
             model: .init(
-                profileImage: nil,
+                profileImageURL: nil,
                 userName: "이애플",
                 nickName: "사과",
                 part: "iOS",
@@ -128,7 +126,7 @@ private struct UserInfoSection: View, Equatable {
         
         NoticeReadStatusItem(
             model: .init(
-                profileImage: nil,
+                profileImageURL: nil,
                 userName: "이애플",
                 nickName: "사과",
                 part: "iOS",

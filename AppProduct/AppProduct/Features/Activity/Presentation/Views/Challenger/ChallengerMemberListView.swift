@@ -64,6 +64,7 @@ struct ChallengerMemberListView: View {
         }
         .sheet(item: $viewModel.selectedMember) { member in
             ChallengerMemberDetailSheetView(member: member)
+                .presentationDragIndicator(.visible)
         }
     }
     
