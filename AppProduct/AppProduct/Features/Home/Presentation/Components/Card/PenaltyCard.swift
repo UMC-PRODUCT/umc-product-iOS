@@ -114,14 +114,26 @@ struct PenaltyCard: View, Equatable {
                         innerRadius: .ratio(Constants.innerRadius),
                         angularInset: 2
                     )
-                    .foregroundStyle(.green)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.indigo400, .indigo600],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
 
                     SectorMark(
                         angle: .value("벌점", hasData ? generation.penaltyPoint : 0),
                         innerRadius: .ratio(Constants.innerRadius),
                         angularInset: 2
                     )
-                    .foregroundStyle(.red)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.indigo100, .indigo300],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
 
                     if !hasData {
                         SectorMark(
@@ -176,8 +188,8 @@ struct PenaltyCard: View, Equatable {
             }
 
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-                legendLabel(color: .green, label: "상점", value: generation.rewardPoint)
-                legendLabel(color: .red, label: "벌점", value: generation.penaltyPoint)
+                legendLabel(color: .indigo500, label: "상점", value: generation.rewardPoint)
+                legendLabel(color: .indigo200, label: "벌점", value: generation.penaltyPoint)
             }
             .frame(maxWidth: .infinity)
         }
@@ -267,7 +279,7 @@ fileprivate struct PointLogPopover: View {
             ForEach(logs) { log in
                 HStack(spacing: DefaultSpacing.spacing8) {
                     Circle()
-                        .fill(log.isReward ? Color.green : Color.red)
+                        .fill(log.isReward ? Color.indigo500 : Color.indigo200)
                         .frame(
                             width: Constants.circleDiameter,
                             height: Constants.circleDiameter
@@ -279,7 +291,7 @@ fileprivate struct PointLogPopover: View {
                     Spacer()
 
                     Text(log.isReward ? "+\(log.point)" : "\(log.point)")
-                        .appFont(.subheadline, color: log.isReward ? .green : .red)
+                        .appFont(.subheadline, color: log.isReward ? .indigo500 : .indigo300)
 
                     Text(log.date)
                         .appFont(.footnote, color: .grey500)
