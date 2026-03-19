@@ -107,13 +107,13 @@ struct ActivityView: View {
                 container: di, errorHandler: errorHandler)
         case (.challenger, .members):
             ChallengerMemberListView(
-                container: di, errorHandler: errorHandler)
+                container: di, errorHandler: errorHandler, userSessionManager: userSession)
         case (.admin, .attendanceManage):
             operatorAttendanceContent
         case (.admin, .studyManage):
             OperatorStudyManagementView(container: di, errorHandler: errorHandler)
         case (.admin, .memberManage):
-            OperatorMemberManagementView(container: di, errorHandler: errorHandler)
+            OperatorMemberManagementView(container: di, errorHandler: errorHandler, userSessionManager: userSession)
         default:
             EmptyView()
         }

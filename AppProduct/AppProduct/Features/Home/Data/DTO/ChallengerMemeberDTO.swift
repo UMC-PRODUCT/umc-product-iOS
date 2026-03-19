@@ -205,12 +205,32 @@ struct ChallengerPointDTO: Codable {
 
 /// 포인트 유형 열거형
 enum PointType: String, Codable {
-    /// 우수 워크북 포인트
     case bestWorkbook = "BEST_WORKBOOK"
-    /// 경고 패널티
     case warning = "WARNING"
-    /// 퇴출 패널티
     case out = "OUT"
+    case blogChallenge = "BLOG_CHALLENGE"
+    case umcEventReview = "UMC_EVENT_REVIEW"
+    case peerReviewSubmission = "PEER_REVIEW_SUBMISSION"
+    case noWorkbookMission = "NO_WORKBOOK_MISSION"
+    case studyLate = "STUDY_LATE"
+    case studyAbsent = "STUDY_ABSENT"
+    case eventLate = "EVENT_LATE"
+    case eventEarlyLeave = "EVENT_EARLY_LEAVE"
+    case eventLateCancel = "EVENT_LATE_CANCEL"
+    case eventNoShow = "EVENT_NO_SHOW"
+    case partLeadFeedbackLate = "PART_LEAD_FEEDBACK_LATE"
+    case schoolCoreMeetingAbsent = "SCHOOL_CORE_MEETING_ABSENT"
+    case schoolCoreTaskNotCompleted = "SCHOOL_CORE_TASK_NOT_COMPLETED"
+    case custom = "CUSTOM"
+
+    var isPenalty: Bool {
+        switch self {
+        case .bestWorkbook, .blogChallenge, .umcEventReview, .peerReviewSubmission:
+            return false
+        default:
+            return true
+        }
+    }
 }
 
 private extension KeyedDecodingContainer {
@@ -294,9 +314,9 @@ extension ChallengerMemberDTO {
     func toGenerationData(gisuId: Int) -> GenerationData {
         let maxRecentPenaltyLogs = 3
 
-        // 패널티 유형(warning, out)만 필터링
+        // 벌점 유형만 필터링
         let penaltyPoints = challengerPoints.filter {
-            $0.pointType == .warning || $0.pointType == .out
+            $0.pointType.isPenalty
         }
 
         // ISO 8601 파싱 (소수 초 유무 모두 허용)

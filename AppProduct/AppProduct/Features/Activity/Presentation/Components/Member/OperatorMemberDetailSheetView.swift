@@ -7,35 +7,40 @@
 
 import SwiftUI
 
-/// 운영진 멤버 상세 정보 및 아웃 포인트 관리 시트 뷰
+/// 운영진 멤버 상세 정보 및 상벌점 관리 시트 뷰
 struct OperatorMemberDetailSheetView: View {
-    
+
     // MARK: - Property
-    
+
     @Environment(\.dismiss) private var dismiss
     var member: MemberManagementItem
-    let isSubmittingOutPoint: Bool
-    let isDeletingOutPoint: Bool
-    let onGrantOut: @Sendable (String) async -> Bool
-    let onDeleteOut: @Sendable (OperatorMemberPenaltyHistory) async -> String?
-    @State private var showPenaltyAlert: Bool = false
-    @State private var penaltyReason: String = ""
+    let availablePointTypes: [ChallengerPointType]
+    let isSubmittingPoint: Bool
+    let isDeletingPoint: Bool
+    let onGrantPoint: @Sendable (ChallengerPointType, Int, String) async -> Bool
+    let onDeletePoint: @Sendable (OperatorMemberPenaltyHistory) async -> String?
+    @State private var showPointForm: Bool = false
+    @State private var selectedPointType: ChallengerPointType?
+    @State private var pointValue: Int = 0
+    @State private var customPointValueText: String = ""
+    @State private var pointReason: String = ""
     @State private var penaltyHistory: [OperatorMemberPenaltyHistory] = []
     @State private var totalPenalty: Double = 0
+    @State private var totalReward: Double = 0
+    @State private var showReasonAlert: Bool = false
     @State private var transientHistoryMessage: String?
     @State private var transientHistoryMessageTask: Task<Void, Never>?
-    
+
     // MARK: - Constant
-    
+
     private enum Constants {
         static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
         static let profileSize: CGSize = .init(width: 60, height: 60)
-        static let fixedPenaltyScore: Double = 1.0
         static let contentHorizontalPadding: CGFloat = 16
         static let contentTopPadding: CGFloat = 8
         static let contentBottomPadding: CGFloat = 0
         static let contentSpacing: CGFloat = 24
-        
+
         static let baseHeight: CGFloat = 340
         static let emptyHistoryHeight: CGFloat = 150
         static let historyRowHeight: CGFloat = 50
@@ -47,24 +52,22 @@ struct OperatorMemberDetailSheetView: View {
         static let bgOpacity: Double = 0.2
         static let animation: Animation = .spring(response: 0.34, dampingFraction: 0.86)
     }
-    
+
     // MARK: - Computed Properties
-    
-    /// 사유 입력 유효성 검사
+
     private var isReasonValid: Bool {
-        !penaltyReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !pointReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var partTint: Color {
         member.part.color
     }
-    
-    /// 아웃 기록 개수에 따른 동적 시트 높이
+
     private var dynamicSheetHeight: CGFloat {
         let historyCount = penaltyHistory.count
-        
+
         var calculatedHeight: CGFloat = Constants.baseHeight
-        
+
         if historyCount == 0 {
             calculatedHeight += max(
                 Constants.emptyHistoryHeight,
@@ -79,33 +82,40 @@ struct OperatorMemberDetailSheetView: View {
                 Constants.minimumVisibleHistoryHeight
             )
         }
-        
+
         return max(Constants.minSheetHeight, min(calculatedHeight, Constants.maxSheetHeight))
     }
-    
-    /// 스크롤뷰 높이 (기록 개수에 따라 동적)
+
     private var scrollViewHeight: CGFloat {
         let recordCount = penaltyHistory.count
-        
+
         if recordCount == 0 {
             return max(
                 Constants.emptyHistoryHeight,
                 Constants.minimumVisibleHistoryHeight
             )
         }
-        
+
         let visibleHistory = min(recordCount, Constants.maxVisibleHistory)
         let historyHeight = (CGFloat(visibleHistory) * Constants.historyRowHeight)
             + (CGFloat(max(0, visibleHistory - 1)) * DefaultSpacing.spacing8)
-        
+
         return max(
             historyHeight,
             Constants.minimumVisibleHistoryHeight
         )
     }
-    
+
+    private var rewardTypes: [ChallengerPointType] {
+        availablePointTypes.filter { $0.isReward }
+    }
+
+    private var penaltyTypes: [ChallengerPointType] {
+        availablePointTypes.filter { !$0.isReward }
+    }
+
     // MARK: - Body
-    
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: Constants.contentSpacing) {
@@ -120,85 +130,183 @@ struct OperatorMemberDetailSheetView: View {
             .presentationDetents([.height(dynamicSheetHeight)])
             .interactiveDismissDisabled()
             .animation(Constants.animation, value: penaltyHistory.count)
-            .alert("아웃 부여", isPresented: $showPenaltyAlert) {
-                outPenaltyInputField
-                outPenaltyCancelButton
-                outPenaltyConfirmButton
-            } message: {
-                outPenaltyMessage
+            .fullScreenCover(isPresented: $showPointForm) {
+                pointFormSheet
             }
         }
         .onChange(of: member) { _, newValue in
             penaltyHistory = newValue.penaltyHistory
             totalPenalty = newValue.penalty
+            totalReward = newValue.rewardPoints
         }
         .task {
             penaltyHistory = member.penaltyHistory
             totalPenalty = member.penalty
+            totalReward = member.rewardPoints
         }
     }
-    
+
     // MARK: - Toolbar
-    
+
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
         ToolBarCollection.CancelBtn {
             dismiss()
         }
         ToolbarItem(placement: .topBarTrailing) {
-            outPenaltyTriggerButton
+            pointTriggerButton
         }
     }
-    
-    private var outPenaltyTriggerButton: some View {
+
+    private var pointTriggerButton: some View {
         Button {
-            penaltyReason = ""
-            showPenaltyAlert = true
+            selectedPointType = nil
+            pointValue = 0
+            customPointValueText = ""
+            pointReason = ""
+            showPointForm = true
         } label: {
-            if isSubmittingOutPoint {
+            if isSubmittingPoint {
                 ProgressView()
-                    .tint(.red)
+                    .tint(.blue)
             } else {
-                Image(systemName: "slash.circle.fill")
-                    .foregroundStyle(.red)
+                Image(systemName: "plus.circle.fill")
+                    .foregroundStyle(.blue)
             }
         }
-        .tint(.red)
-        .disabled(isSubmittingOutPoint)
+        .tint(.blue)
+        .disabled(isSubmittingPoint)
     }
-    
-    private var outPenaltyInputField: some View {
-        TextField("아웃 사유를 입력하세요", text: $penaltyReason)
+
+    // MARK: - Point Form Sheet
+
+    /// CUSTOM 타입의 배점 유효성
+    private var isCustomPointValueValid: Bool {
+        guard selectedPointType?.isCustom == true else { return true }
+        guard let value = Int(customPointValueText), value != 0 else { return false }
+        return true
     }
-    
-    private var outPenaltyCancelButton: some View {
-        Button("취소", role: .cancel) {
-            penaltyReason = ""
-        }
+
+    /// 확정 버튼 활성 조건
+    private var isConfirmEnabled: Bool {
+        selectedPointType != nil && isCustomPointValueValid && !isSubmittingPoint
     }
-    
-    private var outPenaltyConfirmButton: some View {
-        Button("확정") {
-            Task {
-                await addPenalty()
+
+    private var pointFormSheet: some View {
+        NavigationStack {
+            Form {
+                if !rewardTypes.isEmpty {
+                    Section {
+                        ForEach(rewardTypes) { type in
+                            pointTypeRow(type: type, tint: .green)
+                        }
+                    } header: {
+                        Text("상점")
+                    }
+                }
+
+                Section {
+                    ForEach(penaltyTypes) { type in
+                        pointTypeRow(type: type, tint: .red)
+                    }
+                } header: {
+                    Text("벌점")
+                }
+
+                if let selected = selectedPointType, selected.isCustom {
+                    Section("배점") {
+                        HStack {
+                            Text("점수 입력")
+                                .appFont(.subheadline)
+                            Spacer()
+                            TextField("예: 3 또는 -2", text: $customPointValueText)
+                                .keyboardType(.numbersAndPunctuation)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 100)
+                                .onChange(of: customPointValueText) { _, newValue in
+                                    if let parsed = Int(newValue) {
+                                        pointValue = parsed
+                                    }
+                                }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("상벌점 부여")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("취소") {
+                        showPointForm = false
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("확정") {
+                        pointReason = ""
+                        showReasonAlert = true
+                    }
+                    .disabled(!isConfirmEnabled)
+                }
+            }
+            .alert("사유 입력", isPresented: $showReasonAlert) {
+                TextField("사유를 입력하세요", text: $pointReason)
+                Button("취소", role: .cancel) {
+                    pointReason = ""
+                }
+                Button("확인") {
+                    Task {
+                        await addPoint()
+                    }
+                }
+                .disabled(!isReasonValid)
+            } message: {
+                if let selected = selectedPointType {
+                    Text("\(selected.displayName) (\(pointValue > 0 ? "+" : "")\(pointValue)점) 사유를 입력해주세요.")
+                }
             }
         }
-        .disabled(!isReasonValid || isSubmittingOutPoint)
     }
-    
-    private var outPenaltyMessage: some View {
-        Text("사유를 입력하면 아웃 +\(String(format: "%.1f", Constants.fixedPenaltyScore))가 기록됩니다.")
+
+    private func pointTypeRow(
+        type: ChallengerPointType,
+        tint: Color
+    ) -> some View {
+        Button {
+            selectedPointType = type
+            if type.isCustom {
+                customPointValueText = ""
+                pointValue = 0
+            } else {
+                pointValue = type.defaultPointValue
+            }
+        } label: {
+            HStack {
+                Text(type.displayName)
+                    .appFont(.subheadline, color: .primary)
+                Spacer()
+                if !type.isCustom {
+                    Text("\(type.defaultPointValue > 0 ? "+" : "")\(type.defaultPointValue)")
+                        .appFont(.subheadline, color: tint)
+                }
+                if selectedPointType == type {
+                    Image(systemName: "checkmark")
+                        .foregroundStyle(tint)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
-    
+
     // MARK: - SubView
-    
+
     private var memberInfoView: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             RemoteImage(urlString: member.profile ?? "", size: Constants.profileSize)
             memberMetadataView
         }
     }
-    
+
     private var memberMetadataView: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Text("\(member.nickname)/\(member.name)")
@@ -212,12 +320,12 @@ struct OperatorMemberDetailSheetView: View {
             }
         }
     }
-    
+
     private enum StatusChipStyle {
         case accent
         case plain
     }
-    
+
     @ViewBuilder
     private func statusChip(title: String, style: StatusChipStyle) -> some View {
         switch style {
@@ -237,7 +345,7 @@ struct OperatorMemberDetailSheetView: View {
                 .background(.white, in: Capsule())
         }
     }
-    
+
     private var historyView: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             historyHeader
@@ -245,18 +353,32 @@ struct OperatorMemberDetailSheetView: View {
             historyListContainer
         }
     }
-    
+
     private var historyHeader: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             Label("히스토리", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
                 .appFont(.title3Emphasis)
-            
-            if !penaltyHistory.isEmpty {
-                penaltyBadge
+
+            if totalReward > 0 {
+                pointBadge(label: "상점 \(String(format: "%.0f", totalReward))", color: .green)
+            }
+            if totalPenalty > 0 {
+                pointBadge(label: "벌점 \(String(format: "%.0f", totalPenalty))", color: .red)
             }
         }
     }
-    
+
+    private func pointBadge(label: String, color: Color) -> some View {
+        Text(label)
+            .font(.app(.footnote, weight: .regular))
+            .foregroundStyle(color)
+            .padding(Constants.badgePadding)
+            .background {
+                RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
+                    .fill(color.opacity(Constants.bgOpacity))
+            }
+    }
+
     private var historyListContainer: some View {
         Group {
             if penaltyHistory.isEmpty {
@@ -274,25 +396,12 @@ struct OperatorMemberDetailSheetView: View {
                 color: transientHistoryMessage == nil ? .grey500 : .red
             )
     }
-    
-    /// 누적 경고 뱃지
-    private var penaltyBadge: some View {
-        Text("아웃 \(String(format: "%.1f", totalPenalty))")
-            .font(.app(.footnote, weight: .regular))
-            .foregroundStyle(.red)
-            .padding(Constants.badgePadding)
-            .background {
-                RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
-                    .fill(.red.opacity(Constants.bgOpacity))
-            }
-    }
-    
-    /// 기록 없음 뷰
+
     private var emptyHistoryView: some View {
         VStack(spacing: DefaultSpacing.spacing8) {
             Image(systemName: "exclamationmark.bubble.fill")
                 .appFont(.title1, color: .grey500)
-            Text(member.canViewPenaltyHistory ? "아웃 기록이 없습니다" : "타인의 아웃 히스토리를 확인할 수 없습니다")
+            Text(member.canViewPenaltyHistory ? "포인트 기록이 없습니다" : "타인의 포인트 히스토리를 확인할 수 없습니다")
                 .appFont(.subheadline, color: .grey500)
         }
         .frame(maxWidth: .infinity)
@@ -300,8 +409,7 @@ struct OperatorMemberDetailSheetView: View {
         .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
         .glass()
     }
-    
-    /// 히스토리 리스트 뷰
+
     private var historyListView: some View {
         List {
             ForEach(penaltyHistory) { history in
@@ -315,7 +423,7 @@ struct OperatorMemberDetailSheetView: View {
                             Label("삭제", systemImage: "trash")
                         }
                     }
-                    .disabled(isDeletingOutPoint || !member.canViewPenaltyHistory)
+                    .disabled(isDeletingPoint || !member.canViewPenaltyHistory)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     .listRowInsets(.init())
@@ -327,71 +435,89 @@ struct OperatorMemberDetailSheetView: View {
         .scrollIndicators(.hidden)
         .frame(height: scrollViewHeight)
     }
-    
-    /// 아웃 히스토리 행
+
     private func penaltyHistoryRow(_ history: OperatorMemberPenaltyHistory) -> some View {
-        HStack(spacing: DefaultSpacing.spacing16) {
+        let isReward = history.pointType.isReward
+        let color: Color = isReward ? .green : .red
+        let sign = isReward ? "+" : "-"
+
+        return HStack(spacing: DefaultSpacing.spacing16) {
             Text(history.date.toYearMonthDay())
                 .appFont(.subheadlineEmphasis)
-            
+
             Text(history.reason)
                 .appFont(.subheadline)
                 .lineLimit(1)
-            
+
             Spacer()
-            
-            Text("아웃 +\(String(format: "%.1f", history.penaltyScore))")
-                .appFont(.subheadline, color: .red)
+
+            Text("\(sign)\(String(format: "%.0f", history.penaltyScore))")
+                .appFont(.subheadline, color: color)
         }
         .padding(.horizontal, Constants.contentHorizontalPadding)
         .frame(maxWidth: .infinity)
         .frame(height: Constants.historyRowHeight)
         .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
-    
+
     // MARK: - Function
-    
-    /// 아웃 부여하기
+
     @MainActor
-    private func addPenalty() async {
+    private func addPoint() async {
         guard member.canViewPenaltyHistory else { return }
-        guard !penaltyReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        guard let selectedType = selectedPointType else { return }
+        guard !pointReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
 
-        let reason = penaltyReason
-        let isSuccess = await onGrantOut(reason)
+        let reason = pointReason
+        let value = pointValue
+        let isSuccess = await onGrantPoint(selectedType, value, reason)
         guard isSuccess else { return }
-        
-        let newPenalty = OperatorMemberPenaltyHistory(
+
+        let newHistory = OperatorMemberPenaltyHistory(
             date: Date(),
             reason: reason,
-            penaltyScore: Constants.fixedPenaltyScore
+            penaltyScore: Double(abs(value)),
+            pointType: selectedType
         )
-        
+
         withAnimation(Constants.animation) {
-            penaltyHistory.append(newPenalty)
+            penaltyHistory.append(newHistory)
             penaltyHistory.sort { $0.date > $1.date }
         }
-        
-        totalPenalty += Constants.fixedPenaltyScore
-        penaltyReason = ""
+
+        let isRewardPoint = selectedType.isCustom ? value > 0 : selectedType.isReward
+        if isRewardPoint {
+            totalReward += Double(abs(value))
+        } else {
+            totalPenalty += Double(abs(value))
+        }
+
+        showPointForm = false
+        pointReason = ""
+        customPointValueText = ""
+        selectedPointType = nil
     }
-    
-    /// 히스토리 삭제하기
+
     @MainActor
     private func deletePenalty(_ history: OperatorMemberPenaltyHistory) async {
         guard member.canViewPenaltyHistory else { return }
-        if let message = await onDeleteOut(history) {
+        if let message = await onDeletePoint(history) {
             showTransientHistoryMessage(message)
             return
         }
 
         if let index = penaltyHistory.firstIndex(where: { $0.id == history.id }) {
             let deletedScore = penaltyHistory[index].penaltyScore
+            let isReward = penaltyHistory[index].pointType.isReward
             withAnimation(Constants.animation) {
                 penaltyHistory.remove(at: index)
-                totalPenalty -= deletedScore
+                if isReward {
+                    totalReward -= deletedScore
+                } else {
+                    totalPenalty -= deletedScore
+                }
             }
         }
     }
@@ -405,7 +531,7 @@ struct OperatorMemberDetailSheetView: View {
         if member.canViewPenaltyHistory {
             return "히스토리 항목을 왼쪽으로 밀어서 삭제할 수 있습니다."
         }
-        return "본인이 아닌 경우 아웃 히스토리를 확인할 수 없습니다."
+        return "본인이 아닌 경우 포인트 히스토리를 확인할 수 없습니다."
     }
 
     private func showTransientHistoryMessage(_ message: String) {
@@ -427,10 +553,11 @@ struct OperatorMemberDetailSheetView: View {
         .sheet(isPresented: .constant(true), content: {
             OperatorMemberDetailSheetView(
                 member: OperatorMemberDetailSheetView.previewMember,
-                isSubmittingOutPoint: false,
-                isDeletingOutPoint: false,
-                onGrantOut: { _ in true },
-                onDeleteOut: { _ in nil }
+                availablePointTypes: ChallengerPointType.availableTypes(for: 30),
+                isSubmittingPoint: false,
+                isDeletingPoint: false,
+                onGrantPoint: { _, _, _ in true },
+                onDeletePoint: { _ in nil }
             )
         })
 }
@@ -444,20 +571,29 @@ private extension OperatorMemberDetailSheetView {
         school: "덕성여자대학교",
         position: "Challenger",
         part: .front(type: .ios),
-        penalty: 2,
+        penalty: 4,
+        rewardPoints: 3,
         badge: false,
         managementTeam: .schoolPartLeader,
         attendanceRecords: [],
         penaltyHistory: [
             OperatorMemberPenaltyHistory(
                 date: Date().addingTimeInterval(-14 * 24 * 60 * 60),
-                reason: "세션 지각",
-                penaltyScore: 1.0
+                reason: "스터디 지각",
+                penaltyScore: 2.0,
+                pointType: .studyLate
             ),
             OperatorMemberPenaltyHistory(
                 date: Date().addingTimeInterval(-7 * 24 * 60 * 60),
-                reason: "세션 결석 (사유 없음)",
-                penaltyScore: 1.0
+                reason: "우수 워크북",
+                penaltyScore: 2.0,
+                pointType: .bestWorkbook
+            ),
+            OperatorMemberPenaltyHistory(
+                date: Date().addingTimeInterval(-3 * 24 * 60 * 60),
+                reason: "스터디 결석",
+                penaltyScore: 4.0,
+                pointType: .studyAbsent
             )
         ]
     )

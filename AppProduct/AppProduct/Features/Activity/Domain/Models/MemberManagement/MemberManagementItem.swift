@@ -46,9 +46,12 @@ struct MemberManagementItem: Identifiable, Equatable {
     /// 파트 정보 (iOS, Web 등)
     let part: UMCPartType
     
-    /// 현재 누적 패널티 점수
+    /// 현재 누적 벌점
     let penalty: Double
-    
+
+    /// 현재 누적 상점
+    let rewardPoints: Double
+
     /// 뱃지 표시 여부
     let badge: Bool
     
@@ -80,6 +83,7 @@ struct MemberManagementItem: Identifiable, Equatable {
         position: String,
         part: UMCPartType,
         penalty: Double,
+        rewardPoints: Double = 0,
         badge: Bool,
         managementTeam: ManagementTeam,
         attendanceRecords: [MemberAttendanceRecord],
@@ -97,6 +101,7 @@ struct MemberManagementItem: Identifiable, Equatable {
         self.position = position
         self.part = part
         self.penalty = penalty
+        self.rewardPoints = rewardPoints
         self.badge = badge
         self.managementTeam = managementTeam
         self.attendanceRecords = attendanceRecords

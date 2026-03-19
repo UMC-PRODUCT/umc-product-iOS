@@ -121,20 +121,19 @@ struct ManagementTeamBadgePresenter: View {
 
 // MARK: - PenaltyBadgePresenter
 
-/// 운영진 모드에서 멤버의 페널티 점수를 보여주는 뱃지 뷰입니다.
+/// 운영진 모드에서 멤버의 벌점을 보여주는 뱃지 뷰입니다.
 struct PenaltyBadgePresenter: View {
-    
-    /// 아웃
+
     let penalty: Double
-    
+
     private enum Constants {
         static let verticalPadding: CGFloat = 6
         static let horizontalPadding: CGFloat = 8
         static let bgOpacity: Double = 0.2
     }
-    
+
     var body: some View {
-        Text("아웃 \(String(format: "%.1f", penalty))")
+        Text("벌점 \(String(format: "%.0f", penalty))")
             .font(.app(.footnote, weight: .regular))
             .foregroundStyle(.red)
             .padding(.vertical, Constants.verticalPadding)

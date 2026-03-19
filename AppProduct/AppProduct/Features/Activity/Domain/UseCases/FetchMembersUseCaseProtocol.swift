@@ -12,14 +12,16 @@ protocol FetchMembersUseCaseProtocol {
     /// 멤버 목록 조회
     func execute() async throws -> [MemberManagementItem]
 
-    /// 챌린저에게 아웃 포인트를 부여합니다.
-    func grantOutPoint(
+    /// 챌린저에게 포인트를 부여합니다.
+    func grantPoint(
         challengerId: Int,
+        pointType: ChallengerPointType,
+        pointValue: Int,
         description: String
     ) async throws
 
-    /// 챌린저 아웃 포인트를 삭제합니다.
-    func deleteOutPoint(
+    /// 챌린저 포인트를 삭제합니다.
+    func deletePoint(
         challengerPointId: Int
     ) async throws
 
@@ -28,8 +30,8 @@ protocol FetchMembersUseCaseProtocol {
         challengerId: Int
     ) async throws -> [MemberAttendanceRecord]
 
-    /// 특정 챌린저의 아웃 히스토리를 조회합니다.
-    func fetchOutPenaltyHistory(
+    /// 특정 챌린저의 포인트 히스토리를 조회합니다.
+    func fetchPointHistory(
         challengerId: Int
     ) async throws -> [OperatorMemberPenaltyHistory]
 

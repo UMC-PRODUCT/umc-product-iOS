@@ -11,47 +11,55 @@ import SwiftUI
 @Observable
 final class MemberListViewModel {
     // MARK: - Dependency
-    
+
     private let fetchMembersUseCase: FetchMembersUseCaseProtocol
     private let errorHandler: ErrorHandler
-    
+    private let userSessionManager: UserSessionManager
+
     // MARK: - Properties
-    
+
     var searchText: String = ""
     var selectedMember: MemberManagementItem?
     private(set) var membersState: Loadable<[MemberManagementItem]> = .idle
     var alertPrompt: AlertPrompt?
-    private(set) var isSubmittingOutPoint: Bool = false
-    private(set) var isDeletingOutPoint: Bool = false
+    private(set) var isSubmittingPoint: Bool = false
+    private(set) var isDeletingPoint: Bool = false
     private(set) var isLoadingMemberDetail: Bool = false
-    
+
     // MARK: - Init
-    
+
     init(
         fetchMembersUseCase: FetchMembersUseCaseProtocol,
-        errorHandler: ErrorHandler
+        errorHandler: ErrorHandler,
+        userSessionManager: UserSessionManager
     ) {
         self.fetchMembersUseCase = fetchMembersUseCase
         self.errorHandler = errorHandler
+        self.userSessionManager = userSessionManager
     }
-    
+
     // MARK: - Computed Properties
-    
+
+    /// 현재 사용자 역할 기반 사용 가능한 포인트 타입
+    var availablePointTypes: [ChallengerPointType] {
+        ChallengerPointType.availableTypes(for: userSessionManager.currentRole.level)
+    }
+
     /// 검색어로 필터링된 멤버 목록
     private var filteredMembers: [MemberManagementItem] {
         guard case .loaded(let items) = membersState else {
             return []
         }
-        
+
         if searchText.isEmpty {
             return items
         }
-        
+
         return items.filter { member in
             member.name.localizedCaseInsensitiveContains(searchText)
         }
     }
-    
+
     /// Part별로 그룹핑된 멤버 목록
     var groupedMembers: [(part: UMCPartType, members: [MemberManagementItem])] {
         let grouped = Dictionary(grouping: filteredMembers, by: { $0.part })
@@ -59,12 +67,12 @@ final class MemberListViewModel {
             .map { (part: $0.key, members: $0.value) }
             .sorted { $0.part.sortOrder < $1.part.sortOrder }
     }
-    
+
     /// 검색 결과가 비어있는지 여부
     var isSearchResultEmpty: Bool {
         !searchText.isEmpty && filteredMembers.isEmpty
     }
-    
+
     // MARK: - Action
 
     /// 멤버 전체 목록을 조회합니다.
@@ -89,24 +97,21 @@ final class MemberListViewModel {
         }
     }
 
-    /// 멤버에게 아웃 포인트를 부여합니다.
-    ///
-    /// - Parameters:
-    ///   - member: 아웃을 부여할 멤버
-    ///   - reason: 아웃 사유
-    /// - Returns: 성공 여부
+    /// 멤버에게 포인트를 부여합니다.
     @MainActor
-    func submitOutPoint(
+    func submitPoint(
         member: MemberManagementItem,
-        reason: String
+        pointType: ChallengerPointType,
+        pointValue: Int,
+        description: String
     ) async -> Bool {
-        let trimmedReason = reason.trimmingCharacters(
+        let trimmedDescription = description.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
-        guard !trimmedReason.isEmpty else {
+        guard !trimmedDescription.isEmpty else {
             alertPrompt = AlertPrompt(
-                title: "아웃 부여 실패",
-                message: "아웃 사유를 입력해 주세요.",
+                title: "포인트 부여 실패",
+                message: "사유를 입력해 주세요.",
                 positiveBtnTitle: "확인"
             )
             return false
@@ -114,20 +119,22 @@ final class MemberListViewModel {
 
         guard let challengerId = member.challengerID else {
             alertPrompt = AlertPrompt(
-                title: "아웃 부여 실패",
+                title: "포인트 부여 실패",
                 message: "챌린저 ID를 찾을 수 없습니다.",
                 positiveBtnTitle: "확인"
             )
             return false
         }
 
-        isSubmittingOutPoint = true
-        defer { isSubmittingOutPoint = false }
+        isSubmittingPoint = true
+        defer { isSubmittingPoint = false }
 
         do {
-            try await fetchMembersUseCase.grantOutPoint(
+            try await fetchMembersUseCase.grantPoint(
                 challengerId: challengerId,
-                description: trimmedReason
+                pointType: pointType,
+                pointValue: pointValue,
+                description: trimmedDescription
             )
 
             try await reloadMembersAndReselect(member: member)
@@ -135,7 +142,7 @@ final class MemberListViewModel {
             return true
         } catch let error as DomainError {
             alertPrompt = AlertPrompt(
-                title: "아웃 부여 실패",
+                title: "포인트 부여 실패",
                 message: error.userMessage,
                 positiveBtnTitle: "확인"
             )
@@ -145,7 +152,7 @@ final class MemberListViewModel {
                 error,
                 context: ErrorContext(
                     feature: "Activity",
-                    action: "submitOutPoint"
+                    action: "submitPoint"
                 )
             )
             return false
@@ -153,11 +160,6 @@ final class MemberListViewModel {
     }
 
     /// 챌린저 멤버 상세 시트를 표시합니다.
-    ///
-    /// 출석 기록을 조회한 뒤 `selectedMember`를 설정합니다.
-    /// 조회 실패 시 기존 멤버 데이터 그대로 시트를 표시합니다.
-    ///
-    /// - Parameter member: 상세 정보를 표시할 멤버
     @MainActor
     func openChallengerMemberDetail(
         _ member: MemberManagementItem
@@ -173,7 +175,7 @@ final class MemberListViewModel {
         async let recordsTask = try? fetchMembersUseCase.fetchAttendanceRecords(
             challengerId: challengerId
         )
-        async let penaltyHistoryTask = try? fetchMembersUseCase.fetchOutPenaltyHistory(
+        async let pointHistoryTask = try? fetchMembersUseCase.fetchPointHistory(
             challengerId: challengerId
         )
         async let generationsTask = try? fetchMembersUseCase.fetchAllGenerations(
@@ -181,11 +183,15 @@ final class MemberListViewModel {
         )
 
         let records = await recordsTask ?? member.attendanceRecords
-        let penaltyHistory = await penaltyHistoryTask ?? member.penaltyHistory
+        let pointHistory = await pointHistoryTask ?? member.penaltyHistory
         let generations = await generationsTask ?? member.generation
-        let totalPenalty = penaltyHistory.isEmpty
+
+        let penaltyItems = pointHistory.filter { !$0.pointType.isReward }
+        let rewardItems = pointHistory.filter { $0.pointType.isReward }
+        let totalPenalty = penaltyItems.isEmpty
             ? member.penalty
-            : penaltyHistory.reduce(0) { $0 + $1.penaltyScore }
+            : penaltyItems.reduce(0) { $0 + $1.penaltyScore }
+        let totalReward = rewardItems.reduce(0) { $0 + $1.penaltyScore }
 
         selectedMember = MemberManagementItem(
             id: member.id,
@@ -199,34 +205,30 @@ final class MemberListViewModel {
             position: member.position,
             part: member.part,
             penalty: totalPenalty,
+            rewardPoints: totalReward,
             badge: member.badge,
             managementTeam: member.managementTeam,
             attendanceRecords: records,
-            penaltyHistory: penaltyHistory,
+            penaltyHistory: pointHistory,
             canViewPenaltyHistory: true
         )
     }
 
-    /// 아웃 포인트 기록을 삭제합니다.
-    ///
-    /// - Parameters:
-    ///   - member: 아웃을 삭제할 멤버
-    ///   - history: 삭제할 아웃 이력 항목
-    /// - Returns: 성공 여부
+    /// 포인트 기록을 삭제합니다.
     @MainActor
-    func deleteOutPoint(
+    func deletePoint(
         member: MemberManagementItem,
         history: OperatorMemberPenaltyHistory
     ) async -> String? {
         guard let challengerPointId = history.challengerPointId else {
-            return "삭제할 아웃 포인트 ID를 찾을 수 없습니다."
+            return "삭제할 포인트 ID를 찾을 수 없습니다."
         }
 
-        isDeletingOutPoint = true
-        defer { isDeletingOutPoint = false }
+        isDeletingPoint = true
+        defer { isDeletingPoint = false }
 
         do {
-            try await fetchMembersUseCase.deleteOutPoint(
+            try await fetchMembersUseCase.deletePoint(
                 challengerPointId: challengerPointId
             )
             try await reloadMembersAndReselect(member: member)
@@ -235,18 +237,18 @@ final class MemberListViewModel {
         } catch let error as DomainError {
             return error.userMessage
         } catch let error as RepositoryError {
-            return deleteOutPointFailureMessage(from: error)
+            return deletePointFailureMessage(from: error)
         } catch let error as NetworkError {
-            return deleteOutPointFailureMessage(from: error)
+            return deletePointFailureMessage(from: error)
         } catch {
             errorHandler.handle(
                 error,
                 context: ErrorContext(
                     feature: "Activity",
-                    action: "deleteOutPoint"
+                    action: "deletePoint"
                 )
             )
-            return "아웃 삭제에 실패했습니다. 잠시 후 다시 시도해주세요."
+            return "포인트 삭제에 실패했습니다. 잠시 후 다시 시도해주세요."
         }
     }
 
@@ -291,8 +293,6 @@ final class MemberListViewModel {
         })
     }
 
-    /// `sheet(item:)`는 `id`가 바뀌면 다른 시트로 인식해 닫았다가 다시 엽니다.
-    /// 서버 재조회 후 데이터는 최신 값으로 바꾸되, 시트 식별자는 유지합니다.
     private func memberWithStableSheetIdentity(
         base: MemberManagementItem,
         updated: MemberManagementItem
@@ -309,6 +309,7 @@ final class MemberListViewModel {
             position: updated.position,
             part: updated.part,
             penalty: updated.penalty,
+            rewardPoints: updated.rewardPoints,
             badge: updated.badge,
             managementTeam: updated.managementTeam,
             attendanceRecords: updated.attendanceRecords,
@@ -317,7 +318,7 @@ final class MemberListViewModel {
         )
     }
 
-    private func deleteOutPointFailureMessage(from error: RepositoryError) -> String {
+    private func deletePointFailureMessage(from error: RepositoryError) -> String {
         if case .serverError(_, let message) = error,
            let message,
            !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -326,7 +327,7 @@ final class MemberListViewModel {
         return error.userMessage
     }
 
-    private func deleteOutPointFailureMessage(from error: NetworkError) -> String {
+    private func deletePointFailureMessage(from error: NetworkError) -> String {
         guard case .requestFailed(_, let data) = error else {
             return error.userMessage
         }
