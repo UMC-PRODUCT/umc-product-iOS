@@ -8,6 +8,16 @@
 import Foundation
 import SwiftUI
 
+// MARK: - GenerationPointSummary
+
+/// 기수별 상벌점 요약 데이터
+struct GenerationPointSummary: Equatable, Identifiable {
+    var id: Int { gisu }
+    let gisu: Int
+    let reward: Double
+    let penalty: Double
+}
+
 // MARK: - MemberManagementItem
 
 /// 멤버 관리 리스트에서 사용되는 데이터 모델입니다.
@@ -71,6 +81,9 @@ struct MemberManagementItem: Identifiable, Equatable {
     /// 아웃 히스토리 열람 가능 여부
     let canViewPenaltyHistory: Bool
 
+    /// 기수별 상벌점 요약 목록
+    let generationPoints: [GenerationPointSummary]
+
     init(
         id: UUID = .init(),
         memberID: Int? = nil,
@@ -88,7 +101,8 @@ struct MemberManagementItem: Identifiable, Equatable {
         managementTeam: ManagementTeam,
         attendanceRecords: [MemberAttendanceRecord],
         penaltyHistory: [OperatorMemberPenaltyHistory],
-        canViewPenaltyHistory: Bool = true
+        canViewPenaltyHistory: Bool = true,
+        generationPoints: [GenerationPointSummary] = []
     ) {
         self.id = id
         self.memberID = memberID
@@ -107,5 +121,6 @@ struct MemberManagementItem: Identifiable, Equatable {
         self.attendanceRecords = attendanceRecords
         self.penaltyHistory = penaltyHistory
         self.canViewPenaltyHistory = canViewPenaltyHistory
+        self.generationPoints = generationPoints
     }
 }

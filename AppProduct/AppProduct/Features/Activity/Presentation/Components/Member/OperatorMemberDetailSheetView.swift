@@ -271,26 +271,32 @@ struct OperatorMemberDetailSheetView: View {
         type: ChallengerPointType,
         tint: Color
     ) -> some View {
-        Button {
-            selectedPointType = type
-            if type.isCustom {
-                customPointValueText = ""
-                pointValue = 0
-            } else {
-                pointValue = type.defaultPointValue
+        let isSelected = selectedPointType == type
+
+        return Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                selectedPointType = type
+                if type.isCustom {
+                    customPointValueText = ""
+                    pointValue = 0
+                } else {
+                    pointValue = type.defaultPointValue
+                }
             }
         } label: {
             HStack {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? tint : .grey400)
+                    .contentTransition(.symbolEffect(.replace))
+
                 Text(type.displayName)
                     .appFont(.subheadline, color: .primary)
+
                 Spacer()
+
                 if !type.isCustom {
                     Text("\(type.defaultPointValue > 0 ? "+" : "")\(type.defaultPointValue)")
-                        .appFont(.subheadline, color: tint)
-                }
-                if selectedPointType == type {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(tint)
+                        .appFont(.subheadlineEmphasis, color: isSelected ? tint : .grey500)
                 }
             }
             .contentShape(Rectangle())
@@ -433,7 +439,7 @@ struct OperatorMemberDetailSheetView: View {
         .listRowSpacing(DefaultSpacing.spacing8)
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
-        .frame(height: scrollViewHeight)
+//        .frame(height: scrollViewHeight)
     }
 
     private func penaltyHistoryRow(_ history: OperatorMemberPenaltyHistory) -> some View {

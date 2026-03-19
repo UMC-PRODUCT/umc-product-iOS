@@ -238,6 +238,13 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
         let profile = try await fetchMemberProfile(memberId: memberId)
         return allGenerationsText(from: profile, fallback: "")
     }
+
+    func fetchGenerationPointSummaries(
+        memberId: Int
+    ) async throws -> [GenerationPointSummary] {
+        let profile = try await fetchMemberProfile(memberId: memberId)
+        return makeGenerationPointSummaries(from: profile, memberId: memberId)
+    }
 }
 
 // MARK: - Private Helper
@@ -636,6 +643,43 @@ private extension MemberRepository {
             return "\(gisu)기"
         }
         return "-"
+    }
+
+    func makeGenerationPointSummaries(
+        from profile: MemberManagementProfileDTO,
+        memberId: Int
+    ) -> [GenerationPointSummary] {
+        let records = profile.challengerRecords.filter {
+            $0.memberId == memberId || $0.memberId == 0
+        }
+        guard !records.isEmpty else { return [] }
+
+        return records.compactMap { record in
+            guard record.gisu > 0 else { return nil }
+            let allPoints = record.resolvedPoints
+            let reward = allPoints
+                .filter {
+                    let resolved = ChallengerPointType(
+                        rawValue: $0.pointType.uppercased()
+                    )
+                    return resolved?.isReward == true
+                }
+                .reduce(0) { $0 + abs($1.point) }
+            let penalty = allPoints
+                .filter {
+                    let resolved = ChallengerPointType(
+                        rawValue: $0.pointType.uppercased()
+                    )
+                    return resolved == nil || !(resolved!.isReward)
+                }
+                .reduce(0) { $0 + abs($1.point) }
+            return GenerationPointSummary(
+                gisu: record.gisu,
+                reward: reward,
+                penalty: penalty
+            )
+        }
+        .sorted { $0.gisu < $1.gisu }
     }
 
     func makePenaltyHistories(

@@ -303,6 +303,8 @@ extension HomeViewModel {
                 gisuId: 1,
                 gen: 6,
                 penaltyPoint: 0,
+                rewardPoint: 0,
+                pointLogs: [],
                 penaltyLogs: []
             )
         ])

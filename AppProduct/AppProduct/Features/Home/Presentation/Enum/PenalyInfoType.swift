@@ -17,6 +17,19 @@ struct PenaltyInfoItem: Equatable, Codable {
     let penaltyPoint: Int
 }
 
+/// 상벌점 통합 기록 아이템
+struct PointLogItem: Equatable, Identifiable {
+    let id = UUID()
+    /// 사유 (예: 지각, 우수 워크북 등)
+    let reason: String
+    /// 발생 날짜 (MM.dd 형식)
+    let date: String
+    /// 포인트 값 (양수=상점, 음수=벌점)
+    let point: Int
+    /// 상점 여부
+    let isReward: Bool
+}
+
 /// 패널티 정보 표시 타입
 ///
 /// 패널티 점수 요약 또는 상세 기록 표시에 사용됩니다.

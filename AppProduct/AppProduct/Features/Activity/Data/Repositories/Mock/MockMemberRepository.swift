@@ -174,6 +174,15 @@ final class MockMemberRepository: MemberRepositoryProtocol {
     func fetchAllGenerations(memberId: Int) async throws -> String {
         "8기, 9기"
     }
+
+    func fetchGenerationPointSummaries(
+        memberId: Int
+    ) async throws -> [GenerationPointSummary] {
+        [
+            GenerationPointSummary(gisu: 8, reward: 2, penalty: 1),
+            GenerationPointSummary(gisu: 9, reward: 1, penalty: 0)
+        ]
+    }
 }
 
 // MARK: - Mock Attendance Records

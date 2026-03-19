@@ -22,9 +22,15 @@ struct GenerationData: Identifiable, Equatable {
     /// 기수 번호 (예: 9, 10, 11)
     let gen: Int
 
-    /// 현재 패널티 포인트 총점
+    /// 현재 벌점 총점
     let penaltyPoint: Int
 
-    /// 패널티 상세 기록 리스트
+    /// 현재 상점 총점
+    let rewardPoint: Int
+
+    /// 상벌점 통합 기록 (최근 3건)
+    let pointLogs: [PointLogItem]
+
+    /// 패널티 상세 기록 리스트 (하위호환)
     let penaltyLogs: [PenaltyInfoItem]
 }

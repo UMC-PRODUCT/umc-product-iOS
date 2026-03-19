@@ -305,19 +305,12 @@ extension ChallengerMemberDTO {
         )
     }
 
-    /// DTO → GenerationData 변환 (홈 화면 패널티 카드용)
+    /// DTO → GenerationData 변환 (홈 화면 상벌점 카드용)
     ///
     /// - Parameter gisuId: MyProfileDTO의 RoleDTO에서 전달받은 기수 식별 ID
-    /// - Returns: 패널티만 필터링된 `GenerationData`
-    ///
-    /// - Note: `bestWorkbook` 포인트는 제외하고 `warning`, `out`만 포함합니다.
+    /// - Returns: 상점/벌점이 포함된 `GenerationData`
     func toGenerationData(gisuId: Int) -> GenerationData {
-        let maxRecentPenaltyLogs = 3
-
-        // 벌점 유형만 필터링
-        let penaltyPoints = challengerPoints.filter {
-            $0.pointType.isPenalty
-        }
+        let maxRecentLogs = 3
 
         // ISO 8601 파싱 (소수 초 유무 모두 허용)
         let fractionalFormatter = ISO8601DateFormatter()
@@ -331,20 +324,55 @@ extension ChallengerMemberDTO {
         }
 
         let displayFormatter = DateFormatter()
-        displayFormatter.dateFormat = "yyyy.MM.dd"
+        displayFormatter.dateFormat = "MM.dd"
 
+        let penaltyDisplayFormatter = DateFormatter()
+        penaltyDisplayFormatter.dateFormat = "yyyy.MM.dd"
+
+        // 벌점/상점 분리
+        let penaltyPoints = challengerPoints.filter { $0.pointType.isPenalty }
+        let rewardPoints = challengerPoints.filter { !$0.pointType.isPenalty }
+
+        let penaltyTotal = penaltyPoints.reduce(0) { $0 + Int($1.point) }
+        let rewardTotal = rewardPoints.reduce(0) { $0 + Int($1.point) }
+
+        // 상벌점 통합 기록 (최신순 정렬, 전체)
+        let allPointsSorted = challengerPoints
+            .sorted { lhs, rhs in
+                let lhsDate = parseISODate(lhs.createdAt) ?? .distantPast
+                let rhsDate = parseISODate(rhs.createdAt) ?? .distantPast
+                return lhsDate > rhsDate
+            }
+
+        let pointLogs = allPointsSorted.map { point in
+            let dateString: String
+            if let date = parseISODate(point.createdAt) {
+                dateString = displayFormatter.string(from: date)
+            } else {
+                dateString = point.createdAt
+            }
+            let isReward = !point.pointType.isPenalty
+            return PointLogItem(
+                reason: point.description,
+                date: dateString,
+                point: isReward ? Int(point.point) : -Int(point.point),
+                isReward: isReward
+            )
+        }
+
+        // 기존 penaltyLogs 유지 (하위호환)
         let recentPenaltyPoints = penaltyPoints
             .sorted { lhs, rhs in
                 let lhsDate = parseISODate(lhs.createdAt) ?? .distantPast
                 let rhsDate = parseISODate(rhs.createdAt) ?? .distantPast
                 return lhsDate > rhsDate
             }
-            .prefix(maxRecentPenaltyLogs)
+            .prefix(maxRecentLogs)
 
-        let logs = recentPenaltyPoints.map { point in
+        let penaltyLogs = recentPenaltyPoints.map { point in
             let dateString: String
             if let date = parseISODate(point.createdAt) {
-                dateString = displayFormatter.string(from: date)
+                dateString = penaltyDisplayFormatter.string(from: date)
             } else {
                 dateString = point.createdAt
             }
@@ -355,13 +383,13 @@ extension ChallengerMemberDTO {
             )
         }
 
-        let total = penaltyPoints.reduce(0) { $0 + Int($1.point) }
-
         return GenerationData(
             gisuId: gisuId,
             gen: gisu,
-            penaltyPoint: total,
-            penaltyLogs: logs
+            penaltyPoint: penaltyTotal,
+            rewardPoint: rewardTotal,
+            pointLogs: Array(pointLogs),
+            penaltyLogs: penaltyLogs
         )
     }
 }

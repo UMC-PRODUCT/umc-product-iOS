@@ -55,8 +55,8 @@ struct FailedVerificationUMC: View {
         /// 서브타이틀 텍스트
         static let subtitle: String = "죄송합니다. 입력하신 정보로 등록된 \nUMC 챌린저 정보를 찾을 수 없습니다."
 
-        /// 상단 텍스트 버튼용 기존 챌린저 인증 문구
-        static let verifyTextButtonTitle: String = "기존 챌린저 인증하기"
+        /// 상단 텍스트 버튼용 UMC 챌린저 인증 문구
+        static let verifyTextButtonTitle: String = "UMC 챌린저 인증하기"
 
         /// 기존 챌린저 코드 입력 얼럿 제목
         static let codeAlertTitle: String = "기존 챌린저 코드 입력"
@@ -139,17 +139,32 @@ struct FailedVerificationUMC: View {
         }
     }
 
-    /// 제목/부제목 하단의 기존 챌린저 인증 텍스트 버튼
+    /// 제목/부제목 하단의 UMC 챌린저 인증 텍스트 버튼
+    @State private var isBouncing = false
+
     private var existingChallengerTextButton: some View {
         Button {
             viewModel.presentCodeAlert()
         } label: {
             Text(Constants.verifyTextButtonTitle)
-                .underline()
-                .appFont(.callout, weight: .semibold, color: .indigo500)
+                .appFont(.callout, weight: .semibold, color: .white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
         }
+        .buttonStyle(.glassProminent)
+        .scaleEffect(isBouncing ? 1.08 : 1.0)
+        .animation(
+            .spring(duration: 0.4, bounce: 0.6)
+                .repeatCount(3, autoreverses: true),
+            value: isBouncing
+        )
         .padding(.top, Constants.verifyButtonTopPadding)
         .disabled(isInteractionDisabled)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                isBouncing = true
+            }
+        }
     }
 
     /// 하단 툴바 액션 구성을 제공합니다.

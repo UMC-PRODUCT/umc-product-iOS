@@ -12,7 +12,7 @@ struct ChallengerMemberDetailSheetView: View {
 
     @Environment(\.dismiss) private var dismiss
     var member: MemberManagementItem
-    @State private var showGenerationPopover: Bool = false
+    @State private var selectedGisu: Int?
 
     private enum Constants {
         static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
@@ -20,18 +20,27 @@ struct ChallengerMemberDetailSheetView: View {
         static let listPadding: EdgeInsets = .init(top: 12, leading: 12, bottom: 12, trailing: 12)
         static let profileSize: CGSize = .init(width: 60, height: 60)
 
-        static let baseHeight: CGFloat = 340
+        static let baseHeight: CGFloat = 360
         static let emptyRecordHeight: CGFloat = 150
         static let recordRowHeight: CGFloat = 50
         static let maxVisibleRecords: Int = 5
         static let minSheetHeight: CGFloat = 420
         static let maxSheetHeight: CGFloat = 700
+
+        static let summaryRowVerticalPadding: CGFloat = 12
+        static let partTagOpacity: Double = 0.14
+        static let partStrokeOpacity: Double = 0.4
+        static let partStrokeWidth: CGFloat = 1
     }
 
     // MARK: - Computed Properties
 
-    /// 현재 기수 (마지막 기수만 표시)
+    /// 현재 기수 표시 (마지막 기수)
     private var currentGeneration: String {
+        if hasMultipleGenerations,
+           let lastGisu = member.generationPoints.map(\.gisu).max() {
+            return "\(lastGisu)기"
+        }
         let gens = member.generation
             .components(separatedBy: ",")
             .map { $0.trimmingCharacters(in: .whitespaces) }
@@ -41,7 +50,23 @@ struct ChallengerMemberDetailSheetView: View {
 
     /// 복수 기수 여부
     private var hasMultipleGenerations: Bool {
-        member.generation.contains(",")
+        member.generationPoints.count > 1
+    }
+
+    /// 현재 선택된 기수의 요약 데이터
+    private var selectedSummary: GenerationPointSummary? {
+        guard let gisu = selectedGisu else { return nil }
+        return member.generationPoints.first { $0.gisu == gisu }
+    }
+
+    /// 현재 선택된 기수의 상점
+    private var displayRewardPoints: Double {
+        selectedSummary?.reward ?? member.rewardPoints
+    }
+
+    /// 현재 선택된 기수의 벌점
+    private var displayPenaltyPoints: Double {
+        selectedSummary?.penalty ?? member.penalty
     }
 
     private var dynamicSheetHeight: CGFloat {
@@ -80,11 +105,7 @@ struct ChallengerMemberDetailSheetView: View {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
                 memberInfoView
 
-                HStack(spacing: DefaultSpacing.spacing16) {
-                    generationView
-                    infoBox(title: "상점", value: String(format: "%.0f", member.rewardPoints), color: .green)
-                    infoBox(title: "벌점", value: String(format: "%.0f", member.penalty), color: .red)
-                }
+                summaryCardView
 
                 recordView
             }
@@ -107,10 +128,16 @@ struct ChallengerMemberDetailSheetView: View {
                     Text(member.part.name)
                         .appFont(.callout, color: member.part.color)
                         .padding(Constants.tagPadding)
-                        .background(member.part.color.opacity(0.14), in: Capsule())
+                        .background(
+                            member.part.color.opacity(Constants.partTagOpacity),
+                            in: Capsule()
+                        )
                         .overlay {
                             Capsule()
-                                .stroke(member.part.color.opacity(0.4), lineWidth: 1)
+                                .stroke(
+                                    member.part.color.opacity(Constants.partStrokeOpacity),
+                                    lineWidth: Constants.partStrokeWidth
+                                )
                         }
                     Text(member.school)
                         .appFont(.callout, color: .black)
@@ -124,49 +151,85 @@ struct ChallengerMemberDetailSheetView: View {
         }
     }
 
-    /// 활동 기수 박스 — 탭하면 전체 기수 팝오버
-    private var generationView: some View {
-        VStack(spacing: DefaultSpacing.spacing8) {
-            Text("활동 기수")
-                .appFont(.callout, color: .grey700)
-            HStack(spacing: 2) {
-                Text(currentGeneration)
-                    .appFont(.title3Emphasis)
+    private var summaryCardView: some View {
+        VStack(spacing: 0) {
+            summaryRow(title: "활동 기수") {
                 if hasMultipleGenerations {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.grey500)
+                    generationMenu
+                } else {
+                    Text(currentGeneration)
+                        .appFont(.subheadlineEmphasis)
                 }
             }
-        }
-        .padding(Constants.boxPadding)
-        .frame(maxWidth: .infinity)
-        .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-        .glass()
-        .onTapGesture {
-            if hasMultipleGenerations {
-                showGenerationPopover = true
+
+            Divider()
+
+            summaryRow(title: "상점") {
+                Text(String(format: "%.0f", displayRewardPoints))
+                    .appFont(.subheadlineEmphasis, color: .green)
+            }
+
+            Divider()
+
+            summaryRow(title: "벌점") {
+                Text(String(format: "%.0f", displayPenaltyPoints))
+                    .appFont(.subheadlineEmphasis, color: .red)
             }
         }
-        .popover(isPresented: $showGenerationPopover, arrowEdge: .bottom) {
-            Text(member.generation)
-                .appFont(.subheadline)
-                .padding()
-                .presentationCompactAdaptation(.popover)
+        .padding(.horizontal, Constants.listPadding.leading)
+        .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
+        .glass()
+    }
+
+    private var generationMenu: some View {
+        Group {
+            if selectedGisu != nil {
+                Button {
+                    withAnimation { selectedGisu = nil }
+                } label: {
+                    generationLabel
+                }
+                .buttonStyle(.plain)
+            } else {
+                Menu {
+                    ForEach(member.generationPoints) { summary in
+                        Button {
+                            selectedGisu = summary.gisu
+                        } label: {
+                            Text("\(summary.gisu)기")
+                        }
+                    }
+                } label: {
+                    generationLabel
+                }
+                .foregroundStyle(.primary)
+            }
         }
     }
 
-    private func infoBox(title: String, value: String, color: Color) -> some View {
-        VStack(spacing: DefaultSpacing.spacing8) {
-            Text(title)
-                .appFont(.callout, color: .grey700)
-            Text(value)
-                .appFont(.title3Emphasis, color: color)
+    private var generationLabel: some View {
+        HStack(spacing: DefaultSpacing.spacing4) {
+            Text(selectedGisu.map { "\($0)기" } ?? currentGeneration)
+                .appFont(.subheadlineEmphasis)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.grey500)
         }
-        .padding(Constants.boxPadding)
-        .frame(maxWidth: .infinity)
-        .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-        .glass()
+    }
+
+    // MARK: - Function
+
+    private func summaryRow<Content: View>(
+        title: String,
+        @ViewBuilder value: () -> Content
+    ) -> some View {
+        HStack {
+            Text(title)
+                .appFont(.subheadline, color: .grey700)
+            Spacer()
+            value()
+        }
+        .padding(.vertical, Constants.summaryRowVerticalPadding)
     }
 
     private var recordView: some View {
@@ -257,7 +320,12 @@ struct ChallengerMemberDetailSheetView: View {
                             status: .late
                         ),
                     ],
-                    penaltyHistory: []
+                    penaltyHistory: [],
+                    generationPoints: [
+                        GenerationPointSummary(gisu: 7, reward: 1, penalty: 0),
+                        GenerationPointSummary(gisu: 8, reward: 2, penalty: 1),
+                        GenerationPointSummary(gisu: 9, reward: 0, penalty: 1)
+                    ]
                 ))
             })
 }

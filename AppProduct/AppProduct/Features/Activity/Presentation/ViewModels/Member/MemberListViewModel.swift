@@ -172,6 +172,8 @@ final class MemberListViewModel {
         isLoadingMemberDetail = true
         defer { isLoadingMemberDetail = false }
 
+        let memberId = member.memberID ?? 0
+
         async let recordsTask = try? fetchMembersUseCase.fetchAttendanceRecords(
             challengerId: challengerId
         )
@@ -179,12 +181,15 @@ final class MemberListViewModel {
             challengerId: challengerId
         )
         async let generationsTask = try? fetchMembersUseCase.fetchAllGenerations(
-            memberId: member.memberID ?? 0
+            memberId: memberId
         )
+        async let genPointsTask = try? fetchMembersUseCase
+            .fetchGenerationPointSummaries(memberId: memberId)
 
         let records = await recordsTask ?? member.attendanceRecords
         let pointHistory = await pointHistoryTask ?? member.penaltyHistory
         let generations = await generationsTask ?? member.generation
+        let generationPoints = await genPointsTask ?? []
 
         let penaltyItems = pointHistory.filter { !$0.pointType.isReward }
         let rewardItems = pointHistory.filter { $0.pointType.isReward }
@@ -210,7 +215,8 @@ final class MemberListViewModel {
             managementTeam: member.managementTeam,
             attendanceRecords: records,
             penaltyHistory: pointHistory,
-            canViewPenaltyHistory: true
+            canViewPenaltyHistory: true,
+            generationPoints: generationPoints
         )
     }
 
@@ -314,7 +320,8 @@ final class MemberListViewModel {
             managementTeam: updated.managementTeam,
             attendanceRecords: updated.attendanceRecords,
             penaltyHistory: updated.penaltyHistory,
-            canViewPenaltyHistory: base.canViewPenaltyHistory || updated.canViewPenaltyHistory
+            canViewPenaltyHistory: base.canViewPenaltyHistory || updated.canViewPenaltyHistory,
+            generationPoints: updated.generationPoints
         )
     }
 

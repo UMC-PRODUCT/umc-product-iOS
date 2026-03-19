@@ -37,4 +37,9 @@ protocol MemberRepositoryProtocol {
 
     /// 멤버 프로필에서 모든 활동 기수 텍스트를 조회합니다.
     func fetchAllGenerations(memberId: Int) async throws -> String
+
+    /// 멤버의 기수별 상벌점 요약을 조회합니다.
+    func fetchGenerationPointSummaries(
+        memberId: Int
+    ) async throws -> [GenerationPointSummary]
 }
