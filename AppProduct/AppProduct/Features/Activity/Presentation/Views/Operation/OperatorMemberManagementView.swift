@@ -11,31 +11,30 @@ import SwiftUI
 ///
 /// 운영진이 동아리 멤버를 관리하는 화면입니다.
 struct OperatorMemberManagementView: View {
-    
+
     // MARK: - Property
-    
+
     @State private var viewModel: MemberListViewModel
-    
+
     // MARK: - Initializer
-    
+
     init(
         container: DIContainer,
-        errorHandler: ErrorHandler
+        errorHandler: ErrorHandler,
+        userSessionManager: UserSessionManager
     ) {
         let useCaseProvider = container.resolve(ActivityUseCaseProviding.self)
         let memberListViewModel = MemberListViewModel(
             fetchMembersUseCase: useCaseProvider.fetchMembersUseCase,
-            errorHandler: errorHandler
+            errorHandler: errorHandler,
+            userSessionManager: userSessionManager
         )
         self._viewModel = .init(wrappedValue: memberListViewModel)
     }
-    
-    // MARK: - Constant
-    
-    
+
     // MARK: - Body
     var body: some View {
-        
+
         Group {
             switch viewModel.membersState {
             case .idle, .loading:
@@ -69,16 +68,19 @@ struct OperatorMemberManagementView: View {
         .sheet(item: $viewModel.selectedMember) { member in
             OperatorMemberDetailSheetView(
                 member: member,
-                isSubmittingOutPoint: viewModel.isSubmittingOutPoint,
-                isDeletingOutPoint: viewModel.isDeletingOutPoint,
-                onGrantOut: { reason in
-                    await viewModel.submitOutPoint(
+                availablePointTypes: viewModel.availablePointTypes,
+                isSubmittingPoint: viewModel.isSubmittingPoint,
+                isDeletingPoint: viewModel.isDeletingPoint,
+                onGrantPoint: { pointType, pointValue, description in
+                    await viewModel.submitPoint(
                         member: member,
-                        reason: reason
+                        pointType: pointType,
+                        pointValue: pointValue,
+                        description: description
                     )
                 },
-                onDeleteOut: { history in
-                    await viewModel.deleteOutPoint(
+                onDeletePoint: { history in
+                    await viewModel.deletePoint(
                         member: member,
                         history: history
                     )
@@ -87,7 +89,7 @@ struct OperatorMemberManagementView: View {
         }
         .alertPrompt(item: $viewModel.alertPrompt)
     }
-    
+
     // MARK: - SubView
 
     private var loadingView: some View {
@@ -153,7 +155,8 @@ struct OperatorMemberManagementView: View {
 #Preview {
     OperatorMemberManagementView(
         container: MissionPreviewData.container,
-        errorHandler: MissionPreviewData.errorHandler
+        errorHandler: MissionPreviewData.errorHandler,
+        userSessionManager: UserSessionManager()
     )
 }
 #endif

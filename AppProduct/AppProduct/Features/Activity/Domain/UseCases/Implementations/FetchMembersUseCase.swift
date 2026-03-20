@@ -11,31 +11,35 @@ import Foundation
 final class FetchMembersUseCase: FetchMembersUseCaseProtocol {
     // MARK: - Property
     private let repository: MemberRepositoryProtocol
-    
+
     // MARK: - Init
     init(repository: MemberRepositoryProtocol) {
         self.repository = repository
     }
-    
+
     // MARK: - Function
     func execute() async throws -> [MemberManagementItem] {
         try await repository.fetchMembers()
     }
 
-    func grantOutPoint(
+    func grantPoint(
         challengerId: Int,
+        pointType: ChallengerPointType,
+        pointValue: Int,
         description: String
     ) async throws {
-        try await repository.grantOutPoint(
+        try await repository.grantPoint(
             challengerId: challengerId,
+            pointType: pointType,
+            pointValue: pointValue,
             description: description
         )
     }
 
-    func deleteOutPoint(
+    func deletePoint(
         challengerPointId: Int
     ) async throws {
-        try await repository.deleteOutPoint(
+        try await repository.deletePoint(
             challengerPointId: challengerPointId
         )
     }
@@ -48,15 +52,21 @@ final class FetchMembersUseCase: FetchMembersUseCaseProtocol {
         )
     }
 
-    func fetchOutPenaltyHistory(
+    func fetchPointHistory(
         challengerId: Int
     ) async throws -> [OperatorMemberPenaltyHistory] {
-        try await repository.fetchOutPenaltyHistory(
+        try await repository.fetchPointHistory(
             challengerId: challengerId
         )
     }
 
     func fetchAllGenerations(memberId: Int) async throws -> String {
         try await repository.fetchAllGenerations(memberId: memberId)
+    }
+
+    func fetchGenerationPointSummaries(
+        memberId: Int
+    ) async throws -> [GenerationPointSummary] {
+        try await repository.fetchGenerationPointSummaries(memberId: memberId)
     }
 }

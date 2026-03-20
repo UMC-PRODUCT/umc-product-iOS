@@ -62,20 +62,31 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
                     preferredGisuId: preferredGisuID
                 )
             }
-            let outPoints = record?.resolvedPoints.filter {
-                $0.pointType.uppercased() == ChallengerPointType.out.rawValue
-            } ?? []
+            let allPoints = record?.resolvedPoints ?? []
 
-            let totalOutPenalty: Double
+            let penaltyPoints = allPoints.filter {
+                let typeStr = $0.pointType.uppercased()
+                let resolved = ChallengerPointType(rawValue: typeStr)
+                return resolved == nil || !(resolved!.isReward)
+            }
+            let rewardPointsList = allPoints.filter {
+                let typeStr = $0.pointType.uppercased()
+                let resolved = ChallengerPointType(rawValue: typeStr)
+                return resolved?.isReward == true
+            }
+
+            let totalPenalty: Double
             let penaltyHistories: [OperatorMemberPenaltyHistory]
 
-            if outPoints.isEmpty {
-                totalOutPenalty = descriptor.fallbackPenalty
+            if penaltyPoints.isEmpty {
+                totalPenalty = descriptor.fallbackPenalty
                 penaltyHistories = []
             } else {
-                totalOutPenalty = outPoints.reduce(0) { $0 + abs($1.point) }
-                penaltyHistories = makePenaltyHistories(from: outPoints)
+                totalPenalty = penaltyPoints.reduce(0) { $0 + abs($1.point) }
+                penaltyHistories = makePenaltyHistories(from: penaltyPoints)
             }
+
+            let totalReward = rewardPointsList.reduce(0) { $0 + abs($1.point) }
 
             return MemberManagementItem(
                 memberID: descriptor.memberId,
@@ -93,7 +104,8 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
                 school: profile?.schoolName.nonEmpty ?? descriptor.schoolName,
                 position: descriptor.position,
                 part: descriptor.part,
-                penalty: totalOutPenalty,
+                penalty: totalPenalty,
+                rewardPoints: totalReward,
                 badge: false,
                 managementTeam: resolvedManagementTeam(
                     profile: profile,
@@ -114,21 +126,19 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
         }
     }
 
-    /// 챌린저에게 아웃 포인트를 부여합니다.
-    ///
-    /// - Parameters:
-    ///   - challengerId: 포인트를 부여할 챌린저 ID
-    ///   - description: 아웃 사유
-    /// - Throws: 네트워크 오류 또는 서버 에러
-    func grantOutPoint(
+    /// 챌린저에게 포인트를 부여합니다.
+    func grantPoint(
         challengerId: Int,
+        pointType: ChallengerPointType,
+        pointValue: Int,
         description: String
     ) async throws {
         let response = try await adapter.request(
             StudyRouter.createChallengerPoint(
                 challengerId: challengerId,
                 body: ChallengerPointCreateRequestDTO(
-                    pointType: .out,
+                    pointType: pointType,
+                    pointValue: pointValue,
                     description: description
                 )
             )
@@ -145,11 +155,8 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
         try apiResponse.validateSuccess()
     }
 
-    /// 챌린저 아웃 포인트를 삭제합니다.
-    ///
-    /// - Parameter challengerPointId: 삭제할 챌린저 포인트 ID
-    /// - Throws: 네트워크 오류 또는 서버 에러
-    func deleteOutPoint(
+    /// 챌린저 포인트를 삭제합니다.
+    func deletePoint(
         challengerPointId: Int
     ) async throws {
         let response = try await adapter.request(
@@ -198,11 +205,8 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
         }
     }
 
-    /// 챌린저 상세에서 아웃 히스토리를 조회합니다.
-    ///
-    /// `GET /api/v1/challenger/{challengerId}` 응답의 `challengerPoints`
-    /// 또는 `points` 중 `OUT` 타입만 추려 반환합니다.
-    func fetchOutPenaltyHistory(
+    /// 챌린저 상세에서 전체 포인트 히스토리를 조회합니다.
+    func fetchPointHistory(
         challengerId: Int
     ) async throws -> [OperatorMemberPenaltyHistory] {
         let response = try await adapter.request(
@@ -213,23 +217,33 @@ final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendable {
             from: response.data
         )
         let challenger = try apiResponse.unwrap()
-        let outPoints = challenger.challengerPoints.filter { $0.pointType == .out }
 
-        return outPoints.map { point in
-            OperatorMemberPenaltyHistory(
-                challengerPointId: point.id > 0 ? point.id : nil,
-                date: ServerDateTimeConverter.parseUTCDateTimeOrTime(point.createdAt)
-                    ?? Date(),
-                reason: point.description.nonEmpty ?? "아웃",
-                penaltyScore: abs(point.point)
-            )
-        }
-        .sorted { $0.date > $1.date }
+        return challenger.challengerPoints
+            .filter { $0.pointType != .warning }
+            .map { point in
+                let resolvedType = ChallengerPointType(rawValue: point.pointType.rawValue) ?? .out
+                return OperatorMemberPenaltyHistory(
+                    challengerPointId: point.id > 0 ? point.id : nil,
+                    date: ServerDateTimeConverter.parseUTCDateTimeOrTime(point.createdAt)
+                        ?? Date(),
+                    reason: point.description.nonEmpty ?? resolvedType.displayName,
+                    penaltyScore: abs(point.point),
+                    pointType: resolvedType
+                )
+            }
+            .sorted { $0.date > $1.date }
     }
 
     func fetchAllGenerations(memberId: Int) async throws -> String {
         let profile = try await fetchMemberProfile(memberId: memberId)
         return allGenerationsText(from: profile, fallback: "")
+    }
+
+    func fetchGenerationPointSummaries(
+        memberId: Int
+    ) async throws -> [GenerationPointSummary] {
+        let profile = try await fetchMemberProfile(memberId: memberId)
+        return makeGenerationPointSummaries(from: profile, memberId: memberId)
     }
 }
 
@@ -631,16 +645,55 @@ private extension MemberRepository {
         return "-"
     }
 
+    func makeGenerationPointSummaries(
+        from profile: MemberManagementProfileDTO,
+        memberId: Int
+    ) -> [GenerationPointSummary] {
+        let records = profile.challengerRecords.filter {
+            $0.memberId == memberId || $0.memberId == 0
+        }
+        guard !records.isEmpty else { return [] }
+
+        return records.compactMap { record in
+            guard record.gisu > 0 else { return nil }
+            let allPoints = record.resolvedPoints
+            let reward = allPoints
+                .filter {
+                    let resolved = ChallengerPointType(
+                        rawValue: $0.pointType.uppercased()
+                    )
+                    return resolved?.isReward == true
+                }
+                .reduce(0) { $0 + abs($1.point) }
+            let penalty = allPoints
+                .filter {
+                    let resolved = ChallengerPointType(
+                        rawValue: $0.pointType.uppercased()
+                    )
+                    return resolved == nil || !(resolved!.isReward)
+                }
+                .reduce(0) { $0 + abs($1.point) }
+            return GenerationPointSummary(
+                gisu: record.gisu,
+                reward: reward,
+                penalty: penalty
+            )
+        }
+        .sorted { $0.gisu < $1.gisu }
+    }
+
     func makePenaltyHistories(
-        from outPoints: [MemberManagementPointDTO]
+        from points: [MemberManagementPointDTO]
     ) -> [OperatorMemberPenaltyHistory] {
-        outPoints.map { point in
-            OperatorMemberPenaltyHistory(
+        points.map { point in
+            let resolvedType = ChallengerPointType(rawValue: point.pointType.uppercased()) ?? .out
+            return OperatorMemberPenaltyHistory(
                 challengerPointId: point.id > 0 ? point.id : nil,
                 date: ServerDateTimeConverter.parseUTCDateTimeOrTime(point.createdAt)
                     ?? Date(),
-                reason: point.description.nonEmpty ?? "아웃",
-                penaltyScore: abs(point.point)
+                reason: point.description.nonEmpty ?? resolvedType.displayName,
+                penaltyScore: abs(point.point),
+                pointType: resolvedType
             )
         }
         .sorted { $0.date > $1.date }

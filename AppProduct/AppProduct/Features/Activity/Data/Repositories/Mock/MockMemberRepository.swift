@@ -142,40 +142,46 @@ final class MockMemberRepository: MemberRepositoryProtocol {
         ]
     }
 
-    func grantOutPoint(
+    func grantPoint(
         challengerId: Int,
+        pointType: ChallengerPointType,
+        pointValue: Int,
         description: String
     ) async throws {
-        _ = challengerId
-        _ = description
         try await Task.sleep(for: .milliseconds(300))
     }
 
-    func deleteOutPoint(
+    func deletePoint(
         challengerPointId: Int
     ) async throws {
-        _ = challengerPointId
         try await Task.sleep(for: .milliseconds(200))
     }
 
     func fetchAttendanceRecords(
         challengerId: Int
     ) async throws -> [MemberAttendanceRecord] {
-        _ = challengerId
         try await Task.sleep(for: .milliseconds(150))
         return MockAttendanceRecords.good
     }
 
-    func fetchOutPenaltyHistory(
+    func fetchPointHistory(
         challengerId: Int
     ) async throws -> [OperatorMemberPenaltyHistory] {
-        _ = challengerId
         try await Task.sleep(for: .milliseconds(150))
         return MockPenaltyHistory.oneOut
     }
 
     func fetchAllGenerations(memberId: Int) async throws -> String {
         "8기, 9기"
+    }
+
+    func fetchGenerationPointSummaries(
+        memberId: Int
+    ) async throws -> [GenerationPointSummary] {
+        [
+            GenerationPointSummary(gisu: 8, reward: 2, penalty: 1),
+            GenerationPointSummary(gisu: 9, reward: 1, penalty: 0)
+        ]
     }
 }
 

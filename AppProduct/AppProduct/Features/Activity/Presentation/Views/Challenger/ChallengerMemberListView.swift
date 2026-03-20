@@ -19,12 +19,14 @@ struct ChallengerMemberListView: View {
     
     init(
         container: DIContainer,
-        errorHandler: ErrorHandler
+        errorHandler: ErrorHandler,
+        userSessionManager: UserSessionManager
     ) {
         let useCaseProvider = container.resolve(ActivityUseCaseProviding.self)
         let memberListViewModel = MemberListViewModel(
             fetchMembersUseCase: useCaseProvider.fetchMembersUseCase,
-            errorHandler: errorHandler
+            errorHandler: errorHandler,
+            userSessionManager: userSessionManager
         )
         self._viewModel = .init(wrappedValue: memberListViewModel)
     }
@@ -134,6 +136,7 @@ struct ChallengerMemberListView: View {
 #Preview {
     ChallengerMemberListView(
         container: MissionPreviewData.container,
-        errorHandler: MissionPreviewData.errorHandler)
+        errorHandler: MissionPreviewData.errorHandler,
+        userSessionManager: UserSessionManager())
 }
 #endif

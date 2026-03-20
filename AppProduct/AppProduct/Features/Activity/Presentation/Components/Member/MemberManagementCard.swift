@@ -146,42 +146,64 @@ private struct MemberBottomTextPresenter: View, Equatable {
 
 
 // MARK: - MemberPenaltyPresenter
-/// 아웃 상태
-/// - 0일 때: 아무것도 나타나지않음
-/// - 0이 아닐 때: 경고 + 점수
+/// 상벌점 배지
 private struct MemberPenaltyPresenter: View, Equatable {
-    
+
     // MARK: - Property
     let memberManagementItem: MemberManagementItem
-    
+
     // MARK: - Constants
     fileprivate enum Constants {
-        static let hstackSpacing: CGFloat = 3
+        static let hstackSpacing: CGFloat = 4
         static let horizonSpacing: CGFloat = 8
         static let verticalSpacing: CGFloat = 4
         static let radius: CGFloat = 8
         static let strokeWidth: CGFloat = 0.5
     }
-    
+
     // MARK: - Body
     var body: some View {
-        if memberManagementItem.penalty != 0 {
-            HStack(spacing: Constants.hstackSpacing) {
-                Text("경고")
-                Text(String(format: "%.1f", memberManagementItem.penalty))
+        HStack(spacing: Constants.hstackSpacing) {
+            if memberManagementItem.rewardPoints > 0 {
+                pointBadge(
+                    label: "상점",
+                    value: memberManagementItem.rewardPoints,
+                    fgColor: .green,
+                    bgColor: Color.green.opacity(0.1),
+                    borderColor: Color.green.opacity(0.3)
+                )
             }
-            .appFont(.footnoteEmphasis)
-            .foregroundStyle(Color.red700)
-            .padding(.horizontal, Constants.horizonSpacing)
-            .padding(.vertical, Constants.verticalSpacing)
-            .background {
-                RoundedRectangle(cornerRadius: Constants.radius)
-                    .fill(Color.red100)
-                    .strokeBorder(Color.red300, lineWidth: Constants.strokeWidth)
+            if memberManagementItem.penalty > 0 {
+                pointBadge(
+                    label: "벌점",
+                    value: memberManagementItem.penalty,
+                    fgColor: Color.red700,
+                    bgColor: Color.red100,
+                    borderColor: Color.red300
+                )
             }
         }
-        else {
-            EmptyView()
+    }
+
+    private func pointBadge(
+        label: String,
+        value: Double,
+        fgColor: Color,
+        bgColor: Color,
+        borderColor: Color
+    ) -> some View {
+        HStack(spacing: 3) {
+            Text(label)
+            Text(String(format: "%.0f", value))
+        }
+        .appFont(.footnoteEmphasis)
+        .foregroundStyle(fgColor)
+        .padding(.horizontal, Constants.horizonSpacing)
+        .padding(.vertical, Constants.verticalSpacing)
+        .background {
+            RoundedRectangle(cornerRadius: Constants.radius)
+                .fill(bgColor)
+                .strokeBorder(borderColor, lineWidth: Constants.strokeWidth)
         }
     }
 }

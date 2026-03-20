@@ -6,48 +6,60 @@
 //
 
 import SwiftUI
+import Charts
 
-/// 홈 화면 패널티 카드
+/// 홈 화면 상벌점 카드
 ///
-/// 사용자의 기수별 패널티 정보와 상세 기록을 카드 형태로 표시합니다.
+/// 사용자의 기수별 상점/벌점 차트와 상세 기록을 카드 형태로 표시합니다.
 struct PenaltyCard: View, Equatable {
-    
+
     // MARK: - Properties
-    
-    /// 기수별 패널티 데이터 리스트
+
+    /// 기수별 상벌점 데이터 리스트
     let generations: [GenerationData]
-    
+
     /// 현재 표시 중인 탭(기수) 인덱스
     @State private var currentIndex: Int = 0
     /// 드래그 오프셋 (손가락 추적용)
     @State private var dragOffset: CGFloat = 0
     /// 수평 드래그 여부 (방향 잠금용)
     @State private var isHorizontalDrag: Bool?
+    /// 팝오버 필터 (nil이면 닫힘)
+    @State private var popoverFilter: PointLogFilter?
+
+    fileprivate enum PointLogFilter {
+        case reward
+        case penalty
+    }
 
     // MARK: - Constants
 
-    enum Constants {
+    fileprivate enum Constants {
         /// 카드 전체 패딩
         static let padding: CGFloat = 20
         /// 스와이프 임계 거리
         static let swipeThreshold: CGFloat = 50
         /// 스와이프 임계 속도
         static let velocityThreshold: CGFloat = 300
+        /// 차트 크기
+        static let chartSize: CGFloat = 120
+        /// 도넛 내부 비율
+        static let innerRadius: CGFloat = 0.6
     }
-    
+
     // MARK: - Equtable
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.generations == rhs.generations
     }
-    
+
     // MARK: - Init
-    
+
     /// PenaltyCard 생성자
-    /// - Parameter generations: 표시할 기수별 패널티 데이터
+    /// - Parameter generations: 표시할 기수별 상벌점 데이터
     init(generations: [GenerationData]) {
         self.generations = generations
     }
-    
+
     // MARK: - Body
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing24, content: {
@@ -55,7 +67,7 @@ struct PenaltyCard: View, Equatable {
                 generations: generations.map { $0.gen },
                 currentIndex: $currentIndex
             )
-            
+
             cardContent
                 .offset(x: dragOffset)
                 .contentShape(.rect)
@@ -76,16 +88,13 @@ struct PenaltyCard: View, Equatable {
 
     // MARK: - Function
 
-    /// 현재 선택된 기수의 패널티 포인트 및 상세 기록을 표시하는 콘텐츠 영역
+    /// 현재 선택된 기수의 상벌점 차트 및 기록을 표시하는 콘텐츠 영역
     @ViewBuilder
     private var cardContent: some View {
         if generations.indices.contains(currentIndex) {
             let generation = generations[currentIndex]
-            HStack(alignment: .top, spacing: DefaultSpacing.spacing16) {
-                CardInfo(infoType: .penalties(generation.penaltyPoint))
-
-                CardInfo(infoType: .infoText(generation.penaltyLogs))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+                pointChart(generation: generation)
             }
             .padding(.horizontal, DefaultSpacing.spacing4)
             .id(currentIndex)
@@ -93,15 +102,117 @@ struct PenaltyCard: View, Equatable {
         }
     }
 
+    /// 상점/벌점 도넛 차트
+    private func pointChart(generation: GenerationData) -> some View {
+        let hasData = generation.rewardPoint > 0 || generation.penaltyPoint > 0
+
+        return HStack(spacing: DefaultSpacing.spacing24) {
+            ZStack {
+                Chart {
+                    SectorMark(
+                        angle: .value("상점", hasData ? generation.rewardPoint : 0),
+                        innerRadius: .ratio(Constants.innerRadius),
+                        angularInset: 2
+                    )
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.indigo400, .indigo600],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+
+                    SectorMark(
+                        angle: .value("벌점", hasData ? generation.penaltyPoint : 0),
+                        innerRadius: .ratio(Constants.innerRadius),
+                        angularInset: 2
+                    )
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.indigo100, .indigo300],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+
+                    if !hasData {
+                        SectorMark(
+                            angle: .value("없음", 1),
+                            innerRadius: .ratio(Constants.innerRadius)
+                        )
+                        .foregroundStyle(.grey200)
+                    }
+                }
+                .chartLegend(.hidden)
+                .frame(width: Constants.chartSize, height: Constants.chartSize)
+                .allowsHitTesting(false)
+
+                VStack(spacing: 2) {
+                    Text("\(generation.rewardPoint + generation.penaltyPoint)")
+                        .appFont(.title2Emphasis, color: .grey900)
+                    Text("총점")
+                        .appFont(.caption2, color: .grey500)
+                }
+                .allowsHitTesting(false)
+
+                // 차트 영역 탭 감지 오버레이
+                Color.clear
+                    .frame(width: Constants.chartSize, height: Constants.chartSize)
+                    .contentShape(Circle())
+                    .onTapGesture { location in
+                        guard hasData else { return }
+                        let size = Constants.chartSize
+                        let center = CGPoint(x: size / 2, y: size / 2)
+                        let dx = location.x - center.x
+                        let dy = location.y - center.y
+                        // 12시 기준 시계방향 각도
+                        var angle = atan2(dx, -dy) * 180.0 / .pi
+                        if angle < 0 { angle += 360.0 }
+                        let total = Double(
+                            generation.rewardPoint + generation.penaltyPoint
+                        )
+                        let rewardDeg = Double(generation.rewardPoint) / total * 360.0
+                        popoverFilter = angle <= rewardDeg ? .reward : .penalty
+                    }
+            }
+            .popover(isPresented: Binding(
+                get: { popoverFilter != nil },
+                set: { if !$0 { popoverFilter = nil } }
+            )) {
+                PointLogPopover(
+                    logs: generation.pointLogs.filter {
+                        popoverFilter == .reward ? $0.isReward : !$0.isReward
+                    }
+                )
+                .presentationCompactAdaptation(.popover)
+            }
+
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+                legendLabel(color: .indigo500, label: "상점", value: generation.rewardPoint)
+                legendLabel(color: .indigo200, label: "벌점", value: generation.penaltyPoint)
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    /// 범례 라벨
+    private func legendLabel(color: Color, label: String, value: Int) -> some View {
+        HStack(spacing: DefaultSpacing.spacing8) {
+            Circle()
+                .fill(color)
+                .frame(width: 10, height: 10)
+            Text(label)
+                .appFont(.subheadline, color: .grey600)
+            Spacer()
+            Text("\(value)")
+                .appFont(.calloutEmphasis, color: .grey900)
+        }
+    }
+
     /// 기수 간 전환을 위한 수평 스와이프 제스처
-    ///
-    /// 방향 잠금, 러버밴드 효과, 속도 기반 전환을 포함합니다.
-    ///
-    /// - Note: 첫 터치 방향으로 수평/수직을 판별하여 세로 스크롤과 충돌을 방지합니다.
     private var swipeGesture: some Gesture {
         DragGesture(minimumDistance: 15)
             .onChanged { value in
-                // 최초 드래그 방향으로 수평/수직 잠금
                 if isHorizontalDrag == nil {
                     isHorizontalDrag = abs(value.translation.width) > abs(value.translation.height)
                 }
@@ -111,7 +222,6 @@ struct PenaltyCard: View, Equatable {
                 let isAtLeadingEdge = currentIndex == 0 && translation > 0
                 let isAtTrailingEdge = currentIndex == generations.count - 1 && translation < 0
 
-                // 양 끝에서 러버밴드 효과 (저항감 적용)
                 if isAtLeadingEdge || isAtTrailingEdge {
                     dragOffset = translation * 0.3
                 } else {
@@ -125,7 +235,6 @@ struct PenaltyCard: View, Equatable {
                 let translation = value.translation.width
                 let velocity = value.predictedEndTranslation.width
 
-                // 거리 또는 속도 임계값 초과 시 페이지 전환
                 withAnimation(.smooth(duration: 0.3)) {
                     if (translation < -Constants.swipeThreshold || velocity < -Constants.velocityThreshold),
                        currentIndex < generations.count - 1 {
@@ -148,15 +257,62 @@ struct PenaltyCard: View, Equatable {
     }
 }
 
+/// 상벌점 기록 팝오버
+fileprivate struct PointLogPopover: View {
+
+    // MARK: - Property
+
+    let logs: [PointLogItem]
+
+    private enum Constants {
+        static let circleDiameter: CGFloat = 8
+        static let popoverPadding: CGFloat = 16
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+            Text("상세 기록")
+                .appFont(.footnoteEmphasis, color: .grey900)
+
+            ForEach(logs) { log in
+                HStack(spacing: DefaultSpacing.spacing8) {
+                    Circle()
+                        .fill(log.isReward ? Color.indigo500 : Color.indigo200)
+                        .frame(
+                            width: Constants.circleDiameter,
+                            height: Constants.circleDiameter
+                        )
+
+                    Text(log.reason)
+                        .appFont(.subheadline, color: .grey900)
+
+                    Spacer()
+
+                    Text(log.isReward ? "+\(log.point)" : "\(log.point)")
+                        .appFont(.subheadline, color: log.isReward ? .indigo500 : .indigo300)
+
+                    Text(log.date)
+                        .appFont(.footnote, color: .grey500)
+                }
+            }
+        }
+        .padding(Constants.popoverPadding)
+        .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+    }
+}
+
 /// 기수 선택 탭 바
 fileprivate struct GenTabBar: View {
+
     // MARK: - Properties
-    
+
     /// 표시할 기수 목록
     let generations: [Int]
     /// 현재 선택된 인덱스 바인딩
     @Binding var currentIndex: Int
-    
+
     private enum Constants {
         /// 탭 텍스트 패딩
         static let textPadding: EdgeInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
@@ -165,7 +321,7 @@ fileprivate struct GenTabBar: View {
         /// 인디케이터 지름
         static let indicatorDiameter: CGFloat = 8
     }
-    
+
     // MARK: - Body
     var body: some View {
         let titleText = generations.indices.contains(currentIndex)
@@ -177,9 +333,9 @@ fileprivate struct GenTabBar: View {
                 .appFont(.footnoteEmphasis, color: .indigo600)
                 .padding(Constants.textPadding)
                 .background(.indigo100, in: .capsule)
-            
+
             Spacer()
-            
+
             HStack(spacing: Constants.indicatorSpacing) {
                 ForEach(generations.indices, id: \.self) { index in
                     Circle()
@@ -196,191 +352,18 @@ fileprivate struct GenTabBar: View {
     }
 }
 
-// MARK: - CardInfo
-/// 카드 경고 포인트 및 설명
-fileprivate struct CardInfo: View {
-    
-    // MARK:  - Properties
-    /// 표시할 정보 타입 (점수 또는 상세 기록)
-    var infoType: InfoType
-    
-    // MARK: - Constants
-    
-    private enum Constants {
-        static let desCardPadding: CGFloat = 4
-        /// 프로그레스 바 높이
-        static let progressHeight: CGFloat = 20
-    }
-    
-    // MARK: - Init
-    init(infoType: InfoType) {
-        self.infoType = infoType
-    }
-    
-    // MARK: - Body
-    var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16, content: {
-            title
-            content
-        })
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    
-    // MARK: - Top
-    /// 카드 타이틀
-    private var title: some View {
-        Text(infoType.text)
-            .font(.subheadline)
-            .foregroundStyle(.grey600)
-            .fontWeight(.semibold)
-    }
-    
-    /// 카드 컨텐츠
-    @ViewBuilder
-    private var content: some View {
-        if let point = infoType.point {
-            pointContent(point: point)
-        } else if let items = infoType.infoItems {
-            descripContent(items: items)
-        }
-    }
-    
-    // MARK: - Point
-    /// 포인트 컨텐츠
-    /// - Parameter point: 포인트 점수
-    /// - Returns: 포인트 뷰 반환
-    private func pointContent(point: Int) -> some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8, content: {
-            pointTitle(point: point)
-            progressBar(point: point)
-        })
-    }
-    
-    private func pointTitle(point: Int) -> some View {
-        HStack(alignment: .lastTextBaseline, spacing: DefaultSpacing.spacing12, content: {
-            Text("\(point)")
-                .appFont(.title1Emphasis, color: .grey900)
-            
-            Group {
-                Text("/")
-                Text("3")
-            }
-            .appFont(.title2Emphasis, color: .grey400)
-        })
-    }
-    
-    // MARK: - Descrip
-    /// 패널티 사유 카드 리스트
-    /// - Parameter items: 패널티 사유
-    /// - Returns: 패널티 사유 뷰
-    @ViewBuilder
-    private func descripContent(items: [PenaltyInfoItem]) -> some View {
-        if items.isEmpty {
-            emptyPenaltyState
-        } else {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-                ForEach(items.indices, id: \.self) { index in
-                    descripCard(item: items[index])
-                }
-            }
-        }
-    }
-
-    private var emptyPenaltyState: some View {
-        VStack(alignment: .leading) {
-            Image(systemName: "checkmark.shield.fill")
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundStyle(.green500)
-            
-            Spacer()
-
-            Text("등록된 패널티가 없습니다.")
-                .appFont(.footnoteEmphasis, color: .grey900)
-                .multilineTextAlignment(.leading)
-                .padding(.bottom, DefaultSpacing.spacing4)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    
-    /// 패널티 사유 뷰 카드
-    /// - Parameter item: 패널티 사유 데이터
-    /// - Returns: 패널티 사유 뷰
-    private func descripCard(item: PenaltyInfoItem) -> some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4, content: {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                Text(item.reason)
-                    .appFont(.calloutEmphasis, color: .grey900)
-                Spacer()
-                Text("\(item.penaltyPoint)점")
-                    .appFont(.calloutEmphasis, color: .red)
-            }
-            
-            Text(item.date)
-                .appFont(.footnote, color: .grey500)
-        })
-    }
-    
-    // MARK: - Method
-    private func progressBar(point: Int) -> some View {
-        Gauge(value: Double(point), in: 0...3) {
-            EmptyView()
-        }
-        .gaugeStyle(.linearCapacity)
-        .tint(progressGradient(point))
-        .frame(height: Constants.progressHeight)
-    }
-    
-    /// 프로그레스 바 그라데이션 색상 결정
-    private func progressGradient(_ point: Int) -> LinearGradient {
-        switch point {
-        case 0...1:
-            return LinearGradient(
-                colors: [.green300, .green500, .green700],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        case 2:
-            return LinearGradient(
-                colors: [.orange400, .orange500, .orange600],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        case 3:
-            return LinearGradient(
-                colors: [.red300, .red500, .red700],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        default:
-            return LinearGradient(
-                colors: [.grey400, .grey500, .grey600],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        }
-    }
-    
-    /// 프로그레스 바 배경 색상 결정
-    private func progressBackgroundColor(_ point: Int) -> Color {
-        switch point {
-        case 0...1:
-            return .green100
-        case 2:
-            return .orange100
-        case 3:
-            return .red100
-        default:
-            return .grey100
-        }
-    }
-}
-
 #Preview(traits: .sizeThatFitsLayout) {
     PenaltyCard(generations: [
         GenerationData(
             gisuId: 0,
             gen: 11,
-            penaltyPoint: 3,
+            penaltyPoint: 6,
+            rewardPoint: 5,
+            pointLogs: [
+                .init(reason: "스터디 지각", date: "03.26", point: -2, isReward: false),
+                .init(reason: "워크북 미제출", date: "03.27", point: -4, isReward: false),
+                .init(reason: "우수 워크북", date: "03.28", point: 2, isReward: true)
+            ],
             penaltyLogs: [
                 .init(reason: "지각", date: "03.26", penaltyPoint: 1),
                 .init(reason: "과제 미제출", date: "03.27", penaltyPoint: 1),
@@ -391,6 +374,10 @@ fileprivate struct CardInfo: View {
             gisuId: 0,
             gen: 12,
             penaltyPoint: 1,
+            rewardPoint: 3,
+            pointLogs: [
+                .init(reason: "지각", date: "03.14", point: -1, isReward: false),
+            ],
             penaltyLogs: [
                 .init(reason: "지각", date: "03.14", penaltyPoint: 1),
             ]
@@ -399,6 +386,8 @@ fileprivate struct CardInfo: View {
             gisuId: 0,
             gen: 13,
             penaltyPoint: 0,
+            rewardPoint: 0,
+            pointLogs: [],
             penaltyLogs: []
         )
     ])

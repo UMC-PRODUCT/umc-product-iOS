@@ -203,7 +203,7 @@ private struct LoginViewPreviewFetchMyProfileUseCase: FetchMyProfileUseCaseProto
             ],
             roles: [],
             generations: [
-                GenerationData(gisuId: 1, gen: 1, penaltyPoint: 0, penaltyLogs: [])
+                GenerationData(gisuId: 1, gen: 1, penaltyPoint: 0, rewardPoint: 0, pointLogs: [], penaltyLogs: [])
             ]
         )
     }
