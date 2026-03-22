@@ -16,6 +16,13 @@ final class OperatorAttendanceViewModel {
 
     // MARK: - Property
 
+    /// 승인 대기 명단 로드 결과
+    enum PendingLoadResult {
+        case loaded    // 멤버 1명 이상
+        case empty     // 성공이지만 빈 배열
+        case failed    // API 에러 또는 내부 상태 오류
+    }
+
     private var container: DIContainer
     private var errorHandler: ErrorHandler
     private var useCase: OperatorAttendanceUseCaseProtocol
@@ -119,11 +126,11 @@ final class OperatorAttendanceViewModel {
     ///
     /// `/api/v1/attendances/pending/{scheduleId}` 호출 후 해당 세션에 멤버 목록을 채웁니다.
     @MainActor
-    func loadPendingMembers(for sessionId: UUID) async {
+    func loadPendingMembers(for sessionId: UUID) async -> PendingLoadResult {
         guard case .loaded(var sessions) = sessionsState,
               let index = sessions.firstIndex(where: { $0.id == sessionId }),
               let scheduleId = Int(sessions[index].serverID ?? "")
-        else { return }
+        else { return .failed }
 
         do {
             let records = try await useCase.fetchPendingAttendances(
@@ -134,11 +141,13 @@ final class OperatorAttendanceViewModel {
                 pendingMembers: members
             )
             sessionsState = .loaded(sessions)
+            return members.isEmpty ? .empty : .loaded
         } catch {
             errorHandler.handle(error, context: .init(
                 feature: "Activity",
                 action: "loadPendingMembers"
             ))
+            return .failed
         }
     }
 
