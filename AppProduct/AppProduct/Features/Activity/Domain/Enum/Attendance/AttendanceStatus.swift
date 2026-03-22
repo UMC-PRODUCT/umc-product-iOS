@@ -73,7 +73,7 @@ extension AttendanceStatus {
         case "ABSENT":
             self = .absent
         case "PENDING":
-            self = .beforeAttendance
+            self = .pendingApproval
         default:
             if serverStatus.hasSuffix("_PENDING") {
                 self = .pendingApproval
