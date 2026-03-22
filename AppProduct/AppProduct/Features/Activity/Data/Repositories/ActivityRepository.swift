@@ -126,8 +126,19 @@ final class ActivityRepository: ActivityRepositoryProtocol, @unchecked Sendable 
         schedule: AvailableAttendanceSchedule
     ) -> Attendance? {
         switch schedule.status {
-        case .beforeAttendance, .pendingApproval:
+        case .beforeAttendance:
             return nil
+        case .pendingApproval:
+            return Attendance(
+                sessionId: SessionID(
+                    value: String(schedule.scheduleId)
+                ),
+                userId: UserID(value: ""),
+                type: schedule.locationVerified ? .gps : .reason,
+                status: .pendingApproval,
+                locationVerification: nil,
+                reason: nil
+            )
         case .present, .late, .absent:
             return Attendance(
                 sessionId: SessionID(
