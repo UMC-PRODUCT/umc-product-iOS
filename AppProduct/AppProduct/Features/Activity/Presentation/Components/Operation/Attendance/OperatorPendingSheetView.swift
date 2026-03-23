@@ -42,24 +42,36 @@ struct OperatorPendingSheetView: View {
     
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(sessionAttendance.pendingMembers, id: \.id) { member in
-                    OperatorPendingMemberRow(
-                        member: member,
-                        isSelecting: isSelecting,
-                        isSelected: selectedMemberIDs.contains(member.id),
-                        onToggleSelection: {
-                            toggleSelection(for: member.id)
-                        }
+            Group {
+                if sessionAttendance.pendingMembers.isEmpty {
+                    ContentUnavailableView(
+                        "승인 대기 멤버 없음",
+                        systemImage: "person.crop.circle.badge.checkmark",
+                        description: Text(
+                            "현재 승인 대기 중인 멤버가 없습니다."
+                        )
                     )
-                    .equatable()
-                    .listRowSeparator(.hidden)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        swipeActionBtn(member: member)
+                } else {
+                    List {
+                        ForEach(sessionAttendance.pendingMembers, id: \.id) { member in
+                            OperatorPendingMemberRow(
+                                member: member,
+                                isSelecting: isSelecting,
+                                isSelected: selectedMemberIDs.contains(member.id),
+                                onToggleSelection: {
+                                    toggleSelection(for: member.id)
+                                }
+                            )
+                            .equatable()
+                            .listRowSeparator(.hidden)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                swipeActionBtn(member: member)
+                            }
+                        }
                     }
+                    .listRowSpacing(DefaultSpacing.spacing12)
                 }
             }
-            .listRowSpacing(DefaultSpacing.spacing12)
             .navigationTitle("승인 대기 명단")
             .navigationBarTitleDisplayMode(.inline)
             .presentationDetents([.medium, .large])

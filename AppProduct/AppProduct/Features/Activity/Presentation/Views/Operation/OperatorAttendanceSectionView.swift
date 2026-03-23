@@ -214,8 +214,21 @@ struct OperatorAttendanceSectionView: View {
             onLocationTap: { viewModel.locationButtonTapped(session: sessionAttendance.session) },
             onPendingListTap: {
                 Task {
-                    await viewModel.loadPendingMembers(for: sessionAttendance.id)
-                    selectedPendingSessionId = sessionAttendance.id
+                    let result = await viewModel.loadPendingMembers(
+                        for: sessionAttendance.id
+                    )
+                    switch result {
+                    case .loaded:
+                        selectedPendingSessionId = sessionAttendance.id
+                    case .empty:
+                        viewModel.alertPrompt = AlertPrompt(
+                            title: "승인 대기 명단",
+                            message: "승인 대기 중인 멤버가 없습니다.",
+                            positiveBtnTitle: "확인"
+                        )
+                    case .failed:
+                        break
+                    }
                 }
             },
             onReasonTap: { viewModel.reasonButtonTapped(member: $0) },
