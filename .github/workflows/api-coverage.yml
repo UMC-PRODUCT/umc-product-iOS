@@ -71,9 +71,10 @@ jobs:
           path: |
             .stella/.build
             ~/Library/Caches/org.swift.swiftpm
-          key: ${{ runner.os }}-spm-apicov-${{ hashFiles('.stella/Package.resolved', '.stella/Package.swift') }}
+          # tuist-ci.yml 과 같은 이유로 레포명을 키에 넣는다 (이슈 #1296).
+          key: ${{ runner.os }}-spm-apicov-${{ github.event.repository.name }}-${{ hashFiles('.stella/Package.resolved', '.stella/Package.swift') }}
           restore-keys: |
-            ${{ runner.os }}-spm-apicov-
+            ${{ runner.os }}-spm-apicov-${{ github.event.repository.name }}-
 
       - name: Build apicov
         run: swift build -c release --product apicov
