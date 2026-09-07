@@ -14,7 +14,6 @@ on:
   push:
     branches: [ "develop" ]
     paths:
-      - "Stella/**"
       - "AppProduct/**/Router/**"
       - "UMCApp/Features/**/Data/**/Router/**"
       - ".github/workflows/api-coverage.yml"
@@ -35,14 +34,24 @@ jobs:
 
     defaults:
       run:
-        working-directory: Stella
+        working-directory: .stella
 
     outputs:
       pages-artifact: ${{ steps.upload-pages.outputs.artifact_id }}
 
     steps:
-      - name: Checkout
+      # blame 으로 엔드포인트별 작성자를 뽑으므로 전체 히스토리가 필요하다.
+      - name: Checkout iOS repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 스캐너는 별도 레포에서 관리한다 (macOS 앱과 공유).
+      - name: Checkout Stella
+        uses: actions/checkout@v4
+        with:
+          repository: UMC-PRODUCT/umc-product-stella
+          path: .stella
 
       - name: Select Xcode 26.4+
         run: |
@@ -60,9 +69,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            Stella/.build
+            .stella/.build
             ~/Library/Caches/org.swift.swiftpm
-          key: ${{ runner.os }}-spm-apicov-${{ hashFiles('Stella/Package.resolved', 'Stella/Package.swift') }}
+          key: ${{ runner.os }}-spm-apicov-${{ hashFiles('.stella/Package.resolved', '.stella/Package.swift') }}
           restore-keys: |
             ${{ runner.os }}-spm-apicov-
 
@@ -98,14 +107,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-snapshot
-          path: Stella/coverage.json
+          path: .stella/coverage.json
           retention-days: 30
 
       - name: Upload Pages artifact
         id: upload-pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: Stella/_site
+          path: .stella/_site
 
   deploy:
     name: Deploy to GitHub Pages

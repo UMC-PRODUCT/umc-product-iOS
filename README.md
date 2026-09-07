@@ -78,8 +78,11 @@ UMC(University MakeUs Challenge) 동아리 운영을 하나의 앱으로 통합�
 | ⚙️ 빌드 & 실행 | [Build & Run](https://github.com/UMC-PRODUCT/Big-Dipper-iOS/wiki/Build-and-Run) |
 | 🔀 Git 워크플로우 | [Git Workflow](https://github.com/UMC-PRODUCT/Big-Dipper-iOS/wiki/Git-Workflow) |
 | 🔒 보호 경로 (CODEOWNERS) | [Protected Paths](https://github.com/UMC-PRODUCT/Big-Dipper-iOS/wiki/Protected-Paths) |
-| 🛰️ API 커버리지 (Stella) | [Stella](https://github.com/UMC-PRODUCT/Big-Dipper-iOS/wiki/Stella) |
+| 🛰️ API 커버리지 (Stella) | [umc-product-stella › Wiki](https://github.com/UMC-PRODUCT/umc-product-stella/wiki) |
 
+> **Stella** 는 iOS·macOS 두 클라이언트가 함께 쓰는 도구라 [`UMC-PRODUCT/umc-product-stella`](https://github.com/UMC-PRODUCT/umc-product-stella) 레포에서 따로 관리합니다.
+> 이 레포에는 커버리지 리포트를 만드는 워크플로(`.github/workflows/api-coverage.yml`)만 남아 있습니다.
+>
 > 신규 합류자는 [Wiki Home](https://github.com/UMC-PRODUCT/Big-Dipper-iOS/wiki) → **빌드 & 실행** 순서로 시작하세요.
 >
 > 일부 경로(`Core/Foundation`·`Core/DesignSystem`·`UMCApp/Tuist/` 등)는 PR에 **소유자 승인**이 필요합니다.
