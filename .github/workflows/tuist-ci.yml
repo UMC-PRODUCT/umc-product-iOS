@@ -114,9 +114,12 @@ jobs:
             ~/.cache/tuist
             ~/Library/Caches/org.swift.swiftpm
             UMCApp/Tuist/.build
-          key: ${{ runner.os }}-tuist-${{ hashFiles('UMCApp/Tuist/Package.resolved', 'UMCApp/Tuist/Package.swift', 'UMCApp/mise.toml') }}
+          # 캐시된 SwiftPM `.build` 에는 체크아웃 절대경로(`/Users/runner/work/{레포명}/{레포명}/...`)가
+          # 박혀 있다. 레포 이름이 바뀌면 그 경로가 어긋나 tuist generate 가 xcframework 를 못 찾으므로,
+          # 키와 restore-keys 양쪽에 레포명을 넣어 rename 시 자동으로 무효화되게 한다 (이슈 #1296).
+          key: ${{ runner.os }}-tuist-${{ github.event.repository.name }}-${{ hashFiles('UMCApp/Tuist/Package.resolved', 'UMCApp/Tuist/Package.swift', 'UMCApp/mise.toml') }}
           restore-keys: |
-            ${{ runner.os }}-tuist-
+            ${{ runner.os }}-tuist-${{ github.event.repository.name }}-
 
       - name: Install dependencies (tuist install)
         run: make install
