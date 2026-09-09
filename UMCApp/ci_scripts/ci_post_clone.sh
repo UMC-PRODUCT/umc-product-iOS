@@ -72,6 +72,18 @@ decode_base64() {
 BASE_URL_DEBUG_VALUE="${BASE_URL_DEBUG:-${BASE_URL}}"
 BASE_URL_RELEASE_VALUE="${BASE_URL_RELEASE:-${BASE_URL}}"
 
+# TestFlight 워크플로는 App Store 워크플로와 똑같이 Release 구성으로 아카이브한다
+# (기본 스킴의 Archive 액션이 Release 고정). 그래서 서버만 dev 로 돌리려면 configuration
+# 이 아니라 별도 플래그가 필요하다 — APS_ENVIRONMENT 가 같은 축으로 갈려 있어
+# configuration 을 Debug 로 바꾸면 푸시가 통째로 깨진다.
+#
+# App Store Connect 워크플로 전용 환경 변수에 USE_DEV_SERVER=1 을 넣은 워크플로만 해당된다.
+# (TF-External-Only · TF-Internal-Only 에만 지정. AppStore-Release 에는 넣지 않는다)
+if [ "$USE_DEV_SERVER" = "1" ]; then
+  echo "USE_DEV_SERVER=1 — Release 구성에도 dev 베이스 URL 을 주입한다."
+  BASE_URL_RELEASE_VALUE="$BASE_URL_DEBUG_VALUE"
+fi
+
 if [ -z "$BASE_URL_DEBUG_VALUE" ] || [ -z "$BASE_URL_RELEASE_VALUE" ]; then
   echo "ERROR: BASE_URL_DEBUG/BASE_URL_RELEASE (or BASE_URL) environment variables are required."
   exit 1
