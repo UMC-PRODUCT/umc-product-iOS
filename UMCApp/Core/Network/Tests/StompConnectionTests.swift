@@ -13,10 +13,10 @@ struct StompConnectionTests {
 
     @Test("https base URL 은 wss 네이티브 STOMP 엔드포인트로 바뀐다")
     func derivesSecureWebSocketURL() throws {
-        let base = try #require(URL(string: "https://dev.api.umc.it.kr"))
+        let base = try #require(URL(string: "https://api-dev.university.neordinary.com"))
 
         #expect(StompConnection.webSocketURL(base: base).absoluteString
-            == "wss://dev.api.umc.it.kr/ws/websocket")
+            == "wss://api-dev.university.neordinary.com/ws/websocket")
     }
 
     @Test("http base URL 은 ws 로 바뀐다")
@@ -89,7 +89,7 @@ struct StompConnectionBehaviorTests {
         socket: FakeWebSocket,
         tokenStore: TokenStore = MockTokenStore(accessToken: "token-1")
     ) throws -> StompConnection {
-        let url = try #require(URL(string: "wss://dev.api.umc.it.kr/ws/websocket"))
+        let url = try #require(URL(string: "wss://api-dev.university.neordinary.com/ws/websocket"))
         return StompConnection(url: url, tokenStore: tokenStore, makeSocket: { _ in socket })
     }
 
@@ -106,7 +106,7 @@ struct StompConnectionBehaviorTests {
         // cx 를 0 이 아닌 값으로 광고하면 브로커가 그 주기로 우리 heartbeat 를 기다리다
         // 세션을 끊는다 — 송신 타이머가 없는 한 cx 는 0 이어야 한다.
         #expect(sent.contains("heart-beat:0,10000"))
-        #expect(sent.contains("host:dev.api.umc.it.kr"))
+        #expect(sent.contains("host:api-dev.university.neordinary.com"))
         #expect(sent.contains("Authorization:Bearer token-1"))
 
         await connection.disconnect()

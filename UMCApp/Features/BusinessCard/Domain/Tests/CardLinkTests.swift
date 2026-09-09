@@ -33,7 +33,7 @@ struct CardLinkTests {
     /// 과거 정본이던 Universal Link 표기 — 이 표기로 구워진 검증기 QR 이 남아 있을 수 있다.
     @Test("과거 Universal Link 표기도 운영·dev 호스트 모두 읽는다", arguments: [
         "https://api.university.neordinary.com/mypage/card?memberId=42",
-        "https://dev.api.university.neordinary.com/mypage/card?memberId=42",
+        "https://api-dev.university.neordinary.com/mypage/card?memberId=42",
     ])
     func acceptsBothHosts(urlString: String) throws {
         let url = try #require(URL(string: urlString))
@@ -61,7 +61,7 @@ struct CardLinkTests {
     /// 경로만 알아서, 언젠가 이 표기로 구워진 링크가 돌아다닐 수 있다.
     @Test("Android가 등록한 community/threads/card 경로도 읽는다", arguments: [
         "https://api.university.neordinary.com/community/threads/card?memberId=42",
-        "https://dev.api.university.neordinary.com/community/threads/card?memberId=42",
+        "https://api-dev.university.neordinary.com/community/threads/card?memberId=42",
     ])
     func readsAndroidWebPath(urlString: String) throws {
         let url = try #require(URL(string: urlString))
@@ -72,7 +72,7 @@ struct CardLinkTests {
     @Test("호스트·경로·쿼리가 어긋나면 nil", arguments: [
         // 남의 호스트
         "https://evil.com/mypage/card?memberId=42",
-        // 서버가 쓰지 않는 호스트. dev 는 `dev.api…` 로 확정됐고 `alpha.api…` 는 DNS 에
+        // 서버가 쓰지 않는 호스트. dev 는 `api-dev…` 로 확정됐고 `alpha.api…` 는 DNS 에
         // 존재한 적이 없다 — 이 표기의 QR 은 세상에 없으므로 받아주지 않는다.
         "https://alpha.api.university.neordinary.com/mypage/card?memberId=42",
         // 경로 다름 (커뮤니티 스레드 링크)

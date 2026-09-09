@@ -82,9 +82,10 @@ public struct CardLink: Hashable, Sendable {
         static let androidWebPath = "/community/threads/card"
 
         /// 환경별 호스트. 한때 dev 를 `alpha.api…` 로 적어 두었는데 그런 DNS 는 존재한
-        /// 적이 없다 — DEBUG 빌드가 굽는 QR 이 통째로 죽어 있었다.
+        /// 적이 없다 — DEBUG 빌드가 굽는 QR 이 통째로 죽어 있었다. dev 는 서버가
+        /// `dev.api…` 에서 `api-dev…` 로 옮기며 구 호스트가 DNS 째로 사라졌다.
         static let productionHost = "api.university.neordinary.com"
-        static let devHost = "dev.api.university.neordinary.com"
+        static let devHost = "api-dev.university.neordinary.com"
     }
 
     // MARK: - Property
