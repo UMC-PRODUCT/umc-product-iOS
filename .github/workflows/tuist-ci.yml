@@ -162,6 +162,10 @@ jobs:
     needs: build-test
     if: ${{ always() }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # 실패한 잡/스텝과 그 로그를 조회하려면 워크플로 기본 `contents: read` 만으로는 부족하다.
+      actions: read
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       DISCORD_MENTION_ROLE_ID: ${{ secrets.DISCORD_MENTION_ROLE_ID }}
@@ -174,6 +178,21 @@ jobs:
       PR_URL: ${{ github.event.pull_request.html_url }}
 
     steps:
+      # 알림만 보고 원인을 알 수 있게 실패한 스텝 이름과 로그의 error: 라인을 미리 받아 둔다 (이슈 #1304).
+      # 조회가 깨져도 알림 자체는 나가야 하므로 전부 fail-open — 없으면 아래 스텝이 해당 필드를 생략한다.
+      - name: Collect failure details
+        if: ${{ needs.build-test.result == 'failure' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=100" \
+            > jobs.json || echo '{}' > jobs.json
+
+          JOB_ID=$(jq -r '[.jobs[]? | select(.conclusion == "failure")][0].id // empty' jobs.json)
+          if [ -n "$JOB_ID" ]; then
+            gh api "repos/${REPOSITORY}/actions/jobs/${JOB_ID}/logs" > job.log || true
+          fi
+
       - name: Send build result to Discord
         run: |
           if [ -z "${DISCORD_WEBHOOK_URL:-}" ]; then
@@ -184,6 +203,52 @@ jobs:
           python3 - << 'PY' > payload.json
           import json
           import os
+          import re
+
+
+          def failed_step():
+              """실패한 첫 스텝을 `잡 › 스텝` 과 그 잡 로그 링크로 돌려준다."""
+              try:
+                  with open("jobs.json", encoding="utf-8") as file:
+                      jobs = json.load(file)["jobs"]
+              except (OSError, ValueError, KeyError):
+                  return None
+
+              for job in jobs:
+                  for step in job.get("steps", []):
+                      if step.get("conclusion") == "failure":
+                          return f"[{job['name']} › {step['name']}]({job['html_url']})"
+              return None
+
+
+          def error_excerpt():
+              """로그에서 `error:` 라인만 추려 임베드 필드(1024자) 안에 들어가게 자른다.
+
+              Xcode 컴파일 에러와 XCTest 실패 모두 `error:` 를 포함하므로 이 한 줄짜리
+              필터로 대부분의 원인이 잡힌다. 더 정교한 파싱이 필요해지면 그때 늘린다.
+              """
+              try:
+                  with open("job.log", encoding="utf-8", errors="replace") as file:
+                      lines = file.readlines()
+              except OSError:
+                  return None
+
+              seen = []
+              for line in lines:
+                  if "error:" not in line:
+                      continue
+                  # GitHub 이 붙이는 타임스탬프 접두사와 ANSI 컬러 코드를 벗겨 낸다.
+                  text = re.sub(r"^\S+Z\s+", "", line.rstrip())
+                  text = re.sub(r"\x1b\[[0-9;]*m", "", text)
+                  if text and text not in seen:
+                      seen.append(text)
+
+              if not seen:
+                  return None
+
+              excerpt = "\n".join(seen[-5:])[:960]
+              return f"```\n{excerpt}\n```"
+
 
           build_result = os.environ["BUILD_RESULT"]
           short_sha = os.environ["COMMIT_SHA"][:7]
@@ -194,10 +259,32 @@ jobs:
               status_text = "SUCCESS ✅"
               color = 5763719  # green
               mention = ""
+          elif build_result == "cancelled":
+              # concurrency.cancel-in-progress 로 앞선 런이 잘린 경우 — 실패가 아니다.
+              status_text = "CANCELLED ⏹️"
+              color = 9807270  # grey
+              mention = ""
           else:
               status_text = "FAILED ❌"
               color = 15548997  # red
-              mention = f"<@&{mention_role_id}>" if mention_role_id else "@here"
+              # 채널 전체를 깨우는 @here 폴백은 쓰지 않는다. 역할 ID 가 설정된 경우에만 멘션.
+              mention = f"<@&{mention_role_id}>" if mention_role_id else ""
+
+          fields = [
+              {"name": "Build Status", "value": status_text, "inline": True},
+              {"name": "Branch", "value": os.environ["REF_NAME"], "inline": True},
+              {"name": "Commit", "value": f"`{short_sha}` by {os.environ['ACTOR']}", "inline": True},
+          ]
+
+          if build_result == "failure":
+              step = failed_step()
+              if step:
+                  fields.append({"name": "Failed Step", "value": step, "inline": False})
+              excerpt = error_excerpt()
+              if excerpt:
+                  fields.append({"name": "Error Log", "value": excerpt, "inline": False})
+
+          fields.append({"name": "PR", "value": pr_url, "inline": False})
 
           payload = {
               "content": mention,
@@ -206,12 +293,7 @@ jobs:
                       "title": "UMCApp (Tuist) CI Build Result",
                       "url": os.environ["WORKFLOW_URL"],
                       "color": color,
-                      "fields": [
-                          {"name": "Build Status", "value": status_text, "inline": True},
-                          {"name": "Branch", "value": os.environ["REF_NAME"], "inline": True},
-                          {"name": "Commit", "value": f"`{short_sha}` by {os.environ['ACTOR']}", "inline": True},
-                          {"name": "PR", "value": pr_url, "inline": False},
-                      ],
+                      "fields": fields,
                       "footer": {"text": os.environ["REPOSITORY"]},
                   }
               ],
