@@ -29,7 +29,7 @@ struct AppDeepLinkTests {
         "과거 Universal Link 표기도 명함 링크로 읽는다",
         arguments: [
             "https://api.university.neordinary.com/mypage/card?memberId=42",
-            "https://dev.api.university.neordinary.com/mypage/card?memberId=42",
+            "https://api-dev.university.neordinary.com/mypage/card?memberId=42",
         ]
     )
     func parsesCardUniversalLink(_ raw: String) {

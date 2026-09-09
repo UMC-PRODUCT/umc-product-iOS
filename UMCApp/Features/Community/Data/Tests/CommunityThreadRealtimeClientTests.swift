@@ -185,7 +185,7 @@ struct CommunityThreadRealtimeClientTests {
         factory: FakeSocketFactory,
         tokenStore: any TokenStore = StubTokenStore()
     ) throws -> CommunityThreadRealtimeClient {
-        let url = try #require(URL(string: "wss://dev.api.umc.it.kr/ws/websocket"))
+        let url = try #require(URL(string: "wss://api-dev.university.neordinary.com/ws/websocket"))
         let connection = StompConnection(
             url: url,
             tokenStore: tokenStore,
