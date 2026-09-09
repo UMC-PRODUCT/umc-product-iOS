@@ -81,7 +81,6 @@ UMC(University MakeUs Challenge) 동아리 운영을 하나의 앱으로 통합�
 | 🛰️ API 커버리지 (Stella) | [umc-product-stella › Wiki](https://github.com/UMC-PRODUCT/umc-product-stella/wiki) |
 
 > **Stella** 는 iOS·macOS 두 클라이언트가 함께 쓰는 도구라 [`UMC-PRODUCT/umc-product-stella`](https://github.com/UMC-PRODUCT/umc-product-stella) 레포에서 따로 관리합니다.
-> 이 레포에는 커버리지 리포트를 만드는 워크플로(`.github/workflows/api-coverage.yml`)만 남아 있습니다.
 >
 > 신규 합류자는 [Wiki Home](https://github.com/UMC-PRODUCT/Big-Dipper-iOS/wiki) → **빌드 & 실행** 순서로 시작하세요.
 >
