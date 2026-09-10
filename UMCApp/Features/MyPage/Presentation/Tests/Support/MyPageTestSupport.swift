@@ -282,6 +282,9 @@ struct StubBusinessCardUseCaseProvider: BusinessCardUseCaseProviding {
     var fetchReceivedCardsUseCase: FetchReceivedCardsUseCaseProtocol {
         NotStubbedFetchReceivedCardsUseCase()
     }
+    var syncReceivedCardsUseCase: SyncReceivedCardsUseCaseProtocol {
+        NotStubbedSyncReceivedCardsUseCase()
+    }
     var saveReceivedCardUseCase: SaveReceivedCardUseCaseProtocol {
         NotStubbedSaveReceivedCardUseCase()
     }
@@ -330,6 +333,12 @@ private struct NotStubbedFetchPeerCardUseCase: FetchPeerCardUseCaseProtocol {
 
 private struct NotStubbedFetchReceivedCardsUseCase: FetchReceivedCardsUseCaseProtocol {
     func execute(query: String?) async throws -> [ReceivedCard] {
+        fatalError("MyPageViewModel 테스트에서 호출되지 않아야 하는 UseCase")
+    }
+}
+
+private struct NotStubbedSyncReceivedCardsUseCase: SyncReceivedCardsUseCaseProtocol {
+    func execute() async throws {
         fatalError("MyPageViewModel 테스트에서 호출되지 않아야 하는 UseCase")
     }
 }

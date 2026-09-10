@@ -21,9 +21,9 @@ import UMCFoundation
 /// 에 직접 기입한다(그 파일 헤더 참고). 여기서 `body` 를 돌리는 것은 준비 상태·뒤집힘·
 /// 자이로 토글 셋뿐이고 전부 초당 몇 회 수준이다.
 ///
-/// 뒷면은 이 시점에 **흰 QR 정사각과 자식 없는 링크 앵커**다. 온디바이스 합성(#1248)이
-/// 그 위에 값을 얹는다 — 앵커 규약이 「주입에 실패해도 흰 정사각이 남아 빈 카드가 아니라
-/// QR 없음으로 보인다」고 정해 둔 정상 중간 상태다.
+/// 뒷면 링크는 합성(#1248)이 얹지만 **QR 은 아직 흰 정사각**이다 — 이 seam 은 `MyCard`
+/// 하나만 받아 `qrImage` 를 합성기까지 들고 갈 자리가 없다. 앵커 규약이 「주입에 실패해도
+/// 흰 정사각이 남아 빈 카드가 아니라 QR 없음으로 보인다」고 정해 둔 정상 상태다.
 public struct BusinessCard3DView: View {
 
     // MARK: - Property
@@ -48,8 +48,8 @@ public struct BusinessCard3DView: View {
 
     // MARK: - Init
 
-    /// - Parameter makeEntity: 카드 엔티티 생성 seam. 기본값은 베이스 템플릿 로드 한 줄이고,
-    ///   온디바이스 합성(#1248)이 이 기본값만 합성기 호출로 바꾼다. 프리뷰·테스트도 여기로
+    /// - Parameter makeEntity: 카드 엔티티 생성 seam. 기본값은 온디바이스 합성기(#1248)라
+    ///   베이스 템플릿에 이름·소속·칩·링크를 얹은 카드가 나온다. 프리뷰·테스트도 여기로
     ///   주입한다 — 구현체가 하나뿐인 프로토콜을 만들지 않는다.
     public init(
         card: MyCard,
@@ -58,8 +58,11 @@ public struct BusinessCard3DView: View {
         onFlip: (() -> Void)? = nil,
         onExchange: (() -> Void)? = nil,
         onQR: (() -> Void)? = nil,
-        makeEntity: @escaping @MainActor @Sendable (MyCard) async throws -> Entity = { _ in
-            try await BusinessCardTemplate.load()
+        makeEntity: @escaping @MainActor @Sendable (MyCard) async throws -> Entity = { card in
+            try await BusinessCardComposer.compose(
+                card,
+                partTint: BusinessCardComposer.partTint(for: card)
+            )
         }
     ) {
         self.card = card
