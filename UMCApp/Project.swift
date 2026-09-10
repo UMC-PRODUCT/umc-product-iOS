@@ -7,7 +7,11 @@ let project = Project(
     targets: [
         .target(
             name: "UMCApp",
-            destinations: .iOS,
+            // 출시본(AppProduct)은 TARGETED_DEVICE_FAMILY = 1 (iPhone 전용)이다.
+            // Tuist 의 `.iOS` 는 `[.iPhone, .iPad]` 라 이관 과정에서 iPad 가 딸려 들어왔고,
+            // 그 결과 App Store Connect 가 심사에 iPad 스크린샷을 요구한다.
+            // iPad 레이아웃을 검증한 적이 없으므로 출시본과 같은 iPhone 전용으로 되돌린다.
+            destinations: [.iPhone],
             product: .app,
             // App Store에 등록된 기존 앱 레코드와 동일해야 한다. 이 값이 바뀌면 별개 앱이 되어
             // 기존 카카오/Firebase/Google OAuth 등록이 전부 무효화된다.
@@ -20,6 +24,10 @@ let project = Project(
                     // 유실돼 홈 화면에 "UMCApp" 으로 표시되고 있었다.
                     "CFBundleDisplayName": "UMC",
                     "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
+                    // 이 키가 없으면 업로드한 빌드마다 App Store Connect 가 수출 규정 준수
+                    // 질문에 답할 때까지 「수출 규정 준수 정보가 누락된 빌드」로 심사를 막는다.
+                    // 앱이 쓰는 암호화는 HTTPS 뿐이라 면제 대상이다.
+                    "ITSAppUsesNonExemptEncryption": false,
                     "UILaunchScreen": [
                         "UIColorName": "",
                         "UIImageName": "",
@@ -156,7 +164,7 @@ let project = Project(
         ),
         .target(
             name: "UMCAppTests",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .unitTests,
             bundleId: "com.umc.product.tests",
             deploymentTargets: .iOS("26.4"),
