@@ -136,8 +136,16 @@ struct MessageComposer: View {
             .accessibilityLabel("답장 취소")
         }
         .fixedSize(horizontal: false, vertical: true)
+        // 배경 안쪽 여백. 인용 막대와 글이 둥근 모서리 곡선에 물리지 않게 띄운다.
         .padding(.leading, DefaultSpacing.spacing16)
-        .background(Color.grey100)
+        .padding(.vertical, DefaultSpacing.spacing4)
+        .background(
+            Color.grey100,
+            in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
+        )
+        // 배경 바깥 인셋. 이게 없으면 회색이 화면 좌우 끝까지 흘러 잘려 나간 띠처럼 보인다.
+        // 요약 배너·입력줄과 같은 값으로 맞춰 세로로 한 줄에 선다.
+        .padding(.horizontal, DefaultSpacing.spacing16)
     }
 
     /// `@` 자동완성. 후보가 많아도 입력창을 화면 밖으로 밀지 않게 높이를 묶어 스크롤한다.
