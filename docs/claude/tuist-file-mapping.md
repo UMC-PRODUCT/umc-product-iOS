@@ -643,8 +643,8 @@
 | `Data/DTOs/NoticeVoteResponseRequestDTO.swift` | NoticeData |
 | `Data/DTOs/VoteDTO.swift` | NoticeData |
 | `Data/NoticeReadRecord.swift` | NoticeData |
-| `Data/Repositories/Mock/MockNoticeReadRepository.swift` | NoticeData |
-| `Data/Repositories/Mock/MockNoticeRepository.swift` | NoticeData |
+| `Data/Repositories/Mock/MockNoticeReadRepository.swift` | **이식 제외(dead)** — 이식됐으나 소비자 0건이고 `#if DEBUG` 가드도 없어 릴리스 바이너리에 실려서 제거됨(핵심 규칙 #5) |
+| `Data/Repositories/Mock/MockNoticeRepository.swift` | **이식 제외(dead)** — 이식됐으나 소비자 0건이고 `#if DEBUG` 가드도 없어 릴리스 바이너리에 실려서 제거됨(핵심 규칙 #5) |
 | `Data/Repositories/NoticeEditorTargetRepository.swift` | NoticeData |
 | `Data/Repositories/NoticeReadRepository.swift` | NoticeData |
 | `Data/Repositories/NoticeRepository.swift` | NoticeData |
