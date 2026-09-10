@@ -1646,16 +1646,6 @@ struct CommunityThreadRoomViewModelTests {
         #expect(viewModel.isSummaryBannerVisible == false)
     }
 
-    @Test("배너를 닫으면 이 방에 머무는 동안 다시 뜨지 않는다")
-    func keepsSummaryBannerDismissed() async {
-        let (_, viewModel) = makeRoom(unreadCount: "30", summarizer: StubSummarizer())
-        await viewModel.load()
-
-        viewModel.dismissSummaryBanner()
-
-        #expect(viewModel.isSummaryBannerVisible == false)
-    }
-
     /// `load()` 는 성공 직후 읽음 워터마크를 올린다. 배너 조건을 헤더에서 매번 다시 읽으면
     /// 그 뒤 재조회 한 번에 미읽음이 0 으로 정정돼 배너가 사라진다.
     @Test("진입 시점 미읽음 수는 이후 스레드 재조회에도 흔들리지 않는다", .timeLimit(.minutes(1)))

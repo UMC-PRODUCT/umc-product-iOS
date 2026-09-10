@@ -73,8 +73,6 @@ public final class CommunityThreadRoomViewModel {
     /// 필요했던 사람이 진입점을 놓친다. 그래서 진입 시 한 번만 고정하고 이후로는 건드리지 않는다.
     /// 개수 비교·구간 자르기에만 쓰는 연산값이라 `Int` 로 들고 있는다.
     public internal(set) var entryUnreadCount = 0
-    /// 배너를 한 번 닫으면 이 방을 벗어나기 전까지 다시 띄우지 않는다.
-    var isSummaryBannerDismissed = false
     @ObservationIgnored var hasCapturedEntryUnreadCount = false
 
     let summarizer: ThreadSummarizing

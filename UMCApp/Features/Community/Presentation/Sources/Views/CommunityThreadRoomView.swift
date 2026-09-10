@@ -106,8 +106,7 @@ struct CommunityThreadRoomView: View {
             if viewModel.isSummaryBannerVisible {
                 ThreadSummaryBanner(
                     unreadCount: viewModel.entryUnreadCount,
-                    onTap: { viewModel.isSummarySheetPresented = true },
-                    onDismiss: { viewModel.dismissSummaryBanner() }
+                    onTap: { viewModel.isSummarySheetPresented = true }
                 )
                 .transition(.opacity)
             }

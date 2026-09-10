@@ -23,9 +23,14 @@ extension CommunityThreadRoomViewModel {
     /// 배너를 띄울지.
     ///
     /// 미지원 기기에서는 폴백 안내조차 띄우지 않고 통째로 감춘다. 쓸 수 없는 기능을 알려 봐야
-    /// 사용자가 할 수 있는 일이 없고, 채팅 화면 위 공간만 잡아먹는다.
+    /// 사용자가 할 수 있는 일이 없고, 채팅 화면 위 공간만 잡아먹는다. 이 게이트는 #1314 에서
+    /// 다시 확인했고 그대로 둔다 — `summarize` 도 같은 조건에서 `.unavailable` 로 떨어지므로
+    /// 배너를 열어 두면 눌러야만 알 수 있는 실패가 된다.
+    ///
+    /// 닫기 상태는 들고 있지 않다 (#1314). 시안이 닫기 버튼을 걷어냈고, 스레드 메뉴의
+    /// "대화 요약" 이 임계치와 무관하게 남아 있어 배너가 유일한 진입점도 아니다.
     public var isSummaryBannerVisible: Bool {
-        guard summarizer.isAvailable, !isSummaryBannerDismissed else { return false }
+        guard summarizer.isAvailable else { return false }
         return entryUnreadCount >= Constants.summaryBannerThreshold
     }
 
@@ -77,10 +82,6 @@ extension CommunityThreadRoomViewModel {
         summary = .idle
     }
 
-    public func dismissSummaryBanner() {
-        isSummaryBannerDismissed = true
-    }
-
     // MARK: - Private Function
 
     /// 요약에 넣을 구간. 배너가 약속한 "읽지 않은 N개" 와 실제 입력이 어긋나면 안 된다.
@@ -100,5 +101,8 @@ fileprivate enum Constants {
     /// 명세에 수치가 없어 여기서 정한다. 서너 개짜리 대화는 스크롤로 훑는 편이 빠르고, 요약은
     /// 오히려 단계를 하나 더 만든다. 한 화면에 들어오는 버블이 대략 이 정도라 "한 화면을 넘게
     /// 밀렸다" 를 기준으로 잡았다.
+    ///
+    /// #1314 에서 다시 확인했다. 하한 아래에서도 스레드 메뉴의 "대화 요약" 으로 언제든 들어갈
+    /// 수 있어, 이 값은 "배너를 띄울 만큼 밀렸는가" 만 가른다 — 내리면 짧은 방마다 배너가 붙는다.
     static let summaryBannerThreshold = 10
 }
