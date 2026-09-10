@@ -33,6 +33,18 @@ WATCH_DESTINATION ?= generic/platform=watchOS Simulator
 MISE ?= mise
 TUIST := $(MISE) exec -- tuist
 
+# 빌드 번호 — 배포 브랜치(`release/3.0.0/96` · `testFlight/96`)의 끝 숫자를 그대로 쓴다.
+# 매니페스트(Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift)가 이 값을
+# CURRENT_PROJECT_VERSION 으로 읽으므로, 브랜치만 규칙대로 자르면 아카이브 전에 따로 넘길 게 없다.
+# 배포 브랜치가 아니면 빈 값 → 내보내지 않고 매니페스트 기본값 1(로컬 개발용)로 떨어진다.
+# `TUIST_BUILD_NUMBER=96 make generate` 로 직접 주면 그쪽이 우선한다(?= 라 덮어쓰지 않는다).
+# CI_BRANCH 는 Xcode Cloud 가 주는 값 — 거기선 HEAD 가 detached 라 git 으로는 브랜치명이 안 나온다.
+BRANCH := $(if $(CI_BRANCH),$(CI_BRANCH),$(shell git rev-parse --abbrev-ref HEAD 2>/dev/null))
+TUIST_BUILD_NUMBER ?= $(shell printf '%s' '$(BRANCH)' | sed -nE 's,^(release|testFlight)/([0-9.]+/)?([0-9]+)$$,\3,p')
+ifneq ($(strip $(TUIST_BUILD_NUMBER)),)
+export TUIST_BUILD_NUMBER
+endif
+
 # ──────────────────────────────────────────────────────────────
 # Help
 # ──────────────────────────────────────────────────────────────
