@@ -80,6 +80,9 @@ struct CommunityThreadRoomView: View {
             }
         }
         .umcDefaultBackground()
+        // 대화는 메시지 목록과 입력창이 세로를 꽉 채워야 한다. 탭바가 남아 있으면 컴포저가
+        // 그만큼 위로 밀리고 읽히는 메시지가 줄어든다 (#1312).
+        .toolbarVisibility(.hidden, for: .tabBar)
         .navigationBarTitleDisplayMode(.inline)
         // 참여 종료 화면의 이탈 경로는 화면 안의 버튼 하나뿐이다 (시안 #31).
         .navigationBarBackButtonHidden(viewModel.ejectionNotice != nil)
