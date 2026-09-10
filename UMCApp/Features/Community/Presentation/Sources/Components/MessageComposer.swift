@@ -23,8 +23,9 @@ fileprivate enum Constants {
 
 /// 하단 입력창.
 ///
-/// 이미지 첨부·마이크는 업로드/음성 체인이 후속 PR 이라 버튼만 두고 비활성화한다 — 나중에 붙을 때
-/// 입력창 높이가 바뀌지 않게 자리를 미리 잡아 둔다 (명세 FLOW 04 컴포저 구성).
+/// 마이크는 음성 체인이 후속 PR 이라 버튼만 두고 비활성화한다 — 나중에 붙을 때 입력창 높이가
+/// 바뀌지 않게 자리를 미리 잡아 둔다. 이미지 첨부는 업로드 경로 자체가 없어 버튼을 걷어냈고,
+/// 그 폭은 입력 필드가 가져간다 (명세 FLOW 04 컴포저 구성).
 ///
 /// 인용 칩과 `@` 자동완성은 입력줄 **위로 쌓는다**. 오버레이로 띄우면 마지막 말풍선을 가리는데,
 /// 답장을 쓰는 순간에 가장 보고 싶은 게 바로 그 말풍선이다.
@@ -67,15 +68,6 @@ struct MessageComposer: View {
 
     private var inputRow: some View {
         HStack(alignment: .bottom, spacing: DefaultSpacing.spacing8) {
-            Button {
-                // 후속 PR: 이미지 첨부
-            } label: {
-                Image(systemName: "photo.on.rectangle")
-                    .foregroundStyle(Color.grey500)
-            }
-            .disabled(true)
-            .accessibilityLabel("사진 첨부")
-
             TextField(Constants.placeholder, text: $text, axis: .vertical)
                 .appFont(.subheadline)
                 .lineLimit(Constants.lineLimit)
