@@ -37,8 +37,8 @@ public struct ArticleTextField: View {
 
     public var body: some View {
         switch placeholder {
-        case .title:
-            titleField
+        case .title, .threadTitle, .threadDescription:
+            promptField
         case .content:
             contentEditor
         }
@@ -46,14 +46,14 @@ public struct ArticleTextField: View {
 
     // MARK: - Function
 
-    private var titleField: some View {
+    private var promptField: some View {
         let field = TextField(
             "",
             text: $text,
             prompt: Text(placeholder.placeholderLabel),
             axis: placeholder.axis
         )
-        .font(.app(placeholder.placeholderFont))
+        .font(.app(placeholder.placeholderFont, weight: placeholder.placeholderWeight))
         .scrollIndicators(placeholder.scrollIndicator)
         .submitLabel(submitLabel)
         .onSubmit {

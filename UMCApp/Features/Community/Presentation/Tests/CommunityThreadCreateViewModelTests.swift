@@ -275,6 +275,28 @@ struct CommunityThreadCreateViewModelTests {
         #expect(viewModel.recommendedCategory == .qna)
     }
 
+    @Test("수동 선택 칸은 자동 분류로 해결되지 않는 상태에서만 열린다")
+    func showsManualSelectionOnlyWhenAutomaticPathFails() async {
+        let viewModel = makeViewModel()
+        viewModel.title = "iOS 스터디"
+        viewModel.threadDescription = "매주 화요일 8시에 모여서 공부해요"
+
+        // 시안의 첫 화면 — 분류 카드만 보이고 수동 칸은 없다.
+        #expect(!viewModel.isManualSelectionVisible)
+
+        await viewModel.classify()
+        #expect(viewModel.isManualSelectionVisible)
+
+        let unavailable = makeViewModel(classifier: StubClassifier(isAvailable: false))
+        #expect(unavailable.isManualSelectionVisible)
+
+        let failing = makeViewModel(classifier: StubClassifier(result: nil))
+        failing.title = "iOS 스터디"
+        failing.threadDescription = "매주 화요일 8시에 모여서 공부해요"
+        await failing.classify()
+        #expect(failing.isManualSelectionVisible)
+    }
+
     @Test("분류가 채운 카테고리·아이콘은 수동으로 덮어쓸 수 있다")
     func allowsManualOverrideAfterClassification() async {
         let viewModel = makeViewModel()

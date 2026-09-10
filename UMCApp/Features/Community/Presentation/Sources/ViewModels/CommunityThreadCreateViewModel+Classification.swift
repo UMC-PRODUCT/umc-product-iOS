@@ -34,6 +34,21 @@ extension CommunityThreadCreateViewModel {
             && !classification.isLoading
     }
 
+    /// 이모지·카테고리를 손으로 고르는 칸을 띄울지.
+    ///
+    /// 첫 화면은 분류 카드만 보여 준다. 자동 분류를 쓸 수 없거나(미지원) 이미 결과·실패가 나온
+    /// 뒤에만 수동 칸을 열어, 직접 고치는 길은 남기되 처음 보는 화면을 어지럽히지 않는다.
+    public var isManualSelectionVisible: Bool {
+        guard isClassificationAvailable else { return true }
+
+        switch classification {
+        case .loaded, .failed:
+            return true
+        case .idle, .loading:
+            return false
+        }
+    }
+
     /// 카테고리 시트에 "AI 추천" 배지를 붙일 항목. 분류 전에는 `nil` 이라 배지도 없다.
     public var recommendedCategory: CommunityThreadCategory? {
         classification.value?.category
