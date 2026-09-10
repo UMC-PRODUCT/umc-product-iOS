@@ -13,10 +13,15 @@ import CoreUIComponents
 // MARK: - Constants
 
 fileprivate enum Constants {
+    static let cardTitle = "카테고리 분류"
     static let engineLabel = "Apple Intelligence"
-    static let onDeviceLabel = "온디바이스"
-    static let idleHint = "제목과 특징을 채우면 카테고리와 아이콘을 대신 정해 드려요."
-    static let idleDisabledHint = "스레드 특징을 입력하면 분류할 수 있어요."
+    /// 배지를 뺀 자리를 대신한다 — 입력한 특징이 기기 밖으로 나가지 않는다는 사실은 남겨야 한다.
+    static let headerAccessibilityLabel = "카테고리 분류. Apple Intelligence 가 온디바이스로 처리합니다."
+    static let idleHint = "AI가 카테고리와 아이콘을 정해 드릴게요."
+    static let idleDisabledHint = """
+    쓰레드 특징을 입력하면
+    AI가 카테고리•아이콘을 정해줘요
+    """
     static let classifyTitle = "AI로 분류하기"
     static let reclassifyTitle = "다시 분류하기"
     static let changeIconTitle = "이모지 변경하기"
@@ -31,9 +36,11 @@ fileprivate enum Constants {
     static let manualHint = "마음에 들지 않으면 카테고리와 이모지를 직접 바꿀 수 있어요."
 
     static let sparklesImage = "sparkles"
+    static let engineImage = "apple.intelligence"
     static let failureImage = "exclamationmark.circle"
 
-    static let headerIconSize: CGFloat = 16
+    static let engineIconSize: CGFloat = 13
+    static let hintIconSize: CGFloat = 20
     static let resultIconSize: CGFloat = 34
     static let cardPadding: EdgeInsets = .init(
         top: DefaultSpacing.spacing16,
@@ -44,6 +51,19 @@ fileprivate enum Constants {
     /// 줄마다 오른쪽을 다르게 비워 실제 문단처럼 보이게 한다.
     static let shimmerBarInsets: [CGFloat] = [0, DefaultSpacing.spacing48]
     static let aiBorderWidth: CGFloat = 1
+
+    /// Apple Intelligence 표기 전용 그라디언트. 앱 팔레트가 아니라 Apple 이 정한 브랜드 색이라
+    /// 색 토큰으로 올리지 않고 이 파일에 가둔다.
+    static let engineGradient = LinearGradient(
+        colors: [
+            Color(red: 1.0, green: 0.553, blue: 0.157),
+            Color(red: 1.0, green: 0.176, blue: 0.333),
+            Color(red: 0.796, green: 0.188, blue: 0.878),
+            Color(red: 0.0, green: 0.753, blue: 0.910)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
 
     /// AI 처리 중임을 알리는 그라디언트. 대화 요약 시트와 같은 값으로 맞춘다.
     static let aiGradient = LinearGradient(
@@ -71,7 +91,7 @@ struct ThreadClassificationCard: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             header
             content
         }
@@ -95,28 +115,29 @@ struct ThreadClassificationCard: View {
 
     // MARK: - View Component
 
-    /// 무엇이 정한 값인지. "온디바이스" 는 입력한 특징이 기기 밖으로 나가지 않는다는 뜻이라
-    /// 브랜드 표기만큼 중요한 정보다.
+    /// 카드가 무엇을 하는 자리인지와, 그 값을 무엇이 정하는지.
     private var header: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            Image(systemName: Constants.sparklesImage)
-                .font(.system(size: Constants.headerIconSize, weight: .medium))
-                .foregroundStyle(Color.indigo500)
-                .symbolEffect(
-                    .variableColor.iterative.reversing,
-                    isActive: viewModel.classification.isLoading
-                )
+            Text(Constants.cardTitle)
+                .appFont(.body, weight: .semibold, color: .grey900)
 
-            Text(Constants.engineLabel)
-                .appFont(.callout, weight: .semibold, color: .grey700)
+            Spacer(minLength: 0)
 
-            Text(Constants.onDeviceLabel)
-                .appFont(.caption2, color: .indigo600)
-                .padding(.horizontal, DefaultSpacing.spacing8)
-                .padding(.vertical, DefaultSpacing.spacing4)
-                .background(Color.indigo100, in: .capsule)
+            HStack(spacing: DefaultSpacing.spacing4) {
+                Image(systemName: Constants.engineImage)
+                    .font(.system(size: Constants.engineIconSize))
+                    .symbolEffect(
+                        .variableColor.iterative.reversing,
+                        isActive: viewModel.classification.isLoading
+                    )
+
+                Text(Constants.engineLabel)
+                    .appFont(.caption1)
+            }
+            .foregroundStyle(Constants.engineGradient)
         }
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(Constants.headerAccessibilityLabel)
     }
 
     @ViewBuilder
@@ -137,16 +158,33 @@ struct ThreadClassificationCard: View {
         }
     }
 
+    /// 분류 버튼은 누를 수 있을 때만 나타난다. 특징이 비어 있는 첫 화면에서 잠긴 버튼을 띄우면
+    /// 무엇을 해야 버튼이 열리는지 안내 문구와 버튼이 서로 경쟁한다.
+    @ViewBuilder
     private var idleContent: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-            Text(viewModel.canClassify ? Constants.idleHint : Constants.idleDisabledHint)
-                .appFont(.footnote, color: .grey500)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        if viewModel.canClassify {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+                hintRow(Constants.idleHint)
 
-            MainButton(Constants.classifyTitle) { classify() }
-                .buttonStyle(.glassProminent)
-                .disabled(!viewModel.canClassify)
+                MainButton(Constants.classifyTitle) { classify() }
+                    .buttonStyle(.glassProminent)
+            }
+        } else {
+            hintRow(Constants.idleDisabledHint)
         }
+    }
+
+    private func hintRow(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: DefaultSpacing.spacing8) {
+            Image(systemName: Constants.sparklesImage)
+                .font(.system(size: Constants.hintIconSize))
+
+            Text(text)
+                .appFont(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .foregroundStyle(Color.indigo500)
+        .accessibilityElement(children: .combine)
     }
 
     private var loadingContent: some View {
@@ -259,7 +297,15 @@ struct ThreadClassificationCard: View {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("분류 전") {
+#Preview("입력 전") {
+    ThreadClassificationCard(
+        viewModel: previewViewModel(description: ""),
+        onChangeIcon: {}
+    )
+    .padding(DefaultSpacing.spacing16)
+}
+
+#Preview("특징 입력됨") {
     ThreadClassificationCard(
         viewModel: previewViewModel(description: "매주 화요일 8시에 모여서 iOS 공부해요"),
         onChangeIcon: {}
