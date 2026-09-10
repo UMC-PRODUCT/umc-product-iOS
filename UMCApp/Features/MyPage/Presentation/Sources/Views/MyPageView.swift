@@ -131,13 +131,14 @@ struct MyPageView: View {
                 .frame(maxWidth: .infinity)
 
         case .loaded(let card):
+            // 「명함 교환」·「QR 코드」는 이번 릴리즈 제외(#1329). `onExchange`/`onQR` 를
+            // 넘기지 않으면 2D·3D 두 경로 모두 `hasActions == false` 라 버튼 행이 빠진다 —
+            // 되살릴 때 이 두 인자만 다시 넘기면 된다.
             BusinessCard3DView(
                 card: card,
                 isFlipped: isCardFlipped,
                 qrImage: viewModel.qrImage,
-                onFlip: { isCardFlipped.toggle() },
-                onExchange: { onOpenBusinessCard(.exchange) },
-                onQR: { onOpenBusinessCard(.cardQR) }
+                onFlip: { isCardFlipped.toggle() }
             )
 
         case .failed(let error):
