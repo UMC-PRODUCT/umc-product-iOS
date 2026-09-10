@@ -142,7 +142,10 @@ let project = Project(
                 .external(name: "FirebaseCore"),
                 .external(name: "FirebaseMessaging"),
                 .project(target: "UMCAppWidget", path: "UMCAppWidget"),
-                .project(target: "UMCWatchApp", path: "UMCWatchApp"),
+                // 워치 앱은 이번 릴리즈에 담지 않는다 — 다음 릴리즈에서 이 줄만 되살리면 된다.
+                // (임베드 의존성만 끊은 것이라 UMCWatchApp/UMCWatchComplication 프로젝트와
+                //  `make build-watch` 는 그대로 살아 있다.)
+                // .project(target: "UMCWatchApp", path: "UMCWatchApp"),
             ],
             settings: .settings(
                 configurations: [
