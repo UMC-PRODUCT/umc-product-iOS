@@ -107,8 +107,6 @@ OAuth 등록이 전부 무효화된다, `UMCApp/Project.swift:12-14`).
   - ★ 별도 식별자 생성·연결 필요: **iCloud Container `iCloud.com.umc.product`**
     (entitlement `com.apple.developer.icloud-container-identifiers`). 포털의
     Identifiers → iCloud Containers 에서 만들고 App ID 에 연결한다
-- [ ] **Nearby Interaction** — entitlement `com.apple.developer.nearby-interaction` (`true`)
-  — **이번 이슈(#1241)의 핵심 항목.** 꺼져 있으면 UWB 거리 검증이 서명 단계에서 막힌다
 - [ ] **App Groups** — entitlement `com.apple.security.application-groups`
   - ★ 별도 식별자 생성·연결 필요: **App Group `group.com.umc.product.widget`**
     (포털의 Identifiers → App Groups 에서 만들고 App ID 에 연결한다)
@@ -130,8 +128,12 @@ OAuth 등록이 전부 무효화된다, `UMCApp/Project.swift:12-14`).
 - 로컬 네트워크 / Bonjour (`NSLocalNetworkUsageDescription`, `NSBonjourServices`)
 - 카메라 (`NSCameraUsageDescription`), 사진 추가 (`NSPhotoLibraryAddUsageDescription`)
 - 위치 (`NSLocationWhenInUseUsageDescription`)
-- Nearby Interaction 의 **권한 문구** (`NSNearbyInteractionUsageDescription`) — 문구는
-  Info.plist, capability 는 3-1 의 entitlement. 둘 다 있어야 한다
+- **Nearby Interaction 전체** — 제품이 쓰는 것은 기기끼리 거리를 재는 포그라운드 세션
+  (`NINearbyPeerConfiguration`, `PeerRangingCoordinator.swift:199`)뿐이라
+  `NSNearbyInteractionUsageDescription` 문구만 있으면 된다. entitlement
+  `com.apple.developer.nearby-interaction` 은 백그라운드·액세서리 세션용이고 포털 App ID
+  capability 목록에도 없어서 entitlements 에 남겨 두면 automatic signing 이
+  「not found and could not be included in profile」 로 실패한다 — 그래서 제거했다
 
 ## 4) Xcode 쪽 준비
 
