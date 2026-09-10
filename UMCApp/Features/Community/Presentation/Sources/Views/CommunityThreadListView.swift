@@ -230,7 +230,10 @@ struct CommunityThreadListView: View {
                 } label: {
                     Label("편집", systemImage: "pencil")
                 }
-                .tint(.green500)
+                // 브랜드 green500(#33A881, V 66%)은 옆에 붙는 시스템 red(V 100%) 대비 명도가
+                // 눌려 비활성처럼 읽힌다. green 계열 토큰은 전부 V 54~66% 구간이라 대안이 없어,
+                // leading 의 .orange/.blue 와 같은 시스템 팔레트로 맞춘다.
+                .tint(.green)
             }
 
             Button(role: .destructive) {
