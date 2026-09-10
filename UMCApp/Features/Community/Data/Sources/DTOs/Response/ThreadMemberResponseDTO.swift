@@ -2,6 +2,8 @@
 //  ThreadMemberResponseDTO.swift
 //  CommunityData
 //
+//  Created by euijjang97 on 8/13/26.
+//
 
 import Foundation
 import CommunityDomain

@@ -1,3 +1,10 @@
+//
+//  Project.swift
+//  CoreWatchConnectivity
+//
+//  Created by euijjang97 on 4/24/26.
+//
+
 import ProjectDescription
 import ProjectDescriptionHelpers
 

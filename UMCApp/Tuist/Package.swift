@@ -1,4 +1,11 @@
 // swift-tools-version: 6.0
+//
+//  Package.swift
+//  UMCApp
+//
+//  Created by euijjang97 on 3/6/26.
+//
+
 import PackageDescription
 
 #if TUIST

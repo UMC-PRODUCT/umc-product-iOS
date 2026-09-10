@@ -2,6 +2,8 @@
 //  ChallengerGenRepositoryTests.swift
 //  HomeDataTests
 //
+//  Created by euijjang97 on 8/7/26.
+//
 //  인메모리 `ModelContainer`로 (gen, gisuId) 매핑의 저장/조회 왕복, 같은 gen 재저장 시 upsert,
 //  입력에 없는 기존 gen pruning, gen 오름차순 정렬(사전순이 아닌 수치 기준)을 검증한다.
 //

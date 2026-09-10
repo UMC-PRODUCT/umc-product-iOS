@@ -1,3 +1,10 @@
+//
+//  Project.swift
+//  UMCFoundation
+//
+//  Created by euijjang97 on 3/6/26.
+//
+
 import ProjectDescription
 import ProjectDescriptionHelpers
 
@@ -13,4 +20,3 @@ let project = coreProject(
     ],
     includesTests: true
 )
-

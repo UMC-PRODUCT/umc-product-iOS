@@ -2,6 +2,8 @@
 //  MyPagePostDTO.swift
 //  MyPageData
 //
+//  Created by One on 5/18/26.
+//
 //  마이페이지 게시글 목록(작성/좋아요/스크랩) 조회 관련 DTO 모음.
 //  - Query / Response Item / Response Page / Nested(LightningInfo) DTO를 한 파일에 모은다.
 //

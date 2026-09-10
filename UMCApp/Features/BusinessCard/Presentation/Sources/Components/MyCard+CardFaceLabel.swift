@@ -2,6 +2,8 @@
 //  MyCard+CardFaceLabel.swift
 //  BusinessCardPresentation
 //
+//  Created by euijjang97 on 8/31/26.
+//
 
 import BusinessCardDomain
 import Foundation

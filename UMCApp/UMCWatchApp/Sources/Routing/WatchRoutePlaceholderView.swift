@@ -1,3 +1,10 @@
+//
+//  WatchRoutePlaceholderView.swift
+//  UMCWatchApp
+//
+//  Created by euijjang97 on 8/31/26.
+//
+
 // 경로가 실제로 도달 가능한지만 증명하는 최소 화면이다.
 // #1207(출석)·#1208(The Ping)·#1209(폴백) 에서 실제 화면으로 교체된다.
 

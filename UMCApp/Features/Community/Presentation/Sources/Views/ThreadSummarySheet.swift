@@ -2,6 +2,8 @@
 //  ThreadSummarySheet.swift
 //  CommunityPresentation
 //
+//  Created by euijjang97 on 8/13/26.
+//
 
 import SwiftUI
 import CommunityDomain

@@ -2,7 +2,7 @@
 //  CardIconImage.swift
 //  UMCApp
 //
-//  Created by JEONG on 7/11/26.
+//  Created by euijjang97 on 7/11/26.
 //
 
 import CoreDesignSystem

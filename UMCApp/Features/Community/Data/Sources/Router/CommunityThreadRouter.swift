@@ -2,6 +2,8 @@
 //  CommunityThreadRouter.swift
 //  CommunityData
 //
+//  Created by euijjang97 on 8/12/26.
+//
 
 import Foundation
 import Moya

@@ -2,6 +2,8 @@
 //  MyPagePostResponseDTOTests.swift
 //  MyPageDataTests
 //
+//  Created by One on 5/18/26.
+//
 //  toCommunityItemModel() / LightningInfoDTO.toDomain() / MyPagePostPageDTO.toDomain() 검증.
 //
 

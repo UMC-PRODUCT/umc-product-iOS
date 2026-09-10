@@ -2,6 +2,8 @@
 //  CommunityThreadRepositoryTests.swift
 //  CommunityDataTests
 //
+//  Created by euijjang97 on 8/12/26.
+//
 //  진짜 `CommunityThreadRepository` 를 대상으로, 네트워크 계층만 가짜(`StubCommunityThreadNetwork`)로
 //  주입해 6개 엔드포인트의 라우터 호출 계약 · page size 클램프 · 에러 변환 분기를 검증한다.
 //

@@ -2,6 +2,8 @@
 //  KeyedDecodingContainerFlexibleNumberTests.swift
 //  UMCFoundationTests
 //
+//  Created by One on 5/18/26.
+//
 //  서버가 정수/실수를 String 또는 Number 어느 쪽으로 보내든 디코딩이 통과하는지 검증.
 //
 

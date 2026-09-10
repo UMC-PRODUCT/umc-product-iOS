@@ -1,3 +1,10 @@
+//
+//  ClassifyScheduleUseCaseTests.swift
+//  HomeDomainTests
+//
+//  Created by euijjang97 on 7/14/26.
+//
+
 import Testing
 import UMCFoundation
 @testable import HomeDomain

@@ -2,6 +2,8 @@
 //  CommunityThreadCreateRuleTests.swift
 //  CommunityDomainTests
 //
+//  Created by euijjang97 on 8/14/26.
+//
 
 import Foundation
 import Testing

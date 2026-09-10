@@ -1,3 +1,10 @@
+//
+//  Settings+Recommended.swift
+//  ProjectDescriptionHelpers
+//
+//  Created by euijjang97 on 4/25/26.
+//
+
 import ProjectDescription
 
 /// 빌드 번호 — TestFlight/App Store는 동일 `MARKETING_VERSION` 안에서 빌드 번호가 매번 달라야

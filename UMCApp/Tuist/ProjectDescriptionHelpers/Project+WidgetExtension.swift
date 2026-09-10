@@ -1,3 +1,10 @@
+//
+//  Project+WidgetExtension.swift
+//  ProjectDescriptionHelpers
+//
+//  Created by euijjang97 on 4/23/26.
+//
+
 import ProjectDescription
 
 /// Widget Extension 타겟용 Project 생성 헬퍼

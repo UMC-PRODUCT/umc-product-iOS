@@ -1,3 +1,10 @@
+//
+//  PenaltyCard.swift
+//  HomePresentation
+//
+//  Created by euijjang97 on 7/9/26.
+//
+
 import Charts
 import CoreDesignSystem
 import Foundation

@@ -2,6 +2,8 @@
 //  ThreadCardStyle.swift
 //  CommunityPresentation
 //
+//  Created by euijjang97 on 8/14/26.
+//
 
 import SwiftUI
 import CoreDesignSystem

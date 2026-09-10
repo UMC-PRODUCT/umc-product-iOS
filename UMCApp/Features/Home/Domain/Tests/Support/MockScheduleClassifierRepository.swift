@@ -1,3 +1,10 @@
+//
+//  MockScheduleClassifierRepository.swift
+//  HomeDomainTests
+//
+//  Created by euijjang97 on 7/14/26.
+//
+
 import Foundation
 import UMCFoundation
 @testable import HomeDomain

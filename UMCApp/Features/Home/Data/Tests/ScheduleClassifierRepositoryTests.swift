@@ -2,6 +2,8 @@
 //  ScheduleClassifierRepositoryTests.swift
 //  HomeDataTests
 //
+//  Created by euijjang97 on 7/14/26.
+//
 //  키워드 매칭 테이블(카테고리별 대표 키워드/미매칭 시 .general)과 `UserDefaults` 기반 캐시
 //  저장/로드 roundtrip(deprecated 카테고리 필터링 포함)을 검증한다. `UserDefaults.standard`를
 //  오염시키지 않도록 매 테스트마다 임시 suite를 만들어 쓰고 종료 시 제거한다.
