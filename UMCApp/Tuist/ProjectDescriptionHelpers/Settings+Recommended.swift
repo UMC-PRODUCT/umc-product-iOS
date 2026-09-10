@@ -8,7 +8,10 @@
 import ProjectDescription
 
 /// 빌드 번호 — TestFlight/App Store는 동일 `MARKETING_VERSION` 안에서 빌드 번호가 매번 달라야
-/// 업로드를 받아준다. 아카이브 직전에 환경변수로 올린다:
+/// 업로드를 받아준다. 배포 브랜치(`release/3.0.0/96` · `testFlight/96`)에서 `make generate` 를
+/// 돌리면 Makefile 이 브랜치명 끝 숫자를 이 환경변수로 넣어준다.
+///
+/// 브랜치와 무관하게 직접 정하려면 그대로 넘기면 된다(Makefile 기본값보다 우선한다):
 ///
 /// ```bash
 /// TUIST_BUILD_NUMBER=42 make generate
