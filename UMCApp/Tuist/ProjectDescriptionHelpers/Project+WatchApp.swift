@@ -1,3 +1,10 @@
+//
+//  Project+WatchApp.swift
+//  ProjectDescriptionHelpers
+//
+//  Created by euijjang97 on 4/24/26.
+//
+
 import ProjectDescription
 
 /// 호스트 iOS 앱의 번들 ID. Watch 앱 번들 ID는 반드시 `<이 값>.watchkitapp` 이어야 한다.

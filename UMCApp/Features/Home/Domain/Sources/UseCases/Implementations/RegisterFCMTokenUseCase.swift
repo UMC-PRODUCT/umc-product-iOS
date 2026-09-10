@@ -1,3 +1,10 @@
+//
+//  RegisterFCMTokenUseCase.swift
+//  HomeDomain
+//
+//  Created by euijjang97 on 8/6/26.
+//
+
 import Foundation
 
 /// FCM 토큰 등록 UseCase 구현체.

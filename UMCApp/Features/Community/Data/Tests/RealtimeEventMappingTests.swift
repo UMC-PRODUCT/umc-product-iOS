@@ -2,6 +2,8 @@
 //  RealtimeEventMappingTests.swift
 //  CommunityDataTests
 //
+//  Created by euijjang97 on 8/12/26.
+//
 
 import Foundation
 import Testing

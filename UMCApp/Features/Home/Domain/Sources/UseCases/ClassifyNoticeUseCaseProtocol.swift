@@ -1,3 +1,10 @@
+//
+//  ClassifyNoticeUseCaseProtocol.swift
+//  HomeDomain
+//
+//  Created by euijjang97 on 8/6/26.
+//
+
 import Foundation
 
 /// 알림 분류 UseCase 프로토콜.

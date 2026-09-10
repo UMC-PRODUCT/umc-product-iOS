@@ -1,3 +1,10 @@
+//
+//  LoginUseCaseProtocol.swift
+//  AuthDomain
+//
+//  Created by euijjang97 on 7/9/26.
+//
+
 /// 소셜 로그인 UseCase 인터페이스
 public protocol LoginUseCaseProtocol {
     /// 카카오 로그인 실행

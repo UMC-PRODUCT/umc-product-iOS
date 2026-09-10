@@ -2,6 +2,8 @@
 //  CommunityThreadListView.swift
 //  CommunityPresentation
 //
+//  Created by euijjang97 on 8/12/26.
+//
 
 import SwiftUI
 import CommunityDomain

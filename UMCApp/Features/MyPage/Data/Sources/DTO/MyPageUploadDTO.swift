@@ -2,6 +2,8 @@
 //  MyPageUploadDTO.swift
 //  MyPageData
 //
+//  Created by One on 5/18/26.
+//
 //  마이페이지 프로필 이미지/링크 수정 요청 DTO 모음.
 //
 

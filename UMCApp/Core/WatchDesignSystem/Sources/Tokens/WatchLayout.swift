@@ -1,3 +1,10 @@
+//
+//  WatchLayout.swift
+//  CoreWatchDesignSystem
+//
+//  Created by euijjang97 on 8/31/26.
+//
+
 import SwiftUI
 
 /// 워치 전용 레이아웃 상수. iOS `DefaultConstant` 는 탭바·44pt 터치 타깃 등

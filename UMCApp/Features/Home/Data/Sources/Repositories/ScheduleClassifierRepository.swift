@@ -1,3 +1,10 @@
+//
+//  ScheduleClassifierRepository.swift
+//  HomeData
+//
+//  Created by euijjang97 on 7/14/26.
+//
+
 import CoreML
 import Foundation
 import HomeDomain

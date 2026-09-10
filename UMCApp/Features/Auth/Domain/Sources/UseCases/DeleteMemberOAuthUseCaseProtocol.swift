@@ -1,3 +1,10 @@
+//
+//  DeleteMemberOAuthUseCaseProtocol.swift
+//  AuthDomain
+//
+//  Created by euijjang97 on 8/10/26.
+//
+
 /// 로그인 OAuth 수단 연동 해제 UseCase 인터페이스
 public protocol DeleteMemberOAuthUseCaseProtocol {
     /// OAuth 연동을 해제한다.

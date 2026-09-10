@@ -1,3 +1,10 @@
+//
+//  Project+Feature.swift
+//  ProjectDescriptionHelpers
+//
+//  Created by euijjang97 on 4/5/26.
+//
+
 import ProjectDescription
 
 private let bundleIdBase = "dev.umc.feature"

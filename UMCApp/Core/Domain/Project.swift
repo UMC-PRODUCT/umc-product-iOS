@@ -1,3 +1,10 @@
+//
+//  Project.swift
+//  CoreDomain
+//
+//  Created by One on 5/10/26.
+//
+
 import ProjectDescription
 import ProjectDescriptionHelpers
 

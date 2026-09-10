@@ -2,6 +2,8 @@
 //  DIContainerCommunityTests.swift
 //  UMCAppTests
 //
+//  Created by euijjang97 on 8/12/26.
+//
 
 import CommunityData
 import CommunityDomain

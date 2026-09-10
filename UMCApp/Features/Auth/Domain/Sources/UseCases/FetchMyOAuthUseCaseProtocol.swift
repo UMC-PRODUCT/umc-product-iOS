@@ -1,3 +1,10 @@
+//
+//  FetchMyOAuthUseCaseProtocol.swift
+//  AuthDomain
+//
+//  Created by euijjang97 on 8/10/26.
+//
+
 /// 내 OAuth 연동 정보 조회 UseCase 인터페이스
 public protocol FetchMyOAuthUseCaseProtocol {
     /// 내 OAuth 연동 정보를 조회한다.

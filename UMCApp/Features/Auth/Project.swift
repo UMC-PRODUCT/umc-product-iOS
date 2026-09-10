@@ -1,3 +1,10 @@
+//
+//  Project.swift
+//  Auth
+//
+//  Created by euijjang97 on 3/6/26.
+//
+
 import ProjectDescription
 import ProjectDescriptionHelpers
 

@@ -1,3 +1,10 @@
+//
+//  WatchAttendanceOutcomeTests.swift
+//  UMCWatchAppTests
+//
+//  Created by euijjang97 on 8/31/26.
+//
+
 import Testing
 @testable import UMCWatchApp
 

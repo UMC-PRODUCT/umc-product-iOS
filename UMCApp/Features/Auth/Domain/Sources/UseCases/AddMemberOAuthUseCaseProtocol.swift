@@ -1,3 +1,10 @@
+//
+//  AddMemberOAuthUseCaseProtocol.swift
+//  AuthDomain
+//
+//  Created by euijjang97 on 8/10/26.
+//
+
 /// 로그인 OAuth 수단 추가 연동 UseCase 인터페이스
 public protocol AddMemberOAuthUseCaseProtocol {
     /// OAuth 검증 토큰으로 연동을 추가한다.
