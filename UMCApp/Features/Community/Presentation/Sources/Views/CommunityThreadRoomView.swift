@@ -49,9 +49,17 @@ struct CommunityThreadRoomView: View {
     @Environment(\.di) private var di
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(PathStore.self) private var pathStore
 
     @State private var isInviteSheetPresented = false
+
+    /// 액션 오버레이가 겨냥한 메시지. 메시지 값을 통째로 들고 있으면 삭제·갱신된 뒤 stale 해지므로
+    /// id 만 두고 매번 목록에서 되찾는다.
+    @State private var actionTargetID: String?
+
+    /// 오버레이를 닫은 뒤 VoiceOver 포커스를 원래 말풍선으로 돌려보낸다.
+    @AccessibilityFocusState private var focusedMessageID: String?
 
     /// 최하단 근처를 보고 있는지. `defaultScrollAnchor(.bottom)` 으로 진입 직후는 항상 최하단이고,
     /// 스크롤이 일어나기 전에는 geometry 콜백이 오지 않으므로 초기값이 곧 실제 상태다.
@@ -78,6 +86,32 @@ struct CommunityThreadRoomView: View {
             } else {
                 room
             }
+        }
+        // `.ignoresSafeArea()` 를 GeometryReader 에 걸어야 딤이 네비게이션 바 뒤까지 덮고,
+        // `proxy[anchor]` 도 같은 전체 화면 좌표계로 풀린다.
+        .overlayPreferenceValue(MessageActionAnchorKey.self) { anchor in
+            GeometryReader { proxy in
+                if let message = actionTargetMessage, let anchor {
+                    MessageActionOverlay(
+                        bubbleFrame: proxy[anchor],
+                        containerSize: proxy.size,
+                        isMine: viewModel.isMine(message),
+                        actions: MessageAction.items(
+                            deliveryState: message.deliveryState,
+                            canReport: viewModel.canReport(message),
+                            canDelete: viewModel.canDelete(message)
+                        ),
+                        onReact: { emoji in
+                            dismissActions()
+                            Task { await viewModel.toggleReaction(message, emoji: emoji) }
+                        },
+                        onMoreEmoji: { dismissActions() },
+                        onAction: { perform($0, on: message) },
+                        onDismiss: { dismissActions() }
+                    )
+                }
+            }
+            .ignoresSafeArea()
         }
         .umcDefaultBackground()
         // 대화는 메시지 목록과 입력창이 세로를 꽉 채워야 한다. 탭바가 남아 있으면 컴포저가
@@ -413,24 +447,23 @@ struct CommunityThreadRoomView: View {
                     MessageBubble(
                         message: message,
                         isMine: viewModel.isMine(message),
-                        canDelete: viewModel.canDelete(message),
-                        canReport: viewModel.canReport(message),
                         onRetry: { Task { await viewModel.retry(message) } },
                         onReact: { emoji in
                             Task { await viewModel.toggleReaction(message, emoji: emoji) }
                         },
-                        onReply: { viewModel.requestReply(message) },
                         onQuoteTap: { viewModel.scrollToQuoted($0) },
-                        onCopy: { viewModel.copyContent(message) },
-                        onDelete: { viewModel.requestDelete(message) },
-                        onReport: { viewModel.requestReport(message) }
+                        isActionTargeted: actionTargetID == message.id,
+                        onRequestActions: { showActions(for: message) }
                     )
+                    .accessibilityFocused($focusedMessageID, equals: message.id)
                     .task { await viewModel.loadOlderIfNeeded(currentItem: message) }
                 }
             }
             .padding(.horizontal, DefaultSpacing.spacing16)
         }
         .defaultScrollAnchor(.bottom)
+        // 오버레이가 떠 있는 동안 스크롤되면 딤에 뚫어 둔 구멍이 말풍선과 어긋난다.
+        .scrollDisabled(actionTargetID != nil)
         .scrollDismissesKeyboard(.interactively)
         .onScrollGeometryChange(for: Bool.self) { geometry in
             geometry.contentOffset.y + geometry.containerSize.height
@@ -474,7 +507,37 @@ struct CommunityThreadRoomView: View {
         )
     }
 
+    private var actionTargetMessage: ThreadMessage? {
+        guard let actionTargetID else { return nil }
+        return viewModel.messages.first { $0.id == actionTargetID }
+    }
+
     // MARK: - Function
+
+    private func showActions(for message: ThreadMessage) {
+        withAnimation(reduceMotion ? nil : .snappy) { actionTargetID = message.id }
+    }
+
+    private func dismissActions() {
+        let messageId = actionTargetID
+        withAnimation(reduceMotion ? nil : .snappy) { actionTargetID = nil }
+        focusedMessageID = messageId
+    }
+
+    private func perform(_ action: MessageAction, on message: ThreadMessage) {
+        dismissActions()
+
+        switch action {
+        case .reply:
+            viewModel.requestReply(message)
+        case .copy:
+            viewModel.copyContent(message)
+        case .report:
+            viewModel.requestReport(message)
+        case .delete:
+            viewModel.requestDelete(message)
+        }
+    }
 
     /// 최하단으로 내려간다. 마지막 항목이 `LazyVStack` 에서 아직 만들어지지 않았어도
     /// `scrollTo` 가 위치를 잡아 준다.

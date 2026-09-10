@@ -26,9 +26,7 @@ fileprivate enum Constants {
     static let quoteBarWidth: CGFloat = 3
     /// 말풍선 안에 들어가는 블록이라 바깥 모서리(16)보다 작게 준다.
     static let quoteCornerRadius: CGFloat = 8
-    /// 반응 팔레트. 고정 목록만 노출해 사용자 자유 입력 경로를 아예 두지 않는다 —
-    /// 그래서 Genmoji(표준 유니코드가 아닌 이미지 글리프)가 서버로 나갈 수 없다.
-    static let reactionEmojis = ["👍", "❤️", "😂", "😮", "😢", "🙏"]
+    static let affordanceIconSize: CGFloat = 16
 }
 
 /// 메시지 한 개.
@@ -36,25 +34,27 @@ fileprivate enum Constants {
 /// 수신은 좌측(이름 표시), 발신은 우측. SYSTEM 은 좌우 구분 없이 중앙 캡션으로 그린다.
 /// 삭제된 메시지는 목록에서 빼지 않고 톰스톤 문구로 남긴다 — 앞뒤 맥락이 끊기지 않게.
 ///
-/// `isMine`/`canDelete` 를 스스로 판단하지 않고 받는다. 판정 기준(`senderId` 대조, 권한)은
-/// ViewModel 하나에만 두고, 이 타입은 프리뷰·테스트에서 양쪽 모양을 바로 찍어 볼 수 있게
-/// 순수하게 남긴다.
+/// `isMine` 을 스스로 판단하지 않고 받는다. 판정 기준(`senderId` 대조)은 ViewModel 하나에만
+/// 두고, 이 타입은 프리뷰·테스트에서 양쪽 모양을 바로 찍어 볼 수 있게 순수하게 남긴다.
+///
+/// 답장·복사·신고·삭제는 여기 없다. 롱프레스로 뜨는 오버레이가 화면 전체를 덮어야 해서
+/// 화면(``CommunityThreadRoomView``)이 들고 있고, 이 타입은 "열어 달라" 는 신호만 올린다.
 struct MessageBubble: View {
 
     // MARK: - Property
 
     let message: ThreadMessage
     let isMine: Bool
-    let canDelete: Bool
-    let canReport: Bool
     let onRetry: () -> Void
+    /// 말풍선 아래 반응 칩 토글. 팔레트에서 고르는 경로는 오버레이가 따로 들고 있다.
     let onReact: (String) -> Void
-    let onReply: () -> Void
     /// 인용 블록 탭 → 원본 messageId 로 스크롤 (시안 #38).
     let onQuoteTap: (String) -> Void
-    let onCopy: () -> Void
-    let onDelete: () -> Void
-    let onReport: () -> Void
+    /// 액션 오버레이가 이 말풍선을 겨냥하고 있는지. 겨냥된 하나만 rect 를 위로 올린다 —
+    /// 모든 버블이 상시 anchor 를 뿜으면 스크롤마다 preference 가 갱신된다.
+    let isActionTargeted: Bool
+    /// 롱프레스·어피던스 아이콘 탭. 오버레이를 여는 건 화면이 한다.
+    let onRequestActions: () -> Void
 
     // MARK: - Body
 
@@ -66,6 +66,7 @@ struct MessageBubble: View {
                 if isMine {
                     Spacer(minLength: DefaultSpacing.spacing32)
                     deliveryIndicator
+                    if !message.isDeleted { reactionAffordance }
                 }
 
                 VStack(
@@ -95,6 +96,7 @@ struct MessageBubble: View {
                 }
 
                 if !isMine {
+                    if !message.isDeleted { reactionAffordance }
                     Spacer(minLength: DefaultSpacing.spacing32)
                 }
             }
@@ -104,14 +106,40 @@ struct MessageBubble: View {
 
     // MARK: - View Component
 
-    /// 톰스톤에는 메뉴를 붙이지 않는다 — 지워진 본문을 복사하거나 다시 지울 이유가 없다.
+    /// 톰스톤에는 액션을 붙이지 않는다 — 지워진 본문을 복사하거나 다시 지울 이유가 없다.
     @ViewBuilder
     private var bubble: some View {
         if message.isDeleted {
             bubbleContent
         } else {
-            bubbleContent.contextMenu { contextMenuItems }
+            bubbleContent
+                // 인용 블록 Button 위에서도 롱프레스가 먹어야 한다 — Button 이 제스처를
+                // 먼저 삼키지 않도록 simultaneous 로 건다.
+                .simultaneousGesture(
+                    LongPressGesture().onEnded { _ in onRequestActions() }
+                )
+                // 값만 조건부로 낸다. 모디파이어 자체를 `if` 로 감싸면 뷰 identity 가 바뀐다.
+                .anchorPreference(key: MessageActionAnchorKey.self, value: .bounds) { anchor in
+                    isActionTargeted ? anchor : nil
+                }
         }
+    }
+
+    /// 롱프레스 진입점을 눈에 보이게 드러낸다 (#1317 완료 조건 d).
+    /// 시안이 없어 임시 SF Symbol 로 자리만 잡아 둔다 — 모양·위치·표시 조건은 디자인 확정 대기.
+    private var reactionAffordance: some View {
+        Button(action: onRequestActions) {
+            Image(systemName: "face.smiling")
+                .font(.system(size: Constants.affordanceIconSize))
+                .foregroundStyle(Color.grey500)
+                .frame(
+                    width: Constants.minimumTapTarget,
+                    height: Constants.minimumTapTarget
+                )
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("메시지 반응 및 동작")
     }
 
     /// 본문은 항상 그대로 남기고, 내부 링크가 있으면 그 아래에 카드를 덧붙인다.
@@ -184,44 +212,6 @@ struct MessageBubble: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(reply.senderName)님의 메시지에 답장, \(reply.snippet)")
         .accessibilityHint("원본 메시지로 이동")
-    }
-
-    /// 이모지 팔레트는 메뉴 맨 위 한 줄로 낸다. `ControlGroup` + `.compactMenu` 가 네이티브
-    /// 가로 배열을 그려 주므로 오버레이를 직접 띄우지 않는다.
-    ///
-    /// 신고에 `.destructive` 를 주지 않는다 — 지우는 동작이 아니고, 운영진 권한이라 삭제와
-    /// 신고가 함께 뜨는 자리에서 빨강이 둘이면 어느 쪽이 되돌릴 수 없는지가 흐려진다.
-    @ViewBuilder
-    private var contextMenuItems: some View {
-        ControlGroup {
-            ForEach(Constants.reactionEmojis, id: \.self) { emoji in
-                Button(emoji) { onReact(emoji) }
-            }
-        }
-        .controlGroupStyle(.compactMenu)
-
-        // 아직 서버가 모르는 메시지는 답장 대상이 될 수 없다 — 보낼 id 가 내가 만든 UUID 다.
-        if message.deliveryState == .sent {
-            Button(action: onReply) {
-                Label("답장", systemImage: "arrowshape.turn.up.left")
-            }
-        }
-
-        Button(action: onCopy) {
-            Label("복사", systemImage: "doc.on.doc")
-        }
-
-        if canReport {
-            Button(action: onReport) {
-                Label("신고", systemImage: "exclamationmark.bubble")
-            }
-        }
-
-        if canDelete {
-            Button(role: .destructive, action: onDelete) {
-                Label("삭제", systemImage: "trash")
-            }
-        }
     }
 
     /// 말풍선 아래 붙는 반응 칩. 칩을 다시 누르면 같은 토글이 돈다.
@@ -501,23 +491,15 @@ struct MessageBubble: View {
         )
     }
 
-    func bubble(
-        _ message: ThreadMessage,
-        isMine: Bool,
-        canDelete: Bool = false
-    ) -> MessageBubble {
+    func bubble(_ message: ThreadMessage, isMine: Bool) -> MessageBubble {
         MessageBubble(
             message: message,
             isMine: isMine,
-            canDelete: canDelete,
-            canReport: !isMine,
             onRetry: {},
             onReact: { _ in },
-            onReply: {},
             onQuoteTap: { _ in },
-            onCopy: {},
-            onDelete: {},
-            onReport: {}
+            isActionTargeted: false,
+            onRequestActions: {}
         )
     }
 
@@ -526,7 +508,7 @@ struct MessageBubble: View {
             message(id: "1", content: "안녕하세요! 오늘 스터디 몇 시에 시작하나요?"),
             isMine: false
         )
-        bubble(message(id: "2", content: "7시에 시작합니다"), isMine: true, canDelete: true)
+        bubble(message(id: "2", content: "7시에 시작합니다"), isMine: true)
         bubble(
             message(
                 id: "3",
