@@ -134,7 +134,10 @@ struct MyPageView: View {
             // 「명함 교환」·「QR 코드」는 이번 릴리즈 제외(#1329). `onExchange`/`onQR` 를
             // 넘기지 않으면 2D·3D 두 경로 모두 `hasActions == false` 라 버튼 행이 빠진다 —
             // 되살릴 때 이 두 인자만 다시 넘기면 된다.
-            BusinessCard3DView(
+            // 3D 전환도 이번 릴리즈 제외(#1331) — 합성이 끝나는 순간 크로스페이드되는 3D 카드가
+            // 로고·라벨 누락, 프로필 자리 회색 원, 파트 칩 색 어긋남으로 시안과 달라서 처음 뜨는
+            // 2D 카드로 고정한다. `BusinessCard3DView` 와 인자가 같으니 되살릴 때 식별자만 되돌리면 된다.
+            BusinessCardFaceView(
                 card: card,
                 isFlipped: isCardFlipped,
                 qrImage: viewModel.qrImage,
