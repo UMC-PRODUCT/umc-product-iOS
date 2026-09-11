@@ -37,6 +37,11 @@ private let buildNumber = Environment.buildNumber.getString(default: "1")
 /// - `DEVELOPMENT_TEAM` / `CODE_SIGN_STYLE`: 서명 설정. Xcode UI에서 팀을 골라도 `tuist generate`
 ///   시 `.xcodeproj`이 재생성되며 날아가므로 매니페스트에 고정해야 아카이브가 반복 가능하다.
 public let recommendedSettings: SettingsDictionary = [
+    // GoogleSignIn/Firebase 는 ObjC 카테고리로 기능을 얹는다(예: AppAuth 의
+    // `OIDAuthorizationService+IOS` → `presentAuthorizationRequest:presentingViewController:callback:`).
+    // 외부 의존성이 전부 staticFramework(Package.swift `productTypes: [:]` 기본값)라
+    // 카테고리 `.o` 는 참조할 심볼이 없어 링커가 버리고, 런타임에 unrecognized selector 로 터진다.
+    "OTHER_LDFLAGS": "$(inherited) -ObjC",
     "ENABLE_MODULE_VERIFIER": "YES",
     "MODULE_VERIFIER_SUPPORTED_LANGUAGES": "objective-c objective-c++",
     "MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS": "gnu17 gnu++20",
