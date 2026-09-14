@@ -29,12 +29,12 @@ public final class MyPageViewModel {
     /// 사용자 프로필 데이터를 담는 Loadable 상태.
     public private(set) var profileData: Loadable<ProfileData> = .idle
 
-    /// 명함 편집 진입이 아직 준비되지 않았다.
+    /// 내 정보 편집 진입이 아직 준비되지 않았다.
     ///
     /// `myCard`는 프로필 응답이 도착하는 즉시 `.loaded`가 되지만, `profileData`는 이어지는
     /// `/member-oauth/me` 왕복(``syncConnectedSocials``)까지 끝나야 `.loaded`가 된다 —
     /// 그래서 처음 진입에 "명함 카드는 떠 있는데 편집 스냅샷은 아직"인 구간이 생긴다. 이
-    /// 구간에는 명함 편집 행을 비활성화해 조용히 씹히는 탭을 막는다(뷰가 소비).
+    /// 구간에는 내 정보 편집 행을 비활성화해 조용히 씹히는 탭을 막는다(뷰가 소비).
     /// pop 복귀 재조회는 로드된 프로필을 유지하므로(``fetchProfile``) 다시 켜지지 않는다.
     public var isCardEditPending: Bool {
         switch profileData {
@@ -118,7 +118,7 @@ public final class MyPageViewModel {
     ///
     /// 이미 로드된 프로필이 있으면 그대로 둔 채 재조회합니다(stale-while-revalidate,
     /// ``loadBusinessCard``와 같은 정책) — pop 복귀 재조회마다 `.loading`으로 밀면
-    /// ``isCardEditPending``이 다시 켜져 「명함 편집」·「나의 활동 ・프로젝트」 행이 함께
+    /// ``isCardEditPending``이 다시 켜져 「내 정보 편집」·「나의 활동 ・프로젝트」 행이 함께
     /// 스피너를 돌린다. 처음 진입·실패 후 재시도만 로딩 상태를 그립니다.
     ///
     /// 이미 조회가 진행 중이면 중복 호출을 무시합니다. 에러 분기:

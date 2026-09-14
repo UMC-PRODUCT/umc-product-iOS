@@ -11,7 +11,7 @@ import Foundation
 ///
 /// 외부 링크, 활동 내역, 설정, 소셜 연동 등 MyPage에서 제공하는 모든 섹션 카테고리를 나타냅니다.
 public enum MyPageSectionType: String, CaseIterable {
-    /// 명함 관리(받은 명함 · 명함 편집) — v3 루트 섹션
+    /// 명함 관리(받은 명함 · 내 정보 편집) — v3 루트 섹션
     case businessCard = "명함 관리"
     /// 나의 활동(스터디 · 활동/프로젝트 카운트) — v3 루트 섹션
     case myActivity = "나의 활동"

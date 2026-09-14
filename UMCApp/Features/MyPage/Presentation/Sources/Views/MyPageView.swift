@@ -75,7 +75,7 @@ struct MyPageView: View {
                         activityCount: viewModel.activityStat.activityCount,
                         onStudyTap: onOpenStudy,
                         onActivityTap: activityLogsAction,
-                        // 활동 이력도 「명함 편집」과 같은 프로필 스냅샷을 기다린다.
+                        // 활동 이력도 「내 정보 편집」과 같은 프로필 스냅샷을 기다린다.
                         isActivityPending: viewModel.isCardEditPending
                     )
                 }
@@ -109,7 +109,7 @@ struct MyPageView: View {
         .task {
             await viewModel.loadBusinessCard()
         }
-        // 명함 편집에서 이미지·링크를 수정하고 돌아오면 카드가 옛 스냅샷으로 남는다.
+        // 내 정보 편집에서 이미지·링크를 수정하고 돌아오면 카드가 옛 스냅샷으로 남는다.
         // 수정 API가 세션 캐시를 갱신해 두므로 여기서는 추가 왕복 없이 최신 값을 다시 읽는다.
         // 명함도 같은 정본 프로필 캐시에서 파생되므로 함께 다시 읽는다.
         .onChange(of: pathStore.depth(of: .mypage)) { previousDepth, currentDepth in
@@ -157,7 +157,7 @@ struct MyPageView: View {
 
     // MARK: - Function
 
-    /// 명함 편집으로 이동하는 액션. 스냅샷이 아직 없으면(로딩 중·실패) `nil` —
+    /// 내 정보 편집으로 이동하는 액션. 스냅샷이 아직 없으면(로딩 중·실패) `nil` —
     /// `BusinessCardSection`이 이를 받아 행을 비활성화한다(``MyPageViewModel/isCardEditPending``
     /// 이 로딩 중인 구간의 진행 표시를 함께 맡는다). `nil`이 아닐 때도 재조회하지 않고 루트가
     /// 이미 로드해 둔 스냅샷을 싣는다 — `MyPageDestination.cardEdit`의 문서 주석과 같은 이유
@@ -178,7 +178,7 @@ struct MyPageView: View {
     }
 
     /// 명함 카드 로드 실패 후 재시도. 진입 시 네트워크 장애로 `profileData`도 함께
-    /// `.failed`가 됐을 수 있다 — 카드만 재시도하면 「명함 편집」 행이 활성 외관인 채
+    /// `.failed`가 됐을 수 있다 — 카드만 재시도하면 「내 정보 편집」 행이 활성 외관인 채
     /// 무반응으로 남으므로(``cardEditAction``이 `profileData`를 요구) 두 로드를 함께
     /// 재시도한다. `static`으로 뽑아 뷰 렌더링 없이 테스트한다.
     static func retryCardAndProfile(viewModel: MyPageViewModel) async {

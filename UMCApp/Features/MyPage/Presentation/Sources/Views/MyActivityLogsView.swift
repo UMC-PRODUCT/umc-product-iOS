@@ -11,7 +11,7 @@ import SwiftUI
 
 /// 「나의 활동 ・프로젝트」가 여는 활동 이력 목록 (MP-F11).
 ///
-/// 읽기 전용이다 — 기록 추가는 「명함 편집」(``MyPageProfileView``)이 소유한다. ``ActiveLogs``는
+/// 읽기 전용이다 — 기록 추가는 「내 정보 편집」(``MyPageProfileView``)이 소유한다. ``ActiveLogs``는
 /// `onAddTap`이 `nil`이면 추가 버튼을 그리지 않으므로 그대로 재사용한다.
 ///
 /// - Important: 「프로젝트」 축은 서버·도메인·DTO 에 엔티티가 0건이라 그릴 값이 없다. 목록은

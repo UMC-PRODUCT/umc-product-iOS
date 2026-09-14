@@ -9,7 +9,7 @@ import CoreDesignSystem
 import CoreUIComponents
 import SwiftUI
 
-/// v3 루트의 「명함 관리」 섹션 — 받은 명함 / 명함 편집.
+/// v3 루트의 「명함 관리」 섹션 — 받은 명함 / 내 정보 편집.
 public struct BusinessCardSection: View {
 
     // MARK: - Property
@@ -26,7 +26,7 @@ public struct BusinessCardSection: View {
     ///   - receivedCardCount: 받은 명함 수(서버 정수는 핵심규칙 #2에 따라 String).
     ///     아직 못 세었으면(조회 전·실패) `nil` — "0장"이 아니라 "-"로 그린다 (#1222).
     ///   - onReceivedCards: 명함첩(받은 명함 그리드)으로 이동.
-    ///   - onCardEdit: 명함 편집으로 이동. 편집에 필요한 프로필 스냅샷이 아직 없으면
+    ///   - onCardEdit: 내 정보 편집으로 이동. 편집에 필요한 프로필 스냅샷이 아직 없으면
     ///     (로딩 중·실패) `nil` — 행이 죽은 탭 없이 비활성화된다.
     ///   - isCardEditPending: `true`면 스냅샷 로딩 중이라는 뜻 — 행이 chevron 대신 진행
     ///     표시를 보여준다(`onCardEdit`이 `nil`이어도 무반응처럼 보이지 않게).
@@ -65,7 +65,7 @@ public struct BusinessCardSection: View {
                 MyPageListRow(
                     systemIcon: "square.and.pencil",
                     iconColor: MyPageListIconColor.blue,
-                    title: "명함 편집",
+                    title: "내 정보 편집",
                     action: onCardEdit,
                     isPending: isCardEditPending
                 )

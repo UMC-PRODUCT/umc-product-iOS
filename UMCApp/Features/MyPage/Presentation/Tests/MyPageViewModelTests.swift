@@ -172,12 +172,12 @@ struct MyPageViewModelTests {
 }
 
 /// 리뷰 지적(Important): `myCard`는 프로필 응답 도착 즉시 `.loaded`라 카드가 그려지는데,
-/// `profileData`는 `/member-oauth/me` 왕복까지 끝나야 `.loaded`라 그 사이 「명함 편집」 탭이
+/// `profileData`는 `/member-oauth/me` 왕복까지 끝나야 `.loaded`라 그 사이 「내 정보 편집」 탭이
 /// 조용히 씹히는 창이 매 진입마다 생겼다. `isCardEditPending`이 그 창을 뷰에 알려 행을
 /// 비활성화(+진행 표시)하게 한다 — 이 스위트는 `profileData`의 4개 상태 전이마다
 /// `isCardEditPending`이 옳은 값을 내는지 고정한다.
 @MainActor
-@Suite("MyPageViewModel — isCardEditPending (명함 편집 무반응 창 방지)")
+@Suite("MyPageViewModel — isCardEditPending (내 정보 편집 무반응 창 방지)")
 struct MyPageViewModelCardEditPendingTests {
 
     @Test("초기 상태(.idle)에서는 pending")
@@ -391,7 +391,7 @@ struct MyPageViewModelLoadBusinessCardTests {
 
 /// 리뷰 지적(Important): `MyPageView`의 카드 retry가 `loadBusinessCard`만 재실행하면,
 /// 진입 시 네트워크 장애로 `profileData`·`myCard`가 함께 `.failed`였을 때 카드만 복구되고
-/// `profileData`는 `.failed`로 남아 「명함 편집」 행이 활성 외관인 채 무반응이 된다
+/// `profileData`는 `.failed`로 남아 「내 정보 편집」 행이 활성 외관인 채 무반응이 된다
 /// (``MyPageViewModel/isCardEditPending``이 `profileData`만 본다). `MyPageView.retryCardAndProfile`이
 /// 두 로드를 함께 `forceRefresh`로 재시도하는지 뷰 렌더링 없이 고정한다.
 @MainActor
