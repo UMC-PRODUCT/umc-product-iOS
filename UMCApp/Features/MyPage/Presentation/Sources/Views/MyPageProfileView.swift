@@ -26,22 +26,15 @@ public struct MyPageProfileView: View {
     // MARK: - Property
 
     @State private var viewModel: MyPageProfileViewModel
-    @Environment(\.di) private var di
     @Environment(ErrorHandler.self) private var errorHandler
     @Environment(\.dismiss) private var dismiss
     @State private var showAddActivityLogAlert: Bool = false
-    @State private var challengerCode: String = ""
     @State private var alertPrompt: AlertPrompt?
 
     private enum Constants {
         static let schoolHeader = "학교"
         static let activityLogHeader = "활동 이력"
         static let profileLinkHeader = "외부 프로필 링크"
-
-        static let codeAlertTitle = "챌린저 코드 입력"
-        static let codeAlertMessage = "운영진에게 발급받은 6자리 코드를 입력해주세요."
-        static let codeFieldPlaceholder = "6자리 코드"
-        static let codeLength = 6
     }
 
     // MARK: - Init
@@ -76,12 +69,9 @@ public struct MyPageProfileView: View {
         .onChange(of: viewModel.selectedPhotoItem) { _, _ in
             Task { await viewModel.loadSelectedImage() }
         }
-        .alert(
-            Constants.codeAlertTitle,
-            isPresented: $showAddActivityLogAlert,
-            actions: challengerCodeAlertActions,
-            message: challengerCodeAlertMessage
-        )
+        .challengerCodeAlert(isPresented: $showAddActivityLogAlert) { code in
+            try await viewModel.addActivityLog(code: code)
+        }
         .alertPrompt(item: $alertPrompt)
     }
 
@@ -127,22 +117,6 @@ public struct MyPageProfileView: View {
         )
     }
 
-    @ViewBuilder
-    private func challengerCodeAlertActions() -> some View {
-        TextField(Constants.codeFieldPlaceholder, text: $challengerCode)
-            .keyboardType(.asciiCapable)
-
-        Button("닫기", role: .cancel) {
-            challengerCode = ""
-        }
-
-        Button("전송", action: submitChallengerCode)
-    }
-
-    private func challengerCodeAlertMessage() -> some View {
-        Text(Constants.codeAlertMessage)
-    }
-
     // MARK: - Function
 
     /// 프로필 수정(이미지·링크)을 서버에 제출하고 완료 시 화면을 닫습니다.
@@ -158,80 +132,6 @@ public struct MyPageProfileView: View {
                 )
             }
         }
-    }
-
-    /// 활동 이력 추가 코드를 서버에 전송하고, 성공 시 프로필과 로컬 세션 저장소를 갱신합니다.
-    private func submitChallengerCode() {
-        let trimmedCode = challengerCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard isValidChallengerCode(trimmedCode) else {
-            errorHandler.handle(
-                AppError.validation(
-                    .invalidFormat(
-                        field: "challengerCode",
-                        expected: "\(Constants.codeLength)자리 영숫자 코드"
-                    )
-                ),
-                context: ErrorContext(feature: "MyPage", action: "submitChallengerCode")
-            )
-            return
-        }
-
-        Task {
-            defer { challengerCode = "" }
-
-            do {
-                try await viewModel.addActivityLog(code: trimmedCode)
-                await syncProfileStorage()
-            } catch let error as RepositoryError {
-                presentCodeFailurePrompt(code: error.code, message: error.userMessage)
-            } catch {
-                errorHandler.handle(
-                    error,
-                    context: ErrorContext(feature: "MyPage", action: "addActivityLog")
-                )
-            }
-        }
-    }
-
-    private func isValidChallengerCode(_ code: String) -> Bool {
-        code.count == Constants.codeLength
-            && code.unicodeScalars.allSatisfy(CharacterSet.alphanumerics.contains)
-    }
-
-    /// 활동 이력이 추가되면 역할·기수가 바뀌므로 `AppStorageKey` 기반 로컬 세션 값도 맞춘다.
-    ///
-    /// 동기화 실패는 이력 추가 자체를 되돌리지 않으므로 화면 흐름을 끊지 않는다.
-    private func syncProfileStorage() async {
-        let fetchProfile = di.resolve(FetchMemberProfileUseCaseProtocol.self)
-
-        guard let profile = try? await fetchProfile.execute() else { return }
-
-        di.resolve(SyncProfileStorageUseCaseProtocol.self).execute(profile: profile)
-    }
-
-    private func presentCodeFailurePrompt(code: String?, message: String) {
-        let resolvedMessage: String
-
-        switch code {
-        case "CHALLENGER-0002":
-            resolvedMessage = "이미 등록된 사용자입니다."
-        case "CHALLENGER-0012":
-            resolvedMessage = "이미 사용된 챌린저 기록 추가용 코드입니다."
-        case "CHALLENGER-0013":
-            resolvedMessage = "코드에 등록된 사용자 이름이 요청자와 일치하지 않습니다."
-        case "CHALLENGER-0014":
-            resolvedMessage = "코드에 등록된 학교가 요청자 소속과 일치하지 않습니다."
-        case "CHALLENGER-0016":
-            resolvedMessage = "챌린저 기록 코드를 먼저 입력해주세요."
-        default:
-            resolvedMessage = Self.sanitizedErrorMessage(from: message)
-        }
-
-        alertPrompt = AlertPrompt(
-            title: "인증 실패",
-            message: resolvedMessage,
-            positiveBtnTitle: "확인"
-        )
     }
 
     private func presentDisconnectPrompt(_ connection: SocialConnection) {
@@ -281,7 +181,7 @@ public struct MyPageProfileView: View {
         case "AUTHENTICATION-0016":
             resolvedMessage = "연동된 계정이 하나뿐이면 연동을 해제할 수 없습니다. 회원 탈퇴를 이용해주세요."
         default:
-            resolvedMessage = Self.sanitizedErrorMessage(from: message)
+            resolvedMessage = message.strippingServerErrorCode()
         }
 
         alertPrompt = AlertPrompt(
@@ -305,18 +205,5 @@ public struct MyPageProfileView: View {
             code: json["code"] as? String,
             message: (json["message"] as? String) ?? error.userMessage
         )
-    }
-
-    /// 사용자에게 노출할 문구에서 `CHALLENGER-0012:` 같은 서버 코드 접두사를 걷어낸다.
-    private static func sanitizedErrorMessage(from message: String) -> String {
-        let trimmed = message
-            .replacingOccurrences(
-                of: #"^[A-Z]+-\d{4}\s*[:\-]?\s*"#,
-                with: "",
-                options: .regularExpression
-            )
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        return trimmed.isEmpty ? "인증에 실패했습니다. 다시 시도해주세요." : trimmed
     }
 }

@@ -89,6 +89,7 @@ private final class MockMemberProfileRepository:
     private(set) var fetchMyProfileCallCount = 0
     private(set) var primeCacheCallCount = 0
     private(set) var primedProfiles: [Profile] = []
+    private(set) var invalidateCacheCallCount = 0
     private(set) var lastForceRefresh: Bool?
 
     func fetchMyProfile() async throws -> Profile {
@@ -104,6 +105,10 @@ private final class MockMemberProfileRepository:
     func primeCache(with profile: Profile) async {
         primeCacheCallCount += 1
         primedProfiles.append(profile)
+    }
+
+    func invalidateCache() async {
+        invalidateCacheCallCount += 1
     }
 }
 
@@ -545,11 +550,26 @@ struct MyPageRepositoryAddRecordTests {
         #expect(stub.lastMethod == .post)
     }
 
+    @Test("addChallengerRecord — 성공 시 프로필 캐시를 무효화해 추가된 기수·역할이 바로 보이게 한다")
+    func addRecordInvalidatesProfileCache() async throws {
+        let memberProfileRepository = MockMemberProfileRepository()
+        let (sut, _) = makeRepository(
+            .success(Fixture.successVoid()),
+            memberProfileRepository: memberProfileRepository
+        )
+
+        try await sut.addChallengerRecord(code: "INVITE-42")
+
+        #expect(memberProfileRepository.invalidateCacheCallCount == 1)
+    }
+
     @Test("addChallengerRecord — 서버 에러 본문(requestFailed)을 RepositoryError.serverError로 승격한다")
     func addRecordMapsServerError() async {
         let body = Fixture.failureBody(code: "REC409", message: "이미 등록된 기록입니다.")
+        let memberProfileRepository = MockMemberProfileRepository()
         let (sut, _) = makeRepository(
-            .failure(NetworkError.requestFailed(statusCode: 409, data: body))
+            .failure(NetworkError.requestFailed(statusCode: 409, data: body)),
+            memberProfileRepository: memberProfileRepository
         )
 
         await #expect(throws: RepositoryError.serverError(
@@ -557,6 +577,9 @@ struct MyPageRepositoryAddRecordTests {
         )) {
             try await sut.addChallengerRecord(code: "X")
         }
+
+        // 실패한 요청은 캐시를 건드리지 않는다 (멀쩡한 스냅샷을 버리지 않는다)
+        #expect(memberProfileRepository.invalidateCacheCallCount == 0)
     }
 
     @Test("addChallengerRecord — 파싱 불가한 NetworkError는 원본 그대로 전파한다")

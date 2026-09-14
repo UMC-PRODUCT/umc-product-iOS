@@ -56,12 +56,15 @@ final class MockMyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable 
     // MARK: - addChallengerRecord
 
     var addChallengerRecordError: Error?
+    /// 요청이 진행 중인 동안 실행할 훅. 재진입 가드를 결정적으로 검증할 때 주입한다.
+    var onAddChallengerRecord: (@Sendable () async -> Void)?
     private(set) var addChallengerRecordCallCount = 0
     private(set) var addChallengerRecordReceivedCode: String?
 
     func addChallengerRecord(code: String) async throws {
         addChallengerRecordCallCount += 1
         addChallengerRecordReceivedCode = code
+        await onAddChallengerRecord?()
         if let addChallengerRecordError {
             throw addChallengerRecordError
         }
@@ -171,7 +174,8 @@ final class MockMyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable 
 func makeStubProfileData(
     challengeId: Int = 1,
     socialConnections: [SocialConnection] = [],
-    profileLink: [ProfileLink] = []
+    profileLink: [ProfileLink] = [],
+    activityLogs: [ActivityLog] = []
 ) -> ProfileData {
     ProfileData(
         challengeId: challengeId,
@@ -186,7 +190,7 @@ func makeStubProfileData(
             part: .pm
         ),
         socialConnections: socialConnections,
-        activityLogs: [],
+        activityLogs: activityLogs,
         profileLink: profileLink
     )
 }

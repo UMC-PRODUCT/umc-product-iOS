@@ -102,6 +102,10 @@ public final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendab
                 from: response.data
             )
             try apiResponse.validateSuccess()
+            // 기록 추가는 응답에 최신 스냅샷이 없어 prime 할 값이 없다. 캐시를 그대로 두면
+            // 세 호출부(활동 이력·명함 편집·세션 저장소 동기화)가 방금 추가한 기수·역할이
+            // 빠진 스냅샷을 읽는다.
+            await memberProfileRepository.invalidateCache()
         } catch let error as NetworkError {
             throw Self.parseServerError(from: error) ?? error
         }
