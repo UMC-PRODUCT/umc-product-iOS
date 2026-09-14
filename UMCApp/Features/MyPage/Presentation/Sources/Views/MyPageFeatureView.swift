@@ -17,7 +17,7 @@ import SwiftUI
 /// (명함 카드 UI 자체는 `BusinessCardFaceView`를 재사용하므로 BusinessCardPresentation을
 /// import하지만, 그건 화면 조립이지 네비게이션 결합이 아니다.)
 ///
-/// 명함 편집은 여기 없다 — 프로필 스냅샷이 필요해 App 셸 번역이 부적합하므로, MyPage 내부에서
+/// 내 정보 편집은 여기 없다 — 프로필 스냅샷이 필요해 App 셸 번역이 부적합하므로, MyPage 내부에서
 /// `MyPageDestination.cardEdit(profileData:)`로 직접 push한다.
 public enum BusinessCardEntry: Hashable, Sendable {
     /// 명함첩 — 받은 명함 그리드.

@@ -98,7 +98,7 @@ struct BusinessCardDebugView: View {
             DebugMyPageRow(
                 icon: "square.and.pencil",
                 iconTint: .blue,
-                title: "명함 편집"
+                title: "내 정보 편집"
             ) {
                 DebugCardEditView(container: container, viewModel: viewModel)
             }
