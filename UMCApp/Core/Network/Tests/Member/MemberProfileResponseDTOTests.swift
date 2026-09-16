@@ -526,6 +526,28 @@ struct MemberProfileResponseDTOTests {
         #expect(summary.organizationName == "강남지부")
     }
 
+    // MARK: - toMemberProfileSummary() gisuId 누수 차단 (#1356)
+
+    @Test("gisu가 비면 gisuId로 폴백하지 않고 0(기수 미표시)이 된다")
+    func summaryDoesNotFallBackToGisuIdWhenGisuIsEmpty() throws {
+        let dto = try Self.dto(
+            roles: [Self.role(roleType: "SCHOOL_PRESIDENT", gisu: "", gisuId: "3")]
+        )
+
+        let summary = dto.toMemberProfileSummary()
+        #expect(summary.generation == 0)
+    }
+
+    @Test("gisu가 있으면 gisuId와 달라도 gisu를 쓴다 (11기 · gisuId 3)")
+    func summaryUsesGisuNotGisuId() throws {
+        let dto = try Self.dto(
+            roles: [Self.role(roleType: "SCHOOL_PRESIDENT", gisu: "11", gisuId: "3")]
+        )
+
+        let summary = dto.toMemberProfileSummary()
+        #expect(summary.generation == 11)
+    }
+
     // MARK: - toMemberProfileSummary() 이름 폴백 (latestRecordName/latestRecordNickname)
 
     @Test("challengerRecords가 비어 있으면 최상위 name/nickname으로 폴백한다")

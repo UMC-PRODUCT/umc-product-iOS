@@ -26,4 +26,13 @@ let project = featureProject(
     dataTestDependencies: [
         .target(name: "NoticeDomain"),
         .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
+    ],
+    includesPresentationTests: true,
+    presentationTestDependencies: [
+        // VM 테스트가 NoticeDetail·TargetAudience 픽스처를 직접 만든다.
+        .target(name: "NoticeDomain"),
+        // 기수 역매핑 테스트가 `ChallengerGenRepositoryProtocol` 스텁을 구현한다.
+        .project(target: "CoreDomain", path: .relativeToRoot("Core/Domain")),
+        .project(target: "CoreDI", path: .relativeToRoot("Core/DI")),
+        .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
     ])

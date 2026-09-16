@@ -346,12 +346,21 @@ public final class NoticeDetailViewModel {
         let originalGeneration = detail.targetAudience.generation
         let resolvedGeneration = resolveGeneration(from: originalGeneration)
 
-        guard resolvedGeneration != originalGeneration else {
+        // 화면 표시용 기수: 판별에 실패하면 비운다 — gisuId 를 기수로 노출하지 않기 위함이다(#1356).
+        let displayedGeneration = resolvedGeneration ?? ""
+        // 수신 대상 기수: 판별에 성공했을 때만 보정한다. 이 값은 The Ping 열람 권한 판정
+        // (`NoticeReadStatusPermissionEvaluator.canViewReadStatus`)의 입력이라, 판별 실패를
+        // 이유로 비우면 권한까지 함께 사라진다.
+        let normalizedGeneration = resolvedGeneration ?? originalGeneration
+
+        guard displayedGeneration != detail.generation
+                || normalizedGeneration != originalGeneration
+        else {
             return detail
         }
 
         let normalizedAudience = TargetAudience(
-            generation: resolvedGeneration,
+            generation: normalizedGeneration,
             scope: detail.targetAudience.scope,
             parts: detail.targetAudience.parts,
             chapterId: detail.targetAudience.chapterId,
@@ -362,7 +371,7 @@ public final class NoticeDetailViewModel {
 
         return NoticeDetail(
             id: detail.id,
-            generation: resolvedGeneration,
+            generation: displayedGeneration,
             scope: detail.scope,
             category: detail.category,
             isMustRead: detail.isMustRead,
@@ -385,17 +394,13 @@ public final class NoticeDetailViewModel {
     }
 
     /// 현재 값이 gisuId인지 판별하여 실제 기수(gen)를 반환합니다.
-    private func resolveGeneration(from value: String) -> String {
-        guard !value.isEmpty else { return value }
-        do {
-            let pairs = try genRepository.fetchGenGisuIdPairs()
-            if let matchedGen = pairs.first(where: { $0.gisuId == value })?.gen {
-                return matchedGen
-            }
-            return value
-        } catch {
-            return value
-        }
+    ///
+    /// 서버 생성 응답 경로는 이 필드에 `targetGisuId`(서버 PK)를 담고, 상세 조회 경로는
+    /// `targetGisu`(기수 값)를 담아 값의 정체가 경로마다 다르다. 두 열을 모두 조회해
+    /// 판별하며, 어느 쪽에도 없으면 `nil` 이다 — 판별하지 못한 값을 기수로 내보내면
+    /// gisuId 가 「3기」처럼 새기 때문이다(#1356).
+    private func resolveGeneration(from value: String) -> String? {
+        genRepository.normalizedGen(forAmbiguousValue: value)
     }
 
     private var resolvedMemberRoles: [ManagementTeam] {

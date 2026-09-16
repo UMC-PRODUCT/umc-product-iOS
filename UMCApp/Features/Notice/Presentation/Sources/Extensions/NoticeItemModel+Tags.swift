@@ -16,12 +16,7 @@ extension NoticeItemModel {
     ///
     /// 순서: 기수 → 출처(scope) → 파트
     public var tags: [NoticeItemTag] {
-        var items: [NoticeItemTag] = [
-            NoticeItemTag(
-                text: targetsAllGenerations ? "모든 기수" : "\(generation)기",
-                backColor: .blue
-            )
-        ]
+        var items: [NoticeItemTag] = [generationTag].compactMap { $0 }
         
         if let scopeTag {
             items.append(scopeTag)
@@ -30,6 +25,20 @@ extension NoticeItemModel {
         items.append(contentsOf: partTags)
         
         return items
+    }
+    
+    /// 기수 태그 — 기수를 특정하지 못하면 태그 자체를 생략한다
+    ///
+    /// 기수 값을 알 수 없는 상태(역매핑 실패 등)에서 `"\(generation)기"` 를 그대로 쓰면
+    /// 「기」만 남거나 gisuId 가 기수로 새어 나간다(#1356).
+    var generationTag: NoticeItemTag? {
+        if targetsAllGenerations {
+            return NoticeItemTag(text: "모든 기수", backColor: .blue)
+        }
+        guard let generationNumber = Int(generation), generationNumber > 0 else {
+            return nil
+        }
+        return NoticeItemTag(text: "\(generation)기", backColor: .blue)
     }
     
     /// 중앙 공지는 출처 태그 없음 — scope 태그는 지부/교내만 표시

@@ -288,22 +288,11 @@ public final class NoticeEditorViewModel {
     // MARK: - Helper
 
     /// 선택된 gisuId를 사용자 표시용 기수 값으로 역매핑합니다.
+    ///
+    /// 역매핑에 실패하면 `nil` 이다 — `gisuId` 를 기수로 되돌려주면 「11기」가 「3기」로
+    /// 표시된다(#1356).
     public func refreshSelectedGenerationValue() {
-        let currentGisuId = resolvedGisuId
-        guard let idInt = Int(currentGisuId), idInt > 0 else {
-            selectedGenerationValue = nil
-            return
-        }
-
-        do {
-            let selectedGeneration = try genRepository
-                .fetchGenGisuIdPairs()
-                .first(where: { $0.gisuId == String(currentGisuId) })?
-                .gen
-            selectedGenerationValue = selectedGeneration ?? currentGisuId
-        } catch {
-            selectedGenerationValue = currentGisuId
-        }
+        selectedGenerationValue = genRepository.gen(forGisuId: resolvedGisuId)
     }
     
     /// 선택된 PhotosPickerItem 목록으로부터 UIImage를 비동기로 로드합니다.
