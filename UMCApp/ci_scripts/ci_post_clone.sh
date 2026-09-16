@@ -16,8 +16,8 @@
 # (KAKAO_KEY / TMAP_SECRET_KEY / GOOGLE_CLIENT_ID / GOOGLE_REVERSED_CLIENT_ID / BASE_URL)
 # APS_ENVIRONMENT 처럼 Shared.xcconfig 가 스스로 결정하는 값은 여기서 덮어쓰지 않는다.
 #
-# 참고: UMCApp 은 Tuist 프로젝트라 xcworkspace 가 레포에 없다. Xcode Cloud 워크플로가
-#       UMCApp/UMCApp.xcworkspace 를 빌드하려면 이 스크립트 이후 `tuist generate` 단계가 필요하다.
+# 그리고 Tuist 워크스페이스를 생성한다 (스크립트 하단). UMCApp 은 Tuist 프로젝트라
+# xcworkspace 가 레포에 없으므로, 여기서 만들지 않으면 워크플로가 빌드 대상을 찾지 못한다.
 
 set -e
 
@@ -176,3 +176,36 @@ if ! grep -q "<key>GOOGLE_APP_ID</key>" "$FIREBASE_PLIST_PATH"; then
 fi
 
 echo "GoogleService-Info.plist restored successfully at: $FIREBASE_PLIST_PATH"
+
+# ──────────────────────────────────────────────────────────────
+# Tuist 프로젝트 생성
+# ──────────────────────────────────────────────────────────────
+# UMCApp 은 Tuist 프로젝트라 UMCApp.xcworkspace 가 레포에 없다. Xcode Cloud 는
+# post-clone 직후 워크스페이스를 해석하므로, 여기서 생성해 두면 빌드가 이어진다.
+# 러너에는 mise 가 없어 직접 설치한다(버전은 UMCApp/mise.toml 이 고정).
+# 빌드 진입점은 로컬·GitHub Actions 와 동일하게 Makefile 을 쓴다(CLAUDE.md 규약).
+
+if ! command -v mise >/dev/null 2>&1; then
+  echo "Installing mise..."
+  curl -fsSL https://mise.run | sh
+fi
+export PATH="$HOME/.local/bin:$PATH"
+
+cd "${WORKSPACE_ROOT}/UMCApp"
+
+# mise 는 신뢰하지 않은 설정 파일을 무시한다 — CI 는 대화형 승인이 불가능하므로 명시적으로 신뢰한다.
+mise trust "${WORKSPACE_ROOT}/UMCApp/mise.toml"
+mise install
+
+echo "Resolving SPM dependencies (tuist install)..."
+make install
+
+echo "Generating Xcode workspace (tuist generate)..."
+make generate
+
+if [ ! -d "${WORKSPACE_ROOT}/UMCApp/UMCApp.xcworkspace" ]; then
+  echo "ERROR: tuist generate did not produce UMCApp.xcworkspace"
+  exit 1
+fi
+
+echo "UMCApp.xcworkspace generated successfully."
