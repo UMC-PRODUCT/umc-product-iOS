@@ -139,6 +139,7 @@ struct MyPageView: View {
             // 2D 카드로 고정한다. `BusinessCard3DView` 와 인자가 같으니 되살릴 때 식별자만 되돌리면 된다.
             BusinessCardFaceView(
                 card: card,
+                stat: viewModel.activityStat,
                 isFlipped: isCardFlipped,
                 qrImage: viewModel.qrImage,
                 onFlip: { isCardFlipped.toggle() }
