@@ -90,6 +90,9 @@ struct ChallengerMissionCardHeader: View, Equatable {
         case .pendingApproval, .pass, .fail:
             Text(model.status.displayText)
                 .appFont(.footnote, color: model.status.foregroundColor)
+        case .notStarted where isExpanded, .inProgress where isExpanded:
+            // 펼치면 본문(ChallengerMissionCardContent)이 설명 전체를 보여 주므로 요약을 숨긴다
+            EmptyView()
         default:
             Text(model.missionTitle)
                 .appFont(.footnote, color: .grey500)

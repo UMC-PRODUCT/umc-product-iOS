@@ -29,9 +29,9 @@ struct ChallengerMissionCardContent: View, Equatable {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             switch model.status {
             case .notStarted, .inProgress:
-                EmptyView()
+                missionTitleText(lineLimit: nil)
             case .pendingApproval, .pass, .fail:
-                missionTitleText
+                missionTitleText(lineLimit: 2)
                 statusResultView
             case .locked, .completed:
                 EmptyView()
@@ -41,10 +41,10 @@ struct ChallengerMissionCardContent: View, Equatable {
 
     // MARK: - Private Views
 
-    private var missionTitleText: some View {
+    private func missionTitleText(lineLimit: Int?) -> some View {
         Text(model.missionTitle)
             .appFont(.subheadline, color: .grey600)
-            .lineLimit(2)
+            .lineLimit(lineLimit)
             .fixedSize(horizontal: false, vertical: true)
     }
 
