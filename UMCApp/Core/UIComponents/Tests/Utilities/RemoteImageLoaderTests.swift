@@ -54,8 +54,8 @@ struct RemoteImageLoaderTests {
 
     // MARK: - Fixture
 
-    /// ``BusinessCardComposer.portraitPixelSize`` 와 같은 값. 모듈이 갈라져 있어
-    /// 상수를 공유하지 못하므로 숫자로 적고 이 주석으로 묶어 둔다.
+    /// 다운샘플 목표 픽셀. 이 값 자체가 검증 대상은 아니고, 위아래 두 테스트가
+    /// 「목표보다 큰 원본은 깎고 작은 원본은 두는지」를 같은 기준으로 보게 묶어 둔다.
     private static let targetPixels: CGFloat = 512
 
     private static func solidImage(side: CGFloat) -> UIImage {

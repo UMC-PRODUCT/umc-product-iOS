@@ -1,9 +1,11 @@
+> 이 스택은 #1349 에서 제거됐다.
+
 # 3D 명함 베이스 USDZ 템플릿 · 바인딩 앵커 규약
 
 #1246 이 정한 규약을 **코드에서 어떻게 참조하는가**에 집중한 문서다. 좌표 도출 근거·시안 pt→mm
 환산·WCAG 대비 계산 같은 설계 전문은 이 문서에서 반복하지 않는다 — #1247(회전)·#1248(온디바이스
 합성)을 구현할 때 실제로 열어 보게 되는 Swift 심볼·테스트·재생성 커맨드가 이 문서의 범위다.
-Phase 0(#1245) 스파이크 실측치는 `docs/claude/business-card-3d-spike.md` 를 본다.
+Phase 0(#1245) 스파이크 실측치는 `docs/claude/archive/business-card-3d-spike.md` 를 본다.
 
 - 작성자: 제옹(euijjang97)
 - 기준 코드:
@@ -132,7 +134,7 @@ guard let anchor = root.findEntity(named: BusinessCardTemplate.RequiredPrim.anch
 > 깨뜨리게 된다.
 
 **`make test` 의 기본 스킴(`SCHEME=UMCApp`)으로는 이 테스트가 돌지 않는다.** 앱 스킴의 테스트
-액션에 `BusinessCardPresentationTests` 가 들어 있지 않다(`docs/claude/business-card-3d-spike.md:180-181`
+액션에 `BusinessCardPresentationTests` 가 들어 있지 않다(`docs/claude/archive/business-card-3d-spike.md:180-181`
 과 같은 사정). `SCHEME=BusinessCardPresentation` 을 반드시 지정한다.
 
 ## 4) 템플릿 재생성 파이프라인

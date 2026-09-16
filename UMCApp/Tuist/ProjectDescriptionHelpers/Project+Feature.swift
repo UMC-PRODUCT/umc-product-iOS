@@ -29,7 +29,7 @@ private let bundleIdBase = "dev.umc.feature"
 ///     staticFramework는 Compile Sources 산출물이 소비 타겟까지 전파되지 않으므로,
 ///     런타임에 필요한 리소스는 별도 리소스 번들로 명시해야 한다.
 ///   - presentationExtraDependencies: Presentation 타겟에 추가할 의존성
-///   - presentationResources: Presentation 타겟에 번들로 포함할 리소스 (예: 3D 명함 USDZ 템플릿).
+///   - presentationResources: Presentation 타겟에 번들로 포함할 리소스.
 ///     `dataResources` 와 같은 이유 — staticFramework는 Compile Sources 산출물이 소비 타겟까지
 ///     전파되지 않으므로, 런타임에 필요한 리소스는 별도 리소스 번들로 명시해야 한다.
 ///   - includesDomainTests: `true`이면 `Domain/Tests/**` 소스를 사용하는 unitTests 타겟 생성

@@ -132,11 +132,10 @@ struct MyPageView: View {
 
         case .loaded(let card):
             // 「명함 교환」·「QR 코드」는 이번 릴리즈 제외(#1329). `onExchange`/`onQR` 를
-            // 넘기지 않으면 2D·3D 두 경로 모두 `hasActions == false` 라 버튼 행이 빠진다 —
-            // 되살릴 때 이 두 인자만 다시 넘기면 된다.
-            // 3D 카드는 되살리지 않는다(#1331 에서 고정 → #1348 이 확정). 시안과 어긋나는
-            // 문제(로고·라벨 누락, 프로필 자리 회색 원, 파트 칩 색)를 떠나서, 필요한 것은
-            // 평면 카드의 Y축 원근 회전뿐이고 그건 이 2D 카드가 스스로 한다. 스택은 #1349 가 걷어낸다.
+            // 넘기지 않으면 `hasActions == false` 라 버튼 행이 빠진다 — 되살릴 때
+            // 이 두 인자만 다시 넘기면 된다.
+            // RealityKit 3D 경로는 #1349 에서 철거됐다. 명함을 그리는 뷰는 이제 이것
+            // 하나뿐이고, 필요한 Y축 원근 회전은 이 2D 카드가 스스로 한다(#1348).
             BusinessCardFaceView(
                 card: card,
                 stat: viewModel.activityStat,
