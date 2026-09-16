@@ -17,6 +17,8 @@ fileprivate enum Constants {
     /// 버블 최대 폭. `UIScreen.main` 은 iOS 26 에서 사용할 수 없고, 화면 비율을 쓰려면
     /// 컨테이너 폭을 위에서 내려받는 배선이 붙는다. 아이폰 폭(320~440pt)에서 고정 280pt 면
     /// 시안 비율(약 72%)과 맞고, 큰 화면에서는 줄 길이가 짧아져 오히려 읽기 좋다.
+    /// 긴 메시지에만 걸리는 상한이다 — 짧은 본문은 ``BubbleWidthLayout`` 이 내용 폭으로 줄인다.
+    /// `frame(maxWidth:)` 는 부모가 더 넓게 제안하면 본문과 상관없이 이 폭까지 늘어나 쓰지 않는다.
     static let maxBubbleWidth: CGFloat = 280
     /// HIG 최소 탭 타깃. 재시도는 전송 실패에서 벗어나는 유일한 컨트롤이라 아이콘 크기로 두면
     /// 미스탭 비용이 크다.
@@ -173,13 +175,13 @@ struct MessageBubble: View {
     /// 지워 두면 메타 조회가 실패한 순간 링크에 닿을 방법이 사라진다 — 남겨 두면 그 경우가
     /// 그냥 "카드 없는 텍스트 링크" 가 된다.
     private var bubbleContent: some View {
-        WidthLimit(maxWidth: Constants.maxBubbleWidth) {
+        BubbleWidthLayout(maxWidth: Constants.maxBubbleWidth) {
             VStack(
                 alignment: isMine ? .trailing : .leading,
                 spacing: DefaultSpacing.spacing8
             ) {
-                // 대상이 삭제되면 서버가 `replyTo` 를 통째로 `null` 로 준다 — 그때는 인용 없이 본문만
-                // 남는다. 빈 인용 블록을 그려 두면 무엇을 가리켰는지 알 수 없는 껍데기가 된다.
+                // 대상이 삭제되면 서버가 `replyTo` 를 통째로 `null` 로 준다 — 그때는 인용 없이
+                // 본문만 남는다. 빈 인용 블록을 그려 두면 무엇을 가리켰는지 알 수 없는 껍데기가 된다.
                 if let reply = message.replyTo, !message.isDeleted {
                     quoteBlock(reply)
                 }
@@ -486,43 +488,41 @@ struct MessageBubble: View {
     }()
 }
 
-// MARK: - WidthLimit
+// MARK: - Bubble Width Layout
 
-/// 폭 상한만 거는 레이아웃. 자식이 실제로 쓴 크기만 보고한다.
+/// 말풍선을 내용 폭만큼만 차지하게 하고, 넘치면 `maxWidth` 에서 줄바꿈시킨다.
 ///
-/// `.frame(maxWidth:)` 는 제안받은 폭을 상한까지 통째로 차지한다. 옆에 시간 라벨을 붙이면
-/// 짧은 말풍선이어도 frame 이 남은 폭을 다 먹어 라벨이 말풍선 배경에서 떨어져 나간다.
-fileprivate struct WidthLimit: Layout {
+/// 내용 폭은 nil 제안으로 잰다 — 인용 블록·링크 카드 안의 `Spacer(minLength: 0)` 가 0 으로
+/// 접혀야 그 블록들이 말풍선을 캡까지 벌리지 않고, 정해진 폭 안에서만 늘어난다.
+///
+/// 높이 제안은 자식에게 넘기지 않는다. 스택이 형제끼리 높이를 나누며 본문보다 작게 제안하면
+/// 긴 본문이 한 줄로 잘린다 — 말풍선은 언제나 본문 높이만큼 선다.
+struct BubbleWidthLayout: Layout {
 
     // MARK: - Property
 
     let maxWidth: CGFloat
 
-    // MARK: - Function
+    // MARK: - Layout
 
     func sizeThatFits(
         proposal: ProposedViewSize,
         subviews: Subviews,
         cache: inout ()
     ) -> CGSize {
-        subviews.first?.sizeThatFits(limited(proposal)) ?? .zero
+        guard let subview = subviews.first else { return .zero }
+        let idealWidth = subview.sizeThatFits(.unspecified).width
+        let width = min(idealWidth, maxWidth, proposal.width ?? .infinity)
+        return subview.sizeThatFits(ProposedViewSize(width: width, height: nil))
     }
 
-    /// 측정 때와 같은 제안으로 배치한다 — 자식이 방금 보고한 크기 그대로 자리를 잡는다.
     func placeSubviews(
         in bounds: CGRect,
         proposal: ProposedViewSize,
         subviews: Subviews,
         cache: inout ()
     ) {
-        subviews.first?.place(at: bounds.origin, proposal: limited(proposal))
-    }
-
-    private func limited(_ proposal: ProposedViewSize) -> ProposedViewSize {
-        ProposedViewSize(
-            width: min(proposal.width ?? maxWidth, maxWidth),
-            height: proposal.height
-        )
+        subviews.first?.place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
     }
 }
 
@@ -583,6 +583,23 @@ fileprivate struct WidthLimit: Layout {
                 isMine: false
             )
             bubble(message(id: "2", content: "7시에 시작합니다"), isMine: true)
+            bubble(message(id: "11", content: "네 좋아요"), isMine: false)
+            bubble(message(id: "12", content: "네 좋아요"), isMine: true)
+            // 본문이 길어도 시간 라벨은 잘리지 않고 말풍선 쪽이 줄바꿈된다.
+            bubble(
+                message(
+                    id: "13",
+                    content: "이번 주는 레이아웃을 다뤄요. 제안 크기가 부모에서 자식으로 내려가는 흐름을 봐요"
+                ),
+                isMine: false
+            )
+            bubble(
+                message(
+                    id: "14",
+                    content: "좋아요. 자료는 미리 읽어 두고, 궁금한 점은 스레드에 먼저 남겨 둘게요"
+                ),
+                isMine: true
+            )
             bubble(
                 message(
                     id: "3",
@@ -631,35 +648,18 @@ fileprivate struct WidthLimit: Layout {
             bubble(message(id: "6", content: "지워진 내용", deletedAt: base), isMine: false)
             // 같은 발신자·같은 분 연속 메시지는 마지막 말풍선에만 시간을 붙인다.
             bubble(
-                message(id: "11", content: "이번 주 장소가 바뀌었어요"),
+                message(id: "15", content: "이번 주 장소가 바뀌었어요"),
                 isMine: false,
                 showsTime: false
             )
             bubble(
-                message(id: "12", content: "공지 확인 부탁드려요"),
+                message(id: "16", content: "공지 확인 부탁드려요"),
                 isMine: false,
                 showsTime: false
             )
-            bubble(message(id: "13", content: "지도 링크 곧 올릴게요"), isMine: false)
-            bubble(message(id: "14", content: "네 확인했어요"), isMine: true, showsTime: false)
-            bubble(message(id: "15", content: "감사합니다!"), isMine: true)
-            // 본문이 길어도 시간 라벨은 잘리지 않고 말풍선 쪽이 줄바꿈된다.
-            bubble(
-                message(
-                    id: "16",
-                    content: "다음 주 스터디는 발표 순서를 미리 정해 두려고 해요. "
-                        + "각자 맡은 챕터 요약을 금요일까지 스레드에 올려 주세요."
-                ),
-                isMine: false
-            )
-            bubble(
-                message(
-                    id: "17",
-                    content: "네, 저는 3장 맡을게요. 요약은 목요일 밤까지 올리고 "
-                        + "발표 자료도 같이 공유하겠습니다."
-                ),
-                isMine: true
-            )
+            bubble(message(id: "17", content: "지도 링크 곧 올릴게요"), isMine: false)
+            bubble(message(id: "18", content: "네 확인했어요"), isMine: true, showsTime: false)
+            bubble(message(id: "19", content: "감사합니다!"), isMine: true)
             bubble(message(id: "7", content: "김유엠님이 참여했어요", type: .system), isMine: false)
         }
         .padding(.horizontal, DefaultSpacing.spacing16)

@@ -14,12 +14,12 @@ import SwiftUI
 /// 시안 `명함_l`(372×205) — 마이페이지 루트가 쓰는 명함 카드.
 ///
 /// #1347 에서 「라이선스 카드」 어법으로 갈아탔다. 레퍼런스(RIFE LICENSE)에서 가져온 것은
-/// **레이아웃과 타이포뿐**이다 — 타이틀 · `{파트}. [{이름}]` · 기록 슬롯 4칸 · 하단 발급 행 ·
+/// **레이아웃과 타이포뿐**이다 — 타이틀 · `{파트}. [{이름}]` · 하단 발급 행 ·
 /// 라틴 대문자 모노스페이스. 배경은 기존 브랜드 그라디언트(`indigo400 → indigo500`)를 그대로
 /// 둔다. 다크 단색으로 갈아엎으면 라이트/다크(#1234)·대비(#1235) 기준을 처음부터 다시 잡아야
 /// 하는데, 카드가 얻는 건 톤 하나뿐이라 값이 맞지 않는다.
 ///
-/// 앞면은 이름·파트/기수 칩·기록 슬롯·발급 행, 뒷면은 시리얼과 **QR + 외부 링크 3줄**
+/// 앞면은 이름 행·기수 칩·발급 행, 뒷면은 시리얼과 **QR + 외부 링크 3줄**
 /// (github · linkedIn · blog)이다. 헤더와 하단 버튼 두 개는 양면 공통이다.
 ///
 /// 상태를 들지 않는다 — 뒤집힘 여부는 소유자가 가지고 ``isFlipped`` 로 내려준다.
@@ -32,7 +32,6 @@ public struct BusinessCardFaceView: View {
     // MARK: - Property
 
     private let card: MyCard
-    private let stat: ActivityStat
     private let isFlipped: Bool
     private let qrImage: CGImage?
     private let onFlip: (() -> Void)?
@@ -59,7 +58,7 @@ public struct BusinessCardFaceView: View {
     /// 시안 실측값 (`Figma 12639:33234` / `12766:98172`).
     private enum Metrics {
         /// 시안 실측 높이. 글자가 커지면 이 값을 **바닥으로** 두고 늘어난다
-        /// (고정하면 AX 크기에서 칩·슬롯이 카드 밖으로 밀린다).
+        /// (고정하면 AX 크기에서 이름 행·칩이 카드 밖으로 밀린다).
         static let cardMinHeight: CGFloat = 205
         /// 버튼 행(39)과 그 위 간격(24)을 뺀 높이. 액션 없는 카드가 아래를 비우지 않게 한다.
         static let faceOnlyMinHeight: CGFloat = 205 - 24 - 39
@@ -71,12 +70,10 @@ public struct BusinessCardFaceView: View {
         static let headerSpacing: CGFloat = 8
         /// QR 과 오른쪽 링크 블록 사이.
         static let contentSpacing: CGFloat = 16
-        /// 앞면 블록(이름 행 · 칩 행 · 기록 슬롯 · 발급 행) 사이. 네 블록이 205pt 안에
-        /// 들어오도록 ``contentSpacing`` 보다 좁게 잡는다.
+        /// 앞면 블록(이름 행 · 기수 칩 · 발급 행) 사이.
         static let faceBlockSpacing: CGFloat = 12
         static let qrSize: CGFloat = 70
         static let nameSpacing: CGFloat = 6
-        static let chipSpacing: CGFloat = 5
         static let logoWidth: CGFloat = 47
         static let logoHeight: CGFloat = 15.16
         static let buttonSpacing: CGFloat = 10
@@ -88,12 +85,8 @@ public struct BusinessCardFaceView: View {
         static let qrRadius: CGFloat = 6.18
         static let qrBorderWidth: CGFloat = 0.26
         /// 라이선스 어법의 넓은 자간. 고정값이라 AX 크기에서는 상대적으로 좁아지는데,
-        /// 그쪽에서는 자간보다 슬롯 4칸이 들어갈 폭이 급하므로 의도한 방향이다.
+        /// 그쪽에서는 자간보다 한 줄에 글자가 들어갈 폭이 급하므로 의도한 방향이다.
         static let tracking: CGFloat = 1.2
-        static let slotSpacing: CGFloat = 16
-        static let slotLabelSpacing: CGFloat = 2
-        /// 「BOOKMARK」처럼 긴 라벨이 잘려 뜻이 사라지느니 살짝 줄인다 (`PartChip` 선례).
-        static let slotMinimumScale: CGFloat = 0.8
         static let dividerHeight: CGFloat = 1
         /// 발급 행 구분선. 텍스트가 아니라 구획선이라 흰색을 그대로 쓰면 카드가 갈라져 보인다.
         static let dividerOpacity: CGFloat = 0.35
@@ -147,12 +140,8 @@ public struct BusinessCardFaceView: View {
 
     // MARK: - Init
 
-    /// - Parameter stat: 기록 슬롯 4칸에 실을 카운트. 기본값 ``ActivityStat/empty`` 는 네 칸이
-    ///   모두 "-" 가 된다 — 받은 명함(상대 카드)에는 상대의 카운트가 아예 없으므로 그게
-    ///   정확한 표현이다(「0건」이 아니라 「우리가 못 셌다」, #1222).
     public init(
         card: MyCard,
-        stat: ActivityStat = .empty,
         isFlipped: Bool = false,
         qrImage: CGImage? = nil,
         onFlip: (() -> Void)? = nil,
@@ -160,7 +149,6 @@ public struct BusinessCardFaceView: View {
         onQR: (() -> Void)? = nil
     ) {
         self.card = card
-        self.stat = stat
         self.isFlipped = isFlipped
         self.qrImage = qrImage
         self.onFlip = onFlip
@@ -192,13 +180,27 @@ public struct BusinessCardFaceView: View {
     /// 회전하는 몸통. 헤더와 버튼 행은 양면 공통이지만 면과 **함께** 돈다 — 카드 한 장이
     /// 넘어가는 것이지 앞면 위에서 내용만 갈리는 것이 아니다.
     ///
-    /// 회전은 `rotation3DEffect`(렌더 단계)라 여기서 잡은 최소 높이를 건드리지 않는다.
-    /// 돌아가는 동안에도 카드가 차지하는 자리는 그대로고 아래 섹션이 흔들리지 않는다(#1234).
+    /// 회전은 `rotation3DEffect`(렌더 단계)라 레이아웃을 건드리지 않는다. 90° 에서 면이
+    /// 바뀌어도 안 보이는 면이 `.hidden()` 으로 자리를 잡고 있어 카드 높이는 늘 두 면 중
+    /// 큰 쪽이고, 아래 섹션이 움직이지 않는다(#1363). 낮은 면은 위에 붙고 남는 공간은 아래다.
+    /// 고정 높이·비율로 맞추지 않는 건 AX 크기에서 면이 카드 밖으로 넘치기 때문이다(#1234).
+    ///
+    /// 그리는 면은 여전히 하나다(``CardFlip``). 분기를 `if/else` 로 둬 90° 교체의 identity
+    /// 동작도 이전과 같다.
     private func cardBody(showsBack: Bool) -> some View {
         VStack(spacing: Metrics.blockSpacing) {
             VStack(alignment: .leading, spacing: Metrics.headerSpacing) {
                 header
-                if showsBack { backFace } else { frontFace }
+
+                ZStack(alignment: .topLeading) {
+                    if showsBack {
+                        frontFace.hidden().accessibilityHidden(true)
+                        backFace
+                    } else {
+                        frontFace
+                        backFace.hidden().accessibilityHidden(true)
+                    }
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -261,28 +263,26 @@ public struct BusinessCardFaceView: View {
     /// **QR 은 뒷면에 그대로 둔다** — 앞면 우상단은 플립 버튼 자리고, 양면에 QR 을 두면
     /// 같은 값이 두 번 나올 뿐이다. **호(arc) 게이지도 그리지 않는다** — 대응하는 진척률이
     /// 도메인에 없어서 그리는 순간 없는 수치를 지어내게 된다.
+    ///
+    /// #1363 에서 둘을 더 뺐다. **기록 슬롯 4칸** — 마이페이지에서는 카드 바로 아래 섹션이
+    /// 같은 카운트를 다시 보여 주고, 받은 명함 상세에서는 상대 카운트가 없어 늘 `-` 였다.
+    /// **파트 칩** — 이름 행 `{파트}.` 와 같은 값을 한 번 더 말할 뿐이다.
     private var frontFace: some View {
         VStack(alignment: .leading, spacing: Metrics.faceBlockSpacing) {
             identityRow
-
-            HStack(spacing: Metrics.chipSpacing) {
-                PartChip(text: card.partDisplayName)
-                PartChip(text: "\(card.generation)기")
-            }
-
-            recordSlots
+            PartChip(text: "\(card.generation)기")
             issuerRow
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        // 이름·칩·슬롯 8개가 따로 읽히면 누구 명함인지 조립해야 알 수 있다.
+        // 이름 행·기수 칩·학교가 따로 읽히면 누구 명함인지 조립해야 알 수 있다.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(card.frontFaceAccessibilityLabel(stat: stat))
+        .accessibilityLabel(card.frontFaceAccessibilityLabel)
     }
 
     /// 레퍼런스 어법 `Runner. [한수빈]` 을 그대로 옮긴 이름 행.
     ///
     /// 파트는 **대문자로 올리지 않는다** — `iOS` 가 `IOS` 가 되면 틀린 파트명이 된다.
-    /// 레퍼런스도 대문자는 타이틀과 슬롯 라벨에만 쓴다.
+    /// 레퍼런스도 대문자는 타이틀·라벨에만 쓴다.
     ///
     /// 이름은 한글이라 모노 대상이 아니므로 Pretendard 를 유지한다. 표기 규칙은
     /// ``MyCard/nameWithNickname``(#1236) 한 곳에 있고, 폭이 모자라면 파트가 먼저
@@ -297,44 +297,6 @@ public struct BusinessCardFaceView: View {
                 .lineLimit(1)
                 .layoutPriority(1)
         }
-    }
-
-    /// 기록 슬롯 4칸.
-    ///
-    /// 기본은 한 줄(1×4)이지만 모노 + 대문자 + 넓은 자간은 같은 폭에 글자가 덜 들어간다 —
-    /// AX 글자 크기에서 「BOOKMARK」 한 칸만 100pt를 넘어 네 칸이 카드 밖으로 밀린다.
-    /// `ViewThatFits` 가 그때 2×2 로 접는다 (#1234 — 카드는 늘어나되 넘치지 않는다).
-    private var recordSlots: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: Metrics.slotSpacing) {
-                ForEach(CardRecordSlot.allCases, id: \.self) { recordSlot($0) }
-            }
-
-            Grid(
-                alignment: .leading,
-                horizontalSpacing: Metrics.slotSpacing,
-                verticalSpacing: Metrics.slotSpacing
-            ) {
-                GridRow {
-                    recordSlot(.study)
-                    recordSlot(.activity)
-                }
-                GridRow {
-                    recordSlot(.cards)
-                    recordSlot(.bookmark)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func recordSlot(_ slot: CardRecordSlot) -> some View {
-        VStack(alignment: .leading, spacing: Metrics.slotLabelSpacing) {
-            licenseText(slot.label, style: .caption2)
-            licenseText(slot.displayValue(in: stat), style: .callout, weight: .semibold)
-        }
-        .lineLimit(1)
-        .minimumScaleFactor(Metrics.slotMinimumScale)
     }
 
     /// 하단 발급 행 — 발급 기관 자리에 소속 대학교가 온다.
@@ -509,8 +471,9 @@ public struct BusinessCardFaceView: View {
     /// `withAnimation` 으로는 안 된다 — 그쪽 `body` 는 최종값(180)만 보므로 면이 회전
     /// 시작과 동시에 바뀌어 버린다. 90° 판정을 하려면 중간 각도를 봐야 한다.
     ///
-    /// 두 면을 겹쳐 두지 않는다. `ZStack` + `opacity` 로 가르면 교차 구간에서 두 면이
-    /// 한 프레임이라도 섞이는데, 여기서는 그릴 면 자체가 하나뿐이다.
+    /// 두 면을 겹쳐 그리지 않는다. `ZStack` + `opacity` 로 가르면 교차 구간에서 두 면이
+    /// 한 프레임이라도 섞이는데, 여기서는 그릴 면 자체가 하나뿐이다. 안 보이는 면은
+    /// `.hidden()` 으로 레이아웃 자리만 잡는다(#1363).
     ///
     /// 목표 각도가 ``BusinessCardFaceView/isFlipped`` 에서 파생된 0 또는 180 뿐이라
     /// 각이 쌓이지 않는다 — 회전 중 다시 누르면 현재 각도에서 반대쪽으로 되돌아간다.
@@ -584,17 +547,6 @@ struct CardFlipGeometry {
 
 #if DEBUG
 #Preview("앞면") {
-    BusinessCardFaceView(
-        card: BusinessCardPreviewData.myCard,
-        stat: BusinessCardPreviewData.activityStat
-    )
-    .padding(.horizontal, 14)
-    .frame(maxHeight: .infinity)
-    .background(Color.grey100)
-}
-
-/// 받은 명함(상대 카드)과 조회 실패가 보는 화면 — 기록 슬롯 네 칸이 모두 "-" 다.
-#Preview("앞면 · 못 센 상태") {
     BusinessCardFaceView(card: BusinessCardPreviewData.myCard)
         .padding(.horizontal, 14)
         .frame(maxHeight: .infinity)
@@ -608,7 +560,6 @@ struct CardFlipGeometry {
 
     BusinessCardFaceView(
         card: BusinessCardPreviewData.myCard,
-        stat: BusinessCardPreviewData.activityStat,
         isFlipped: isFlipped,
         onFlip: { isFlipped.toggle() }
     )
