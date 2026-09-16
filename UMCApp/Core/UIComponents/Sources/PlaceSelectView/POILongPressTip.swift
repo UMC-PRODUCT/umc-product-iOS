@@ -20,7 +20,7 @@ struct POILongPressTip: Tip {
     }
 
     var message: Text? {
-        Text("카페, 식당 등 지도 위 아이콘을 길게 누르면 해당 장소를 바로 선택할 수 있어요.")
+        Text("검색하지 않아도 카페, 식당 등 지도 위 아이콘을 길게 누르면 바로 선택할 수 있어요.")
     }
 
     var image: Image? {
