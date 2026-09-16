@@ -82,14 +82,66 @@ private func makeViewModel(
     useCase: MockOperatorStudyManagementUseCase,
     errorHandler: ErrorHandler = ErrorHandler(),
     gisuId: String? = "11",
-    challengerId: String? = "C-1"
+    challengerId: String? = "C-1",
+    genRepository: ChallengerGenRepositoryProtocol? = nil
 ) -> OperatorStudyManagementViewModel {
     OperatorStudyManagementViewModel(
         errorHandler: errorHandler,
         useCase: useCase,
         gisuIdProvider: { gisuId },
-        challengerIdProvider: { challengerId }
+        challengerIdProvider: { challengerId },
+        genRepository: genRepository
     )
+}
+
+/// 기수 값(`gen`)과 기수 ID(`gisuId`)가 다른 실제 형태를 재현하는 스텁.
+private struct StubChallengerGenRepository: ChallengerGenRepositoryProtocol {
+    var pairs: [(gen: String, gisuId: String)] = [(gen: "11", gisuId: "3")]
+
+    func replaceMappings(_ pairs: [(gen: String, gisuId: String)]) throws {}
+
+    func fetchGenGisuIdPairs() throws -> [(gen: String, gisuId: String)] { pairs }
+}
+
+// MARK: - 기수 표시 (#1356)
+
+@Suite("OperatorStudyManagementViewModel — 기수 표시")
+@MainActor
+struct OperatorStudyManagementViewModelGenerationTests {
+
+    @Test("currentGeneration은 gisuId가 아니라 역매핑한 기수 값을 돌려준다")
+    func currentGenerationMapsGisuIdToGeneration() {
+        let viewModel = makeViewModel(
+            useCase: MockOperatorStudyManagementUseCase(),
+            gisuId: "3",
+            genRepository: StubChallengerGenRepository()
+        )
+
+        #expect(viewModel.currentGeneration == "11")
+        // 서버 전달용 ID 는 그대로 유지된다 — 표시값만 분리된 것이다.
+        #expect(viewModel.currentGisuId == "3")
+    }
+
+    @Test("매핑에 없는 gisuId는 기수로 새지 않는다")
+    func currentGenerationIsNilForUnmappedGisuId() {
+        let viewModel = makeViewModel(
+            useCase: MockOperatorStudyManagementUseCase(),
+            gisuId: "3",
+            genRepository: StubChallengerGenRepository(pairs: [])
+        )
+
+        #expect(viewModel.currentGeneration == nil)
+    }
+
+    @Test("역매핑 저장소가 없으면 기수를 표시하지 않는다")
+    func currentGenerationIsNilWithoutRepository() {
+        let viewModel = makeViewModel(
+            useCase: MockOperatorStudyManagementUseCase(),
+            gisuId: "3"
+        )
+
+        #expect(viewModel.currentGeneration == nil)
+    }
 }
 
 // drainUntil 은 Tests 타깃 공용 `ConcurrencyTestSupport.swift` 의 헬퍼를 사용한다.

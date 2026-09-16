@@ -58,6 +58,9 @@ final class OperatorStudyManagementViewModel {
     /// 일정 등록 권한(담당 멘토 여부) 판정에만 쓴다.
     private let challengerIdProvider: () -> String?
 
+    /// 기수 ID → 기수 값 역매핑 저장소 — 화면에 기수를 표시할 때만 쓴다.
+    private let genRepository: ChallengerGenRepositoryProtocol?
+
     /// 스터디 그룹 관리 로딩 상태
     private(set) var studyGroupDetailsState: Loadable<[StudyGroupInfo]> = .idle
 
@@ -160,22 +163,34 @@ final class OperatorStudyManagementViewModel {
     ///   - gisuIdProvider: 현재 기수 ID 제공자 (기본값: `AppStorageKey.gisuIdString()`)
     ///   - challengerIdProvider: 현재 챌린저 ID 제공자
     ///     (기본값: `AppStorageKey.challengerIdString()`)
+    ///   - genRepository: 기수 ID → 기수 값 역매핑 저장소 (표시용, 없으면 기수를 표시하지 않음)
     init(
         errorHandler: ErrorHandler,
         useCase: OperatorStudyManagementUseCaseProtocol,
         gisuIdProvider: @escaping () -> String? = { AppStorageKey.gisuIdString() },
-        challengerIdProvider: @escaping () -> String? = { AppStorageKey.challengerIdString() }
+        challengerIdProvider: @escaping () -> String? = { AppStorageKey.challengerIdString() },
+        genRepository: ChallengerGenRepositoryProtocol? = nil
     ) {
         self.errorHandler = errorHandler
         self.useCase = useCase
         self.gisuIdProvider = gisuIdProvider
         self.challengerIdProvider = challengerIdProvider
+        self.genRepository = genRepository
     }
 
     // MARK: - Computed Property
 
-    /// 현재 사용자 기수 ID (서버 응답 `String`). 그룹 생성 화면의 표시·검증용.
+    /// 현재 사용자 기수 ID (서버 응답 `String`). 서버 전달·검증 전용 — 화면에 쓰지 않는다.
     var currentGisuId: String? { gisuIdProvider() }
+
+    /// 화면에 표시할 현재 기수 값(`gen`).
+    ///
+    /// `currentGisuId` 는 서버 PK 라 그대로 쓰면 「11기」가 「3기」로 보인다(#1356).
+    /// 역매핑에 실패하면 `nil` — 기수를 모르는 채로 숫자를 지어내지 않는다.
+    var currentGeneration: String? {
+        guard let gisuId = currentGisuId else { return nil }
+        return genRepository?.gen(forGisuId: gisuId)
+    }
 
     /// 화면에 떠 있는 목록이 지금 선택된 필터의 결과인지 여부.
     ///

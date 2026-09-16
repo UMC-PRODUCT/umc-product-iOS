@@ -289,6 +289,15 @@ enum OperatorStudyPreviewData {
 
 // MARK: - Preview Factories
 
+/// 프리뷰 전용 기수 매핑 저장소 — gisuId `3` 이 11기라는 실제 형태(값 ≠ ID)를 재현한다.
+private struct PreviewChallengerGenRepository: ChallengerGenRepositoryProtocol {
+    func replaceMappings(_ pairs: [(gen: String, gisuId: String)]) throws {}
+
+    func fetchGenGisuIdPairs() throws -> [(gen: String, gisuId: String)] {
+        [(gen: "11", gisuId: "3")]
+    }
+}
+
 @MainActor
 private func makePreviewViewModel(
     useCase: PreviewOperatorStudyManagementUseCase,
@@ -297,14 +306,15 @@ private func makePreviewViewModel(
     OperatorStudyManagementViewModel(
         errorHandler: ErrorHandler(),
         useCase: useCase,
-        gisuIdProvider: { gisuId }
+        gisuIdProvider: { gisuId },
+        genRepository: PreviewChallengerGenRepository()
     )
 }
 
 /// 조회 결과가 샘플 그룹으로 채워지는 프리뷰용 ViewModel.
 @MainActor
 func previewOperatorStudyManagementViewModel(
-    gisuId: String? = "11"
+    gisuId: String? = "3"
 ) -> OperatorStudyManagementViewModel {
     makePreviewViewModel(
         useCase: PreviewOperatorStudyManagementUseCase(),
@@ -316,7 +326,7 @@ func previewOperatorStudyManagementViewModel(
 @MainActor
 func previewOperatorStudyManagementViewModel(
     outcome: PreviewOperatorStudyManagementUseCase.Outcome,
-    gisuId: String? = "11"
+    gisuId: String? = "3"
 ) -> OperatorStudyManagementViewModel {
     makePreviewViewModel(
         useCase: PreviewOperatorStudyManagementUseCase(outcome: outcome),
@@ -328,7 +338,7 @@ func previewOperatorStudyManagementViewModel(
 @MainActor
 func previewOperatorStudyManagementViewModel(
     submissionOutcome: PreviewOperatorStudyManagementUseCase.SubmissionOutcome,
-    gisuId: String? = "11"
+    gisuId: String? = "3"
 ) -> OperatorStudyManagementViewModel {
     makePreviewViewModel(
         useCase: PreviewOperatorStudyManagementUseCase(

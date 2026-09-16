@@ -219,7 +219,8 @@ struct ActivityView: View {
             OperatorStudyManagementView(
                 viewModel: OperatorStudyManagementViewModel(
                     errorHandler: errorHandler,
-                    useCase: container.resolve(OperatorStudyManagementUseCaseProtocol.self)
+                    useCase: container.resolve(OperatorStudyManagementUseCaseProtocol.self),
+                    genRepository: container.resolve(ChallengerGenRepositoryProtocol.self)
                 ),
                 userSession: userSession,
                 onRegisterSchedule: { group in

@@ -170,12 +170,16 @@ struct OperatorStudyGroupCreateView: View {
 
     // MARK: - Function
 
+    /// 「기수」 행 표시 텍스트.
+    ///
+    /// 서버 기수 ID(`currentGisuId`)가 아니라 역매핑한 기수 값을 쓴다 — ID 를 그대로 쓰면
+    /// 11기 사용자에게 「3기」가 보인다(#1356).
     private var generationDisplayText: String {
-        guard let gisuId = viewModel.currentGisuId,
-              let gisuNumber = Int(gisuId),
-              gisuNumber > 0
+        guard let generation = viewModel.currentGeneration,
+              let generationNumber = Int(generation),
+              generationNumber > 0
         else { return "정보 없음" }
-        return "\(gisuNumber)기"
+        return "\(generationNumber)기"
     }
 
     private var selectedMentorsText: String {

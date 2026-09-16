@@ -159,9 +159,9 @@ extension MemberProfileResponseDTO {
             .map {
                 (
                     role: $0,
-                    // 정본 DTO의 `gisu`는 decodeFlexibleStringOrEmpty로 항상 non-nil이므로,
-                    // MyPage 원본의 `gisu ?? gisuId` 폴백을 "gisu가 비어 있으면 gisuId"로 이식한다.
-                    generation: Int($0.gisu.isEmpty ? $0.gisuId : $0.gisu) ?? 0,
+                    // `gisuId`는 서버로 기수를 전달할 때 쓰는 파라미터 전용 값이라 화면 표시로
+                    // 새면 안 된다(#1356). `gisu`가 비면 0 — 기수를 표시하지 않는다.
+                    generation: Int($0.gisu) ?? 0,
                     level: $0.roleType.level
                 )
             }
