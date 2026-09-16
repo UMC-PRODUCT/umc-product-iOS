@@ -138,7 +138,6 @@ struct MyPageView: View {
             // 하나뿐이고, 필요한 Y축 원근 회전은 이 2D 카드가 스스로 한다(#1348).
             BusinessCardFaceView(
                 card: card,
-                stat: viewModel.activityStat,
                 isFlipped: isCardFlipped,
                 qrImage: viewModel.qrImage,
                 onFlip: { isCardFlipped.toggle() }
