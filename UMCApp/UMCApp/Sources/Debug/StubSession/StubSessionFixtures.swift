@@ -47,7 +47,7 @@ enum StubSessionFixtures {
         latestGisuId: "10",
         chapterId: "2",
         chapterName: "GACI",
-        responsiblePart: "IOS",
+        responsiblePart: "MOBILE_PRODUCT_ENGINEER",
         roles: [
             ProfileRole(
                 id: "1",
@@ -57,7 +57,7 @@ enum StubSessionFixtures {
                 roleType: .schoolPresident,
                 organizationType: .school,
                 organizationId: "3",
-                responsiblePart: "IOS"
+                responsiblePart: "MOBILE_PRODUCT_ENGINEER"
             )
         ],
         email: "stub@umc.test",
@@ -261,8 +261,8 @@ enum StubSessionFixtures {
     static let studyGroups: [StudyGroupInfo] = [
         StudyGroupInfo(
             serverID: "601",
-            name: "iOS 심화 스터디",
-            part: .front(type: .ios),
+            name: "모바일 PE 심화 스터디",
+            part: .mobileProductEngineer,
             createdDate: Date(timeIntervalSinceNow: -86_400 * 14),
             mentors: [
                 StudyGroupMember(
@@ -332,6 +332,9 @@ enum StubSessionFixtures {
     ]
 
     /// 스터디원 제출 현황 픽스처. `weeklyCurriculumOptions` 와 같은 주차 식별자를 공유한다.
+    ///
+    /// `partLabel` 은 실제 DTO 매핑처럼 `UMCPartType.name` 과 같게 둔다. 신규 파트 표시명이
+    /// 길어 배지가 이름 칸을 누르는지도 이 데이터로 확인한다.
     static let studyMemberSubmissions: [StudyMemberSubmission] = [
         StudyMemberSubmission(
             studyGroupMemberId: "211",
@@ -340,9 +343,9 @@ enum StubSessionFixtures {
             nickname: "옵셔널",
             schoolName: "한성대학교",
             studyGroupId: "601",
-            studyGroupName: "iOS 심화 스터디",
-            part: .front(type: .ios),
-            partLabel: "iOS",
+            studyGroupName: "모바일 PE 심화 스터디",
+            part: .mobileProductEngineer,
+            partLabel: "모바일 프로덕트 엔지니어",
             weeks: [
                 WeeklySubmission(
                     weekNo: "1",
@@ -371,9 +374,9 @@ enum StubSessionFixtures {
             nickname: "클로저",
             schoolName: "한성대학교",
             studyGroupId: "601",
-            studyGroupName: "iOS 심화 스터디",
-            part: .front(type: .ios),
-            partLabel: "iOS",
+            studyGroupName: "모바일 PE 심화 스터디",
+            part: .mobileProductEngineer,
+            partLabel: "모바일 프로덕트 엔지니어",
             weeks: [
                 WeeklySubmission(
                     weekNo: "1",
@@ -478,13 +481,13 @@ enum StubSessionFixtures {
             noticeId: "9003",
             generation: "12",
             scope: .campus,
-            category: .part(.front(type: .ios)),
+            category: .part(.mobileProductEngineer),
             mustRead: true,
             isAlert: false,
             date: Date(timeIntervalSinceNow: -86_400),
-            title: "iOS 파트 주차별 워크북 제출 안내",
+            title: "모바일 PE 파트 주차별 워크북 제출 안내",
             content: """
-            iOS 파트 챌린저 여러분, 이번 주 워크북 제출 마감은 일요일 23시 59분입니다.
+            모바일 PE 파트 챌린저 여러분, 이번 주 워크북 제출 마감은 일요일 23시 59분입니다.
 
             제출이 늦어지면 벌점이 부과되니 기한을 꼭 지켜주세요.
             """,
@@ -496,7 +499,7 @@ enum StubSessionFixtures {
             vote: nil,
             viewCount: "34",
             scopeDisplayName: "한성대",
-            parts: [.front(type: .ios)]
+            parts: [.mobileProductEngineer]
         ),
         NoticeItemModel(
             noticeId: "9004",
@@ -573,7 +576,7 @@ enum StubSessionFixtures {
                 id: "1",
                 name: "김유엠",
                 nickName: "유엠",
-                part: "iOS",
+                part: "모바일 프로덕트 엔지니어",
                 branch: "GACI",
                 campus: "한성대",
                 profileImageURL: nil,
@@ -608,7 +611,7 @@ enum StubSessionFixtures {
         var result: [Date: [ScheduleDetailData]] = [:]
 
         let templates: [(dayOffset: Int, name: String, tags: [String], isOnline: Bool)] = [
-            (2, "iOS 파트 정기 스터디", ["스터디"], false),
+            (2, "모바일 PE 정기 스터디", ["스터디"], false),
             (9, "중앙 연합 세미나", ["세미나"], true),
             (16, "지부 네트워킹 데이", ["네트워킹"], false),
             (23, "운영진 정기 회의", ["회의"], true),
@@ -648,7 +651,10 @@ enum StubSessionFixtures {
 
     // MARK: - Member
 
-    /// 멤버 관리 화면 픽스처 — 파트별 그룹핑 확인용으로 6개 파트를 모두 포함한다.
+    /// 멤버 관리 화면 픽스처 — 파트별 그룹핑 확인용으로 6개 파트를 담는다.
+    ///
+    /// 개발 파트는 11기 개편 기준 신규 파트(모바일 PE는 인프라 겸직)로 두고,
+    /// 레거시 Android·Spring 은 구·신 기수가 섞인 실제 화면을 재현하려고 남긴다.
     static let members: [MemberManagementItem] = [
         MemberManagementItem(
             memberID: "201",
@@ -658,15 +664,16 @@ enum StubSessionFixtures {
             nickname: "스위프트",
             generation: "12기",
             school: "한성대학교",
-            position: "iOS 파트장",
-            part: .front(type: .ios),
+            position: "모바일 PE 파트장",
+            part: .mobileProductEngineer,
+            infra: true,
             penalty: 0,
             rewardPoints: 6,
             badge: true,
             managementTeam: .schoolPartLeader,
             attendanceRecords: [
                 MemberAttendanceRecord(
-                    sessionTitle: "iOS 파트 정기 스터디",
+                    sessionTitle: "모바일 PE 정기 스터디",
                     week: 3,
                     status: .present
                 ),
@@ -696,6 +703,7 @@ enum StubSessionFixtures {
             generation: "12기",
             school: "한성대학교",
             position: "Android 파트원",
+            // 레거시 파트 확인용 — 구·신 기수 파트가 한 화면에 섞이는 상황을 남긴다.
             part: .front(type: .android),
             penalty: 2,
             rewardPoints: 1,
@@ -721,8 +729,8 @@ enum StubSessionFixtures {
             nickname: "리액트",
             generation: "11기",
             school: "한성대학교",
-            position: "Web 파트원",
-            part: .front(type: .web),
+            position: "웹 PE 파트원",
+            part: .webProductEngineer,
             penalty: 0,
             rewardPoints: 2,
             badge: false,
@@ -805,7 +813,7 @@ enum StubSessionFixtures {
 
         let ongoing = ScheduleAttendanceInfo(
             scheduleId: "7001",
-            name: "iOS 파트 정기 스터디",
+            name: "모바일 PE 정기 스터디",
             description: "stub 세션 출석 픽스처입니다.",
             startsAt: at(0, hour: 19),
             endsAt: at(0, hour: 21),
