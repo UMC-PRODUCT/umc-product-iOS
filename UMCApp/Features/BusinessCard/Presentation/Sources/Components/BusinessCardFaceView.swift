@@ -8,6 +8,7 @@
 import BusinessCardDomain
 import CoreDesignSystem
 import CoreUIComponents
+import Foundation
 import SwiftUI
 
 /// 시안 `명함_l`(372×205) — 마이페이지 루트가 쓰는 명함 카드.
@@ -24,7 +25,8 @@ import SwiftUI
 /// 상태를 들지 않는다 — 뒤집힘 여부는 소유자가 가지고 ``isFlipped`` 로 내려준다.
 /// QR 도 마찬가지로 생성은 UseCase 의 일이라 완성된 이미지를 받는다.
 ///
-/// - Note: 3D 플립 모션은 이 라운드 범위 밖이다(#1348). 두 면을 즉시 전환한다.
+/// 면 전환은 Y축 원근 회전이다(#1348). ``CardFlip`` 이 90° 에서 면을 갈아 끼우고 뒷면을
+/// 미리 반 바퀴 돌려 둬 거울상을 막는다. 「동작 줄이기」가 켜져 있으면 회전 없이 바뀐다.
 public struct BusinessCardFaceView: View {
 
     // MARK: - Property
@@ -36,6 +38,9 @@ public struct BusinessCardFaceView: View {
     private let onFlip: (() -> Void)?
     private let onExchange: (() -> Void)?
     private let onQR: (() -> Void)?
+
+    /// 회전은 사용자가 만들지 않은 자율 모션이라 이 설정이 이긴다.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Constants {
         static let title = "UMC LICENSE"
@@ -92,6 +97,37 @@ public struct BusinessCardFaceView: View {
         static let dividerHeight: CGFloat = 1
         /// 발급 행 구분선. 텍스트가 아니라 구획선이라 흰색을 그대로 쓰면 카드가 갈라져 보인다.
         static let dividerOpacity: CGFloat = 0.35
+
+        // MARK: 플립 (#1348)
+
+        /// 회전축. 세로축이라 카드가 책장처럼 좌우로 넘어간다.
+        static let flipAxis: (x: CGFloat, y: CGFloat, z: CGFloat) = (0, 1, 0)
+
+        /// 플립 지속(초). 3D 스택의 `Card3DMetrics.flipDuration` 과 같은 값에서 시작한다
+        /// (180° 는 복귀 모션의 6배 이동인데 1.5배만 준다 — 각속도 지각이 선형이 아니라
+        /// 6배를 그대로 주면 늘어지게 느껴진다). **최종값은 디자인팀 확인 항목.**
+        /// 그쪽 상수를 참조하지 않고 옮겨 적었다 — 3D 스택은 #1349 에서 통째로 사라지므로
+        /// 지금 참조를 걸면 철거가 이 파일을 깨뜨린다.
+        static let flipDuration: TimeInterval = 0.45
+
+        /// 원근 계수. SwiftUI 는 이 값으로 시점 거리 ≈ `카드 폭 / perspective` 를 만든다.
+        /// 0.5 는 카드 폭(≈345pt)의 두 배 거리에서 보는 셈이라 90° 부근에서 가까운 모서리가
+        /// 넓어지는 사다리꼴이 눈에 들어오면서, 기본값 1.0 처럼 카드가 휘어 보이지는 않는다.
+        /// 레퍼런스(RIFE LICENSE)와 눈으로 맞출 손잡이다.
+        static let flipPerspective: CGFloat = 0.5
+
+        /// 정지 상태 그림자 — **디자인팀 확인 항목**(#1348). 시안에 명함 그림자가 없어서
+        /// 회전과 함께 여기서 처음 생긴다. 같은 피처의 `CardQRView` 흰 박스가 쓰는 값
+        /// (검정 8% · 반경 16 · 아래 4)을 그대로 가져왔다 — 두 화면 다 `grey000` 바탕에서
+        /// 카드 한 장이 떠 보이면 되는 같은 문제다.
+        static let shadowRadius: CGFloat = 16
+        static let shadowOffsetY: CGFloat = 4
+        static let shadowOpacity: Double = 0.08
+
+        /// 회전 중 그림자가 좌우로 쓸리는 최대 폭. 회전축이 세로라 가로로만 쓸린다.
+        /// 정지 오프셋(4)의 3배 — 카드가 떠 있다는 게 보일 만큼은 크되, 카드 폭 밖으로
+        /// 빠져나가 따로 노는 얼룩이 되지는 않는 선이다.
+        static let shadowSway: CGFloat = 12
     }
 
     /// 카드 배경 · QR 테두리. 전부 코어 토큰이다 (#1237).
@@ -106,6 +142,9 @@ public struct BusinessCardFaceView: View {
         static let gradientStart = Color.indigo400
         static let gradientEnd = Color.indigo500
         static let qrBorder = Color.grey200
+        /// 회전 그림자. 토큰(`grey900`)이 아니라 검정인 이유는 같은 피처의 `CardQRView`
+        /// 와 맞추기 위해서다 — 바탕을 눌러 카드를 띄우는 역할만 한다.
+        static let shadow = Color.black
     }
 
     // MARK: - Init
@@ -140,10 +179,28 @@ public struct BusinessCardFaceView: View {
     }
 
     public var body: some View {
+        CardFlip(
+            angle: isFlipped ? CardFlipGeometry.halfTurn : 0,
+            content: cardBody(showsBack:)
+        )
+        // 회전을 만드는 유일한 지점. 「동작 줄이기」면 `nil` 이라 각도가 즉시 튀고, 그 결과가
+        // 회전 없는 면 교체 — 이 파일이 원래 하던 동작 그대로다.
+        .animation(
+            reduceMotion ? nil : .easeInOut(duration: Metrics.flipDuration),
+            value: isFlipped
+        )
+    }
+
+    /// 회전하는 몸통. 헤더와 버튼 행은 양면 공통이지만 면과 **함께** 돈다 — 카드 한 장이
+    /// 넘어가는 것이지 앞면 위에서 내용만 갈리는 것이 아니다.
+    ///
+    /// 회전은 `rotation3DEffect`(렌더 단계)라 여기서 잡은 최소 높이를 건드리지 않는다.
+    /// 돌아가는 동안에도 카드가 차지하는 자리는 그대로고 아래 섹션이 흔들리지 않는다(#1234).
+    private func cardBody(showsBack: Bool) -> some View {
         VStack(spacing: Metrics.blockSpacing) {
             VStack(alignment: .leading, spacing: Metrics.headerSpacing) {
                 header
-                if isFlipped { backFace } else { frontFace }
+                if showsBack { backFace } else { frontFace }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -445,6 +502,86 @@ public struct BusinessCardFaceView: View {
         }
         .buttonStyle(.plain)
     }
+
+    // MARK: - Flip
+
+    /// 카드를 Y축으로 돌리며 90° 에서 면을 갈아 끼우는 컨테이너 (#1348).
+    ///
+    /// `Animatable` 이라 ``angle`` 에 **프레임마다 보간된 값**이 들어온다. `@State` +
+    /// `withAnimation` 으로는 안 된다 — 그쪽 `body` 는 최종값(180)만 보므로 면이 회전
+    /// 시작과 동시에 바뀌어 버린다. 90° 판정을 하려면 중간 각도를 봐야 한다.
+    ///
+    /// 두 면을 겹쳐 두지 않는다. `ZStack` + `opacity` 로 가르면 교차 구간에서 두 면이
+    /// 한 프레임이라도 섞이는데, 여기서는 그릴 면 자체가 하나뿐이다.
+    ///
+    /// 목표 각도가 ``BusinessCardFaceView/isFlipped`` 에서 파생된 0 또는 180 뿐이라
+    /// 각이 쌓이지 않는다 — 회전 중 다시 누르면 현재 각도에서 반대쪽으로 되돌아간다.
+    private struct CardFlip<Content: View>: View, Animatable {
+
+        // MARK: - Property
+
+        var angle: Double
+        let content: (Bool) -> Content
+
+        var animatableData: Double {
+            get { angle }
+            set { angle = newValue }
+        }
+
+        // MARK: - Body
+
+        var body: some View {
+            let geometry = CardFlipGeometry(angle: angle)
+
+            content(geometry.showsBack)
+                // 뒷면을 미리 반 바퀴 돌려 둔다. 바깥 회전과 합쳐 360° 가 되므로 회전이
+                // 끝난 뒷면의 텍스트·QR 이 거울상이 아니라 정방향으로 읽힌다.
+                .rotation3DEffect(.degrees(geometry.counterTurn), axis: Metrics.flipAxis)
+                .rotation3DEffect(
+                    .degrees(angle),
+                    axis: Metrics.flipAxis,
+                    perspective: Metrics.flipPerspective
+                )
+                // 회전 **뒤에** 얹는다. 앞에 얹으면 그림자가 카드와 함께 뒤집혀 반대쪽으로
+                // 뻗는다. 모서리를 보일수록(`facing` → 0) 옅어지고 바닥에 붙는다.
+                .shadow(
+                    color: Palette.shadow.opacity(Metrics.shadowOpacity * geometry.facing),
+                    radius: Metrics.shadowRadius,
+                    x: Metrics.shadowSway * CGFloat(geometry.sway),
+                    y: Metrics.shadowOffsetY * CGFloat(geometry.facing)
+                )
+        }
+    }
+}
+
+/// 플립 한 프레임의 기하 (#1348). 각도 하나에서 「어느 면을 그리는지 · 거울상을 되돌릴
+/// 각 · 그림자가 얼마나 정면인지」가 전부 파생된다.
+///
+/// 뷰에서 떼어 둔 이유는 `CardInteractionPolicy` 와 같다 — 순수 값이라 뷰를 띄우지 않고
+/// 테스트된다. 90° 교체와 거울상 방지는 조용히 틀려도 빌드가 통과하는 종류의 규칙이다.
+struct CardFlipGeometry {
+
+    // MARK: - Property
+
+    /// 반 바퀴. 앞면과 뒷면이 한 바퀴를 절반씩 나눠 갖는다.
+    static let halfTurn: Double = 180
+
+    let angle: Double
+
+    /// 90° 를 **넘는 순간** 뒷면으로 바뀐다. 그 지점의 카드는 폭이 0(`cos 90° = 0`)이라
+    /// 교체가 어느 프레임에도 보이지 않는다.
+    var showsBack: Bool { angle >= Self.halfTurn / 2 }
+
+    /// 뒷면을 미리 되돌려 두는 각. 바깥 회전과 더해 360° 가 되면 정방향이다.
+    var counterTurn: Double { showsBack ? Self.halfTurn : 0 }
+
+    /// 정면도. 1 이면 카드가 정면, 0 이면 모서리만 보인다.
+    var facing: Double { abs(cos(radians)) }
+
+    /// 그림자가 좌우로 쓸리는 정도(-1…1). 세로축 회전이라 가로로만 쓸린다.
+    var sway: Double { sin(radians) }
+
+    private var radians: Double { angle * .pi / Self.halfTurn }
 }
 
 #if DEBUG
@@ -464,6 +601,22 @@ public struct BusinessCardFaceView: View {
         .padding(.horizontal, 14)
         .frame(maxHeight: .infinity)
         .background(Color.grey100)
+}
+
+/// 플립 모션(#1348) 확인용 — 버튼을 눌러 회전을 본다. 「동작 줄이기」를 켜 두면 같은
+/// 프리뷰가 회전 없이 즉시 바뀐다.
+#Preview("플립") {
+    @Previewable @State var isFlipped = false
+
+    BusinessCardFaceView(
+        card: BusinessCardPreviewData.myCard,
+        stat: BusinessCardPreviewData.activityStat,
+        isFlipped: isFlipped,
+        onFlip: { isFlipped.toggle() }
+    )
+    .padding(.horizontal, 14)
+    .frame(maxHeight: .infinity)
+    .background(Color.grey100)
 }
 
 #Preview("뒷면") {

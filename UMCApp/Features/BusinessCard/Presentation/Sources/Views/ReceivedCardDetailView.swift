@@ -60,7 +60,9 @@ private enum Metrics {
 /// - Note: 이 화면의 시안은 아직 없다(#1227 「디자인 확인 필요」). 명함 카드는 기존
 ///   `명함_l` 컴포넌트를 그대로 쓰고, 나머지는 마이페이지 섹션 관용구(카드 배경 위
 ///   레이블/값 행)를 따랐다. 시안이 나오면 이 레이아웃부터 맞춘다.
-/// - Note: 설계서 §5.3 의 3D 명함은 #1247·#1248 위에 올라간다. 지금은 2D 로 둔다.
+/// - Note: 설계서 §5.3 의 RealityKit 3D 명함은 쓰지 않는다(#1348). 카드는 2D
+///   ``BusinessCardFaceView`` 한 장이고 플립만 Y축 원근 회전으로 돈다 — 마이페이지
+///   히어로(#1331)와 같은 카드·같은 모션이다. 3D 스택 철거는 #1349.
 /// - Important: 자체 `NavigationStack` 을 만들지 않는다. 탭별 스택은 상위 셸이 소유한다.
 public struct ReceivedCardDetailView: View {
 
@@ -86,7 +88,10 @@ public struct ReceivedCardDetailView: View {
     public var body: some View {
         ScrollView {
             VStack(spacing: Metrics.sectionSpacing) {
-                BusinessCard3DView(
+                // 3D 카드에서 2D 카드로 갈아탔다(#1348). 인자가 같아 식별자만 바뀌었고
+                // `isFlipped` 배선도 그대로다 — 합성을 기다리던 seam(#1329)이 사라져
+                // 첫 프레임부터 최종 렌더다.
+                BusinessCardFaceView(
                     card: viewModel.card.profile,
                     isFlipped: viewModel.isFlipped,
                     qrImage: viewModel.qrImage,
