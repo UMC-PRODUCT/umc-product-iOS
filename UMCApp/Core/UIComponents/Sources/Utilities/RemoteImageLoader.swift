@@ -11,7 +11,7 @@ import Kingfisher
 
 /// URL 문자열에서 이미지를 받아 `CGImage` 로 돌려준다.
 ///
-/// ``RemoteImage`` 의 헤드리스 판 — 뷰 없이 픽셀만 필요한 곳(3D 텍스처 등)에서 쓴다.
+/// ``RemoteImage`` 의 헤드리스 판 — 뷰 없이 픽셀만 필요한 곳에서 쓴다.
 /// 다운로드·디스크 캐시·같은 URL 중복 요청 병합은 Kingfisher 가 이미 한다.
 /// 여기서 다시 하지 않는다.
 public enum RemoteImageLoader {

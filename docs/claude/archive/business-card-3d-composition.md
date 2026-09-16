@@ -1,9 +1,11 @@
+> 이 스택은 #1349 에서 제거됐다.
+
 # 3D 명함 온디바이스 합성 파이프라인
 
 #1248 이 만든 합성기 `BusinessCardComposer` 를 **어떻게 부르고, 무엇이 돌아오는가**에 집중한
 문서다. 앵커 이름·좌표 규약·템플릿 재생성 파이프라인은 여기서 반복하지 않는다 —
-`docs/claude/business-card-3d-anchor-contract.md` 소관이다. Phase 0 실측치의 출처는
-`docs/claude/business-card-3d-spike.md` 다. 이 문서의 독자는 #1247(회전·상호작용 뷰)과
+`docs/claude/archive/business-card-3d-anchor-contract.md` 소관이다. Phase 0 실측치의 출처는
+`docs/claude/archive/business-card-3d-spike.md` 다. 이 문서의 독자는 #1247(회전·상호작용 뷰)과
 #1249(2D 스냅샷 캐시)를 구현하며 `compose` 를 실제로 호출하게 될 사람이다.
 
 - 작성자: 제옹(euijjang97)
@@ -64,7 +66,7 @@ public enum BusinessCardComposer {
   `RemoteImageLoader.cgImage(from:maxPixelSize:)` 로 먼저 받아 넘긴다
   (`BusinessCardComposer.swift:79-81`).
 - `portraitPixelSize`(512px)는 `BusinessCardComposer.swift:49-51` 에 있다. 512px RGBA 텍스처
-  1장 실측 926~932KB (`docs/claude/business-card-3d-spike.md` 축 1 표). 메모리를 줄여야 하면
+  1장 실측 926~932KB (`docs/claude/archive/business-card-3d-spike.md` 축 1 표). 메모리를 줄여야 하면
   이 상수 하나만 낮춘다.
 - `ReceivedCard` 도 같은 경로다 — `profile` 이 그대로 `MyCard` 라 받은 명함용 별도 API 가 없다
   (`BusinessCardComposer.swift:77-78`).
@@ -113,7 +115,7 @@ private static func breathe() async throws {
 ```
 
 스파이크 실측에서 워밍업 이후 합성 전체가 27~54ms 였으므로
-(`docs/claude/business-card-3d-spike.md` 축 1 표 — 사진 제외 27.02~39.49ms · 포함
+(`docs/claude/archive/business-card-3d-spike.md` 축 1 표 — 사진 제외 27.02~39.49ms · 포함
 31.01~54.08ms), 단계별로 쪼개면 한 조각이 프레임 예산(16.7ms) 안에 들어간다는 계산이다.
 
 주의할 점 두 가지:
@@ -216,7 +218,7 @@ entity.position = SIMD3(0, -slot.frameHeight / 2, 0)
 
 이 보정을 `textEntity` **한 곳에서만** 한다 (`:282-286`). 앵커마다 다른 보정값을 넣기 시작하면
 좌표가 코드로 새어 나와 「좌표는 USDZ 가 들고 있다」는 규약
-(`docs/claude/business-card-3d-anchor-contract.md` §1)이 무너진다. 결과가 틀어지면 고칠 곳은
+(`docs/claude/archive/business-card-3d-anchor-contract.md` §1)이 무너진다. 결과가 틀어지면 고칠 곳은
 `build_template.py` 의 좌표다.
 
 ## 6) 에러 vs 정상 부재 — 두 종류의 「없음」
@@ -256,7 +258,7 @@ Kingfisher 가 이미 캐시하고, 명함첩 그리드의 다장 표시 문제�
   뿐 화면이 아니다.
 - **#1249 — 2D 스냅샷 캐시·prewarm.** 명함첩 그리드는 장당 45~52ms 라 실시간 렌더가 불가하고
   캐시 전제다. RealityKit 최초 초기화(시뮬레이터 실측 9.4~11.6초)를 흡수할 워밍업 지점 결정도
-  이쪽 소관이다 (`docs/claude/business-card-3d-spike.md` 「첫 진입 비용」).
+  이쪽 소관이다 (`docs/claude/archive/business-card-3d-spike.md` 「첫 진입 비용」).
 - **온디바이스 Instruments(Hangs) 실측이 아직 없다.** `breathe()` 의 `Task.yield()` 가
   실기기에서 메인 스레드 블록을 실제로 프레임 예산 안에 눌러 주는지는 측정 전이다. 스파이크
   수치는 전부 시뮬레이터 값이므로, #1247 에서 실기기로 재야 §2 의 조정 손잡이를 돌릴지 말지
@@ -282,7 +284,7 @@ Kingfisher 가 이미 캐시하고, 명함첩 그리드의 다장 표시 문제�
 - 증상: 합성이 `TemplateError.missingAnchor` 로 실패한다.
   - 원인: 템플릿에서 규약 prim 이 지워졌거나 이름이 바뀌었다. 합성기 문제가 아니라 에셋 계약
     위반이다.
-  - 해결: `docs/claude/business-card-3d-anchor-contract.md` §7 트러블슈팅의 같은 항목을 따른다.
+  - 해결: `docs/claude/archive/business-card-3d-anchor-contract.md` §7 트러블슈팅의 같은 항목을 따른다.
     계약 테스트 1(앵커 전수 존재)이 어떤 케이스가 빠졌는지 가리킨다.
 
 - 증상: 합성이 `TemplateError.assetMissing` 으로 실패한다.

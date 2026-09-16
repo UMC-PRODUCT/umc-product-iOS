@@ -60,7 +60,6 @@ private enum Metrics {
 /// - Note: 이 화면의 시안은 아직 없다(#1227 「디자인 확인 필요」). 명함 카드는 기존
 ///   `명함_l` 컴포넌트를 그대로 쓰고, 나머지는 마이페이지 섹션 관용구(카드 배경 위
 ///   레이블/값 행)를 따랐다. 시안이 나오면 이 레이아웃부터 맞춘다.
-/// - Note: 설계서 §5.3 의 3D 명함은 #1247·#1248 위에 올라간다. 지금은 2D 로 둔다.
 /// - Important: 자체 `NavigationStack` 을 만들지 않는다. 탭별 스택은 상위 셸이 소유한다.
 public struct ReceivedCardDetailView: View {
 
@@ -86,7 +85,7 @@ public struct ReceivedCardDetailView: View {
     public var body: some View {
         ScrollView {
             VStack(spacing: Metrics.sectionSpacing) {
-                BusinessCard3DView(
+                BusinessCardFaceView(
                     card: viewModel.card.profile,
                     isFlipped: viewModel.isFlipped,
                     qrImage: viewModel.qrImage,

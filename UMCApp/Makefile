@@ -123,12 +123,6 @@ graph: ## 의존성 그래프(graph.png) 생성
 cache-warm: ## Tuist 바이너리 캐시 워밍업
 	@$(TUIST) cache
 
-##@ 에셋
-
-.PHONY: card-template
-card-template: ## 3D 명함 베이스 USDZ 템플릿 재생성 (#1246 규약)
-	@python3 $(ROOT)/tools/card-template/build_template.py
-
 ##@ Xcode
 
 .PHONY: open

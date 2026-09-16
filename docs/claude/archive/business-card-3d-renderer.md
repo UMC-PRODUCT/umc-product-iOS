@@ -1,10 +1,12 @@
+> 이 스택은 #1349 에서 제거됐다.
+
 # 3D 명함 렌더러 — 회전·인터랙션·접근성
 
 #1247 이 구현한 `BusinessCard3DView`/`BusinessCard3DScene` 의 동작 원리를 정리한 문서다.
 후속 이슈(#1248 온디바이스 합성, #1249 명함첩 2D 스냅샷) 담당자가 이 렌더러를 어떻게
 확장·재사용해야 하는지에 집중한다. 베이스 USDZ 템플릿의 앵커·머티리얼 슬롯 계약은
-`docs/claude/business-card-3d-anchor-contract.md` 를 본다 — 이 문서에서 반복하지 않는다.
-Phase 0 스파이크 실측치(첫 진입 지연, 스냅샷 비용)는 `docs/claude/business-card-3d-spike.md`.
+`docs/claude/archive/business-card-3d-anchor-contract.md` 를 본다 — 이 문서에서 반복하지 않는다.
+Phase 0 스파이크 실측치(첫 진입 지연, 스냅샷 비용)는 `docs/claude/archive/business-card-3d-spike.md`.
 
 - 작성자: 제옹(euijjang97)
 - 기준 코드:
@@ -192,7 +194,7 @@ private let logger = Logger(
   "빈 카드"가 아니라 "QR 없음"으로 보인다(`BusinessCardTemplate.swift:166-168`).
 - `Anchor_LinkTop`/`Anchor_LinkMiddle`/`Anchor_LinkBottom` 은 #1247 시점에는 아무 자식도
   없다 — "앵커 없음"(에러)과 "값 없음"(정상, 자식 미생성)의 구분은
-  `docs/claude/business-card-3d-anchor-contract.md` §2 를 따른다. #1248 이 `github`/`linkedIn`/`blog`
+  `docs/claude/archive/business-card-3d-anchor-contract.md` §2 를 따른다. #1248 이 `github`/`linkedIn`/`blog`
   값을 채워 넣는 합성기를 여기 연결한다.
 
 ## 7) 테스트 실행법
@@ -203,7 +205,7 @@ cd UMCApp && make test SCHEME=BusinessCardPresentation
 
 기본 `SCHEME=UMCApp` 으로는 `BusinessCard3DInteractionTests`(`BusinessCard3DInteractionTests.swift:20`)
 가 돌지 않는다 — 앱 스킴의 테스트 액션에 `BusinessCardPresentationTests` 타겟이 들어 있지 않다
-(`docs/claude/business-card-3d-anchor-contract.md` §3 과 같은 사정).
+(`docs/claude/archive/business-card-3d-anchor-contract.md` §3 과 같은 사정).
 
 이 테스트 스위트는 회전 기하(드래그 클램프, 플립 왕복, 자이로 매핑, 평활 수렴)와 인터랙션 정책
 (Reduce Motion, VoiceOver/백그라운드/하드웨어 부재, 2D 폴백 분기)을 순수 값 타입 단정으로
@@ -214,7 +216,7 @@ cd UMCApp && make test SCHEME=BusinessCardPresentation
 ## 8) #1249 를 위한 주의 — 명함첩 그리드는 3D 를 쓰지 않는다
 
 명함첩 그리드 셀은 `BusinessCard3DView` 를 그대로 재사용하지 않는다. 스파이크 실측치
-(`docs/claude/business-card-3d-spike.md` "축 3 — 2D 스냅샷")에 따르면 256px 스냅샷 1장이
+(`docs/claude/archive/business-card-3d-spike.md` "축 3 — 2D 스냅샷")에 따르면 256px 스냅샷 1장이
 45.47~52.33ms 로, 스크롤 프레임 예산(16.7ms)의 3배다. 그리드 셀이 보일 때마다 3D 렌더를
 돌리면 스크롤이 끊긴다.
 
@@ -266,7 +268,7 @@ cd UMCApp && make test SCHEME=BusinessCardPresentation
 - [ ] 합성 결과에 애니메이션 가능한 값을 추가했다면 SwiftUI 상태가 아니라
       `BusinessCard3DScene` 의 비관측 프로퍼티로 관리하는가
 - [ ] `Anchor_LinkTop`/`Middle`/`Bottom` 에 "값 없음"과 "앵커 없음"을 구분해 처리하는가
-      (`docs/claude/business-card-3d-anchor-contract.md` §2)
+      (`docs/claude/archive/business-card-3d-anchor-contract.md` §2)
 - [ ] `make test SCHEME=BusinessCardPresentation` 이 통과하는가 (기본 `SCHEME=UMCApp` 아님)
 - [ ] 자이로 부호(`CardRotation.rotated`)·키 라이트 값을 실기기에서 육안으로 확인했는가
       (§5 표의 "실기기 육안 튜닝 대상" 항목)
