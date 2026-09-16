@@ -151,6 +151,72 @@ struct MessageActionLayoutTests {
         #expect(x == 139)
     }
 
+    /// 말풍선 아래에 자리가 있으면 시안 배치 그대로 — 반응 바는 위, 메뉴는 아래.
+    @Test("자리가 있으면 메뉴를 말풍선 아래에 둔다")
+    func placesMenuBelowBubble() {
+        let origins = MessageActionLayout.verticalOrigins(
+            bubbleFrame: CGRect(x: 16, y: 300, width: 200, height: 44),
+            barHeight: 50,
+            menuHeight: 180,
+            containerHeight: 874,
+            margin: 16,
+            gap: 8
+        )
+
+        #expect(origins.bar == 242)
+        #expect(origins.menu == 352)
+    }
+
+    /// 최근 메시지는 화면 아래에 있다. 메뉴를 따로 끌어올리면 반응 바를 덮고, 위에 그려진
+    /// 메뉴가 이모지 탭을 가로채 답장이 눌렸다 (#1375).
+    @Test("아래에 자리가 없으면 메뉴를 반응 바 위로 올려 겹치지 않게 한다")
+    func movesMenuAboveBarNearBottom() {
+        let origins = MessageActionLayout.verticalOrigins(
+            bubbleFrame: CGRect(x: 16, y: 754, width: 200, height: 44),
+            barHeight: 50,
+            menuHeight: 180,
+            containerHeight: 874,
+            margin: 16,
+            gap: 8
+        )
+
+        #expect(origins.bar == 696)
+        #expect(origins.menu == 508)
+        #expect(origins.menu + 180 <= origins.bar)
+    }
+
+    /// 위로 밀려 여백에 붙은 반응 바와, 그 바로 밑 말풍선 아래 메뉴가 서로 겹치면 안 된다.
+    @Test("반응 바가 상단 여백에 붙어도 메뉴는 그 아래에서 시작한다")
+    func keepsMenuBelowTopClampedBar() {
+        let origins = MessageActionLayout.verticalOrigins(
+            bubbleFrame: CGRect(x: 16, y: 0, width: 200, height: 44),
+            barHeight: 50,
+            menuHeight: 180,
+            containerHeight: 874,
+            margin: 16,
+            gap: 8
+        )
+
+        #expect(origins.bar == 16)
+        #expect(origins.menu == 74)
+    }
+
+    /// 화면을 거의 채운 긴 말풍선은 위아래 어디에도 메뉴 자리가 없다.
+    @Test("위아래 모두 자리가 없으면 메뉴를 반응 바 바로 아래에 붙인다")
+    func stacksMenuUnderBarForTallBubble() {
+        let origins = MessageActionLayout.verticalOrigins(
+            bubbleFrame: CGRect(x: 16, y: 100, width: 200, height: 740),
+            barHeight: 50,
+            menuHeight: 180,
+            containerHeight: 874,
+            margin: 16,
+            gap: 8
+        )
+
+        #expect(origins.bar == 42)
+        #expect(origins.menu == 100)
+    }
+
     /// 320pt 화면에서는 312pt 반응 바가 좌우 여백을 한 번에 넘긴다.
     @Test("좁은 화면에서는 좌측 여백까지만 물러난다")
     func clampsXToLeadingMarginOnNarrowScreen() {
@@ -162,5 +228,22 @@ struct MessageActionLayoutTests {
         )
 
         #expect(x == 16)
+    }
+}
+
+// MARK: - Emoji Picker
+
+@Suite("EmojiPickerSheet")
+struct EmojiPickerSheetTests {
+
+    /// 서버는 그래파임 하나만 받는다. 목록에 하나라도 걸리는 게 섞이면 고른 반응이 매번 실패한다.
+    @Test("전체 이모지 목록은 비어 있지 않고 전부 반응 검증을 통과한다")
+    func listsOnlyValidReactionEmojis() throws {
+        #expect(EmojiPickerSheet.emojis.count > 1_000)
+        #expect(Set(EmojiPickerSheet.emojis).count == EmojiPickerSheet.emojis.count)
+
+        for emoji in EmojiPickerSheet.emojis {
+            try CommunityThreadRoomUseCase.validateReactionEmoji(emoji)
+        }
     }
 }

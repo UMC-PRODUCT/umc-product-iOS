@@ -375,6 +375,13 @@ public final class CommunityThreadRoomViewModel {
             }
         } catch {
             rollbackReactions(messageId: messageId, from: optimistic, to: snapshot)
+            // 칩만 조용히 되돌리면 탭이 먹지 않은 것처럼 보인다 (#1375). 끊긴 연결(`notConnected`)도
+            // 여기로 오므로 재시도를 붙인다 — 다시 누를 때는 되돌린 상태에서 같은 방향으로 나간다.
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Community",
+                action: "toggleReaction",
+                retryAction: { [weak self] in await self?.toggleReaction(message, emoji: emoji) }
+            ))
         }
     }
 
