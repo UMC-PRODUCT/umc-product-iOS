@@ -152,6 +152,9 @@ struct MemberManagementChallengerRecordDTO: Codable, Sendable, Equatable {
     let gisu: Int
     let gisuId: String
     let part: String
+    /// 인프라 겸직 여부. 서버가 신규 두 파트(`WEB_PRODUCT_ENGINEER`·
+    /// `MOBILE_PRODUCT_ENGINEER`)에서만 `true` 로 내려주고 나머지는 키를 생략한다 (#1351).
+    let infra: Bool
     let challengerPoints: [MemberManagementPointDTO]
     /// 서버가 `points` 키로 내려주는 폴백 포인트(챌린저 포인트가 비었을 때 사용).
     let fallbackPoints: [MemberManagementPointDTO]
@@ -169,6 +172,7 @@ struct MemberManagementChallengerRecordDTO: Codable, Sendable, Equatable {
         case gisu
         case gisuId
         case part
+        case infra
         case challengerPoints
         case fallbackPoints = "points"
     }
@@ -181,6 +185,7 @@ struct MemberManagementChallengerRecordDTO: Codable, Sendable, Equatable {
         gisu: Int,
         gisuId: String,
         part: String,
+        infra: Bool = false,
         challengerPoints: [MemberManagementPointDTO],
         fallbackPoints: [MemberManagementPointDTO]
     ) {
@@ -189,6 +194,7 @@ struct MemberManagementChallengerRecordDTO: Codable, Sendable, Equatable {
         self.gisu = gisu
         self.gisuId = gisuId
         self.part = part
+        self.infra = infra
         self.challengerPoints = challengerPoints
         self.fallbackPoints = fallbackPoints
     }
@@ -202,6 +208,7 @@ struct MemberManagementChallengerRecordDTO: Codable, Sendable, Equatable {
         gisu = try container.decodeIntFlexibleIfPresent(forKey: .gisu) ?? 0
         gisuId = try container.decodeFlexibleStringIfPresent(forKey: .gisuId) ?? ""
         part = try container.decodeIfPresent(String.self, forKey: .part) ?? ""
+        infra = try container.decodeBoolFlexibleIfPresent(forKey: .infra) ?? false
         challengerPoints = try container.decodeIfPresent(
             [MemberManagementPointDTO].self,
             forKey: .challengerPoints
@@ -221,6 +228,7 @@ struct MemberManagementChallengerRecordDTO: Codable, Sendable, Equatable {
         try container.encode(gisu, forKey: .gisu)
         try container.encode(gisuId, forKey: .gisuId)
         try container.encode(part, forKey: .part)
+        try container.encode(infra, forKey: .infra)
         try container.encode(challengerPoints, forKey: .challengerPoints)
         try container.encode(fallbackPoints, forKey: .fallbackPoints)
     }

@@ -127,4 +127,90 @@ struct MemberManagementProfileDTODecodingTests {
 
         #expect(record.resolvedPoints.map(\.id) == ["1"])
     }
+
+    // MARK: - infra / part null (#1351 서버 Part 체계 개편)
+
+    /// 같은 `GET /api/v1/member/profile/{memberId}` 응답이라 프로필 DTO 와 폴백 규칙이
+    /// 같아야 한다 — 키 없음·`null` 은 `false`.
+    @Test("infra 를 유연하게 디코딩하고 키가 없거나 null 이면 false 로 폴백한다")
+    func decodesInfraFlag() throws {
+        let cases: [(label: String, raw: String?, expected: Bool)] = [
+            ("키 없음", nil, false),
+            ("null", "null", false),
+            ("true", "true", true),
+            ("false", "false", false),
+            ("정수 1", "1", true),
+            ("문자열 true", "\"true\"", true),
+        ]
+
+        for testCase in cases {
+            let infraEntry = testCase.raw.map { ", \"infra\": \($0)" } ?? ""
+            let json = """
+            {
+              "id": 100, "name": "홍길동", "nickname": "길동", "schoolName": "한성대",
+              "roles": [],
+              "challengerRecords": [
+                {
+                  "challengerId": 1, "memberId": 100, "gisu": 11, "gisuId": 70,
+                  "part": "MOBILE_PRODUCT_ENGINEER"\(infraEntry)
+                }
+              ]
+            }
+            """
+
+            let record = try #require(decode(json).challengerRecords.first)
+
+            #expect(record.infra == testCase.expected, "\(testCase.label)")
+        }
+    }
+
+    /// 비수강 운영진 레코드는 `part` 가 `null` 로 온다 — 디코딩을 깨지 않고 빈 문자열로 남긴다.
+    @Test("part 가 null 이어도 디코딩되고 빈 문자열로 남는다")
+    func decodesNullPartAsEmptyString() throws {
+        let json = """
+        {
+          "id": 100, "name": "홍길동", "nickname": "길동", "schoolName": "한성대",
+          "roles": [],
+          "challengerRecords": [
+            {
+              "challengerId": 1, "memberId": 100, "gisu": 11, "gisuId": 70,
+              "part": null
+            }
+          ]
+        }
+        """
+
+        let record = try #require(decode(json).challengerRecords.first)
+
+        #expect(record.part.isEmpty)
+        #expect(record.infra == false)
+    }
+
+    /// 신규 파트 문자열이 그대로 보존돼야 하류에서 `UMCPartType` 으로 읽힌다.
+    @Test(
+        "신규 파트 문자열이 UMCPartType 으로 해석된다",
+        arguments: [
+            ("WEB_PRODUCT_ENGINEER", UMCPartType.webProductEngineer),
+            ("MOBILE_PRODUCT_ENGINEER", UMCPartType.mobileProductEngineer)
+        ]
+    )
+    func resolvesNewPartStrings(apiValue: String, expected: UMCPartType) throws {
+        let json = """
+        {
+          "id": 100, "name": "홍길동", "nickname": "길동", "schoolName": "한성대",
+          "roles": [],
+          "challengerRecords": [
+            {
+              "challengerId": 1, "memberId": 100, "gisu": 11, "gisuId": 70,
+              "part": "\(apiValue)", "infra": true
+            }
+          ]
+        }
+        """
+
+        let record = try #require(decode(json).challengerRecords.first)
+
+        #expect(UMCPartType(apiValue: record.part) == expected)
+        #expect(record.infra)
+    }
 }

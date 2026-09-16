@@ -107,6 +107,12 @@ public enum NoticePart: String, CaseIterable, Identifiable, Equatable, Hashable 
             case .spring:
                 self = .springboot
             }
+        case .webProductEngineer, .mobileProductEngineer:
+            // 공지 파트 탭에 신규 두 파트를 노출할지는 공지 API 명세가 없어 #1351 에서
+            // 정하지 않았다. 탭은 종전 7종 그대로 두고 여기서 `nil` 로 끊는다 —
+            // 노출이 필요해지면 `case` 2개와 `displayName`·`iconName`·`umcPartType`
+            // 만 추가하면 된다.
+            return nil
         }
     }
 }

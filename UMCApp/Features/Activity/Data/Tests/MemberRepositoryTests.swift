@@ -284,6 +284,51 @@ struct MemberRepositoryListTests {
         #expect(stub.requestedPaths.last == "/api/v1/member/profile/100")
     }
 
+    /// 서버 Part 개편(#1351) 으로 11기 개발 파트는 이 두 값만 내려온다.
+    /// 매핑이 빠지면 `makeDescriptors` 의 `?? .pm` 폴백을 타 멤버 관리 목록에서
+    /// 전원 기획 파트로 보인다 — 에러 없이 틀린 데이터만 남는 종류다.
+    @Test(
+        "fetchMembersPage — 신규 파트는 .pm 폴백을 타지 않는다",
+        arguments: [
+            ("WEB_PRODUCT_ENGINEER", UMCPartType.webProductEngineer),
+            ("MOBILE_PRODUCT_ENGINEER", UMCPartType.mobileProductEngineer)
+        ]
+    )
+    func fetchMembersPageMapsNewParts(
+        apiValue: String,
+        expected: UMCPartType
+    ) async throws {
+        let page = Fixture.offsetPage(
+            items: [Fixture.offsetItem(memberId: "100", part: apiValue)]
+        )
+        let profile = Fixture.memberProfile(records: [Fixture.record(gisu: 11, points: [])])
+        let (sut, _) = makeRepository([
+            .success(Fixture.success(page)),
+            .success(Fixture.success(profile))
+        ])
+
+        let result = try await sut.fetchMembersPage(page: 0)
+
+        #expect(result.members.first?.part == expected)
+    }
+
+    /// 모르는 제3의 값에 대한 기존 폴백은 그대로 둔다 (#1351 범위 밖).
+    @Test("fetchMembersPage — 모르는 파트는 종전대로 .pm 으로 떨어진다")
+    func fetchMembersPageKeepsUnknownPartFallback() async throws {
+        let page = Fixture.offsetPage(
+            items: [Fixture.offsetItem(memberId: "100", part: "RUST")]
+        )
+        let profile = Fixture.memberProfile(records: [Fixture.record(gisu: 11, points: [])])
+        let (sut, _) = makeRepository([
+            .success(Fixture.success(page)),
+            .success(Fixture.success(profile))
+        ])
+
+        let result = try await sut.fetchMembersPage(page: 0)
+
+        #expect(result.members.first?.part == .pm)
+    }
+
     @Test("fetchMembers — schoolId 가 없으면 네트워크 호출 없이 도메인 에러를 던진다")
     func fetchMembersThrowsWhenNoSchool() async {
         let (sut, stub) = makeRepository([], context: StubMemberContext(schoolId: nil))
@@ -467,6 +512,26 @@ struct MemberRepositoryChallengerSearchTests {
         #expect(challenger.part == .front(type: .ios))
         #expect(result.hasNext)
         #expect(result.nextCursor == 12)
+    }
+
+    /// 커서 검색은 `makeChallengerInfo` 의 `?? .pm` 이라는 별도 폴백을 탄다 —
+    /// 오프셋 경로와 따로 고정해 둔다 (#1351).
+    @Test(
+        "신규 파트 검색 항목이 .pm 폴백을 타지 않는다",
+        arguments: [
+            ("WEB_PRODUCT_ENGINEER", UMCPartType.webProductEngineer),
+            ("MOBILE_PRODUCT_ENGINEER", UMCPartType.mobileProductEngineer)
+        ]
+    )
+    func mapsNewPartsWithoutFallback(apiValue: String, expected: UMCPartType) async throws {
+        let page = Fixture.cursorPage(
+            items: [Fixture.offsetItem(memberId: "100", part: apiValue, gisu: 11)]
+        )
+        let (sut, _) = makeRepository(.success(Fixture.success(page)))
+
+        let result = try await sut.searchChallengers(keyword: nil, cursor: nil, size: 50)
+
+        #expect(result.challengers.first?.part == expected)
     }
 
     @Test("기수는 '9기' 표시 문구가 아니라 챌린저 ID 해석에 쓰는 숫자 문자열이다")

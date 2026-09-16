@@ -46,13 +46,18 @@ struct UserDefaultsStudyContextProviderTests {
 
     /// 스터디 조회가 받아들이는 파트 전체 집합을 고정합니다.
     ///
-    /// `ADMIN` 을 제외한 7종이며, canonical ``UMCPartType`` 수렴 전후로 동일해야 합니다.
+    /// `ADMIN` 을 제외한 9종이며, canonical ``UMCPartType`` 수렴 전후로 동일해야 합니다.
+    ///
+    /// 신규 두 파트(#1351)가 여기서 빠지면 그 파트장이 커리큘럼 개요를 `part=IOS` 로
+    /// 조회해 남의 파트 커리큘럼을 본다 — 에러 없이 틀린 데이터만 나온다.
     @Test(
         "알려진 파트는 대문자로 정규화한다",
         arguments: [
             ("ios", "IOS"), ("SpringBoot", "SPRINGBOOT"), ("WEB", "WEB"),
             ("plan", "PLAN"), ("design", "DESIGN"), ("android", "ANDROID"),
-            ("nodejs", "NODEJS")
+            ("nodejs", "NODEJS"),
+            ("WEB_PRODUCT_ENGINEER", "WEB_PRODUCT_ENGINEER"),
+            ("mobile_product_engineer", "MOBILE_PRODUCT_ENGINEER")
         ]
     )
     func normalizesKnownPart(stored: String, expected: String) {

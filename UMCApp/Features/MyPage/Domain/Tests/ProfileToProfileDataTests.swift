@@ -167,4 +167,26 @@ struct ProfileToProfileDataTests {
         #expect(linkedin?.url == "https://linkedin.com/in/me")
         #expect(blog?.url == "https://blog.me")
     }
+
+    /// 11기 챌린저는 전원 이 두 파트다. 매핑이 없으면 `fallbackPart` 를 타고 **운영진**
+    /// 으로 표시되면서 활동 이력에서도 통째로 사라진다 (#1351).
+    @Test(
+        "신규 파트 기록이 운영진 폴백으로 새지 않는다",
+        arguments: [
+            ("WEB_PRODUCT_ENGINEER", UMCPartType.webProductEngineer),
+            ("MOBILE_PRODUCT_ENGINEER", UMCPartType.mobileProductEngineer)
+        ]
+    )
+    func newPartRecordsKeepTheirPart(apiValue: String, expected: UMCPartType) {
+        let records = [Self.record(gisu: "11", part: apiValue, name: "11기")]
+        let profile = Self.makeProfile(challengerRecords: records)
+
+        let result = profile.toProfileData()
+
+        #expect(result.challengerInfo.part == expected)
+        #expect(result.challengerInfo.gen == "11")
+        #expect(result.activityLogs.contains {
+            $0.part == expected && $0.generation == 11 && $0.role == .challenger
+        })
+    }
 }

@@ -215,6 +215,10 @@ public struct MemberProfileChallengerRecordDTO: Codable {
     public let chapterId: String?
     public let chapterName: String?
     public let part: String
+    /// 인프라 겸직 여부. 서버가 신규 두 파트(`WEB_PRODUCT_ENGINEER`·
+    /// `MOBILE_PRODUCT_ENGINEER`)에서만 `true` 로 내려주고, 나머지 파트에서는 키 자체를
+    /// 생략한다 (#1351). 화면 노출은 아직 없고 도메인까지만 실어 나른다.
+    public let infra: Bool
     public let schoolId: String
     public let schoolName: String
     public let name: String?
@@ -232,6 +236,7 @@ public struct MemberProfileChallengerRecordDTO: Codable {
         case chapterId
         case chapterName
         case part
+        case infra
         case schoolId
         case schoolName
         case name
@@ -258,6 +263,7 @@ public struct MemberProfileChallengerRecordDTO: Codable {
         chapterId = container.decodeFlexibleStringOrNil(forKey: .chapterId)
         chapterName = try container.decodeIfPresent(String.self, forKey: .chapterName)
         part = try container.decodeIfPresent(String.self, forKey: .part) ?? ""
+        infra = try container.decodeBoolFlexibleIfPresent(forKey: .infra) ?? false
         schoolId = container.decodeFlexibleStringOrEmpty(forKey: .schoolId)
         schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
         name = try container.decodeIfPresent(String.self, forKey: .name)
@@ -287,6 +293,7 @@ public struct MemberProfileChallengerRecordDTO: Codable {
         try container.encodeIfPresent(chapterId, forKey: .chapterId)
         try container.encodeIfPresent(chapterName, forKey: .chapterName)
         try container.encode(part, forKey: .part)
+        try container.encode(infra, forKey: .infra)
         try container.encode(schoolId, forKey: .schoolId)
         try container.encode(schoolName, forKey: .schoolName)
         try container.encodeIfPresent(name, forKey: .name)

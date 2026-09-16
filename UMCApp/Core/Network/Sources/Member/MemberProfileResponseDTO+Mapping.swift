@@ -54,6 +54,7 @@ extension MemberProfileResponseDTO {
                 chapterId: record.chapterId,
                 chapterName: record.chapterName,
                 part: record.part,
+                infra: record.infra,
                 schoolId: record.schoolId,
                 schoolName: record.schoolName,
                 name: record.name,

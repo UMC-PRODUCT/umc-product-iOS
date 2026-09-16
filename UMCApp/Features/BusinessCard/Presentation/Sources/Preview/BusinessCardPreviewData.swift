@@ -53,7 +53,7 @@ public enum BusinessCardPreviewData {
 
     // MARK: - Received Cards
 
-    /// 파트 7종(`UMCPartType.allCases`)에 운영진(`.admin`)과 우리가 못 읽은 파트까지
+    /// 파트 9종(`UMCPartType.allCases`)에 운영진(`.admin`)과 우리가 못 읽은 파트까지
     /// 모두 나오는 명함첩 시드.
     ///
     /// `.admin`은 associated value 제약으로 `allCases` 밖에 있지만 「파트 없는 운영진」
@@ -144,8 +144,11 @@ public enum BusinessCardPreviewData {
     }
 
     /// `UMCPartType.allCases` 선언 순서(PM → Design → Server·Spring → Server·Node →
-    /// Front·Web → Front·Android → Front·iOS)와 1:1 대응하는 더미 신원. 실명·실기관이
-    /// 아니다.
+    /// Front·Web → Front·Android → Front·iOS → 웹 프로덕트 엔지니어 → 모바일 프로덕트
+    /// 엔지니어)와 1:1 대응하는 더미 신원. 실명·실기관이 아니다.
+    ///
+    /// - Important: `receivedCards` 가 `zip` 으로 묶으므로 항목 수가 `allCases` 보다
+    ///   적으면 뒤쪽 파트 카드가 조용히 잘린다. 파트를 늘릴 때 여기도 함께 늘린다.
     private static let identities: [Identity] = [
         Identity(name: "김도윤", nickname: "도윤", university: "한성대학교", generation: "10"),
         Identity(name: "이서연", nickname: "서연", university: "중앙대학교", generation: "11"),
@@ -154,6 +157,8 @@ public enum BusinessCardPreviewData {
         Identity(name: "정하은", nickname: "하은", university: "국민대학교", generation: "10"),
         Identity(name: "강민준", nickname: "민준", university: "동국대학교", generation: "11"),
         Identity(name: "윤소민", nickname: "소민", university: "숭실대학교", generation: "9"),
+        Identity(name: "임서준", nickname: "서준", university: "건국대학교", generation: "11"),
+        Identity(name: "한예린", nickname: "예린", university: "경희대학교", generation: "11"),
     ]
 }
 #endif
