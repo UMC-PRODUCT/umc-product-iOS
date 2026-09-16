@@ -71,10 +71,10 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
     ///   - Design: "Design"
     ///   - Server: "Spring" 또는 "NodeJS"
     ///   - Front: "Web", "Android", "iOS"
-    ///   - Product Engineer: "웹 프로덕트 엔지니어", "모바일 프로덕트 엔지니어"
+    ///   - Product Engineer: "Web PE", "Mobile PE"
     ///
-    /// - Note: 신규 두 파트만 한글 표시명이다. 서버 `ChallengerPart` 가 확정한
-    ///   `displayName` 을 그대로 쓰며, 영문으로 줄이면 레거시 `Web` 과 겹친다.
+    /// - Note: 신규 두 파트는 서버 `displayName`(한글 풀네임) 대신 영문 약칭을 쓴다 (#1379).
+    ///   `Web PE` 는 레거시 `Web` 과 문자열이 달라 구·신 기수가 섞여도 구분된다.
     public var name: String {
         switch self {
         case .admin:
@@ -88,15 +88,15 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
         case .front(let type):
             return type.rawValue
         case .webProductEngineer:
-            return "웹 프로덕트 엔지니어"
+            return "Web PE"
         case .mobileProductEngineer:
-            return "모바일 프로덕트 엔지니어"
+            return "Mobile PE"
         }
     }
 
     /// 인프라 겸직 배지의 표시명 — 서버 `ChallengerTrack.INFRA_PLUS` 의 `displayName`.
     ///
-    /// 신규 두 파트의 ``name`` 과 같은 관례로 서버 표시명을 그대로 쓴다 (#1359).
+    /// 서버 표시명을 그대로 쓴다 (#1359).
     public static let infraName = "인프라 플러스"
 
     /// 인프라 겸직을 얹을 수 있는 파트인지 — 서버 `ChallengerPart.canHaveInfra()` 와 같다.
@@ -110,7 +110,7 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
     /// 파트의 정렬 순서를 반환합니다.
     ///
     /// 정렬 순서: PM(0) > Design(1) > Web(2) > iOS(3) > Android(4) > Spring(5) >
-    /// NodeJS(6) > 웹 프로덕트 엔지니어(7) > 모바일 프로덕트 엔지니어(8)
+    /// NodeJS(6) > Web PE(7) > Mobile PE(8)
     ///
     /// - Note: 화면 정렬 전용 값이라 서버 `ChallengerPart.sortOrder` 와 일치하지
     ///   않는다(운영진이 서버 7, 여기선 -1). 신규 파트는 기존 7종 뒤에 이어 붙인다.

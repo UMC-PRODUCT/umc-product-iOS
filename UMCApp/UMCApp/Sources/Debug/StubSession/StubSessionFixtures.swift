@@ -345,7 +345,7 @@ enum StubSessionFixtures {
             studyGroupId: "601",
             studyGroupName: "모바일 PE 심화 스터디",
             part: .mobileProductEngineer,
-            partLabel: "모바일 프로덕트 엔지니어",
+            partLabel: "Mobile PE",
             weeks: [
                 WeeklySubmission(
                     weekNo: "1",
@@ -376,7 +376,7 @@ enum StubSessionFixtures {
             studyGroupId: "601",
             studyGroupName: "모바일 PE 심화 스터디",
             part: .mobileProductEngineer,
-            partLabel: "모바일 프로덕트 엔지니어",
+            partLabel: "Mobile PE",
             weeks: [
                 WeeklySubmission(
                     weekNo: "1",
@@ -576,7 +576,7 @@ enum StubSessionFixtures {
                 id: "1",
                 name: "김유엠",
                 nickName: "유엠",
-                part: "모바일 프로덕트 엔지니어",
+                part: "Mobile PE",
                 branch: "GACI",
                 campus: "한성대",
                 profileImageURL: nil,

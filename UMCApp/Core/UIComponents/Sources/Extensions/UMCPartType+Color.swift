@@ -45,7 +45,7 @@ extension UMCPartType {
     ///   `UMCPartTypeSeedColorTests` 만 교체한다.
     ///
     /// - Note: 신규 두 파트는 디자인이 토큰으로 확정한 칩 잉크 색(``chipTokenColors``)을
-    ///   시드로 쓴다 — 웹 프로덕트 엔지니어 `yellow600`, 모바일 프로덕트 엔지니어 `green700`
+    ///   시드로 쓴다 — Web PE `yellow600`, Mobile PE `green700`
     ///   (#1359). #1351 의 임시 `systemBlue`·`systemMint` 를 대체한다. 이 둘만 다이내믹
     ///   토큰이라 카드 워시가 모드를 따라 바뀌지만, 칩은 시드 면 대신 토큰 쌍을 그려
     ///   모드 불변 전제가 필요 없다.
@@ -111,8 +111,8 @@ extension UMCPartType {
         }
     }
 
-    /// 인프라 겸직 배지(``UMCPartType/infraName``)의 면·잉크 쌍 — 시안이 웹 프로덕트
-    /// 엔지니어와 같은 yellow 계열로 줬다 (#1359).
+    /// 인프라 겸직 배지(``UMCPartType/infraName``)의 면·잉크 쌍 — 시안이 Web PE 와
+    /// 같은 yellow 계열로 줬다 (#1359).
     public static let infraChipColors: (background: Color, foreground: Color) = (
         .yellow100, .yellow600
     )
