@@ -162,11 +162,15 @@ struct ProfileToMyCardTests {
     @Test(
         "신규 두 파트는 못 읽은 파트가 아니라 정식 파트로 실린다",
         arguments: [
-            ("WEB_PRODUCT_ENGINEER", UMCPartType.webProductEngineer),
-            ("MOBILE_PRODUCT_ENGINEER", UMCPartType.mobileProductEngineer)
+            ("WEB_PRODUCT_ENGINEER", UMCPartType.webProductEngineer, "Web Product Engineer"),
+            (
+                "MOBILE_PRODUCT_ENGINEER",
+                UMCPartType.mobileProductEngineer,
+                "Mobile Product Engineer"
+            )
         ]
     )
-    func mapsNewParts(apiValue: String, expected: UMCPartType) throws {
+    func mapsNewParts(apiValue: String, expected: UMCPartType, displayName: String) throws {
         let profile = Profile(
             memberId: "42", name: "정의찬", nickname: "제옹", generations: [],
             challengerRecords: [makeRecord(gisu: "11", part: apiValue)]
@@ -176,7 +180,7 @@ struct ProfileToMyCardTests {
 
         #expect(card.part == expected)
         #expect(card.partRaw == nil)
-        #expect(card.partDisplayName == expected.name)
+        #expect(card.partDisplayName == displayName)
         #expect(try card.toExchangePayload().part == apiValue)
     }
 

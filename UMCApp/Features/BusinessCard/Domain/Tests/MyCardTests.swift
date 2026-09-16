@@ -52,4 +52,31 @@ struct MyCardTests {
 
         #expect(card.nameWithNickname == nameCase.expected)
     }
+
+    /// 명함만 신규 두 파트를 영문으로 쓴다 (#1374). `UMCPartType.name` 은 다른 피처가
+    /// 한글로 쓰므로 그대로여야 한다 — 두 값이 갈리는 것 자체가 의도다.
+    @Test(
+        "명함 파트명은 신규 두 파트만 영문이고 나머지는 UMCPartType.name 그대로다",
+        arguments: [
+            (UMCPartType.mobileProductEngineer, "Mobile Product Engineer"),
+            (UMCPartType.webProductEngineer, "Web Product Engineer"),
+            (UMCPartType.front(type: .ios), "iOS"),
+            (UMCPartType.pm, "PM"),
+        ]
+    )
+    func partDisplayNameUsesEnglishOnCard(part: UMCPartType, expected: String) {
+        let card = MyCard(
+            memberId: "42", name: "정의찬", nickname: "제옹",
+            part: part, generation: "12", university: "한양대학교",
+            email: nil, github: nil, linkedIn: nil, blog: nil, avatarURL: nil
+        )
+
+        #expect(card.partDisplayName == expected)
+    }
+
+    @Test("신규 파트의 UMCPartType.name 은 한글 표시명을 유지한다")
+    func partTypeNameStaysKorean() {
+        #expect(UMCPartType.mobileProductEngineer.name == "모바일 프로덕트 엔지니어")
+        #expect(UMCPartType.webProductEngineer.name == "웹 프로덕트 엔지니어")
+    }
 }

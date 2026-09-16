@@ -42,19 +42,19 @@ extension MyCard {
 
     // MARK: - Accessibility
 
-    /// 「앞면. 홍길동/길동, iOS 파트, 12기, ○○대학교」.
+    /// 「앞면. 홍길동/길동, iOS 파트, ○○대학교, 12기」.
     ///
     /// 접두어가 **지금 보이는 면**을 전달한다. 카드가 한 덩어리로 읽히는 탓에 면 정보가
     /// 라벨에 없으면 지금 어느 쪽을 보고 있는지 알 방법이 없다.
     ///
-    /// 낭독 순서는 화면 순서를 그대로 따른다 — 학교는 하단 발급 행으로 내려갔으므로
-    /// 맨 뒤에서 읽는다.
+    /// 낭독 순서는 화면 순서를 그대로 따른다 — 이름 행 · 파트 행 다음에 발급 행을
+    /// 학교(왼쪽) · 기수(오른쪽) 순으로 읽는다 (#1374).
     var frontFaceAccessibilityLabel: String {
         let items = [
             nameWithNickname,
             "\(partDisplayName)\(Constants.partSuffix)",
-            "\(generation)\(Constants.generationSuffix)",
-            university
+            university,
+            "\(generation)\(Constants.generationSuffix)"
         ]
         return Constants.frontPrefix + items.joined(separator: Constants.separator)
     }
