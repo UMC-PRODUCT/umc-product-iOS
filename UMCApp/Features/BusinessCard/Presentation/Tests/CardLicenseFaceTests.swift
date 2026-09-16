@@ -14,7 +14,8 @@ import UMCFoundation
 /// 라이선스 카드 표기(#1347) 중 **눈으로 못 보는 두 규칙**만 본다.
 ///
 /// 레이아웃은 프리뷰가 보여주므로 테스트하지 않는다. 조용히 틀려도 화면상으로는 멀쩡한 것,
-/// 즉 「시리얼이 원본 ID 를 흘리는가」와 「못 센 칸이 0 으로 둔갑하는가」 두 가지만 단정한다.
+/// 즉 「시리얼이 원본 ID 를 흘리는가」와 「앞면 라벨이 화면에 남은 항목만 읽는가」(#1363)
+/// 두 가지만 단정한다.
 @Suite("라이선스 카드 표기")
 struct CardLicenseFaceTests {
 
@@ -54,30 +55,14 @@ struct CardLicenseFaceTests {
         #expect(serial.allSatisfy { $0 == "-" || ($0.isHexDigit && !$0.isLowercase) })
     }
 
-    // MARK: - 2. 기록 슬롯
+    // MARK: - 2. 앞면 접근성 라벨
 
-    /// `nil` 은 「0」이 아니라 「아직 못 셌다」다 (#1222). 0 으로 그리면 통신이 끊긴 카드가
-    /// 「스터디 0건」이라고 단언한다.
-    @Test("못 센 칸은 0 이 아니라 - 로 그린다", arguments: CardRecordSlot.allCases)
-    func emptySlotRendersDash(_ slot: CardRecordSlot) {
-        #expect(slot.displayValue(in: .empty) == "-")
-        #expect(slot.spokenPhrase(in: .empty) == nil)
-    }
+    /// #1363 에서 기록 슬롯·파트 칩을 뺐다. 라벨에 기록이 남으면 화면에 없는 값을 읽는다.
+    @Test("앞면 라벨은 이름·파트·기수·학교만 읽는다")
+    func frontFaceLabelReadsVisibleItemsOnly() {
+        let label = card(memberId: Constants.memberId).frontFaceAccessibilityLabel
 
-    /// `"50+"` 같은 서버 잘림 표기를 숫자로 바꾸거나 잘라내지 않는다 (핵심규칙 #2).
-    @Test("센 칸은 서버 문자열을 그대로 싣는다")
-    func countedSlotKeepsServerString() {
-        let stat = ActivityStat(
-            receivedCardCount: "50+",
-            studyCount: "3",
-            activityCount: "0",
-            bookmarkCount: "12"
-        )
-
-        #expect(CardRecordSlot.cards.displayValue(in: stat) == "50+")
-        // 서버가 진짜로 0 을 세어 준 경우는 "-" 가 아니라 "0" 이다.
-        #expect(CardRecordSlot.activity.displayValue(in: stat) == "0")
-        #expect(CardRecordSlot.study.spokenPhrase(in: stat) == "스터디 3건")
+        #expect(label == "앞면. 김유엠/유엠디, iOS 파트, 12기, 한양대학교")
     }
 
     // MARK: - Helper
