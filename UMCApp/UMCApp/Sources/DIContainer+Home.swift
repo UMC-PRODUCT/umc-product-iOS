@@ -71,6 +71,14 @@ extension DIContainer {
                 repository: self.resolve(NoticeClassifierRepositoryProtocol.self)
             )
         }
+        register(CalendarSyncRepositoryProtocol.self) {
+            CalendarSyncRepository()
+        }
+        register(SyncSchedulesToCalendarUseCaseProtocol.self) {
+            SyncSchedulesToCalendarUseCase(
+                repository: self.resolve(CalendarSyncRepositoryProtocol.self)
+            )
+        }
         register(ScheduleClassifierRepositoryProtocol.self) {
             ScheduleClassifierRepository()
         }

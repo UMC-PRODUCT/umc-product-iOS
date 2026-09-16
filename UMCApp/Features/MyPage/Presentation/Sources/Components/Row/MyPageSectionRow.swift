@@ -130,6 +130,27 @@ public struct MyPageSectionRow: View {
         self.titleColor = titleColor
     }
     
+    /// SF Symbol 아이콘만 두고 오른쪽을 비우는 Row 생성자
+    ///
+    /// 오른쪽 컨트롤을 바깥에서 얹는 행(`Toggle` 레이블 등)이 쓴다.
+    /// - Parameters:
+    ///   - systemIcon: 왼쪽에 표시할 SF Symbol 이름
+    ///   - title: 중앙에 표시할 타이틀
+    ///   - iconBackgroundColor: SF Symbol의 circle 배경색 (기본값: .clear)
+    ///   - titleColor: 타이틀 텍스트 색상 (기본값: .black)
+    public init(
+        systemIcon: String,
+        title: String,
+        iconBackgroundColor: Color = .clear,
+        titleColor: Color = .black
+    ) {
+        self.icon = .system(systemIcon)
+        self.title = title
+        self.rightContent = .none
+        self.iconBackgroundColor = iconBackgroundColor
+        self.titleColor = titleColor
+    }
+    
     /// MyPageSectionRow 내부에서 사용하는 상수
     private enum Constants {
         static let linkIcon: CGFloat = 30

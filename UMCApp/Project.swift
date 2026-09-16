@@ -49,6 +49,12 @@ let project = Project(
                     // NSPhotoLibraryUsageDescription(전체 접근)이 아니라 Add 전용 키를 쓴다.
                     "NSPhotoLibraryAddUsageDescription": "내 명함 QR 이미지를 사진 앱에 저장합니다.",
                     "NSLocationWhenInUseUsageDescription": "GPS 기반 스마트 출석 체크를 위해 위치 정보를 사용합니다.",
+                    // 홈 일정을 "UMC" 전용 캘린더로 내보낸다(#1311). 서버에서 수정·삭제된
+                    // 일정을 따라가려면 기존 이벤트 조회·갱신·삭제가 필요하고 그건 풀 액세스
+                    // 에서만 되므로, write-only 키(NSCalendarsWriteOnlyAccessUsageDescription)는
+                    // 넣지 않는다 — 키가 둘이면 심사도 사용자도 혼란스럽다.
+                    "NSCalendarsFullAccessUsageDescription":
+                        "UMC 일정을 전용 캘린더에 추가·갱신·삭제하기 위해 캘린더에 접근합니다.",
                     // MultipeerConnectivity 근거리 명함 교환.
                     // 이 두 키가 없으면 MPC 는 시작 자체가 되지 않는다(브라우저/광고 모두 실패).
                     // 서비스 타입은 MPCTransport.serviceType 과 반드시 같아야 한다.

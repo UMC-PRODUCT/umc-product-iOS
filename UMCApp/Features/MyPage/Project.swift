@@ -28,6 +28,9 @@ let project = featureProject(
         .project(target: "CoreNetwork", path: .relativeToRoot("Core/Network")),
         .project(target: "AuthDomain", path: .relativeToRoot("Features/Auth")),
         .project(target: "BadgeDomain", path: .relativeToRoot("Features/Badge")),
+        // 애플 캘린더 연동 토글(#1311)이 HomeDomain의 CalendarSyncRepository/
+        // SyncSchedulesToCalendar·FetchSchedules UseCase를 직접 쓴다.
+        .project(target: "HomeDomain", path: .relativeToRoot("Features/Home")),
         // 로그아웃/탈퇴가 DI 캐시를 비우기 전에 STOMP 연결을 stop() 해야 한다.
         .project(target: "CommunityDomain", path: .relativeToRoot("Features/Community")),
         // v3 루트가 명함 카드를 직접 그린다. 카드 UI(BusinessCardFaceView)를 MyPage가
@@ -65,5 +68,7 @@ let project = featureProject(
             target: "BusinessCardPresentation", path: .relativeToRoot("Features/BusinessCard")
         ),
         .project(target: "CoreNearbyExchange", path: .relativeToRoot("Core/NearbyExchange")),
+        // 설정 화면이 CalendarSyncViewModel을 구성하므로 그 의존 타입도 링크해야 한다(#1311).
+        .project(target: "HomeDomain", path: .relativeToRoot("Features/Home")),
     ]
 )

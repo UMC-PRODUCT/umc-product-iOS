@@ -174,6 +174,63 @@ struct HomeViewModelTests {
         #expect(viewModel.category(for: "1") == .general)
     }
 
+    @Test("fetchSchedules() 성공 시 조회한 달 구간과 일정을 애플 캘린더 동기화로 넘긴다")
+    func fetchSchedulesForwardsMonthRangeToCalendarSync() async throws {
+        let fetchSchedulesUseCase = MockFetchSchedulesUseCase(
+            result: [.now: [makeSchedule(scheduleId: "1", name: "알고리즘 스터디")]]
+        )
+        let syncUseCase = MockSyncSchedulesToCalendarUseCase()
+        let viewModel = makeViewModel(
+            fetchSchedulesUseCase: fetchSchedulesUseCase,
+            syncSchedulesToCalendarUseCase: syncUseCase
+        )
+
+        await viewModel.fetchSchedules(year: 2026, month: 7)
+
+        #expect(syncUseCase.callCount == 1)
+        #expect(syncUseCase.lastScheduleIds == ["1"])
+
+        let calendar = Calendar.kstGregorian
+        let range = try #require(syncUseCase.lastRange)
+        #expect(calendar.dateComponents([.year, .month], from: range.from).month == 7)
+        #expect(calendar.dateComponents([.year, .month], from: range.to).month == 7)
+    }
+
+    @Test("조회가 실패하면 애플 캘린더 동기화를 호출하지 않는다 (마지막 성공 상태 유지)")
+    func fetchSchedulesFailureSkipsCalendarSync() async {
+        let fetchSchedulesUseCase = MockFetchSchedulesUseCase()
+        fetchSchedulesUseCase.error = DummyError()
+        let syncUseCase = MockSyncSchedulesToCalendarUseCase()
+        let viewModel = makeViewModel(
+            fetchSchedulesUseCase: fetchSchedulesUseCase,
+            syncSchedulesToCalendarUseCase: syncUseCase
+        )
+
+        await viewModel.fetchSchedules()
+
+        #expect(syncUseCase.callCount == 0)
+    }
+
+    @Test("애플 캘린더 동기화가 실패해도 일정과 분류 결과는 그대로 남는다")
+    func calendarSyncFailureDoesNotAffectSchedules() async {
+        let schedule = makeSchedule(scheduleId: "1", name: "알고리즘 스터디")
+        let fetchSchedulesUseCase = MockFetchSchedulesUseCase(result: [.now: [schedule]])
+        let classifyScheduleUseCase = MockClassifyScheduleUseCase()
+        classifyScheduleUseCase.resultsByTitle["알고리즘 스터디"] = .study
+        let syncUseCase = MockSyncSchedulesToCalendarUseCase()
+        syncUseCase.error = DummyError()
+        let viewModel = makeViewModel(
+            fetchSchedulesUseCase: fetchSchedulesUseCase,
+            classifyScheduleUseCase: classifyScheduleUseCase,
+            syncSchedulesToCalendarUseCase: syncUseCase
+        )
+
+        await viewModel.fetchSchedules()
+
+        #expect(viewModel.scheduleByDates.isEmpty == false)
+        #expect(viewModel.category(for: "1") == .study)
+    }
+
     @Test("fetchProfile(forceRefresh: true)는 UseCase에 forceRefresh를 그대로 전달한다")
     func forceRefreshIsPassedThroughToUseCase() async {
         let useCase = MockFetchHomeProfileUseCase()
@@ -206,17 +263,23 @@ private func makeViewModel(
     useCase: FetchHomeProfileUseCaseProtocol? = nil,
     recentNoticesUseCase: FetchRecentNoticesUseCaseProtocol? = nil,
     fetchSchedulesUseCase: FetchSchedulesUseCaseProtocol? = nil,
-    classifyScheduleUseCase: ClassifyScheduleUseCaseProtocol? = nil
+    classifyScheduleUseCase: ClassifyScheduleUseCaseProtocol? = nil,
+    syncSchedulesToCalendarUseCase: SyncSchedulesToCalendarUseCaseProtocol? = nil
 ) -> HomeViewModel {
     let useCase = useCase ?? MockFetchHomeProfileUseCase()
     let recentNoticesUseCase = recentNoticesUseCase ?? MockFetchRecentNoticesUseCase()
     let fetchSchedulesUseCase = fetchSchedulesUseCase ?? MockFetchSchedulesUseCase()
     let classifyScheduleUseCase = classifyScheduleUseCase ?? MockClassifyScheduleUseCase()
+    let syncSchedulesToCalendarUseCase = syncSchedulesToCalendarUseCase
+        ?? MockSyncSchedulesToCalendarUseCase()
     let container = DIContainer()
     container.register(FetchHomeProfileUseCaseProtocol.self) { useCase }
     container.register(FetchRecentNoticesUseCaseProtocol.self) { recentNoticesUseCase }
     container.register(FetchSchedulesUseCaseProtocol.self) { fetchSchedulesUseCase }
     container.register(ClassifyScheduleUseCaseProtocol.self) { classifyScheduleUseCase }
+    container.register(SyncSchedulesToCalendarUseCaseProtocol.self) {
+        syncSchedulesToCalendarUseCase
+    }
     container.register(ChallengerGenRepositoryProtocol.self) { StubChallengerGenRepository() }
     container.register(FetchMemberProfileUseCaseProtocol.self) { StubFetchMemberProfileUseCase() }
     container.register(SyncProfileStorageUseCaseProtocol.self) {
@@ -314,6 +377,29 @@ private final class MockFetchSchedulesUseCase: FetchSchedulesUseCaseProtocol, @u
     func execute(from: Date, to: Date, isAttendanceRequired: Bool) async throws -> [Date: [ScheduleDetailData]] {
         if let error { throw error }
         return result
+    }
+}
+
+/// 애플 캘린더 동기화 호출을 기록하는 Mock (#1311). `error`를 채우면 동기화만 실패한다.
+private final class MockSyncSchedulesToCalendarUseCase: SyncSchedulesToCalendarUseCaseProtocol,
+                                                        @unchecked Sendable {
+    var error: Error?
+    var callCount: Int { lock.withLock { recordedCallCount } }
+    var lastRange: (from: Date, to: Date)? { lock.withLock { recordedRange } }
+    var lastScheduleIds: [String] { lock.withLock { recordedScheduleIds } }
+
+    private let lock = NSLock()
+    private var recordedCallCount = 0
+    private var recordedRange: (from: Date, to: Date)?
+    private var recordedScheduleIds: [String] = []
+
+    func execute(from: Date, to: Date, schedules: [ScheduleDetailData]) async throws {
+        lock.withLock {
+            recordedCallCount += 1
+            recordedRange = (from, to)
+            recordedScheduleIds = schedules.map(\.scheduleId)
+        }
+        if let error { throw error }
     }
 }
 
