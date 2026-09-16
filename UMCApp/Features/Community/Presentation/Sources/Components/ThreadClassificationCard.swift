@@ -355,7 +355,8 @@ private struct PreviewCreateUseCase: CommunityThreadCreateUseCaseProtocol {
         title: String,
         description: String,
         category: CommunityThreadCategory,
-        icon: String
+        icon: String,
+        memberIds: [String]
     ) async throws -> CommunityThread {
         throw ThreadClassificationError.unavailable
     }

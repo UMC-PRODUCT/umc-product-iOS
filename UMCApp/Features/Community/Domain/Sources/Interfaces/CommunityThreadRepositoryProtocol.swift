@@ -32,12 +32,17 @@ public protocol CommunityThreadRepositoryProtocol: Sendable {
     /// - Parameters:
     ///   - category: ``CommunityThreadCategory`` 의 rawValue
     ///   - icon: grapheme cluster 하나. 서버가 `@SingleGrapheme` 으로 막는다.
+    ///   - memberIds: 생성과 동시에 초대할 멤버. 최대 99명이고 중복은 400 이다
+    ///     (`@Size(max = 99) @UniqueElements`). 구현체가 전송 직전에 `Int` 로 바꾼다.
+    ///     빈 배열이면 서버가 개설자만 넣는다.
     /// - Returns: 생성된 스레드 상세. 리스트에 그대로 꽂을 수 있다.
+    ///   `memberCount` 는 초대한 인원까지 세어 돌아온다.
     func createThread(
         title: String,
         description: String,
         category: String,
-        icon: String
+        icon: String,
+        memberIds: [String]
     ) async throws -> CommunityThread
 
     /// `PATCH /threads/{threadId}` — **부분 수정**.

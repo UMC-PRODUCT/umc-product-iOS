@@ -169,7 +169,8 @@ struct CommunityThreadRepositoryTests {
             title: "iOS 스터디",
             description: "매주 화요일 8시",
             category: "STUDY",
-            icon: "📚"
+            icon: "📚",
+            memberIds: ["7", "11", "숫자아님"]
         )
 
         #expect(thread.id == "12")
@@ -185,6 +186,9 @@ struct CommunityThreadRepositoryTests {
         #expect(body.description == "매주 화요일 8시")
         #expect(body.category == "STUDY")
         #expect(body.icon == "📚")
+        // Domain 의 String 식별자를 여기서만 Int 로 바꾼다. 숫자가 아닌 값은 서버가 모르는
+        // 식별자라 보내 봐야 400 이므로 버린다(`InviteMembersBody` 와 같은 판단).
+        #expect(body.memberIds == [7, 11])
     }
 
     @Test("fetchMessages 가 getMessages 로 가고 배타적 커서를 그대로 싣는다")

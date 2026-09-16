@@ -8,6 +8,7 @@
 import Foundation
 import Testing
 import CommunityDomain
+import CoreDomain
 import UMCFoundation
 @testable import CommunityPresentation
 
@@ -21,6 +22,7 @@ private final class StubCreateUseCase: CommunityThreadCreateUseCaseProtocol {
         let description: String
         let category: CommunityThreadCategory
         let icon: String
+        let memberIds: [String]
     }
 
     var shouldFail = false
@@ -30,9 +32,18 @@ private final class StubCreateUseCase: CommunityThreadCreateUseCaseProtocol {
         title: String,
         description: String,
         category: CommunityThreadCategory,
-        icon: String
+        icon: String,
+        memberIds: [String]
     ) async throws -> CommunityThread {
-        calls.append(Call(title: title, description: description, category: category, icon: icon))
+        calls.append(
+            Call(
+                title: title,
+                description: description,
+                category: category,
+                icon: icon,
+                memberIds: memberIds
+            )
+        )
         if shouldFail { throw AppError.unknown(message: "생성 실패") }
         return makeThread(id: "new")
     }
@@ -149,6 +160,7 @@ struct CommunityThreadCreateViewModelTests {
         viewModel.threadDescription = "매주 화요일 8시"
         viewModel.category = .study
         viewModel.icon = "📚"
+        viewModel.invitees = [makeChallenger(memberId: "7"), makeChallenger(memberId: "11")]
 
         let thread = await viewModel.submit()
 
@@ -159,10 +171,52 @@ struct CommunityThreadCreateViewModelTests {
                     title: "iOS 스터디",
                     description: "매주 화요일 8시",
                     category: .study,
-                    icon: "📚"
+                    icon: "📚",
+                    memberIds: ["7", "11"]
                 )
             ]
         )
+    }
+
+    // MARK: - 초대할 챌린저
+
+    @Test("고른 챌린저가 없으면 빈 배열로 제출한다 — 개설자만 들어간다")
+    func submitsWithoutInvitees() async {
+        let useCase = StubCreateUseCase()
+        let viewModel = makeViewModel(useCase: useCase)
+        viewModel.title = "iOS 스터디"
+        viewModel.threadDescription = "매주 화요일 8시"
+
+        _ = await viewModel.submit()
+
+        #expect(useCase.calls.first?.memberIds.isEmpty == true)
+    }
+
+    @Test("같은 사람을 두 번 고르면 하나로 합친다 — 검색 시트는 중복을 막지 않는다")
+    func deduplicatesInvitees() {
+        let viewModel = makeViewModel()
+
+        viewModel.invitees = [
+            makeChallenger(memberId: "7"),
+            makeChallenger(memberId: "7"),
+            makeChallenger(memberId: "11"),
+        ]
+
+        #expect(viewModel.invitees.map(\.memberId) == ["7", "11"])
+        // 중복 정리는 사용자가 의도한 결과라 굳이 알리지 않는다.
+        #expect(viewModel.inviteeCapacityNotice == nil)
+    }
+
+    @Test("상한을 넘겨 고르면 앞에서부터 99명만 남기고 사유를 띄운다")
+    func clampsInviteesToMaxCount() {
+        let viewModel = makeViewModel()
+
+        viewModel.invitees = (1...120).map { makeChallenger(memberId: String($0)) }
+
+        #expect(viewModel.invitees.count == CommunityThreadCreateRule.inviteMaxCount)
+        #expect(viewModel.invitees.last?.memberId
+            == String(CommunityThreadCreateRule.inviteMaxCount))
+        #expect(viewModel.inviteeCapacityNotice != nil)
     }
 
     @Test("실패하면 인라인 에러가 뜨고 입력값은 그대로 남는다")
@@ -328,6 +382,19 @@ private func makeViewModel(
     CommunityThreadCreateViewModel(
         useCase: useCase ?? StubCreateUseCase(),
         classifier: classifier
+    )
+}
+
+private func makeChallenger(memberId: String) -> ChallengerInfo {
+    ChallengerInfo(
+        memberId: memberId,
+        challengerId: memberId,
+        gen: "6",
+        name: "챌린저\(memberId)",
+        nickname: "닉\(memberId)",
+        schoolName: "인하대학교",
+        profileImage: nil,
+        part: .front(type: .ios)
     )
 }
 
