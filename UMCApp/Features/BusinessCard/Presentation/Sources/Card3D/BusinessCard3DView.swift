@@ -29,6 +29,7 @@ public struct BusinessCard3DView: View {
     // MARK: - Property
 
     private let card: MyCard
+    private let stat: ActivityStat
     private let isFlipped: Bool
     private let qrImage: CGImage?
     private let onFlip: (() -> Void)?
@@ -48,11 +49,15 @@ public struct BusinessCard3DView: View {
 
     // MARK: - Init
 
+    /// - Parameter stat: 2D 폴백의 기록 슬롯(#1347)에 실을 카운트. 3D 합성기
+    ///   (`BusinessCardComposer`)는 아직 슬롯을 굽지 않으므로 3D 경로에서는 낭독 라벨에만
+    ///   반영된다 — 두 경로의 구성이 갈리는 자리라 슬롯을 3D 에 얹을 때 여기부터 본다.
     /// - Parameter makeEntity: 카드 엔티티 생성 seam. 기본값은 온디바이스 합성기(#1248)라
     ///   베이스 템플릿에 이름·소속·칩·링크를 얹은 카드가 나온다. 프리뷰·테스트도 여기로
     ///   주입한다 — 구현체가 하나뿐인 프로토콜을 만들지 않는다.
     public init(
         card: MyCard,
+        stat: ActivityStat = .empty,
         isFlipped: Bool = false,
         qrImage: CGImage? = nil,
         onFlip: (() -> Void)? = nil,
@@ -66,6 +71,7 @@ public struct BusinessCard3DView: View {
         }
     ) {
         self.card = card
+        self.stat = stat
         self.isFlipped = isFlipped
         self.qrImage = qrImage
         self.onFlip = onFlip
@@ -116,6 +122,7 @@ public struct BusinessCard3DView: View {
         case .twoDimensional:
             BusinessCardFaceView(
                 card: card,
+                stat: stat,
                 isFlipped: isFlipped,
                 qrImage: qrImage,
                 onFlip: onFlip,
@@ -253,7 +260,9 @@ public struct BusinessCard3DView: View {
 
     /// 라벨이 바뀌면 VoiceOver 가 포커스된 요소를 다시 읽으므로 별도 알림을 넣지 않는다.
     private var faceLabel: String {
-        isFlipped ? card.backFaceAccessibilityLabel : card.frontFaceAccessibilityLabel
+        isFlipped
+            ? card.backFaceAccessibilityLabel
+            : card.frontFaceAccessibilityLabel(stat: stat)
     }
 
     /// 실패해도 사용자에게 알리지 않는다 — 동작하는 2D 카드가 그대로 있고,

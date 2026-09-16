@@ -40,6 +40,17 @@ public enum BusinessCardPreviewData {
         avatarURL: nil
     )
 
+    /// 라이선스 카드 앞면 기록 슬롯(#1347) 프리뷰용 카운트.
+    ///
+    /// 받은 명함만 `"50+"` 로 둔다 — 서버가 잘라 보낸 표기를 앱이 숫자로 바꾸지 않고
+    /// 그대로 싣는다는 규칙(핵심규칙 #2)을 프리뷰에서도 눈으로 확인하기 위해서다.
+    public static let activityStat = ActivityStat(
+        receivedCardCount: "50+",
+        studyCount: "3",
+        activityCount: "5",
+        bookmarkCount: "12"
+    )
+
     // MARK: - Received Cards
 
     /// 파트 7종(`UMCPartType.allCases`)에 운영진(`.admin`)과 우리가 못 읽은 파트까지
