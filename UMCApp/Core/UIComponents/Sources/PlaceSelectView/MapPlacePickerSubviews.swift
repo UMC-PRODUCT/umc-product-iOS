@@ -7,6 +7,7 @@
 
 import CoreDesignSystem
 import SwiftUI
+import UMCFoundation
 
 // MARK: - MapPickerPinView
 
@@ -71,7 +72,7 @@ struct MapPickerSelectionCardView: View {
         } else if isResolvingPlace {
             resolvingContent
         } else {
-            Text("탭으로 주소를 선택하거나, POI를 길게 눌러 장소를 선택하세요.")
+            Text("장소를 검색하거나, 지도를 탭하거나 POI를 길게 눌러 선택하세요.")
                 .appFont(.subheadline, color: .grey600)
         }
     }
@@ -103,5 +104,61 @@ struct MapPickerSelectionCardView: View {
         }
         .buttonStyle(.glassProminent)
         .disabled(selectedPlace == nil || isResolvingPlace)
+    }
+}
+
+// MARK: - MapPickerSearchResultsView
+
+/// 검색 중 지도를 덮어 표시하는 장소 검색 결과 목록
+struct MapPickerSearchResultsView: View {
+
+    let searchResult: Loadable<[PlaceSelection]>
+    let searchText: String
+    let selectPlace: (PlaceSelection) -> Void
+
+    var body: some View {
+        // 검색어가 바뀌면 목록 전체가 교체되고 행에 상태가 없어 순번을 식별자로 쓴다.
+        List(Array((searchResult.value ?? []).enumerated()), id: \.offset) { _, place in
+            Button {
+                selectPlace(place)
+            } label: {
+                resultRow(place)
+            }
+        }
+        .listStyle(.plain)
+        .overlay {
+            stateContent
+        }
+    }
+
+    // MARK: - Private View
+
+    private func resultRow(_ place: PlaceSelection) -> some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            Text(place.name)
+                .appFont(.callout, weight: .semibold, color: .grey900)
+
+            Text(place.address)
+                .appFont(.subheadline, color: .grey600)
+                .multilineTextAlignment(.leading)
+        }
+    }
+
+    @ViewBuilder
+    private var stateContent: some View {
+        switch searchResult {
+        case .idle, .loading:
+            ProgressView()
+        case .loaded(let places) where places.isEmpty:
+            ContentUnavailableView.search(text: searchText)
+        case .loaded:
+            EmptyView()
+        case .failed:
+            ContentUnavailableView(
+                "검색에 실패했어요",
+                systemImage: "exclamationmark.magnifyingglass",
+                description: Text("네트워크 연결을 확인한 뒤 다시 검색해 주세요.")
+            )
+        }
     }
 }

@@ -10,13 +10,15 @@ import CoreLocation
 import MapKit
 import SwiftUI
 import TipKit
+import UMCFoundation
 
 // MARK: - MapPlacePickerView
 
-/// Apple 지도에서 핀을 찍어 장소를 선택하는 뷰
+/// Apple 지도에서 핀을 찍거나 검색해 장소를 선택하는 뷰
 ///
 /// 선택한 좌표를 역지오코딩해 `PlaceSelection`으로 변환하고,
 /// 확정 시 상위 화면에 선택 결과를 전달한다.
+/// 상단 검색은 현재 지도에 보이는 영역을 기준으로 결과 우선순위를 정한다.
 public struct MapPlacePickerView: View {
 
     // MARK: - Property
@@ -37,8 +39,20 @@ public struct MapPlacePickerView: View {
     @State private var hasInitializedState: Bool = false
     /// 애플 맵 기본 POI 말풍선 표시를 위한 선택된 지도 피처
     @State private var selectedMapFeature: MapFeature?
+    @State private var visibleRegion: MKCoordinateRegion?
+    @State private var searchText: String = ""
+    @State private var isSearchPresented: Bool = false
+    @State private var searchResult: Loadable<[PlaceSelection]> = .idle
 
     private let poiTip = POILongPressTip()
+
+    private var trimmedSearchText: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var isShowingSearchResults: Bool {
+        isSearchPresented && !trimmedSearchText.isEmpty
+    }
 
     // MARK: - Initializer
 
@@ -56,7 +70,15 @@ public struct MapPlacePickerView: View {
         NavigationStack {
             ZStack(alignment: .bottom) {
                 mapContent
-                selectionCard
+                if isShowingSearchResults {
+                    MapPickerSearchResultsView(
+                        searchResult: searchResult,
+                        searchText: trimmedSearchText,
+                        selectPlace: selectSearchResult
+                    )
+                } else {
+                    selectionCard
+                }
             }
             .navigationTitle("지도에서 선택")
             .navigationBarTitleDisplayMode(.inline)
@@ -65,8 +87,17 @@ public struct MapPlacePickerView: View {
                     currentLocationButton
                 }
             }
+            .searchable(
+                text: $searchText,
+                isPresented: $isSearchPresented,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "장소 또는 주소 검색"
+            )
             .task {
                 await configureInitialStateIfNeeded()
+            }
+            .task(id: trimmedSearchText) {
+                await searchPlaces(matching: trimmedSearchText)
             }
         }
     }
@@ -93,9 +124,14 @@ public struct MapPlacePickerView: View {
                 MapCompass()
             }
             .overlay(alignment: .top) {
-                TipView(poiTip, arrowEdge: .none)
-                    .glassEffect()
-                    .padding(.horizontal, DefaultSpacing.spacing16)
+                if !isShowingSearchResults {
+                    TipView(poiTip, arrowEdge: .none)
+                        .glassEffect()
+                        .padding(.horizontal, DefaultSpacing.spacing16)
+                }
+            }
+            .onMapCameraChange(frequency: .onEnd) { context in
+                visibleRegion = context.region
             }
             .onChange(of: selectedMapFeature) { _, feature in
                 guard let feature else { return }
@@ -210,6 +246,57 @@ public struct MapPlacePickerView: View {
         isResolvingPlace = false
     }
 
+    /// 입력이 멈추면 현재 보이는 지도 영역을 기준으로 장소를 검색한다
+    ///
+    /// `.task(id:)`가 검색어 변경 시 이전 작업을 취소하므로, 디바운스 대기 중이거나
+    /// 응답 대기 중에 취소된 작업은 상태를 갱신하지 않는다.
+    @MainActor
+    private func searchPlaces(matching query: String) async {
+        guard !query.isEmpty else {
+            searchResult = .idle
+            return
+        }
+
+        try? await Task.sleep(for: Constants.searchDebounce)
+        guard !Task.isCancelled else { return }
+
+        searchResult = .loading
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        request.resultTypes = [.pointOfInterest, .address]
+        if let visibleRegion {
+            request.region = visibleRegion
+        }
+
+        do {
+            let response = try await MKLocalSearch(request: request).start()
+            guard !Task.isCancelled else { return }
+            searchResult = .loaded(response.mapItems.map { item in
+                placeSelection(from: item, coordinate: item.location.coordinate)
+            })
+        } catch MKError.placemarkNotFound {
+            guard !Task.isCancelled else { return }
+            searchResult = .loaded([])
+        } catch {
+            guard !Task.isCancelled, !(error is CancellationError) else { return }
+            searchResult = .failed(.unknown(message: "장소 검색에 실패했습니다."))
+        }
+    }
+
+    /// 검색 결과를 선택 상태로 반영하고 검색을 닫는다
+    ///
+    /// 검색 결과에 이미 이름과 주소가 있으므로 역지오코딩하지 않는다.
+    @MainActor
+    private func selectSearchResult(_ place: PlaceSelection) {
+        selectedMapFeature = nil
+        selectedCoordinate = place.coordinate
+        selectedPlace = place
+        isResolvingPlace = false
+        moveCamera(to: place.coordinate)
+        isSearchPresented = false
+        searchText = ""
+    }
+
     /// 지정한 좌표가 화면 중심에 오도록 카메라를 갱신한다
     @MainActor
     private func moveCamera(to coordinate: CLLocationCoordinate2D) {
@@ -243,24 +330,33 @@ public struct MapPlacePickerView: View {
             guard let first = mapItems.first else {
                 return fallbackPlaceInfo(for: coordinate)
             }
-
-            let address =
-                first.address?.shortAddress
-                ?? first.address?.fullAddress
-                ?? first.addressRepresentations?.fullAddress(
-                    includingRegion: false,
-                    singleLine: true
-                )
-                ?? fallbackAddress(for: coordinate)
-
-            return PlaceSelection(
-                name: first.name ?? address,
-                address: address,
-                coordinate: coordinate
-            )
+            return placeSelection(from: first, coordinate: coordinate)
         } catch {
             return fallbackPlaceInfo(for: coordinate)
         }
+    }
+
+    /// 지도 아이템의 이름과 주소를 지정한 좌표의 `PlaceSelection`으로 변환한다
+    ///
+    /// 짧은 주소 → 전체 주소 → 주소 표현 → 좌표 문자열 순으로 주소를 고른다.
+    private func placeSelection(
+        from mapItem: MKMapItem,
+        coordinate: CLLocationCoordinate2D
+    ) -> PlaceSelection {
+        let address =
+            mapItem.address?.shortAddress
+            ?? mapItem.address?.fullAddress
+            ?? mapItem.addressRepresentations?.fullAddress(
+                includingRegion: false,
+                singleLine: true
+            )
+            ?? fallbackAddress(for: coordinate)
+
+        return PlaceSelection(
+            name: mapItem.name ?? address,
+            address: address,
+            coordinate: coordinate
+        )
     }
 
     /// 역지오코딩에 실패했을 때 사용할 기본 장소 정보를 생성한다
@@ -284,4 +380,5 @@ fileprivate enum Constants {
     static let defaultCenter = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780)
     static let defaultSpan = MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
     static let pinSize: CGFloat = 28
+    static let searchDebounce: Duration = .milliseconds(300)
 }
