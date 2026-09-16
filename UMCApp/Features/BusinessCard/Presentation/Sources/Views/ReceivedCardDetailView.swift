@@ -60,6 +60,9 @@ private enum Metrics {
 /// - Note: 이 화면의 시안은 아직 없다(#1227 「디자인 확인 필요」). 명함 카드는 기존
 ///   `명함_l` 컴포넌트를 그대로 쓰고, 나머지는 마이페이지 섹션 관용구(카드 배경 위
 ///   레이블/값 행)를 따랐다. 시안이 나오면 이 레이아웃부터 맞춘다.
+/// - Note: 카드는 2D ``BusinessCardFaceView`` 한 장이고 플립만 Y축 원근 회전으로 돈다
+///   (#1348) — 마이페이지 히어로(#1331)와 같은 카드·같은 모션이다. 설계서 §5.3 의
+///   RealityKit 3D 명함은 #1349 에서 스택째 철거했다.
 /// - Important: 자체 `NavigationStack` 을 만들지 않는다. 탭별 스택은 상위 셸이 소유한다.
 public struct ReceivedCardDetailView: View {
 

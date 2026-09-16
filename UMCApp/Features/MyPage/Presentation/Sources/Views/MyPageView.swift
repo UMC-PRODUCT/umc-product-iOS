@@ -134,8 +134,8 @@ struct MyPageView: View {
             // 「명함 교환」·「QR 코드」는 이번 릴리즈 제외(#1329). `onExchange`/`onQR` 를
             // 넘기지 않으면 `hasActions == false` 라 버튼 행이 빠진다 — 되살릴 때
             // 이 두 인자만 다시 넘기면 된다.
-            // RealityKit 3D 경로는 철거됐다(#1349). 명함을 그리는 뷰는 이제 이것 하나뿐이라
-            // #1331 이 남겨 뒀던 「되살릴 때 식별자만 되돌린다」 여지도 같이 닫혔다.
+            // RealityKit 3D 경로는 #1349 에서 철거됐다. 명함을 그리는 뷰는 이제 이것
+            // 하나뿐이고, 필요한 Y축 원근 회전은 이 2D 카드가 스스로 한다(#1348).
             BusinessCardFaceView(
                 card: card,
                 stat: viewModel.activityStat,
