@@ -233,7 +233,7 @@ public struct ScheduleRegistrationView: View {
         } else {
             if isAIAvailable {
                 ToolBarCollection.AddBtn(
-                    imageSystemName: "sparkles",
+                    imageSystemName: "apple.intelligence",
                     action: { showAISheet = true }
                 )
             }
@@ -667,9 +667,9 @@ private struct AIAutofillSheet: View {
 
     private var headerSection: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            Image(systemName: "sparkles")
+            Image(systemName: "apple.intelligence")
                 .font(.system(size: Constants.headerIconSize, weight: .medium))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(.appleIntelligence)
 
             Text(Constants.headerLabel)
                 .appFont(.callout, weight: .semibold, color: Color.grey700)

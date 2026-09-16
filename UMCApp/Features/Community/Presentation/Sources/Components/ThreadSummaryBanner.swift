@@ -13,16 +13,8 @@ import CoreDesignSystem
 fileprivate enum Constants {
     static let iconSize: CGFloat = 20
     static let chevronSize: CGFloat = 13
-    static let sparklesImage = "sparkles"
+    static let engineImage = "apple.intelligence"
     static let hint = "Apple Intelligence로 핵심만 요약해 드려요"
-
-    /// 요약 계열 화면이 공유하는 그라디언트. 분류 카드·요약 시트와 같은 값으로 맞춘다 —
-    /// 같은 온디바이스 기능인데 진입점만 단색이면 다른 기능처럼 보인다.
-    static let aiGradient = LinearGradient(
-        colors: [.indigo300, .indigo500, .indigo700],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
 
     static func title(unreadCount: Int) -> String {
         "읽지 않은 메시지 \(unreadCount)개"
@@ -48,9 +40,9 @@ struct ThreadSummaryBanner: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: DefaultSpacing.spacing12) {
-                Image(systemName: Constants.sparklesImage)
+                Image(systemName: Constants.engineImage)
                     .font(.system(size: Constants.iconSize, weight: .medium))
-                    .foregroundStyle(Constants.aiGradient)
+                    .foregroundStyle(.appleIntelligence)
 
                 // 수치(제목)와 설명(서브)을 두 줄로 나눈다. 한 줄로 묶으면 큰 글자 크기에서
                 // "읽지 않은 메시지 N개" 라는 핵심 수치부터 잘려 나간다.

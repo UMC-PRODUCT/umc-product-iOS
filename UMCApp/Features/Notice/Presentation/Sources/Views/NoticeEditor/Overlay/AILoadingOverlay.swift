@@ -78,9 +78,9 @@ struct AILoadingOverlay: View {
     private var headerIcon: some View {
         switch phase {
         case .processing:
-            Image(systemName: "sparkles")
+            Image(systemName: "apple.intelligence")
                 .font(.system(size: DefaultConstant.iconSize, weight: .medium))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(.appleIntelligence)
                 .symbolEffect(.variableColor.iterative.reversing)
         case .completed:
             Image(systemName: "checkmark.circle.fill")

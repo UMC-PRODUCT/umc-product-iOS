@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreDesignSystem
 
 /// 공지 에디터의 기본 액세서리 툴바입니다.
 public struct DefaultToolbarView: View {
@@ -38,7 +39,7 @@ public struct DefaultToolbarView: View {
     private var formatButton: some View {
         toolbarButton(
             icon: Constants.formatIcon,
-            tint: viewModel.isFormatPanelVisible ? .indigo500 : Constants.inactiveColor,
+            tint: viewModel.isFormatPanelVisible ? Color.indigo500 : Constants.inactiveColor,
             action: viewModel.toggleFormatPanel
         )
     }
@@ -139,8 +140,9 @@ public struct DefaultToolbarView: View {
         .buttonStyle(.plain)
     }
 
+    /// Apple Intelligence 진입점이라 서식 버튼과 달리 브랜드 그라디언트를 쓴다.
     private var aiButton: some View {
-        toolbarButton(icon: Constants.aiIcon, action: onTapAI)
+        toolbarButton(icon: Constants.aiIcon, tint: .appleIntelligence, action: onTapAI)
     }
 
     private var highlightButton: some View {
@@ -149,7 +151,7 @@ public struct DefaultToolbarView: View {
 
     private func toolbarButton(
         icon: String,
-        tint: Color = .primary,
+        tint: some ShapeStyle = Color.primary,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -172,7 +174,7 @@ public struct DefaultToolbarView: View {
     fileprivate enum Constants {
         static let formatIcon: String = "textformat.size"
         static let listIcon: String = "list.bullet"
-        static let aiIcon: String = "sparkles"
+        static let aiIcon: String = "apple.intelligence"
         static let highlightIcon: String = "highlighter"
 
         static let bulletTitle: String = "구분점"

@@ -27,7 +27,7 @@ fileprivate enum Constants {
     static let originalTitle = "원문 보기"
     static let dismissTitle = "닫기"
 
-    static let sparklesImage = "sparkles"
+    static let engineImage = "apple.intelligence"
     static let failureImage = "exclamationmark.circle"
     static let bulletImage = "circle.fill"
     static let actionItemImage = "checkmark.circle"
@@ -46,13 +46,6 @@ fileprivate enum Constants {
     /// 비율을 쓰려면 카드 너비를 재야 하고, 그 값을 재는 순간 카드 안쪽 패딩까지 따라와서다.
     static let shimmerBarInsets: [CGFloat] = [0, DefaultSpacing.spacing24, DefaultSpacing.spacing96]
     static let aiBorderWidth: CGFloat = 1
-
-    /// AI 처리 중임을 알리는 그라디언트.
-    static let aiGradient = LinearGradient(
-        colors: [.indigo300, .indigo500, .indigo700],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
 }
 
 /// 미읽음 구간 요약 시트.
@@ -107,9 +100,9 @@ struct ThreadSummarySheet: View {
     /// 채팅 요약에서는 브랜드 표기보다 중요한 정보다.
     private var header: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            Image(systemName: Constants.sparklesImage)
+            Image(systemName: Constants.engineImage)
                 .font(.system(size: Constants.headerIconSize, weight: .medium))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(.appleIntelligence)
 
             Text(Constants.engineLabel)
                 .appFont(.callout, weight: .semibold, color: .grey700)
@@ -140,9 +133,9 @@ struct ThreadSummarySheet: View {
     private var loadingCard: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             HStack(spacing: DefaultSpacing.spacing8) {
-                Image(systemName: Constants.sparklesImage)
+                Image(systemName: Constants.engineImage)
                     .font(.system(size: Constants.headerIconSize, weight: .medium))
-                    .foregroundStyle(Color.indigo500)
+                    .foregroundStyle(.appleIntelligence)
                     .symbolEffect(.variableColor.iterative.reversing)
 
                 Text(Constants.loadingTitle)
@@ -169,7 +162,7 @@ struct ThreadSummarySheet: View {
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true
             )
-            .stroke(Constants.aiGradient, lineWidth: Constants.aiBorderWidth)
+            .stroke(.appleIntelligence, lineWidth: Constants.aiBorderWidth)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Constants.loadingTitle)

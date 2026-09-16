@@ -35,9 +35,9 @@ struct AIConfirmationOverlay: View {
                 .ignoresSafeArea()
 
             VStack(spacing: DefaultSpacing.spacing16) {
-                Image(systemName: "sparkles")
+                Image(systemName: "apple.intelligence")
                     .font(.system(size: DefaultConstant.iconSize, weight: .medium))
-                    .foregroundStyle(Color.indigo500)
+                    .foregroundStyle(.appleIntelligence)
 
                 Text("Apple Intelligence")
                     .appFont(.callout, weight: .semibold)

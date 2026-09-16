@@ -248,7 +248,7 @@ struct CommunityThreadRoomView: View {
                 Button {
                     viewModel.isSummarySheetPresented = true
                 } label: {
-                    Label("대화 요약", systemImage: "sparkles")
+                    Label("대화 요약", systemImage: "apple.intelligence")
                 }
                 // 온디바이스 모델을 쓸 수 없는 기기에서는 열어 봐야 할 일이 없다 (#1137).
                 .disabled(!viewModel.canSummarize)
