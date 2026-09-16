@@ -38,6 +38,20 @@ public enum CommunityThreadCreateRule {
         return String(last)
     }
 
+    /// 생성과 동시에 초대할 수 있는 최대 인원. 서버 `@Size(max = 99)` 이고, 방 정원
+    /// 100(`CommunityThreadProperties.DEFAULT_MAX_MEMBERS`)에서 개설자 한 자리를 뺀 수다.
+    public static let inviteMaxCount = 99
+
+    /// 서버 `@UniqueElements` 선반영 — 빈 값과 중복을 털고 상한까지 자른다.
+    ///
+    /// 선택 UI 가 상한을 모르기 때문에(챌린저 검색 시트는 개수 제한이 없다) 여기서 한 번
+    /// 정리해야 400 대신 "앞의 99명만" 이라는 예측 가능한 결과가 나온다.
+    public static func normalizedMemberIds(_ memberIds: [String]) -> [String] {
+        var seen = Set<String>()
+        let unique = memberIds.filter { !$0.isEmpty && seen.insert($0).inserted }
+        return Array(unique.prefix(inviteMaxCount))
+    }
+
     /// 서버 `@CodePointLength(max = 32)`. 사람이 만들 수 있는 이모지는 한참 아래지만
     /// 조합 문자를 잔뜩 붙인 grapheme 하나가 상한을 넘길 수 있어 함께 본다.
     private static let iconMaxCodePoints = 32
@@ -60,13 +74,18 @@ extension Character {
 
 public protocol CommunityThreadCreateUseCaseProtocol: Sendable {
 
-    /// - Parameter icon: 비었으면 카테고리 기본 이모지로 채운다. 서버는 `icon` 을 필수로 받는다.
+    /// - Parameters:
+    ///   - icon: 비었으면 카테고리 기본 이모지로 채운다. 서버는 `icon` 을 필수로 받는다.
+    ///   - memberIds: 생성과 동시에 초대할 멤버. 중복·상한은 구현체가
+    ///     ``CommunityThreadCreateRule/normalizedMemberIds(_:)`` 로 정리한다. 빈 배열이면
+    ///     개설자만 들어간다. (프로토콜 요구사항에는 기본값을 못 달아 구현체에서 `[]` 를 준다)
     /// - Returns: 서버가 돌려준 상세. 리스트에 바로 꽂을 수 있다.
     func create(
         title: String,
         description: String,
         category: CommunityThreadCategory,
-        icon: String
+        icon: String,
+        memberIds: [String]
     ) async throws -> CommunityThread
 }
 
@@ -90,7 +109,8 @@ public struct CommunityThreadCreateUseCase: CommunityThreadCreateUseCaseProtocol
         title: String,
         description: String,
         category: CommunityThreadCategory,
-        icon: String
+        icon: String,
+        memberIds: [String] = []
     ) async throws -> CommunityThread {
         let normalizedIcon = CommunityThreadCreateRule.normalizedIcon(icon)
 
@@ -98,7 +118,8 @@ public struct CommunityThreadCreateUseCase: CommunityThreadCreateUseCaseProtocol
             title: clamped(title, max: CommunityThreadCreateRule.titleMaxLength),
             description: clamped(description, max: CommunityThreadCreateRule.descriptionMaxLength),
             category: category.rawValue,
-            icon: normalizedIcon.isEmpty ? category.defaultIcon : normalizedIcon
+            icon: normalizedIcon.isEmpty ? category.defaultIcon : normalizedIcon,
+            memberIds: CommunityThreadCreateRule.normalizedMemberIds(memberIds)
         )
     }
 

@@ -223,6 +223,54 @@ struct CommunityThreadCreateUseCaseTests {
             #expect(call.icon == expected, "입력 \(input)")
         }
     }
+
+    @Test("초대 인원을 넘기지 않으면 빈 배열로 나간다 — 개설자만 들어간다")
+    func sendsEmptyMemberIdsByDefault() async throws {
+        let repository = FakeThreadRepository()
+        let useCase = CommunityThreadCreateUseCase(repository: repository)
+
+        _ = try await useCase.create(title: "제목", description: "특징", category: .free, icon: "💬")
+
+        let call = try #require(await repository.createThreadCalls.first)
+        #expect(call.memberIds.isEmpty)
+    }
+
+    @Test("초대 인원은 중복을 털고 순서를 지킨 채 내려간다 — 서버 @UniqueElements")
+    func deduplicatesMemberIds() async throws {
+        let repository = FakeThreadRepository()
+        let useCase = CommunityThreadCreateUseCase(repository: repository)
+
+        _ = try await useCase.create(
+            title: "제목",
+            description: "특징",
+            category: .free,
+            icon: "💬",
+            memberIds: ["7", "3", "7", "", "3", "11"]
+        )
+
+        let call = try #require(await repository.createThreadCalls.first)
+        #expect(call.memberIds == ["7", "3", "11"])
+    }
+
+    @Test("상한을 넘긴 초대 인원은 앞에서부터 99명만 내려간다 — 서버 @Size(max = 99)")
+    func clampsMemberIdsToInviteMax() async throws {
+        let repository = FakeThreadRepository()
+        let useCase = CommunityThreadCreateUseCase(repository: repository)
+        let overflowing = (1...120).map(String.init)
+
+        _ = try await useCase.create(
+            title: "제목",
+            description: "특징",
+            category: .free,
+            icon: "💬",
+            memberIds: overflowing
+        )
+
+        let call = try #require(await repository.createThreadCalls.first)
+        #expect(call.memberIds.count == CommunityThreadCreateRule.inviteMaxCount)
+        #expect(call.memberIds.first == "1")
+        #expect(call.memberIds.last == String(CommunityThreadCreateRule.inviteMaxCount))
+    }
 }
 
 @Suite("커뮤니티 스레드 채팅방 UseCase")
@@ -720,6 +768,7 @@ private actor FakeThreadRepository: CommunityThreadRepositoryProtocol {
         let description: String
         let category: String
         let icon: String
+        let memberIds: [String]
     }
 
     struct MemberCall: Equatable {
@@ -836,14 +885,16 @@ private actor FakeThreadRepository: CommunityThreadRepositoryProtocol {
         title: String,
         description: String,
         category: String,
-        icon: String
+        icon: String,
+        memberIds: [String]
     ) async throws -> CommunityThread {
         createThreadCalls.append(
             CreateThreadCall(
                 title: title,
                 description: description,
                 category: category,
-                icon: icon
+                icon: icon,
+                memberIds: memberIds
             )
         )
         if let error { throw error }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ActivityPresentation
 import CommunityDomain
 import CoreDesignSystem
 import CoreUIComponents
@@ -23,7 +24,11 @@ fileprivate enum Constants {
     static let categoryLabel = "카테고리"
     static let categoryHint = "탭하면 카테고리를 고를 수 있어요."
 
+    static let inviteeLabel = "초대할 챌린저"
+    static let inviteeHint = "탭하면 초대할 챌린저를 고를 수 있어요."
+
     static let categoryImage = "chevron.up.chevron.down"
+    static let inviteeImage = "chevron.right"
     static let errorImage = "exclamationmark.triangle"
 
     /// 이모지 한 칸이 아이콘처럼 보이도록 본문보다 크게 잡는다.
@@ -60,6 +65,8 @@ struct CommunityThreadCreateView: View {
     /// "이모지 변경하기" 가 이모지 키보드를 바로 띄우게 하는 통로.
     @FocusState private var isIconFocused: Bool
 
+    @State private var isInviteePickerPresented = false
+
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Init
@@ -77,7 +84,13 @@ struct CommunityThreadCreateView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
+                inviteeRow
+
                 composer
+
+                if let notice = viewModel.inviteeCapacityNotice {
+                    errorLabel(notice)
+                }
 
                 if let message = viewModel.submitErrorMessage {
                     errorLabel(message)
@@ -101,6 +114,49 @@ struct CommunityThreadCreateView: View {
     }
 
     // MARK: - View Component
+
+    /// 생성과 동시에 초대할 챌린저를 고르는 행.
+    ///
+    /// 선택 시트는 Activity 의 `SelectedChallengerView` 를 그대로 쓴다 — 일정 등록의 참여자
+    /// 선택(`ScheduleRegistrationView`)이 이미 같은 방식으로 재사용하고 있다. 그쪽은 개수
+    /// 제한을 모르므로 상한은 ViewModel 이 되쓸 때 자른다.
+    private var inviteeRow: some View {
+        Button {
+            isInviteePickerPresented = true
+        } label: {
+            HStack(spacing: DefaultSpacing.spacing8) {
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                    Text(Constants.inviteeLabel)
+                        .appFont(.body, color: Color.grey900)
+
+                    Text("최대 \(viewModel.inviteeMaxCount)명까지 추가할 수 있습니다")
+                        .appFont(.caption1, color: Color.grey500)
+                }
+
+                Spacer(minLength: 0)
+
+                Text("\(viewModel.invitees.count) / \(viewModel.inviteeMaxCount)")
+                    .appFont(.callout, color: Color.grey500)
+
+                Image(systemName: Constants.inviteeImage)
+                    .foregroundStyle(Color.grey500)
+            }
+            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .padding(.vertical, DefaultSpacing.spacing12)
+            .background(
+                Color.grey100,
+                in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Constants.inviteeLabel)
+        .accessibilityValue("\(viewModel.invitees.count)명 선택")
+        .accessibilityHint(Constants.inviteeHint)
+        .sheet(isPresented: $isInviteePickerPresented) {
+            SelectedChallengerView(challenger: $viewModel.invitees)
+                .presentationDragIndicator(.visible)
+        }
+    }
 
     /// 제목과 특징을 한 덩어리로 묶은 입력부. 둘 사이의 구분선 말고는 장식을 두지 않는다.
     private var composer: some View {

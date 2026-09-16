@@ -65,9 +65,11 @@ public struct CommunityThreadRepository: CommunityThreadRepositoryProtocol, @unc
         title: String,
         description: String,
         category: String,
-        icon: String
+        icon: String,
+        memberIds: [String] = []
     ) async throws -> CommunityThread {
         // 201 응답 본문이 상세와 같은 스키마라 `fetchThread` 와 같은 DTO 를 쓴다.
+        // 초대한 인원까지 센 `memberCount` 가 함께 오므로 생성 직후 화면이 바로 맞는다.
         try await payload(
             CommunityThreadDTO.self,
             from: .createThread(
@@ -75,7 +77,8 @@ public struct CommunityThreadRepository: CommunityThreadRepositoryProtocol, @unc
                     title: title,
                     description: description,
                     category: category,
-                    icon: icon
+                    icon: icon,
+                    memberIds: memberIds
                 )
             )
         ).toDomain

@@ -8,6 +8,7 @@
 import Foundation
 import Observation
 import CommunityDomain
+import CoreDomain
 import UMCFoundation
 
 /// 스레드 생성 폼 상태 기계.
@@ -45,6 +46,17 @@ public final class CommunityThreadCreateViewModel {
     public var category: CommunityThreadCategory = .free
     public var isCategorySheetPresented = false
 
+    /// 생성과 동시에 초대할 챌린저. 챌린저 검색 시트(`SelectedChallengerView`)가 통째로 되쓴다.
+    ///
+    /// 그 시트는 개수 제한을 모르므로 여기서 받아 적을 때 중복(`memberId` 기준)과 상한을
+    /// 정리한다 — 잘린 경우에만 ``inviteeCapacityNotice`` 가 채워진다.
+    public var invitees: [ChallengerInfo] = [] {
+        didSet { clampInvitees() }
+    }
+
+    /// 상한에 걸려 선택이 잘린 사유. 다음 선택 조작에서 지운다(``ThreadInviteViewModel`` 과 동일).
+    public private(set) var inviteeCapacityNotice: String?
+
     public private(set) var state: Loadable<CommunityThread> = .idle
 
     /// 온디바이스 자동 분류 상태. 로직은 `+Classification` 확장에 있다.
@@ -76,6 +88,11 @@ public final class CommunityThreadCreateViewModel {
         category.defaultIcon
     }
 
+    /// 초대 행에 띄울 상한. 서버 `@Size(max = 99)` 와 같은 값이다.
+    public var inviteeMaxCount: Int {
+        CommunityThreadCreateRule.inviteMaxCount
+    }
+
     /// 인라인으로 띄울 실패 메시지.
     public var submitErrorMessage: String? {
         guard case .failed(let error) = state else { return nil }
@@ -95,7 +112,8 @@ public final class CommunityThreadCreateViewModel {
                 title: title,
                 description: threadDescription,
                 category: category,
-                icon: icon
+                icon: icon,
+                memberIds: invitees.map(\.memberId)
             )
             state = .loaded(thread)
             return thread
@@ -109,6 +127,26 @@ public final class CommunityThreadCreateViewModel {
 
     private func trimmed(_ text: String) -> String {
         text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 중복·상한을 넘긴 선택만 되쓴다 — 매번 대입하면 `didSet` 이 무한히 재진입한다.
+    ///
+    /// 사유는 되쓰기 **뒤에** 적는다. 되쓰기가 `didSet` 을 한 번 더 태우고 그 안쪽 호출은
+    /// 이미 정리된 값을 보므로, 순서를 뒤집으면 방금 적은 사유를 안쪽이 지운다.
+    private func clampInvitees() {
+        var seen = Set<String>()
+        let unique = invitees.filter { seen.insert($0.memberId).inserted }
+        let clamped = Array(unique.prefix(CommunityThreadCreateRule.inviteMaxCount))
+        let isOverflowing = unique.count > CommunityThreadCreateRule.inviteMaxCount
+
+        if clamped != invitees {
+            invitees = clamped
+        }
+
+        // 중복 제거로 줄어든 건 사용자가 알 필요가 없다 — 상한에 걸려 잘렸을 때만 알린다.
+        inviteeCapacityNotice = isOverflowing
+            ? "한 번에 \(CommunityThreadCreateRule.inviteMaxCount)명까지 선택할 수 있어요."
+            : nil
     }
 
     /// 상한을 넘긴 입력만 되쓴다 — 매번 대입하면 `didSet` 이 무한히 재진입한다.

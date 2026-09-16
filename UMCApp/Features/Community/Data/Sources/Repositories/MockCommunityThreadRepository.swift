@@ -48,11 +48,14 @@ public struct MockCommunityThreadRepository: CommunityThreadRepositoryProtocol {
     }
 
     /// 서버처럼 개설자를 `OWNER` 로 넣은 새 스레드를 돌려준다.
+    ///
+    /// `memberCount` 는 서버와 같이 초대한 인원에 개설자 한 명을 더해 센다.
     public func createThread(
         title: String,
         description: String,
         category: String,
-        icon: String
+        icon: String,
+        memberIds: [String] = []
     ) async throws -> CommunityThread {
         CommunityThread(
             id: "999",
@@ -60,7 +63,7 @@ public struct MockCommunityThreadRepository: CommunityThreadRepositoryProtocol {
             description: description,
             category: CommunityThreadCategory(rawValue: category) ?? .free,
             icon: icon,
-            memberCount: "1",
+            memberCount: "\(memberIds.count + 1)",
             unreadCount: "0",
             maxMembers: "100",
             isPinned: false,
