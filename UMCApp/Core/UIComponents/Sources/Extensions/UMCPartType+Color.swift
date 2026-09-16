@@ -14,15 +14,15 @@ extension UMCPartType {
     /// 우리가 못 읽은 파트(`MyCard.partRaw` 가 있는 경우)의 시드 폴백.
     ///
     /// `partRaw != nil` 이면 `part` 가 관례상 `.admin` 으로 떨어져 Admin 인디고(#6155F5)로
-    /// 칠해지던 버그를 막는다. 채널폭 13 의 저채도 회색이라 유채색 시드 8종(채널폭 최소 78)
-    /// 과 섞이지 않는다 (#1236 확정).
+    /// 칠해지던 버그를 막는다. 채널폭 13 의 저채도 회색이라 유채색 시드 10종(채널폭 최소 78)
+    /// 과 섞이지 않는다 (#1236 확정, #1351 에서 2종 추가).
     ///
-    /// - Note: 시드 8종과 달리 이 값만 다이내믹 토큰이라 모드에 따라 변한다
+    /// - Note: 시드 10종과 달리 이 값만 다이내믹 토큰이라 모드에 따라 변한다
     ///   (light `#B2B8BF` / dark `#7C8792`). 칩 면이 모드 불변이라는 전제의 유일한 예외지만,
     ///   검정 라벨 대비가 라이트 12.22 · 다크 7.82 로 양쪽 다 AA 를 넘어 잉크는 그대로 둔다.
     public static let unresolvedSeedColor: Color = .grey400
 
-    /// ``unresolvedSeedColor`` 의 칩 면 — 시드 8종과 같은 혼합 규칙(``chipSeedColor``)을 탄다.
+    /// ``unresolvedSeedColor`` 의 칩 면 — 시드 10종과 같은 혼합 규칙(``chipSeedColor``)을 탄다.
     public static var unresolvedChipSeedColor: Color {
         unresolvedSeedColor.mix(with: .white, by: chipWhiteMix, in: .device)
     }
@@ -43,6 +43,14 @@ extension UMCPartType {
     ///   나머지 7종이 iOS 시스템 팔레트 계열이고 주황이 비어 있어 충돌하지 않는다.
     ///   #1236 에서 현행 유지로 확정했다. 공식 iOS 변형 색이 오면 이 한 값과
     ///   `UMCPartTypeSeedColorTests` 만 교체한다.
+    ///
+    /// - Note: 신규 두 파트(#1351)도 시안이 없어 같은 절차로 비어 있던 iOS 시스템
+    ///   팔레트 슬롯에서 골랐다 — 웹 프로덕트 엔지니어 `systemBlue`(#007AFF),
+    ///   모바일 프로덕트 엔지니어 `systemMint`(#00C7BE). 11기 활동 기수에 실제로
+    ///   함께 뜨는 네 파트(PLAN 마젠타·DESIGN 핑크·이 둘)가 색상환에서 가장 멀리
+    ///   떨어지는 조합이다. 민트는 레거시 Android 시안(#00C0E8)과 색상각이 13°라
+    ///   구·신 기수가 한 목록에 섞이는 활동 이력에서만 가깝게 보인다 —
+    ///   디자인 확정 색이 오면 이 두 값과 `UMCPartTypeSeedColorTests` 만 교체한다.
     public var seedColor: Color {
         switch self {
         case .admin:
@@ -67,6 +75,10 @@ extension UMCPartType {
             case .ios:
                 return Color(red: 255 / 255, green: 149 / 255, blue: 0 / 255)
             }
+        case .webProductEngineer:
+            return Color(red: 0 / 255, green: 122 / 255, blue: 255 / 255)
+        case .mobileProductEngineer:
+            return Color(red: 0 / 255, green: 199 / 255, blue: 190 / 255)
         }
     }
 
@@ -77,7 +89,7 @@ extension UMCPartType {
     /// 바꾸는 안은 다크에서 다시 깨진다(검정 라벨: Admin 2.95·PM 3.47·Design 3.90·Web 4.08
     /// 미달 / 흰 라벨: Spring 3.42·Android 3.32·iOS 3.38·Node 2.39 미달, #1235 실측).
     ///
-    /// 이 값 위의 검정 라벨은 8종 전부 **5.92~14.92** 로 WCAG AA(4.5:1)를 통과한다 —
+    /// 이 값 위의 검정 라벨은 10종 전부 **5.92~14.92** 로 WCAG AA(4.5:1)를 통과한다 —
     /// `UMCPartTypeSeedColorTests` 가 고정한다 (#1236 확정).
     public var chipSeedColor: Color {
         seedColor.mix(with: .white, by: Self.chipWhiteMix, in: .device)
@@ -103,6 +115,8 @@ extension UMCPartType {
             case .android: return .teal
             case .ios:     return .orange
             }
+        case .webProductEngineer:    return .blue
+        case .mobileProductEngineer: return .mint
         }
     }
 }

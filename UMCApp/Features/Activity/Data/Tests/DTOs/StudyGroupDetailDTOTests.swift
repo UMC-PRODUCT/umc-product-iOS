@@ -236,7 +236,11 @@ struct StudyGroupDetailDTOTests {
             ("\"WEB\"", UMCPartType.front(type: .web)),
             ("\"SPRINGBOOT\"", UMCPartType.server(type: .spring)),
             ("\"PLAN\"", UMCPartType.pm),
-            ("\"DESIGN\"", UMCPartType.design)
+            ("\"DESIGN\"", UMCPartType.design),
+            // 서버 Part 개편으로 11기 개발 파트는 이 두 값만 내려온다 (#1351).
+            // 매핑이 빠지면 아래 `.front(.ios)` 폴백을 타 전원 iOS 스터디로 보인다.
+            ("\"WEB_PRODUCT_ENGINEER\"", UMCPartType.webProductEngineer),
+            ("\"MOBILE_PRODUCT_ENGINEER\"", UMCPartType.mobileProductEngineer)
         ]
     )
     func toDomainMapsKnownPart(partJSON: String, expected: UMCPartType) throws {

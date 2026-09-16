@@ -15,7 +15,7 @@ import UMCFoundation
 struct UMCPartTypeSeedColorTests {
 
     /// 명함첩 카드의 배경 그라데이션·칩 색이 전부 이 한 값에서 파생된다.
-    /// 값이 틀어지면 시안과 어긋난 카드가 8종 전부 조용히 나가므로 hex 로 못 박는다.
+    /// 값이 틀어지면 시안과 어긋난 카드가 10종 전부 조용히 나가므로 hex 로 못 박는다.
     private static let designSeeds: [(part: UMCPartType, hex: String)] = [
         (.admin, "6155F5"),
         (.design, "FF2D55"),
@@ -25,6 +25,8 @@ struct UMCPartTypeSeedColorTests {
         (.front(type: .ios), "FF9500"),
         (.server(type: .spring), "34C759"),
         (.server(type: .node), "FFCC00"),
+        (.webProductEngineer, "007AFF"),
+        (.mobileProductEngineer, "00C7BE"),
     ]
 
     /// 회색과 유채색을 가르는 채널폭 경계. 실측은 폴백 13(라이트)·22(다크) 대 시드 최소
@@ -39,7 +41,7 @@ struct UMCPartTypeSeedColorTests {
         #expect(seed.part.seedColor.srgbHex == seed.hex)
     }
 
-    @Test("여덟 파트의 시드 컬러가 서로 겹치지 않는다")
+    @Test("열 파트의 시드 컬러가 서로 겹치지 않는다")
     func seedColorsAreDistinct() {
         let hexes = Self.designSeeds.map(\.part.seedColor.srgbHex)
 
@@ -69,9 +71,10 @@ struct UMCPartTypeSeedColorTests {
     }
 
     /// 이 값이 흰 라벨(#1235, 8종 전부 미달)을 버리고 검정 라벨로 간 근거다. 시드나
-    /// 혼합비를 건드리면 화면이 아니라 여기서 먼저 깨져야 한다.
+    /// 혼합비를 건드리면 화면이 아니라 여기서 먼저 깨져야 한다. #1351 의 신규 두 파트도
+    /// 같은 기준을 통과해야 색을 확정할 수 있다.
     @Test(
-        "파트 칩 면 위 검정 라벨이 여덟 파트 전부 WCAG AA(4.5:1)를 넘는다",
+        "파트 칩 면 위 검정 라벨이 열 파트 전부 WCAG AA(4.5:1)를 넘는다",
         arguments: designSeeds
     )
     func chipSeedColorPassesBlackLabelContrast(seed: (part: UMCPartType, hex: String)) {
@@ -88,8 +91,8 @@ struct UMCPartTypeSeedColorTests {
         #expect(ratio >= Self.minimumContrastRatio, "폴백 대비 \(ratio)")
     }
 
-    /// `allCases` 는 `.admin` 을 빼고 7종만 담는다(운영진은 파트 선택 목록에 안 오른다).
-    /// 명함은 운영진 카드도 그려야 하므로 그 7종을 덮되 admin 까지 별도로 확인한다.
+    /// `allCases` 는 `.admin` 을 빼고 9종만 담는다(운영진은 파트 선택 목록에 안 오른다).
+    /// 명함은 운영진 카드도 그려야 하므로 그 9종을 덮되 admin 까지 별도로 확인한다.
     @Test("파트 선택 목록(allCases) 전체가 시드 컬러를 갖는다")
     func allSelectablePartsCovered() {
         let covered = Set(Self.designSeeds.map(\.part))

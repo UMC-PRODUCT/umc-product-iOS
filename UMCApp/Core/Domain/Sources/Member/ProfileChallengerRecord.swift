@@ -19,6 +19,8 @@ public struct ProfileChallengerRecord: Equatable, Hashable, Sendable {
     public let chapterId: String?
     public let chapterName: String?
     public let part: String
+    /// 인프라 겸직 여부. 서버가 신규 두 파트에서만 `true` 로 내려준다 (#1351).
+    public let infra: Bool
     public let schoolId: String
     public let schoolName: String
     public let name: String?
@@ -38,6 +40,7 @@ public struct ProfileChallengerRecord: Equatable, Hashable, Sendable {
         chapterId: String?,
         chapterName: String?,
         part: String,
+        infra: Bool = false,
         schoolId: String,
         schoolName: String,
         name: String?,
@@ -54,6 +57,7 @@ public struct ProfileChallengerRecord: Equatable, Hashable, Sendable {
         self.chapterId = chapterId
         self.chapterName = chapterName
         self.part = part
+        self.infra = infra
         self.schoolId = schoolId
         self.schoolName = schoolName
         self.name = name

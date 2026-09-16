@@ -49,7 +49,8 @@ struct MemberProfileResponseDTOTests {
         gisuId: Any = 210,
         chapterId: Any? = 300,
         chapterName: String? = "서울",
-        part: String = "IOS",
+        part: Any? = "IOS",
+        infra: Any? = nil,
         schoolId: Any = 900,
         schoolName: String = "한국대학교",
         name: String? = "김철수",
@@ -65,10 +66,11 @@ struct MemberProfileResponseDTOTests {
             "challengerId": challengerId,
             "gisu": gisu,
             "gisuId": gisuId,
-            "part": part,
             "schoolId": schoolId,
             "schoolName": schoolName,
         ]
+        if let part { dict["part"] = part }
+        if let infra { dict["infra"] = infra }
         dict["memberId"] = memberId ?? NSNull()
         dict["chapterId"] = chapterId ?? NSNull()
         if let chapterName { dict["chapterName"] = chapterName }
@@ -201,6 +203,69 @@ struct MemberProfileResponseDTOTests {
         #expect(externalLinks.instagram == "https://instagram.com/chulsoo")
         #expect(externalLinks.blog == "https://blog.chulsoo.dev")
         #expect(externalLinks.personal == "https://chulsoo.dev")
+    }
+
+    // MARK: - infra (#1351 서버 Part 체계 개편)
+
+    /// 서버는 신규 두 파트에서만 `infra` 를 내려주고 나머지 파트에서는 키를 생략한다.
+    /// 「키 없음 = 겸직 아님」이라 폴백이 `true` 로 뒤집히면 전 기수 기록이 인프라가 된다.
+    @Test("infra 를 Bool·정수·문자열로 받고, 키가 없거나 null 이면 false 로 폴백한다")
+    func decodesInfraFlag() throws {
+        // `Any?` 는 Sendable 이 아니라 `arguments:` 로 넘길 수 없어 표를 안에 둔다.
+        let cases: [(label: String, raw: Any?, expected: Bool)] = [
+            ("키 없음", nil, false),
+            ("null", NSNull(), false),
+            ("true", true, true),
+            ("false", false, false),
+            ("정수 1", 1, true),
+            ("정수 0", 0, false),
+            ("문자열 true", "true", true),
+        ]
+
+        for testCase in cases {
+            let dto = try Self.dto(
+                challengerRecords: [
+                    Self.record(part: "WEB_PRODUCT_ENGINEER", infra: testCase.raw)
+                ]
+            )
+
+            #expect(dto.challengerRecords.first?.infra == testCase.expected, "\(testCase.label)")
+            #expect(
+                dto.toDomain().challengerRecords.first?.infra == testCase.expected,
+                "\(testCase.label) — 도메인"
+            )
+        }
+    }
+
+    /// 비수강 운영진은 `part` 가 `null` 로 내려온다. 디코딩이 깨지지 않고 빈 문자열로
+    /// 남아야 하류(활동 이력·마이페이지·명함)의 운영진 처리가 종전대로 돈다.
+    @Test("part 가 null 이어도 디코딩되고 빈 문자열로 남는다")
+    func decodesNullPartAsEmptyString() throws {
+        let dto = try Self.dto(challengerRecords: [Self.record(part: nil)])
+
+        #expect(dto.challengerRecords.first?.part.isEmpty == true)
+        #expect(dto.toDomain().challengerRecords.first?.part.isEmpty == true)
+    }
+
+    /// 신규 파트 기록이 활동 이력에서 빠지거나(`compactMap`) 운영진으로 눌리면 안 된다.
+    @Test(
+        "신규 파트 챌린저 기록이 활동 이력에 해당 파트로 남는다",
+        arguments: [
+            ("WEB_PRODUCT_ENGINEER", UMCPartType.webProductEngineer),
+            ("MOBILE_PRODUCT_ENGINEER", UMCPartType.mobileProductEngineer)
+        ]
+    )
+    func keepsNewPartInActivityLogs(apiValue: String, expected: UMCPartType) throws {
+        let profile = try Self.dto(
+            roles: [],
+            challengerRecords: [Self.record(gisu: 11, part: apiValue, infra: true)]
+        ).toDomain()
+
+        let logs = profile.activityLogs()
+
+        #expect(logs.count == 1)
+        #expect(logs.first?.part == expected)
+        #expect(logs.first?.generation == 11)
     }
 
     // MARK: - roles/challengerRecords 누락 시 [] 폴백

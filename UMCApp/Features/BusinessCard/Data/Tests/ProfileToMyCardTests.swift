@@ -157,6 +157,29 @@ struct ProfileToMyCardTests {
         #expect(card.linkedIn == nil)
     }
 
+    /// 11기 개발 챌린저는 전원 이 두 파트라, 매핑이 없으면 `partRaw` 경로로 새면서
+    /// 자기 명함이 「운영진」으로 보이고 그 값이 교환 페이로드까지 퍼진다 (#1351).
+    @Test(
+        "신규 두 파트는 못 읽은 파트가 아니라 정식 파트로 실린다",
+        arguments: [
+            ("WEB_PRODUCT_ENGINEER", UMCPartType.webProductEngineer),
+            ("MOBILE_PRODUCT_ENGINEER", UMCPartType.mobileProductEngineer)
+        ]
+    )
+    func mapsNewParts(apiValue: String, expected: UMCPartType) throws {
+        let profile = Profile(
+            memberId: "42", name: "정의찬", nickname: "제옹", generations: [],
+            challengerRecords: [makeRecord(gisu: "11", part: apiValue)]
+        )
+
+        let card = try profile.toMyCard()
+
+        #expect(card.part == expected)
+        #expect(card.partRaw == nil)
+        #expect(card.partDisplayName == expected.name)
+        #expect(try card.toExchangePayload().part == apiValue)
+    }
+
     private func makeRecord(gisu: String, part: String) -> ProfileChallengerRecord {
         ProfileChallengerRecord(
             challengerId: "c\(gisu)", memberId: "42", gisu: gisu, gisuId: gisu,

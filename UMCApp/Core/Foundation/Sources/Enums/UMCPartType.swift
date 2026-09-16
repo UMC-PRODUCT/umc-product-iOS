@@ -9,8 +9,12 @@ import Foundation
 
 /// UMC 동아리의 파트(직무) 유형을 정의하는 열거형입니다.
 ///
-/// UMC는 PM, 디자인, 서버(Spring/Node), 프론트(Web/Android/iOS) 파트로 구성되며,
-/// 이 열거형은 각 파트와 세부 기술 스택을 타입 안전하게 표현합니다.
+/// UMC는 기획·디자인과 개발 파트로 구성되며, 이 열거형은 각 파트와 세부 기술 스택을
+/// 타입 안전하게 표현합니다.
+///
+/// 11기부터 개발 파트가 ``webProductEngineer``·``mobileProductEngineer`` 두 값으로
+/// 개편됐고, 서버(Spring/Node)·프론트(Web/Android/iOS)는 구 기수 기록을 읽기 위한
+/// 레거시로만 남았습니다 (#1351).
 ///
 /// - Note: Associated Value를 사용하여 서버/프론트 파트의 세부 기술 스택을 구분합니다.
 ///
@@ -42,7 +46,21 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
     /// 프론트 파트 (Frontend Developer)
     ///
     /// - Parameter type: 프론트 기술 스택 (Web, Android, iOS)
+    ///
+    /// - Note: 레거시 파트다. 서버가 `WEB`·`ANDROID`·`IOS` 를 신규 발급하지 않고
+    ///   구 기수 보존용으로만 남겼다 (#1351). 삭제하면 지난 기수 기록을 못 읽는다.
     case front(type: FrontType)
+
+    /// 웹 프로덕트 엔지니어 파트 (서버 `WEB_PRODUCT_ENGINEER`)
+    ///
+    /// 11기부터 개발 파트를 대체한 두 파트 중 하나다. 기존 `WEB` 과 별개 값이라
+    /// 같은 화면에 구·신 기수가 섞이면 두 파트가 함께 보인다.
+    case webProductEngineer
+
+    /// 모바일 프로덕트 엔지니어 파트 (서버 `MOBILE_PRODUCT_ENGINEER`)
+    ///
+    /// 11기부터 레거시 `IOS`·`ANDROID` 를 대체한다.
+    case mobileProductEngineer
 
     // MARK: - Property
 
@@ -53,6 +71,10 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
     ///   - Design: "Design"
     ///   - Server: "Spring" 또는 "NodeJS"
     ///   - Front: "Web", "Android", "iOS"
+    ///   - Product Engineer: "웹 프로덕트 엔지니어", "모바일 프로덕트 엔지니어"
+    ///
+    /// - Note: 신규 두 파트만 한글 표시명이다. 서버 `ChallengerPart` 가 확정한
+    ///   `displayName` 을 그대로 쓰며, 영문으로 줄이면 레거시 `Web` 과 겹친다.
     public var name: String {
         switch self {
         case .admin:
@@ -65,12 +87,20 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
             return type.rawValue
         case .front(let type):
             return type.rawValue
+        case .webProductEngineer:
+            return "웹 프로덕트 엔지니어"
+        case .mobileProductEngineer:
+            return "모바일 프로덕트 엔지니어"
         }
     }
 
     /// 파트의 정렬 순서를 반환합니다.
     ///
-    /// 정렬 순서: PM(0) > Design(1) > Web(2) > iOS(3) > Android(4) > Spring(5) > NodeJS(6)
+    /// 정렬 순서: PM(0) > Design(1) > Web(2) > iOS(3) > Android(4) > Spring(5) >
+    /// NodeJS(6) > 웹 프로덕트 엔지니어(7) > 모바일 프로덕트 엔지니어(8)
+    ///
+    /// - Note: 화면 정렬 전용 값이라 서버 `ChallengerPart.sortOrder` 와 일치하지
+    ///   않는다(운영진이 서버 7, 여기선 -1). 신규 파트는 기존 7종 뒤에 이어 붙인다.
     public var sortOrder: Int {
         switch self {
         case .admin:
@@ -95,6 +125,10 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
             case .node:
                 return 6
             }
+        case .webProductEngineer:
+            return 7
+        case .mobileProductEngineer:
+            return 8
         }
     }
 
@@ -109,6 +143,8 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
         case .front(type: .web): return "globe"
         case .front(type: .android): return "inset.filled.applewatch.case"
         case .front(type: .ios): return "apple.logo"
+        case .webProductEngineer: return "laptopcomputer"
+        case .mobileProductEngineer: return "iphone"
         }
     }
 
@@ -117,7 +153,8 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
         .pm, .design,
         .server(type: .spring), .server(type: .node),
         .front(type: .web), .front(type: .android),
-        .front(type: .ios)
+        .front(type: .ios),
+        .webProductEngineer, .mobileProductEngineer
     ]
 
     // MARK: - Nested Types
@@ -162,6 +199,8 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
             case .android:              return "ANDROID"
             case .ios:                  return "IOS"
             }
+        case .webProductEngineer:       return "WEB_PRODUCT_ENGINEER"
+        case .mobileProductEngineer:    return "MOBILE_PRODUCT_ENGINEER"
         }
     }
 
@@ -176,6 +215,8 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
         case "WEB":         self = .front(type: .web)
         case "ANDROID":     self = .front(type: .android)
         case "IOS":         self = .front(type: .ios)
+        case "WEB_PRODUCT_ENGINEER":    self = .webProductEngineer
+        case "MOBILE_PRODUCT_ENGINEER": self = .mobileProductEngineer
         default:            return nil
         }
     }
