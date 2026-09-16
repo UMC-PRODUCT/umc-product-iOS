@@ -68,33 +68,56 @@ struct MessageComposer: View {
 
     // MARK: - View Component
 
+    /// 입력 카드. 글은 위, 버튼은 카드 안 아래 줄 오른쪽. 여러 줄이 되면 글만 위로 늘고
+    /// 버튼 줄은 바닥에 남아서, 캡슐 밖에 버튼이 따로 떨어져 보이던 문제가 없다.
     private var inputRow: some View {
-        HStack(alignment: .bottom, spacing: DefaultSpacing.spacing8) {
+        VStack(spacing: 0) {
             TextField(Constants.placeholder, text: $text, axis: .vertical)
                 .appFont(.subheadline)
                 .lineLimit(Constants.lineLimit)
                 .padding(.horizontal, DefaultSpacing.spacing12)
-                .padding(.vertical, DefaultSpacing.spacing8)
-                .background(Color.grey100, in: .capsule)
+                .padding(.top, DefaultSpacing.spacing12)
 
-            Button {
-                // 후속 PR: 음성 입력
-            } label: {
-                Image(systemName: "mic")
-                    .foregroundStyle(Color.grey500)
-            }
-            .disabled(true)
-            .accessibilityLabel("음성 입력")
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
 
-            Button(action: onSend) {
-                Image(systemName: "arrow.up")
-                    .foregroundStyle(.white)
-                    .frame(width: sendButtonSize, height: sendButtonSize)
-                    .background(canSend ? Color.indigo500 : Color.grey300, in: .circle)
+                Button {
+                    // 후속 PR: 음성 입력
+                } label: {
+                    Image(systemName: "mic")
+                        .foregroundStyle(Color.grey500)
+                        .frame(
+                            minWidth: DefaultConstant.minimumTouchTarget,
+                            minHeight: DefaultConstant.minimumTouchTarget
+                        )
+                        .contentShape(.rect)
+                }
+                .disabled(true)
+                .accessibilityLabel("음성 입력")
+
+                Button(action: onSend) {
+                    Image(systemName: "arrow.up")
+                        .foregroundStyle(.white)
+                        .frame(width: sendButtonSize, height: sendButtonSize)
+                        .background(canSend ? Color.indigo500 : Color.grey300, in: .circle)
+                        // 원판이 44pt 보다 작아도 누르는 영역은 44pt 를 채운다.
+                        .frame(
+                            minWidth: DefaultConstant.minimumTouchTarget,
+                            minHeight: DefaultConstant.minimumTouchTarget
+                        )
+                        .contentShape(.rect)
+                }
+                .disabled(!canSend)
+                .accessibilityLabel("전송")
             }
-            .disabled(!canSend)
-            .accessibilityLabel("전송")
+            // 44pt 영역이 원판 둘레에 여백을 만들어 주므로 카드 안쪽 여백은 조금만 더한다.
+            .padding(.horizontal, DefaultSpacing.spacing4)
+            .padding(.bottom, DefaultSpacing.spacing4)
         }
+        .background(
+            Color.grey100,
+            in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
+        )
         .padding(.horizontal, DefaultSpacing.spacing16)
         .padding(.vertical, DefaultSpacing.spacing8)
     }
