@@ -34,9 +34,13 @@ fileprivate enum Constants {
     카테고리와 이모지를 직접 골라 주세요.
     """
     static let manualHint = "마음에 들지 않으면 카테고리와 이모지를 직접 바꿀 수 있어요."
+    static let reclassifyNudge = "특징이 바뀌었어요. 다시 분류하면 카테고리와 아이콘을 새로 정해 드려요."
+    static let categoryLabel = "카테고리"
+    static let categoryHint = "탭하면 카테고리를 고를 수 있어요."
 
     static let engineImage = "apple.intelligence"
     static let failureImage = "exclamationmark.circle"
+    static let categoryImage = "chevron.up.chevron.down"
 
     static let engineIconSize: CGFloat = 13
     static let hintIconSize: CGFloat = 20
@@ -50,6 +54,10 @@ fileprivate enum Constants {
     /// 줄마다 오른쪽을 다르게 비워 실제 문단처럼 보이게 한다.
     static let shimmerBarInsets: [CGFloat] = [0, DefaultSpacing.spacing48]
     static let aiBorderWidth: CGFloat = 1
+    static let categoryIconSize: CGFloat = 22
+    static let minimumTouchHeight: CGFloat = 44
+    static let valueSpringDuration: TimeInterval = 0.35
+    static let valueFadeDuration: TimeInterval = 0.2
 }
 
 /// 생성·편집 폼 안의 온디바이스 분류 카드.
@@ -62,16 +70,35 @@ struct ThreadClassificationCard: View {
 
     // MARK: - Property
 
+    /// 편집 화면이 넘기는 현재 값. 있으면 카드가 값 행을 품고, 결과·버튼을 보조 톤으로 줄인다.
+    struct Editing {
+        let icon: String
+        let category: CommunityThreadCategory
+        let isReclassifySuggested: Bool
+        let onSelectCategory: () -> Void
+    }
+
     let viewModel: any ThreadClassificationPresenting
 
+    var editing: Editing? = nil
+
     /// 이모지 칸으로 포커스를 옮긴다. 포커스는 폼이 들고 있어 화면이 넘겨 준다.
-    let onChangeIcon: () -> Void
+    var onChangeIcon: () -> Void = {}
+
+    @ScaledMetric(relativeTo: .body) private var categoryIconSize = Constants.categoryIconSize
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             header
+
+            if let editing {
+                categoryRow(editing)
+            }
+
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,11 +153,21 @@ struct ThreadClassificationCard: View {
         } else {
             switch viewModel.classification {
             case .idle:
-                idleContent
+                if editing != nil {
+                    editingGuidance(
+                        viewModel.canClassify ? Constants.idleHint : Constants.idleDisabledHint
+                    )
+                } else {
+                    idleContent
+                }
             case .loading:
                 loadingContent
             case .loaded(let classification):
-                resultContent(classification)
+                if editing != nil {
+                    editingGuidance(classification.reason)
+                } else {
+                    resultContent(classification)
+                }
             case .failed:
                 failureContent
             }
@@ -256,15 +293,74 @@ struct ThreadClassificationCard: View {
     }
 
     /// "다시 분류하기" 는 미지원·특징 미입력·처리 중에 잠긴다. "이모지 변경하기" 는 항상 열려 있다.
+    ///
+    /// 편집 화면에서는 저장이 주 액션이라 재분류는 보조 버튼이고, 누를 수 있을 때만 둔다.
+    /// 이모지는 화면 위 아이콘 배지가 맡는다.
+    @ViewBuilder
     private var actions: some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
-            MainButton(Constants.reclassifyTitle) { classify() }
-                .buttonStyle(.glassProminent)
-                .disabled(!viewModel.canClassify)
+        if editing != nil {
+            if viewModel.canClassify {
+                MainButton(Constants.reclassifyTitle) { classify() }
+                    .buttonStyle(.glass)
+            }
+        } else {
+            HStack(spacing: DefaultSpacing.spacing12) {
+                MainButton(Constants.reclassifyTitle) { classify() }
+                    .buttonStyle(.glassProminent)
+                    .disabled(!viewModel.canClassify)
 
-            MainButton(Constants.changeIconTitle, action: onChangeIcon)
-                .buttonStyle(.glass)
+                MainButton(Constants.changeIconTitle, action: onChangeIcon)
+                    .buttonStyle(.glass)
+            }
         }
+    }
+
+    // MARK: - Editing Component
+
+    /// 지금 저장될 아이콘·카테고리. 분류 결과도 이 행으로 바뀌므로 결과 영역에서 반복하지 않는다.
+    private func categoryRow(_ editing: Editing) -> some View {
+        Button(action: editing.onSelectCategory) {
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Text(editing.icon)
+                    .font(.system(size: categoryIconSize))
+
+                Text(editing.category.displayName)
+                    .appFont(.body, weight: .semibold, color: .grey900)
+
+                Spacer(minLength: 0)
+
+                Image(systemName: Constants.categoryImage)
+                    .foregroundStyle(Color.grey600)
+            }
+            .frame(minHeight: Constants.minimumTouchHeight)
+            .contentShape(.rect)
+            .contentTransition(reduceMotion ? .opacity : .interpolate)
+            .animation(valueAnimation, value: editing.icon)
+            .animation(valueAnimation, value: editing.category)
+        }
+        .buttonStyle(.plain)
+        // 분류가 끝나면 결과가 카테고리를 덮어쓰므로, 그 사이에 고른 값은 사라진다.
+        .disabled(viewModel.classification.isLoading)
+        .accessibilityLabel(Constants.categoryLabel)
+        .accessibilityValue(editing.category.displayName)
+        .accessibilityHint(Constants.categoryHint)
+    }
+
+    /// 편집 화면의 안내 자리. 특징을 고쳤으면 원래 문구 대신 재분류 넛지를 띄운다.
+    private func editingGuidance(_ text: String) -> some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+            Text(editing?.isReclassifySuggested == true ? Constants.reclassifyNudge : text)
+                .appFont(.subheadline, color: .grey700)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            actions
+        }
+    }
+
+    private var valueAnimation: Animation {
+        reduceMotion
+            ? .easeInOut(duration: Constants.valueFadeDuration)
+            : .spring(duration: Constants.valueSpringDuration, bounce: 0)
     }
 
     // MARK: - Function
@@ -289,6 +385,19 @@ struct ThreadClassificationCard: View {
     ThreadClassificationCard(
         viewModel: previewViewModel(description: "매주 화요일 8시에 모여서 iOS 공부해요"),
         onChangeIcon: {}
+    )
+    .padding(DefaultSpacing.spacing16)
+}
+
+#Preview("편집") {
+    ThreadClassificationCard(
+        viewModel: previewViewModel(description: "매주 화요일 8시에 모여서 iOS 공부해요"),
+        editing: .init(
+            icon: "📚",
+            category: .study,
+            isReclassifySuggested: true,
+            onSelectCategory: {}
+        )
     )
     .padding(DefaultSpacing.spacing16)
 }
