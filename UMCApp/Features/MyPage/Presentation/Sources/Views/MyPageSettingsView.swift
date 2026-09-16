@@ -27,6 +27,9 @@ struct MyPageSettingsView: View {
 
     @State private var viewModel: MyPageViewModel
 
+    /// 애플 캘린더 연동 토글 상태(#1311). 설정 섹션이 읽고, 권한 안내 Alert은 이 화면이 띄운다.
+    @State private var calendarSyncViewModel: CalendarSyncViewModel
+
     /// 연동 요청 중인 소셜. 외부 로그인 시트가 떠 있는 동안 중복 탭을 막는 화면 상태다.
     @State private var connectingSocial: SocialType?
 
@@ -41,6 +44,7 @@ struct MyPageSettingsView: View {
     init(container: DIContainer) {
         self.container = container
         _viewModel = State(initialValue: MyPageViewModel(container: container))
+        _calendarSyncViewModel = State(initialValue: CalendarSyncViewModel(container: container))
     }
 
     // MARK: - Body
@@ -54,7 +58,7 @@ struct MyPageSettingsView: View {
                 )
             }
 
-            SettingSection()
+            SettingSection(calendarSync: calendarSyncViewModel)
             LawSection()
             InfoSection()
 
@@ -77,6 +81,7 @@ struct MyPageSettingsView: View {
         .navigation(naviTitle: NavigationTitle.MyPage.settings, displayMode: .inline)
         .umcDefaultBackground()
         .alertPrompt(item: $viewModel.alertPrompt)
+        .alertPrompt(item: $calendarSyncViewModel.alertPrompt)
         .task {
             await viewModel.fetchProfile()
         }

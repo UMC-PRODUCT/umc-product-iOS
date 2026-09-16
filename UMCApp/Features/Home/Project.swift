@@ -21,6 +21,9 @@ let project = featureProject(
     ],
     dataExtraDependencies: [
         .project(target: "CoreDomain", path: .relativeToRoot("Core/Domain")),
+        // 홈 일정을 애플 캘린더의 "UMC" 전용 캘린더로 내보낸다(#1311).
+        // `import EventKit` 은 어댑터 한 파일(EventKitEventStore)에만 있다.
+        .sdk(name: "EventKit", type: .framework),
     ],
     // staticFramework의 Compile Sources 산출물(.mlmodelc)은 소비 타겟까지 전파되지 않으므로,
     // 런타임 로드가 가능하도록 리소스 번들로도 명시한다 (ScheduleClassifierRepository 참고).

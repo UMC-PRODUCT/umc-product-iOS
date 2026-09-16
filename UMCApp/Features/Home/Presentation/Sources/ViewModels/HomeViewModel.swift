@@ -52,6 +52,7 @@ public final class HomeViewModel {
     private let fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol
     private let fetchMySchedulesUseCase: FetchSchedulesUseCaseProtocol
     private let classifyScheduleUseCase: ClassifyScheduleUseCaseProtocol
+    private let syncSchedulesToCalendarUseCase: SyncSchedulesToCalendarUseCaseProtocol
     private let challengerGenRepository: ChallengerGenRepositoryProtocol
     private let fetchMemberProfileUseCase: FetchMemberProfileUseCaseProtocol
     private let syncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol
@@ -63,6 +64,9 @@ public final class HomeViewModel {
         fetchRecentNoticesUseCase = container.resolve(FetchRecentNoticesUseCaseProtocol.self)
         fetchMySchedulesUseCase = container.resolve(FetchSchedulesUseCaseProtocol.self)
         classifyScheduleUseCase = container.resolve(ClassifyScheduleUseCaseProtocol.self)
+        syncSchedulesToCalendarUseCase = container.resolve(
+            SyncSchedulesToCalendarUseCaseProtocol.self
+        )
         challengerGenRepository = container.resolve(ChallengerGenRepositoryProtocol.self)
         fetchMemberProfileUseCase = container.resolve(FetchMemberProfileUseCaseProtocol.self)
         syncProfileStorageUseCase = container.resolve(SyncProfileStorageUseCaseProtocol.self)
@@ -148,15 +152,21 @@ public final class HomeViewModel {
             return
         }
 
+        let from = startOfMonth.kstStartOfDay
+        let to = endOfMonth.kstEndOfDay
+
         do {
             let schedules = try await fetchMySchedulesUseCase.execute(
-                from: startOfMonth.kstStartOfDay,
-                to: endOfMonth.kstEndOfDay,
+                from: from,
+                to: to,
                 isAttendanceRequired: false
             )
             guard generation == scheduleRequestGeneration else { return }
             scheduleByDates = schedules
-            await classifySchedules(schedules.values.flatMap { $0 }, generation: generation)
+
+            let flattened = schedules.values.flatMap { $0 }
+            await classifySchedules(flattened, generation: generation)
+            await syncToAppleCalendar(from: from, to: to, schedules: flattened)
         } catch {
             guard generation == scheduleRequestGeneration else { return }
             clearSchedules()
@@ -246,6 +256,27 @@ public final class HomeViewModel {
 
         guard generation == scheduleRequestGeneration else { return }
         scheduleCategories = categories
+    }
+
+    /// 조회한 달의 일정을 애플 캘린더로 내보낸다.
+    ///
+    /// 연동 OFF 이면 UseCase가 그대로 빠져나오므로 여기서 별도 가드를 두지 않는다.
+    /// 동기화는 부수효과라 실패해도 ``scheduleByDates`` 나 화면 흐름을 건드리지 않고
+    /// 로그만 남긴다 (캘린더 조회 자체의 degrade 정책과 동일).
+    private func syncToAppleCalendar(
+        from: Date,
+        to: Date,
+        schedules: [ScheduleDetailData]
+    ) async {
+        do {
+            try await syncSchedulesToCalendarUseCase.execute(
+                from: from,
+                to: to,
+                schedules: schedules
+            )
+        } catch {
+            logger.error("애플 캘린더 동기화 실패: \(error.localizedDescription)")
+        }
     }
 
     /// 일정 조회가 불가능하거나 실패했을 때의 degrade 처리. 캘린더는 흐름을 막지 않아야 하므로
