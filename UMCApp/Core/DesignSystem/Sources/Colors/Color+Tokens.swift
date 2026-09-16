@@ -63,6 +63,7 @@ public extension Color {
     static let yellow100 = Color("yellow100", bundle: .module)
     static let yellow300 = Color("yellow300", bundle: .module)
     static let yellow500 = Color("yellow500", bundle: .module)
+    static let yellow600 = Color("yellow600", bundle: .module)
     static let yellow700 = Color("yellow700", bundle: .module)
     static let yellow900 = Color("yellow900", bundle: .module)
 

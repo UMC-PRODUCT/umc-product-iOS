@@ -78,11 +78,16 @@ struct ReceivedCardCell: View {
             : UMCPartType.unresolvedSeedColor
     }
 
-    /// 칩 면. 혼합비는 ``UMCPartType/chipSeedColor`` 안에만 두고 여기서는 갈래만 고른다.
-    private var chipFill: Color {
-        card.profile.partRaw == nil
-            ? card.profile.part.chipSeedColor
-            : UMCPartType.unresolvedChipSeedColor
+    /// 칩 면·잉크. 혼합비·토큰은 ``UMCPartType`` 쪽에만 두고 여기서는 갈래만 고른다.
+    ///
+    /// 디자인이 토큰 쌍을 확정한 파트(``UMCPartType/chipTokenColors``, #1359)는 그 쌍을,
+    /// 나머지는 시드 면 + 검정 잉크를 쓴다.
+    private var chipColors: (background: Color, foreground: Color) {
+        guard card.profile.partRaw == nil else {
+            return (UMCPartType.unresolvedChipSeedColor, Color.black)
+        }
+        return card.profile.part.chipTokenColors
+            ?? (card.profile.part.chipSeedColor, Color.black)
     }
 
     // MARK: - Body
@@ -165,14 +170,17 @@ struct ReceivedCardCell: View {
     ///   잉크도 모드 불변인 `Color.black` 이어야 한다. 못 읽은 파트 폴백만 다이내믹
     ///   토큰이라 모드에 따라 변하지만, 검정 라벨 대비가 라이트 12.22 · 다크 7.82 로
     ///   양쪽 다 AA 를 넘는다 (``UMCPartType/unresolvedSeedColor``).
+    ///
+    /// - Note: 신규 두 파트는 면·잉크가 함께 뒤집히는 토큰 쌍이라 위 모드 불변 전제를 타지
+    ///   않는다. 라이트 대비는 AA 미달로 디자인팀 재조율 대기다 (#1359).
     private func chip(_ text: String) -> some View {
         Text(text)
-            .appFont(.caption2, color: Color.black)
+            .appFont(.caption2, color: chipColors.foreground)
             .lineLimit(1)
             .padding(.horizontal, Metrics.chipHorizontalPadding)
             .padding(.vertical, Metrics.chipVerticalPadding)
             .frame(minHeight: Metrics.chipMinHeight)
-            .background(chipFill, in: Capsule())
+            .background(chipColors.background, in: Capsule())
     }
 
     /// 시드 컬러 2겹 — 좌상단은 거의 흰색, 우하단으로 갈수록 파트 색이 옅게 깔린다.

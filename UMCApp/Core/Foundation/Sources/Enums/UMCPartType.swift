@@ -94,6 +94,19 @@ public enum UMCPartType: Codable, Equatable, Hashable, Sendable {
         }
     }
 
+    /// 인프라 겸직 배지의 표시명 — 서버 `ChallengerTrack.INFRA_PLUS` 의 `displayName`.
+    ///
+    /// 신규 두 파트의 ``name`` 과 같은 관례로 서버 표시명을 그대로 쓴다 (#1359).
+    public static let infraName = "인프라 플러스"
+
+    /// 인프라 겸직을 얹을 수 있는 파트인지 — 서버 `ChallengerPart.canHaveInfra()` 와 같다.
+    ///
+    /// 서버에 `INFRA` 파트는 없다. 인프라는 신규 두 파트 위에만 붙는 플래그라,
+    /// 다른 파트에 `infra == true` 가 와도 배지를 그리지 않는다 (#1359).
+    public var canHaveInfra: Bool {
+        self == .webProductEngineer || self == .mobileProductEngineer
+    }
+
     /// 파트의 정렬 순서를 반환합니다.
     ///
     /// 정렬 순서: PM(0) > Design(1) > Web(2) > iOS(3) > Android(4) > Spring(5) >
