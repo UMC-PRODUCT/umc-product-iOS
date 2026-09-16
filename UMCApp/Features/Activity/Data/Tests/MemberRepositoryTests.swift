@@ -163,12 +163,14 @@ private enum Fixture {
         memberId: String = "100",
         challengerId: String = "C100",
         gisu: Int,
+        part: String = "IOS",
+        infra: Bool = false,
         points: [String]
     ) -> String {
         """
         {
           "challengerId": "\(challengerId)", "memberId": "\(memberId)", "gisu": \(gisu),
-          "gisuId": "70", "part": "IOS",
+          "gisuId": "70", "part": "\(part)", "infra": \(infra),
           "challengerPoints": [\(points.joined(separator: ","))], "points": []
         }
         """
@@ -327,6 +329,47 @@ struct MemberRepositoryListTests {
         let result = try await sut.fetchMembersPage(page: 0)
 
         #expect(result.members.first?.part == .pm)
+    }
+
+    /// 수강 없는 운영진은 서버가 `part = null` 로 준다. `.pm` 폴백을 타면 운영진이 기획 파트
+    /// 칩을 달고 나오므로 파트 없는 운영진 관례인 `.admin` 으로 둔다 — 행이 칩을 숨긴다 (#1359).
+    @Test("fetchMembersPage — part 가 null 이면 .pm 이 아니라 .admin 이다")
+    func fetchMembersPageMapsNullPartToAdmin() async throws {
+        let item = Fixture.offsetItem(memberId: "100")
+            .replacingOccurrences(of: "\"part\": \"IOS\"", with: "\"part\": null")
+        let page = Fixture.offsetPage(items: [item])
+        let profile = Fixture.memberProfile(records: [Fixture.record(gisu: 11, points: [])])
+        let (sut, _) = makeRepository([
+            .success(Fixture.success(page)),
+            .success(Fixture.success(profile))
+        ])
+
+        let result = try await sut.fetchMembersPage(page: 0)
+
+        #expect(result.members.first?.part == .admin)
+    }
+
+    /// 검색 응답에는 `infra` 가 없다. 행의 인프라 배지는 프로필 보강에서 받은 레코드 값만 쓴다.
+    @Test("fetchMembersPage — 프로필 레코드의 infra 를 멤버 항목에 싣는다", arguments: [true, false])
+    func fetchMembersPageCarriesInfraFromProfile(infra: Bool) async throws {
+        let page = Fixture.offsetPage(
+            items: [Fixture.offsetItem(memberId: "100", part: "WEB_PRODUCT_ENGINEER")]
+        )
+        let record = Fixture.record(
+            gisu: 11,
+            part: "WEB_PRODUCT_ENGINEER",
+            infra: infra,
+            points: []
+        )
+        let profile = Fixture.memberProfile(records: [record])
+        let (sut, _) = makeRepository([
+            .success(Fixture.success(page)),
+            .success(Fixture.success(profile))
+        ])
+
+        let result = try await sut.fetchMembersPage(page: 0)
+
+        #expect(result.members.first?.infra == infra)
     }
 
     @Test("fetchMembers — schoolId 가 없으면 네트워크 호출 없이 도메인 에러를 던진다")

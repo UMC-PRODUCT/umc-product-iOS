@@ -298,7 +298,10 @@ private extension MemberRepository {
     ) -> [MemberDescriptor] {
         items.compactMap { item in
             guard !item.memberId.isEmpty else { return nil }
-            let part = UMCPartType(apiValue: item.part) ?? .pm
+            // 수강 없는 운영진은 서버가 `part = null` 로 준다(`ADMIN` 아님). `.pm` 폴백을 타면
+            // 운영진이 기획 파트 칩을 달고 나오므로, 파트 없는 운영진 관례인 `.admin` 으로 둬
+            // 행에서 칩을 그리지 않는다 (#1359). 모르는 제3의 값은 종전대로 `.pm` 이다.
+            let part = item.part.isEmpty ? .admin : UMCPartType(apiValue: item.part) ?? .pm
             let managementTeam = ManagementTeam.highestPriority(in: item.roleTypes)
                 ?? .challenger
             let generation = resolvedGeneration(
@@ -437,6 +440,7 @@ private extension MemberRepository {
             school: profile?.schoolName.nonEmpty ?? descriptor.schoolName,
             position: descriptor.position,
             part: descriptor.part,
+            infra: record?.infra ?? false,
             penalty: totalPenalty,
             rewardPoints: totalReward,
             badge: false,

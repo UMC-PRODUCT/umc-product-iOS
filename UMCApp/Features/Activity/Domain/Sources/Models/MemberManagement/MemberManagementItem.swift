@@ -69,6 +69,10 @@ public struct MemberManagementItem: Identifiable, Equatable {
     /// 파트 정보 (iOS, Web 등)
     public let part: UMCPartType
 
+    /// 인프라 겸직 여부. 멤버 프로필(`challengerRecords[].infra`)에서만 온다 — 챌린저 검색
+    /// 응답에는 이 필드가 없다. 배지는 ``UMCPartType/canHaveInfra`` 인 파트에서만 그린다 (#1359).
+    public let infra: Bool
+
     /// 현재 누적 벌점
     public let penalty: Double
 
@@ -106,6 +110,7 @@ public struct MemberManagementItem: Identifiable, Equatable {
         school: String,
         position: String,
         part: UMCPartType,
+        infra: Bool = false,
         penalty: Double,
         rewardPoints: Double = 0,
         badge: Bool,
@@ -125,6 +130,7 @@ public struct MemberManagementItem: Identifiable, Equatable {
         self.school = school
         self.position = position
         self.part = part
+        self.infra = infra
         self.penalty = penalty
         self.rewardPoints = rewardPoints
         self.badge = badge

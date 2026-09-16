@@ -33,7 +33,8 @@ struct CoreMemberManagementRow: View {
             CoreMemberTextPresenter(
                 name: memberManagementItem.name,
                 nickname: memberManagementItem.nickname,
-                part: memberManagementItem.part
+                part: memberManagementItem.part,
+                infra: memberManagementItem.infra
             )
 
             Spacer()
@@ -48,6 +49,9 @@ struct CoreMemberManagementRow: View {
 // MARK: - CoreMemberTextPresenter
 
 /// 멤버의 닉네임·이름과 파트 배지를 표시합니다.
+///
+/// 파트 없는 운영진(`.admin`, 서버 `part = null`)은 파트 칩을 그리지 않는다. 인프라 겸직은
+/// 파트 칩 옆 두 번째 배지로, ``UMCPartType/canHaveInfra`` 인 파트에서만 붙는다 (#1359).
 struct CoreMemberTextPresenter: View {
 
     /// 멤버 이름
@@ -59,11 +63,30 @@ struct CoreMemberTextPresenter: View {
     /// 소속 파트
     let part: UMCPartType
 
+    /// 인프라 겸직 여부
+    var infra: Bool = false
+
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             Text("\(nickname)/\(name)")
                 .appFont(.callout, weight: .semibold, color: .black)
 
+            if part != .admin {
+                partChip
+            }
+
+            if infra && part.canHaveInfra {
+                tokenChip(UMCPartType.infraName, colors: UMCPartType.infraChipColors)
+            }
+        }
+    }
+
+    /// 디자인이 토큰 쌍을 확정한 파트는 그 쌍을, 나머지는 파트 시스템 색 톤을 쓴다.
+    @ViewBuilder
+    private var partChip: some View {
+        if let colors = part.chipTokenColors {
+            tokenChip(part.name, colors: colors)
+        } else {
             Text(part.name)
                 .appFont(.footnote, color: part.color)
                 .padding(.horizontal, 8)
@@ -77,6 +100,18 @@ struct CoreMemberTextPresenter: View {
                         .stroke(part.color.opacity(0.4), lineWidth: 1)
                 }
         }
+    }
+
+    /// 면·잉크 토큰 쌍 칩. 라이트 대비가 AA 미달이라 디자인팀 재조율 대기다 (#1359).
+    private func tokenChip(
+        _ title: String,
+        colors: (background: Color, foreground: Color)
+    ) -> some View {
+        Text(title)
+            .appFont(.footnote, color: colors.foreground)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(colors.background, in: Capsule())
     }
 }
 
@@ -134,6 +169,24 @@ struct ManagementTeamBadgePresenter: View {
                 position: "Challenger",
                 part: .front(type: .ios),
                 penalty: 1,
+                badge: false,
+                managementTeam: .challenger,
+                attendanceRecords: [],
+                penaltyHistory: []
+            )
+        )
+
+        CoreMemberManagementRow(
+            memberManagementItem: MemberManagementItem(
+                profile: nil,
+                name: "김인프",
+                nickname: "라",
+                generation: "11기",
+                school: "가천대학교",
+                position: "Challenger",
+                part: .webProductEngineer,
+                infra: true,
+                penalty: 0,
                 badge: false,
                 managementTeam: .challenger,
                 attendanceRecords: [],

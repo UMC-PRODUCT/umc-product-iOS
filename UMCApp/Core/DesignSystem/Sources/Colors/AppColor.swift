@@ -28,7 +28,7 @@ public enum AppColor {
 
     case red100, red300, red500, red700, red900
     case green100, green300, green500, green700, green900
-    case yellow100, yellow300, yellow500, yellow700, yellow900
+    case yellow100, yellow300, yellow500, yellow600, yellow700, yellow900
 
     // MARK: - ETC
 
@@ -83,6 +83,7 @@ public enum AppColor {
         case .yellow100: return .yellow100
         case .yellow300: return .yellow300
         case .yellow500: return .yellow500
+        case .yellow600: return .yellow600
         case .yellow700: return .yellow700
         case .yellow900: return .yellow900
 
