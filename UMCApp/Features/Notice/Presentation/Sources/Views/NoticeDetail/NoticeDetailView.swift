@@ -65,7 +65,7 @@ public struct NoticeDetailView: View {
         static let collapseAnimation: Animation = .spring(response: 0.36, dampingFraction: 0.88)
         static let failedTitleText: String = "공지사항을 불러오지 못했습니다."
         static let failedIconName: String = "exclamationmark.triangle"
-        static let aiSummaryIcon: String = "sparkles"
+        static let aiSummaryIcon: String = "apple.intelligence"
     }
 
     // MARK: - Body
@@ -288,7 +288,7 @@ public struct NoticeDetailView: View {
                     viewModel.showReadingSummarySheet = true
                 } label: {
                     Image(systemName: Constants.aiSummaryIcon)
-                        .foregroundStyle(Color.indigo500)
+                        .foregroundStyle(.appleIntelligence)
                 }
             }
         }

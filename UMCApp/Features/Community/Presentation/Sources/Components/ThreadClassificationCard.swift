@@ -35,7 +35,6 @@ fileprivate enum Constants {
     """
     static let manualHint = "마음에 들지 않으면 카테고리와 이모지를 직접 바꿀 수 있어요."
 
-    static let sparklesImage = "sparkles"
     static let engineImage = "apple.intelligence"
     static let failureImage = "exclamationmark.circle"
 
@@ -51,26 +50,6 @@ fileprivate enum Constants {
     /// 줄마다 오른쪽을 다르게 비워 실제 문단처럼 보이게 한다.
     static let shimmerBarInsets: [CGFloat] = [0, DefaultSpacing.spacing48]
     static let aiBorderWidth: CGFloat = 1
-
-    /// Apple Intelligence 표기 전용 그라디언트. 앱 팔레트가 아니라 Apple 이 정한 브랜드 색이라
-    /// 색 토큰으로 올리지 않고 이 파일에 가둔다.
-    static let engineGradient = LinearGradient(
-        colors: [
-            Color(red: 1.0, green: 0.553, blue: 0.157),
-            Color(red: 1.0, green: 0.176, blue: 0.333),
-            Color(red: 0.796, green: 0.188, blue: 0.878),
-            Color(red: 0.0, green: 0.753, blue: 0.910)
-        ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
-    /// AI 처리 중임을 알리는 그라디언트. 대화 요약 시트와 같은 값으로 맞춘다.
-    static let aiGradient = LinearGradient(
-        colors: [.indigo300, .indigo500, .indigo700],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
 }
 
 /// 생성·편집 폼 안의 온디바이스 분류 카드.
@@ -108,7 +87,7 @@ struct ThreadClassificationCard: View {
                     corners: .concentric(minimum: DefaultConstant.concentricRadius),
                     isUniform: true
                 )
-                .stroke(Constants.aiGradient, lineWidth: Constants.aiBorderWidth)
+                .stroke(.appleIntelligence, lineWidth: Constants.aiBorderWidth)
             }
         }
     }
@@ -134,7 +113,7 @@ struct ThreadClassificationCard: View {
                 Text(Constants.engineLabel)
                     .appFont(.caption1)
             }
-            .foregroundStyle(Constants.engineGradient)
+            .foregroundStyle(.appleIntelligence)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Constants.headerAccessibilityLabel)
@@ -176,8 +155,9 @@ struct ThreadClassificationCard: View {
 
     private func hintRow(_ text: String) -> some View {
         HStack(alignment: .top, spacing: DefaultSpacing.spacing8) {
-            Image(systemName: Constants.sparklesImage)
+            Image(systemName: Constants.engineImage)
                 .font(.system(size: Constants.hintIconSize))
+                .foregroundStyle(.appleIntelligence)
 
             Text(text)
                 .appFont(.subheadline)

@@ -33,6 +33,8 @@ struct NoticeEditorAttachmentToolbar: View {
         static let itemSpacing: CGFloat = 12
         static let aiIconSize: CGFloat = 20
         static let aiIconFrame: CGSize = .init(width: 30, height: 30)
+        /// 그라디언트는 `Color` 가 아니라 비활성 색으로 갈아끼울 수 없어 불투명도로 낮춘다.
+        static let disabledOpacity: CGFloat = 0.4
     }
 
     // MARK: - Body
@@ -60,20 +62,21 @@ struct NoticeEditorAttachmentToolbar: View {
             Button {
                 onTapAI()
             } label: {
-                Label("본문 다듬기", systemImage: "sparkles")
+                Label("본문 다듬기", systemImage: "apple.intelligence")
             }
             .disabled(isAIButtonDisabled)
 
             Button {
                 onTapAISummary()
             } label: {
-                Label("붙여넣고 요약", systemImage: "wand.and.stars")
+                Label("붙여넣고 요약", systemImage: "apple.intelligence")
             }
             .disabled(isAISummaryButtonDisabled)
         } label: {
-            Image(systemName: "sparkles")
+            Image(systemName: "apple.intelligence")
                 .font(.system(size: Constants.aiIconSize))
-                .foregroundStyle(isBothAIDisabled ? Color.black.opacity(0.4) : Color.black)
+                .foregroundStyle(.appleIntelligence)
+                .opacity(isBothAIDisabled ? Constants.disabledOpacity : 1)
                 .frame(
                     width: Constants.aiIconFrame.width,
                     height: Constants.aiIconFrame.height

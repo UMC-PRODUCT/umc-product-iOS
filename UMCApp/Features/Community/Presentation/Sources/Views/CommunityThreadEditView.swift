@@ -20,6 +20,7 @@ fileprivate enum Constants {
     static let deleteTitle = "스레드 삭제"
     static let deleteFooter = "삭제하면 대화 내용과 참여자가 모두 사라져요. 되돌릴 수 없어요."
     static let reclassifyNudge = "특징이 바뀌었어요. 다시 분류하면 카테고리와 아이콘을 새로 정해 드려요."
+    static let engineImage = "apple.intelligence"
 
     /// 이모지 한 칸이 아이콘처럼 보이도록 본문보다 크게 잡는다.
     static let iconFontSize: CGFloat = 34
@@ -150,15 +151,20 @@ struct CommunityThreadEditView: View {
     /// 특징만 고치면 카테고리는 그대로 남는다(#3). 그게 맞는 동작이지만 사용자는 모르므로,
     /// 다시 분류할 수 있다는 것만 알리고 실행은 아래 카드 버튼에 맡긴다 (#11).
     private var reclassifyNudge: some View {
-        Label(Constants.reclassifyNudge, systemImage: "sparkles")
-            .appFont(.footnote, color: .indigo700)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(DefaultSpacing.spacing12)
-            .background(
-                Color.indigo100,
-                in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
-            )
-            .accessibilityElement(children: .combine)
+        Label {
+            Text(Constants.reclassifyNudge)
+        } icon: {
+            Image(systemName: Constants.engineImage)
+                .foregroundStyle(.appleIntelligence)
+        }
+        .appFont(.footnote, color: .indigo700)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(DefaultSpacing.spacing12)
+        .background(
+            Color.indigo100,
+            in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
+        )
+        .accessibilityElement(children: .combine)
     }
 
     private var categoryRow: some View {

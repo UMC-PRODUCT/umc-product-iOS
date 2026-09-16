@@ -63,8 +63,8 @@ struct AISummaryInputSheet: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             HStack(spacing: DefaultSpacing.spacing8) {
-                Image(systemName: "sparkles")
-                    .foregroundStyle(Color.indigo500)
+                Image(systemName: "apple.intelligence")
+                    .foregroundStyle(.appleIntelligence)
                 Text("Apple Intelligence")
                     .appFont(.callout, weight: .semibold)
             }

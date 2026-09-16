@@ -44,7 +44,7 @@ struct NoticeReadingSummarySheet: View {
         static let headerLabel: String = "Apple Intelligence"
         static let streamingPlaceholder: String = "요약하는 중..."
         static let failedIconName: String = "exclamationmark.circle"
-        static let sparklesIconName: String = "sparkles"
+        static let engineIconName: String = "apple.intelligence"
     }
 
     // MARK: - Body
@@ -78,9 +78,9 @@ struct NoticeReadingSummarySheet: View {
 
     private var headerSection: some View {
         HStack(spacing: Constants.headerSpacing) {
-            Image(systemName: Constants.sparklesIconName)
+            Image(systemName: Constants.engineIconName)
                 .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(.appleIntelligence)
 
             Text(Constants.headerLabel)
                 .appFont(.callout, weight: .semibold)
