@@ -47,6 +47,9 @@ struct MessageBubble: View {
 
     let message: ThreadMessage
     let isMine: Bool
+    /// 시간 라벨을 화면에 그릴지. 같은 발신자·같은 분 묶음의 마지막인지는 앞뒤 메시지를 봐야
+    /// 알 수 있어서 화면(``CommunityThreadRoomView/showsTime(at:in:)``)이 정해 내려준다.
+    let showsTime: Bool
     let onRetry: () -> Void
     /// 말풍선 아래 반응 칩 토글. 팔레트에서 고르는 경로는 오버레이가 따로 들고 있다.
     let onReact: (String) -> Void
@@ -85,16 +88,25 @@ struct MessageBubble: View {
                             Text(message.senderName)
                                 .appFont(.caption2, color: .grey600)
                         }
-                        bubble
+
+                        // 시간은 반응 칩이 아니라 말풍선 하단에 맞춘다.
+                        HStack(alignment: .bottom, spacing: DefaultSpacing.spacing4) {
+                            if isMine { timeLabel }
+                            bubble
+                            if !isMine { timeLabel }
+                        }
                     }
                     .accessibilityElement(children: .combine)
+                    // 묶음 중간 말풍선은 시간을 그리지 않지만 VoiceOver 는 한 개씩 읽는다 —
+                    // 화면 표시와 무관하게 언제 보낸 메시지인지 항상 덧붙인다.
+                    .accessibilityLabel { label in
+                        label
+                        Text(timeText)
+                    }
 
                     if showsReactions {
                         reactionChips
                     }
-
-                    Text(Self.timeFormatter.string(from: message.createdAt))
-                        .appFont(.caption2, color: .grey500)
                 }
 
                 if !isMine {
@@ -124,6 +136,19 @@ struct MessageBubble: View {
                 .anchorPreference(key: MessageActionAnchorKey.self, value: .bounds) { anchor in
                     isActionTargeted ? anchor : nil
                 }
+        }
+    }
+
+    /// 숨길 때는 레이아웃에서 아예 뺀다 — 투명하게 남기면 묶음 중간 말풍선도 그 폭을 예약한다.
+    /// 읽기는 결합 라벨이 맡으므로 여기서는 VoiceOver 에서 숨긴다.
+    @ViewBuilder
+    private var timeLabel: some View {
+        if showsTime {
+            Text(timeText)
+                .appFont(.caption2, color: .grey500)
+                .lineLimit(1)
+                .fixedSize()
+                .accessibilityHidden(true)
         }
     }
 
@@ -319,6 +344,10 @@ struct MessageBubble: View {
 
     private var quoteBackground: Color {
         isMine ? .indigo600 : .grey200
+    }
+
+    private var timeText: String {
+        Self.timeFormatter.string(from: message.createdAt)
     }
 
     private var bubbleText: AttributedString {
@@ -529,10 +558,15 @@ struct BubbleWidthLayout: Layout {
         )
     }
 
-    func bubble(_ message: ThreadMessage, isMine: Bool) -> MessageBubble {
+    func bubble(
+        _ message: ThreadMessage,
+        isMine: Bool,
+        showsTime: Bool = true
+    ) -> MessageBubble {
         MessageBubble(
             message: message,
             isMine: isMine,
+            showsTime: showsTime,
             onRetry: {},
             onReact: { _ in },
             onQuoteTap: { _ in },
@@ -541,76 +575,94 @@ struct BubbleWidthLayout: Layout {
         )
     }
 
-    return VStack(spacing: 0) {
-        bubble(
-            message(id: "1", content: "안녕하세요! 오늘 스터디 몇 시에 시작하나요?"),
-            isMine: false
-        )
-        bubble(message(id: "2", content: "7시에 시작합니다"), isMine: true)
-        bubble(message(id: "11", content: "네 좋아요"), isMine: false)
-        bubble(message(id: "12", content: "네 좋아요"), isMine: true)
-        bubble(
-            message(
-                id: "13",
-                content: "이번 주는 레이아웃을 다뤄요. 제안 크기가 부모에서 자식으로 내려가는 흐름을 봐요"
-            ),
-            isMine: false
-        )
-        bubble(
-            message(
-                id: "14",
-                content: "좋아요. 자료는 미리 읽어 두고, 궁금한 점은 스레드에 먼저 남겨 둘게요"
-            ),
-            isMine: true
-        )
-        bubble(
-            message(
-                id: "3",
-                content: "반응이 달린 메시지",
-                reactions: [
-                    ThreadMessageReaction(emoji: "👍", count: "3", reactedByMe: true),
-                    ThreadMessageReaction(emoji: "🙏", count: "1", reactedByMe: false)
-                ]
-            ),
-            isMine: false
-        )
-        // 외부 URL 은 카드가 아니라 텍스트 링크로만 남는다. 내부 링크 카드는 메타 조회에
-        // DI 가 필요해 프리뷰에서는 다루지 않는다.
-        bubble(
-            message(id: "8", content: "자료는 여기 https://umc.it.kr/docs 참고해 주세요"),
-            isMine: false
-        )
-        bubble(
-            message(
-                id: "9",
-                content: "@김유엠 7시 맞아요",
-                mentions: [ThreadMessageMention(memberId: "7", name: "김유엠")],
-                replyTo: ThreadMessageReply(
-                    messageId: "1",
-                    senderName: "김유엠",
-                    snippet: "안녕하세요! 오늘 스터디 몇 시에 시작하나요?"
-                )
-            ),
-            isMine: false
-        )
-        bubble(
-            message(
-                id: "10",
-                content: "@김유엠 확인했습니다",
-                mentions: [ThreadMessageMention(memberId: "7", name: "김유엠")],
-                replyTo: ThreadMessageReply(
-                    messageId: "2",
-                    senderName: "김메이커스",
-                    snippet: "7시에 시작합니다"
-                )
-            ),
-            isMine: true
-        )
-        bubble(message(id: "4", content: "보내는 중", deliveryState: .sending), isMine: true)
-        bubble(message(id: "5", content: "실패한 메시지", deliveryState: .failed), isMine: true)
-        bubble(message(id: "6", content: "지워진 내용", deletedAt: base), isMine: false)
-        bubble(message(id: "7", content: "김유엠님이 참여했어요", type: .system), isMine: false)
+    // 연속 메시지 케이스까지 넣으면 한 화면을 넘는다.
+    return ScrollView {
+        VStack(spacing: 0) {
+            bubble(
+                message(id: "1", content: "안녕하세요! 오늘 스터디 몇 시에 시작하나요?"),
+                isMine: false
+            )
+            bubble(message(id: "2", content: "7시에 시작합니다"), isMine: true)
+            bubble(message(id: "11", content: "네 좋아요"), isMine: false)
+            bubble(message(id: "12", content: "네 좋아요"), isMine: true)
+            // 본문이 길어도 시간 라벨은 잘리지 않고 말풍선 쪽이 줄바꿈된다.
+            bubble(
+                message(
+                    id: "13",
+                    content: "이번 주는 레이아웃을 다뤄요. 제안 크기가 부모에서 자식으로 내려가는 흐름을 봐요"
+                ),
+                isMine: false
+            )
+            bubble(
+                message(
+                    id: "14",
+                    content: "좋아요. 자료는 미리 읽어 두고, 궁금한 점은 스레드에 먼저 남겨 둘게요"
+                ),
+                isMine: true
+            )
+            bubble(
+                message(
+                    id: "3",
+                    content: "반응이 달린 메시지",
+                    reactions: [
+                        ThreadMessageReaction(emoji: "👍", count: "3", reactedByMe: true),
+                        ThreadMessageReaction(emoji: "🙏", count: "1", reactedByMe: false)
+                    ]
+                ),
+                isMine: false
+            )
+            // 외부 URL 은 카드가 아니라 텍스트 링크로만 남는다. 내부 링크 카드는 메타 조회에
+            // DI 가 필요해 프리뷰에서는 다루지 않는다.
+            bubble(
+                message(id: "8", content: "자료는 여기 https://umc.it.kr/docs 참고해 주세요"),
+                isMine: false
+            )
+            bubble(
+                message(
+                    id: "9",
+                    content: "@김유엠 7시 맞아요",
+                    mentions: [ThreadMessageMention(memberId: "7", name: "김유엠")],
+                    replyTo: ThreadMessageReply(
+                        messageId: "1",
+                        senderName: "김유엠",
+                        snippet: "안녕하세요! 오늘 스터디 몇 시에 시작하나요?"
+                    )
+                ),
+                isMine: false
+            )
+            bubble(
+                message(
+                    id: "10",
+                    content: "@김유엠 확인했습니다",
+                    mentions: [ThreadMessageMention(memberId: "7", name: "김유엠")],
+                    replyTo: ThreadMessageReply(
+                        messageId: "2",
+                        senderName: "김메이커스",
+                        snippet: "7시에 시작합니다"
+                    )
+                ),
+                isMine: true
+            )
+            bubble(message(id: "4", content: "보내는 중", deliveryState: .sending), isMine: true)
+            bubble(message(id: "5", content: "실패한 메시지", deliveryState: .failed), isMine: true)
+            bubble(message(id: "6", content: "지워진 내용", deletedAt: base), isMine: false)
+            // 같은 발신자·같은 분 연속 메시지는 마지막 말풍선에만 시간을 붙인다.
+            bubble(
+                message(id: "15", content: "이번 주 장소가 바뀌었어요"),
+                isMine: false,
+                showsTime: false
+            )
+            bubble(
+                message(id: "16", content: "공지 확인 부탁드려요"),
+                isMine: false,
+                showsTime: false
+            )
+            bubble(message(id: "17", content: "지도 링크 곧 올릴게요"), isMine: false)
+            bubble(message(id: "18", content: "네 확인했어요"), isMine: true, showsTime: false)
+            bubble(message(id: "19", content: "감사합니다!"), isMine: true)
+            bubble(message(id: "7", content: "김유엠님이 참여했어요", type: .system), isMine: false)
+        }
+        .padding(.horizontal, DefaultSpacing.spacing16)
     }
-    .padding(.horizontal, DefaultSpacing.spacing16)
 }
 #endif

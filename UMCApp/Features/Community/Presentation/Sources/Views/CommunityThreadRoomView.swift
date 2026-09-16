@@ -447,6 +447,7 @@ struct CommunityThreadRoomView: View {
                     MessageBubble(
                         message: message,
                         isMine: viewModel.isMine(message),
+                        showsTime: Self.showsTime(at: index, in: viewModel.messages),
                         onRetry: { Task { await viewModel.retry(message) } },
                         onReact: { emoji in
                             Task { await viewModel.toggleReaction(message, emoji: emoji) }
@@ -571,5 +572,30 @@ struct CommunityThreadRoomView: View {
         guard index > messages.startIndex else { return current }
         let previous = messages[index - 1].createdAt
         return Calendar.current.isDate(previous, inSameDayAs: current) ? nil : current
+    }
+
+    /// 시간 라벨을 붙일지. 같은 발신자가 같은 분에 이어 보낸 묶음에서는 마지막 말풍선에만 붙인다.
+    ///
+    /// 날짜 구분선은 따로 보지 않는다 — 날짜가 바뀌면 분도 반드시 달라 묶음이 이미 끊긴다.
+    /// 전송 중·실패 메시지에는 시간을 달지 않는다 — 그 자리는 전송 상태 표시가 차지하고, 시각도
+    /// 서버 값이 아니다. 묶음에도 끼우지 않아서 뒤에 실패가 남아도 앞 메시지의 시간은 남는다.
+    static func showsTime(at index: Int, in messages: [ThreadMessage]) -> Bool {
+        guard messages.indices.contains(index) else { return false }
+        let current = messages[index]
+        guard current.type != .system, current.deliveryState == .sent else { return false }
+
+        let nextIndex = index + 1
+        guard messages.indices.contains(nextIndex) else { return true }
+        let next = messages[nextIndex]
+
+        let continuesGroup = next.type != .system
+            && next.senderId == current.senderId
+            && next.deliveryState == .sent
+            && Calendar.current.isDate(
+                current.createdAt,
+                equalTo: next.createdAt,
+                toGranularity: .minute
+            )
+        return !continuesGroup
     }
 }
