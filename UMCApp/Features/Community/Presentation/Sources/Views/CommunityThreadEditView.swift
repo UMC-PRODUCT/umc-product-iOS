@@ -47,7 +47,7 @@ fileprivate enum Constants {
 
 /// 스레드 편집 화면.
 ///
-/// 생성 화면(#1313)과 같은 컴포저·같은 분류 카드를 쓴다 — 만들 때와 고칠 때의 화면이 다르면
+/// 생성 화면(#1313)과 같은 입력 필드·같은 분류 카드를 쓴다 — 만들 때와 고칠 때의 화면이 다르면
 /// 어떤 값이 무엇이었는지 다시 배워야 한다. 편집에만 있는 건 세 가지다: 이미 정해진 아이콘을
 /// 보여 주는 배지, 특징을 고쳤을 때 카드가 띄우는 재분류 넛지(#11), 맨 아래 삭제(#09).
 struct CommunityThreadEditView: View {
@@ -202,7 +202,7 @@ struct CommunityThreadEditView: View {
             .onChange(of: viewModel.icon, initial: true) { _, icon in iconDraft = icon }
     }
 
-    /// 제목과 특징을 한 덩어리로 묶은 입력부. 생성 화면과 같은 모양이다.
+    /// 제목과 특징을 한 덩어리로 묶은 입력부.
     private var composer: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
             ArticleTextField(

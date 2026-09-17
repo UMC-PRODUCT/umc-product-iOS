@@ -83,27 +83,16 @@ struct CommunityThreadCreateView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
-                composer
+        Form {
+            submitErrorSection
 
-                classificationSection
+            composerSection
 
-                inviteeRow
+            classificationSection
 
-                if let notice = viewModel.inviteeCapacityNotice {
-                    errorLabel(notice)
-                }
-
-                if let message = viewModel.submitErrorMessage {
-                    errorLabel(message)
-                }
-            }
-            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            .padding(.top, DefaultSpacing.spacing24)
+            inviteeSection
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.grey000)
         .navigationTitle(Constants.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { submitButton }
@@ -118,6 +107,17 @@ struct CommunityThreadCreateView: View {
     }
 
     // MARK: - View Component
+
+    /// 초대 행과, 상한에 걸렸을 때만 나오는 안내를 한 섹션에 둔다.
+    private var inviteeSection: some View {
+        Section {
+            inviteeRow
+
+            if let notice = viewModel.inviteeCapacityNotice {
+                errorLabel(notice)
+            }
+        }
+    }
 
     /// 생성과 동시에 초대할 챌린저를 고르는 행.
     ///
@@ -140,14 +140,7 @@ struct CommunityThreadCreateView: View {
                 Image(systemName: Constants.inviteeImage)
                     .foregroundStyle(Color.grey500)
             }
-            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            .padding(.vertical, DefaultSpacing.spacing12)
-            .background(
-                Color.grey100,
-                in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
-            )
         }
-        .buttonStyle(.plain)
         .accessibilityLabel(Constants.inviteeLabel)
         .accessibilityValue(inviteeValue)
         .accessibilityHint(Constants.inviteeHint)
@@ -164,9 +157,19 @@ struct CommunityThreadCreateView: View {
             : "\(viewModel.invitees.count)명"
     }
 
-    /// 아이콘·제목과 특징을 한 덩어리로 묶은 입력부. 구분선 말고는 장식을 두지 않는다.
-    private var composer: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+    /// 제출 실패 메시지. 일정 등록 화면처럼 폼 맨 위 섹션에 띄워 입력부보다 먼저 읽히게 한다.
+    @ViewBuilder
+    private var submitErrorSection: some View {
+        if let message = viewModel.submitErrorMessage {
+            Section {
+                errorLabel(message)
+            }
+        }
+    }
+
+    /// 아이콘·제목과 특징을 한 섹션으로 묶은 입력부. 두 행 사이 구분선은 Form 이 그린다.
+    private var composerSection: some View {
+        Section {
             HStack(spacing: DefaultSpacing.spacing12) {
                 iconSlot
 
@@ -179,8 +182,6 @@ struct CommunityThreadCreateView: View {
                 )
                 .accessibilityLabel(Constants.titleLabel)
             }
-
-            Divider()
 
             ArticleTextField(
                 placeholder: .threadDescription,
@@ -216,11 +217,13 @@ struct CommunityThreadCreateView: View {
         .accessibilityHint(Constants.iconHint)
     }
 
-    /// 특징 바로 아래에 붙는 분류 카드. 카테고리 선택 행은 자동 분류로 해결되지 않는 상태에서만
-    /// 따라 나온다.
+    /// 입력부 바로 아래 섹션의 분류 카드. 카테고리 선택 행은 자동 분류로 해결되지 않는 상태에서만
+    /// 따라 나온다. 카드 표면은 Form 셀이 맡으므로 카드 자체 표면은 끈다.
     private var classificationSection: some View {
-        VStack(spacing: DefaultSpacing.spacing12) {
-            ThreadClassificationCard(viewModel: viewModel) { isIconFocused = true }
+        Section {
+            ThreadClassificationCard(viewModel: viewModel, showsSurface: false) {
+                isIconFocused = true
+            }
 
             if viewModel.isManualSelectionVisible {
                 categoryRow
@@ -244,14 +247,7 @@ struct CommunityThreadCreateView: View {
                 Image(systemName: Constants.categoryImage)
                     .foregroundStyle(Color.grey500)
             }
-            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-            .padding(.vertical, DefaultSpacing.spacing12)
-            .background(
-                Color.grey100,
-                in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
-            )
         }
-        .buttonStyle(.plain)
         .accessibilityLabel(Constants.categoryLabel)
         .accessibilityValue(viewModel.category.displayName)
         .accessibilityHint(Constants.categoryHint)
