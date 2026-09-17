@@ -22,6 +22,10 @@ let project = featureProject(
         // 투표자·작성자 프로필 조회에 MyPage 정본 Repository 프로토콜을 사용한다.
         .project(target: "MyPageDomain", path: .relativeToRoot("Features/MyPage")),
     ],
+    includesDomainTests: true,
+    domainTestDependencies: [
+        .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
+    ],
     includesDataTests: true,
     dataTestDependencies: [
         .target(name: "NoticeDomain"),
