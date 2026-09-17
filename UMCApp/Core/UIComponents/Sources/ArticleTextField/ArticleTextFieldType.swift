@@ -24,7 +24,7 @@ public enum ArticleTextFieldType {
         case .threadTitle:
             return "스레드 제목을 입력하세요."
         case .threadDescription:
-            return "스레드 특징을 입력하세요"
+            return "스레드 특징을 입력하세요."
         }
     }
 

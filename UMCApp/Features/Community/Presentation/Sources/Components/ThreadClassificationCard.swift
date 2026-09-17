@@ -18,10 +18,7 @@ fileprivate enum Constants {
     /// 배지를 뺀 자리를 대신한다 — 입력한 특징이 기기 밖으로 나가지 않는다는 사실은 남겨야 한다.
     static let headerAccessibilityLabel = "카테고리 분류. Apple Intelligence 가 온디바이스로 처리합니다."
     static let idleHint = "AI가 카테고리와 아이콘을 정해 드릴게요."
-    static let idleDisabledHint = """
-    쓰레드 특징을 입력하면
-    AI가 카테고리•아이콘을 정해줘요
-    """
+    static let idleDisabledHint = "특징을 입력하면 카테고리와 아이콘을 추천해 드려요."
     static let classifyTitle = "AI로 분류하기"
     static let reclassifyTitle = "다시 분류하기"
     static let changeIconTitle = "이모지 변경하기"
@@ -43,7 +40,6 @@ fileprivate enum Constants {
     static let categoryImage = "chevron.up.chevron.down"
 
     static let engineIconSize: CGFloat = 13
-    static let hintIconSize: CGFloat = 20
     static let resultIconSize: CGFloat = 34
     static let cardPadding: EdgeInsets = .init(
         top: DefaultSpacing.spacing16,
@@ -103,8 +99,9 @@ struct ThreadClassificationCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Constants.cardPadding)
-        .glassEffect(
-            .regular,
+        // 폼 콘텐츠라 떠 있는 컨트롤 층의 Glass 대신 초대 행과 같은 단색 그룹 표면을 쓴다.
+        .background(
+            Color.grey100,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
         // 처리 중임을 색으로도 알린다. 진행바 하나만으로는 일반 로딩과 구분되지 않는다.
@@ -180,28 +177,21 @@ struct ThreadClassificationCard: View {
     private var idleContent: some View {
         if viewModel.canClassify {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
-                hintRow(Constants.idleHint)
+                hintText(Constants.idleHint)
 
                 MainButton(Constants.classifyTitle) { classify() }
                     .buttonStyle(.glassProminent)
             }
         } else {
-            hintRow(Constants.idleDisabledHint)
+            hintText(Constants.idleDisabledHint)
         }
     }
 
-    private func hintRow(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: DefaultSpacing.spacing8) {
-            Image(systemName: Constants.engineImage)
-                .font(.system(size: Constants.hintIconSize))
-                .foregroundStyle(.appleIntelligence)
-
-            Text(text)
-                .appFont(.subheadline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .foregroundStyle(Color.indigo500)
-        .accessibilityElement(children: .combine)
+    /// 누를 수 없는 안내라 링크로 읽히는 틴트 대신 보조 텍스트 색을 쓴다. AI 아이콘은 헤더에만 둔다.
+    private func hintText(_ text: String) -> some View {
+        Text(text)
+            .appFont(.subheadline, color: .grey600)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var loadingContent: some View {
