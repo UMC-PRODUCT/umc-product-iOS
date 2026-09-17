@@ -76,6 +76,17 @@ private final class StubEditClassifier: ThreadClassifying, @unchecked Sendable {
     }
 }
 
+private final class StubEditDescriptionRefiner: ThreadDescriptionRefining, @unchecked Sendable {
+
+    static let result = "매주 화요일 저녁 8시에 모여 사이드 프로젝트를 함께 만들어요."
+
+    let isAvailable = true
+
+    func refine(title: String, description: String) async throws -> String {
+        Self.result
+    }
+}
+
 /// 분류가 도는 **중간** 상태를 관찰하려고 호출을 붙잡아 두는 대역.
 ///
 /// `release()` 를 부를 때까지 `classify` 가 멈춰 있어, 그동안 저장 버튼이 잠기는지 확인할 수 있다.
@@ -282,6 +293,21 @@ struct CommunityThreadEditViewModelTests {
         #expect(viewModel.canSubmit)
     }
 
+    @Test("다듬은 특징을 적용하면 변경으로 잡히고 재분류를 권한다")
+    func suggestsReclassifyAfterApplyingRefinedDescription() async {
+        let viewModel = makeViewModel()
+
+        await viewModel.refineDescription()
+        // 제안만 받은 상태는 변경이 아니다 — 적용 전에는 특징이 그대로다.
+        #expect(!viewModel.hasChanges)
+
+        viewModel.applyRefinedDescription()
+
+        #expect(viewModel.threadDescription == StubEditDescriptionRefiner.result)
+        #expect(viewModel.hasChanges)
+        #expect(viewModel.isReclassifySuggested)
+    }
+
     // MARK: - 삭제
 
     @Test("확인 알럿을 거치지 않으면 삭제되지 않는다")
@@ -335,12 +361,14 @@ struct CommunityThreadEditViewModelTests {
 @MainActor
 private func makeViewModel(
     useCase: StubEditUseCase? = nil,
-    classifier: ThreadClassifying = StubEditClassifier()
+    classifier: ThreadClassifying = StubEditClassifier(),
+    refiner: ThreadDescriptionRefining = StubEditDescriptionRefiner()
 ) -> CommunityThreadEditViewModel {
     CommunityThreadEditViewModel(
         thread: makeEditableThread(),
         useCase: useCase ?? StubEditUseCase(),
         classifier: classifier,
+        descriptionRefiner: refiner,
         errorHandler: ErrorHandler()
     )
 }

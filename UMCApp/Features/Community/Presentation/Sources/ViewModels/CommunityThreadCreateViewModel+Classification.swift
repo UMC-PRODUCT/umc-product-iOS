@@ -30,10 +30,13 @@ extension CommunityThreadCreateViewModel {
     }
 
     /// "다시 분류하기" 를 누를 수 있는지. 미지원 기기에서는 항상 `false` 라 버튼이 잠긴다.
+    ///
+    /// 특징을 다듬는 중에도 잠근다 — 곧 바뀔 수 있는 특징으로 분류하면 결과가 금방 낡는다.
     public var canClassify: Bool {
         isClassificationAvailable
             && !threadDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !classification.isLoading
+            && !descriptionRefinement.isLoading
     }
 
     /// 카테고리를 손으로 고르는 행을 띄울지. 이모지는 폼의 아이콘 섹션에서 늘 고칠 수 있다.

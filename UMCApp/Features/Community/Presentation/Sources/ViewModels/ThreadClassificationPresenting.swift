@@ -54,6 +54,12 @@ public protocol ThreadFormPresenting: ThreadClassificationPresenting, Observable
 
     /// 폼 맨 위에 띄울 제출 실패 메시지.
     var submitErrorMessage: String? { get }
+
+    /// 특징 다듬기. 상태와 동작은 `+DescriptionRefinement` 확장이 두 화면에 한 번만 구현한다.
+    var descriptionRefiner: ThreadDescriptionRefining { get }
+
+    /// 다듬은 특징 제안. `.loaded` 여도 적용 전까지 `threadDescription` 은 바뀌지 않는다.
+    var descriptionRefinement: Loadable<String> { get set }
 }
 
 extension CommunityThreadCreateViewModel: ThreadFormPresenting {}

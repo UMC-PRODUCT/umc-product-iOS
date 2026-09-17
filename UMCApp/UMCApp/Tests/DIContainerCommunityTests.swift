@@ -79,6 +79,13 @@ struct DIContainerCommunityTests {
         #expect(container.resolveIfRegistered(ThreadClassifying.self) != nil)
     }
 
+    @Test("스레드 특징 다듬기가 등록되어 해석된다")
+    func resolvesThreadDescriptionRefiner() throws {
+        let container = try makeContainer()
+
+        #expect(container.resolveIfRegistered(ThreadDescriptionRefining.self) != nil)
+    }
+
     // MARK: - 프로세스 단일 인스턴스
 
     /// 구독 destination 이 유저별이라 실시간 클라이언트는 프로세스에 하나여야 한다.
