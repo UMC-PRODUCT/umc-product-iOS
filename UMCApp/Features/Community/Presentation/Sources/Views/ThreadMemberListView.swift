@@ -6,9 +6,9 @@
 //
 
 import SwiftUI
+import ActivityPresentation
 import CommunityDomain
 import CoreDesignSystem
-import CoreDI
 import CoreRouting
 import CoreUIComponents
 import UMCFoundation
@@ -28,20 +28,25 @@ struct ThreadMemberListView: View {
     // MARK: - Property
 
     @State private var viewModel: ThreadMemberListViewModel
+    @State private var inviteViewModel: ThreadInviteViewModel
 
     /// 나가기·삭제가 끝났을 때 리스트 화면에 알린다. 실시간 `member.left`/`thread.deleted` 로도
     /// 행이 지워지지만, 그걸 기다리면 루트로 돌아온 직후 잠깐 남아 있는 행이 보인다.
     private let onRemoved: () -> Void
 
-    @Environment(\.di) private var di
     @Environment(PathStore.self) private var pathStore
 
     @State private var isInviteSheetPresented = false
 
     // MARK: - Init
 
-    init(viewModel: ThreadMemberListViewModel, onRemoved: @escaping () -> Void) {
+    init(
+        viewModel: ThreadMemberListViewModel,
+        inviteViewModel: ThreadInviteViewModel,
+        onRemoved: @escaping () -> Void
+    ) {
         _viewModel = State(initialValue: viewModel)
+        _inviteViewModel = State(initialValue: inviteViewModel)
         self.onRemoved = onRemoved
     }
 
@@ -59,15 +64,11 @@ struct ThreadMemberListView: View {
                 ToolbarItem(placement: .topBarTrailing) { leaveButton }
             }
             .alertPrompt(item: $viewModel.alertPrompt)
-            .sheet(isPresented: $isInviteSheetPresented) {
-                ThreadInviteSheet(
-                    viewModel: ThreadInviteViewModel(
-                        threadId: viewModel.threadId,
-                        useCase: di.resolve(CommunityThreadInviteUseCaseProtocol.self)
-                    ),
-                    // 초대한 쪽에는 실시간 이벤트가 오지 않아 목록을 직접 다시 읽는다.
-                    onInvited: { _ in Task { await viewModel.load() } }
-                )
+            .alertPrompt(item: $inviteViewModel.alertPrompt)
+            // 선택 화면에 전송 버튼이 없어 닫을 때 초대한다 (`ThreadInviteViewModel` 참고).
+            .sheet(isPresented: $isInviteSheetPresented, onDismiss: invite) {
+                SelectedChallengerView(challenger: $inviteViewModel.invitees)
+                    .presentationDragIndicator(.visible)
             }
             .task { await viewModel.load() }
             .onChange(of: viewModel.didLeave) { _, didLeave in
@@ -159,6 +160,16 @@ struct ThreadMemberListView: View {
                 // 색만으로 구분하지 않도록 휴지통 아이콘을 함께 둔다.
                 Label("스레드 삭제", systemImage: "trash")
             }
+        }
+    }
+
+    // MARK: - Function
+
+    private func invite() {
+        Task {
+            guard await inviteViewModel.invite() != nil else { return }
+            // 초대한 쪽에는 실시간 이벤트가 오지 않아 목록을 직접 다시 읽는다.
+            await viewModel.load()
         }
     }
 }

@@ -54,7 +54,7 @@ public final class CommunityThreadCreateViewModel {
         didSet { clampInvitees() }
     }
 
-    /// 상한에 걸려 선택이 잘린 사유. 다음 선택 조작에서 지운다(``ThreadInviteViewModel`` 과 동일).
+    /// 상한에 걸려 선택이 잘린 사유. 다음 선택 조작에서 지운다.
     public private(set) var inviteeCapacityNotice: String?
 
     public private(set) var state: Loadable<CommunityThread> = .idle
