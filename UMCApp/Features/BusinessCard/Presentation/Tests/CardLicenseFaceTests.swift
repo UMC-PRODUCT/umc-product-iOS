@@ -14,8 +14,8 @@ import UMCFoundation
 /// 라이선스 카드 표기(#1347) 중 **눈으로 못 보는 두 규칙**만 본다.
 ///
 /// 레이아웃은 프리뷰가 보여주므로 테스트하지 않는다. 조용히 틀려도 화면상으로는 멀쩡한 것,
-/// 즉 「시리얼이 원본 ID 를 흘리는가」와 「앞면 라벨이 화면에 남은 항목만 읽는가」(#1363)
-/// 두 가지만 단정한다.
+/// 즉 「시리얼이 원본 ID 를 흘리는가」와 「앞면 라벨이 화면에 남은 항목만 화면 순서대로
+/// 읽는가」(#1363 · #1374) 두 가지만 단정한다.
 @Suite("라이선스 카드 표기")
 struct CardLicenseFaceTests {
 
@@ -58,21 +58,31 @@ struct CardLicenseFaceTests {
     // MARK: - 2. 앞면 접근성 라벨
 
     /// #1363 에서 기록 슬롯·파트 칩을 뺐다. 라벨에 기록이 남으면 화면에 없는 값을 읽는다.
-    @Test("앞면 라벨은 이름·파트·기수·학교만 읽는다")
-    func frontFaceLabelReadsVisibleItemsOnly() {
+    /// #1374 에서 기수가 발급 행 오른쪽으로 내려가 학교 뒤에서 읽는다.
+    @Test("앞면 라벨은 이름·파트·학교·기수를 화면 순서대로 읽는다")
+    func frontFaceLabelReadsVisibleItemsInScreenOrder() {
         let label = card(memberId: Constants.memberId).frontFaceAccessibilityLabel
 
-        #expect(label == "앞면. 김유엠/유엠디, iOS 파트, 12기, 한양대학교")
+        #expect(label == "앞면. 김유엠/유엠디, iOS 파트, 한양대학교, 12기")
+    }
+
+    /// 앞면이 그리는 영문 파트명과 VoiceOver 가 읽는 파트명이 같아야 한다 (#1374).
+    @Test("앞면 라벨은 신규 파트를 화면과 같은 영문으로 읽는다")
+    func frontFaceLabelReadsEnglishPart() {
+        let label = card(memberId: Constants.memberId, part: .mobileProductEngineer)
+            .frontFaceAccessibilityLabel
+
+        #expect(label == "앞면. 김유엠/유엠디, Mobile Product Engineer 파트, 한양대학교, 12기")
     }
 
     // MARK: - Helper
 
-    private func card(memberId: String) -> MyCard {
+    private func card(memberId: String, part: UMCPartType = .front(type: .ios)) -> MyCard {
         MyCard(
             memberId: memberId,
             name: "김유엠",
             nickname: "유엠디",
-            part: .front(type: .ios),
+            part: part,
             generation: "12",
             university: "한양대학교",
             email: nil,

@@ -81,8 +81,18 @@ public struct MyCard: Equatable, Hashable, Sendable {
 
     /// 화면에 쓰는 파트 이름. 못 읽은 값이면 원본을 그대로 보여준다 — 틀린 이름(운영진)보다
     /// 낯선 이름이 낫다.
+    ///
+    /// 신규 두 파트는 명함에서만 영문 전체 표기다 (#1374). 앞면이 파트를 라틴 모노 텍스트로
+    /// 그리는데 ``UMCPartType/name`` 의 한글 표시명은 그 서체에서 띄어쓰기가 벌어진다.
+    /// `UMCPartType.name` 은 다른 피처가 한글로 쓰므로 건드리지 않는다. 전체 표기라
+    /// 레거시 `Web` 과도 겹치지 않는다.
     public var partDisplayName: String {
-        partRaw ?? part.name
+        if let partRaw { return partRaw }
+        switch part {
+        case .webProductEngineer: return "Web Product Engineer"
+        case .mobileProductEngineer: return "Mobile Product Engineer"
+        default: return part.name
+        }
     }
 
     /// 전송·저장에 싣는 파트 문자열. 원본을 받았으면 원본을 그대로 되돌려 보낸다 —

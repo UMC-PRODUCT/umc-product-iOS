@@ -14,12 +14,12 @@ import SwiftUI
 /// 시안 `명함_l`(372×205) — 마이페이지 루트가 쓰는 명함 카드.
 ///
 /// #1347 에서 「라이선스 카드」 어법으로 갈아탔다. 레퍼런스(RIFE LICENSE)에서 가져온 것은
-/// **레이아웃과 타이포뿐**이다 — 타이틀 · `{파트}. [{이름}]` · 하단 발급 행 ·
-/// 라틴 대문자 모노스페이스. 배경은 기존 브랜드 그라디언트(`indigo400 → indigo500`)를 그대로
+/// **레이아웃과 타이포뿐**이다 — 타이틀 · 이름 아래 파트 · 하단 발급 행 ·
+/// 라틴 모노스페이스. 배경은 기존 브랜드 그라디언트(`indigo400 → indigo500`)를 그대로
 /// 둔다. 다크 단색으로 갈아엎으면 라이트/다크(#1234)·대비(#1235) 기준을 처음부터 다시 잡아야
 /// 하는데, 카드가 얻는 건 톤 하나뿐이라 값이 맞지 않는다.
 ///
-/// 앞면은 이름 행·기수 칩·발급 행, 뒷면은 시리얼과 **QR + 외부 링크 3줄**
+/// 앞면은 이름 행·파트 행·발급 행(학교 · 기수), 뒷면은 시리얼과 **QR + 외부 링크 3줄**
 /// (github · linkedIn · blog)이다. 헤더와 하단 버튼 두 개는 양면 공통이다.
 ///
 /// 상태를 들지 않는다 — 뒤집힘 여부는 소유자가 가지고 ``isFlipped`` 로 내려준다.
@@ -44,6 +44,7 @@ public struct BusinessCardFaceView: View {
     private enum Constants {
         static let title = "UMC LICENSE"
         static let serialPrefix = "SERIAL. "
+        static let generationPrefix = "GEN. "
         static let exchangeIcon = "shareplay"
         static let exchangeTitle = "명함 교환"
         static let qrIcon = "qrcode"
@@ -58,7 +59,7 @@ public struct BusinessCardFaceView: View {
     /// 시안 실측값 (`Figma 12639:33234` / `12766:98172`).
     private enum Metrics {
         /// 시안 실측 높이. 글자가 커지면 이 값을 **바닥으로** 두고 늘어난다
-        /// (고정하면 AX 크기에서 이름 행·칩이 카드 밖으로 밀린다).
+        /// (고정하면 AX 크기에서 이름·파트 행이 카드 밖으로 밀린다).
         static let cardMinHeight: CGFloat = 205
         /// 버튼 행(39)과 그 위 간격(24)을 뺀 높이. 액션 없는 카드가 아래를 비우지 않게 한다.
         static let faceOnlyMinHeight: CGFloat = 205 - 24 - 39
@@ -70,9 +71,10 @@ public struct BusinessCardFaceView: View {
         static let headerSpacing: CGFloat = 8
         /// QR 과 오른쪽 링크 블록 사이.
         static let contentSpacing: CGFloat = 16
-        /// 앞면 블록(이름 행 · 기수 칩 · 발급 행) 사이.
+        /// 앞면 블록(이름·파트 행 · 발급 행) 사이.
         static let faceBlockSpacing: CGFloat = 12
         static let qrSize: CGFloat = 70
+        /// 이름 행과 파트 행 사이.
         static let nameSpacing: CGFloat = 6
         static let logoWidth: CGFloat = 47
         static let logoHeight: CGFloat = 15.16
@@ -266,57 +268,70 @@ public struct BusinessCardFaceView: View {
     ///
     /// #1363 에서 둘을 더 뺐다. **기록 슬롯 4칸** — 마이페이지에서는 카드 바로 아래 섹션이
     /// 같은 카운트를 다시 보여 주고, 받은 명함 상세에서는 상대 카운트가 없어 늘 `-` 였다.
-    /// **파트 칩** — 이름 행 `{파트}.` 와 같은 값을 한 번 더 말할 뿐이다.
+    /// **파트 칩** — 이름 행에 있던 파트와 같은 값을 한 번 더 말할 뿐이었다.
+    ///
+    /// #1374 에서 **기수 칩**도 뺐다. 기수는 발급 행 오른쪽 `GEN. {기수}` 로 옮겨 한 줄을
+    /// 줄였다 — 칩과 학교가 각각 한 줄씩 차지해 카드 오른쪽 절반이 비어 있었다.
     private var frontFace: some View {
         VStack(alignment: .leading, spacing: Metrics.faceBlockSpacing) {
-            identityRow
-            PartChip(text: "\(card.generation)기")
+            identityBlock
             issuerRow
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        // 이름 행·기수 칩·학교가 따로 읽히면 누구 명함인지 조립해야 알 수 있다.
+        // 이름·파트·학교·기수가 따로 읽히면 누구 명함인지 조립해야 알 수 있다.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(card.frontFaceAccessibilityLabel)
     }
 
-    /// 레퍼런스 어법 `Runner. [한수빈]` 을 그대로 옮긴 이름 행.
+    /// 이름 행 아래에 파트 행을 둔다 (#1374).
     ///
-    /// 파트는 **대문자로 올리지 않는다** — `iOS` 가 `IOS` 가 되면 틀린 파트명이 된다.
-    /// 레퍼런스도 대문자는 타이틀·라벨에만 쓴다.
+    /// 예전에는 레퍼런스 어법 `Runner. [한수빈]` 대로 `{파트}. [{이름}]` 한 줄이었다.
+    /// 파트가 먼저 읽혔고, 이름에 우선순위가 걸려 있어 긴 파트명이 잘렸다. 이름이 1차
+    /// 식별자라 한 줄을 통째로 주고 가장 크게 그린다.
     ///
     /// 이름은 한글이라 모노 대상이 아니므로 Pretendard 를 유지한다. 표기 규칙은
-    /// ``MyCard/nameWithNickname``(#1236) 한 곳에 있고, 폭이 모자라면 파트가 먼저
-    /// 줄어들도록 이름에 우선순위를 준다 — 이름이 1차 식별자다.
-    private var identityRow: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Metrics.nameSpacing) {
-            licenseText("\(card.partDisplayName).", style: .title3, weight: .semibold)
-                .lineLimit(1)
-
-            Text("[\(card.nameWithNickname)]")
+    /// ``MyCard/nameWithNickname``(#1236) 한 곳에 있다.
+    ///
+    /// 파트는 **대문자로 올리지 않는다** — `iOS` 가 `IOS` 가 되면 틀린 파트명이 된다.
+    /// 줄 수도 막지 않는다. 기본 크기에서는 가장 긴 `Mobile Product Engineer` 도 375pt
+    /// 기기에서 한 줄에 들어가고, 큰 글자에서는 말줄임 대신 줄을 바꿔 카드가 늘어난다.
+    private var identityBlock: some View {
+        VStack(alignment: .leading, spacing: Metrics.nameSpacing) {
+            Text(card.nameWithNickname)
                 .appFont(.title3, weight: .semibold, color: Color.white)
                 .lineLimit(1)
-                .layoutPriority(1)
+
+            licenseText(card.partDisplayName, style: .subheadline, weight: .medium)
         }
     }
 
-    /// 하단 발급 행 — 발급 기관 자리에 소속 대학교가 온다.
+    /// 하단 발급 행 — 왼쪽 발급 기관 자리에 소속 대학교, 오른쪽에 기수 `GEN. {기수}` 가 온다.
     ///
-    /// 레퍼런스의 `ISSUED / 2026 . 09 . 10` 에 해당하는 **발급일은 싣지 않는다.**
+    /// 오른쪽은 레퍼런스의 `ISSUED / 2026 . 09 . 10` 자리지만 **발급일은 싣지 않는다.**
     /// ``MyCard`` 에 그 필드가 없고(서버 요구사항은 #1225), 클라이언트에서 오늘 날짜 따위로
-    /// 지어내면 카드가 매번 다른 날 발급된 것처럼 읽힌다. 플레이스홀더(`----.--.--`)도 두지
-    /// 않는다 — 빈 자리가 「곧 채워질 값」처럼 보이는 것 자체가 거짓말이다.
-    /// 서버 필드가 생기면 이 행 오른쪽에 붙이면 된다.
+    /// 지어내면 카드가 매번 다른 날 발급된 것처럼 읽힌다. 비워 둔 그 자리에 기수를 옮겨
+    /// 왔다(#1374) — 「몇 기에 발급된 카드인가」라 뜻도 맞는다.
+    ///
+    /// 폭이 모자라면 학교가 먼저 말줄임된다. 기수는 짧고, 잘리면 숫자가 통째로 사라진다.
     private var issuerRow: some View {
         VStack(alignment: .leading, spacing: Metrics.linkSpacing) {
             Rectangle()
                 .fill(Color.white.opacity(Metrics.dividerOpacity))
                 .frame(height: Metrics.dividerHeight)
 
-            // 한글이라 모노·대문자 대상이 아니다. 자간만 라이선스 어법에 맞춘다.
-            Text(card.university)
-                .appFont(.caption1, color: Color.white)
-                .tracking(Metrics.tracking)
-                .lineLimit(1)
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+                // 한글이라 모노·대문자 대상이 아니다. 자간만 라이선스 어법에 맞춘다.
+                Text(card.university)
+                    .appFont(.caption1, color: Color.white)
+                    .tracking(Metrics.tracking)
+                    .lineLimit(1)
+
+                Spacer(minLength: Metrics.linkSpacing)
+
+                licenseText(Constants.generationPrefix + card.generation)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+            }
         }
     }
 
@@ -411,8 +426,10 @@ public struct BusinessCardFaceView: View {
     /// `AppFont` 의 `textStyle` 을 그대로 태워 Dynamic Type 을 따라가게 한다 — 고정 pt 로
     /// 박으면 이 카드만 글자 크기 설정을 무시한다.
     ///
-    /// 라틴 대문자·숫자 전용이다. 한글은 모노 패밀리가 없어 어차피 시스템 폰트로 떨어지므로
-    /// 이름·학교는 Pretendard(`appFont`)를 그대로 쓴다.
+    /// 라틴 문자·숫자 전용이다. 한글은 모노 패밀리가 없어 어차피 시스템 폰트로 떨어지므로
+    /// 이름·학교는 Pretendard(`appFont`)를 그대로 쓴다. 파트가 여기 들어오는 것도 명함의
+    /// 파트명이 전부 영문이라서다(``MyCard/partDisplayName``, #1374). 못 읽은 원본 파트만
+    /// 한글일 수 있는데, 그때도 시스템 폰트로 떨어질 뿐 깨지지는 않는다.
     private func licenseText(
         _ text: String,
         style: AppFont = .caption2,

@@ -26,11 +26,13 @@ public enum BusinessCardPreviewData {
     /// 명함_l(``BusinessCardFaceView``)·명함_m(``BusinessCardSummaryView``) 프리뷰가
     /// 공유하는 「내 카드」 한 장. 뒷면 링크 3종(github·linkedIn·blog)을 모두 채워
     /// 뒷면 프리뷰도 같은 값으로 렌더된다.
+    ///
+    /// 파트는 가장 긴 표기(`Mobile Product Engineer`)라 잘림을 프리뷰에서 바로 본다 (#1374).
     public static let myCard = MyCard(
         memberId: "42",
         name: "김유엠",
         nickname: "유엠디",
-        part: .front(type: .ios),
+        part: .mobileProductEngineer,
         generation: "12",
         university: "한양대학교",
         email: "umc@example.com",
