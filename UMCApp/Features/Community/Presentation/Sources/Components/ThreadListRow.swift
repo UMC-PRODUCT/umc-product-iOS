@@ -89,7 +89,7 @@ struct ThreadListRow: View {
                 .layoutPriority(1)
 
             if !isCompactMetadata {
-                categoryChip
+                ThreadCategoryChip(category: thread.category)
             }
 
             // 행 전체가 Button 이라 자식 레이블이 합쳐진다. 레이블을 주지 않으면
@@ -113,17 +113,6 @@ struct ThreadListRow: View {
                 timeLabel
             }
         }
-    }
-
-    /// 시스템 블루를 쓴다. 다크 모드 대비는 시스템이 맞춰 주므로 별도 토큰을 만들지 않는다.
-    private var categoryChip: some View {
-        Text(thread.category.displayName)
-            .appFont(.caption2)
-            .foregroundStyle(Color.blue)
-            .lineLimit(1)
-            .padding(.horizontal, DefaultSpacing.spacing8)
-            .padding(.vertical, Constants.capsuleVerticalPadding)
-            .background(Color.blue.opacity(Constants.chipTintOpacity), in: .capsule)
     }
 
     @ViewBuilder
@@ -161,13 +150,37 @@ struct ThreadListRow: View {
     /// 접근성 크기 전용 셋째 줄. 제목 줄에서 내려온 칩과 시각을 담는다.
     private var metadataLine: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            categoryChip
+            ThreadCategoryChip(category: thread.category)
             timeLabel
         }
     }
 
     private var previewText: String {
         thread.lastMessage?.preview ?? Constants.emptyPreview
+    }
+}
+
+// MARK: - ThreadCategoryChip
+
+/// 카테고리 칩. 스레드 리스트 행과 생성·편집 폼의 미리보기가 같은 모양을 쓴다.
+///
+/// 시스템 블루를 쓴다. 다크 모드 대비는 시스템이 맞춰 주므로 별도 토큰을 만들지 않는다.
+struct ThreadCategoryChip: View {
+
+    // MARK: - Property
+
+    let category: CommunityThreadCategory
+
+    // MARK: - Body
+
+    var body: some View {
+        Text(category.displayName)
+            .appFont(.caption2)
+            .foregroundStyle(Color.blue)
+            .lineLimit(1)
+            .padding(.horizontal, DefaultSpacing.spacing8)
+            .padding(.vertical, Constants.capsuleVerticalPadding)
+            .background(Color.blue.opacity(Constants.chipTintOpacity), in: .capsule)
     }
 }
 

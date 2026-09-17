@@ -270,6 +270,6 @@ public final class CommunityThreadEditViewModel {
     }
 }
 
-// MARK: - ThreadClassificationPresenting
+// MARK: - ThreadFormPresenting
 
-extension CommunityThreadEditViewModel: ThreadClassificationPresenting {}
+extension CommunityThreadEditViewModel: ThreadFormPresenting {}
