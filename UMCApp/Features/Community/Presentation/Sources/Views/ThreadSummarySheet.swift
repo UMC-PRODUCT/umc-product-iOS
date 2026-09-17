@@ -16,8 +16,6 @@ import UMCFoundation
 fileprivate enum Constants {
     static let navigationTitle = "대화 요약"
     static let engineLabel = "Apple Intelligence"
-    static let onDeviceLabel = "온디바이스"
-    static let disclaimer = "요약은 참고용이에요. 중요한 내용은 원문을 확인해 주세요."
     static let loadingTitle = "대화를 읽고 있어요"
     static let bulletsTitle = "이런 이야기가 오갔어요"
     static let actionItemsTitle = "내 액션 아이템"
@@ -25,7 +23,7 @@ fileprivate enum Constants {
     static let failureTitle = "요약을 만들지 못했어요"
     static let retryTitle = "다시 요약"
     static let originalTitle = "원문 보기"
-    static let dismissTitle = "닫기"
+    static let dismissLabel = "닫기"
 
     static let engineImage = "apple.intelligence"
     static let failureImage = "exclamationmark.circle"
@@ -50,8 +48,8 @@ fileprivate enum Constants {
 
 /// 미읽음 구간 요약 시트.
 ///
-/// 헤더(무엇이 만들었는지)와 하단 면책 문구는 요약 상태와 무관하게 항상 그린다. 생성형 결과를
-/// 보여 주는 화면에서 출처와 한계 표기는 결과가 있을 때만 보여 줄 성질의 것이 아니다.
+/// 헤더(무엇이 만들었는지)는 요약 상태와 무관하게 항상 그린다. 생성형 결과를 보여 주는
+/// 화면에서 출처 표기는 결과가 있을 때만 보여 줄 성질의 것이 아니다.
 struct ThreadSummarySheet: View {
 
     // MARK: - Property
@@ -68,7 +66,6 @@ struct ThreadSummarySheet: View {
                 VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
                     header
                     content
-                    disclaimer
                 }
                 .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
                 .padding(.top, DefaultSpacing.spacing24)
@@ -79,8 +76,8 @@ struct ThreadSummarySheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(Constants.dismissTitle) { dismiss() }
-                        .appFont(.body, color: .grey700)
+                    Button(role: .close) { dismiss() }
+                        .accessibilityLabel(Constants.dismissLabel)
                 }
             }
         }
@@ -96,8 +93,7 @@ struct ThreadSummarySheet: View {
 
     // MARK: - View Component
 
-    /// 무엇이 만든 요약인지. "온디바이스" 는 대화 내용이 기기 밖으로 나가지 않는다는 뜻이라
-    /// 채팅 요약에서는 브랜드 표기보다 중요한 정보다.
+    /// 무엇이 만든 요약인지.
     private var header: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             Image(systemName: Constants.engineImage)
@@ -106,12 +102,6 @@ struct ThreadSummarySheet: View {
 
             Text(Constants.engineLabel)
                 .appFont(.callout, weight: .semibold, color: .grey700)
-
-            Text(Constants.onDeviceLabel)
-                .appFont(.caption2, color: .indigo600)
-                .padding(.horizontal, DefaultSpacing.spacing8)
-                .padding(.vertical, DefaultSpacing.spacing4)
-                .background(Color.indigo100, in: .capsule)
         }
         .accessibilityElement(children: .combine)
     }
@@ -286,11 +276,5 @@ struct ThreadSummarySheet: View {
             .regular,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
-    }
-
-    private var disclaimer: some View {
-        Text(Constants.disclaimer)
-            .appFont(.caption2, color: .grey500)
-            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
