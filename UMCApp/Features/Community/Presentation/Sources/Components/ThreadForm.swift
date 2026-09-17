@@ -67,7 +67,7 @@ fileprivate enum Constants {
 /// 있는 섹션을 `trailing` 으로 덧붙인다.
 ///
 /// 아이콘은 추천 이모지 몇 개만 앱이 보여 주고, 나머지는 iOS 순정 이모지 키보드에 맡긴다.
-/// `String` 바인딩 `TextField` 는 adaptive image glyph 를 지원하지 않는다고 시스템에 알리므로
+/// 입력 칸(`EmojiTextField`)은 adaptive image glyph 를 지원하지 않는다고 시스템에 알리므로
 /// Genmoji·Memoji 가 후보로 뜨지 않고, 표준 유니코드 이모지만 들어온다.
 ///
 /// 실측(#1132 · iPhone 17 Pro 시뮬레이터 · iOS 26.5): 이 칸의 이모지 키보드에는 카테고리
@@ -94,7 +94,8 @@ struct ThreadForm<ViewModel: ThreadFormPresenting, Trailing: View>: View {
 
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isDescriptionFocused: Bool
-    @FocusState private var isIconFocused: Bool
+    /// 숨긴 `EmojiTextField` 는 SwiftUI 포커스 시스템 밖이라 `@FocusState` 대신 직접 묶는다.
+    @State private var isIconFocused = false
 
     @State private var iconDraft = ""
 
@@ -466,11 +467,7 @@ struct ThreadForm<ViewModel: ThreadFormPresenting, Trailing: View>: View {
     }
 
     private var iconField: some View {
-        TextField("", text: $iconDraft)
-            .focused($isIconFocused)
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
-            .submitLabel(.done)
+        EmojiTextField(text: $iconDraft, isFocused: $isIconFocused)
             .frame(width: Constants.iconCellSize, height: Constants.iconCellSize)
             .opacity(0)
             .accessibilityHidden(true)
