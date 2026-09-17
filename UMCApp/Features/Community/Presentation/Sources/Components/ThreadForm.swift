@@ -30,10 +30,22 @@ fileprivate enum Constants {
     static let unselectedValue = "선택 안 됨"
     static let categoryLabel = "카테고리"
     static let categoryHint = "탭하면 카테고리를 고를 수 있어요."
+    static let refineTitle = "특징 다듬기"
+    static let refiningTitle = "특징을 다듬고 있어요"
+    static let refineHint = "Apple Intelligence 가 온디바이스로 특징을 다듬어 제안합니다. 적용하기 전에는 바뀌지 않아요."
+    static let refinedTitle = "이렇게 다듬어 봤어요"
+    static let refinedLabelPrefix = "다듬은 특징"
+    static let applyTitle = "적용"
+    static let applyHint = "입력한 특징을 다듬은 문장으로 바꿉니다."
+    static let discardTitle = "취소"
+    static let discardHint = "다듬은 문장을 버리고 입력한 특징을 그대로 둡니다."
+    static let dismissTitle = "닫기"
 
     static let customIconImage = "face.smiling"
     static let categoryImage = "chevron.up.chevron.down"
     static let errorImage = "exclamationmark.triangle"
+    static let refineImage = "apple.intelligence"
+    static let refineFailureImage = "exclamationmark.circle"
 
     /// 카테고리 기본 이모지를 앞에 둔다 — 아이콘을 비워 둔 상태가 그중 한 칸의 선택으로 보인다.
     /// 뒤에 붙인 것도 모두 `normalizedIcon` 을 그대로 통과하는 이모지 한 글자여야 한다.
@@ -257,8 +269,121 @@ struct ThreadForm<ViewModel: ThreadFormPresenting, Trailing: View>: View {
             )
             .accessibilityLabel(Constants.descriptionLabel)
             .accessibilityHint(Constants.descriptionHint)
+
+            // 미지원 기기에서는 행을 감춘다. 분류와 달리 다듬기는 없어도 막히는 흐름이 없다.
+            if viewModel.isDescriptionRefinementAvailable {
+                refineDescriptionRow
+
+                descriptionRefinementResultRow
+            }
         } header: {
             Text(Constants.descriptionHeader)
+        }
+    }
+
+    // MARK: - Description Refinement
+
+    /// 처리 중에는 심볼의 Apple Intelligence 색 애니메이션이 돈다 — 분류 카드 헤더와 같은 신호다.
+    private var refineDescriptionRow: some View {
+        let isRefining = viewModel.descriptionRefinement.isLoading
+
+        return Button {
+            Task { await viewModel.refineDescription() }
+        } label: {
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Image(systemName: Constants.refineImage)
+                    .foregroundStyle(.appleIntelligence)
+                    .symbolEffect(.variableColor.iterative.reversing, isActive: isRefining)
+
+                Text(isRefining ? Constants.refiningTitle : Constants.refineTitle)
+                    .appFont(
+                        .body,
+                        color: viewModel.canRefineDescription ? Color.indigo500 : Color.grey500
+                    )
+
+                Spacer(minLength: 0)
+
+                if isRefining {
+                    ProgressView()
+                }
+            }
+        }
+        .disabled(!viewModel.canRefineDescription)
+        .accessibilityLabel(isRefining ? Constants.refiningTitle : Constants.refineTitle)
+        .accessibilityHint(Constants.refineHint)
+    }
+
+    @ViewBuilder
+    private var descriptionRefinementResultRow: some View {
+        switch viewModel.descriptionRefinement {
+        case .loaded(let refined):
+            refinedDescriptionRow(refined)
+        case .failed:
+            refinementFailureRow
+        case .idle, .loading:
+            EmptyView()
+        }
+    }
+
+    /// 다듬은 문장은 적용 전까지 제안일 뿐이다. 특징 칸을 바로 덮으면 사용자가 쓴 문장이 사라진다.
+    ///
+    /// 한 행에 버튼이 둘이라 `.borderless` 를 건다 — 기본 스타일이면 행 탭 한 번에 둘 다 눌린다.
+    private func refinedDescriptionRow(_ refined: String) -> some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                Text(Constants.refinedTitle)
+                    .appFont(.caption1, color: .grey500)
+
+                Text(refined)
+                    .appFont(.body, color: .grey900)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(Constants.refinedLabelPrefix), \(refined)")
+
+            HStack(spacing: DefaultSpacing.spacing16) {
+                Spacer(minLength: 0)
+
+                Button {
+                    viewModel.discardRefinedDescription()
+                } label: {
+                    Text(Constants.discardTitle)
+                        .appFont(.callout, color: .grey600)
+                }
+                .accessibilityHint(Constants.discardHint)
+
+                Button {
+                    viewModel.applyRefinedDescription()
+                } label: {
+                    Text(Constants.applyTitle)
+                        .appFont(.callout, weight: .semibold, color: Color.indigo500)
+                }
+                .accessibilityHint(Constants.applyHint)
+            }
+            .buttonStyle(.borderless)
+        }
+    }
+
+    /// 원래 특징은 그대로라 흐름을 막지 않고 안내만 띄운다. 다시 시도는 위 행이 맡는다.
+    private var refinementFailureRow: some View {
+        HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
+            Label {
+                Text(viewModel.descriptionRefinementErrorMessage ?? "")
+                    .appFont(.footnote, color: .grey500)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } icon: {
+                Image(systemName: Constants.refineFailureImage)
+                    .foregroundStyle(Color.grey400)
+            }
+
+            // 행 전체가 닫기 버튼이 되지 않도록 버튼 영역만 탭을 받게 한다.
+            Button {
+                viewModel.discardRefinedDescription()
+            } label: {
+                Text(Constants.dismissTitle)
+                    .appFont(.footnote, color: .grey600)
+            }
+            .buttonStyle(.borderless)
         }
     }
 

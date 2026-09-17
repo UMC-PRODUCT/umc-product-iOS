@@ -100,9 +100,9 @@ extension DIContainer {
 
     // MARK: - On-Device AI
 
-    /// 온디바이스 대화 요약기와 스레드 분류기.
+    /// 온디바이스 대화 요약기와 스레드 분류기·특징 다듬기.
     ///
-    /// 둘 다 실행 한 번마다 세션을 새로 만들고 인스턴스에는 상태가 없다 — 실시간 클라이언트와
+    /// 모두 실행 한 번마다 세션을 새로 만들고 인스턴스에는 상태가 없다 — 실시간 클라이언트와
     /// 달리 단일 인스턴스를 강제할 이유가 없다.
     private func registerCommunityOnDeviceAI() {
         register(ThreadSummarizing.self) {
@@ -110,6 +110,9 @@ extension DIContainer {
         }
         register(ThreadClassifying.self) {
             FoundationModelsThreadClassifier()
+        }
+        register(ThreadDescriptionRefining.self) {
+            FoundationModelsThreadDescriptionRefiner()
         }
     }
 }

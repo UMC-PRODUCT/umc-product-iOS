@@ -52,6 +52,9 @@ public final class CommunityThreadEditViewModel {
     public private(set) var state: Loadable<CommunityThread> = .idle
     public private(set) var classification: Loadable<ThreadClassification> = .idle
 
+    /// 다듬은 특징 제안. 로직은 ``ThreadFormPresenting`` 확장에 있다.
+    public var descriptionRefinement: Loadable<String> = .idle
+
     /// 삭제가 확정된 상태. View 가 이걸 보고 리스트로 되돌린다.
     public private(set) var didDelete = false
 
@@ -62,6 +65,7 @@ public final class CommunityThreadEditViewModel {
 
     private let useCase: CommunityThreadEditUseCaseProtocol
     private let classifier: ThreadClassifying
+    public let descriptionRefiner: ThreadDescriptionRefining
     private let errorHandler: ErrorHandler
 
     /// 마지막으로 분류를 돌린 특징. 넛지를 한 번 따르고 나면 같은 문구로 다시 조르지 않는다.
@@ -74,11 +78,13 @@ public final class CommunityThreadEditViewModel {
         thread: CommunityThread,
         useCase: CommunityThreadEditUseCaseProtocol,
         classifier: ThreadClassifying,
+        descriptionRefiner: ThreadDescriptionRefining,
         errorHandler: ErrorHandler
     ) {
         self.original = thread
         self.useCase = useCase
         self.classifier = classifier
+        self.descriptionRefiner = descriptionRefiner
         self.errorHandler = errorHandler
         self.category = thread.category
         self.title = thread.title
@@ -129,10 +135,12 @@ public final class CommunityThreadEditViewModel {
         classifier.isAvailable
     }
 
+    /// 특징을 다듬는 중에는 잠근다 — 곧 바뀔 수 있는 특징으로 분류하면 결과가 금방 낡는다.
     public var canClassify: Bool {
         isClassificationAvailable
             && !trimmed(threadDescription).isEmpty
             && !classification.isLoading
+            && !descriptionRefinement.isLoading
     }
 
     /// "다시 분류" 넛지를 띄울지 (#11).

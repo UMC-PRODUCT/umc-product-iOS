@@ -62,17 +62,23 @@ public final class CommunityThreadCreateViewModel {
     /// 온디바이스 자동 분류 상태. 로직은 `+Classification` 확장에 있다.
     public internal(set) var classification: Loadable<ThreadClassification> = .idle
 
+    /// 다듬은 특징 제안. 로직은 ``ThreadFormPresenting`` 확장에 있다.
+    public var descriptionRefinement: Loadable<String> = .idle
+
     private let useCase: CommunityThreadCreateUseCaseProtocol
     let classifier: ThreadClassifying
+    public let descriptionRefiner: ThreadDescriptionRefining
 
     // MARK: - Init
 
     public init(
         useCase: CommunityThreadCreateUseCaseProtocol,
-        classifier: ThreadClassifying
+        classifier: ThreadClassifying,
+        descriptionRefiner: ThreadDescriptionRefining
     ) {
         self.useCase = useCase
         self.classifier = classifier
+        self.descriptionRefiner = descriptionRefiner
     }
 
     // MARK: - Computed Property

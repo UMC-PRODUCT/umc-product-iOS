@@ -74,6 +74,27 @@ private final class StubClassifier: ThreadClassifying, @unchecked Sendable {
     }
 }
 
+/// 특징 다듬기 대역. `result` 를 `nil` 로 두면 실패를 던진다.
+private final class StubDescriptionRefiner: ThreadDescriptionRefining, @unchecked Sendable {
+
+    static let defaultResult = "매주 화요일 저녁 8시에 모여 함께 공부해요."
+
+    let isAvailable: Bool
+    var result: String?
+    private(set) var callCount = 0
+
+    init(isAvailable: Bool = true, result: String? = StubDescriptionRefiner.defaultResult) {
+        self.isAvailable = isAvailable
+        self.result = result
+    }
+
+    func refine(title: String, description: String) async throws -> String {
+        callCount += 1
+        guard let result else { throw ThreadDescriptionRefinementError.emptyResult }
+        return result
+    }
+}
+
 // MARK: - Tests
 
 @Suite("커뮤니티 스레드 생성 ViewModel")
@@ -368,6 +389,80 @@ struct CommunityThreadCreateViewModelTests {
         // 추천 배지는 분류 결과를 계속 가리킨다 — 선택 상태와 다른 정보다.
         #expect(viewModel.recommendedCategory == .study)
     }
+
+    // MARK: - 특징 다듬기
+
+    @Test("다듬은 특징은 적용하기 전까지 입력을 바꾸지 않고, 적용하면 교체된다")
+    func appliesRefinedDescriptionOnlyOnApply() async {
+        let viewModel = makeViewModel()
+        viewModel.title = "iOS 스터디"
+        viewModel.threadDescription = "화요일 8시 공부"
+
+        await viewModel.refineDescription()
+
+        #expect(viewModel.descriptionRefinement.value == StubDescriptionRefiner.defaultResult)
+        #expect(viewModel.threadDescription == "화요일 8시 공부")
+
+        viewModel.applyRefinedDescription()
+
+        #expect(viewModel.threadDescription == StubDescriptionRefiner.defaultResult)
+        #expect(viewModel.descriptionRefinement.isIdle)
+    }
+
+    @Test("다듬은 특징을 취소하면 입력한 특징이 그대로 남는다")
+    func keepsDescriptionWhenRefinementDiscarded() async {
+        let viewModel = makeViewModel()
+        viewModel.threadDescription = "화요일 8시 공부"
+
+        await viewModel.refineDescription()
+        viewModel.discardRefinedDescription()
+
+        #expect(viewModel.threadDescription == "화요일 8시 공부")
+        #expect(viewModel.descriptionRefinement.isIdle)
+    }
+
+    @Test("다듬기가 실패하면 인라인 에러가 뜨고 특징은 그대로 남는다")
+    func showsErrorWhenRefinementFails() async {
+        let viewModel = makeViewModel(refiner: StubDescriptionRefiner(result: nil))
+        viewModel.threadDescription = "화요일 8시 공부"
+
+        await viewModel.refineDescription()
+
+        #expect(viewModel.descriptionRefinement.error != nil)
+        #expect(
+            viewModel.descriptionRefinementErrorMessage
+                == ThreadDescriptionRefinementError.emptyResult.errorDescription
+        )
+        #expect(viewModel.threadDescription == "화요일 8시 공부")
+    }
+
+    @Test("미지원 기기에서는 다듬기가 잠기고 다듬기를 부르지 않는다")
+    func locksRefinementWhenUnavailable() async {
+        let refiner = StubDescriptionRefiner(isAvailable: false)
+        let viewModel = makeViewModel(refiner: refiner)
+        viewModel.threadDescription = "화요일 8시 공부"
+
+        #expect(!viewModel.isDescriptionRefinementAvailable)
+        #expect(!viewModel.canRefineDescription)
+
+        await viewModel.refineDescription()
+
+        #expect(viewModel.descriptionRefinement.isIdle)
+        #expect(refiner.callCount == 0)
+    }
+
+    @Test("특징이 비면 다듬을 수 없다")
+    func doesNotRefineWithoutDescription() async {
+        let refiner = StubDescriptionRefiner()
+        let viewModel = makeViewModel(refiner: refiner)
+        viewModel.title = "iOS 스터디"
+
+        #expect(!viewModel.canRefineDescription)
+
+        await viewModel.refineDescription()
+
+        #expect(refiner.callCount == 0)
+    }
 }
 
 // MARK: - Fixture
@@ -377,11 +472,13 @@ struct CommunityThreadCreateViewModelTests {
 @MainActor
 private func makeViewModel(
     useCase: StubCreateUseCase? = nil,
-    classifier: StubClassifier = StubClassifier()
+    classifier: StubClassifier = StubClassifier(),
+    refiner: StubDescriptionRefiner = StubDescriptionRefiner()
 ) -> CommunityThreadCreateViewModel {
     CommunityThreadCreateViewModel(
         useCase: useCase ?? StubCreateUseCase(),
-        classifier: classifier
+        classifier: classifier,
+        descriptionRefiner: refiner
     )
 }
 

@@ -340,7 +340,8 @@ private func previewViewModel(
 ) -> CommunityThreadCreateViewModel {
     let viewModel = CommunityThreadCreateViewModel(
         useCase: PreviewCreateUseCase(),
-        classifier: PreviewClassifier(isAvailable: isAvailable)
+        classifier: PreviewClassifier(isAvailable: isAvailable),
+        descriptionRefiner: PreviewDescriptionRefiner(isAvailable: isAvailable)
     )
     viewModel.title = "iOS 스터디"
     viewModel.threadDescription = description
@@ -356,6 +357,14 @@ private struct PreviewClassifier: ThreadClassifying {
             icon: "📚",
             reason: "매주 정해진 시간에 모여 공부한다는 내용이 있어 스터디로 봤어요."
         )
+    }
+}
+
+private struct PreviewDescriptionRefiner: ThreadDescriptionRefining {
+    let isAvailable: Bool
+
+    func refine(title: String, description: String) async throws -> String {
+        "매주 화요일 저녁 8시에 모여 함께 iOS 를 공부해요."
     }
 }
 
