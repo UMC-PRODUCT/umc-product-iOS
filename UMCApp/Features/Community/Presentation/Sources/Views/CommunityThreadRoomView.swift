@@ -298,7 +298,13 @@ struct CommunityThreadRoomView: View {
                 }
 
                 if let shareLink = viewModel.shareLink {
-                    ShareLink(item: shareLink) {
+                    ShareLink(
+                        item: shareLink,
+                        preview: SharePreview(
+                            viewModel.sharePreviewTitle,
+                            image: Image.umcChannelLogo
+                        )
+                    ) {
                         Label("링크 공유", systemImage: "square.and.arrow.up")
                     }
                 }

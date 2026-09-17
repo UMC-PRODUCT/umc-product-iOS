@@ -1943,4 +1943,18 @@ struct CommunityThreadRoomViewModelTests {
 
         #expect(viewModel.shareLink?.absoluteString == "umc://thread/1")
     }
+
+    @Test("공유 미리보기 제목은 링크 대신 스레드 제목을 쓴다")
+    func sharePreviewTitleUsesThreadTitle() async {
+        let (_, viewModel) = await makeMenuRoom()
+
+        #expect(viewModel.sharePreviewTitle == "스레드")
+    }
+
+    @Test("헤더를 못 불러왔으면 공유 미리보기 제목은 기본 문구다")
+    func sharePreviewTitleFallsBackWithoutHeader() {
+        let viewModel = makeViewModel(StubRoomUseCase())
+
+        #expect(viewModel.sharePreviewTitle == "UMC 스레드")
+    }
 }
