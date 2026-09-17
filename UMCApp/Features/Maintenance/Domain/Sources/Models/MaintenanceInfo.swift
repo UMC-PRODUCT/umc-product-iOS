@@ -5,7 +5,7 @@
 //  Created by euijjang97 on 7/10/26.
 //
 
-/// 원격 킬스위치(RemoteConfig) 기반 점검 상태 정보.
+/// 원격 설정 기반 점검 상태 정보.
 public struct MaintenanceInfo: Equatable, Sendable {
 
     // MARK: - Property

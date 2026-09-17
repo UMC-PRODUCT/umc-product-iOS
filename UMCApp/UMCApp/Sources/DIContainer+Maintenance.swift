@@ -17,6 +17,9 @@ extension DIContainer {
         register(CheckMaintenanceUseCaseProtocol.self) {
             CheckMaintenanceUseCase(service: self.resolve(RemoteConfigServiceProtocol.self))
         }
+        register(FetchRemoteNoticesUseCaseProtocol.self) {
+            FetchRemoteNoticesUseCase(service: self.resolve(RemoteConfigServiceProtocol.self))
+        }
         register(AppStoreVersionServiceProtocol.self) {
             AppStoreVersionService()
         }

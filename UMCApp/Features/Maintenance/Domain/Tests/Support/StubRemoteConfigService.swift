@@ -9,18 +9,21 @@
 
 /// `RemoteConfigServiceProtocol`의 테스트용 Stub 구현체
 ///
-/// 실제 Firebase 접근 없이 고정된 값을 반환한다.
+/// 실제 원격 설정 요청 없이 고정된 값을 반환한다.
 final class StubRemoteConfigService: RemoteConfigServiceProtocol, @unchecked Sendable {
 
     var stubbedMaintenanceInfo: MaintenanceInfo?
     var stubbedMinimumVersion: String?
+    var stubbedNotices: [RemoteNotice]
 
     init(
         stubbedMaintenanceInfo: MaintenanceInfo? = nil,
-        stubbedMinimumVersion: String? = nil
+        stubbedMinimumVersion: String? = nil,
+        stubbedNotices: [RemoteNotice] = []
     ) {
         self.stubbedMaintenanceInfo = stubbedMaintenanceInfo
         self.stubbedMinimumVersion = stubbedMinimumVersion
+        self.stubbedNotices = stubbedNotices
     }
 
     func fetchMaintenanceStatus() async -> MaintenanceInfo? {
@@ -29,5 +32,9 @@ final class StubRemoteConfigService: RemoteConfigServiceProtocol, @unchecked Sen
 
     func fetchMinimumSupportedVersion() async -> String? {
         stubbedMinimumVersion
+    }
+
+    func fetchNotices() async -> [RemoteNotice] {
+        stubbedNotices
     }
 }

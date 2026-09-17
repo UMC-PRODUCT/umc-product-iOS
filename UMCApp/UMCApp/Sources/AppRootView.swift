@@ -11,12 +11,14 @@ import CoreDesignSystem
 import CoreDI
 import CoreDomain
 import CoreNetwork
+import MaintenancePresentation
 import SwiftUI
 import UMCFoundation
 
 /// 앱 루트 화면.
 ///
 /// `AppFlowViewModel`의 상태에 따라 Bootstrap / Login / SignUp / Main(탭 셸)을 스위칭한다.
+/// 원격 안내 대상 화면은 흐름 상태별로 여기서 알리고, Main은 선택 탭을 아는 `RootTabView`가 알린다.
 struct AppRootView: View {
 
     // MARK: - Property
@@ -37,9 +39,11 @@ struct AppRootView: View {
             switch viewModel.state {
             case .bootstrap:
                 BootstrapView(container: di, errorHandler: errorHandler)
+                    .remoteNoticeScreen(.bootstrap)
 
             case .login:
                 LoginView(container: di, errorHandler: errorHandler)
+                    .remoteNoticeScreen(.login)
 
             case .signUp(let verificationToken, let email, let fullName, let context):
                 SignUpView(
@@ -50,9 +54,11 @@ struct AppRootView: View {
                     initialFullName: fullName,
                     postRegisterLoginContext: context
                 )
+                .remoteNoticeScreen(.signUp)
 
             case .pendingApproval:
                 FailedVerificationUMC(container: di, errorHandler: errorHandler)
+                    .remoteNoticeScreen(.pendingApproval)
 
             case .main:
                 RootTabView()

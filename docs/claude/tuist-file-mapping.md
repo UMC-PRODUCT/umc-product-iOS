@@ -545,7 +545,7 @@
 
 | 레거시 파일 | → Tuist 목적지 |
 |---|---|
-| `Data/RemoteConfigService.swift` | MaintenanceData (RemoteConfig) — Firebase 의존 추가 |
+| `Data/RemoteConfigService.swift` | MaintenanceData (GitHub Pages 원격 설정, #1389) — Firebase 의존 없음 |
 | `Domain/CheckForceUpdateUseCase.swift` | MaintenanceDomain (UseCases/Implementations; 프로토콜 Interfaces) |
 | `Domain/CheckMaintenanceUseCase.swift` | MaintenanceDomain (UseCases/Implementations; 프로토콜 Interfaces) |
 | `Domain/MaintenanceInfo.swift` | MaintenanceDomain (Models) |

@@ -11,7 +11,7 @@
 | `Shared.xcconfig` | `UMCApp/Secrets/` | ✅ | 앱 타겟이 참조하는 진입 xcconfig. 비밀이 아닌 기본값 + 환경별 `BASE_URL` 정의. 마지막에 `Secrets.xcconfig` 를 선택적 포함. |
 | `Secrets.xcconfig.template` | `UMCApp/Secrets/` | ✅ | 로컬 시크릿 템플릿(플레이스홀더). |
 | `Secrets.xcconfig` | `UMCApp/Secrets/` | ❌ (gitignore) | 개발자별 실제 키. `Shared.xcconfig` 기본값을 오버라이드. |
-| `GoogleService-Info.plist` | `UMCApp/UMCApp/Resources/` | ❌ (gitignore) | Firebase(FCM 푸시·RemoteConfig) 설정. 없으면 `UMCAppApp.configureFirebaseIfNeeded()` 가 구성을 건너뛴다. |
+| `GoogleService-Info.plist` | `UMCApp/UMCApp/Resources/` | ❌ (gitignore) | Firebase(FCM 푸시) 설정. 없으면 `UMCAppApp.configureFirebaseIfNeeded()` 가 구성을 건너뛴다. |
 
 두 시크릿 모두 **팀 공유 채널에서 수령**합니다. (`GoogleService-Info.plist` 는 Firebase 콘솔 →
 프로젝트 `umcproduct-6cbe1` → 프로젝트 설정 → iOS 앱 `com.umc.product` 에서도 내려받을 수 있습니다.)

@@ -10,8 +10,8 @@ import Foundation
 /// 짧은 시간 내에 연속 호출되는 비동기 작업을 하나의 실행으로 합쳐주는 헬퍼.
 ///
 /// `MaintenanceViewModel.check()` 1회당 점검·강제 업데이트 두 UseCase가 순차적으로
-/// `RemoteConfigService`를 호출한다. 별도 처리가 없으면 매 호출마다
-/// `fetchAndActivate()`가 새로 실행되어 네트워크 왕복이 두 배로 발생한다.
+/// `RemoteConfigService`를 호출한다. 별도 처리가 없으면 매 호출마다 원격 설정 파일을
+/// 새로 요청해 네트워크 왕복이 두 배로 발생한다.
 ///
 /// - 이미 실행 중인 작업이 있으면 그 결과를 그대로 공유한다(동시 호출 대응).
 /// - 방금 끝난 작업이 있으면 `coalesceWindow` 동안은 재실행하지 않고 넘어간다
