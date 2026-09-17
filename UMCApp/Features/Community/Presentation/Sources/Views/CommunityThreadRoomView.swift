@@ -6,9 +6,9 @@
 //
 
 import SwiftUI
+import ActivityPresentation
 import CommunityDomain
 import CoreDesignSystem
-import CoreDI
 import CoreRouting
 import CoreUIComponents
 import UMCFoundation
@@ -38,6 +38,7 @@ struct CommunityThreadRoomView: View {
     // MARK: - Property
 
     @State private var viewModel: CommunityThreadRoomViewModel
+    @State private var inviteViewModel: ThreadInviteViewModel
 
     /// 방 안에서 바꾼 고정·알림을 리스트 행에 반영한다. 두 값은 실시간 이벤트가 없어
     /// (`thread.updated` 는 제목·설명 계열만 싣는다) 이 통로가 유일한 동기화 수단이다.
@@ -46,7 +47,6 @@ struct CommunityThreadRoomView: View {
     /// 나가기·삭제로 스레드가 목록에서 빠졌음을 알린다.
     private let onThreadRemoved: (String) -> Void
 
-    @Environment(\.di) private var di
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -72,10 +72,12 @@ struct CommunityThreadRoomView: View {
 
     init(
         viewModel: CommunityThreadRoomViewModel,
+        inviteViewModel: ThreadInviteViewModel,
         onThreadToggled: @escaping (CommunityThread) -> Void,
         onThreadRemoved: @escaping (String) -> Void
     ) {
         _viewModel = State(initialValue: viewModel)
+        _inviteViewModel = State(initialValue: inviteViewModel)
         self.onThreadToggled = onThreadToggled
         self.onThreadRemoved = onThreadRemoved
     }
@@ -224,15 +226,11 @@ struct CommunityThreadRoomView: View {
                 Task { await viewModel.toggleReaction(message, emoji: emoji) }
             }
         }
-        .fullScreenCover(isPresented: $isInviteSheetPresented) {
-            ThreadInviteSheet(
-                viewModel: ThreadInviteViewModel(
-                    threadId: viewModel.threadId,
-                    useCase: di.resolve(CommunityThreadInviteUseCaseProtocol.self)
-                ),
-                onInvited: { viewModel.applyInvited(count: $0) }
-            )
+        // 선택 화면에 전송 버튼이 없어 닫을 때 초대한다 (`ThreadInviteViewModel` 참고).
+        .fullScreenCover(isPresented: $isInviteSheetPresented, onDismiss: invite) {
+            SelectedChallengerView(challenger: $inviteViewModel.invitees)
         }
+        .alertPrompt(item: $inviteViewModel.alertPrompt)
         // 스펙 6.4: 포그라운드 + 최하단일 때만 워터마크를 올린다. 과거를 읽는 중이거나 앱이
         // 백그라운드인 동안 올리면 안 본 메시지까지 읽음 처리된다.
         .onChange(of: readableMessageId) { _, messageId in
@@ -541,6 +539,13 @@ struct CommunityThreadRoomView: View {
     }
 
     // MARK: - Function
+
+    private func invite() {
+        Task {
+            guard let count = await inviteViewModel.invite() else { return }
+            viewModel.applyInvited(count: count)
+        }
+    }
 
     private func showActions(for message: ThreadMessage) {
         withAnimation(reduceMotion ? nil : .snappy) { actionTargetID = message.id }

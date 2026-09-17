@@ -57,6 +57,7 @@ struct CommunityRoutingView: View {
                     errorHandler: errorHandler,
                     summarizer: container.resolve(ThreadSummarizing.self)
                 ),
+                inviteViewModel: makeInviteViewModel(threadId: threadId),
                 onThreadToggled: onThreadToggled,
                 onThreadRemoved: onThreadRemoved
             )
@@ -92,8 +93,19 @@ struct CommunityRoutingView: View {
                     useCase: container.resolve(CommunityThreadMemberUseCaseProtocol.self),
                     errorHandler: errorHandler
                 ),
+                inviteViewModel: makeInviteViewModel(threadId: threadId),
                 onRemoved: { onThreadRemoved(threadId) }
             )
         }
+    }
+
+    // MARK: - Function
+
+    /// 채팅방 ⋯ 메뉴와 참여자 목록이 같은 초대 흐름을 쓴다.
+    private func makeInviteViewModel(threadId: String) -> ThreadInviteViewModel {
+        ThreadInviteViewModel(
+            threadId: threadId,
+            useCase: container.resolve(CommunityThreadInviteUseCaseProtocol.self)
+        )
     }
 }
