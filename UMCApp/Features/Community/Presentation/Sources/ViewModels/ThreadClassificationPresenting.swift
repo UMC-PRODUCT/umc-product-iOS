@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 import CommunityDomain
 import UMCFoundation
 
@@ -31,4 +32,28 @@ public protocol ThreadClassificationPresenting: AnyObject {
     func classify() async
 }
 
-extension CommunityThreadCreateViewModel: ThreadClassificationPresenting {}
+/// ``ThreadForm`` 이 읽고 쓰는 폼 값.
+///
+/// 생성·편집 화면이 같은 폼을 쓰는데 ViewModel 은 서로 다르다. 폼이 한쪽 타입을 직접 들면 두
+/// 화면의 섹션 구성이 다시 갈라지므로, 폼이 실제로 건드리는 값만 이 프로토콜로 묶는다.
+/// `Observable` 은 폼이 `@Bindable` 로 바인딩을 뽑는 데 필요하다.
+@MainActor
+public protocol ThreadFormPresenting: ThreadClassificationPresenting, Observable {
+
+    var title: String { get set }
+    var threadDescription: String { get set }
+    var icon: String { get set }
+    var category: CommunityThreadCategory { get set }
+    var isCategorySheetPresented: Bool { get set }
+
+    /// 아이콘을 비워 두면 저장될 카테고리 기본 이모지.
+    var iconPlaceholder: String { get }
+
+    /// 카테고리 시트에 "AI 추천" 배지를 붙일 항목.
+    var recommendedCategory: CommunityThreadCategory? { get }
+
+    /// 폼 맨 위에 띄울 제출 실패 메시지.
+    var submitErrorMessage: String? { get }
+}
+
+extension CommunityThreadCreateViewModel: ThreadFormPresenting {}
