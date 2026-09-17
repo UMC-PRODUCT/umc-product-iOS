@@ -78,6 +78,10 @@ struct ThreadClassificationCard: View {
 
     var editing: Editing? = nil
 
+    /// 카드가 자체 표면(여백·배경·처리 중 테두리)을 그릴지. Form 셀 안에서는 셀이 표면을 맡으므로
+    /// 끈다 — 켜 두면 셀 안에 회색 카드가 한 겹 더 생긴다.
+    var showsSurface = true
+
     /// 이모지 칸으로 포커스를 옮긴다. 포커스는 폼이 들고 있어 화면이 넘겨 준다.
     var onChangeIcon: () -> Void = {}
 
@@ -98,15 +102,16 @@ struct ThreadClassificationCard: View {
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Constants.cardPadding)
-        // 폼 콘텐츠라 떠 있는 컨트롤 층의 Glass 대신 초대 행과 같은 단색 그룹 표면을 쓴다.
+        .padding(showsSurface ? Constants.cardPadding : EdgeInsets())
+        // 폼 콘텐츠라 떠 있는 컨트롤 층의 Glass 대신 Form 셀과 같은 단색 그룹 표면을 쓴다.
         .background(
-            Color.grey100,
+            showsSurface ? Color.grey100 : .clear,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
         // 처리 중임을 색으로도 알린다. 진행바 하나만으로는 일반 로딩과 구분되지 않는다.
+        // 표면이 없으면 헤더 심볼의 Apple Intelligence 색 애니메이션이 그 역할을 맡는다.
         .overlay {
-            if viewModel.classification.isLoading {
+            if showsSurface && viewModel.classification.isLoading {
                 ConcentricRectangle(
                     corners: .concentric(minimum: DefaultConstant.concentricRadius),
                     isUniform: true
