@@ -13,7 +13,8 @@ import CoreUIComponents
 // MARK: - Constants
 
 fileprivate enum Constants {
-    static let sendButtonSize: CGFloat = 32
+    /// 마이크·전송 원판 지름. 두 버튼을 같은 크기의 원으로 나란히 세운다.
+    static let actionButtonSize: CGFloat = 32
     static let placeholder = "메시지를 입력해주세요"
     static let lineLimit = 1...4
     /// 인용 칩 왼쪽의 세로 막대. 답장이라는 걸 아이콘 없이 알려 주는 표식이다.
@@ -47,13 +48,9 @@ struct MessageComposer: View {
     let onCancelReply: () -> Void
     let onSelectMention: (ThreadMember) -> Void
 
-    /// 전송 아이콘은 본문 크기를 따라 커지는데 원판이 고정이면 접근성 크기에서 글리프가 밖으로
+    /// 버튼 아이콘은 본문 크기를 따라 커지는데 원판이 고정이면 접근성 크기에서 글리프가 밖으로
     /// 삐져나온다. 원판도 같은 비율로 키운다.
-    @ScaledMetric(relativeTo: .body) private var sendButtonSize = Constants.sendButtonSize
-    /// 글자가 커지면 칩이 높아지고 둥근 끝 곡선도 안쪽으로 깊어진다. 고정 16pt 면 인용 막대 끝이
-    /// 곡선에 닿으므로 왼쪽 여백도 같이 키운다.
-    @ScaledMetric(relativeTo: .caption)
-    private var replyChipLeadingPadding = DefaultSpacing.spacing16
+    @ScaledMetric(relativeTo: .body) private var actionButtonSize = Constants.actionButtonSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Body
@@ -64,19 +61,27 @@ struct MessageComposer: View {
                 mentionList
             }
 
-            if let replyTarget {
-                replyChip(replyTarget)
-                    // 아래로 미는 `move` 는 배경 없는 입력줄 밑으로 칩이 비쳐 보여서 제자리 확대로
-                    // 띄운다. 동작 줄이기에서는 페이드만 남긴다.
-                    .transition(
-                        reduceMotion
-                            ? .opacity
-                            : .scale(scale: DefaultConstant.transitionScale, anchor: .bottom)
-                                .combined(with: .opacity)
-                    )
-            }
+            // 칩·카드·버튼의 glass 를 한 번에 그린다. 따로 그리면 glass 마다 오프스크린 패스가 돈다.
+            GlassEffectContainer {
+                VStack(spacing: 0) {
+                    if let replyTarget {
+                        replyChip(replyTarget)
+                            // 아래로 미는 `move` 는 반투명 입력 카드 밑으로 칩이 비쳐 보여서 제자리
+                            // 확대로 띄운다. 동작 줄이기에서는 페이드만 남긴다.
+                            .transition(
+                                reduceMotion
+                                    ? .opacity
+                                    : .scale(
+                                        scale: DefaultConstant.transitionScale,
+                                        anchor: .bottom
+                                    )
+                                    .combined(with: .opacity)
+                            )
+                    }
 
-            inputRow
+                    inputRow
+                }
+            }
         }
         // 화면 VStack 이 아니라 여기에 건다. 전송하면 인용 해제와 메시지 추가가 한 번에 일어나서,
         // 위에 걸면 메시지 배열까지 애니메이션 대상이 된다.
@@ -103,6 +108,9 @@ struct MessageComposer: View {
                 } label: {
                     Image(systemName: "mic")
                         .foregroundStyle(Color.grey500)
+                        .frame(width: actionButtonSize, height: actionButtonSize)
+                        // 아직 누를 수 없어 `.interactive()` 는 뺀다 — 눌림 반응이 오면 되는 줄 안다.
+                        .glassEffect(.regular, in: .circle)
                         .frame(
                             minWidth: DefaultConstant.minimumTouchTarget,
                             minHeight: DefaultConstant.minimumTouchTarget
@@ -114,9 +122,9 @@ struct MessageComposer: View {
 
                 Button(action: onSend) {
                     Image(systemName: "arrow.up")
-                        .foregroundStyle(.white)
-                        .frame(width: sendButtonSize, height: sendButtonSize)
-                        .background(canSend ? Color.indigo500 : Color.grey300, in: .circle)
+                        .foregroundStyle(canSend ? Color.white : Color.grey400)
+                        .frame(width: actionButtonSize, height: actionButtonSize)
+                        .glassEffect(sendButtonGlass, in: .circle)
                         // 원판이 44pt 보다 작아도 누르는 영역은 44pt 를 채운다.
                         .frame(
                             minWidth: DefaultConstant.minimumTouchTarget,
@@ -131,12 +139,18 @@ struct MessageComposer: View {
             .padding(.horizontal, DefaultSpacing.spacing4)
             .padding(.bottom, DefaultSpacing.spacing4)
         }
-        .background(
-            Color.grey100,
-            in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
-        )
+        // concentric 은 화면 하단 모서리 곡률을 따라 40pt 이상으로 커져서 두세 줄 높이 카드가
+        // 캡슐처럼 보였다. 고정 반경으로 줄여 각을 살린다 (#1391).
+        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
         .padding(.horizontal, DefaultSpacing.spacing16)
         .padding(.vertical, DefaultSpacing.spacing8)
+    }
+
+    /// 보낼 수 있을 때만 강조색을 채우고 눌림에 반응한다. 비활성은 마이크와 같은 무채색 glass 라
+    /// 색이 빠진 것만으로 누를 수 없다는 게 드러난다. `.buttonStyle(.glassProminent)` 는 44pt
+    /// 터치 영역 전체를 원으로 칠해서 32pt 원판을 만들 수 없어 glass 를 직접 입힌다.
+    private var sendButtonGlass: Glass {
+        canSend ? .regular.tint(Color.indigo500).interactive() : .regular
     }
 
     /// 답장 대상 요약 + 취소. 취소는 답장을 그만두는 유일한 경로라 44pt 를 채운다.
@@ -177,14 +191,13 @@ struct MessageComposer: View {
             }
             .accessibilityLabel("답장 취소")
         }
-        // 배경 안쪽 여백. 인용 막대와 글이 둥근 모서리 곡선에 물리지 않게 띄운다.
-        .padding(.leading, replyChipLeadingPadding)
+        // 배경 안쪽 여백. 인용 막대와 글이 둥근 모서리 곡선에 물리지 않게 띄운다. 반경이 고정이라
+        // 글자가 커져 칩이 높아져도 곡선 깊이는 그대로다.
+        .padding(.leading, DefaultSpacing.spacing16)
         .padding(.vertical, DefaultSpacing.spacing4)
-        .background(
-            Color.grey100,
-            in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
-        )
-        // 배경 바깥 인셋. 이게 없으면 회색이 화면 좌우 끝까지 흘러 잘려 나간 띠처럼 보인다.
+        // 입력 카드와 같은 glass·반경. 둘이 세로로 쌓여 한 덩어리로 읽힌다.
+        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
+        // 배경 바깥 인셋. 이게 없으면 glass 가 화면 좌우 끝까지 흘러 잘려 나간 띠처럼 보인다.
         // 요약 배너·입력줄과 같은 값으로 맞춰 세로로 한 줄에 선다.
         .padding(.horizontal, DefaultSpacing.spacing16)
     }

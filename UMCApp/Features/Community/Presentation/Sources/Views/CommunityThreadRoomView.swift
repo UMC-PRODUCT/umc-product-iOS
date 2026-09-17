@@ -155,37 +155,43 @@ struct CommunityThreadRoomView: View {
             }
 
             content
+        }
+        // 입력 카드가 glass 라 뒤로 메시지가 흘러야 떠 있는 카드로 보인다. VStack 아래에 두면
+        // 비치는 게 없다. 스크롤 뷰는 바 높이만큼 콘텐츠 인셋을 받아 마지막 말풍선이 카드에
+        // 가리지 않고, 바 뒤로는 스크롤 가장자리 효과가 깔린다.
+        .safeAreaBar(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                if let notice = viewModel.sendCooldownNotice {
+                    noticeCapsule(notice)
+                }
 
-            if let notice = viewModel.sendCooldownNotice {
-                noticeCapsule(notice)
-            }
+                // 신고 접수·중복 안내. 확인을 누를 것이 없어 Alert 대신 쿨다운 안내와 같은 자리에
+                // 잠깐 띄운다.
+                if let notice = viewModel.reportNotice {
+                    noticeCapsule(notice)
+                }
 
-            // 신고 접수·중복 안내. 확인을 누를 것이 없어 Alert 대신 쿨다운 안내와 같은 자리에
-            // 잠깐 띄운다.
-            if let notice = viewModel.reportNotice {
-                noticeCapsule(notice)
-            }
-
-            // 로딩 중에도 자리를 지킨다. 헤더가 온 뒤에 컴포저가 나타나면 메시지 영역이 그
-            // 높이만큼 한 번 더 줄어 뼈대가 아래로 밀린다 — 비활성으로 그려 두면 높이가
-            // 처음부터 같다. 실패는 다르다: 보낼 방을 모르고 재시도 뷰가 화면을 채우므로
-            // 입력창을 그리지 않는다.
-            if viewModel.header.error == nil {
-                MessageComposer(
-                    text: $viewModel.draft,
-                    canSend: viewModel.canSend,
-                    replyTarget: viewModel.replyTarget,
-                    mentionCandidates: viewModel.mentionCandidates,
-                    onSend: { Task { await viewModel.send() } },
-                    onCancelReply: { viewModel.cancelReply() },
-                    onSelectMention: { viewModel.selectMention($0) }
-                )
-                // 헤더가 오기 전에는 어느 방으로 보낼지 모른다. `.disabled` 는 높이를 건드리지
-                // 않으므로 자리는 그대로 두고 손댈 수만 없게 막는다.
-                .disabled(viewModel.header.value == nil)
-                // 초안이 바뀔 때마다 `@` 토큰을 다시 판정한다. `TextField` 는 커서를 넘겨주지
-                // 않으므로 텍스트 변화가 유일한 신호다.
-                .onChange(of: viewModel.draft) { _, _ in viewModel.draftDidChange() }
+                // 로딩 중에도 자리를 지킨다. 헤더가 온 뒤에 컴포저가 나타나면 하단 인셋이 그
+                // 높이만큼 늦게 붙어 뼈대가 한 번 더 움직인다 — 비활성으로 그려 두면 인셋이
+                // 처음부터 같다. 실패는 다르다: 보낼 방을 모르고 재시도 뷰가 화면을 채우므로
+                // 입력창을 그리지 않는다.
+                if viewModel.header.error == nil {
+                    MessageComposer(
+                        text: $viewModel.draft,
+                        canSend: viewModel.canSend,
+                        replyTarget: viewModel.replyTarget,
+                        mentionCandidates: viewModel.mentionCandidates,
+                        onSend: { Task { await viewModel.send() } },
+                        onCancelReply: { viewModel.cancelReply() },
+                        onSelectMention: { viewModel.selectMention($0) }
+                    )
+                    // 헤더가 오기 전에는 어느 방으로 보낼지 모른다. `.disabled` 는 높이를
+                    // 건드리지 않으므로 자리는 그대로 두고 손댈 수만 없게 막는다.
+                    .disabled(viewModel.header.value == nil)
+                    // 초안이 바뀔 때마다 `@` 토큰을 다시 판정한다. `TextField` 는 커서를
+                    // 넘겨주지 않으므로 텍스트 변화가 유일한 신호다.
+                    .onChange(of: viewModel.draft) { _, _ in viewModel.draftDidChange() }
+                }
             }
         }
         .animation(.default, value: viewModel.sendCooldownNotice)
@@ -479,7 +485,10 @@ struct CommunityThreadRoomView: View {
         .scrollDisabled(actionTargetID != nil)
         .scrollDismissesKeyboard(.interactively)
         .onScrollGeometryChange(for: Bool.self) { geometry in
-            geometry.contentOffset.y + geometry.containerSize.height
+            // `containerSize` 는 위아래 인셋(네비게이션 바·떠 있는 컴포저)을 뺀 높이라 오프셋에
+            // 더하면 네비게이션 바 높이만큼 모자라 최하단에서도 false 가 된다. `visibleRect` 는
+            // 프레임 전체라 컴포저가 덮는 하단 인셋만 빼면 카드 위로 실제 보이는 끝이 나온다.
+            geometry.visibleRect.maxY - geometry.contentInsets.bottom
                 >= geometry.contentSize.height - Constants.bottomProximity
         } action: { _, isNearBottom in
             self.isNearBottom = isNearBottom
