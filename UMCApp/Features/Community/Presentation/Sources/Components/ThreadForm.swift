@@ -503,14 +503,17 @@ struct ThreadForm<ViewModel: ThreadFormPresenting, Trailing: View>: View {
 
     // MARK: - Classification Section
 
-    /// 분류 카드와, 그 결과를 손으로 덮어쓰는 카테고리 행.
+    /// 값인 카테고리 행을 먼저, 그 값을 정하는 분류 카드(AI 안내·재분류)를 아래에 둔다.
+    ///
+    /// 카드가 위에 오면 재분류 버튼이 무엇을 바꾸는지 누르기 전까지 읽히지 않고, 섹션의 주인공인
+    /// 카테고리 값이 카드에 딸린 보조 행처럼 보인다. 생성 화면은 분류 전에 행이 없어 카드만 남는다.
     private var classificationSection: some View {
         Section {
-            ThreadClassificationCard(viewModel: viewModel, mode: classificationMode)
-
             if showsCategoryRow {
                 categoryRow
             }
+
+            ThreadClassificationCard(viewModel: viewModel, mode: classificationMode)
         } header: {
             Text(Constants.classificationHeader)
         }
