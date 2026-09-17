@@ -71,7 +71,6 @@ struct MessageBubble: View {
                 if isMine {
                     Spacer(minLength: DefaultSpacing.spacing32)
                     deliveryIndicator
-                    if !message.isDeleted { reactionAffordance }
                 }
 
                 VStack(
@@ -110,7 +109,6 @@ struct MessageBubble: View {
                 }
 
                 if !isMine {
-                    if !message.isDeleted { reactionAffordance }
                     Spacer(minLength: DefaultSpacing.spacing32)
                 }
             }
@@ -153,7 +151,10 @@ struct MessageBubble: View {
     }
 
     /// 롱프레스 진입점을 눈에 보이게 드러낸다 (#1317 완료 조건 d).
-    /// 시안이 없어 임시 SF Symbol 로 자리만 잡아 둔다 — 모양·위치·표시 조건은 디자인 확정 대기.
+    ///
+    /// 칩 줄(``reactionChips``) 안에 세운다. 바깥 HStack 에 두면 그 줄의 폭을 말풍선이 정해서
+    /// 칩과 아이콘 사이가 말풍선 폭만큼 벌어진다. 그래서 반응이 있는 메시지에만 칩 옆에 붙고,
+    /// 첫 반응을 다는 경로는 그대로 롱프레스 오버레이가 맡는다.
     private var reactionAffordance: some View {
         Button(action: onRequestActions) {
             Image(systemName: "face.smiling")
@@ -243,6 +244,8 @@ struct MessageBubble: View {
     /// 말풍선 아래 붙는 반응 칩. 칩을 다시 누르면 같은 토글이 돈다.
     private var reactionChips: some View {
         HStack(spacing: DefaultSpacing.spacing4) {
+            if isMine { reactionAffordance }
+
             ForEach(message.reactions, id: \.emoji) { reaction in
                 Button {
                     onReact(reaction.emoji)
@@ -252,6 +255,8 @@ struct MessageBubble: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(Self.reactionLabel(reaction))
             }
+
+            if !isMine { reactionAffordance }
         }
     }
 
