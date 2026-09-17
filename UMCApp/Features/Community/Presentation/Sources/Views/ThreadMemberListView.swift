@@ -56,6 +56,7 @@ struct ThreadMemberListView: View {
                 if viewModel.isOwner {
                     ToolbarItem(placement: .topBarTrailing) { inviteButton }
                 }
+                ToolbarItem(placement: .topBarTrailing) { leaveButton }
             }
             .alertPrompt(item: $viewModel.alertPrompt)
             .sheet(isPresented: $isInviteSheetPresented) {
@@ -84,6 +85,18 @@ struct ThreadMemberListView: View {
         Button("초대") { isInviteSheetPresented = true }
     }
 
+    /// 나가기. 개설자는 위임 전까지 잠기고, 그 사유는 참여자 섹션 footer 로 붙인다 (#1131 결정 2).
+    private var leaveButton: some View {
+        Button(role: .destructive) {
+            viewModel.confirmLeave()
+        } label: {
+            // 툴바에서는 아이콘만 보이고, 제목은 VoiceOver 라벨로 읽힌다.
+            Label("스레드 나가기", systemImage: "door.left.hand.open")
+        }
+        .tint(.red)
+        .disabled(!viewModel.canLeave)
+    }
+
     @ViewBuilder
     private var content: some View {
         switch viewModel.state {
@@ -108,7 +121,7 @@ struct ThreadMemberListView: View {
 
     private func memberList(_ members: [ThreadMember]) -> some View {
         List {
-            Section("참여자 \(members.count)명") {
+            Section {
                 ForEach(members) { member in
                     ThreadMemberRow(
                         member: member,
@@ -120,36 +133,31 @@ struct ThreadMemberListView: View {
                         onKick: { viewModel.confirmKick(member) }
                     )
                 }
+            } header: {
+                Text("참여자 \(members.count)명")
+            } footer: {
+                if let reason = viewModel.leaveBlockReason {
+                    Text(reason)
+                        .appFont(.caption1, color: .grey600)
+                }
             }
 
-            leaveSection
+            if viewModel.canDeleteThread {
+                deleteSection
+            }
         }
         .listStyle(.insetGrouped)
         .refreshable { await viewModel.load() }
     }
 
-    /// 나가기. 개설자는 위임 전까지 버튼이 잠기고, 그 사유를 footer 로 붙인다 (#1131 결정 2).
-    ///
-    /// 위임할 상대조차 없으면 사유 대신 삭제 버튼을 연다 — 안내만 남기면 막다른 길이 된다 (#1134).
-    private var leaveSection: some View {
+    /// 위임할 상대조차 없는 개설자의 출구 — 안내만 남기면 막다른 길이 된다 (#1134).
+    private var deleteSection: some View {
         Section {
-            Button("스레드 나가기", role: .destructive) {
-                viewModel.confirmLeave()
-            }
-            .disabled(!viewModel.canLeave)
-
-            if viewModel.canDeleteThread {
-                Button(role: .destructive) {
-                    viewModel.confirmDeleteThread()
-                } label: {
-                    // 색만으로 구분하지 않도록 휴지통 아이콘을 함께 둔다.
-                    Label("스레드 삭제", systemImage: "trash")
-                }
-            }
-        } footer: {
-            if let reason = viewModel.leaveBlockReason {
-                Text(reason)
-                    .appFont(.caption1, color: .grey600)
+            Button(role: .destructive) {
+                viewModel.confirmDeleteThread()
+            } label: {
+                // 색만으로 구분하지 않도록 휴지통 아이콘을 함께 둔다.
+                Label("스레드 삭제", systemImage: "trash")
             }
         }
     }
