@@ -977,17 +977,24 @@ struct CommunityThreadRoomViewModelTests {
         #expect(useCase.addedReactions.isEmpty)
     }
 
-    @Test("전송에 실패하면 반응은 누르기 전 상태로 돌아간다")
+    /// 되돌리기만 하면 사용자는 탭이 먹지 않은 것으로 본다 (#1375).
+    @Test("전송에 실패하면 반응을 누르기 전 상태로 되돌리고 전역 Alert 으로 알린다")
     func rollsBackFailedReaction() async throws {
         let useCase = StubRoomUseCase()
         useCase.reactionError = AppError.unknown(message: "notConnected")
+        let errorHandler = ErrorHandler()
         let original = [ThreadMessageReaction(emoji: "👍", count: "1", reactedByMe: false)]
         let message = makeMessage(id: "5", reactions: original, createdAt: 500)
-        let viewModel = await makeLoadedViewModel(useCase, with: message)
+        let viewModel = await makeLoadedViewModel(
+            useCase,
+            with: message,
+            errorHandler: errorHandler
+        )
 
         await viewModel.toggleReaction(message, emoji: "👍")
 
         #expect(viewModel.messages.first?.reactions == original)
+        #expect(errorHandler.currentError != nil)
     }
 
     /// `reaction.changed` 는 배열을 통째로 교체한다. 낙관적 값 위에 더해지지 않아야 한다.

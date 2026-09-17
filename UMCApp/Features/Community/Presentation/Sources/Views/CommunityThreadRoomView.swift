@@ -58,6 +58,9 @@ struct CommunityThreadRoomView: View {
     /// id 만 두고 매번 목록에서 되찾는다.
     @State private var actionTargetID: String?
 
+    /// `+` 로 연 전체 이모지 피커의 대상. 반응은 id 로 목록에서 다시 찾으므로 값이 stale 해도 된다.
+    @State private var emojiPickerTarget: ThreadMessage?
+
     /// 오버레이를 닫은 뒤 VoiceOver 포커스를 원래 말풍선으로 돌려보낸다.
     @AccessibilityFocusState private var focusedMessageID: String?
 
@@ -105,7 +108,10 @@ struct CommunityThreadRoomView: View {
                             dismissActions()
                             Task { await viewModel.toggleReaction(message, emoji: emoji) }
                         },
-                        onMoreEmoji: { dismissActions() },
+                        onMoreEmoji: {
+                            dismissActions()
+                            emojiPickerTarget = message
+                        },
                         onAction: { perform($0, on: message) },
                         onDismiss: { dismissActions() }
                     )
@@ -205,6 +211,12 @@ struct CommunityThreadRoomView: View {
         // 대상이 곧 표시 조건이라 `item:` 을 쓴다 — 성공하면 ViewModel 이 대상을 비워 시트가 닫힌다.
         .sheet(item: $viewModel.reportTarget) { _ in
             MessageReportSheet(viewModel: viewModel)
+        }
+        .sheet(item: $emojiPickerTarget) { message in
+            EmojiPickerSheet { emoji in
+                emojiPickerTarget = nil
+                Task { await viewModel.toggleReaction(message, emoji: emoji) }
+            }
         }
         .sheet(isPresented: $isInviteSheetPresented) {
             ThreadInviteSheet(

@@ -145,6 +145,35 @@ enum MessageActionLayout {
         return min(max(preferredY, margin), maxY)
     }
 
+    /// 반응 바와 메뉴의 y 원점을 함께 정한다.
+    ///
+    /// 둘을 따로 보정하면 화면 아래쪽 말풍선에서 메뉴가 위로 밀려 반응 바를 덮는다. 메뉴가 위에
+    /// 그려지므로 이모지 탭을 가로채 답장·복사가 대신 눌렸다 (#1375). 그래서 아래에 자리가
+    /// 없으면 메뉴를 반응 바 위로 넘기고, 위에도 없으면 바 바로 아래에 붙여 겹침만은 막는다.
+    static func verticalOrigins(
+        bubbleFrame: CGRect,
+        barHeight: CGFloat,
+        menuHeight: CGFloat,
+        containerHeight: CGFloat,
+        margin: CGFloat,
+        gap: CGFloat
+    ) -> (bar: CGFloat, menu: CGFloat) {
+        let bar = clampedY(
+            preferredY: bubbleFrame.minY - gap - barHeight,
+            height: barHeight,
+            containerHeight: containerHeight,
+            margin: margin
+        )
+        let belowBar = bar + barHeight + gap
+        let belowBubble = max(bubbleFrame.maxY + gap, belowBar)
+        if belowBubble + menuHeight <= containerHeight - margin {
+            return (bar, belowBubble)
+        }
+
+        let aboveBar = bar - gap - menuHeight
+        return (bar, aboveBar >= margin ? aboveBar : belowBar)
+    }
+
     /// 좌우 정렬 + 화면 밖으로 나가지 않게 x 원점을 정한다.
     static func clampedX(
         isMine: Bool,
@@ -338,12 +367,7 @@ struct MessageActionOverlay: View {
                 containerWidth: containerSize.width,
                 margin: Constants.margin
             ),
-            y: MessageActionLayout.clampedY(
-                preferredY: bubbleFrame.minY - Constants.gap - Constants.reactionBarHeight,
-                height: Constants.reactionBarHeight,
-                containerHeight: containerSize.height,
-                margin: Constants.margin
-            )
+            y: verticalOrigins.bar
         )
     }
 
@@ -355,12 +379,18 @@ struct MessageActionOverlay: View {
                 containerWidth: containerSize.width,
                 margin: Constants.margin
             ),
-            y: MessageActionLayout.clampedY(
-                preferredY: bubbleFrame.maxY + Constants.gap,
-                height: menuHeight,
-                containerHeight: containerSize.height,
-                margin: Constants.margin
-            )
+            y: verticalOrigins.menu
+        )
+    }
+
+    private var verticalOrigins: (bar: CGFloat, menu: CGFloat) {
+        MessageActionLayout.verticalOrigins(
+            bubbleFrame: bubbleFrame,
+            barHeight: Constants.reactionBarHeight,
+            menuHeight: menuHeight,
+            containerHeight: containerSize.height,
+            margin: Constants.margin,
+            gap: Constants.gap
         )
     }
 
