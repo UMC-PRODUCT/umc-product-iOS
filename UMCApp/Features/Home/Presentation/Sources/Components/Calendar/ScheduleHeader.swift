@@ -11,7 +11,7 @@ import UMCFoundation
 
 /// 일정 캘린더 카드의 헤더.
 ///
-/// 표시 중인 연월 타이틀(탭 시 날짜 선택 시트), 표시 모드 전환 세그먼트, 월 이동 스테퍼를 제공한다.
+/// 월 이동 화살표를 양옆에 둔 연월 타이틀(탭 시 날짜 선택 시트)과 표시 모드 전환 세그먼트를 제공한다.
 struct ScheduleHeader: View {
 
     // MARK: - Property
@@ -31,10 +31,11 @@ struct ScheduleHeader: View {
 
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
+            previousMonthButton
             title
+            nextMonthButton
             Spacer(minLength: DefaultSpacing.spacing8)
             modePicker
-            monthStepper
         }
         .sheet(isPresented: $showDatePicker) {
             DateSheetPicker(month: $month, selectedDate: $selectedDate)
@@ -49,9 +50,16 @@ struct ScheduleHeader: View {
         Button {
             showDatePicker = true
         } label: {
-            Text(monthTitle)
-                .appFont(.body, weight: .semibold, color: .grey900)
-                .fixedSize()
+            // 월 자릿수(9월↔12월)가 바뀌어도 오른쪽 화살표가 튀지 않게 가장 긴 타이틀 폭을 잡아 둔다.
+            ZStack {
+                Text("0000년 00월 일정")
+                    .hidden()
+                    .accessibilityHidden(true)
+                Text(monthTitle)
+            }
+            .monospacedDigit()
+            .appFont(.body, weight: .semibold, color: .grey900)
+            .fixedSize()
         }
     }
 
@@ -69,20 +77,24 @@ struct ScheduleHeader: View {
         .frame(width: Constants.segmentWidth)
     }
 
-    private var monthStepper: some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
-            Button {
-                changeMonth(by: -1)
-            } label: {
-                Image(systemName: "chevron.left")
-            }
-            Button {
-                changeMonth(by: 1)
-            } label: {
-                Image(systemName: "chevron.right")
-            }
+    private var previousMonthButton: some View {
+        Button {
+            changeMonth(by: -1)
+        } label: {
+            Image(systemName: "chevron.left")
         }
         .foregroundStyle(Color.grey600)
+        .accessibilityLabel("이전 달")
+    }
+
+    private var nextMonthButton: some View {
+        Button {
+            changeMonth(by: 1)
+        } label: {
+            Image(systemName: "chevron.right")
+        }
+        .foregroundStyle(Color.grey600)
+        .accessibilityLabel("다음 달")
     }
 
     // MARK: - Function
