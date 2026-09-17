@@ -58,8 +58,8 @@ struct UMCPartTypeTests {
 
     @Test("신규 두 파트가 표시명·아이콘·정렬 순서를 갖는다")
     func newPartsHaveDisplayMetadata() {
-        #expect(UMCPartType.webProductEngineer.name == "웹 프로덕트 엔지니어")
-        #expect(UMCPartType.mobileProductEngineer.name == "모바일 프로덕트 엔지니어")
+        #expect(UMCPartType.webProductEngineer.name == "Web PE")
+        #expect(UMCPartType.mobileProductEngineer.name == "Mobile PE")
         #expect(!UMCPartType.webProductEngineer.icon.isEmpty)
         #expect(!UMCPartType.mobileProductEngineer.icon.isEmpty)
         #expect(UMCPartType.webProductEngineer.sortOrder

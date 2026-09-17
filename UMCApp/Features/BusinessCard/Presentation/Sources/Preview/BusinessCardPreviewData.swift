@@ -133,8 +133,8 @@ public enum BusinessCardPreviewData {
     }
 
     /// `UMCPartType.allCases` 선언 순서(PM → Design → Server·Spring → Server·Node →
-    /// Front·Web → Front·Android → Front·iOS → 웹 프로덕트 엔지니어 → 모바일 프로덕트
-    /// 엔지니어)와 1:1 대응하는 더미 신원. 실명·실기관이 아니다.
+    /// Front·Web → Front·Android → Front·iOS → Web PE → Mobile PE)와 1:1 대응하는
+    /// 더미 신원. 실명·실기관이 아니다.
     ///
     /// - Important: `receivedCards` 가 `zip` 으로 묶으므로 항목 수가 `allCases` 보다
     ///   적으면 뒤쪽 파트 카드가 조용히 잘린다. 파트를 늘릴 때 여기도 함께 늘린다.
