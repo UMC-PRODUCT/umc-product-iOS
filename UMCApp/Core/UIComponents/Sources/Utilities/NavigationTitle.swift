@@ -41,6 +41,7 @@ public enum NavigationTitle {
 
     /// 커뮤니티 화면용 타이틀
     public enum Community: String, NavigationTitleRepresentable {
+        case root = "커뮤니티"
         case postDetail = "게시글"
         case createPost = "게시글 생성"
         case editPost = "게시글 수정"

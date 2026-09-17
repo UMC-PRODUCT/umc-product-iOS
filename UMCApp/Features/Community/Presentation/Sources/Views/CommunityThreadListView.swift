@@ -58,7 +58,8 @@ struct CommunityThreadListView: View {
     var body: some View {
         content
             .overlay { recentSearchList }
-            .navigationTitle("커뮤니티")
+            // 필터·검색 버튼과 타이틀을 한 행에 두려고 `.inlineLarge` 를 쓴다 (마이페이지와 동일).
+            .navigationInlineLarge(naviTitle: NavigationTitle.Community.root)
             .umcDefaultBackground()
             .searchable(text: $viewModel.searchText, prompt: Constants.searchPrompt)
             .searchToolbarBehavior(.minimize)
