@@ -17,6 +17,7 @@ fileprivate enum Constants {
     static let placeholder = "메시지를 입력해주세요"
     static let lineLimit = 1...4
     /// 인용 칩 왼쪽의 세로 막대. 답장이라는 걸 아이콘 없이 알려 주는 표식이다.
+    /// 말풍선 인용 블록과 같은 두께·캡슐 모양으로 맞춘다.
     static let quoteBarWidth: CGFloat = 3
     /// 자동완성 오버레이 최대 높이 — 약 3.5행. 반쯤 걸친 행이 보여야 더 있다는 게 드러난다.
     static let mentionListMaxHeight: CGFloat = 176
@@ -49,6 +50,11 @@ struct MessageComposer: View {
     /// 전송 아이콘은 본문 크기를 따라 커지는데 원판이 고정이면 접근성 크기에서 글리프가 밖으로
     /// 삐져나온다. 원판도 같은 비율로 키운다.
     @ScaledMetric(relativeTo: .body) private var sendButtonSize = Constants.sendButtonSize
+    /// 글자가 커지면 칩이 높아지고 둥근 끝 곡선도 안쪽으로 깊어진다. 고정 16pt 면 인용 막대 끝이
+    /// 곡선에 닿으므로 왼쪽 여백도 같이 키운다.
+    @ScaledMetric(relativeTo: .caption)
+    private var replyChipLeadingPadding = DefaultSpacing.spacing16
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Body
 
@@ -60,10 +66,21 @@ struct MessageComposer: View {
 
             if let replyTarget {
                 replyChip(replyTarget)
+                    // 아래로 미는 `move` 는 배경 없는 입력줄 밑으로 칩이 비쳐 보여서 제자리 확대로
+                    // 띄운다. 동작 줄이기에서는 페이드만 남긴다.
+                    .transition(
+                        reduceMotion
+                            ? .opacity
+                            : .scale(scale: DefaultConstant.transitionScale, anchor: .bottom)
+                                .combined(with: .opacity)
+                    )
             }
 
             inputRow
         }
+        // 화면 VStack 이 아니라 여기에 건다. 전송하면 인용 해제와 메시지 추가가 한 번에 일어나서,
+        // 위에 걸면 메시지 배열까지 애니메이션 대상이 된다.
+        .animation(.snappy, value: replyTarget)
     }
 
     // MARK: - View Component
@@ -102,25 +119,33 @@ struct MessageComposer: View {
     /// 답장 대상 요약 + 취소. 취소는 답장을 그만두는 유일한 경로라 44pt 를 채운다.
     private func replyChip(_ reply: ThreadMessageReply) -> some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            Rectangle()
-                .fill(Color.indigo500)
-                .frame(width: Constants.quoteBarWidth)
+            // 막대는 글 높이만큼만 선다. 44pt 행 높이를 채우면 둥근 배경 곡선에 끝이 닿는다.
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Capsule()
+                    .fill(Color.indigo500)
+                    .frame(width: Constants.quoteBarWidth)
 
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                Text("\(reply.senderName)님에게 답장")
-                    .appFont(.caption2, weight: .semibold, color: .indigo600)
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                    Text("\(reply.senderName)님에게 답장")
+                        .appFont(.caption1, weight: .semibold, color: .indigo600)
 
-                Text(reply.snippet)
-                    .appFont(.caption1, color: .grey600)
-                    .lineLimit(1)
+                    Text(reply.snippet)
+                        .appFont(.caption1, color: .grey600)
+                        .lineLimit(1)
+                }
             }
+            .fixedSize(horizontal: false, vertical: true)
+            // 큰 글자 크기에서는 글이 44pt 를 넘겨 행 높이를 정한다 — 그때도 막대가 위아래를 채우지 않게.
+            .padding(.vertical, DefaultSpacing.spacing4)
             .accessibilityElement(children: .combine)
 
             Spacer(minLength: DefaultSpacing.spacing8)
 
             Button(action: onCancelReply) {
+                // 본문보다 먼저 눈에 걸리지 않게 글리프만 작고 가늘게. 터치 영역은 44pt 그대로.
                 Image(systemName: "xmark")
-                    .foregroundStyle(Color.grey600)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Color.grey500)
                     .frame(
                         width: DefaultConstant.minimumTouchTarget,
                         height: DefaultConstant.minimumTouchTarget
@@ -129,9 +154,8 @@ struct MessageComposer: View {
             }
             .accessibilityLabel("답장 취소")
         }
-        .fixedSize(horizontal: false, vertical: true)
         // 배경 안쪽 여백. 인용 막대와 글이 둥근 모서리 곡선에 물리지 않게 띄운다.
-        .padding(.leading, DefaultSpacing.spacing16)
+        .padding(.leading, replyChipLeadingPadding)
         .padding(.vertical, DefaultSpacing.spacing4)
         .background(
             Color.grey100,

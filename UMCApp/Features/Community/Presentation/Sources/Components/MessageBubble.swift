@@ -24,7 +24,7 @@ fileprivate enum Constants {
     /// 미스탭 비용이 크다.
     static let minimumTapTarget: CGFloat = 44
     static let deletedText = "삭제된 메시지예요"
-    /// 인용 블록 왼쪽 세로 막대. 컴포저 인용 칩과 같은 두께로 맞춰 둔다.
+    /// 인용 블록 왼쪽 세로 막대. 컴포저 인용 칩과 같은 두께·캡슐 모양으로 맞춰 둔다.
     static let quoteBarWidth: CGFloat = 3
     /// 말풍선 안에 들어가는 블록이라 바깥 모서리(16)보다 작게 준다.
     static let quoteCornerRadius: CGFloat = 8
@@ -211,7 +211,7 @@ struct MessageBubble: View {
             onQuoteTap(reply.messageId)
         } label: {
             HStack(spacing: DefaultSpacing.spacing8) {
-                Rectangle()
+                Capsule()
                     .fill(quoteAccent)
                     .frame(width: Constants.quoteBarWidth)
 
@@ -230,7 +230,8 @@ struct MessageBubble: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             .padding(.vertical, DefaultSpacing.spacing4)
-            .padding(.trailing, DefaultSpacing.spacing8)
+            // 막대를 왼쪽 끝에 붙이면 8pt 모서리 곡선 밖으로 끝이 삐져나온다. 오른쪽과 같은 폭으로 띄운다.
+            .padding(.horizontal, DefaultSpacing.spacing8)
             .background(quoteBackground, in: .rect(cornerRadius: Constants.quoteCornerRadius))
         }
         .buttonStyle(.plain)
