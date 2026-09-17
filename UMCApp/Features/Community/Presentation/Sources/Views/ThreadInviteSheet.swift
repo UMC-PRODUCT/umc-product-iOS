@@ -75,7 +75,6 @@ struct ThreadInviteSheet: View {
                     dismiss()
                 }
         }
-        .presentationDetents([.medium, .large])
     }
 
     // MARK: - View Component

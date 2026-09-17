@@ -224,7 +224,7 @@ struct CommunityThreadRoomView: View {
                 Task { await viewModel.toggleReaction(message, emoji: emoji) }
             }
         }
-        .sheet(isPresented: $isInviteSheetPresented) {
+        .fullScreenCover(isPresented: $isInviteSheetPresented) {
             ThreadInviteSheet(
                 viewModel: ThreadInviteViewModel(
                     threadId: viewModel.threadId,
