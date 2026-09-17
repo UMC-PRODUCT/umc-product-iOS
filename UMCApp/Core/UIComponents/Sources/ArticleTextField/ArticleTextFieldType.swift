@@ -39,14 +39,12 @@ public enum ArticleTextFieldType {
         }
     }
 
-    /// `.title` 은 이 값이 `.semibold` 로 적혀 있었지만 실제 렌더에 반영된 적이 없다.
-    /// 그대로 살리면 공지 에디터 제목이 갑자기 굵어지므로 보이던 대로 Regular 에 맞춘다.
+    /// 모든 입력칸을 Regular 로 맞춘다. `.title` 은 `.semibold` 로 적혀 있었지만 렌더에 반영된 적이
+    /// 없어 보이던 대로 두었고, `.threadTitle` 은 `.semibold` 가 다른 입력칸보다 튀어 Regular 로 맞췄다.
     public var placeholderWeight: AppFontWeight {
         switch self {
-        case .title, .content, .threadDescription:
+        case .title, .content, .threadTitle, .threadDescription:
             return .regular
-        case .threadTitle:
-            return .semibold
         }
     }
 

@@ -19,7 +19,7 @@ fileprivate enum Constants {
     static let iconHeader = "아이콘"
     static let classificationHeader = "카테고리 분류"
 
-    static let untitledPreview = "이름 없는 스레드"
+    static let untitledPreview = "스레드 제목"
 
     static let titleLabel = "스레드 제목"
     static let descriptionLabel = "스레드 특징"
@@ -201,7 +201,7 @@ struct ThreadForm<ViewModel: ThreadFormPresenting, Trailing: View>: View {
     /// 리스트에 올라갈 모습. 저장 전 값을 스레드 리스트 행과 같은 배치로 미리 보여 준다.
     private var previewSection: some View {
         Section {
-            HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
+            HStack(alignment: .center, spacing: DefaultSpacing.spacing12) {
                 previewIcon
 
                 VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
