@@ -10,6 +10,7 @@ import ProjectDescriptionHelpers
 
 let project = Project(
     name: "CoreNearbyExchange",
+    options: recommendedProjectOptions,
     settings: recommendedProjectSettings,
     targets: [
         .target(

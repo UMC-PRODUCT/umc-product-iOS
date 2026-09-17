@@ -31,6 +31,7 @@ public func widgetExtensionProject(
 ) -> Project {
     Project(
         name: name,
+        options: recommendedProjectOptions,
         settings: recommendedProjectSettings,
         targets: [
             .target(

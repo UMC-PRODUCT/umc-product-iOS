@@ -91,6 +91,7 @@ public func watchAppProject(
 
     return Project(
         name: name,
+        options: recommendedProjectOptions,
         settings: recommendedProjectSettings,
         targets: targets
     )
