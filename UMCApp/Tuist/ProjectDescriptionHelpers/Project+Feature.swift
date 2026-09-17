@@ -143,6 +143,7 @@ public func featureProject(
 
     return Project(
         name: name,
+        options: recommendedProjectOptions,
         settings: recommendedProjectSettings,
         targets: targets
     )

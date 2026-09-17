@@ -66,6 +66,7 @@ public func coreProject(
 
     return Project(
         name: name,
+        options: recommendedProjectOptions,
         settings: recommendedProjectSettings,
         targets: targets
     )

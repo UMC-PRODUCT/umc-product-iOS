@@ -57,3 +57,13 @@ public let recommendedSettings: SettingsDictionary = [
 public let recommendedProjectSettings: Settings = .settings(
     base: recommendedSettings
 )
+
+/// 프로젝트 전역 옵션 — 개발 지역을 한국어로 고정한다.
+///
+/// Tuist 기본값은 `en`이라 앱 번들의 `CFBundleDevelopmentRegion`이 `en`으로 생성되고,
+/// 한국어 로컬라이제이션이 없는 앱에서 시스템 제공 UI(취소/완료 버튼, 피커, 공유 시트 등)가
+/// 영어로 표시된다. 레거시 `AppProduct`와 같은 값으로 맞춘다.
+public let recommendedProjectOptions: Project.Options = .options(
+    defaultKnownRegions: ["ko", "en", "Base"],
+    developmentRegion: "ko"
+)
