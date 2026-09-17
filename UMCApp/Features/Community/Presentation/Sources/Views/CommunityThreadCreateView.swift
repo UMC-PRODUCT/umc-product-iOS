@@ -25,16 +25,17 @@ fileprivate enum Constants {
     static let categoryHint = "탭하면 카테고리를 고를 수 있어요."
 
     static let inviteeLabel = "초대할 챌린저"
+    static let inviteeEmptyValue = "선택 안 함"
     static let inviteeHint = "탭하면 초대할 챌린저를 고를 수 있어요."
 
     static let categoryImage = "chevron.up.chevron.down"
     static let inviteeImage = "chevron.right"
     static let errorImage = "exclamationmark.triangle"
 
-    /// 이모지 한 칸이 아이콘처럼 보이도록 본문보다 크게 잡는다.
-    static let iconFontSize: CGFloat = 34
-    /// 이모지 한 글자만 들어가는 칸이라 카테고리 쪽에 폭을 양보한다.
-    static let iconFieldWidth: CGFloat = 52
+    /// 이모지 한 칸이 아이콘처럼 보이도록 제목보다 크게 잡는다.
+    static let iconFontSize: CGFloat = 28
+    /// 제목 옆 원형 슬롯 지름. 이모지 둘레에 여백이 남도록 글자 크기보다 넉넉히 잡는다.
+    static let iconSlotSize: CGFloat = 52
 }
 
 /// 스레드 생성 화면.
@@ -62,7 +63,7 @@ struct CommunityThreadCreateView: View {
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isDescriptionFocused: Bool
 
-    /// "이모지 변경하기" 가 이모지 키보드를 바로 띄우게 하는 통로.
+    /// 아이콘 슬롯 탭과 "이모지 변경하기" 가 이모지 키보드를 바로 띄우게 하는 통로.
     @FocusState private var isIconFocused: Bool
 
     @State private var isInviteePickerPresented = false
@@ -84,9 +85,11 @@ struct CommunityThreadCreateView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
-                inviteeRow
-
                 composer
+
+                classificationSection
+
+                inviteeRow
 
                 if let notice = viewModel.inviteeCapacityNotice {
                     errorLabel(notice)
@@ -104,7 +107,8 @@ struct CommunityThreadCreateView: View {
         .navigationTitle(Constants.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { submitButton }
-        .safeAreaInset(edge: .bottom) { classificationSection }
+        // 작성 중 다른 탭으로 넘어가면 초안을 잃는다 — 스레드 방 화면과 같이 탭 바를 숨긴다.
+        .toolbarVisibility(.hidden, for: .tabBar)
         .sheet(isPresented: $viewModel.isCategorySheetPresented) {
             ThreadCategorySheet(
                 selection: $viewModel.category,
@@ -125,17 +129,12 @@ struct CommunityThreadCreateView: View {
             isInviteePickerPresented = true
         } label: {
             HStack(spacing: DefaultSpacing.spacing8) {
-                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                    Text(Constants.inviteeLabel)
-                        .appFont(.body, color: Color.grey900)
-
-                    Text("최대 \(viewModel.inviteeMaxCount)명까지 추가할 수 있습니다")
-                        .appFont(.caption1, color: Color.grey500)
-                }
+                Text(Constants.inviteeLabel)
+                    .appFont(.body, color: Color.grey900)
 
                 Spacer(minLength: 0)
 
-                Text("\(viewModel.invitees.count) / \(viewModel.inviteeMaxCount)")
+                Text(inviteeValue)
                     .appFont(.callout, color: Color.grey500)
 
                 Image(systemName: Constants.inviteeImage)
@@ -150,7 +149,7 @@ struct CommunityThreadCreateView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Constants.inviteeLabel)
-        .accessibilityValue("\(viewModel.invitees.count)명 선택")
+        .accessibilityValue(inviteeValue)
         .accessibilityHint(Constants.inviteeHint)
         .sheet(isPresented: $isInviteePickerPresented) {
             SelectedChallengerView(challenger: $viewModel.invitees)
@@ -158,17 +157,28 @@ struct CommunityThreadCreateView: View {
         }
     }
 
-    /// 제목과 특징을 한 덩어리로 묶은 입력부. 둘 사이의 구분선 말고는 장식을 두지 않는다.
+    /// 상한 안내는 여기 두지 않는다 — 상한에 걸렸을 때만 `inviteeCapacityNotice` 가 알린다.
+    private var inviteeValue: String {
+        viewModel.invitees.isEmpty
+            ? Constants.inviteeEmptyValue
+            : "\(viewModel.invitees.count)명"
+    }
+
+    /// 아이콘·제목과 특징을 한 덩어리로 묶은 입력부. 구분선 말고는 장식을 두지 않는다.
     private var composer: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-            ArticleTextField(
-                placeholder: .threadTitle,
-                text: $viewModel.title,
-                focused: $isTitleFocused,
-                submitLabel: .next,
-                onSubmit: { isDescriptionFocused = true }
-            )
-            .accessibilityLabel(Constants.titleLabel)
+            HStack(spacing: DefaultSpacing.spacing12) {
+                iconSlot
+
+                ArticleTextField(
+                    placeholder: .threadTitle,
+                    text: $viewModel.title,
+                    focused: $isTitleFocused,
+                    submitLabel: .next,
+                    onSubmit: { isDescriptionFocused = true }
+                )
+                .accessibilityLabel(Constants.titleLabel)
+            }
 
             Divider()
 
@@ -182,35 +192,11 @@ struct CommunityThreadCreateView: View {
         }
     }
 
-    /// 화면 아래에 붙는 분류 카드. 수동 선택 칸은 자동 분류로 해결되지 않는 상태에서만 따라 나온다.
-    private var classificationSection: some View {
-        VStack(spacing: DefaultSpacing.spacing12) {
-            ThreadClassificationCard(viewModel: viewModel) { isIconFocused = true }
-
-            if viewModel.isManualSelectionVisible {
-                manualSelection
-            }
-        }
-        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        .padding(.bottom, DefaultSpacing.spacing12)
-    }
-
-    private var manualSelection: some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
-            iconField
-                .frame(width: Constants.iconFieldWidth)
-
-            categoryRow
-        }
-        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
-        .padding(.vertical, DefaultSpacing.spacing12)
-        .glassEffect(
-            .regular,
-            in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
-        )
-    }
-
-    private var iconField: some View {
+    /// 제목 옆 원형 이모지 슬롯. 비어 있으면 카테고리 기본 이모지를 흐리게 띄우고, 분류 결과와
+    /// 손으로 고른 이모지가 모두 이 한 칸에 보인다.
+    ///
+    /// 이모지 한 글자보다 슬롯이 커서 글자 밖을 눌러도 키보드가 뜨도록 탭을 슬롯 전체로 넓힌다.
+    private var iconSlot: some View {
         TextField(
             "",
             text: $viewModel.icon,
@@ -222,23 +208,48 @@ struct CommunityThreadCreateView: View {
         .autocorrectionDisabled()
         .textInputAutocapitalization(.never)
         .submitLabel(.done)
+        .frame(width: Constants.iconSlotSize, height: Constants.iconSlotSize)
+        .background(Color.grey100, in: .circle)
+        .contentShape(.circle)
+        .onTapGesture { isIconFocused = true }
         .accessibilityLabel(Constants.iconLabel)
         .accessibilityHint(Constants.iconHint)
+    }
+
+    /// 특징 바로 아래에 붙는 분류 카드. 카테고리 선택 행은 자동 분류로 해결되지 않는 상태에서만
+    /// 따라 나온다.
+    private var classificationSection: some View {
+        VStack(spacing: DefaultSpacing.spacing12) {
+            ThreadClassificationCard(viewModel: viewModel) { isIconFocused = true }
+
+            if viewModel.isManualSelectionVisible {
+                categoryRow
+            }
+        }
     }
 
     private var categoryRow: some View {
         Button {
             viewModel.isCategorySheetPresented = true
         } label: {
-            HStack(spacing: DefaultSpacing.spacing4) {
-                Text(viewModel.category.displayName)
-                    .appFont(.subheadline, color: .grey900)
-
-                Image(systemName: Constants.categoryImage)
-                    .foregroundStyle(Color.grey600)
+            HStack(spacing: DefaultSpacing.spacing8) {
+                Text(Constants.categoryLabel)
+                    .appFont(.body, color: Color.grey900)
 
                 Spacer(minLength: 0)
+
+                Text(viewModel.category.displayName)
+                    .appFont(.callout, color: Color.grey500)
+
+                Image(systemName: Constants.categoryImage)
+                    .foregroundStyle(Color.grey500)
             }
+            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .padding(.vertical, DefaultSpacing.spacing12)
+            .background(
+                Color.grey100,
+                in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
+            )
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Constants.categoryLabel)

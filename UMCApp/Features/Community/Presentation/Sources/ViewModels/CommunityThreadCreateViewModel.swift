@@ -88,11 +88,6 @@ public final class CommunityThreadCreateViewModel {
         category.defaultIcon
     }
 
-    /// 초대 행에 띄울 상한. 서버 `@Size(max = 99)` 와 같은 값이다.
-    public var inviteeMaxCount: Int {
-        CommunityThreadCreateRule.inviteMaxCount
-    }
-
     /// 인라인으로 띄울 실패 메시지.
     public var submitErrorMessage: String? {
         guard case .failed(let error) = state else { return nil }
