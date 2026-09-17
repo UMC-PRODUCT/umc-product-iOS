@@ -10,12 +10,25 @@ import PackageDescription
 
 #if TUIST
     import struct ProjectDescription.PackageSettings
+    import struct ProjectDescription.Settings
+
+    /// macOS·Catalyst 전용 소스는 iOS 빌드에서 `#if` 로 전부 빠져 빈 `.o` 가 된다.
+    /// staticFramework 를 묶는 libtool 이 그 빈 오브젝트마다 `has no symbols` 경고를 내므로
+    /// 서드파티 타겟에서만 끈다(#1394). dynamic 으로 바꾸면 #1340 의 `-ObjC` 링크 문제와 얽힌다.
+    private let silencedNoSymbolsWarning: Settings = .settings(
+        base: ["OTHER_LIBTOOLFLAGS": "$(inherited) -no_warning_for_no_symbols"]
+    )
 
     let packageSettings = PackageSettings(
         // Customize the product types for specific package product
         // Default is .staticFramework
         // productTypes: ["Alamofire": .framework,]
-        productTypes: [:]
+        productTypes: [:],
+        targetSettings: [
+            "AppAuth": silencedNoSymbolsWarning,
+            "AppCheckCore": silencedNoSymbolsWarning,
+            "Firebase": silencedNoSymbolsWarning,
+        ]
     )
 #endif
 
