@@ -52,6 +52,11 @@ extension CommunityThreadRoomViewModel {
         return MessageLink.thread(id: threadId).url
     }
 
+    /// 공유 시트 미리보기 제목. 링크 주소 대신 스레드 제목을 보이고, 헤더 전이면 기본 문구를 쓴다 (#1403).
+    public var sharePreviewTitle: String {
+        header.value?.title ?? "UMC 스레드"
+    }
+
     // MARK: - Function
 
     /// 고정 토글. 리스트와 같은 낙관적 갱신 — 먼저 뒤집고 실패하면 되돌린다.
