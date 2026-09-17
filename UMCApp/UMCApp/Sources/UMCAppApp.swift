@@ -75,8 +75,6 @@ struct UMCAppApp: App {
         // (`SwiftUI.App` 은 `@MainActor` 라 `init()` 도 MainActor 격리다)
         container.activateWatchSession()
         _container = State(initialValue: container)
-        // RemoteConfig 접근은 lazy이므로, FirebaseApp.configure() 이전에 이 ViewModel을
-        // 만들어도 실제 RemoteConfig 인스턴스는 생성되지 않는다.
         _maintenanceViewModel = State(initialValue: MaintenanceViewModel(container: container))
         try? Tips.configure()
     }
@@ -91,6 +89,10 @@ struct UMCAppApp: App {
                 .environment(\.di, container)
                 .modelContainer(sharedModelContainer)
                 .alertPrompt(item: errorAlertBinding)
+                .alertPrompt(item: remoteNoticeAlertBinding)
+                .onPreferenceChange(RemoteNoticeScreenKey.self) { screen in
+                    maintenanceViewModel.screen = screen
+                }
                 .onOpenURL(perform: handleOpenURL)
                 .fullScreenCover(isPresented: maintenanceOverlayBinding) {
                     if let overlayKind = maintenanceViewModel.overlayKind {
@@ -153,6 +155,25 @@ extension UMCAppApp {
         )
     }
 
+    /// 현재 화면의 INFO 안내 바인딩.
+    ///
+    /// 확인을 누른 안내만 이번 실행 동안 숨긴다. 오버레이가 떠서 알림이 밀려난 경우에는
+    /// 확인한 게 아니므로 `set`을 no-op으로 두어, 오버레이가 사라지면 다시 띄운다.
+    private var remoteNoticeAlertBinding: Binding<AlertPrompt?> {
+        Binding(
+            get: {
+                guard let notice = maintenanceViewModel.infoNotice else { return nil }
+                return AlertPrompt(
+                    title: notice.title,
+                    message: notice.body,
+                    positiveBtnTitle: "확인",
+                    positiveBtnAction: { maintenanceViewModel.dismiss(notice) }
+                )
+            },
+            set: { _ in }
+        )
+    }
+
     /// 딥링크 URL을 처리합니다.
     ///
     /// 앱 내부 링크(`umc://`)는 탭 셸이 떠 있어야 열 수 있으므로 여기서는 보관만 하고,
@@ -172,8 +193,7 @@ extension UMCAppApp {
     ///
     /// - Note: CI 등 시크릿(plist)이 배포되지 않은 환경에서도 빌드·실행이 깨지지 않도록,
     ///   plist 부재/파싱 실패/플레이스홀더 값(`GOOGLE_APP_ID`가 `__`로 시작)이면 조용히
-    ///   건너뛴다. 이 경우 RemoteConfig는 항상 fail-open으로 동작한다
-    ///   (`MaintenanceData.RemoteConfigService` 참고).
+    ///   건너뛴다. 이 경우 푸시(FCM)만 비활성이 된다.
     ///
     /// - Note: `AppDelegate.didFinishLaunchingWithOptions`도 `Messaging` 접근 전에 이 메서드를
     ///   호출한다. 두 진입점의 호출 순서는 보장되지 않지만 `FirebaseApp.app()` 가드로 멱등이다.

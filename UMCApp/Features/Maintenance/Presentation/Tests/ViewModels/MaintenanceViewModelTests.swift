@@ -15,7 +15,8 @@ import Testing
 @MainActor
 private func makeViewModel(
     checkMaintenanceUseCase: CheckMaintenanceUseCaseProtocol? = nil,
-    checkForceUpdateUseCase: CheckForceUpdateUseCaseProtocol? = nil
+    checkForceUpdateUseCase: CheckForceUpdateUseCaseProtocol? = nil,
+    notices: [RemoteNotice] = []
 ) -> MaintenanceViewModel {
     let checkMaintenanceUseCase = checkMaintenanceUseCase
         ?? StubCheckMaintenanceUseCase(result: nil)
@@ -25,13 +26,16 @@ private func makeViewModel(
     let container = DIContainer()
     container.register(CheckMaintenanceUseCaseProtocol.self) { checkMaintenanceUseCase }
     container.register(CheckForceUpdateUseCaseProtocol.self) { checkForceUpdateUseCase }
+    container.register(FetchRemoteNoticesUseCaseProtocol.self) {
+        StubFetchRemoteNoticesUseCase(result: notices)
+    }
     return MaintenanceViewModel(container: container)
 }
 
 // MARK: - Tests
 
 @MainActor
-@Suite("MaintenanceViewModel — 킬스위치·강제 업데이트 오버레이 판정")
+@Suite("MaintenanceViewModel — 킬스위치·강제 업데이트·화면별 안내 판정")
 struct MaintenanceViewModelTests {
 
     @Test("점검이 활성화되면 점검 정보가 노출되고 진입이 차단된다")
@@ -100,6 +104,59 @@ struct MaintenanceViewModelTests {
 
         #expect(viewModel.overlayKind == .maintenance(info))
     }
+
+    @Test("현재 화면 대상 BLOCKING 안내는 강제 업데이트보다 우선하고, 다른 화면에서는 뜨지 않는다")
+    func blockingNoticeTargetsCurrentScreen() async {
+        let viewModel = makeViewModel(
+            checkForceUpdateUseCase: StubCheckForceUpdateUseCase(result: true),
+            notices: [makeNotice(screen: "community", template: .blocking)]
+        )
+        await viewModel.check()
+
+        viewModel.screen = .community
+        #expect(viewModel.overlayKind == .maintenance(
+            MaintenanceInfo(isActive: true, title: "안내", message: "본문")
+        ))
+
+        viewModel.screen = .home
+        #expect(viewModel.overlayKind == .forceUpdate)
+    }
+
+    @Test("INFO 안내는 확인하면 다시 뜨지 않는다")
+    func infoNoticeHiddenAfterDismiss() async {
+        let notice = makeNotice(screen: RemoteNotice.allScreens, template: .info)
+        let viewModel = makeViewModel(notices: [notice])
+        await viewModel.check()
+        viewModel.screen = .home
+
+        #expect(viewModel.infoNotice == notice)
+
+        viewModel.dismiss(notice)
+        await viewModel.check()
+        #expect(viewModel.infoNotice == nil)
+    }
+
+    @Test("오버레이가 떠 있으면 INFO 안내는 뜨지 않는다")
+    func infoNoticeSuppressedByOverlay() async {
+        let viewModel = makeViewModel(
+            checkForceUpdateUseCase: StubCheckForceUpdateUseCase(result: true),
+            notices: [makeNotice(screen: RemoteNotice.allScreens, template: .info)]
+        )
+        await viewModel.check()
+
+        #expect(viewModel.infoNotice == nil)
+    }
+
+    private func makeNotice(screen: String, template: RemoteNoticeTemplate) -> RemoteNotice {
+        RemoteNotice(
+            screen: screen,
+            isEnabled: true,
+            template: template,
+            title: "안내",
+            body: "본문",
+            until: nil
+        )
+    }
 }
 
 // MARK: - Stub
@@ -113,6 +170,19 @@ private final class StubCheckMaintenanceUseCase:
     }
 
     func execute() async -> MaintenanceInfo? {
+        result
+    }
+}
+
+private final class StubFetchRemoteNoticesUseCase:
+    FetchRemoteNoticesUseCaseProtocol, @unchecked Sendable {
+    let result: [RemoteNotice]
+
+    init(result: [RemoteNotice]) {
+        self.result = result
+    }
+
+    func execute() async -> [RemoteNotice] {
         result
     }
 }

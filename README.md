@@ -44,7 +44,7 @@ UMC(University MakeUs Challenge) 동아리 운영을 하나의 앱으로 통합�
 | 🧠 **온디바이스 AI** | FoundationModels 기반 대화 요약·액션 아이템 추출·스레드 자동 분류 |
 | 🪪 **명함 근거리 교환** | MultipeerConnectivity + NearbyInteraction, QR·딥링크 폴백 |
 | ⌚️ **watchOS 컴패니언** | 출석 · The Ping · 다음 세션 Complication |
-| 🛡️ **원격 운영 안전장치** | RemoteConfig 점검 킬스위치 · 강제 업데이트 오버레이 |
+| 🛡️ **원격 운영 안전장치** | 원격 설정(GitHub Pages) 점검 킬스위치 · 강제 업데이트 · 화면별 안내 |
 
 ## 🛠️ 기술 스택
 

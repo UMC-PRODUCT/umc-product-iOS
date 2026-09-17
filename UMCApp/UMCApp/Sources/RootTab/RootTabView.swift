@@ -18,6 +18,8 @@ import CoreDI
 import CoreDomain
 import CoreRouting
 import HomePresentation
+import MaintenanceDomain
+import MaintenancePresentation
 import MyPagePresentation
 import NoticePresentation
 
@@ -67,6 +69,7 @@ struct RootTabView: View {
             RootTabAccessoryView(pathStore: pathStore)
         }
         .environment(pathStore)
+        .remoteNoticeScreen(remoteNoticeScreen)
         // 명함 링크는 탭을 옮기는 것으로 끝나지 않는다 — 서버 조회·저장·완료 화면까지가
         // 한 동작이라 탭 셸 바깥(모달)에 붙인다.
         .businessCardLinkReceiver(link: $pendingCardLink, container: di)
@@ -106,6 +109,17 @@ struct RootTabView: View {
             role: userSession.currentRole,
             canToggleAdminMode: userSession.canToggleAdminMode
         )
+    }
+
+    /// 원격 안내 대상 화면. 탭 안에서 push된 화면은 구분하지 않고 탭 단위로 본다.
+    private var remoteNoticeScreen: RemoteNoticeScreen {
+        switch pathStore.selectedTab {
+        case .home: .home
+        case .notice: .notice
+        case .activity: .activity
+        case .community: .community
+        case .mypage: .mypage
+        }
     }
 
     private func tabLabel(_ tab: NavigationTab) -> some View {

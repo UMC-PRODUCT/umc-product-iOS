@@ -26,7 +26,8 @@ let package = Package(
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.6.1"),
         .package(url: "https://github.com/kakao/kakao-ios-sdk", from: "2.27.0"),
         .package(url: "https://github.com/google/GoogleSignIn-iOS", from: "9.1.0"),
-        // 원격 킬스위치(점검)·강제 업데이트(#946)의 RemoteConfig 소스.
+        // FCM 푸시(FirebaseCore·FirebaseMessaging). 킬스위치·강제 업데이트는 GitHub Pages
+        // 원격 설정으로 옮겨 RemoteConfig를 쓰지 않는다(#1389).
         // AppProduct(레거시)에서 검증된 버전(12.7.0)을 하한으로 하는 same-major 범위
         // (from:, 다른 패키지들과 동일한 버전 지정 스타일).
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "12.7.0"),

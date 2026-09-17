@@ -5,31 +5,22 @@
 //  Created by euijjang97 on 7/10/26.
 //
 
-import FirebaseCore
-import FirebaseRemoteConfig
 import Foundation
 import MaintenanceDomain
 import os
 
-/// Firebase Remote Config 기반 킬스위치·강제 업데이트 정보 조회 서비스.
+/// GitHub Pages 원격 설정(`UMC-PRODUCT/umc-product-iOS-remote-config`) 기반 킬스위치·강제 업데이트·
+/// 화면별 안내 조회 서비스.
 ///
-/// `RemoteConfig.remoteConfig()`는 `FirebaseApp.configure()` 이후에만 안전하게 호출할 수
-/// 있다. `remoteConfig`를 lazy로 유지해, 이 서비스가 `FirebaseApp.configure()`보다 먼저
-/// DI 컨테이너에 등록·생성되어도 실제 Firebase 접근은 최초 사용 시점까지 지연된다.
-///
-/// `GoogleService-Info.plist`가 없어 `FirebaseApp`이 구성되지 못한 환경(CI 등)에서는
-/// `remoteConfig`가 `nil`로 유지되어, Firebase SDK의 fatalError 없이 항상 fail-open
-/// (점검 비활성·업데이트 불필요)으로 동작한다.
+/// - API 서버용 Moya 클라이언트를 쓰면 인증 헤더가 GitHub으로 함께 나가므로 전용
+///   `URLSession`을 둔다.
+/// - 전용 디스크 `URLCache`로 GitHub Pages의 Cache-Control(10분)과 ETag를 그대로 따른다.
+///   10분 안에는 네트워크를 쓰지 않고, 그 뒤에는 바뀐 게 없으면 304로 끝난다.
+/// - 네트워크·디코딩이 실패하면 캐시에 남은 마지막 응답, 그것도 없으면 이번 실행의 마지막
+///   성공값을 쓴다. 둘 다 없으면 점검 비활성·업데이트 불필요·안내 없음으로 동작한다(fail-open).
 public final class RemoteConfigService: RemoteConfigServiceProtocol {
 
     // MARK: - Constant
-
-    private enum Key {
-        static let enabled = "maintenance_enabled"
-        static let title = "maintenance_title"
-        static let message = "maintenance_message"
-        static let minimumVersion = "ios_min_version"
-    }
 
     private enum DefaultValue {
         static let title = "서비스 점검 안내"
@@ -37,28 +28,30 @@ public final class RemoteConfigService: RemoteConfigServiceProtocol {
     }
 
     private enum Constants {
-        /// `check()` 1회당 두 UseCase가 순차 호출해도 `fetchAndActivate()`가 한 번만
-        /// 실행되도록 묶어주는 창. Firebase의 `minimumFetchInterval`(release 600초)보다
-        /// 훨씬 짧게 잡아, 정당한 재확인(포그라운드 복귀 등)은 그대로 새로 페치한다.
+        static let configURLString =
+            "https://umc-product.github.io/umc-product-iOS-remote-config/app-config.json"
+        static let cacheDirectoryName = "RemoteConfig"
+        static let cacheDiskCapacity = 1024 * 1024
+        /// `check()` 1회당 여러 UseCase가 순차 호출해도 요청이 한 번만 나가도록 묶어주는 창.
+        /// 캐시 만료(10분)보다 훨씬 짧게 잡아, 정당한 재확인(포그라운드 복귀 등)은 그대로
+        /// 새로 조회한다.
         static let refreshCoalesceWindow: TimeInterval = 5
     }
 
     // MARK: - Property
 
+    private let session: URLSession
     private let fetchTimeout: TimeInterval
     private let refreshCoalescer = RefreshCoalescer(
         coalesceWindow: Constants.refreshCoalesceWindow
     )
-
-    private lazy var remoteConfig: RemoteConfig? = {
-        guard FirebaseApp.app() != nil else { return nil }
-        return Self.makeRemoteConfig(fetchTimeout: fetchTimeout)
-    }()
+    private let lastConfig = OSAllocatedUnfairLock<AppConfigResponseDTO?>(initialState: nil)
 
     // MARK: - Init
 
     public init(fetchTimeout: TimeInterval = 4) {
         self.fetchTimeout = fetchTimeout
+        self.session = Self.makeSession()
     }
 
     // MARK: - Function
@@ -74,9 +67,13 @@ public final class RemoteConfigService: RemoteConfigServiceProtocol {
         }
         #endif
 
-        guard let remoteConfig else { return nil }
-        await refreshIfPossible(remoteConfig)
-        return currentMaintenanceInfo(remoteConfig)
+        let notice = await fetchNotices().first {
+            $0.template == .blocking
+                && $0.screen == RemoteNotice.allScreens
+                && $0.isShowable(today: Date())
+        }
+        guard let notice else { return nil }
+        return MaintenanceInfo(isActive: true, title: notice.title, message: notice.body)
     }
 
     public func fetchMinimumSupportedVersion() async -> String? {
@@ -86,62 +83,66 @@ public final class RemoteConfigService: RemoteConfigServiceProtocol {
         }
         #endif
 
-        guard let remoteConfig else { return nil }
-        await refreshIfPossible(remoteConfig)
-        let minimumVersion = remoteConfig[Key.minimumVersion].stringValue
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return minimumVersion.isEmpty ? nil : minimumVersion
+        await refresh()
+        return lastConfig.withLock { $0 }?.toMinimumSupportedVersion()
+    }
+
+    public func fetchNotices() async -> [RemoteNotice] {
+        await refresh()
+        return lastConfig.withLock { $0 }?.toNotices() ?? []
     }
 }
 
 // MARK: - Private Helper
 
 extension RemoteConfigService {
-    private static func makeRemoteConfig(fetchTimeout: TimeInterval) -> RemoteConfig {
-        let remoteConfig = RemoteConfig.remoteConfig()
-        let settings = RemoteConfigSettings()
-        #if DEBUG
-        settings.minimumFetchInterval = 0
-        #else
-        settings.minimumFetchInterval = 600
-        #endif
-        settings.fetchTimeout = fetchTimeout
-        remoteConfig.configSettings = settings
-        remoteConfig.setDefaults([
-            Key.enabled: false as NSObject,
-            Key.title: DefaultValue.title as NSObject,
-            Key.message: DefaultValue.message as NSObject,
-            Key.minimumVersion: "" as NSObject,
-        ])
-        return remoteConfig
+    private static func makeSession() -> URLSession {
+        let configuration = URLSessionConfiguration.default
+        let cacheDirectory = FileManager.default
+            .urls(for: .cachesDirectory, in: .userDomainMask)
+            .first?
+            .appending(path: Constants.cacheDirectoryName)
+        configuration.urlCache = URLCache(
+            memoryCapacity: 0,
+            diskCapacity: Constants.cacheDiskCapacity,
+            directory: cacheDirectory
+        )
+        return URLSession(configuration: configuration)
     }
 
-    /// `RefreshCoalescer`로 묶어 중복 실행을 막고, 실제 페치는 여기서 수행한다.
-    ///
-    /// 페치 실패는 로그만 남기고 삼킨다 — 원격 설정 접근이 불가하면 마지막으로
-    /// 활성화된(또는 기본) 값으로 동작을 이어가는 fail-open 정책이다.
-    private func refreshIfPossible(_ remoteConfig: RemoteConfig) async {
-        await refreshCoalescer.run {
+    /// `RefreshCoalescer`로 묶어 중복 요청을 막고, 성공한 응답만 마지막 성공값으로 남긴다.
+    private func refresh() async {
+        await refreshCoalescer.run { [self] in
             do {
-                _ = try await remoteConfig.fetchAndActivate()
+                let config = try await requestConfig(cachePolicy: .useProtocolCachePolicy)
+                lastConfig.withLock { $0 = config }
             } catch {
+                let reason = error.localizedDescription
                 Self.logger.error(
-                    "RemoteConfig fetchAndActivate 실패, 마지막 활성값으로 계속 진행: \(error.localizedDescription, privacy: .public)"
+                    "원격 설정 조회 실패, 캐시·마지막 성공값으로 진행: \(reason, privacy: .public)"
                 )
+                // 기한이 지난 캐시라도 네트워크 없이 캐시에서만 읽는다. 캐시가 없으면 실패한다.
+                guard let cached = try? await requestConfig(
+                    cachePolicy: .returnCacheDataDontLoad
+                ) else { return }
+                lastConfig.withLock { $0 = cached }
             }
         }
     }
 
-    private func currentMaintenanceInfo(_ remoteConfig: RemoteConfig) -> MaintenanceInfo? {
-        guard remoteConfig[Key.enabled].boolValue else { return nil }
-
-        let title = remoteConfig[Key.title].stringValue
-        let message = remoteConfig[Key.message].stringValue
-        return MaintenanceInfo(
-            isActive: true,
-            title: title.isEmpty ? DefaultValue.title : title,
-            message: message.isEmpty ? DefaultValue.message : message
-        )
+    private func requestConfig(
+        cachePolicy: URLRequest.CachePolicy
+    ) async throws -> AppConfigResponseDTO {
+        guard let url = URL(string: Constants.configURLString) else {
+            throw URLError(.badURL)
+        }
+        let request = URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: fetchTimeout)
+        let (data, response) = try await session.data(for: request)
+        // 레포가 없거나 Pages가 꺼져 404가 와도 마지막 성공값을 덮지 않는다.
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        return try JSONDecoder().decode(AppConfigResponseDTO.self, from: data)
     }
 }
 
