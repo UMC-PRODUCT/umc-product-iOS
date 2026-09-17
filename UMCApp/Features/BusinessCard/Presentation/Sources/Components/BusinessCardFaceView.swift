@@ -10,6 +10,7 @@ import CoreDesignSystem
 import CoreUIComponents
 import Foundation
 import SwiftUI
+import UIKit
 
 /// 시안 `명함_l`(372×205) — 마이페이지 루트가 쓰는 명함 카드.
 ///
@@ -22,11 +23,15 @@ import SwiftUI
 /// 앞면은 이름 행·파트 행·발급 행(학교 · 기수), 뒷면은 시리얼과 **QR + 외부 링크 3줄**
 /// (github · linkedIn · blog)이다. 헤더와 하단 버튼 두 개는 양면 공통이다.
 ///
-/// 상태를 들지 않는다 — 뒤집힘 여부는 소유자가 가지고 ``isFlipped`` 로 내려준다.
+/// 면 상태는 들지 않는다 — 뒤집힘 여부의 정본은 소유자이고 ``isFlipped`` 로 내려준다.
+/// 뷰가 드는 것은 **진행 중인 회전 각도뿐**이다. 끄는 손가락·관성은 소유자가 알 필요가 없고,
+/// 면이 달라지는 순간에만 ``onFlip`` 으로 토글을 요청한다.
 /// QR 도 마찬가지로 생성은 UseCase 의 일이라 완성된 이미지를 받는다.
 ///
-/// 면 전환은 Y축 원근 회전이다(#1348). ``CardFlip`` 이 90° 에서 면을 갈아 끼우고 뒷면을
-/// 미리 반 바퀴 돌려 둬 거울상을 막는다. 「동작 줄이기」가 켜져 있으면 회전 없이 바뀐다.
+/// 면 전환은 Y축 원근 회전이다(#1348). ``CardFlip`` 이 면 경계에서 면을 갈아 끼우고 뒷면을
+/// 미리 반 바퀴 돌려 둬 거울상을 막는다. #1390 부터 헤더 버튼 대신 카드를 가로로 끌어
+/// 돌린다 — 끄는 동안 각이 손가락을 따라가고, 놓으면 속도만큼 더 돌다 가까운 면에 선다.
+/// 「동작 줄이기」가 켜져 있으면 회전 없이 한 번만 뒤집힌다.
 public struct BusinessCardFaceView: View {
 
     // MARK: - Property
@@ -38,7 +43,17 @@ public struct BusinessCardFaceView: View {
     private let onExchange: (() -> Void)?
     private let onQR: (() -> Void)?
 
-    /// 회전은 사용자가 만들지 않은 자율 모션이라 이 설정이 이긴다.
+    /// 누적 각(°). 여러 바퀴 돌면 360 을 넘고 왼쪽으로 돌리면 음수다 — 면 판정은
+    /// ``CardFlipGeometry`` 가 정규화한다.
+    @State private var angle: Double
+    /// 드래그를 잡은 순간의 각. 끄는 동안의 각은 여기에 이동량만 더한다.
+    @State private var dragStartAngle: Double = 0
+    /// 진행 중인 관성 스핀. 도중에 다시 잡으면 지금 보이는 각을 여기서 역산한다 —
+    /// 애니메이션 중인 `angle` 은 이미 도착 각이라 그대로 쓰면 카드가 튄다.
+    @State private var spin: Spin?
+
+    /// 관성 스핀은 손을 뗀 뒤 저절로 도는 모션이라 이 설정이 이긴다. 끄는 동안 따라
+    /// 도는 것도 막는다 — 큰 3D 회전은 손이 만든 것이라도 어지러움을 부른다.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Constants {
@@ -51,7 +66,6 @@ public struct BusinessCardFaceView: View {
         static let qrTitle = "QR 코드"
         static let qrLabel = "내 명함 QR 코드"
         static let qrUnavailable = "QR 코드를 만들지 못했어요"
-        static let flipIcon = "arrow.2.squarepath"
         static let flipToBack = "명함 뒷면 보기"
         static let flipToFront = "명함 앞면 보기"
     }
@@ -98,7 +112,8 @@ public struct BusinessCardFaceView: View {
         /// 회전축. 세로축이라 카드가 책장처럼 좌우로 넘어간다.
         static let flipAxis: (x: CGFloat, y: CGFloat, z: CGFloat) = (0, 1, 0)
 
-        /// 플립 지속(초). #1349 가 철거한 3D 스택이 쓰던 값에서 시작한다 — 180° 는 복귀
+        /// 바깥에서 면을 바꿀 때(VoiceOver 액션) 반 바퀴 플립 지속(초).
+        /// #1349 가 철거한 3D 스택이 쓰던 값에서 시작한다 — 180° 는 복귀
         /// 모션의 6배 이동인데 1.5배만 준다. 각속도 지각이 선형이 아니라 6배를 그대로
         /// 주면 늘어지게 느껴진다. **최종값은 디자인팀 확인 항목**(#1348).
         static let flipDuration: TimeInterval = 0.45
@@ -121,6 +136,33 @@ public struct BusinessCardFaceView: View {
         /// 정지 오프셋(4)의 3배 — 카드가 떠 있다는 게 보일 만큼은 크되, 카드 폭 밖으로
         /// 빠져나가 따로 노는 얼룩이 되지는 않는 선이다.
         static let shadowSway: CGFloat = 12
+
+        // MARK: 드래그 회전 (#1390)
+
+        /// 손가락 1pt 당 회전 각(°). 카드 폭(≈360pt)을 끝까지 끌면 반 바퀴다 — 손 밑의
+        /// 표면이 손가락을 대략 따라오는 비율. 손맛을 맞출 손잡이다.
+        static let dragDegreesPerPoint: Double = 0.5
+
+        /// 놓는 순간 속도로 더 가는 시간(초). `UIScrollView` 감속처럼 세게 튕길수록 멀리
+        /// 가고, 그 투영 각에서 가장 가까운 면에 선다. 상한이 없어 세게 튕기면 여러 바퀴 돈다.
+        static let momentumProjection: Double = 0.35
+
+        /// 관성 감속 곡선의 시작 제어점. 끝 제어점과 함께 ease-out cubic 이다.
+        static let spinStartControl = UnitPoint(x: 0.33, y: 1)
+        static let spinCurve = UnitCurve.bezier(
+            startControlPoint: spinStartControl,
+            endControlPoint: UnitPoint(x: 0.68, y: 1)
+        )
+        /// 곡선의 시작 기울기(≈3). 지속을 `기울기 × 남은 각 / 놓는 속도` 로 잡아야 손을 뗀
+        /// 순간의 각속도가 끊기지 않고 이어진다.
+        static let spinStartSlope = Double(spinStartControl.y / spinStartControl.x)
+        /// 느린 놓기가 순간이동처럼 보이지 않게 · 빠른 플릭이 늘어지지 않게 자른다.
+        static let spinDurationRange: ClosedRange<TimeInterval> = 0.35...1.4
+
+        /// 「동작 줄이기」에서 한 번 뒤집는 문턱 — 끈 거리(pt) 또는 튕긴 속도(pt/s).
+        /// 끄는 동안 따라 도는 과정이 없어서, 문턱 없이는 살짝 스친 손에도 면이 통째로 바뀐다.
+        static let reducedMotionFlipDistance: CGFloat = 40
+        static let reducedMotionFlipVelocity: CGFloat = 300
     }
 
     /// 카드 배경 · QR 테두리. 전부 코어 토큰이다 (#1237).
@@ -156,6 +198,7 @@ public struct BusinessCardFaceView: View {
         self.onFlip = onFlip
         self.onExchange = onExchange
         self.onQR = onQR
+        _angle = State(initialValue: isFlipped ? CardFlipGeometry.halfTurn : 0)
     }
 
     // MARK: - Body
@@ -167,16 +210,37 @@ public struct BusinessCardFaceView: View {
     }
 
     public var body: some View {
-        CardFlip(
-            angle: isFlipped ? CardFlipGeometry.halfTurn : 0,
-            content: cardBody(showsBack:)
-        )
-        // 회전을 만드는 유일한 지점. 「동작 줄이기」면 `nil` 이라 각도가 즉시 튀고, 그 결과가
-        // 회전 없는 면 교체 — 이 파일이 원래 하던 동작 그대로다.
-        .animation(
-            reduceMotion ? nil : .easeInOut(duration: Metrics.flipDuration),
-            value: isFlipped
-        )
+        CardFlip(angle: angle, content: cardBody(showsBack:))
+            // 히트 영역을 회전 전 레이아웃 프레임으로 고정한다. 회전된 내용으로 판정하면
+            // 모서리만 보이는 순간 잡을 곳이 폭 0 으로 사라진다.
+            .contentShape(Rectangle())
+            .gesture(
+                CardPanGesture(
+                    isEnabled: onFlip != nil,
+                    onBegan: beginDrag,
+                    onChanged: updateDrag(translation:),
+                    onEnded: endDrag(translation:velocity:)
+                )
+            )
+            // 컨테이너가 접근성 요소가 아니라 자식 요소마다 붙는다 — 앞면 라벨·QR·링크 행
+            // 어디에 포커스가 있어도 로터에 뜬다.
+            .accessibilityActions {
+                if let onFlip {
+                    Button(
+                        isFlipped ? Constants.flipToFront : Constants.flipToBack,
+                        action: onFlip
+                    )
+                }
+            }
+            // 바깥(VoiceOver 액션 등)에서 면이 바뀐 경우만 돈다. 제스처가 요청한 토글이면
+            // 각이 이미 그 면에 서 있어 아무 일도 하지 않는다.
+            .onChange(of: isFlipped) { _, isFlipped in
+                guard CardFlipGeometry(angle: angle).showsBack != isFlipped else { return }
+                spin = nil
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: Metrics.flipDuration)) {
+                    angle = CardFlipGeometry.restingAngle(near: angle) + CardFlipGeometry.halfTurn
+                }
+            }
     }
 
     /// 회전하는 몸통. 헤더와 버튼 행은 양면 공통이지만 면과 **함께** 돈다 — 카드 한 장이
@@ -228,43 +292,22 @@ public struct BusinessCardFaceView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 0) {
-            HStack(spacing: Metrics.linkSpacing) {
-                Image.umcWordmark
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: Metrics.logoWidth, height: Metrics.logoHeight)
-                    // 옆의 타이틀 텍스트가 같은 뜻을 말한다 — 중복 낭독 방지.
-                    .accessibilityHidden(true)
+        HStack(spacing: Metrics.linkSpacing) {
+            Image.umcWordmark
+                .resizable()
+                .scaledToFit()
+                .frame(width: Metrics.logoWidth, height: Metrics.logoHeight)
+                // 옆의 타이틀 텍스트가 같은 뜻을 말한다 — 중복 낭독 방지.
+                .accessibilityHidden(true)
 
-                licenseText(Constants.title)
-            }
-
-            Spacer(minLength: Metrics.linkSpacing)
-
-            flipButton
+            licenseText(Constants.title)
         }
-    }
-
-    @ViewBuilder
-    private var flipButton: some View {
-        if onFlip != nil { flipButtonBody }
-    }
-
-    private var flipButtonBody: some View {
-        CardGlassCircleButton(
-            systemName: Constants.flipIcon,
-            label: isFlipped ? Constants.flipToFront : Constants.flipToBack
-        ) {
-            onFlip?()
-        }
-        .accessibilityLabel(isFlipped ? Constants.flipToFront : Constants.flipToBack)
     }
 
     /// 레퍼런스에 있던 두 요소는 의도적으로 빼 뒀다. 되살리기 전에 근거부터 확인할 것:
-    /// **QR 은 뒷면에 그대로 둔다** — 앞면 우상단은 플립 버튼 자리고, 양면에 QR 을 두면
-    /// 같은 값이 두 번 나올 뿐이다. **호(arc) 게이지도 그리지 않는다** — 대응하는 진척률이
-    /// 도메인에 없어서 그리는 순간 없는 수치를 지어내게 된다.
+    /// **QR 은 뒷면에 그대로 둔다** — 양면에 QR 을 두면 같은 값이 두 번 나올 뿐이다.
+    /// **호(arc) 게이지도 그리지 않는다** — 대응하는 진척률이 도메인에 없어서 그리는 순간
+    /// 없는 수치를 지어내게 된다.
     ///
     /// #1363 에서 둘을 더 뺐다. **기록 슬롯 4칸** — 마이페이지에서는 카드 바로 아래 섹션이
     /// 같은 카운트를 다시 보여 주고, 받은 명함 상세에서는 상대 카운트가 없어 늘 `-` 였다.
@@ -480,20 +523,90 @@ public struct BusinessCardFaceView: View {
         .buttonStyle(.plain)
     }
 
+    // MARK: - Function
+
+    /// 관성 스핀 중에 잡으면 지금 보이는 각에서 멈춘다. 애니메이션 없이 대입해야 진행 중인
+    /// 스핀이 끊기고 그 각으로 점프한다.
+    private func beginDrag() {
+        if let spin {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { angle = spin.angle(at: .now) }
+            self.spin = nil
+        }
+        dragStartAngle = angle
+    }
+
+    private func updateDrag(translation: CGFloat) {
+        guard !reduceMotion else { return }
+        angle = dragStartAngle + Double(translation) * Metrics.dragDegreesPerPoint
+    }
+
+    /// 면은 **놓는 순간** 확정한다. 스핀이 끝나기를 기다리지 않는 건 도중에 다시 잡힐 수
+    /// 있어서다 — 그러면 다음 놓기가 다시 확정한다.
+    private func endDrag(translation: CGFloat, velocity: CGFloat) {
+        guard !reduceMotion else {
+            flipOnce(translation: translation, velocity: velocity)
+            return
+        }
+
+        let angularVelocity = Double(velocity) * Metrics.dragDegreesPerPoint
+        let current = angle
+        let target = CardFlipGeometry.restingAngle(
+            near: current + angularVelocity * Metrics.momentumProjection
+        )
+
+        if target != current {
+            let duration = spinDuration(delta: target - current, angularVelocity: angularVelocity)
+            withAnimation(.timingCurve(Metrics.spinCurve, duration: duration)) {
+                angle = target
+            }
+            spin = Spin(from: current, to: target, start: .now, duration: duration)
+        }
+        requestFace(restingAt: target)
+    }
+
+    /// 놓는 순간의 각속도를 곡선 시작 기울기로 이어 받는 지속. 속도가 없거나 되돌아가는
+    /// 방향이면 이을 속도가 없으니 가장 짧게 둔다.
+    private func spinDuration(delta: Double, angularVelocity: Double) -> TimeInterval {
+        let range = Metrics.spinDurationRange
+        guard angularVelocity * delta > 0 else { return range.lowerBound }
+
+        let matched = Metrics.spinStartSlope * abs(delta) / abs(angularVelocity)
+        return min(max(matched, range.lowerBound), range.upperBound)
+    }
+
+    /// 「동작 줄이기」 — 끈 방향으로 반 바퀴만, 애니메이션 없이 넘긴다.
+    private func flipOnce(translation: CGFloat, velocity: CGFloat) {
+        guard abs(translation) >= Metrics.reducedMotionFlipDistance
+            || abs(velocity) >= Metrics.reducedMotionFlipVelocity else { return }
+
+        let direction: Double = (translation != 0 ? translation : velocity) < 0 ? -1 : 1
+        let target = CardFlipGeometry.restingAngle(near: angle)
+            + direction * CardFlipGeometry.halfTurn
+        angle = target
+        requestFace(restingAt: target)
+    }
+
+    private func requestFace(restingAt target: Double) {
+        guard CardFlipGeometry(angle: target).showsBack != isFlipped else { return }
+        onFlip?()
+    }
+
     // MARK: - Flip
 
-    /// 카드를 Y축으로 돌리며 90° 에서 면을 갈아 끼우는 컨테이너 (#1348).
+    /// 카드를 Y축으로 돌리며 면 경계에서 면을 갈아 끼우는 컨테이너 (#1348).
     ///
-    /// `Animatable` 이라 ``angle`` 에 **프레임마다 보간된 값**이 들어온다. `@State` +
-    /// `withAnimation` 으로는 안 된다 — 그쪽 `body` 는 최종값(180)만 보므로 면이 회전
-    /// 시작과 동시에 바뀌어 버린다. 90° 판정을 하려면 중간 각도를 봐야 한다.
+    /// `Animatable` 이라 ``angle`` 에 **프레임마다 보간된 값**이 들어온다. 바깥의 `@State`
+    /// 는 `withAnimation` 안에서도 도착 각만 들고 있어, 그 값으로 면을 고르면 회전 시작과
+    /// 동시에 면이 바뀌어 버린다. 90° 판정을 하려면 중간 각도를 봐야 한다.
     ///
     /// 두 면을 겹쳐 그리지 않는다. `ZStack` + `opacity` 로 가르면 교차 구간에서 두 면이
     /// 한 프레임이라도 섞이는데, 여기서는 그릴 면 자체가 하나뿐이다. 안 보이는 면은
     /// `.hidden()` 으로 레이아웃 자리만 잡는다(#1363).
     ///
-    /// 목표 각도가 ``BusinessCardFaceView/isFlipped`` 에서 파생된 0 또는 180 뿐이라
-    /// 각이 쌓이지 않는다 — 회전 중 다시 누르면 현재 각도에서 반대쪽으로 되돌아간다.
+    /// 각은 누적이다(#1390) — 여러 바퀴 돌면 360° 를 넘고 왼쪽으로 돌리면 음수가 된다.
+    /// 면 판정·거울상·그림자는 ``CardFlipGeometry`` 가 한 바퀴 안의 규칙으로 되돌린다.
     private struct CardFlip<Content: View>: View, Animatable {
 
         // MARK: - Property
@@ -512,8 +625,8 @@ public struct BusinessCardFaceView: View {
             let geometry = CardFlipGeometry(angle: angle)
 
             content(geometry.showsBack)
-                // 뒷면을 미리 반 바퀴 돌려 둔다. 바깥 회전과 합쳐 360° 가 되므로 회전이
-                // 끝난 뒷면의 텍스트·QR 이 거울상이 아니라 정방향으로 읽힌다.
+                // 뒷면을 미리 반 바퀴 돌려 둔다. 바깥 회전과 합쳐 360° 의 배수가 되므로
+                // 회전이 끝난 뒷면의 텍스트·QR 이 거울상이 아니라 정방향으로 읽힌다.
                 .rotation3DEffect(.degrees(geometry.counterTurn), axis: Metrics.flipAxis)
                 .rotation3DEffect(
                     .degrees(angle),
@@ -530,13 +643,92 @@ public struct BusinessCardFaceView: View {
                 )
         }
     }
+
+    /// 놓은 뒤 도는 관성 스핀 한 번. 애니메이션과 **같은 곡선**으로 역산하므로 도중에 잡은
+    /// 각이 화면에 보이던 각과 맞는다.
+    private struct Spin {
+        let from: Double
+        let to: Double
+        let start: Date
+        let duration: TimeInterval
+
+        func angle(at date: Date) -> Double {
+            let progress = min(1, date.timeIntervalSince(start) / duration)
+            return from + (to - from) * Metrics.spinCurve.value(at: progress)
+        }
+    }
+
+    /// 가로로 끄는 팬. SwiftUI `DragGesture` 는 `ScrollView` 안에서 `.gesture` 면 세로
+    /// 스크롤을 막고 `.simultaneousGesture` 면 카드와 스크롤이 같이 움직인다. UIKit 팬은
+    /// **시작 여부를 첫 이동 방향으로 고를 수 있어** 세로 끌기를 스크롤에 넘길 수 있다.
+    ///
+    /// 탭은 막지 않는다 — 팬은 이동이 있어야 시작하므로 카드 안 버튼 탭은 그대로 간다.
+    private struct CardPanGesture: UIGestureRecognizerRepresentable {
+
+        // MARK: - Property
+
+        let isEnabled: Bool
+        let onBegan: () -> Void
+        let onChanged: (_ translation: CGFloat) -> Void
+        let onEnded: (_ translation: CGFloat, _ velocity: CGFloat) -> Void
+
+        // MARK: - Function
+
+        func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
+            Coordinator()
+        }
+
+        func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
+            let recognizer = UIPanGestureRecognizer()
+            recognizer.delegate = context.coordinator
+            return recognizer
+        }
+
+        func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
+            recognizer.isEnabled = isEnabled
+        }
+
+        func handleUIGestureRecognizerAction(
+            _ recognizer: UIPanGestureRecognizer,
+            context: Context
+        ) {
+            let view = recognizer.view
+            switch recognizer.state {
+            case .began:
+                // 시작 판정까지 움직인 거리를 버린다. 남겨 두면 잡는 순간 카드가 그만큼 튄다.
+                recognizer.setTranslation(.zero, in: view)
+                onBegan()
+            case .changed:
+                onChanged(recognizer.translation(in: view).x)
+            case .ended:
+                onEnded(recognizer.translation(in: view).x, recognizer.velocity(in: view).x)
+            case .cancelled, .failed:
+                // 끝나지 않은 채 끊겨도 가까운 면에 세운다 — 중간 각도로 멈춰 두지 않는다.
+                onEnded(recognizer.translation(in: view).x, 0)
+            default:
+                break
+            }
+        }
+
+        final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+
+            /// 가로가 우세할 때만 시작한다. 세로 끌기는 여기서 실패해 바깥 스크롤이 가져간다.
+            func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool {
+                guard let pan = recognizer as? UIPanGestureRecognizer else { return true }
+                let velocity = pan.velocity(in: pan.view)
+                return abs(velocity.x) > abs(velocity.y)
+            }
+        }
+    }
 }
 
 /// 플립 한 프레임의 기하 (#1348). 각도 하나에서 「어느 면을 그리는지 · 거울상을 되돌릴
 /// 각 · 그림자가 얼마나 정면인지」가 전부 파생된다.
 ///
 /// 뷰에서 떼어 둔 이유는 `CardInteractionPolicy` 와 같다 — 순수 값이라 뷰를 띄우지 않고
-/// 테스트된다. 90° 교체와 거울상 방지는 조용히 틀려도 빌드가 통과하는 종류의 규칙이다.
+/// 테스트된다. 면 교체와 거울상 방지는 조용히 틀려도 빌드가 통과하는 종류의 규칙이다.
+///
+/// 각은 누적이다(#1390). 360° 를 넘거나 음수여도 한 바퀴로 정규화해 같은 규칙을 쓴다.
 struct CardFlipGeometry {
 
     // MARK: - Property
@@ -546,20 +738,39 @@ struct CardFlipGeometry {
 
     let angle: Double
 
-    /// 90° 를 **넘는 순간** 뒷면으로 바뀐다. 그 지점의 카드는 폭이 0(`cos 90° = 0`)이라
-    /// 교체가 어느 프레임에도 보이지 않는다.
-    var showsBack: Bool { angle >= Self.halfTurn / 2 }
+    /// 한 바퀴로 정규화한 각이 `[90, 270)` 이면 뒷면이다. 두 경계 모두 카드 폭이
+    /// 0(`cos = 0`)이라 교체가 어느 프레임에도 보이지 않는다.
+    var showsBack: Bool { (Self.halfTurn / 2..<Self.halfTurn * 1.5).contains(normalized) }
 
-    /// 뒷면을 미리 되돌려 두는 각. 바깥 회전과 더해 360° 가 되면 정방향이다.
+    /// 뒷면을 미리 되돌려 두는 각. 바깥 회전과 더해 360° 의 배수가 되면 정방향이다.
     var counterTurn: Double { showsBack ? Self.halfTurn : 0 }
 
     /// 정면도. 1 이면 카드가 정면, 0 이면 모서리만 보인다.
     var facing: Double { abs(cos(radians)) }
 
-    /// 그림자가 좌우로 쓸리는 정도(-1…1). 세로축 회전이라 가로로만 쓸린다.
-    var sway: Double { sin(radians) }
+    /// 그림자가 좌우로 쓸리는 정도(0…1). 세로축 회전이라 가로로만 쓸린다.
+    ///
+    /// 얇은 판은 반 바퀴 돌면 윤곽이 같으니 그림자도 반 바퀴 주기로 둔다. `sin` 부호를
+    /// 살리면 여러 바퀴 도는 동안 반 바퀴마다 그림자가 좌우를 오간다.
+    var sway: Double { abs(sin(radians)) }
 
     private var radians: Double { angle * .pi / Self.halfTurn }
+
+    private var normalized: Double {
+        let remainder = angle.truncatingRemainder(dividingBy: Self.halfTurn * 2)
+        return remainder < 0 ? remainder + Self.halfTurn * 2 : remainder
+    }
+
+    // MARK: - Function
+
+    /// 가장 가까운 정지 각(반 바퀴의 배수).
+    ///
+    /// 정확히 가운데(90° · -90° …)는 **위쪽 배수**로 보낸다. ``showsBack`` 의 경계가
+    /// `[90, 270)` 이라 이렇게 해야 정지 각의 면이 원래 각의 면과 늘 같다 — 기본
+    /// `rounded()` 는 -90° 를 -180°(뒷면)로 보내는데 -90° 는 앞면이다.
+    static func restingAngle(near angle: Double) -> Double {
+        (angle / halfTurn + 0.5).rounded(.down) * halfTurn
+    }
 }
 
 #if DEBUG
@@ -570,8 +781,8 @@ struct CardFlipGeometry {
         .background(Color.grey100)
 }
 
-/// 플립 모션(#1348) 확인용 — 버튼을 눌러 회전을 본다. 「동작 줄이기」를 켜 두면 같은
-/// 프리뷰가 회전 없이 즉시 바뀐다.
+/// 드래그 회전(#1390) 확인용 — 카드를 가로로 끌거나 튕겨 본다. 「동작 줄이기」를 켜 두면
+/// 같은 프리뷰가 회전 없이 한 번만 뒤집힌다.
 #Preview("플립") {
     @Previewable @State var isFlipped = false
 
