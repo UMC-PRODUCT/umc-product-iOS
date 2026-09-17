@@ -72,17 +72,19 @@ public struct BusinessCardFaceView: View {
 
     /// 시안 실측값 (`Figma 12639:33234` / `12766:98172`).
     private enum Metrics {
-        /// 시안 실측 높이. 글자가 커지면 이 값을 **바닥으로** 두고 늘어난다
+        /// 시안 실측(205)보다 키운 높이(#1401) — 콘텐츠가 가장자리에 붙어 답답해 보였다.
+        /// 글자가 커지면 이 값을 **바닥으로** 두고 늘어난다
         /// (고정하면 AX 크기에서 이름·파트 행이 카드 밖으로 밀린다).
-        static let cardMinHeight: CGFloat = 205
-        /// 버튼 행(39)과 그 위 간격(24)을 뺀 높이. 액션 없는 카드가 아래를 비우지 않게 한다.
-        static let faceOnlyMinHeight: CGFloat = 205 - 24 - 39
+        static let cardMinHeight: CGFloat = 240
+        /// 버튼 행과 그 위 간격을 뺀 높이. 액션 없는 카드가 아래를 비우지 않게 한다.
+        static let faceOnlyMinHeight: CGFloat = cardMinHeight - blockSpacing - buttonMinHeight
         static let cardRadius: CGFloat = 34
-        static let cardPadding: CGFloat = 16
+        /// 시안(16)보다 넓힌 상하좌우 여백(#1401).
+        static let cardPadding: CGFloat = 24
         /// 정보 블록과 버튼 행 사이.
         static let blockSpacing: CGFloat = 24
-        /// 헤더 행과 그 아래 본문 사이.
-        static let headerSpacing: CGFloat = 8
+        /// 헤더 행과 그 아래 본문 사이. 여백을 넓힌 만큼 함께 벌린다(#1401).
+        static let headerSpacing: CGFloat = 12
         /// QR 과 오른쪽 링크 블록 사이.
         static let contentSpacing: CGFloat = 16
         /// 앞면 블록(이름·파트 행 · 발급 행) 사이.
