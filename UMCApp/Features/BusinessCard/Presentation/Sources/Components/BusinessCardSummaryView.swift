@@ -15,7 +15,7 @@ import UMCFoundation
 ///
 /// 마이페이지 루트의 `명함_l`(372×205, ``BusinessCardFaceView``)과 **별개 컴포넌트**다.
 /// variant 가 아니라 Figma 에 컴포넌트 둘로 존재하고, 그라디언트 각도·알파부터
-/// 아바타·이름 크기까지 다르다. 로고 헤더·플립 버튼·하단 액션 버튼은 여기 없다.
+/// 아바타·이름 크기까지 다르다. 로고 헤더·드래그 회전·하단 액션 버튼은 여기 없다.
 struct BusinessCardSummaryView: View {
 
     // MARK: - Property
