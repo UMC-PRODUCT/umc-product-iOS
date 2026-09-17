@@ -206,7 +206,7 @@ public final class ReceivedCardRepository: ReceivedCardRepositoryProtocol, @unch
             items.append(contentsOf: page.content)
             // 커서가 전진하지 않으면 같은 페이지를 영원히 받는다.
             guard page.hasNext, let next = page.nextCursor, !next.isEmpty, next != cursor else {
-                try await MainActor.run {
+                try await MainActor.run { [items] in
                     try reconcile(items, owner: owner, syncStartedAt: syncStartedAt)
                 }
                 return

@@ -66,21 +66,20 @@ public final class CalendarSyncRepository: CalendarSyncRepositoryProtocol, @unch
     }
 
     public func disableSync() async throws {
-        lock.lock()
-        defer { lock.unlock() }
+        try lock.withLock {
+            userDefaults.set(false, forKey: Constants.isEnabledKey)
+            let identifier = userDefaults.string(forKey: Constants.calendarIdentifierKey)
 
-        userDefaults.set(false, forKey: Constants.isEnabledKey)
-        let identifier = userDefaults.string(forKey: Constants.calendarIdentifierKey)
+            // 캘린더 삭제가 실패하더라도 로컬 상태는 반드시 비운다 — 남겨두면 다음 ON 에서
+            // 존재하지 않을 수도 있는 식별자로 reconcile 을 시도한다.
+            defer {
+                userDefaults.removeObject(forKey: Constants.calendarIdentifierKey)
+                saveMapping([:])
+            }
 
-        // 캘린더 삭제가 실패하더라도 로컬 상태는 반드시 비운다 — 남겨두면 다음 ON 에서
-        // 존재하지 않을 수도 있는 식별자로 reconcile 을 시도한다.
-        defer {
-            userDefaults.removeObject(forKey: Constants.calendarIdentifierKey)
-            saveMapping([:])
-        }
-
-        if let identifier, store.calendarExists(identifier: identifier) {
-            try store.removeCalendar(identifier: identifier)
+            if let identifier, store.calendarExists(identifier: identifier) {
+                try store.removeCalendar(identifier: identifier)
+            }
         }
     }
 
@@ -93,38 +92,37 @@ public final class CalendarSyncRepository: CalendarSyncRepositoryProtocol, @unch
     /// EventKit 호출은 전부 동기라 락을 잡은 채로 끝난다. 이 메서드는 격리되어 있지 않으므로
     /// 호출자가 `@MainActor` 여도 본문은 메인 스레드 밖에서 돈다.
     public func reconcile(from: Date, to: Date, schedules: [ScheduleDetailData]) async throws {
-        lock.lock()
-        defer { lock.unlock() }
+        try lock.withLock {
+            let calendarIdentifier = try ensureCalendar()
+            var mapping = loadMapping()
+            var writtenEventIdentifiers: Set<String> = []
 
-        let calendarIdentifier = try ensureCalendar()
-        var mapping = loadMapping()
-        var writtenEventIdentifiers: Set<String> = []
-
-        for schedule in schedules {
-            let liveIdentifier = mapping[schedule.scheduleId].flatMap {
-                store.eventExists(identifier: $0) ? $0 : nil
+            for schedule in schedules {
+                let liveIdentifier = mapping[schedule.scheduleId].flatMap {
+                    store.eventExists(identifier: $0) ? $0 : nil
+                }
+                let savedIdentifier = try store.saveEvent(
+                    makeDraft(from: schedule),
+                    identifier: liveIdentifier,
+                    inCalendar: calendarIdentifier
+                )
+                mapping[schedule.scheduleId] = savedIdentifier
+                writtenEventIdentifiers.insert(savedIdentifier)
             }
-            let savedIdentifier = try store.saveEvent(
-                makeDraft(from: schedule),
-                identifier: liveIdentifier,
-                inCalendar: calendarIdentifier
-            )
-            mapping[schedule.scheduleId] = savedIdentifier
-            writtenEventIdentifiers.insert(savedIdentifier)
+
+            let staleIdentifiers = try store.eventIdentifiers(
+                inCalendar: calendarIdentifier,
+                from: from,
+                to: to
+            ).filter { !writtenEventIdentifiers.contains($0) }
+
+            for identifier in staleIdentifiers {
+                try store.removeEvent(identifier: identifier)
+            }
+
+            let removed = Set(staleIdentifiers)
+            saveMapping(mapping.filter { !removed.contains($0.value) })
         }
-
-        let staleIdentifiers = try store.eventIdentifiers(
-            inCalendar: calendarIdentifier,
-            from: from,
-            to: to
-        ).filter { !writtenEventIdentifiers.contains($0) }
-
-        for identifier in staleIdentifiers {
-            try store.removeEvent(identifier: identifier)
-        }
-
-        let removed = Set(staleIdentifiers)
-        saveMapping(mapping.filter { !removed.contains($0.value) })
     }
 
     // MARK: - Private Function

@@ -129,10 +129,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ///   쌓인다.
     func application(
         _ application: UIApplication,
-        didReceiveRemoteNotification userInfo: [AnyHashable: Any]
-    ) async -> UIBackgroundFetchResult {
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
         handlePush(userInfo: userInfo, isTap: false)
-        return .newData
+        completionHandler(.newData)
     }
 }
 
