@@ -35,6 +35,9 @@ enum MyPageDestination: Hashable {
     ///   싣는다 — 여기서 다시 조회하면 숫자와 목록이 어긋난다(`cardEdit`과 같은 이유).
     case activityLogs([ActivityLog])
 
+    /// 「수료증 ・인증서」 발급·조회·다운로드 (#1450).
+    case certificates
+
     /// 내 활동 게시글 목록 (내가 쓴 글 / 댓글 단 글 / 스크랩).
     ///
     /// - Parameter logType: 진입 시 처음 보여줄 활동 종류. 화면 안에서 세 종류를 전환할 수 있다.
