@@ -42,6 +42,8 @@ let project = featureProject(
         .project(
             target: "BusinessCardPresentation", path: .relativeToRoot("Features/BusinessCard")
         ),
+        // 설정의 이메일 변경 행(#1453)이 AuthPresentation의 ChangeEmailView로 push 한다.
+        .project(target: "AuthPresentation", path: .relativeToRoot("Features/Auth")),
     ],
     includesDomainTests: true,
     domainTestDependencies: [
