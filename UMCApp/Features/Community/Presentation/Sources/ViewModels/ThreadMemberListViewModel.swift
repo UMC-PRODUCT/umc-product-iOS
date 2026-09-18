@@ -53,7 +53,16 @@ public final class ThreadMemberListViewModel {
 
     /// 내가 개설자인지. 서버 역할이 유일한 근거라 목록을 받기 전에는 `false` 다.
     public var isOwner: Bool {
-        members.first { isMe($0.id) }?.role == .owner
+        myRole == .owner
+    }
+
+    /// 초대 진입점을 열지. 개설자·관리자 둘 다 연다 (서버 `requireManager`).
+    public var canInvite: Bool {
+        myRole?.canManageMembers == true
+    }
+
+    private var myRole: ThreadMemberRole? {
+        members.first { isMe($0.id) }?.role
     }
 
     /// 나가기를 막는 이유. `nil` 이면 나갈 수 있다.
@@ -98,15 +107,20 @@ public final class ThreadMemberListViewModel {
         isMe(member.id)
     }
 
-    /// 행의 ⋯ 메뉴를 열지. 개설자만, 그리고 내 행에는 열지 않는다 —
-    /// 자기를 내보내거나 자기에게 위임하는 조합은 서버도 거절한다.
-    public func canManage(_ member: ThreadMember) -> Bool {
+    /// 행의 `내보내기` 를 열지. 개설자·관리자만, 내 행과 개설자 행에는 열지 않는다 —
+    /// 자기를 내보내거나 개설자를 내보내는 조합은 서버도 거절한다.
+    public func canKick(_ member: ThreadMember) -> Bool {
+        canInvite && !isMe(member.id) && member.role != .owner
+    }
+
+    /// 행의 `개설자 위임` 을 열지. 개설자만, 내 행에는 열지 않는다 (서버 `changeRole`).
+    public func canTransferOwnership(to member: ThreadMember) -> Bool {
         isOwner && !isMe(member.id)
     }
 
     /// 내보내기 확인. 되돌릴 수 없어 재초대 조건까지 알린다 (시안 #37).
     public func confirmKick(_ member: ThreadMember) {
-        guard canManage(member) else { return }
+        guard canKick(member) else { return }
 
         alertPrompt = AlertPrompt(
             title: "\(member.name) 님을 내보낼까요?",
@@ -122,11 +136,11 @@ public final class ThreadMemberListViewModel {
 
     /// 개설자 위임 확인. 내 권한을 넘기는 비가역 작업이라 한 번 묻는다.
     public func confirmTransferOwnership(to member: ThreadMember) {
-        guard canManage(member) else { return }
+        guard canTransferOwnership(to: member) else { return }
 
         alertPrompt = AlertPrompt(
             title: "\(member.name) 님에게 개설자를 위임할까요?",
-            message: "위임하면 되돌릴 수 없고, 나는 일반 참여자가 돼요.",
+            message: "위임하면 되돌릴 수 없고, 나는 관리자가 돼요.",
             positiveBtnTitle: "위임",
             positiveBtnAction: { [weak self] in
                 Task { @MainActor in await self?.transferOwnership(to: member) }

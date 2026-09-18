@@ -136,7 +136,56 @@ struct ThreadMemberListViewModelTests {
         await viewModel.load()
 
         #expect(viewModel.isOwner == false)
-        #expect(viewModel.members.allSatisfy { viewModel.canManage($0) == false })
+        #expect(viewModel.canInvite == false)
+        #expect(viewModel.members.allSatisfy { viewModel.canKick($0) == false })
+        #expect(viewModel.members.allSatisfy { viewModel.canTransferOwnership(to: $0) == false })
+    }
+
+    /// 위임으로 `ADMIN` 이 된 전 개설자. 서버 `requireManager` 는 초대·내보내기를 허용하고
+    /// `changeRole`(위임)은 `OWNER` 에게만 허용한다.
+    @Test("관리자는 초대·내보내기를 할 수 있지만 위임과 개설자 내보내기는 못 한다")
+    func limitsAdminToInviteAndKick() async throws {
+        let useCase = StubMemberUseCase()
+        useCase.members = [
+            makeMember(id: "5", role: .admin),
+            makeMember(id: "9", name: "이재원", role: .owner),
+            makeMember(id: "3", name: "강예진")
+        ]
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+
+        let me = try #require(viewModel.members.first { $0.id == "5" })
+        let owner = try #require(viewModel.members.first { $0.id == "9" })
+        let member = try #require(viewModel.members.first { $0.id == "3" })
+
+        #expect(viewModel.canInvite)
+        #expect(viewModel.canKick(member))
+        #expect(viewModel.canKick(owner) == false)
+        #expect(viewModel.canKick(me) == false)
+        #expect(viewModel.members.allSatisfy { viewModel.canTransferOwnership(to: $0) == false })
+    }
+
+    @Test("관리자의 내보내기는 확인을 거쳐 실행되고, 위임 요청은 무시된다")
+    func adminKicksButCannotTransfer() async throws {
+        let useCase = StubMemberUseCase()
+        useCase.members = [
+            makeMember(id: "5", role: .admin),
+            makeMember(id: "9", name: "이재원", role: .owner),
+            makeMember(id: "3", name: "강예진")
+        ]
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        let target = try #require(viewModel.members.first { $0.id == "3" })
+
+        viewModel.confirmTransferOwnership(to: target)
+        #expect(viewModel.alertPrompt == nil)
+
+        viewModel.confirmKick(target)
+        try tapConfirm(viewModel)
+        await Task.yield()
+
+        #expect(useCase.kickCalls == ["3"])
+        #expect(useCase.transferCalls.isEmpty)
     }
 
     @Test("개설자라도 내 행에는 관리 메뉴를 열지 않는다")
@@ -147,8 +196,10 @@ struct ThreadMemberListViewModelTests {
         let me = viewModel.members.first { $0.id == "5" }
         let other = viewModel.members.first { $0.id == "9" }
 
-        #expect(me.map { viewModel.canManage($0) } == false)
-        #expect(other.map { viewModel.canManage($0) } == true)
+        #expect(me.map { viewModel.canKick($0) } == false)
+        #expect(me.map { viewModel.canTransferOwnership(to: $0) } == false)
+        #expect(other.map { viewModel.canKick($0) } == true)
+        #expect(other.map { viewModel.canTransferOwnership(to: $0) } == true)
     }
 
     // MARK: - Kick
@@ -233,6 +284,8 @@ struct ThreadMemberListViewModelTests {
 
         #expect(useCase.transferCalls == ["9"])
         #expect(viewModel.members.first { $0.id == "5" }?.role == .admin)
+        // 관리자가 된 전 개설자에게도 초대는 남는다 (#1443).
+        #expect(viewModel.canInvite)
     }
 
     // MARK: - Leave

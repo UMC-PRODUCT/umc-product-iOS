@@ -195,7 +195,7 @@ public final class CommunityThreadRoomViewModel {
     /// 초대 진입점을 열지. 헤더를 받기 전에는 내 역할을 몰라 닫아 둔다 (#1136 완료 조건 1).
     /// 서버는 나간 사람에게도 예전 역할(`myRole`)을 실어 주므로 참여 여부를 함께 본다.
     public var canInvite: Bool {
-        canWrite && header.value?.myRole == .owner
+        canWrite && header.value?.myRole?.canManageMembers == true
     }
 
     // MARK: - Function

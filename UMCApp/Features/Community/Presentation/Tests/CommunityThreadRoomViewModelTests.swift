@@ -1894,6 +1894,15 @@ struct CommunityThreadRoomViewModelTests {
         #expect(viewModel.canManageThread)
     }
 
+    /// 위임으로 `ADMIN` 이 된 전 개설자도 서버가 초대를 허용한다 (#1443).
+    @Test("관리자에게도 초대와 운영 그룹이 열린다")
+    func opensManagementGroupForAdmin() async {
+        let (_, viewModel) = await makeMenuRoom(myRole: .admin)
+
+        #expect(viewModel.canInvite)
+        #expect(viewModel.canManageThread)
+    }
+
     @Test("일반 참여자에게는 운영 그룹이 통째로 닫힌다")
     func hidesManagementGroupForMember() async {
         let (_, viewModel) = await makeMenuRoom(myRole: .member)
