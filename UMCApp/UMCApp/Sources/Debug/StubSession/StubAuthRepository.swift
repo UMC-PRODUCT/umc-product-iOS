@@ -58,6 +58,8 @@ struct StubAuthRepository: AuthRepositoryProtocol {
 
     func changePassword(currentPassword: String, newPassword: String) async throws {}
 
+    func changeEmail(emailVerificationToken: String) async throws {}
+
     func deleteMemberOAuth(
         memberOAuthId: String,
         googleAccessToken: String?,

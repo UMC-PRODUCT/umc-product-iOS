@@ -11,4 +11,5 @@
 public enum EmailVerificationPurpose: String, Equatable, Sendable {
     case register = "REGISTER"
     case passwordReset = "PASSWORD_RESET"
+    case changeEmail = "CHANGE_EMAIL"
 }

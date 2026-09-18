@@ -272,6 +272,28 @@ struct AuthRouterResetPasswordTests {
     }
 }
 
+// MARK: - Suite: 이메일 변경(ChangeEmail) 케이스 계약
+
+@Suite("AuthRouter — 이메일 변경(ChangeEmail) 케이스 계약")
+struct AuthRouterChangeEmailTests {
+
+    @Test("changeEmail — path는 /api/v1/member/email, method는 .patch, body는 토큰 하나")
+    func changeEmailContract() throws {
+        let dto = ChangeEmailRequestDTO(emailVerificationToken: "email-token")
+        let router = AuthRouter.changeEmail(body: dto)
+
+        #expect(router.path == "/api/v1/member/email")
+        #expect(router.method == .patch)
+        guard case .requestJSONEncodable = router.task else {
+            Issue.record("task가 .requestJSONEncodable 이어야 함 — 실제: \(router.task)")
+            return
+        }
+        let json = try encodeToJSON(dto)
+        #expect(json["emailVerificationToken"] as? String == "email-token")
+        #expect(json.keys.count == 1)
+    }
+}
+
 // MARK: - Suite: 이메일(ID/PW) 로그인 케이스 계약
 
 @Suite("AuthRouter — 이메일(ID/PW) 로그인 케이스 계약")

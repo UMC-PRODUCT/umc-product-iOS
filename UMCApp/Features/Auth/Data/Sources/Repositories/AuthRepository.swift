@@ -569,6 +569,32 @@ extension AuthRepository: AuthRegistrationRepositoryProtocol {
             throw RepositoryError.decodingError(detail: "\(decodingError)")
         }
     }
+
+    // MARK: - Change Email
+
+    public func changeEmail(emailVerificationToken: String) async throws {
+        let response: Response
+        do {
+            response = try await adapter.request(
+                AuthRouter.changeEmail(
+                    body: ChangeEmailRequestDTO(emailVerificationToken: emailVerificationToken)
+                )
+            )
+        } catch let networkError as NetworkError {
+            throw Self.parseServerError(from: networkError) ?? networkError
+        }
+
+        do {
+            // 서버는 갱신된 회원 정보를 돌려주지만 프로필은 캐시 무효화 후 재조회로 반영한다.
+            let apiResponse = try JSONDecoder().decode(
+                APIResponse<EmptyResult>.self,
+                from: response.data
+            )
+            try apiResponse.validateSuccess()
+        } catch let decodingError as DecodingError {
+            throw RepositoryError.decodingError(detail: "\(decodingError)")
+        }
+    }
 }
 
 // MARK: - Helpers (Email Verification Error Mapping)
