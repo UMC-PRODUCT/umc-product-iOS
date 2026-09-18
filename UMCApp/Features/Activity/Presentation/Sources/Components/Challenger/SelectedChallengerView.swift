@@ -34,6 +34,9 @@ public struct SelectedChallengerView: View {
     /// 검색 UseCase 주입 지점 — 프리뷰/테스트용. 미지정 시 DI 컨테이너에서 해석합니다.
     private let searchUseCase: SearchChallengersUseCaseProtocol?
 
+    /// 검색으로 추가할 수 있는 memberId. `nil` 이면 제한하지 않습니다.
+    private let selectableMemberIds: Set<String>?
+
     /// 현재 사용자의 memberId (본인은 삭제 방지)
     private var myMemberIdSet: Set<String> {
         guard let id = AppStorageKey.memberIdString() else { return [] }
@@ -45,12 +48,15 @@ public struct SelectedChallengerView: View {
     /// - Parameters:
     ///   - challenger: 상위 화면의 선택 목록 바인딩
     ///   - searchUseCase: 검색 UseCase (기본값 `nil` — DI 컨테이너에서 해석)
+    ///   - selectableMemberIds: 검색 결과 중 고를 수 있는 memberId (기본값 `nil` — 제한 없음)
     public init(
         challenger: Binding<[ChallengerInfo]>,
-        searchUseCase: SearchChallengersUseCaseProtocol? = nil
+        searchUseCase: SearchChallengersUseCaseProtocol? = nil,
+        selectableMemberIds: Set<String>? = nil
     ) {
         self._challenger = challenger
         self.searchUseCase = searchUseCase
+        self.selectableMemberIds = selectableMemberIds
     }
 
     // MARK: - Body
@@ -77,7 +83,8 @@ public struct SelectedChallengerView: View {
                 .navigationDestination(isPresented: $showsSearch) {
                     SearchChallengerView(
                         useCase: resolvedSearchUseCase,
-                        selectedChallengers: $challenger
+                        selectedChallengers: $challenger,
+                        selectableMemberIds: selectableMemberIds
                     )
                 }
         }

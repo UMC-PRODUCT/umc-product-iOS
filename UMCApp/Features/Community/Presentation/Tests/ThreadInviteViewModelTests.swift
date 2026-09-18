@@ -19,16 +19,21 @@ import UMCFoundation
 private final class StubInviteUseCase: CommunityThreadInviteUseCaseProtocol {
 
     var shouldFailInvite = false
+    var inviteError: Error = AppError.unknown(message: "실패")
+    var candidateIds: [String] = []
 
     private(set) var inviteCalls: [[String]] = []
 
     func loadCandidates(threadId: String) async throws -> ThreadInviteCandidates {
-        ThreadInviteCandidates(candidates: [], remainingSlots: nil)
+        let candidates = candidateIds.map {
+            ThreadMember(id: $0, name: "후보\($0)", part: nil, profileImageURL: nil, role: .member)
+        }
+        return ThreadInviteCandidates(candidates: candidates, remainingSlots: nil)
     }
 
     func invite(threadId: String, memberIds: [String]) async throws {
         inviteCalls.append(memberIds)
-        if shouldFailInvite { throw AppError.unknown(message: "실패") }
+        if shouldFailInvite { throw inviteError }
     }
 }
 
@@ -87,6 +92,45 @@ struct ThreadInviteViewModelTests {
         #expect(invitedCount == nil)
         #expect(viewModel.alertPrompt != nil)
         #expect(viewModel.invitees.map(\.memberId) == ["11"])
+    }
+
+    @Test("거절 사유가 오면 그 사유로 알린다")
+    func explainsInviteRejection() async {
+        let useCase = StubInviteUseCase()
+        useCase.shouldFailInvite = true
+        useCase.inviteError = ThreadInviteError.kicked
+        let viewModel = ThreadInviteViewModel(threadId: "1", useCase: useCase)
+        viewModel.invitees = [makeChallenger(memberId: "11")]
+
+        _ = await viewModel.invite()
+
+        #expect(viewModel.alertPrompt?.message == ThreadInviteError.kicked.errorDescription)
+    }
+
+    @Test("초대 후보를 읽으면 후보가 아닌 선택을 뺀다")
+    func prunesInviteesOutsideCandidates() async {
+        let useCase = StubInviteUseCase()
+        useCase.candidateIds = ["11", "13"]
+        let viewModel = ThreadInviteViewModel(threadId: "1", useCase: useCase)
+        viewModel.invitees = [makeChallenger(memberId: "11"), makeChallenger(memberId: "12")]
+
+        await viewModel.loadInvitableMembers()
+
+        #expect(viewModel.invitableMemberIds == ["11", "13"])
+        #expect(viewModel.invitees.map(\.memberId) == ["11"])
+    }
+
+    @Test("초대에 성공하면 들어온 멤버를 후보에서 뺀다")
+    func removesInvitedFromCandidates() async {
+        let useCase = StubInviteUseCase()
+        useCase.candidateIds = ["11", "13"]
+        let viewModel = ThreadInviteViewModel(threadId: "1", useCase: useCase)
+        await viewModel.loadInvitableMembers()
+        viewModel.invitees = [makeChallenger(memberId: "11")]
+
+        _ = await viewModel.invite()
+
+        #expect(viewModel.invitableMemberIds == ["13"])
     }
 
     @Test("아무도 고르지 않고 닫으면 요청을 보내지 않는다")

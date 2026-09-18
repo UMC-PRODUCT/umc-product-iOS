@@ -232,7 +232,11 @@ struct CommunityThreadRoomView: View {
         }
         // 선택 화면에 전송 버튼이 없어 닫을 때 초대한다 (`ThreadInviteViewModel` 참고).
         .fullScreenCover(isPresented: $isInviteSheetPresented, onDismiss: invite) {
-            SelectedChallengerView(challenger: $inviteViewModel.invitees)
+            SelectedChallengerView(
+                challenger: $inviteViewModel.invitees,
+                selectableMemberIds: inviteViewModel.invitableMemberIds
+            )
+            .task { await inviteViewModel.loadInvitableMembers() }
         }
         .alertPrompt(item: $inviteViewModel.alertPrompt)
         // 스펙 6.4: 포그라운드 + 최하단일 때만 워터마크를 올린다. 과거를 읽는 중이거나 앱이

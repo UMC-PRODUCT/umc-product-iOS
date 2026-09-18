@@ -28,6 +28,9 @@ struct SearchChallengerView: View {
 
     @State private var viewModel: SearchChallengerViewModel
 
+    /// 고를 수 있는 memberId. `nil` 이면 제한하지 않는다.
+    private let selectableMemberIds: Set<String>?
+
     /// 검색창 입력 (로컬 상태로 둬 입력 지연을 피한다)
     @State private var searchText = ""
 
@@ -62,11 +65,14 @@ struct SearchChallengerView: View {
     /// - Parameters:
     ///   - useCase: 챌린저 검색 UseCase (상위에서 DI 로 해석해 주입)
     ///   - selectedChallengers: 상위 화면의 선택 목록 바인딩
+    ///   - selectableMemberIds: 고를 수 있는 memberId (기본값 `nil` — 제한 없음)
     init(
         useCase: SearchChallengersUseCaseProtocol,
-        selectedChallengers: Binding<[ChallengerInfo]>
+        selectedChallengers: Binding<[ChallengerInfo]>,
+        selectableMemberIds: Set<String>? = nil
     ) {
         self._selectedChallengers = selectedChallengers
+        self.selectableMemberIds = selectableMemberIds
         self._viewModel = State(
             initialValue: SearchChallengerViewModel(searchChallengersUseCase: useCase)
         )
@@ -119,10 +125,11 @@ struct SearchChallengerView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .loaded(let challengers):
-            if challengers.isEmpty {
+            let selectable = challengers.filter(isSelectable)
+            if selectable.isEmpty {
                 emptyResultView
             } else {
-                resultList(challengers)
+                resultList(selectable)
             }
 
         case .failed(let error):
@@ -190,10 +197,16 @@ struct SearchChallengerView: View {
     }
 
     /// 선택을 확정해 상위 화면 목록에 반영합니다.
+    ///
+    /// CSV 로 고른 인원은 검색 결과를 거치지 않아 여기서 한 번 더 거른다.
     private func confirmSelection() {
         selectedChallengers = viewModel.confirmedSelection(
             previousSelection: initialSelection
-        )
+        ).filter(isSelectable)
+    }
+
+    private func isSelectable(_ challenger: ChallengerInfo) -> Bool {
+        selectableMemberIds?.contains(challenger.memberId) ?? true
     }
 
     private func handleCSVImport(_ result: Result<[URL], Error>) {
