@@ -5,6 +5,7 @@
 //  Created by euijjang97 on 8/12/26.
 //
 
+import PhotosUI
 import SwiftUI
 import CommunityDomain
 import CoreDesignSystem
@@ -24,13 +25,15 @@ fileprivate enum Constants {
     /// 자동완성 오버레이 최대 높이 — 약 3.5행. 반쯤 걸친 행이 보여야 더 있다는 게 드러난다.
     static let mentionListMaxHeight: CGFloat = 176
     static let mentionRowAvatarSize = CGSize(width: 28, height: 28)
+    /// 한 번에 고를 수 있는 사진 수. 서버는 4장까지 받지만 우선 1장만 연다 (#1451).
+    static let maxImageSelection = 1
 }
 
 /// 하단 입력창.
 ///
 /// 마이크는 음성 체인이 후속 PR 이라 버튼만 두고 비활성화한다 — 나중에 붙을 때 입력창 높이가
-/// 바뀌지 않게 자리를 미리 잡아 둔다. 이미지 첨부는 업로드 경로 자체가 없어 버튼을 걷어냈고,
-/// 그 폭은 입력 필드가 가져간다 (명세 FLOW 04 컴포저 구성).
+/// 바뀌지 않게 자리를 미리 잡아 둔다. 사진 버튼은 버튼 줄 왼쪽 끝에 둔다 — 고르는 즉시
+/// 전송하므로 입력 중인 글과 섞이지 않는다 (#1451).
 ///
 /// 인용 칩과 `@` 자동완성은 입력줄 **위로 쌓는다**. 오버레이로 띄우면 마지막 말풍선을 가리는데,
 /// 답장을 쓰는 순간에 가장 보고 싶은 게 바로 그 말풍선이다.
@@ -51,6 +54,10 @@ struct MessageComposer: View {
     let onCancelReply: () -> Void
     let onCancelEdit: () -> Void
     let onSelectMention: (ThreadMember) -> Void
+    var canAttachImage = false
+    var onPickImages: ([PhotosPickerItem]) -> Void = { _ in }
+
+    @State private var pickedImages: [PhotosPickerItem] = []
 
     /// 버튼 아이콘은 본문 크기를 따라 커지는데 원판이 고정이면 접근성 크기에서 글리프가 밖으로
     /// 삐져나온다. 원판도 같은 비율로 키운다.
@@ -109,6 +116,8 @@ struct MessageComposer: View {
                 .padding(.top, DefaultSpacing.spacing12)
 
             HStack(spacing: 0) {
+                imageButton
+
                 Spacer(minLength: 0)
 
                 Button {
@@ -152,6 +161,32 @@ struct MessageComposer: View {
         .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
         .padding(.horizontal, DefaultSpacing.spacing16)
         .padding(.vertical, DefaultSpacing.spacing8)
+    }
+
+    /// 고르는 즉시 올려 보낸다. 선택을 비워 둬야 같은 사진을 다시 골라도 `onChange` 가 돈다.
+    private var imageButton: some View {
+        PhotosPicker(
+            selection: $pickedImages,
+            maxSelectionCount: Constants.maxImageSelection,
+            matching: .images
+        ) {
+            Image(systemName: "photo")
+                .foregroundStyle(canAttachImage ? Color.grey700 : Color.grey400)
+                .frame(width: actionButtonSize, height: actionButtonSize)
+                .glassEffect(canAttachImage ? .regular.interactive() : .regular, in: .circle)
+                .frame(
+                    minWidth: DefaultConstant.minimumTouchTarget,
+                    minHeight: DefaultConstant.minimumTouchTarget
+                )
+                .contentShape(.rect)
+        }
+        .disabled(!canAttachImage)
+        .accessibilityLabel("사진 보내기")
+        .onChange(of: pickedImages) { _, items in
+            guard !items.isEmpty else { return }
+            onPickImages(items)
+            pickedImages = []
+        }
     }
 
     /// 보낼 수 있을 때만 강조색을 채우고 눌림에 반응한다. 비활성은 마이크와 같은 무채색 glass 라

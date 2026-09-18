@@ -32,7 +32,7 @@ public final class CommunityThreadRoomViewModel {
     /// "히스토리 로드 실패 = 인라인 + 재시도" 를 요구하므로 두 실패를 이 한 상태로 모은다.
     public private(set) var header: Loadable<CommunityThread> = .idle
     /// 표시 순서(오래된 것 → 최신). 서버는 최신순으로 주므로 담을 때 뒤집는다.
-    /// `+Edit` 이 낙관적 수정을 찍으므로 setter 를 모듈 내부로 연다.
+    /// `+Edit`·`+Image` 가 낙관적 수정·버블을 찍으므로 setter 를 모듈 내부로 연다.
     public internal(set) var messages: [ThreadMessage] = []
     public private(set) var isLoadingOlder = false
 
@@ -134,7 +134,7 @@ public final class CommunityThreadRoomViewModel {
     let listUseCase: CommunityThreadListUseCaseProtocol
     /// `useCase` 와 같은 이유로 모듈 내부에 연다 — `+ThreadMenu` 확장이 명령 실패를 올린다.
     let errorHandler: ErrorHandler
-    private let currentMemberId: String?
+    let currentMemberId: String?
     private let sendTimeout: Duration
 
     /// 최하단 근처를 보고 있는지. 화면만 알 수 있는 값이라 `updateNearBottom(_:)` 로 받아 둔다.
@@ -350,6 +350,10 @@ public final class CommunityThreadRoomViewModel {
               messages[index].deliveryState == .failed else { return }
 
         messages[index].deliveryState = .sending
+        if messages[index].type == .image {
+            await dispatchImages(clientMessageId: clientMessageId, files: messages[index].files)
+            return
+        }
         // 인용·멘션은 낙관적 버블이 그대로 들고 있다 — 초안은 이미 비워졌으므로 여기가 유일한 출처다.
         await dispatch(
             clientMessageId: clientMessageId,
@@ -780,7 +784,7 @@ public final class CommunityThreadRoomViewModel {
 
     /// 응답이 오지 않는 경우를 닫는다. STOMP 는 SEND 에 대한 성공 응답이 없어 이 감시가 없으면
     /// `.sending` 스피너가 영원히 남는다.
-    private func startTimeout(for clientMessageId: String) {
+    func startTimeout(for clientMessageId: String) {
         pendingTimeouts[clientMessageId]?.cancel()
         pendingTimeouts[clientMessageId] = Task { [weak self, sendTimeout] in
             try? await Task.sleep(for: sendTimeout)
@@ -789,7 +793,7 @@ public final class CommunityThreadRoomViewModel {
         }
     }
 
-    private func markFailed(clientMessageId: String) {
+    func markFailed(clientMessageId: String) {
         let key = clientMessageId.lowercased()
         pendingTimeouts.removeValue(forKey: key)?.cancel()
         // 이미 에코가 도착해 `.sent` 가 된 항목은 되돌리지 않는다. 전송 프레임의 실패와

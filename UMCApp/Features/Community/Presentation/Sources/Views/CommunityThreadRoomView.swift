@@ -192,7 +192,9 @@ struct CommunityThreadRoomView: View {
                         onSend: { Task { await viewModel.send() } },
                         onCancelReply: { viewModel.cancelReply() },
                         onCancelEdit: { viewModel.cancelEdit() },
-                        onSelectMention: { viewModel.selectMention($0) }
+                        onSelectMention: { viewModel.selectMention($0) },
+                        canAttachImage: viewModel.canAttachImage,
+                        onPickImages: { items in Task { await viewModel.sendImages(items) } }
                     )
                     // 헤더가 오기 전에는 어느 방으로 보낼지 모른다. `.disabled` 는 높이를
                     // 건드리지 않으므로 자리는 그대로 두고 손댈 수만 없게 막는다.

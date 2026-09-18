@@ -190,11 +190,18 @@ struct MessageBubble: View {
                     quoteBlock(reply)
                 }
 
-                Text(bubbleText)
-                    .appFont(.subheadline)
-                    .foregroundStyle(bubbleForeground)
-                    .italic(message.isDeleted)
-                    .tint(linkTint)
+                if !message.files.isEmpty, !message.isDeleted {
+                    ImageMessageContent(files: message.files)
+                }
+
+                // 사진만 보낸 메시지는 본문이 비어 있다 — 빈 줄을 그리면 사진 아래 틈이 남는다.
+                if message.isDeleted || message.files.isEmpty || !message.content.isEmpty {
+                    Text(bubbleText)
+                        .appFont(.subheadline)
+                        .foregroundStyle(bubbleForeground)
+                        .italic(message.isDeleted)
+                        .tint(linkTint)
+                }
 
                 ForEach(cardLinks, id: \.self) { link in
                     MessageLinkCard(link: link)

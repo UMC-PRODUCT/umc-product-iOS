@@ -7,6 +7,7 @@
 
 import Foundation
 import Testing
+import UIKit
 import CommunityDomain
 import UMCFoundation
 @testable import CommunityPresentation
@@ -857,6 +858,94 @@ struct CommunityThreadRoomViewModelTests {
         #expect(viewModel.canSend == false)
         #expect(useCase.sentContents.isEmpty)
         #expect(viewModel.messages.isEmpty)
+    }
+
+    // MARK: - Image
+
+    /// 인코딩을 거치지 않는 경로라 JPEG 헤더만 있으면 된다.
+    private static let jpeg = Data([0xFF, 0xD8, 0xFF, 0xD9])
+
+    @Test("사진은 sending 버블이 먼저 꽂히고, 올린 fileId 로 IMAGE 를 보낸다")
+    func sendsImageAfterUpload() async throws {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+
+        await viewModel.sendImages(jpegData: [Self.jpeg])
+
+        let message = try #require(viewModel.messages.first)
+        #expect(message.type == .image)
+        #expect(message.content.isEmpty)
+        #expect(message.files.count == 1)
+        #expect(message.deliveryState == .sending)
+        #expect(useCase.uploadedImages == [Self.jpeg])
+        #expect(useCase.imageSendCalls == [["file-1"]])
+        #expect(useCase.sentClientMessageIds.first == message.clientMessageId)
+    }
+
+    @Test("업로드가 실패하면 보내지 않고 버블만 failed 로 바꾼다 — 전역 Alert 없음")
+    func failedUploadStaysInBubble() async {
+        let useCase = StubRoomUseCase()
+        useCase.uploadError = AppError.unknown(message: "업로드 실패")
+        let errorHandler = ErrorHandler()
+        let viewModel = makeViewModel(useCase, errorHandler: errorHandler)
+        await viewModel.load()
+
+        await viewModel.sendImages(jpegData: [Self.jpeg])
+
+        #expect(viewModel.messages.first?.deliveryState == .failed)
+        #expect(useCase.imageSendCalls.isEmpty)
+        #expect(errorHandler.currentError == nil)
+    }
+
+    @Test("실패한 사진은 로컬 파일을 다시 올려 같은 clientMessageId 로 보낸다")
+    func retriesImageFromLocalFile() async throws {
+        let useCase = StubRoomUseCase()
+        useCase.uploadError = AppError.unknown(message: "업로드 실패")
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+
+        await viewModel.sendImages(jpegData: [Self.jpeg])
+        let failed = try #require(viewModel.messages.first)
+        useCase.uploadError = nil
+        await viewModel.retry(failed)
+
+        #expect(useCase.uploadedImages == [Self.jpeg, Self.jpeg])
+        #expect(useCase.imageSendCalls == [["file-2"]])
+        #expect(useCase.sentClientMessageIds == [failed.clientMessageId].compactMap { $0 })
+        #expect(useCase.sentContents.isEmpty)
+        #expect(viewModel.messages.first?.deliveryState == .sending)
+    }
+
+    @Test("비참여자는 사진도 보내지 않는다")
+    func blocksImageAsNonMember() async {
+        let useCase = StubRoomUseCase()
+        useCase.thread = makeThread(isJoined: false)
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+
+        await viewModel.sendImages(jpegData: [Self.jpeg])
+
+        #expect(viewModel.canAttachImage == false)
+        #expect(viewModel.messages.isEmpty)
+        #expect(useCase.uploadedImages.isEmpty)
+    }
+
+    @Test("고른 사진은 긴 변 2048px 로 줄여 JPEG 으로 다시 인코딩한다")
+    func downscalesPickedImage() throws {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let size = CGSize(width: 4_000, height: 100)
+        let source = UIGraphicsImageRenderer(size: size, format: format).image { context in
+            UIColor.red.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+        let png = try #require(source.pngData())
+
+        let jpeg = try #require(CommunityThreadRoomViewModel.jpegData(from: png))
+
+        #expect(jpeg.starts(with: [0xFF, 0xD8]))
+        #expect(UIImage(data: jpeg)?.size.width == 2_048)
     }
 
     // MARK: - Reply
