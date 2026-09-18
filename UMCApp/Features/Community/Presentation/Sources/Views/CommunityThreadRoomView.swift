@@ -23,6 +23,8 @@ fileprivate enum Constants {
     static let loadFailureTitle = "대화를 불러오지 못했어요"
     static let emptyTitle = "아직 대화가 없어요"
     static let emptyDescription = "첫 메시지를 보내 대화를 시작해 보세요."
+    static let readOnlyNotice = "초대를 받으면 대화에 참여할 수 있어요"
+    static let readOnlyRefreshLabel = "새 메시지 불러오기"
     /// HIG 최소 탭 타깃.
     static let minimumTapTarget: CGFloat = 44
     static let newMessagePillIconSize: CGFloat = 12
@@ -176,8 +178,10 @@ struct CommunityThreadRoomView: View {
                 // 로딩 중에도 자리를 지킨다. 헤더가 온 뒤에 컴포저가 나타나면 하단 인셋이 그
                 // 높이만큼 늦게 붙어 뼈대가 한 번 더 움직인다 — 비활성으로 그려 두면 인셋이
                 // 처음부터 같다. 실패는 다르다: 보낼 방을 모르고 재시도 뷰가 화면을 채우므로
-                // 입력창을 그리지 않는다.
-                if viewModel.header.error == nil {
+                // 입력창을 그리지 않는다. 비참여자는 쓸 수 없으니 입력창 자리에 안내를 둔다 (#1432).
+                if viewModel.header.value?.isJoined == false {
+                    readOnlyBar
+                } else if viewModel.header.error == nil {
                     MessageComposer(
                         text: $viewModel.draft,
                         canSend: viewModel.canSend,
@@ -271,28 +275,31 @@ struct CommunityThreadRoomView: View {
             }
 
             Section {
-                Button {
-                    Task {
-                        await viewModel.togglePin()
-                        notifyToggled()
+                // 고정·알림은 서버가 참여 중인 멤버에게만 허용한다. 공유는 누구나 된다 (#1432).
+                if viewModel.canWrite {
+                    Button {
+                        Task {
+                            await viewModel.togglePin()
+                            notifyToggled()
+                        }
+                    } label: {
+                        Label(
+                            viewModel.isPinned ? "고정 해제" : "고정",
+                            systemImage: viewModel.isPinned ? "pin.slash" : "pin"
+                        )
                     }
-                } label: {
-                    Label(
-                        viewModel.isPinned ? "고정 해제" : "고정",
-                        systemImage: viewModel.isPinned ? "pin.slash" : "pin"
-                    )
-                }
 
-                Button {
-                    Task {
-                        await viewModel.toggleMute()
-                        notifyToggled()
+                    Button {
+                        Task {
+                            await viewModel.toggleMute()
+                            notifyToggled()
+                        }
+                    } label: {
+                        Label(
+                            viewModel.isMuted ? "알림 켜기" : "알림 끄기",
+                            systemImage: viewModel.isMuted ? "bell" : "bell.slash"
+                        )
                     }
-                } label: {
-                    Label(
-                        viewModel.isMuted ? "알림 켜기" : "알림 끄기",
-                        systemImage: viewModel.isMuted ? "bell" : "bell.slash"
-                    )
                 }
 
                 if let shareLink = viewModel.shareLink {
@@ -331,19 +338,22 @@ struct CommunityThreadRoomView: View {
                 }
             }
 
-            Section {
-                if viewModel.canEditThread {
-                    Button(role: .destructive) {
-                        viewModel.confirmDeleteThread()
-                    } label: {
-                        Label("스레드 삭제", systemImage: "trash")
+            // 비참여자에게는 나갈 방도, 지울 권한도 없다.
+            if viewModel.canWrite {
+                Section {
+                    if viewModel.canEditThread {
+                        Button(role: .destructive) {
+                            viewModel.confirmDeleteThread()
+                        } label: {
+                            Label("스레드 삭제", systemImage: "trash")
+                        }
                     }
-                }
 
-                Button(role: .destructive) {
-                    viewModel.confirmLeave()
-                } label: {
-                    Label("나가기", systemImage: "rectangle.portrait.and.arrow.right")
+                    Button(role: .destructive) {
+                        viewModel.confirmLeave()
+                    } label: {
+                        Label("나가기", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
                 }
             }
         } label: {
@@ -369,6 +379,37 @@ struct CommunityThreadRoomView: View {
             .background(Color.grey800, in: .capsule)
             .padding(.bottom, DefaultSpacing.spacing8)
             .transition(.opacity)
+    }
+
+    /// 비참여자 하단 안내 (#1432). 입력창과 같은 glass 카드 자리에 둔다.
+    ///
+    /// 서버는 비참여자에게 실시간을 보내지 않는다. 새로고침이 헤더와 최신 페이지를 다시 읽어
+    /// 새 메시지를 붙이고, 그사이 초대를 받았으면 입력창으로 바뀐다.
+    private var readOnlyBar: some View {
+        HStack(spacing: 0) {
+            Text(Constants.readOnlyNotice)
+                .appFont(.subheadline, color: .grey600)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                Task { await viewModel.backfill() }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+                    .foregroundStyle(Color.grey600)
+                    .frame(
+                        minWidth: Constants.minimumTapTarget,
+                        minHeight: Constants.minimumTapTarget
+                    )
+                    .contentShape(.rect)
+            }
+            .accessibilityLabel(Constants.readOnlyRefreshLabel)
+        }
+        .padding(.leading, DefaultSpacing.spacing16)
+        .padding(.trailing, DefaultSpacing.spacing4)
+        .padding(.vertical, DefaultSpacing.spacing4)
+        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
+        .padding(.horizontal, DefaultSpacing.spacing16)
+        .padding(.vertical, DefaultSpacing.spacing8)
     }
 
     private func navigationHeader(_ thread: CommunityThread) -> some View {
@@ -413,11 +454,12 @@ struct CommunityThreadRoomView: View {
     }
 
     /// 메시지 0건 (스펙 #14). 컴포저는 계속 쓸 수 있으므로 여기서는 유도 문구만 낸다.
+    /// 비참여자는 보낼 수 없으니 유도 문구를 뺀다.
     private var emptyMessages: some View {
         ContentUnavailableView(
             Constants.emptyTitle,
             systemImage: "bubble.left.and.bubble.right",
-            description: Text(Constants.emptyDescription)
+            description: viewModel.canWrite ? Text(Constants.emptyDescription) : nil
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -476,7 +518,8 @@ struct CommunityThreadRoomView: View {
                         },
                         onQuoteTap: { viewModel.scrollToQuoted($0) },
                         isActionTargeted: actionTargetID == message.id,
-                        onRequestActions: { showActions(for: message) }
+                        onRequestActions: { showActions(for: message) },
+                        isReadOnly: !viewModel.canWrite
                     )
                     .accessibilityFocused($focusedMessageID, equals: message.id)
                     .task { await viewModel.loadOlderIfNeeded(currentItem: message) }
@@ -547,7 +590,9 @@ struct CommunityThreadRoomView: View {
         }
     }
 
+    /// 오버레이의 반응 바·답장·신고·삭제는 모두 쓰기라 비참여자에게는 띄우지 않는다 (#1432).
     private func showActions(for message: ThreadMessage) {
+        guard viewModel.canWrite else { return }
         withAnimation(reduceMotion ? nil : .snappy) { actionTargetID = message.id }
     }
 

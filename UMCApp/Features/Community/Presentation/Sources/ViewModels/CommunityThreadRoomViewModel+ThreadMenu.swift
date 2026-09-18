@@ -21,8 +21,9 @@ extension CommunityThreadRoomViewModel {
     // MARK: - Computed Property
 
     /// 스레드 편집·삭제를 열지. 리스트 스와이프와 같은 판정(`canEdit`)을 쓴다 (#1134).
+    /// 나간 운영진에게도 서버가 예전 역할을 실어 주므로 참여 여부를 함께 본다 (#1432).
     public var canEditThread: Bool {
-        header.value?.canEdit == true
+        canWrite && header.value?.canEdit == true
     }
 
     /// 운영 그룹을 통째로 그릴지. 일반 참여자에게는 항목이 하나도 남지 않아 구분선까지 감춘다.
