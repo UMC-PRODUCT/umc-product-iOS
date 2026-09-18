@@ -102,9 +102,10 @@ extension MyPageRouter: BaseTargetType {
         case .patchMemberProfileLinks(let request):
             return .requestJSONEncodable(request)
         case .getMyPosts(let query), .getCommentedPosts(let query), .getScrappedPosts(let query):
+            // 기본값(.brackets)은 `sort[]=` 로 직렬화돼 Spring Pageable 이 `sort` 를 무시한다.
             return .requestParameters(
                 parameters: query.toParameters,
-                encoding: URLEncoding.queryString
+                encoding: URLEncoding(destination: .queryString, arrayEncoding: .noBrackets)
             )
         case .getTerms:
             return .requestPlain

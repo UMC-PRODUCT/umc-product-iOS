@@ -31,7 +31,6 @@ struct MyPagePostResponseDTOTests {
         commentCount: String = "5",
         likeCount: String = "10",
         isLiked: Bool = false,
-        isAuthor: Bool = false,
         authorProfileImage: String? = nil,
         lightning: [String: Any]? = nil
     ) -> [String: Any] {
@@ -46,8 +45,7 @@ struct MyPagePostResponseDTOTests {
             "createdAt": createdAt,
             "commentCount": commentCount,
             "likeCount": likeCount,
-            "isLiked": isLiked,
-            "isAuthor": isAuthor
+            "isLiked": isLiked
         ]
         if let authorProfileImage { dict["authorProfileImage"] = authorProfileImage }
         if let lightning { dict["lightningInfo"] = lightning }
@@ -143,6 +141,103 @@ struct MyPagePostResponseDTOTests {
         #expect(item.lightningInfo?.location == "강남역")
         #expect(item.lightningInfo?.maxParticipants == 8)
         #expect(item.lightningInfo?.openChatUrl == "https://chat.example.com")
+    }
+
+    @Test("authorId·authorPart가 null이면 nil로 매핑된다 (deprecated PostResponse.from)")
+    func nullableAuthorFieldsDecodeAsNil() throws {
+        var dict = Self.postDict()
+        dict["authorId"] = NSNull()
+        dict["authorPart"] = NSNull()
+        let item = try Self.decodePost(dict).toCommunityItemModel()
+
+        #expect(item.userId == nil)
+        #expect(item.part == nil)
+    }
+
+    @Test("authorId·authorPart 키가 없어도 디코딩된다")
+    func missingAuthorFieldsDecodeAsNil() throws {
+        var dict = Self.postDict()
+        dict.removeValue(forKey: "authorId")
+        dict.removeValue(forKey: "authorPart")
+        let item = try Self.decodePost(dict).toCommunityItemModel()
+
+        #expect(item.userId == nil)
+        #expect(item.part == nil)
+    }
+
+    @Test("서버 PostResponse 원형(isAuthor 없음, 정수는 문자열) 페이지를 디코딩한다")
+    func serverPageFixtureDecodes() throws {
+        let json = """
+        {
+            "content": [
+                {
+                    "postId": "12",
+                    "title": "번개 모집",
+                    "content": "강남에서 모여요",
+                    "category": "LIGHTNING",
+                    "authorId": "34",
+                    "authorChallengerId": "34",
+                    "authorMemberId": null,
+                    "authorName": "홍길동",
+                    "authorNickname": null,
+                    "authorProfileImage": null,
+                    "authorPart": null,
+                    "createdAt": "2026-02-13T10:30:00Z",
+                    "commentCount": "5",
+                    "likeCount": "42",
+                    "isLiked": false,
+                    "lightningInfo": {
+                        "meetAt": "2026-03-16T09:00:00Z",
+                        "location": "강남역 2번 출구",
+                        "maxParticipants": "5",
+                        "openChatUrl": "https://open.kakao.com/o/sxxxxxx"
+                    }
+                },
+                {
+                    "postId": "11",
+                    "title": "질문",
+                    "content": "본문",
+                    "category": "QUESTION",
+                    "authorId": "34",
+                    "authorChallengerId": "34",
+                    "authorMemberId": null,
+                    "authorName": "홍길동",
+                    "authorNickname": null,
+                    "authorProfileImage": "https://example.com/profile.jpg",
+                    "authorPart": "IOS",
+                    "createdAt": "2026-02-12T10:30:00Z",
+                    "commentCount": "0",
+                    "likeCount": "0",
+                    "isLiked": true,
+                    "lightningInfo": null
+                }
+            ],
+            "page": "0",
+            "size": "20",
+            "totalElements": "2",
+            "totalPages": "1",
+            "hasNext": false,
+            "hasPrevious": false
+        }
+        """.data(using: .utf8)!
+
+        let page = try JSONDecoder().decode(
+            MyPagePostPageDTO<MyPagePostResponseDTO>.self,
+            from: json
+        ).toDomain()
+
+        #expect(page.items.count == 2)
+        #expect(page.hasNext == false)
+        let lightning = try #require(page.items.first)
+        #expect(lightning.postId == "12")
+        #expect(lightning.userId == "34")
+        #expect(lightning.part == nil)
+        #expect(lightning.likeCount == 42)
+        #expect(lightning.lightningInfo?.maxParticipants == 5)
+        let question = try #require(page.items.last)
+        #expect(question.part == UMCPartType.front(type: .ios))
+        #expect(question.isLiked == true)
+        #expect(question.lightningInfo == nil)
     }
 
     // MARK: - LightningInfoDTO.toDomain (JSON shape 흡수)

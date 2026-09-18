@@ -208,6 +208,25 @@ struct MyPageRouterMigratedTaskTests {
             #expect(parameters["size"] as? Int == 10)
         }
     }
+
+    @Test("활동 게시글 — sort 배열은 대괄호 없이 `sort=` 로 인코딩된다 (Spring Pageable 계약)")
+    func postListSortEncodedWithoutBrackets() throws {
+        let query = MyPagePostListQueryDTO(
+            query: MyPagePostListQuery(page: 0, size: 20, sort: ["createdAt,DESC"])
+        )
+        guard case let .requestParameters(parameters, encoding) =
+            MyPageRouter.getMyPosts(query: query).task else {
+            Issue.record("Expected .requestParameters")
+            return
+        }
+        let baseURL = try #require(URL(string: "https://example.com/api/v1/posts/my"))
+
+        let request = try encoding.encode(URLRequest(url: baseURL), with: parameters)
+        let encodedQuery = try #require(request.url?.query)
+
+        #expect(encodedQuery.contains("sort=createdAt"))
+        #expect(!encodedQuery.contains("sort%5B%5D"))
+    }
 }
 
 // MARK: - 요청 DTO / 쿼리 인코딩 계약

@@ -24,7 +24,6 @@ public final class MyActivePostsViewModel {
     private var currentPage: Int = 0
     private var hasNext: Bool = true
     private let pageSize: Int = 20
-    private let sort: [String] = ["createdAt,DESC"]
     
     // MARK: - Function
     
@@ -97,10 +96,11 @@ private extension MyActivePostsViewModel {
     }
     
     private func fetchPage(page: Int) async throws -> MyActivePostPage {
+        // 세 목록의 정렬(작성·최신 댓글·최신 스크랩 순)은 서버가 엔드포인트마다 정한다.
         let query = MyPagePostListQuery(
             page: page,
             size: pageSize,
-            sort: sort
+            sort: []
         )
         
         switch logType {

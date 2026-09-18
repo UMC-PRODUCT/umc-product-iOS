@@ -27,7 +27,7 @@ struct MyActivePostsViewModelTests {
 
     // MARK: - 첫 페이지 로드
 
-    @Test("fetchInitialIfNeeded 성공 시 .loaded + 쿼리는 page 0 / size 20 / createdAt,DESC")
+    @Test("fetchInitialIfNeeded 성공 시 .loaded + 쿼리는 page 0 / size 20 / 정렬 미지정")
     func fetchInitialSuccessLoadsFirstPage() async {
         let items = [makeStubCommunityItem(postId: "1"), makeStubCommunityItem(postId: "2")]
         let mock = MockMyPageRepository()
@@ -44,7 +44,7 @@ struct MyActivePostsViewModelTests {
         #expect(mock.fetchMyPostsCallCount == 1)
         #expect(mock.fetchMyPostsReceivedQuery?.page == 0)
         #expect(mock.fetchMyPostsReceivedQuery?.size == 20)
-        #expect(mock.fetchMyPostsReceivedQuery?.sort == ["createdAt,DESC"])
+        #expect(mock.fetchMyPostsReceivedQuery?.sort == [])
     }
 
     @Test(
