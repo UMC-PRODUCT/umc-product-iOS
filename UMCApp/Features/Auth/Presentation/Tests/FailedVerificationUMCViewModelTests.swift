@@ -206,6 +206,25 @@ struct FailedVerificationUMCViewModelTests {
         #expect(memberProfileRepository.invalidateCacheCallCount == 1)
     }
 
+    @Test("로그아웃 확인 시 로컬 토큰을 지우기 전에 서버 세션 해제를 한 번 호출한다")
+    func logoutConfirmRevokesServerSessionBeforeClearingToken() async throws {
+        let tokenStore = FakeTokenStore()
+        let revokeSessionUseCase = MockRevokeSessionUseCase(tokenStore: tokenStore)
+        let viewModel = makeViewModel(
+            tokenStore: tokenStore,
+            revokeSessionUseCase: revokeSessionUseCase
+        )
+
+        viewModel.presentLogoutPrompt()
+        viewModel.alertPrompt?.positiveBtnAction?()
+
+        try await waitUntil { viewModel.destination == .login }
+
+        #expect(revokeSessionUseCase.executeCallCount == 1)
+        #expect(revokeSessionUseCase.clearCallCountAtExecute == 0)
+        #expect(await tokenStore.clearCallCount == 1)
+    }
+
     @Test("로그아웃 실패 시 ErrorHandler에 에러를 전달하고 화면 전환과 세션 초기화를 하지 않는다")
     func logoutFailureReportsErrorWithoutNavigating() async throws {
         let tokenStore = FakeTokenStore()
@@ -328,6 +347,19 @@ struct FailedVerificationUMCViewModelTests {
         #expect(viewModel.destination == nil)
         #expect(await tokenStore.clearCallCount == 0)
     }
+
+    @Test("회원 탈퇴는 서버 세션 해제를 호출하지 않는다")
+    func deleteAccountDoesNotRevokeServerSession() async throws {
+        let revokeSessionUseCase = MockRevokeSessionUseCase()
+        let viewModel = makeViewModel(revokeSessionUseCase: revokeSessionUseCase)
+
+        viewModel.presentDeleteAccountPrompt()
+        viewModel.alertPrompt?.positiveBtnAction?()
+
+        try await waitUntil { viewModel.destination == .login }
+
+        #expect(revokeSessionUseCase.executeCallCount == 0)
+    }
 }
 
 // MARK: - Helpers
@@ -359,7 +391,8 @@ private func makeViewModel(
     tokenStore: FakeTokenStore? = nil,
     syncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol? = nil,
     userSessionManager: UserSessionManager? = nil,
-    memberProfileRepository: MemberProfileRepositoryProtocol? = nil
+    memberProfileRepository: MemberProfileRepositoryProtocol? = nil,
+    revokeSessionUseCase: RevokeSessionUseCaseProtocol? = nil
 ) -> FailedVerificationUMCViewModel {
     let registerUseCase = registerExistingChallengerUseCase
         ?? MockRegisterExistingChallengerUseCase()
@@ -368,6 +401,7 @@ private func makeViewModel(
     let store = tokenStore ?? FakeTokenStore()
     let syncUseCase = syncProfileStorageUseCase ?? MockSyncProfileStorageUseCase()
     let sessionManager = userSessionManager ?? UserSessionManager()
+    let revokeUseCase = revokeSessionUseCase ?? MockRevokeSessionUseCase()
 
     let container = DIContainer()
     container.register(RegisterExistingChallengerUseCaseProtocol.self) { registerUseCase }
@@ -375,6 +409,7 @@ private func makeViewModel(
     container.register(DeleteMemberUseCaseProtocol.self) { deleteUseCase }
     container.register(SyncProfileStorageUseCaseProtocol.self) { syncUseCase }
     container.register(UserSessionManager.self) { sessionManager }
+    container.register(RevokeSessionUseCaseProtocol.self) { revokeUseCase }
     container.register(NetworkClient.self) {
         NetworkClient(tokenStore: store, refreshService: FakeTokenRefreshService())
     }
@@ -488,6 +523,22 @@ private final class MockDeleteMemberUseCase: DeleteMemberUseCaseProtocol, @unche
     func execute() async throws {
         callCount += 1
         try result.get()
+    }
+}
+
+/// 서버 세션 해제 호출 횟수와, 호출 시점에 로컬 토큰이 이미 지워졌는지를 기록하는 Mock.
+private final class MockRevokeSessionUseCase: RevokeSessionUseCaseProtocol, @unchecked Sendable {
+    private let tokenStore: FakeTokenStore?
+    private(set) var executeCallCount = 0
+    private(set) var clearCallCountAtExecute: Int?
+
+    init(tokenStore: FakeTokenStore? = nil) {
+        self.tokenStore = tokenStore
+    }
+
+    func execute() async {
+        executeCallCount += 1
+        clearCallCountAtExecute = await tokenStore?.clearCallCount
     }
 }
 
