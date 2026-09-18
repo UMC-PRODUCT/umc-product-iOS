@@ -58,4 +58,15 @@ public protocol CommunityThreadRealtimeProtocol: Sendable {
 
     /// 메시지 삭제. 결과는 `message.deleted` 이벤트로 돌아오므로 호출자는 응답을 기다리지 않는다.
     func deleteMessage(threadId: String, messageId: String) async throws
+
+    /// 메시지 본문 수정. 성공하면 `message.updated` 이벤트로 돌아온다.
+    ///
+    /// - Parameter commandId: `x-command-id` 헤더 값(canonical lowercase UUID).
+    ///   수정 실패 에러 프레임에는 `clientMessageId` 가 없어서 이 값으로만 실패를 짝지을 수 있다.
+    func editMessage(
+        threadId: String,
+        messageId: String,
+        commandId: String,
+        content: String
+    ) async throws
 }

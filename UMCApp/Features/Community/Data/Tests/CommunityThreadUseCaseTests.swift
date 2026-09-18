@@ -496,6 +496,45 @@ struct CommunityThreadRoomUseCaseTests {
         #expect(await repository.fetchThreadCalls.isEmpty)
     }
 
+    @Test("메시지 수정은 commandId 를 그대로 실어 실시간 채널로 간다")
+    func routesEditToRealtimeWithCommandId() async throws {
+        let realtime = FakeThreadRealtime()
+        let useCase = makeUseCase(realtime: realtime)
+
+        try await useCase.editMessage(
+            threadId: "thread-1",
+            messageId: "message-42",
+            commandId: "command-1",
+            content: "고친 본문"
+        )
+
+        #expect(await realtime.editCalls == [
+            FakeThreadRealtime.EditCall(
+                threadId: "thread-1",
+                messageId: "message-42",
+                commandId: "command-1",
+                content: "고친 본문"
+            ),
+        ])
+    }
+
+    @Test("검증에 걸린 수정 본문은 실시간 채널에 닿기 전에 막힌다")
+    func rejectsInvalidEditBeforeSending() async {
+        let realtime = FakeThreadRealtime()
+        let useCase = makeUseCase(realtime: realtime)
+
+        await #expect(throws: AppError.validation(.empty(field: "메시지"))) {
+            try await useCase.editMessage(
+                threadId: "thread-1",
+                messageId: "message-42",
+                commandId: "command-1",
+                content: "  "
+            )
+        }
+
+        #expect(await realtime.editCalls.isEmpty)
+    }
+
     // MARK: - Realtime Lifecycle
 
     @Test("실시간 시작은 연결 소유자에게 위임한다")
@@ -1001,6 +1040,13 @@ private actor FakeThreadRealtime: CommunityThreadRealtimeProtocol {
         let messageId: String
     }
 
+    struct EditCall: Equatable {
+        let threadId: String
+        let messageId: String
+        let commandId: String
+        let content: String
+    }
+
     // MARK: - Property
 
     private(set) var startCount = 0
@@ -1010,6 +1056,7 @@ private actor FakeThreadRealtime: CommunityThreadRealtimeProtocol {
     private(set) var addReactionCalls: [ReactionCall] = []
     private(set) var removeReactionCalls: [ReactionCall] = []
     private(set) var deleteCalls: [DeleteCall] = []
+    private(set) var editCalls: [EditCall] = []
 
     private let sendError: Error?
     private let commandError: Error?
@@ -1085,6 +1132,23 @@ private actor FakeThreadRealtime: CommunityThreadRealtimeProtocol {
 
     func deleteMessage(threadId: String, messageId: String) async throws {
         deleteCalls.append(DeleteCall(threadId: threadId, messageId: messageId))
+        if let commandError { throw commandError }
+    }
+
+    func editMessage(
+        threadId: String,
+        messageId: String,
+        commandId: String,
+        content: String
+    ) async throws {
+        editCalls.append(
+            EditCall(
+                threadId: threadId,
+                messageId: messageId,
+                commandId: commandId,
+                content: content
+            )
+        )
         if let commandError { throw commandError }
     }
 }

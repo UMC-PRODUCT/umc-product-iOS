@@ -38,6 +38,12 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
         let mentionedMemberIds: [String]
     }
 
+    struct EditCall: Equatable {
+        let messageId: String
+        let commandId: String
+        let content: String
+    }
+
     var thread = makeThread()
     var members: [ThreadMember] = []
     var loadMembersError: Error?
@@ -47,6 +53,7 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     var loadMessagesError: Error?
     var reactionError: Error?
     var deleteError: Error?
+    var editError: Error?
     var reportError: Error?
     /// 구독하자마자 흘려보낼 신호. 다 흘리면 스트림이 끝나 `observeRealtime()` 이 반환한다.
     var pendingSignals: [CommunityRealtimeSignal] = []
@@ -60,6 +67,7 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     private(set) var addedReactions: [ReactionCall] = []
     private(set) var removedReactions: [ReactionCall] = []
     private(set) var deletedMessageIds: [String] = []
+    private(set) var editCalls: [EditCall] = []
     private(set) var reportCalls: [ReportCall] = []
 
     func loadThread(threadId: String) async throws -> CommunityThread {
@@ -115,6 +123,16 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     func deleteMessage(threadId: String, messageId: String) async throws {
         deletedMessageIds.append(messageId)
         if let deleteError { throw deleteError }
+    }
+
+    func editMessage(
+        threadId: String,
+        messageId: String,
+        commandId: String,
+        content: String
+    ) async throws {
+        editCalls.append(EditCall(messageId: messageId, commandId: commandId, content: content))
+        if let editError { throw editError }
     }
 
     func reportMessage(messageId: String, reason: ThreadMessageReportReason) async throws {
@@ -187,6 +205,13 @@ private actor GatedRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     func removeReaction(threadId: String, messageId: String, emoji: String) async throws {}
 
     func deleteMessage(threadId: String, messageId: String) async throws {}
+
+    func editMessage(
+        threadId: String,
+        messageId: String,
+        commandId: String,
+        content: String
+    ) async throws {}
 
     func reportMessage(messageId: String, reason: ThreadMessageReportReason) async throws {}
 
