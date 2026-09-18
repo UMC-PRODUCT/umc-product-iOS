@@ -404,7 +404,8 @@ struct CommunityThreadRoomView: View {
                 title: Constants.loadFailureTitle,
                 systemImage: "exclamationmark.triangle",
                 description: error.userMessage,
-                isRetrying: false
+                isRetrying: false,
+                error: error
             ) {
                 await viewModel.load()
             }

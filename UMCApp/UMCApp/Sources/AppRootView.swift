@@ -11,6 +11,7 @@ import CoreDesignSystem
 import CoreDI
 import CoreDomain
 import CoreNetwork
+import CoreUIComponents
 import MaintenancePresentation
 import SwiftUI
 import UMCFoundation
@@ -31,6 +32,8 @@ struct AppRootView: View {
 
     @Environment(\.di) private var di
     @Environment(ErrorHandler.self) private var errorHandler
+
+    private let kakaoPlusManager = KakaoPlusManager()
 
     // MARK: - Body
 
@@ -66,6 +69,10 @@ struct AppRootView: View {
         }
         .animation(.easeInOut(duration: DefaultConstant.animationTime), value: viewModel.state)
         .environment(\.appFlow, viewModel.appFlow)
+        // 실패 화면의 `앱 문제 알리기`가 여는 문의 채널 (`RetryContentUnavailableView`).
+        .environment(\.openInquiryChannel) {
+            kakaoPlusManager.openKakaoChannel(errorHandler: errorHandler)
+        }
         .alertPrompt(item: $storageAlert)
         .task { noticeEphemeralStoreIfNeeded() }
         .onReceive(
