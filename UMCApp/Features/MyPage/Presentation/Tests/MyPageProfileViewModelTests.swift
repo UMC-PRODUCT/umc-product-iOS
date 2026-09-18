@@ -7,6 +7,7 @@
 
 import Testing
 import Foundation
+import UIKit
 import UMCFoundation
 import AuthDomain
 import CoreDomain
@@ -84,6 +85,22 @@ struct MyPageProfileViewModelTests {
         #expect(viewModel.selectedPhotoItem == nil)
         #expect(viewModel.isUpdatingProfileImage == false)
         #expect(viewModel.canSubmit == false)
+    }
+
+    @Test("고해상도 이미지 submit — 긴 변 1024px로 줄인 5MB 이하 JPEG 업로드")
+    func submitLargeImageUploadsResizedJPEG() async throws {
+        let mock = MockMyPageRepository()
+        mock.updateProfileImageResult = .success(makeStubProfileData())
+        let viewModel = makeViewModel(profile: makeStubProfileData(), repository: mock)
+
+        let largeImage = makeSolidImage(pixelSize: CGSize(width: 2048, height: 1536))
+        await viewModel.didLoadImage(image: largeImage)
+        try await viewModel.submitProfileUpdate()
+
+        let uploadedData = try #require(mock.updateProfileImageReceivedImageData)
+        let uploadedImage = try #require(UIImage(data: uploadedData))
+        #expect(uploadedImage.size == CGSize(width: 1024, height: 768))
+        #expect(uploadedData.count <= 5 * 1024 * 1024)
     }
 
     @Test("링크 변경 submit — updateProfileLinks 호출 + 전체 SocialLinkType 정규화 전달")
@@ -326,6 +343,16 @@ private func makeViewModel(
         kakaoLoginManager: StubKakaoLoginManager(),
         googleLoginManager: StubGoogleLoginManager()
     )
+}
+
+/// scale 1로 그려 `size`가 곧 픽셀 크기인 단색 이미지
+private func makeSolidImage(pixelSize: CGSize) -> UIImage {
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    return UIGraphicsImageRenderer(size: pixelSize, format: format).image { context in
+        UIColor.red.setFill()
+        context.fill(CGRect(origin: .zero, size: pixelSize))
+    }
 }
 
 // MARK: - Stubs (소셜 연동)

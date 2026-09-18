@@ -34,7 +34,7 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
     /// 선택된 아이템에서 로드된 실제 이미지 객체
     public var selectedImage: UIImage?
     
-    /// 선택된 원본 이미지 바이너리 (업로드용)
+    /// 업로드용으로 축소·압축한 이미지 바이너리
     private var selectedImageData: Data?
     
     /// 프로필 이미지 수정 API 진행 상태
@@ -103,12 +103,15 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
     /// 갤러리에서 이미지를 선택했을 때 호출되는 콜백입니다.
     /// - Parameter image: 로드된 UIImage 객체
     public func didLoadImage(image: UIImage) async {
-        selectedImageData = image.jpegData(compressionQuality: 0.9)
+        selectedImageData = image.jpegDataForUpload(
+            maxPixelLength: Constants.profileImageMaxPixelLength,
+            maxByteCount: Constants.profileImageMaxByteCount
+        )
     }
     
     /// 프로필 이미지를 서버에 업로드 후 회원 정보에 반영합니다.
     ///
-    /// JPEG 0.9 품질로 압축된 이미지를 서버에 업로드하고,
+    /// 긴 변 1024px 이하·5MB 이하로 줄인 JPEG 이미지를 서버에 업로드하고,
     /// 성공 시 로컬 프로필 데이터를 갱신한 뒤 선택 상태를 초기화합니다.
     ///
     /// - Throws: 네트워크 오류 또는 서버 에러
@@ -248,4 +251,10 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
             return (try await googleLoginManager.fetchAccessToken(), nil)
         }
     }
+}
+
+fileprivate enum Constants {
+    static let profileImageMaxPixelLength: CGFloat = 1024
+    // 서버 FileCategory.PROFILE_IMAGE 상한
+    static let profileImageMaxByteCount = 5 * 1024 * 1024
 }
