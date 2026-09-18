@@ -193,4 +193,71 @@ struct CommunityThreadDecodingTests {
         #expect(page.nextOffset == nil)
         #expect(page.pinned.isEmpty)
     }
+
+    // MARK: - 참여자·초대 후보 페이지 (#1431)
+
+    @Test("참여자 목록은 {items, nextOffset, total} 페이지 객체로 받는다")
+    func decodesMemberPage() throws {
+        let json = """
+        {
+          "items": [
+            {"memberId": "5", "name": "정의진", "part": "IOS", "generation": "9",
+             "role": "OWNER", "joinedAt": "2026-08-01T00:00:00Z", "state": "ACTIVE"},
+            {"memberId": "9", "name": "김하늘", "part": "SPRINGBOOT", "generation": "9",
+             "role": "MEMBER", "joinedAt": "2026-08-02T00:00:00Z", "state": "ACTIVE"}
+          ],
+          "nextOffset": "20", "total": "35"
+        }
+        """
+
+        let page = try decode(ThreadMemberListDTO.self, json)
+        let members = page.toDomain
+
+        #expect(page.nextOffset == "20")
+        #expect(page.total == "35")
+        #expect(members.map(\.id) == ["5", "9"])
+        #expect(members.map(\.role) == [.owner, .member])
+        #expect(members.first?.part == "IOS")
+        // 서버 멤버 응답에는 프로필 이미지가 없다.
+        #expect(members.first?.profileImageURL == nil)
+    }
+
+    @Test("초대 후보는 role 이 없어도 일반 참여자로, 비어 있는 파트는 nil 로 받는다")
+    func decodesInvitablePage() throws {
+        let json = """
+        {
+          "items": [
+            {"memberId": "12", "challengerId": "340", "name": "이바다", "part": "WEB",
+             "generation": "9"},
+            {"memberId": "13", "challengerId": null, "name": "운영진", "part": null,
+             "generation": null}
+          ],
+          "nextOffset": null, "total": "2"
+        }
+        """
+
+        let page = try decode(ThreadMemberListDTO.self, json)
+        let members = page.toDomain
+
+        #expect(page.nextOffset == nil)
+        #expect(page.total == "2")
+        #expect(members.map(\.id) == ["12", "13"])
+        #expect(members.map(\.role) == [.member, .member])
+        #expect(members.last?.part == nil)
+    }
+
+    @Test("items 원소 하나가 깨져도 나머지 멤버는 살아남는다")
+    func dropsOnlyBrokenMemberInPage() throws {
+        let json = """
+        {
+          "items": [
+            {"name": "memberId 가 없어 버려진다", "role": "MEMBER"},
+            {"memberId": "5", "name": "정의진", "role": "OWNER"}
+          ],
+          "nextOffset": null, "total": "2"
+        }
+        """
+
+        #expect(try decode(ThreadMemberListDTO.self, json).toDomain.map(\.id) == ["5"])
+    }
 }

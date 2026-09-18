@@ -80,12 +80,14 @@ public protocol CommunityThreadRepositoryProtocol: Sendable {
     /// `GET /threads/{threadId}/members`.
     ///
     /// 참여자 목록·초대(#1136)·`@`멘션 자동완성(#1140)이 함께 쓰는 진입점이다.
+    /// 서버는 페이지로 잘라 주지만 구현체가 마지막 페이지까지 이어 받아 전체를 돌려준다.
     func fetchMembers(threadId: String) async throws -> [ThreadMember]
 
     /// `GET /threads/{threadId}/invitable`.
     ///
     /// 서버가 이미 참여 중인 멤버를 걸러낸 **동아리 전체** 후보를 내려준다 (#1131 결정 3).
     /// 범위 필터 파라미터는 없다 — 클라이언트가 권한 스코프를 계산하지 않는다.
+    /// ``fetchMembers(threadId:)`` 와 같이 마지막 페이지까지 이어 받아 전체를 돌려준다.
     func fetchInvitableMembers(threadId: String) async throws -> [ThreadMember]
 
     /// `POST /threads/{threadId}/invite`.

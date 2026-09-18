@@ -9,7 +9,9 @@ import Foundation
 import CommunityDomain
 import UMCFoundation
 
-/// `GET /threads/{threadId}/members` 의 원소.
+/// `GET /threads/{threadId}/members`·`GET /threads/{threadId}/invitable` 의 원소.
+///
+/// 서버는 `profileImageUrl` 을 주지 않고, 초대 후보에는 `role` 도 없다. 둘 다 비면 폴백한다.
 ///
 /// REST 는 ID 를 String 으로 주지만 STOMP 는 raw number 로 준다. 멤버 목록은 지금 REST 에서만
 /// 쓰이더라도 `decodeFlexibleString*` 으로 받아 두면 나중에 이벤트 페이로드를 붙일 때 DTO 를
@@ -67,42 +69,43 @@ public struct ThreadMemberDTO: Codable {
     }
 }
 
-/// `GET /threads/{threadId}/members` 응답.
+/// `GET /threads/{threadId}/members`·`GET /threads/{threadId}/invitable` 응답 한 페이지.
 ///
-/// - Important: 이 엔드포인트의 `result` 가 `{"members": [...]}` 로 감싸여 오는지 배열 그대로
-///   오는지 클라이언트 계약 문서에 없다. 한쪽만 맞추면 반대쪽에서 화면이 통째로 비므로 둘 다
-///   받는다. 서버 스키마가 확정되면 한쪽을 지우면 된다.
+/// 서버가 `offset`/`limit` 으로 잘라 준다. `nextOffset` 은 다음 요청에 그대로 넣을 절대 오프셋이고,
+/// 마지막 페이지면 `null` 이다. 서버가 정수를 String 으로 주므로 둘 다 String 으로 받는다.
 public struct ThreadMemberListDTO: Codable {
 
     // MARK: - Property
 
-    public let members: [ThreadMemberDTO]
+    public let items: [ThreadMemberDTO]
+    public let nextOffset: String?
+    public let total: String
 
     // MARK: - CodingKeys
 
     enum CodingKeys: String, CodingKey {
-        case members
+        case items, nextOffset, total
     }
 
     // MARK: - Codable
 
     public init(from decoder: Decoder) throws {
-        if let container = try? decoder.container(keyedBy: CodingKeys.self),
-           container.contains(.members) {
-            self.members = try container.decodeLossyArray(ThreadMemberDTO.self, forKey: .members)
-            return
-        }
-        self.members = try [ThreadMemberDTO](from: decoder)
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.items = try container.decodeLossyArray(ThreadMemberDTO.self, forKey: .items)
+        self.nextOffset = container.decodeFlexibleStringOrNil(forKey: .nextOffset)
+        self.total = container.decodeFlexibleStringOrNil(forKey: .total) ?? "0"
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(members, forKey: .members)
+        try container.encode(items, forKey: .items)
+        try container.encodeIfPresent(nextOffset, forKey: .nextOffset)
+        try container.encode(total, forKey: .total)
     }
 
     // MARK: - Computed Property
 
     public var toDomain: [ThreadMember] {
-        members.map(\.toDomain)
+        items.map(\.toDomain)
     }
 }

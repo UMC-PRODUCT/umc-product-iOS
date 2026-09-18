@@ -35,21 +35,32 @@ private final class StubCommunityThreadNetwork:
         case offline
     }
 
-    private let outcome: Outcome
+    /// 호출 순서대로 하나씩 꺼내 쓰고, 마지막 하나는 이후 호출에도 계속 돌려준다.
+    private var outcomes: [Outcome]
     private(set) var requestCount = 0
     private(set) var lastPath: String?
     private(set) var lastMethod: Moya.Method?
-    private(set) var lastTarget: CommunityThreadRouter?
+    private(set) var targets: [CommunityThreadRouter] = []
+
+    var lastTarget: CommunityThreadRouter? { targets.last }
 
     init(_ outcome: Outcome) {
-        self.outcome = outcome
+        self.outcomes = [outcome]
+    }
+
+    /// 페이지를 이어 받는 요청용 — `pages` 를 순서대로 응답한다.
+    init(pages: [Data]) {
+        self.outcomes = pages.map(Outcome.success)
     }
 
     func request<T: TargetType>(_ target: T) async throws -> Response {
         requestCount += 1
         lastPath = target.path
         lastMethod = target.method
-        lastTarget = target as? CommunityThreadRouter
+        if let target = target as? CommunityThreadRouter {
+            targets.append(target)
+        }
+        let outcome = outcomes.count > 1 ? outcomes.removeFirst() : outcomes[0]
         switch outcome {
         case .success(let data):
             return Response(statusCode: 200, data: data)
@@ -87,6 +98,50 @@ private enum Fixture {
     {
       "success": true, "code": "200", "message": "성공",
       "result": {"messages": [], "hasMore": false, "nextBefore": null}
+    }
+    """.utf8)
+
+    /// 참여자 첫 페이지 — `nextOffset` 이 다음 요청 오프셋이다.
+    static let memberFirstPage = Data("""
+    {
+      "success": true, "code": "200", "message": "성공",
+      "result": {
+        "items": [
+          {"memberId": "5", "name": "정의진", "part": "IOS", "generation": "9",
+           "role": "OWNER", "joinedAt": "2026-08-01T00:00:00Z", "state": "ACTIVE"},
+          {"memberId": "9", "name": "김하늘", "part": "WEB", "generation": "9",
+           "role": "MEMBER", "joinedAt": "2026-08-02T00:00:00Z", "state": "ACTIVE"}
+        ],
+        "nextOffset": "100", "total": "101"
+      }
+    }
+    """.utf8)
+
+    /// 참여자 마지막 페이지 — `nextOffset` 이 null 이다.
+    static let memberLastPage = Data("""
+    {
+      "success": true, "code": "200", "message": "성공",
+      "result": {
+        "items": [
+          {"memberId": "11", "name": "이바다", "part": "ANDROID", "generation": "9",
+           "role": "MEMBER", "joinedAt": "2026-08-03T00:00:00Z", "state": "ACTIVE"}
+        ],
+        "nextOffset": null, "total": "101"
+      }
+    }
+    """.utf8)
+
+    /// 초대 후보 한 페이지 — 원소에 `role` 이 없다.
+    static let invitablePage = Data("""
+    {
+      "success": true, "code": "200", "message": "성공",
+      "result": {
+        "items": [
+          {"memberId": "12", "challengerId": "340", "name": "박솔", "part": "WEB",
+           "generation": "9"}
+        ],
+        "nextOffset": null, "total": "1"
+      }
     }
     """.utf8)
 
@@ -159,6 +214,48 @@ struct CommunityThreadRepositoryTests {
             return
         }
         #expect(threadId == "12")
+    }
+
+    @Test("fetchMembers 는 nextOffset 이 null 이 될 때까지 최대 page size 로 이어 받아 합친다")
+    func fetchMembersFollowsNextOffset() async throws {
+        let network = StubCommunityThreadNetwork(
+            pages: [Fixture.memberFirstPage, Fixture.memberLastPage]
+        )
+        let repository = CommunityThreadRepository(networkRequesting: network)
+
+        let members = try await repository.fetchMembers(threadId: "1")
+
+        #expect(members.map(\.id) == ["5", "9", "11"])
+        #expect(network.requestCount == 2)
+        #expect(network.lastPath == "/api/v1/community/threads/1/members")
+        let queries = network.targets.compactMap { target -> ThreadMemberPageQuery? in
+            guard case .getMembers("1", let query) = target else { return nil }
+            return query
+        }
+        #expect(queries.map(\.offset) == [0, 100])
+        #expect(queries.map(\.limit) == [100, 100])
+    }
+
+    @Test("fetchInvitableMembers 는 getInvitableMembers 로 가고 role 없는 후보를 일반 참여자로 받는다")
+    func fetchInvitableMembersCallsGetInvitable() async throws {
+        let (repository, network) = makeRepository(.success(Fixture.invitablePage))
+
+        let members = try await repository.fetchInvitableMembers(threadId: "1")
+
+        #expect(members.map(\.id) == ["12"])
+        #expect(members.first?.role == .member)
+        #expect(network.requestCount == 1)
+        #expect(network.lastPath == "/api/v1/community/threads/1/invitable")
+        #expect(network.lastMethod == .get)
+        guard case .getInvitableMembers("1", let query) = network.lastTarget else {
+            Issue.record(
+                "lastTarget 이 getInvitableMembers 가 아닙니다: "
+                    + String(describing: network.lastTarget)
+            )
+            return
+        }
+        #expect(query.offset == 0)
+        #expect(query.limit == 100)
     }
 
     @Test("createThread 가 POST /threads 로 가고 본문을 변형 없이 싣는다")

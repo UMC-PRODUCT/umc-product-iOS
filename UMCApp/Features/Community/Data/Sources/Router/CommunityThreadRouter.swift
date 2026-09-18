@@ -23,8 +23,8 @@ public enum CommunityThreadRouter {
     case getMessages(threadId: String, query: ThreadMessageQuery)
     case setPin(threadId: String, isPinned: Bool)
     case setMute(threadId: String, isMuted: Bool)
-    case getMembers(threadId: String)
-    case getInvitableMembers(threadId: String)
+    case getMembers(threadId: String, query: ThreadMemberPageQuery)
+    case getInvitableMembers(threadId: String, query: ThreadMemberPageQuery)
     case invite(threadId: String, body: InviteMembersBody)
     case kickMember(threadId: String, memberId: String)
     case changeMemberRole(threadId: String, memberId: String, body: ThreadMemberRoleBody)
@@ -56,9 +56,9 @@ extension CommunityThreadRouter: BaseTargetType {
             return "\(threadsPath)/\(threadId)/pin"
         case .setMute(let threadId, _):
             return "\(threadsPath)/\(threadId)/mute"
-        case .getMembers(let threadId):
+        case .getMembers(let threadId, _):
             return membersPath(threadId)
-        case .getInvitableMembers(let threadId):
+        case .getInvitableMembers(let threadId, _):
             return "\(threadsPath)/\(threadId)/invitable"
         case .invite(let threadId, _):
             return "\(threadsPath)/\(threadId)/invite"
@@ -102,6 +102,11 @@ extension CommunityThreadRouter: BaseTargetType {
                 parameters: query.toParameters,
                 encoding: URLEncoding.queryString
             )
+        case .getMembers(_, let query), .getInvitableMembers(_, let query):
+            return .requestParameters(
+                parameters: query.toParameters,
+                encoding: URLEncoding.queryString
+            )
         case .createThread(let body):
             return .requestJSONEncodable(body)
         case .updateThread(_, let body):
@@ -112,8 +117,7 @@ extension CommunityThreadRouter: BaseTargetType {
             return .requestJSONEncodable(body)
         case .reportMessage(_, let body):
             return .requestJSONEncodable(body)
-        case .getThread, .deleteThread, .setPin, .setMute,
-             .getMembers, .getInvitableMembers, .kickMember, .leave:
+        case .getThread, .deleteThread, .setPin, .setMute, .kickMember, .leave:
             return .requestPlain
         }
     }
