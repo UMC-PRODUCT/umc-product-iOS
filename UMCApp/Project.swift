@@ -120,6 +120,7 @@ let project = Project(
             dependencies: [
                 .project(target: "CoreDesignSystem", path: .relativeToRoot("Core/DesignSystem")),
                 .project(target: "CoreRouting", path: .relativeToRoot("Core/Routing")),
+                .project(target: "CoreUIComponents", path: .relativeToRoot("Core/UIComponents")),
                 .project(target: "AuthPresentation", path: .relativeToRoot("Features/Auth")),
                 .project(target: "AuthData", path: .relativeToRoot("Features/Auth")),
                 .project(target: "BusinessCardPresentation", path: .relativeToRoot("Features/BusinessCard")),

@@ -149,6 +149,20 @@ public enum AppError: Error, LocalizedError, Equatable {
         }
     }
 
+    // MARK: - Reportable
+
+    /// 앱 결함으로 보고 `앱 문제 알리기`를 띄울 에러인지 여부.
+    ///
+    /// 네트워크 단절·권한·서버 비즈니스 에러는 앱 결함이 아니므로 제외한다.
+    public var isReportable: Bool {
+        switch self {
+        case .repository(.decodingError), .repository(.invalidResponse), .unknown:
+            return true
+        case .repository, .network, .validation, .auth, .domain:
+            return false
+        }
+    }
+
     // MARK: - Factory
 
     /// 임의의 `Error`를 공통 규칙으로 `AppError`로 정규화한다.
@@ -169,6 +183,14 @@ public enum AppError: Error, LocalizedError, Equatable {
         }
         if let authError = error as? AuthError {
             return .auth(authError)
+        }
+        // `NetworkClient` 는 전송 실패를 `URLError` 그대로 던진다. `.unknown` 으로 떨구면
+        // 오프라인도 앱 결함(`isReportable`)으로 분류된다. `ErrorHandler.convert` 와 같은 규칙.
+        if let urlError = error as? URLError {
+            return .network(
+                NetworkError.transientFailure(from: urlError)
+                    ?? .requestFailed(statusCode: urlError.errorCode, data: nil)
+            )
         }
         return .unknown(message: error.localizedDescription)
     }

@@ -68,8 +68,16 @@ public enum RepositoryError: Error, LocalizedError, Sendable, Equatable {
     }
 
     /// 사용자에게 표시할 메시지
+    ///
+    /// 디코딩·응답 검증 실패의 detail 은 `DecodingError` 덤프·API 경로라 사용자에게 보이지 않고
+    /// `errorDescription`(로그·앱 문제 리포트)에만 남긴다. 서버 메시지는 사용자용이라 그대로 쓴다.
     public var userMessage: String {
-        errorDescription ?? "알 수 없는 오류가 발생했습니다"
+        switch self {
+        case .serverError:
+            return errorDescription ?? "알 수 없는 오류가 발생했습니다"
+        case .decodingError, .invalidResponse:
+            return "앱에 일시적인 오류가 있어요. 불편을 드려 죄송해요."
+        }
     }
 
     /// 재시도 가능 여부

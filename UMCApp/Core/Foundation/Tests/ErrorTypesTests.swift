@@ -32,6 +32,21 @@ struct RepositoryErrorTests {
                 == "서버 오류가 발생했습니다"
         )
     }
+
+    /// #1433 — 디코딩·응답 검증 실패의 raw detail 이 실패 화면에 그대로 노출되던 문제.
+    @Test("userMessage 는 디코딩·응답 검증 실패의 detail 을 숨기고 서버 메시지는 유지한다")
+    func userMessage() {
+        let appDefectMessage = "앱에 일시적인 오류가 있어요. 불편을 드려 죄송해요."
+        let decoding = RepositoryError.decodingError(detail: "/api/v1/x: DecodingError")
+        #expect(decoding.userMessage == appDefectMessage)
+        #expect(decoding.errorDescription == "데이터 파싱 실패: /api/v1/x: DecodingError")
+        #expect(RepositoryError.invalidResponse(detail: "empty").userMessage == appDefectMessage)
+        #expect(RepositoryError.serverError(code: nil, message: "권한 없음").userMessage == "권한 없음")
+        #expect(
+            RepositoryError.serverError(code: nil, message: nil).userMessage
+                == "서버 오류가 발생했습니다"
+        )
+    }
 }
 
 @Suite("NetworkError — severity / isRetryable")
@@ -96,5 +111,23 @@ struct AppErrorComputedTests {
         #expect(error.isRetryable == true)
         #expect(error.userMessage == "일시적인 오류가 발생했습니다. 다시 시도해주세요.")
         #expect(error.errorDescription == "boom")
+    }
+
+    @Test("앱 문제 알리기는 디코딩·응답 검증 실패와 unknown 에만 노출한다")
+    func isReportable() {
+        #expect(AppError.repository(.decodingError(detail: nil)).isReportable == true)
+        #expect(AppError.repository(.invalidResponse(detail: nil)).isReportable == true)
+        #expect(AppError.unknown(message: "boom").isReportable == true)
+        #expect(AppError.repository(.serverError(code: nil, message: nil)).isReportable == false)
+        #expect(AppError.network(.noNetwork).isReportable == false)
+        #expect(AppError.auth(.sessionExpired).isReportable == false)
+    }
+
+    /// 오프라인이 `.unknown` 으로 떨어지면 앱 문제 알리기 버튼이 뜬다.
+    @Test("from 은 URLError 를 network 로 변환한다")
+    func fromURLError() {
+        #expect(AppError.from(URLError(.notConnectedToInternet)) == .network(.noNetwork))
+        #expect(AppError.from(URLError(.timedOut)) == .network(.timeout))
+        #expect(AppError.from(URLError(.cannotFindHost)).isReportable == false)
     }
 }

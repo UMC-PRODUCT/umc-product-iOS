@@ -118,7 +118,8 @@ struct CommunityThreadListView: View {
                 title: "스레드를 불러오지 못했어요",
                 systemImage: "exclamationmark.triangle",
                 description: error.userMessage,
-                isRetrying: false
+                isRetrying: false,
+                error: error
             ) {
                 await viewModel.load()
             }

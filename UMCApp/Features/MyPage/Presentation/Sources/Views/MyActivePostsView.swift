@@ -114,7 +114,7 @@ private struct MyActivePostListView: View {
             RetryContentUnavailableView(
                 title: "목록을 불러오지 못했어요",
                 systemImage: "exclamationmark.triangle",
-                description: error.errorDescription ?? "잠시 후 다시 시도해 주세요.",
+                description: error.userMessage,
                 isRetrying: viewModel.postState.isLoading,
                 retryAction: { await viewModel.refresh() }
             )
