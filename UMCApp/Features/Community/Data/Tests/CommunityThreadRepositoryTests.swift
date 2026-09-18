@@ -457,4 +457,37 @@ struct CommunityThreadRepositoryTests {
             _ = try await repository.fetchMessages(threadId: "12", before: nil, limit: 30)
         }
     }
+
+    // MARK: - 초대 거절 사유
+
+    @Test(
+        "초대 거절 코드를 ThreadInviteError 로 바꾼다",
+        arguments: [
+            ("COMMUNITY-0038", ThreadInviteError.alreadyJoined),
+            ("COMMUNITY-0039", ThreadInviteError.kicked),
+            ("COMMUNITY-0044", ThreadInviteError.notEligible),
+            ("COMMUNITY-0036", ThreadInviteError.capacityExceeded)
+        ]
+    )
+    func mapsInviteRejection(code: String, expected: ThreadInviteError) async {
+        let body = Data(#"{"success":false,"code":"\#(code)","message":"거절"}"#.utf8)
+        let (repository, _) = makeRepository(
+            .failure(NetworkError.requestFailed(statusCode: 409, data: body))
+        )
+
+        await #expect(throws: expected) {
+            try await repository.inviteMembers(threadId: "12", memberIds: ["11"])
+        }
+    }
+
+    @Test("모르는 초대 거절 코드는 원래 에러를 그대로 올린다")
+    func keepsUnknownInviteRejection() async {
+        let (repository, _) = makeRepository(.success(Fixture.failure))
+
+        await #expect(
+            throws: RepositoryError.serverError(code: "THREAD403", message: "권한이 없습니다")
+        ) {
+            try await repository.inviteMembers(threadId: "12", memberIds: ["11"])
+        }
+    }
 }
