@@ -68,11 +68,17 @@ public final class ActivityStatRepository: ActivityStatRepositoryProtocol, @unch
     /// 50건을 다 채우고 `hasNext` 가 참이면 **실제 수는 더 많다.** 예전에는 그 상태에서도
     /// 그냥 "50"을 보여 줘서 51번째부터는 없는 것처럼 보였다 — 지금은 `"50+"` 로 잘렸음을
     /// 드러낸다 (#1222).
-    public func fetchStudyCount() async throws -> String {
+    ///
+    /// 빈 목록이면 `nil`(「못 셌다」)이다. `/managed` 는 **관리** 범위 조회라 운영진 역할이
+    /// 없는 일반 챌린저에게는 참여 중인 스터디가 있어도 항상 빈 목록을 준다 — 그 0을
+    /// 「나의 스터디 0건」으로 그리면 틀린 값을 단언하게 된다 (#1447). 참여 스터디 API가
+    /// 서버에 생기면 그쪽으로 교체한다.
+    public func fetchStudyCount() async throws -> String? {
         let response = try await networkRequesting.request(
             BusinessCardRouter.getMyStudyGroups(query: StudyCountQueryDTO())
         )
         let page = try decoder.decodeAbsorbingWrapper(StudyCountPageDTO.self, from: response.data)
+        guard page.itemCount > 0 else { return nil }
         return page.hasNext ? "\(page.itemCount)+" : "\(page.itemCount)"
     }
 
