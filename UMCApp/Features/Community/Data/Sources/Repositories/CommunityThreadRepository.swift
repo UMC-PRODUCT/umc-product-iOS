@@ -142,19 +142,13 @@ public struct CommunityThreadRepository: CommunityThreadRepositoryProtocol, @unc
     }
 
     public func fetchMembers(threadId: String) async throws -> [ThreadMember] {
-        try await payload(
-            ThreadMemberListDTO.self,
-            from: .getMembers(threadId: threadId)
-        ).toDomain
+        try await fetchAllMemberPages { .getMembers(threadId: threadId, query: $0) }
     }
 
     /// 후보 목록도 참여자 목록과 같은 스키마로 온다. 후보에는 스레드 역할이 없어
     /// `role` 이 비면 DTO 가 일반 참여자로 폴백하고, 초대 화면은 역할을 쓰지 않는다.
     public func fetchInvitableMembers(threadId: String) async throws -> [ThreadMember] {
-        try await payload(
-            ThreadMemberListDTO.self,
-            from: .getInvitableMembers(threadId: threadId)
-        ).toDomain
+        try await fetchAllMemberPages { .getInvitableMembers(threadId: threadId, query: $0) }
     }
 
     public func inviteMembers(threadId: String, memberIds: [String]) async throws {
@@ -217,6 +211,31 @@ public struct CommunityThreadRepository: CommunityThreadRepositoryProtocol, @unc
         }
     }
 
+    /// `nextOffset` 이 `null` 이 될 때까지 최대 page size 로 이어 받아 합친다.
+    ///
+    /// 참여자 목록·`@`멘션 자동완성·초대 시트가 모두 전체 목록을 전제로 걸러 쓰므로 한 번에 모은다.
+    /// 서버가 오프셋을 앞으로 보내지 않으면 무한 루프가 되므로 그때는 받은 데까지만 돌려준다.
+    private func fetchAllMemberPages(
+        _ target: (ThreadMemberPageQuery) -> CommunityThreadRouter
+    ) async throws -> [ThreadMember] {
+        // ponytail: 초대 후보(동아리 전체)도 순차로 전부 받는다. 느려지면 `q` 검색·무한 스크롤로.
+        var members: [ThreadMember] = []
+        var offset = 0
+        while true {
+            let query = ThreadMemberPageQuery(
+                offset: offset,
+                limit: Constants.limitRange.upperBound
+            )
+            let page = try await payload(ThreadMemberListDTO.self, from: target(query))
+            members += page.toDomain
+            guard let nextOffset = page.nextOffset.flatMap({ Int($0) }),
+                  nextOffset > offset else {
+                return members
+            }
+            offset = nextOffset
+        }
+    }
+
     /// 서버 상한을 벗어난 page size 는 400 이라 전송 직전에 맞춘다.
     /// 검색어(`q`) 상한은 트리밍과 한 몸이라 `CommunityThreadListUseCase` 가 그대로 소유한다.
     private func clamped(_ limit: Int) -> Int {
@@ -227,6 +246,6 @@ public struct CommunityThreadRepository: CommunityThreadRepositoryProtocol, @unc
 // MARK: - Constants
 
 fileprivate enum Constants {
-    /// `GET /threads`·`GET /messages` 가 받는 page size 범위.
+    /// `GET /threads`·`GET /messages`·`GET /members`·`GET /invitable` 가 받는 page size 범위.
     static let limitRange = 1...100
 }

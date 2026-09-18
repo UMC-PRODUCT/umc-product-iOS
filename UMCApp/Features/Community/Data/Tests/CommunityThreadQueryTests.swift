@@ -128,6 +128,26 @@ struct CommunityThreadRouterContractTests {
         #expect((encoding as? URLEncoding)?.destination == URLEncoding.queryString.destination)
     }
 
+    @Test("참여자·초대 후보 조회 task 는 offset/limit 을 쿼리스트링으로 싣는다")
+    func memberPageTaskCarriesQuery() {
+        let query = ThreadMemberPageQuery(offset: 100, limit: 100)
+        let targets: [CommunityThreadRouter] = [
+            .getMembers(threadId: "7", query: query),
+            .getInvitableMembers(threadId: "7", query: query)
+        ]
+
+        for target in targets {
+            guard case let .requestParameters(parameters, encoding) = target.task else {
+                Issue.record("task 가 .requestParameters 여야 함 — 실제: \(target.task)")
+                continue
+            }
+            #expect(parameters["offset"] as? Int == 100)
+            #expect(parameters["limit"] as? Int == 100)
+            #expect((encoding as? URLEncoding)?.destination == URLEncoding.queryString.destination)
+            #expect(target.method == .get)
+        }
+    }
+
     @Test("바디 없는 상태 변경 케이스는 .requestPlain")
     func plainTasks() {
         let targets: [CommunityThreadRouter] = [
