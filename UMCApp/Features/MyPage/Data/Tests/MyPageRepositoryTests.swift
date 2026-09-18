@@ -579,18 +579,35 @@ struct MyPageRepositoryDeleteTests {
         // 백엔드 MEMBER-003은 탈퇴 전 회원 정보 스냅샷을 result로 반환하지만 클라이언트는 폐기한다
         let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.profileObject)))
 
-        try await sut.deleteMember()
+        try await sut.deleteMember(googleAccessToken: nil, kakaoAccessToken: nil)
 
         #expect(stub.requestCount == 1)
         #expect(stub.lastPath == "/api/v1/member")
         #expect(stub.lastMethod == .delete)
     }
 
+    @Test("deleteMember — 전달받은 access token을 DeleteMemberRequestDTO에 그대로 담는다")
+    func deleteMemberForwardsTokensToRequest() async throws {
+        let (sut, stub) = makeRepository(.success(Fixture.successVoid()))
+
+        try await sut.deleteMember(
+            googleAccessToken: "google-token",
+            kakaoAccessToken: "kakao-token"
+        )
+
+        guard case let .deleteMember(request) = try #require(stub.lastTarget) else {
+            Issue.record("기대한 라우터 케이스는 .deleteMember 입니다")
+            return
+        }
+        #expect(request.googleAccessToken == "google-token")
+        #expect(request.kakaoAccessToken == "kakao-token")
+    }
+
     @Test("deleteMember — result가 없는 표준 void 봉투도 성공으로 처리한다")
     func deleteMemberSucceedsWithVoidResult() async throws {
         let (sut, stub) = makeRepository(.success(Fixture.successVoid()))
 
-        try await sut.deleteMember()
+        try await sut.deleteMember(googleAccessToken: nil, kakaoAccessToken: nil)
 
         #expect(stub.requestCount == 1)
         #expect(stub.lastPath == "/api/v1/member")
@@ -604,7 +621,7 @@ struct MyPageRepositoryDeleteTests {
         )
 
         await #expect(throws: RepositoryError.serverError(code: "M403", message: "권한이 없습니다.")) {
-            try await sut.deleteMember()
+            try await sut.deleteMember(googleAccessToken: nil, kakaoAccessToken: nil)
         }
     }
 
@@ -616,7 +633,7 @@ struct MyPageRepositoryDeleteTests {
         )
 
         await #expect(throws: RepositoryError.serverError(code: "M403", message: "권한이 없습니다.")) {
-            try await sut.deleteMember()
+            try await sut.deleteMember(googleAccessToken: nil, kakaoAccessToken: nil)
         }
     }
 
@@ -625,7 +642,7 @@ struct MyPageRepositoryDeleteTests {
         let (sut, _) = makeRepository(.failure(NetworkError.timeout))
 
         await #expect(throws: NetworkError.timeout) {
-            try await sut.deleteMember()
+            try await sut.deleteMember(googleAccessToken: nil, kakaoAccessToken: nil)
         }
     }
 }

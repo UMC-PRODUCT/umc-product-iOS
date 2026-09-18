@@ -252,7 +252,7 @@ final class FailedVerificationUMCViewModel {
         defer { isDeletingAccount = false }
 
         do {
-            try await deleteMemberUseCase.execute()
+            try await deleteMemberUseCase.execute(googleAccessToken: nil, kakaoAccessToken: nil)
             UserDefaults.standard.set(false, forKey: AppStorageKey.canAutoLogin)
             try await networkClient.logout()
             userSessionManager.reset()

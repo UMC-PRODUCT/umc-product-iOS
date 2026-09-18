@@ -105,12 +105,21 @@ final class MockMyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable 
     // MARK: - deleteMember
 
     var deleteMemberError: Error?
+    /// 호출마다 앞에서부터 하나씩 꺼내 던진다. 비어 있으면 `deleteMemberError`를 쓴다.
+    var deleteMemberErrorSequence: [Error?] = []
     private(set) var deleteMemberCallCount = 0
+    private(set) var deleteMemberReceivedGoogleAccessTokens: [String?] = []
+    private(set) var deleteMemberReceivedKakaoAccessTokens: [String?] = []
 
-    func deleteMember() async throws {
+    func deleteMember(googleAccessToken: String?, kakaoAccessToken: String?) async throws {
         deleteMemberCallCount += 1
-        if let deleteMemberError {
-            throw deleteMemberError
+        deleteMemberReceivedGoogleAccessTokens.append(googleAccessToken)
+        deleteMemberReceivedKakaoAccessTokens.append(kakaoAccessToken)
+        let error = deleteMemberErrorSequence.isEmpty
+            ? deleteMemberError
+            : deleteMemberErrorSequence.removeFirst()
+        if let error {
+            throw error
         }
     }
 

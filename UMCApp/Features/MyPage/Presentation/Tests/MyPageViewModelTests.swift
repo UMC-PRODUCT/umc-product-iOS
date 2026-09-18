@@ -817,7 +817,9 @@ private final class StubRepository: MyPageRepositoryProtocol, @unchecked Sendabl
     func addChallengerRecord(code: String) async throws { fatalError("unused") }
     func updateProfileImage(imageData: Data, fileName: String, contentType: String) async throws -> ProfileData { fatalError("unused") }
     func updateProfileLinks(_ links: [ProfileLink]) async throws -> ProfileData { fatalError("unused") }
-    func deleteMember() async throws { fatalError("unused") }
+    func deleteMember(googleAccessToken: String?, kakaoAccessToken: String?) async throws {
+        fatalError("unused")
+    }
 }
 
 private final class ThrowingRepository: MyPageRepositoryProtocol, @unchecked Sendable {
@@ -839,7 +841,9 @@ private final class ThrowingRepository: MyPageRepositoryProtocol, @unchecked Sen
     func addChallengerRecord(code: String) async throws { fatalError("unused") }
     func updateProfileImage(imageData: Data, fileName: String, contentType: String) async throws -> ProfileData { fatalError("unused") }
     func updateProfileLinks(_ links: [ProfileLink]) async throws -> ProfileData { fatalError("unused") }
-    func deleteMember() async throws { fatalError("unused") }
+    func deleteMember(googleAccessToken: String?, kakaoAccessToken: String?) async throws {
+        fatalError("unused")
+    }
 }
 
 private final class SlowStubRepository: MyPageRepositoryProtocol, @unchecked Sendable {
@@ -874,5 +878,7 @@ private final class SlowStubRepository: MyPageRepositoryProtocol, @unchecked Sen
     func addChallengerRecord(code: String) async throws { fatalError("unused") }
     func updateProfileImage(imageData: Data, fileName: String, contentType: String) async throws -> ProfileData { fatalError("unused") }
     func updateProfileLinks(_ links: [ProfileLink]) async throws -> ProfileData { fatalError("unused") }
-    func deleteMember() async throws { fatalError("unused") }
+    func deleteMember(googleAccessToken: String?, kakaoAccessToken: String?) async throws {
+        fatalError("unused")
+    }
 }

@@ -156,7 +156,7 @@ final class MockMyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable 
     var deleteMemberError: Error?
     private(set) var deleteMemberCallCount = 0
 
-    func deleteMember() async throws {
+    func deleteMember(googleAccessToken: String?, kakaoAccessToken: String?) async throws {
         deleteMemberCallCount += 1
         if let deleteMemberError {
             throw deleteMemberError

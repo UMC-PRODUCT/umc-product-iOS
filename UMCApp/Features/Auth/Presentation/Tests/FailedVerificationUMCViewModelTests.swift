@@ -485,7 +485,7 @@ private final class MockDeleteMemberUseCase: DeleteMemberUseCaseProtocol, @unche
     var result: Result<Void, Error> = .success(())
     private(set) var callCount = 0
 
-    func execute() async throws {
+    func execute(googleAccessToken: String?, kakaoAccessToken: String?) async throws {
         callCount += 1
         try result.get()
     }
