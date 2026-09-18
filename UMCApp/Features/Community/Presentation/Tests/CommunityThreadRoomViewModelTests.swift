@@ -549,6 +549,85 @@ struct CommunityThreadRoomViewModelTests {
         #expect(useCase.readWatermarks == ["9"])
     }
 
+    // MARK: - Read Only
+
+    @Test("비참여자도 방에 들어와 대화를 본다 — 참여 종료 화면으로 보내지 않는다")
+    func showsHistoryToNonMember() async {
+        let useCase = StubRoomUseCase()
+        useCase.thread = makeThread(isJoined: false)
+        useCase.pages[nil] = ThreadMessagePage(
+            messages: [makeMessage(id: "5", senderId: "7", createdAt: 500)],
+            hasMore: false,
+            nextBefore: nil
+        )
+        let viewModel = makeViewModel(useCase)
+
+        await viewModel.load()
+
+        #expect(viewModel.ejectionNotice == nil)
+        #expect(viewModel.header.value != nil)
+        #expect(viewModel.messages.map(\.id) == ["5"])
+        #expect(viewModel.canWrite == false)
+    }
+
+    @Test("비참여자는 읽음·반응·삭제·신고·전송을 서버로 보내지 않는다", .timeLimit(.minutes(1)))
+    func sendsNoWritesAsNonMember() async throws {
+        let useCase = StubRoomUseCase()
+        // 나간 운영진에게도 서버는 예전 역할을 실어 준다 — 역할만 보고 열면 안 된다.
+        useCase.thread = makeThread(isJoined: false, myRole: .admin)
+        let message = makeMessage(id: "5", senderId: "7", createdAt: 500)
+        let viewModel = await makeLoadedViewModel(useCase, with: message)
+
+        await viewModel.toggleReaction(message, emoji: "👍")
+        viewModel.requestDelete(message)
+        viewModel.requestReport(message)
+        viewModel.draft = "안녕"
+        await viewModel.send()
+        viewModel.markRead(upTo: message.id)
+        // 워터마크는 디바운스(1초) 뒤에 나간다. 그보다 길게 기다려 안 나간 걸 확인한다.
+        try await Task.sleep(for: .milliseconds(1_500))
+
+        #expect(useCase.readWatermarks.isEmpty)
+        #expect(useCase.addedReactions.isEmpty)
+        #expect(useCase.removedReactions.isEmpty)
+        #expect(useCase.deletedMessageIds.isEmpty)
+        #expect(useCase.reportCalls.isEmpty)
+        #expect(useCase.sentContents.isEmpty)
+        #expect(viewModel.alertPrompt == nil)
+        #expect(viewModel.reportTarget == nil)
+        #expect(viewModel.canInvite == false)
+        #expect(viewModel.canEditThread == false)
+    }
+
+    @Test("강퇴(403)·없음(404)·삭제(410)는 재시도 화면 대신 참여 종료 화면으로 보낸다",
+          arguments: [403, 404, 410])
+    func ejectsOnDefinitiveLoadFailure(statusCode: Int) async {
+        let useCase = StubRoomUseCase()
+        useCase.loadThreadError = AppError.network(
+            .requestFailed(statusCode: statusCode, data: nil)
+        )
+        let viewModel = makeViewModel(useCase)
+
+        await viewModel.load()
+
+        #expect(viewModel.ejectionNotice != nil)
+    }
+
+    @Test("읽기 전용으로 보던 방에 초대되면 쓰기가 열린다", .timeLimit(.minutes(1)))
+    func opensWritingWhenInvitedWhileReadOnly() async {
+        let useCase = StubRoomUseCase()
+        useCase.thread = makeThread(isJoined: false)
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        #expect(viewModel.canWrite == false)
+
+        useCase.thread = makeThread()
+        viewModel.apply(.threadInvited(thread: makeThread()))
+        await waitUntil { viewModel.canWrite }
+
+        #expect(viewModel.ejectionNotice == nil)
+    }
+
     // MARK: - Send
 
     @Test("전송하면 즉시 sending 상태로 꽂히고 draft 가 비워진다")
@@ -1280,21 +1359,20 @@ struct CommunityThreadRoomViewModelTests {
         #expect(viewModel.ejectionNotice != nil)
     }
 
-    @Test("다른 기기에서 내가 나가면 REST 확정 없이 방을 닫는다", .timeLimit(.minutes(1)))
-    func ejectsWhenILeaveFromAnotherDevice() async throws {
+    @Test("다른 기기에서 내가 나가면 방을 닫지 않고 읽기 전용으로 바꾼다", .timeLimit(.minutes(1)))
+    func switchesToReadOnlyWhenILeaveFromAnotherDevice() async {
         let useCase = StubRoomUseCase()
         let viewModel = makeViewModel(useCase)
         await viewModel.load()
 
-        // 강퇴와 달리 대상이 명시돼 있다 — 재조회 없이 바로 닫힌다.
+        // 나가도 열람은 된다 (#1432). 헤더를 다시 받아 쓰기만 잠근다.
+        useCase.thread = makeThread(isJoined: false, memberCount: "2")
         viewModel.apply(.memberLeft(threadId: "1", memberId: "9", memberCount: "2"))
+        await waitUntil { useCase.loadThreadCount == 2 && !viewModel.canWrite }
 
-        #expect(viewModel.ejectionNotice != nil)
-        #expect(useCase.loadThreadCount == 1)
-
-        viewModel.acknowledgeEjection()
-
-        #expect(viewModel.shouldDismiss)
+        #expect(viewModel.ejectionNotice == nil)
+        #expect(viewModel.shouldDismiss == false)
+        #expect(viewModel.header.value?.memberCount == "2")
     }
 
     @Test("남이 나가면 멤버 수만 줄고 방에는 그대로 남는다")
@@ -1327,17 +1405,20 @@ struct CommunityThreadRoomViewModelTests {
         #expect(viewModel.header.value?.memberCount == "2")
     }
 
-    @Test("내가 강퇴당했으면 REST 재조회로 확정한 뒤 내보낸다", .timeLimit(.minutes(1)))
-    func ejectsWhenRefetchSaysNotJoined() async {
+    @Test("재조회가 200 + isJoined:false 면 내보내지 않고 읽기 전용으로 바꾼다",
+          .timeLimit(.minutes(1)))
+    func switchesToReadOnlyWhenRefetchSaysNotJoined() async {
         let useCase = StubRoomUseCase()
         let viewModel = makeViewModel(useCase)
         await viewModel.load()
 
+        // 강퇴는 403 으로 온다. 200 + 비참여는 나간 상태라 열람은 남는다 (#1432).
         useCase.thread = makeThread(isJoined: false, memberCount: "2")
         viewModel.apply(.memberKicked(threadId: "1", memberId: "9", memberCount: "2"))
-        await waitUntil { viewModel.ejectionNotice != nil }
+        await waitUntil { !viewModel.canWrite }
 
-        #expect(viewModel.ejectionNotice != nil)
+        #expect(viewModel.ejectionNotice == nil)
+        #expect(viewModel.shouldDismiss == false)
     }
 
     @Test("재조회가 전송 단계에서 실패하면 내보내지 않는다 — 네트워크 한 번에 방을 닫으면 안 된다",
@@ -1469,7 +1550,7 @@ struct CommunityThreadRoomViewModelTests {
         await viewModel.load()
 
         // 종료성 이벤트는 브로커가 재생하지 않는다 — 재연결 시 REST 로만 알 수 있다.
-        useCase.thread = makeThread(isJoined: false, memberCount: "2")
+        useCase.loadThreadError = AppError.network(.requestFailed(statusCode: 403, data: nil))
         useCase.pendingSignals = [.reconnected]
         await viewModel.observeRealtime()
 

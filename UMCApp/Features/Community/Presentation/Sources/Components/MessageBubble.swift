@@ -60,6 +60,8 @@ struct MessageBubble: View {
     let isActionTargeted: Bool
     /// 롱프레스·어피던스 아이콘 탭. 오버레이를 여는 건 화면이 한다.
     let onRequestActions: () -> Void
+    /// 비참여자 열람 (#1432). 반응 칩은 보여 주되 누를 수 없고, 어피던스 아이콘도 뺀다.
+    let isReadOnly: Bool
 
     // MARK: - Body
 
@@ -244,19 +246,25 @@ struct MessageBubble: View {
     /// 말풍선 아래 붙는 반응 칩. 칩을 다시 누르면 같은 토글이 돈다.
     private var reactionChips: some View {
         HStack(spacing: DefaultSpacing.spacing4) {
-            if isMine { reactionAffordance }
+            if isMine, !isReadOnly { reactionAffordance }
 
             ForEach(message.reactions, id: \.emoji) { reaction in
-                Button {
-                    onReact(reaction.emoji)
-                } label: {
+                if isReadOnly {
                     chipLabel(reaction)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(Self.reactionLabel(reaction))
+                } else {
+                    Button {
+                        onReact(reaction.emoji)
+                    } label: {
+                        chipLabel(reaction)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Self.reactionLabel(reaction))
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Self.reactionLabel(reaction))
             }
 
-            if !isMine { reactionAffordance }
+            if !isMine, !isReadOnly { reactionAffordance }
         }
     }
 
@@ -577,7 +585,8 @@ struct BubbleWidthLayout: Layout {
             onReact: { _ in },
             onQuoteTap: { _ in },
             isActionTargeted: false,
-            onRequestActions: {}
+            onRequestActions: {},
+            isReadOnly: false
         )
     }
 

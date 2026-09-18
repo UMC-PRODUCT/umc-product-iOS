@@ -26,7 +26,7 @@ extension CommunityThreadRoomViewModel {
     /// 아직 서버가 모르는 메시지(`.sending`/`.failed`)의 id 는 내가 만든 UUID 라 보내 봐야
     /// 거절당한다 — `canDelete` 와 같은 이유로 막는다.
     public func canReport(_ message: ThreadMessage) -> Bool {
-        guard !message.isDeleted, message.deliveryState == .sent else { return false }
+        guard canWrite, !message.isDeleted, message.deliveryState == .sent else { return false }
         return !isMine(message)
     }
 

@@ -170,10 +170,19 @@ public final class CommunityThreadRoomViewModel {
 
     // MARK: - Computed Property
 
-    /// 전송 버튼 활성 조건 = `validateText` 통과 + 쿨다운 아님. 상한을 넘긴 입력은 서버까지
+    /// 대화에 쓸 수 있는지 (전송·반응·읽음·신고·삭제).
+    ///
+    /// 서버는 열람을 전체 공개로 열고 쓰기만 ACTIVE 멤버에게 남겼다 (#1432, 서버 계약 §7). 비참여자가
+    /// 보낸 쓰기는 거절만 돌아오므로 여기서 먼저 끊는다. 헤더를 받기 전에는 참여 여부를 몰라 닫아 둔다.
+    public var canWrite: Bool {
+        header.value?.isJoined == true
+    }
+
+    /// 전송 버튼 활성 조건 = 참여 중 + `validateText` 통과 + 쿨다운 아님. 상한을 넘긴 입력은 서버까지
     /// 보내지 않고 버튼을 잠가 실패 왕복을 없앤다 (스펙 3.3 클라이언트 선반영).
     public var canSend: Bool {
-        sendCooldownNotice == nil
+        canWrite
+            && sendCooldownNotice == nil
             && (try? CommunityThreadRoomUseCase.validateText(trimmedDraft)) != nil
     }
 
@@ -184,8 +193,9 @@ public final class CommunityThreadRoomViewModel {
     }
 
     /// 초대 진입점을 열지. 헤더를 받기 전에는 내 역할을 몰라 닫아 둔다 (#1136 완료 조건 1).
+    /// 서버는 나간 사람에게도 예전 역할(`myRole`)을 실어 주므로 참여 여부를 함께 본다.
     public var canInvite: Bool {
-        header.value?.myRole == .owner
+        canWrite && header.value?.myRole == .owner
     }
 
     // MARK: - Function
@@ -204,7 +214,7 @@ public final class CommunityThreadRoomViewModel {
     /// 아직 서버가 모르는 메시지(`.sending`/`.failed`)는 지울 대상 자체가 없다 — 보낼 messageId
     /// 가 내가 만든 UUID 라 서버가 거절한다.
     public func canDelete(_ message: ThreadMessage) -> Bool {
-        guard !message.isDeleted, message.deliveryState == .sent else { return false }
+        guard canWrite, !message.isDeleted, message.deliveryState == .sent else { return false }
         if isMe(message.senderId) { return true }
 
         switch header.value?.myRole {
@@ -237,13 +247,9 @@ public final class CommunityThreadRoomViewModel {
 
         do {
             let (thread, page) = try await (threadRequest, pageRequest)
-            // 공유 링크·딥링크로 들어온 비멤버를 여기서 끊는다 (#1142). 진입 경로가 리스트 탭·
-            // 링크 카드·`umc://thread/{id}` 셋으로 늘었지만 모두 이 화면으로 모이므로, 게이트도
-            // 여기 하나면 된다. "공유해도 멤버만 열림, 신규 유입은 초대로만" (명세 FLOW 04).
-            guard thread.isJoined else {
-                eject(message: Constants.nonMemberMessage)
-                return
-            }
+            // 비참여자(`isJoined == false`)도 막지 않는다 — 서버가 열람을 전체 공개로 바꿨다
+            // (#1432). 리스트 탭·링크 카드·`umc://thread/{id}` 모두 이 화면으로 모이고, 쓰기는
+            // `canWrite` 가 한곳에서 잠근다.
             // 응답을 기다리는 동안 실시간으로 도착한 메시지와 전송 중인 낙관적 버블은 서버
             // 스냅샷에 없다. 통째로 덮으면 되찾을 경로가 없어 대화록에 구멍이 남는다.
             // 반대로 `loadOlder` 로 쌓인 과거 이력까지 살리면 최신 페이지 뒤에 붙어 시간순이
@@ -263,17 +269,17 @@ public final class CommunityThreadRoomViewModel {
             // 확정해야 한다 — 순서가 뒤집히면 배너 조건이 영영 성립하지 않는다.
             captureEntryUnreadCount(from: thread)
             // 방에 들어온 행위 자체가 읽음이다. 리스트의 미읽음 배지는 이 워터마크가 서버에
-            // 닿은 뒤 다음 REST 조회로 정정된다 (스펙 10장 잠정 정책).
+            // 닿은 뒤 다음 REST 조회로 정정된다 (스펙 10장 잠정 정책). 비참여자는 `markRead` 가 거른다.
             if let newest = messages.last {
                 markRead(upTo: newest.id)
             }
         } catch {
             // 취소는 화면을 떠난 정상 흐름이다. 에러 화면으로 바꾸면 안 된다.
             guard !(error is CancellationError) else { return }
-            // 비멤버 조회는 서버 구현에 따라 403/404 로 온다. 재시도 버튼이 달린 실패 화면을
-            // 띄우면 눌러도 같은 거절만 반복된다 — 안내하고 리스트로 돌려보낸다.
-            guard !isDefinitiveNonMember(error) else {
-                eject(message: Constants.nonMemberMessage)
+            // 강퇴(403)·삭제(404/410)는 재시도해도 같은 거절만 반복된다 — 재시도 버튼이 달린
+            // 실패 화면 대신 "참여 종료됨" 으로 안내하고 리스트로 돌려보낸다.
+            if let notice = Self.ejectionMessage(for: error) {
+                eject(message: notice)
                 return
             }
             header = .failed(AppError.from(error))
@@ -328,7 +334,8 @@ public final class CommunityThreadRoomViewModel {
 
     /// 실패한 메시지 재전송. 같은 `clientMessageId` 를 다시 쓰면 서버가 중복을 걸러 준다.
     public func retry(_ message: ThreadMessage) async {
-        guard sendCooldownNotice == nil,
+        guard canWrite,
+              sendCooldownNotice == nil,
               let clientMessageId = message.clientMessageId,
               let index = messages.firstIndex(where: { $0.clientMessageId == clientMessageId }),
               messages[index].deliveryState == .failed else { return }
@@ -349,7 +356,8 @@ public final class CommunityThreadRoomViewModel {
     /// 서버가 준 배열이 진실이므로 덮어쓰지 않는다.
     public func toggleReaction(_ message: ThreadMessage, emoji: String) async {
         // 미확정 버블의 id 는 내가 만든 UUID 다. 톰스톤도 반응 대상이 아니다.
-        guard let index = messages.firstIndex(where: { $0.id == message.id }),
+        guard canWrite,
+              let index = messages.firstIndex(where: { $0.id == message.id }),
               messages[index].deliveryState == .sent,
               !messages[index].isDeleted else { return }
 
@@ -412,7 +420,8 @@ public final class CommunityThreadRoomViewModel {
     /// 이 디바운스는 `start()` 반환 ≠ 연결 완료라는 계약도 함께 흡수한다 — 진입 직후 바로
     /// 보내면 `notConnected` 로 버려진다.
     public func markRead(upTo messageId: String) {
-        guard messageId != lastSentWatermark else { return }
+        // 비참여자의 워터마크는 서버가 거절한다. 진입·스크롤 두 경로가 모두 여기로 모인다.
+        guard canWrite, messageId != lastSentWatermark else { return }
         // 미확정 버블의 id 는 내가 만든 UUID 다. 그대로 보내면 서버에 없는 messageId 가 나가고,
         // 거절은 clientMessageId 없는 에러 프레임으로 와 조용히 버려진다. 가짜 id 를 만든 쪽이
         // 여기라 방어도 여기서 한다 — View 에 규칙을 떠넘기면 반드시 샌다.
@@ -478,13 +487,12 @@ public final class CommunityThreadRoomViewModel {
             header = .loaded(thread)
 
         case .memberLeft(_, let memberId, let memberCount):
-            // 나간 게 나라면 다른 기기·웹에서 벌어진 일이다. 강퇴와 달리 대상이 명시돼 있어
-            // REST 확정 없이 바로 닫는다 — 남이 나간 경우는 카운트만 바뀐다.
-            guard !isMe(memberId) else {
-                eject(message: Constants.leftMessage)
-                return
-            }
             updateMemberCount(memberCount)
+            // 나간 게 나라면 다른 기기·웹에서 벌어진 일이다. 나가도 열람은 되므로 방을 닫지 않고
+            // 헤더를 다시 받아 읽기 전용으로 바꾼다 (#1432). 직접 나간 뒤라면 화면이 이미 접히는 중이다.
+            guard isMe(memberId), !didLeave else { return }
+            membershipCheckTask?.cancel()
+            membershipCheckTask = Task { [weak self] in await self?.confirmMembership() }
 
         case .memberKicked(_, _, let memberCount):
             // 서버가 이벤트마다 ACTIVE 수신자를 재계산해 유저 단위로 팬아웃한다(스펙 :108).
@@ -498,9 +506,16 @@ public final class CommunityThreadRoomViewModel {
 
         case .threadDeleted:
             // 삭제는 수신자 전원에게 같은 의미다 — 팬아웃 모호성이 없다.
-            eject(message: "이 스레드가 삭제됐어요.")
+            eject(message: Constants.deletedMessage)
 
-        case .commandAcknowledged, .readUpdated, .threadInvited, .unknown:
+        case .threadInvited:
+            // 읽기 전용으로 보던 방에 초대됐다. 헤더를 다시 받아 쓰기를 열고, 실시간이 없던 동안의
+            // 공백도 함께 메운다. 이미 참여 중이면 할 일이 없다.
+            guard !canWrite else { return }
+            membershipCheckTask?.cancel()
+            membershipCheckTask = Task { [weak self] in await self?.backfill() }
+
+        case .commandAcknowledged, .readUpdated, .unknown:
             // command.acknowledged 는 저장 확정이 아니라 접수 확인이다(§3.2) — 상태를 안 바꾼다.
             // read.updated 는 남의 영수증과 구분할 수 없어 no-op (Task 14 와 같은 정책).
             break
@@ -603,8 +618,11 @@ public final class CommunityThreadRoomViewModel {
         }
     }
 
-    /// 재연결 직후 공백 메우기. 최신 페이지를 다시 읽어 모르는 것만 붙인다.
-    private func backfill() async {
+    /// 공백 메우기. 헤더와 최신 페이지를 다시 읽어 모르는 메시지만 붙인다.
+    ///
+    /// 재연결 직후에 돌고, 실시간을 받지 못하는 비참여자의 새로고침 버튼도 이 경로를 쓴다 —
+    /// 서버 계약이 비참여자에게 "history 로 다시 조회" 를 안내한다 (#1432).
+    public func backfill() async {
         // 강퇴·스레드 삭제는 종료성 이벤트라 브로커가 재생하지 않는다. 끊긴 사이에 일어났다면
         // 여기서 확정하지 않는 한 영원히 모른 채 이미 쫓겨난 방에 남는다 (스펙 §6.5).
         await confirmMembership()
@@ -622,31 +640,32 @@ public final class CommunityThreadRoomViewModel {
         }
     }
 
-    /// 강퇴·삭제 이벤트가 나를 겨눈 것인지 REST 로 확정한다.
+    /// 강퇴·삭제·나가기 이벤트가 나를 겨눈 것인지 REST 로 확정한다.
     ///
+    /// `200 + isJoined:false` 는 나간 상태라 헤더만 갈아 끼워 읽기 전용으로 둔다 (#1432).
     /// 전송 실패만 "아직 모른다" 로 취급한다 — 네트워크가 한 번 튄 걸로 방을 닫으면 안 되지만,
     /// 인가 거절까지 뭉개면 정작 강퇴당했을 때 확정 경로가 통째로 사라진다.
     private func confirmMembership() async {
         do {
             let thread = try await useCase.loadThread(threadId: threadId)
-            guard thread.isJoined else {
-                eject(message: Constants.ejectedMessage)
-                return
-            }
             header = .loaded(thread)
         } catch {
-            guard isDefinitiveNonMember(error) else { return }
-            eject(message: Constants.ejectedMessage)
+            guard let notice = Self.ejectionMessage(for: error) else { return }
+            eject(message: notice)
         }
     }
 
-    /// 강퇴 뒤 상세 조회는 서버 구현에 따라 `200 + isJoined:false` 일 수도, 403/404 일 수도 있다.
-    /// 어느 쪽이든 "이 스레드는 더 못 본다" 는 확정이라 둘 다 비멤버로 본다.
-    private func isDefinitiveNonMember(_ error: Error) -> Bool {
+    /// 더는 볼 수 없는 방인지. 열람이 전체 공개라 비참여자도 200 을 받는다 — 거절은 강퇴(403)와
+    /// 삭제(404 없음·410 삭제됨)뿐이고, 어느 쪽이든 재시도해도 결과가 같다.
+    private static func ejectionMessage(for error: Error) -> String? {
         guard case .network(.requestFailed(let statusCode, _)) = AppError.from(error) else {
-            return false
+            return nil
         }
-        return statusCode == 403 || statusCode == 404
+        switch statusCode {
+        case 403: return Constants.ejectedMessage
+        case 404, 410: return Constants.deletedMessage
+        default: return nil
+        }
     }
 
     /// 429 쿨다운. 서버가 남은 시간을 주지 않으므로 고정 시간 뒤에 스스로 푼다.
@@ -819,7 +838,5 @@ fileprivate enum Constants {
     /// 서버가 남은 시간을 주지 않아 고정값으로 푼다.
     static let sendCooldown: Duration = .seconds(5)
     static let ejectedMessage = "이 스레드에서 내보내졌어요."
-    static let leftMessage = "다른 기기에서 이 스레드를 나갔어요."
-    /// 공유 링크로 들어온 비멤버 안내. 링크 자체로는 참여시키지 않는다 (명세 FLOW 04).
-    static let nonMemberMessage = "이 스레드의 멤버만 대화를 볼 수 있어요. 초대를 받아 참여해 주세요."
+    static let deletedMessage = "이 스레드가 삭제됐어요."
 }
