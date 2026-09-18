@@ -635,31 +635,61 @@ struct MyPageRepositoryDeleteTests {
 @Suite("MyPageRepository — 프로필 링크 정규화")
 struct MyPageRepositoryUpdateLinksTests {
 
-    @Test("updateProfileLinks — 일부만 준 링크를 SocialLinkType 3종 전체로 정규화하고 공백을 trim한다")
-    func updateLinksNormalizesToAllTypes() async throws {
-        // github만(공백 포함) 제공 → linkedin/blog는 빈 문자열로 채워져야 함
-        let input = [ProfileLink(type: .github, url: "  https://github.com/me  ")]
+    @Test("updateProfileLinks — 5종을 allCases 순서로 모두 보내고 URL 공백을 trim한다")
+    func updateLinksSendsAllFiveTypes() async throws {
+        // 서버는 요청에 없는 타입을 null로 지우므로, 받은 5종이 빠짐없이 나가야 기존 값이 보존된다.
+        let input = [
+            ProfileLink(type: .personal, url: "https://me.dev"),
+            ProfileLink(type: .github, url: "  https://github.com/me  "),
+            ProfileLink(type: .linkedin, url: "https://linkedin.com/in/me"),
+            ProfileLink(type: .blog, url: "https://blog.me"),
+            ProfileLink(type: .instagram, url: "https://instagram.com/me")
+        ]
         let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.profileObject)))
 
         let result = try await sut.updateProfileLinks(input)
 
-        // 응답 매핑
         #expect(result.challengeId == 777)
         #expect(stub.lastPath == "/api/v1/member/profile/links")
         #expect(stub.lastMethod == .patch)
 
-        // 전송된 정규화 페이로드 검증
-        guard case let .patchMemberProfileLinks(request) = try #require(stub.lastTarget) else {
-            Issue.record("기대한 라우터 케이스는 .patchMemberProfileLinks 입니다: \(String(describing: stub.lastTarget))")
-            return
-        }
-        let byType = Dictionary(
-            uniqueKeysWithValues: request.links.map { ($0.type, $0.link) }
-        )
-        #expect(request.links.count == SocialLinkType.allCases.count)  // 3종 전부
-        #expect(byType["GITHUB"] == "https://github.com/me")           // trim 적용
-        #expect(byType["LINKEDIN"] == "")                              // 미제공 → 빈 문자열
-        #expect(byType["BLOG"] == "")
+        let links = try sentProfileLinks(stub)
+        #expect(links.map(\.type) == ["GITHUB", "LINKEDIN", "BLOG", "INSTAGRAM", "PERSONAL"])
+        #expect(links.map(\.link) == [
+            "https://github.com/me",
+            "https://linkedin.com/in/me",
+            "https://blog.me",
+            "https://instagram.com/me",
+            "https://me.dev"
+        ])
+    }
+
+    @Test("updateProfileLinks — 빈 값·공백뿐인 링크는 \"\"로 보내지 않고 요청에서 뺀다")
+    func updateLinksDropsEmptyLinks() async throws {
+        let input = [
+            ProfileLink(type: .github, url: "https://github.com/me"),
+            ProfileLink(type: .linkedin, url: ""),
+            ProfileLink(type: .blog, url: "   "),
+            ProfileLink(type: .instagram, url: "https://instagram.com/me"),
+            ProfileLink(type: .personal, url: "")
+        ]
+        let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.profileObject)))
+
+        _ = try await sut.updateProfileLinks(input)
+
+        let links = try sentProfileLinks(stub)
+        #expect(links.map(\.type) == ["GITHUB", "INSTAGRAM"])
+        #expect(links.allSatisfy { !$0.link.isEmpty })
+    }
+
+    @Test("updateProfileLinks — 모든 링크가 비면 빈 배열을 보낸다")
+    func updateLinksSendsEmptyArrayWhenAllCleared() async throws {
+        let input = SocialLinkType.allCases.map { ProfileLink(type: $0, url: "") }
+        let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.profileObject)))
+
+        _ = try await sut.updateProfileLinks(input)
+
+        #expect(try sentProfileLinks(stub).isEmpty)
     }
 
     @Test("updateProfileLinks — 성공 시 정본 프로필 캐시를 응답 스냅샷으로 갱신한다")
@@ -715,6 +745,19 @@ struct MyPageRepositoryUpdateLinksTests {
             _ = try await sut.updateProfileLinks([ProfileLink(type: .github, url: "x")])
         }
     }
+}
+
+/// 마지막 요청이 링크 PATCH 였는지 확인하고 전송된 링크 항목을 꺼낸다.
+private func sentProfileLinks(
+    _ stub: StubMyPageNetwork
+) throws -> [UpdateMemberProfileLinkRequestDTO] {
+    guard case let .patchMemberProfileLinks(request) = try #require(stub.lastTarget) else {
+        Issue.record(
+            "기대한 라우터 케이스는 .patchMemberProfileLinks 입니다: \(String(describing: stub.lastTarget))"
+        )
+        return []
+    }
+    return request.links
 }
 
 // MARK: - Suite: 프로필 이미지 업로드 오케스트레이션
