@@ -1227,6 +1227,214 @@ struct CommunityThreadRoomViewModelTests {
         #expect(errorHandler.currentError != nil)
     }
 
+    // MARK: - Edit
+
+    @Test("수정은 서버에 있는 내 TEXT 메시지에만 걸린다")
+    func limitsEditToOwnSettledTextMessage() async {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase, currentMemberId: "9")
+        await viewModel.load()
+
+        var deleted = makeMessage(id: "4", senderId: "9")
+        deleted.deletedAt = Date(timeIntervalSince1970: 600)
+        let system = ThreadMessage(
+            id: "5",
+            threadId: "1",
+            senderId: "9",
+            senderName: "정의진",
+            content: "정의진님이 참여했어요",
+            type: .system,
+            createdAt: Date(timeIntervalSince1970: 0)
+        )
+
+        #expect(viewModel.canEdit(makeMessage(id: "1", senderId: "9")))
+        #expect(viewModel.canEdit(makeMessage(id: "2", senderId: "7")) == false)
+        #expect(viewModel.canEdit(
+            makeMessage(id: "3", senderId: "9").with(deliveryState: .sending)
+        ) == false)
+        #expect(viewModel.canEdit(deleted) == false)
+        #expect(viewModel.canEdit(system) == false)
+    }
+
+    @Test("수정을 누르면 원문이 입력창에 채워지고 답장은 걷히며, 취소하면 비워진다")
+    func entersAndLeavesEditMode() async {
+        let useCase = StubRoomUseCase()
+        let message = makeMessage(id: "5", content: "원문", createdAt: 500)
+        let viewModel = await makeLoadedViewModel(useCase, with: message)
+        viewModel.requestReply(message)
+
+        viewModel.requestEdit(message)
+
+        #expect(viewModel.editTarget?.id == "5")
+        #expect(viewModel.draft == "원문")
+        #expect(viewModel.replyTarget == nil)
+
+        viewModel.cancelEdit()
+
+        #expect(viewModel.editTarget == nil)
+        #expect(viewModel.draft.isEmpty)
+    }
+
+    @Test("수정 중에 답장을 걸면 수정 모드를 빠져나온다")
+    func replyLeavesEditMode() async {
+        let useCase = StubRoomUseCase()
+        let message = makeMessage(id: "5", content: "원문", createdAt: 500)
+        let viewModel = await makeLoadedViewModel(useCase, with: message)
+        viewModel.requestEdit(message)
+
+        viewModel.requestReply(message)
+
+        #expect(viewModel.editTarget == nil)
+        #expect(viewModel.draft.isEmpty)
+        #expect(viewModel.replyTarget?.messageId == "5")
+    }
+
+    @Test("수정 모드의 전송은 새 메시지 대신 수정 명령을 보내고 말풍선을 먼저 고친다")
+    func submitsEditOptimistically() async throws {
+        let useCase = StubRoomUseCase()
+        let message = makeMessage(id: "5", content: "원문", createdAt: 500)
+        let viewModel = await makeLoadedViewModel(useCase, with: message)
+        viewModel.requestEdit(message)
+
+        viewModel.draft = "  고친 본문 "
+        await viewModel.send()
+
+        let call = try #require(useCase.editCalls.first)
+        #expect(call.messageId == "5")
+        #expect(call.content == "고친 본문")
+        // 에러 프레임과 짝짓는 열쇠라 서버 규칙(canonical lowercase UUID)을 따른다.
+        #expect(UUID(uuidString: call.commandId) != nil)
+        #expect(call.commandId == call.commandId.lowercased())
+        #expect(useCase.sentContents.isEmpty)
+        #expect(viewModel.messages.count == 1)
+        #expect(viewModel.messages.first?.content == "고친 본문")
+        #expect(viewModel.messages.first?.isEdited == true)
+        #expect(viewModel.editTarget == nil)
+        #expect(viewModel.draft.isEmpty)
+    }
+
+    /// 서버는 같은 본문을 중복으로 보고 `message.updated` 를 내지 않는다 — 보내면 "(수정됨)" 만 남는다.
+    @Test("본문이 그대로면 보내지 않고 수정 모드만 빠져나온다")
+    func skipsUnchangedEdit() async {
+        let useCase = StubRoomUseCase()
+        let message = makeMessage(id: "5", content: "원문", createdAt: 500)
+        let viewModel = await makeLoadedViewModel(useCase, with: message)
+        viewModel.requestEdit(message)
+
+        await viewModel.send()
+
+        #expect(useCase.editCalls.isEmpty)
+        #expect(viewModel.messages.first?.isEdited == false)
+        #expect(viewModel.editTarget == nil)
+    }
+
+    @Test("같은 commandId 의 에러 프레임이 오면 원문으로 되돌리고 전역 Alert 으로 알린다")
+    func rollsBackEditOnCommandError() async throws {
+        let useCase = StubRoomUseCase()
+        let errorHandler = ErrorHandler()
+        let message = makeMessage(id: "5", content: "원문", createdAt: 500)
+        let viewModel = await makeLoadedViewModel(
+            useCase,
+            with: message,
+            errorHandler: errorHandler
+        )
+        viewModel.requestEdit(message)
+        viewModel.draft = "고친 본문"
+        await viewModel.send()
+        let commandId = try #require(useCase.editCalls.first?.commandId)
+
+        viewModel.applyCommandFailure(RealtimeCommandError(
+            commandId: commandId,
+            clientMessageId: nil,
+            status: "403",
+            code: "CHAT_MESSAGE_MUTATION_FORBIDDEN",
+            message: "수정할 수 없습니다",
+            retryable: false
+        ))
+
+        #expect(viewModel.messages.first?.content == "원문")
+        #expect(viewModel.messages.first?.isEdited == false)
+        #expect(errorHandler.currentError != nil)
+    }
+
+    @Test("다른 명령의 에러 프레임이나 ACK 를 받은 수정은 되돌리지 않는다")
+    func keepsEditForUnrelatedErrorOrAcknowledged() async throws {
+        let useCase = StubRoomUseCase()
+        let errorHandler = ErrorHandler()
+        let message = makeMessage(id: "5", content: "원문", createdAt: 500)
+        let viewModel = await makeLoadedViewModel(
+            useCase,
+            with: message,
+            errorHandler: errorHandler
+        )
+        viewModel.requestEdit(message)
+        viewModel.draft = "고친 본문"
+        await viewModel.send()
+        let commandId = try #require(useCase.editCalls.first?.commandId)
+
+        viewModel.applyCommandFailure(RealtimeCommandError(
+            commandId: "other-command",
+            clientMessageId: nil,
+            status: "400",
+            code: "INVALID",
+            message: "잘못된 요청",
+            retryable: false
+        ))
+        viewModel.apply(.commandAcknowledged(
+            threadId: "1",
+            commandId: commandId,
+            messageId: "5",
+            clientMessageId: nil,
+            deduplicated: false
+        ))
+        viewModel.applyCommandFailure(RealtimeCommandError(
+            commandId: commandId,
+            clientMessageId: nil,
+            status: "400",
+            code: "INVALID",
+            message: "잘못된 요청",
+            retryable: false
+        ))
+
+        #expect(viewModel.messages.first?.content == "고친 본문")
+        #expect(errorHandler.currentError == nil)
+    }
+
+    @Test("수정 전송이 실패하면 원문으로 되돌리고 전역 Alert 으로 알린다")
+    func rollsBackEditOnSendFailure() async {
+        let useCase = StubRoomUseCase()
+        useCase.editError = AppError.unknown(message: "notConnected")
+        let errorHandler = ErrorHandler()
+        let message = makeMessage(id: "5", content: "원문", createdAt: 500)
+        let viewModel = await makeLoadedViewModel(
+            useCase,
+            with: message,
+            errorHandler: errorHandler
+        )
+        viewModel.requestEdit(message)
+        viewModel.draft = "고친 본문"
+
+        await viewModel.send()
+
+        #expect(viewModel.messages.first?.content == "원문")
+        #expect(viewModel.messages.first?.isEdited == false)
+        #expect(errorHandler.currentError != nil)
+    }
+
+    @Test("message.updated 가 오면 서버 본문과 수정 시각으로 확정한다")
+    func confirmsEditWithServerEvent() async {
+        let useCase = StubRoomUseCase()
+        let message = makeMessage(id: "5", content: "원문", createdAt: 500)
+        let viewModel = await makeLoadedViewModel(useCase, with: message)
+        var updated = makeMessage(id: "5", content: "고친 본문", createdAt: 500)
+        updated.editedAt = Date(timeIntervalSince1970: 900)
+
+        viewModel.apply(.messageUpdated(threadId: "1", message: updated))
+
+        #expect(viewModel.messages.first?.content == "고친 본문")
+        #expect(viewModel.messages.first?.editedAt == Date(timeIntervalSince1970: 900))
+    }
+
     // MARK: - Report
 
     @Test("신고는 남의 메시지에만 걸리고, 톰스톤·미확정 메시지에는 걸지 않는다")

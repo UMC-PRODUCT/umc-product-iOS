@@ -65,11 +65,12 @@ fileprivate struct ReactionEmoji: Identifiable {
 
 /// 말풍선 하나에 걸 수 있는 동작.
 ///
-/// 노출 판정을 ``items(deliveryState:canReport:canDelete:)`` 하나로 모아 둔다 — 뷰 안에서
+/// 노출 판정을 ``items(deliveryState:canReport:canDelete:canEdit:)`` 하나로 모아 둔다 — 뷰 안에서
 /// `if` 로 흩어 두면 조건이 맞는지 화면을 띄워 봐야만 알 수 있다.
 enum MessageAction: Hashable, Identifiable {
     case reply
     case copy
+    case edit
     case report
     case delete
 
@@ -79,6 +80,7 @@ enum MessageAction: Hashable, Identifiable {
         switch self {
         case .reply: "답장"
         case .copy: "복사"
+        case .edit: "수정"
         case .report: "신고"
         case .delete: "삭제"
         }
@@ -88,6 +90,7 @@ enum MessageAction: Hashable, Identifiable {
         switch self {
         case .reply: "arrowshape.turn.up.left"
         case .copy: "doc.on.doc"
+        case .edit: "pencil"
         case .report: "flag"
         case .delete: "trash"
         }
@@ -100,13 +103,15 @@ enum MessageAction: Hashable, Identifiable {
     static func items(
         deliveryState: ThreadMessageDeliveryState,
         canReport: Bool,
-        canDelete: Bool
+        canDelete: Bool,
+        canEdit: Bool = false
     ) -> [MessageAction] {
         var actions: [MessageAction] = []
 
         // 아직 서버가 모르는 메시지는 답장 대상이 될 수 없다 — 보낼 id 가 내가 만든 UUID 다.
         if deliveryState == .sent { actions.append(.reply) }
         actions.append(.copy)
+        if canEdit { actions.append(.edit) }
         if canReport { actions.append(.report) }
         if canDelete { actions.append(.delete) }
 
