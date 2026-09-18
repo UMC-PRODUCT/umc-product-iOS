@@ -89,7 +89,7 @@ public struct NoticeDetailView: View {
     private var content: some View {
         switch viewModel.noticeState {
         case .idle, .loading:
-            Progress()
+            CoreUIComponents.Progress()
         case .loaded(let noticeDetail):
             detailContent(noticeDetail)
         case .failed(let error):
