@@ -20,6 +20,16 @@ public protocol AuthRepositoryProtocol {
     /// 로그아웃 처리를 수행한다. (토큰 정리 등 세션 종료 책임을 Repository로 위임)
     func logout() async throws
 
+    /// 이 기기의 푸시(FCM) 설치를 서버에서 비활성화한다.
+    ///
+    /// 현재 세션의 인증으로 본인 설치임을 증명하므로 로컬 토큰을 지우기 **전에** 호출한다.
+    func unregisterPushInstallation() async throws
+
+    /// 현재 리프레시 토큰을 서버 allow-list에서 제거한다.
+    ///
+    /// 저장된 리프레시 토큰을 요청 바디로 보내므로 로컬 토큰을 지우기 **전에** 호출한다.
+    func revokeRefreshToken() async throws
+
     /// 카카오 소셜 로그인을 수행한다.
     /// - Parameters:
     ///   - accessToken: 카카오 SDK에서 발급받은 액세스 토큰

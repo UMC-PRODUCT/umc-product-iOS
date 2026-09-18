@@ -58,6 +58,13 @@ public enum AuthRouter: BaseTargetType {
     case addMemberOAuth(body: AddMemberOAuthRequestDTO)
     /// 로그인 OAuth 수단 연동 해제
     case deleteMemberOAuth(memberOAuthId: String, body: DeleteMemberOAuthRequestDTO)
+    /// 로그아웃 — 리프레시 토큰을 서버 allow-list에서 제거
+    case logout(body: LogoutRequestDTO)
+    /// 로그아웃 시 이 기기의 FCM 설치 비활성화
+    ///
+    /// - Note: 등록(`POST .../installations`)은 `HomeRouter.postFCMInstallation` 소관이다.
+    ///   해제는 세션 종료 흐름의 일부라 여기 둔다.
+    case unregisterFCMInstallation(installationId: String)
 
     // MARK: - Path
 
@@ -101,6 +108,10 @@ public enum AuthRouter: BaseTargetType {
             return "/api/v1/member-oauth"
         case .deleteMemberOAuth(let memberOAuthId, _):
             return "/api/v1/member-oauth/\(memberOAuthId)"
+        case .logout:
+            return "/api/v1/auth/logout"
+        case .unregisterFCMInstallation(let installationId):
+            return "/api/v1/notifications/fcm/installations/\(installationId)"
         }
     }
 
@@ -113,11 +124,11 @@ public enum AuthRouter: BaseTargetType {
         case .loginKakao, .loginApple, .loginGoogle, .loginByEmail,
              .sendEmailVerification, .resendEmailVerification, .verifyEmailCode,
              .register, .registerByEmail, .registerCredential, .registerExistingChallenger,
-             .addMemberOAuth:
+             .addMemberOAuth, .logout:
             return .post
         case .resetPassword, .changePassword:
             return .patch
-        case .deleteMemberOAuth:
+        case .deleteMemberOAuth, .unregisterFCMInstallation:
             return .delete
         }
     }
@@ -167,6 +178,10 @@ public enum AuthRouter: BaseTargetType {
             return .requestJSONEncodable(body)
         case .deleteMemberOAuth(_, let body):
             return .requestJSONEncodable(body)
+        case .logout(let body):
+            return .requestJSONEncodable(body)
+        case .unregisterFCMInstallation:
+            return .requestPlain
         }
     }
 }

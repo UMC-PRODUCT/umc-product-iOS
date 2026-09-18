@@ -228,6 +228,7 @@ final class FailedVerificationUMCViewModel {
         defer { isLoggingOut = false }
 
         UserDefaults.standard.set(false, forKey: AppStorageKey.canAutoLogin)
+        await container.resolve(RevokeSessionUseCaseProtocol.self).execute()
 
         do {
             try await networkClient.logout()

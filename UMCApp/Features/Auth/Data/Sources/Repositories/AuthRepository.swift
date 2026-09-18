@@ -72,6 +72,33 @@ public struct AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         try await networkClient.logout()
     }
 
+    public func unregisterPushInstallation() async throws {
+        let defaults = UserDefaults.standard
+        // 업로드 기록이 남으면 같은 계정으로 다시 로그인했을 때 AppDelegate가 "이미 등록한
+        // (멤버, 토큰)"으로 보고 재등록을 건너뛰어, 방금 비활성화한 설치가 영영 살아나지 않는다.
+        // 요청이 실패해도 서버 상태를 확신할 수 없으니 항상 지운다 — 재등록은 upsert라 무해하다.
+        defer {
+            defaults.removeObject(forKey: AppStorageKey.uploadedFCMToken)
+            defaults.removeObject(forKey: AppStorageKey.uploadedFCMMemberId)
+        }
+
+        guard let installationId = defaults.string(forKey: AppStorageKey.fcmInstallationId),
+              !installationId.isEmpty
+        else { return }
+
+        _ = try await adapter.request(
+            AuthRouter.unregisterFCMInstallation(installationId: installationId)
+        )
+    }
+
+    public func revokeRefreshToken() async throws {
+        guard let refreshToken = await tokenStore.getRefreshToken() else { return }
+
+        _ = try await adapter.request(
+            AuthRouter.logout(body: LogoutRequestDTO(refreshToken: refreshToken))
+        )
+    }
+
     public func loginKakao(accessToken: String, email: String) async throws -> OAuthLoginResult {
         try await performOAuthLogin(
             AuthRouter.loginKakao(

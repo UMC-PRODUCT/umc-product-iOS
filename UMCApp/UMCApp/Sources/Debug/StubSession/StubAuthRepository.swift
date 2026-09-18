@@ -24,6 +24,10 @@ struct StubAuthRepository: AuthRepositoryProtocol {
 
     func logout() async throws {}
 
+    func unregisterPushInstallation() async throws {}
+
+    func revokeRefreshToken() async throws {}
+
     func loginKakao(accessToken: String, email: String) async throws -> OAuthLoginResult {
         .existingMember
     }
