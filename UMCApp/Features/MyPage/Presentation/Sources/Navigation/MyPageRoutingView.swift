@@ -5,6 +5,7 @@
 //  Created by euijjang97 on 8/10/26.
 //
 
+import AuthPresentation
 import CoreDI
 import SwiftUI
 import UMCFoundation
@@ -19,6 +20,8 @@ struct MyPageRoutingView: View {
 
     private let destination: MyPageDestination
     private let container: DIContainer
+
+    @Environment(ErrorHandler.self) private var errorHandler
 
     // MARK: - Init
 
@@ -42,6 +45,9 @@ struct MyPageRoutingView: View {
 
         case .settings:
             MyPageSettingsView(container: container)
+
+        case .changePassword:
+            ChangePasswordView(container: container, errorHandler: errorHandler)
         }
     }
 }

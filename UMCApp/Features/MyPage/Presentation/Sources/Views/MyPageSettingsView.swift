@@ -6,6 +6,7 @@
 //
 
 import CoreDI
+import CoreRouting
 import CoreUIComponents
 import MyPageDomain
 import SwiftUI
@@ -35,6 +36,7 @@ struct MyPageSettingsView: View {
 
     @Environment(ErrorHandler.self) private var errorHandler
     @Environment(\.appFlow) private var appFlow
+    @Environment(PathStore.self) private var pathStore
 
     private let container: DIContainer
 
@@ -72,6 +74,9 @@ struct MyPageSettingsView: View {
 
             AuthSection(
                 alertPrompt: $viewModel.alertPrompt,
+                onChangePassword: {
+                    pathStore.push(MyPageDestination.changePassword, on: .mypage)
+                },
                 onLogout: { endSession("logout", perform: viewModel.logout) },
                 onDeleteAccount: { endSession("deleteAccount", perform: viewModel.deleteAccount) }
             )

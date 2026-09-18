@@ -45,4 +45,7 @@ enum MyPageDestination: Hashable {
     /// 프로필이 있어야 의미가 있는 섹션(외부 링크·소셜 연동)은 화면이 직접 조회하므로
     /// 목적지는 스냅샷을 싣지 않는다 — 탭 루트(``MyPageView``)와 같은 방식이다.
     case settings
+
+    /// 비밀번호 변경. 화면은 `AuthPresentation` 이 소유한다.
+    case changePassword
 }
