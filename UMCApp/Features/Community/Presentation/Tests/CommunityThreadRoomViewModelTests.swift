@@ -55,6 +55,7 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     var deleteError: Error?
     var editError: Error?
     var reportError: Error?
+    var uploadError: Error?
     /// 구독하자마자 흘려보낼 신호. 다 흘리면 스트림이 끝나 `observeRealtime()` 이 반환한다.
     var pendingSignals: [CommunityRealtimeSignal] = []
 
@@ -69,6 +70,8 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     private(set) var deletedMessageIds: [String] = []
     private(set) var editCalls: [EditCall] = []
     private(set) var reportCalls: [ReportCall] = []
+    private(set) var uploadedImages: [Data] = []
+    private(set) var imageSendCalls: [[String]] = []
 
     func loadThread(threadId: String) async throws -> CommunityThread {
         loadThreadCount += 1
@@ -103,6 +106,22 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
                 mentionedMemberIds: mentionedMemberIds
             )
         )
+        if let sendError { throw sendError }
+    }
+
+    func uploadImage(jpegData: Data) async throws -> String {
+        uploadedImages.append(jpegData)
+        if let uploadError { throw uploadError }
+        return "file-\(uploadedImages.count)"
+    }
+
+    func sendImage(
+        threadId: String,
+        clientMessageId: String,
+        fileMetadataIds: [String]
+    ) async throws {
+        sentClientMessageIds.append(clientMessageId)
+        imageSendCalls.append(fileMetadataIds)
         if let sendError { throw sendError }
     }
 
@@ -197,6 +216,14 @@ private actor GatedRoomUseCase: CommunityThreadRoomUseCaseProtocol {
         await withCheckedContinuation { sendGate = $0 }
         if let sendError { throw sendError }
     }
+
+    func uploadImage(jpegData: Data) async throws -> String { "" }
+
+    func sendImage(
+        threadId: String,
+        clientMessageId: String,
+        fileMetadataIds: [String]
+    ) async throws {}
 
     func markRead(threadId: String, lastReadMessageId: String) async throws {}
 

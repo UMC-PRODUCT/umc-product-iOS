@@ -19,7 +19,7 @@ struct ThreadCommandBodyTests {
         )
     }
 
-    @Test("메시지 본문은 항상 TEXT 타입으로 나간다 — 1차 PR 은 텍스트만 보낸다")
+    @Test("첨부가 없는 메시지는 TEXT 타입으로 나간다")
     func encodesTextMessage() throws {
         let body = SendMessageBody(
             clientMessageId: "aaaa-bbbb",
@@ -35,6 +35,21 @@ struct ThreadCommandBodyTests {
         // 평범한 메시지에는 답장 키 자체가 없어야 한다 — `null` 을 실으면 서버 검증이 다르게 돈다.
         #expect(object["replyToId"] == nil)
         #expect((object["mentionedMemberIds"] as? [Int])?.isEmpty == true)
+    }
+
+    /// 서버는 TEXT 에 파일이 실리거나 IMAGE 에 파일이 없으면 프레임을 거절한다.
+    @Test("첨부가 있는 메시지는 IMAGE 타입으로 나간다")
+    func encodesImageMessage() throws {
+        let body = SendMessageBody(
+            clientMessageId: "aaaa-bbbb",
+            content: "",
+            fileMetadataIds: ["file-1"]
+        )
+
+        let object = try json(body)
+        #expect(object["type"] as? String == "IMAGE")
+        #expect(object["fileMetadataIds"] as? [String] == ["file-1"])
+        #expect(object["content"] as? String == "")
     }
 
     /// 도메인은 서버 정수를 `String` 으로 들고 다니지만 STOMP 본문은 숫자여야 한다 —

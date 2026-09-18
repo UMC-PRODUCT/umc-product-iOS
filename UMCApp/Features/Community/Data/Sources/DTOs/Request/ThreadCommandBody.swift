@@ -57,7 +57,8 @@ enum ThreadCommandID {
 
 /// `/app/community/threads/{id}/messages` 본문.
 ///
-/// 1차 PR 은 텍스트만 보내므로 `type` 은 상수다. 이미지 전송이 붙으면 파라미터로 승격한다.
+/// `type` 은 첨부 유무로 정해진다 — 서버가 TEXT 에 파일을, IMAGE 에 빈 첨부를 거절하므로
+/// 둘을 따로 받으면 어긋난 조합을 만들 수 있다.
 ///
 /// `replyToId`/`mentionedMemberIds` 는 서버가 **숫자**로 받는다(양수 Long, 초과 시 프레임 거절).
 /// 도메인은 서버 정수를 전 레이어 `String` 으로 들고 있으므로 여기 이니셜라이저에서만 숫자로
@@ -74,7 +75,7 @@ public struct SendMessageBody: Encodable {
     public let replyToId: Int?
     /// 서버가 중복 제거·정렬·100개 상한을 처리하므로 고른 순서 그대로 보낸다.
     public let mentionedMemberIds: [Int]
-    private let type = "TEXT"
+    private let type: String
 
     // MARK: - Init
 
@@ -88,6 +89,7 @@ public struct SendMessageBody: Encodable {
         self.clientMessageId = clientMessageId
         self.content = content
         self.fileMetadataIds = fileMetadataIds
+        self.type = fileMetadataIds.isEmpty ? "TEXT" : "IMAGE"
         self.replyToId = replyToId.flatMap(Int.init)
         self.mentionedMemberIds = mentionedMemberIds.compactMap(Int.init)
     }
