@@ -10,7 +10,7 @@ import MyPageDomain
 import SwiftUI
 import UMCFoundation
 
-/// 사용자가 등록한 외부 링크(GitHub / LinkedIn / Blog)를 열어 주는 섹션.
+/// 사용자가 등록한 외부 링크(`SocialLinkType` 전 종류)를 열어 주는 섹션.
 ///
 /// 등록된 링크가 없으면 이동 대신 프로필에서 링크를 추가하도록 안내합니다.
 public struct ProfileLinkSection: View {

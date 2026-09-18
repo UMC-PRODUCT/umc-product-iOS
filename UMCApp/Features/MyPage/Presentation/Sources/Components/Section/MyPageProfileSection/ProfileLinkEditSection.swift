@@ -10,7 +10,7 @@ import CoreUIComponents
 import MyPageDomain
 import SwiftUI
 
-/// 외부 프로필 링크(GitHub / LinkedIn / Blog)를 TextField로 직접 편집하는 섹션.
+/// 외부 프로필 링크(`SocialLinkType` 전 종류)를 TextField로 직접 편집하는 섹션.
 ///
 /// 링크를 열기만 하는 ``ProfileLinkSection``과 달리 프로필 수정 화면 전용이다.
 struct ProfileLinkEditSection: View, Equatable {

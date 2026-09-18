@@ -52,7 +52,9 @@ private extension Profile {
         let mappedLinks: [SocialLinkType: String] = [
             .github: externalLinks?.github?.nonEmpty ?? "",
             .linkedin: externalLinks?.linkedIn?.nonEmpty ?? "",
-            .blog: externalLinks?.blog?.nonEmpty ?? ""
+            .blog: externalLinks?.blog?.nonEmpty ?? "",
+            .instagram: externalLinks?.instagram?.nonEmpty ?? "",
+            .personal: externalLinks?.personal?.nonEmpty ?? ""
         ]
 
         return SocialLinkType.allCases.map {
