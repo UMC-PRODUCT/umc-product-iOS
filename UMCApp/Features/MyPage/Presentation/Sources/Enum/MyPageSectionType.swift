@@ -17,8 +17,8 @@ public enum MyPageSectionType: String, CaseIterable {
     case myActivity = "나의 활동"
     /// 외부 소셜 링크(GitHub, LinkedIn, Blog)
     case profileLink = "외부 링크"
-    /// 내가 쓴 글, 댓글 단 글, 스크랩 등 활동 내역
-    case myActiveLogs = "내 활동"
+    /// 내가 쓴 글, 댓글 단 글, 스크랩 등 커뮤니티 활동 내역 — v3 루트 섹션
+    case myActiveLogs = "커뮤니티 활동"
     /// 알림 설정, 위치 설정 등
     case settings = "설정"
     /// 개인정보처리 방침, 이용약관 등

@@ -5,10 +5,11 @@
 //  Created by euijjang97 on 8/10/26.
 //
 
+import CoreDesignSystem
 import CoreUIComponents
 import SwiftUI
 
-/// 내가 쓴 글 / 댓글 단 글 / 스크랩으로 이동하는 활동 내역 섹션.
+/// v3 루트의 「커뮤니티 활동」 섹션 — 내가 쓴 글 / 댓글 단 글 / 스크랩으로 이동한다.
 public struct MyActiveLogSection: View {
 
     // MARK: - Property
@@ -29,32 +30,23 @@ public struct MyActiveLogSection: View {
     // MARK: - Body
 
     public var body: some View {
-        Section(content: {
-            sectionContent
-        }, header: {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
             SectionHeaderView(title: sectionType.rawValue, weight: .semibold)
-        })
-    }
 
-    // MARK: - Function
+            MyPageListCard {
+                ForEach(MyActiveLogsType.allCases) { log in
+                    if log != MyActiveLogsType.allCases.first {
+                        MyPageListDivider()
+                    }
 
-    private var sectionContent: some View {
-        ForEach(MyActiveLogsType.allCases) { log in
-            content(log)
+                    MyPageListRow(
+                        systemIcon: log.icon,
+                        iconColor: log.backgroundColor,
+                        title: log.rawValue,
+                        action: { onSelect(log) }
+                    )
+                }
+            }
         }
-    }
-
-    private func content(_ log: MyActiveLogsType) -> some View {
-        Button(action: {
-            onSelect(log)
-        }, label: {
-            MyPageSectionRow(
-                systemIcon: log.icon,
-                title: log.rawValue,
-                rightImage: "chevron.right",
-                iconBackgroundColor: log.backgroundColor
-            )
-        })
-        .buttonStyle(.borderless)
     }
 }
