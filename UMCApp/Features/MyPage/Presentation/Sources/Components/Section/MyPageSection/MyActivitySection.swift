@@ -28,6 +28,7 @@ public struct MyActivitySection: View {
     private let onStudyTap: (() -> Void)?
     private let onActivityTap: (() -> Void)?
     private let isActivityPending: Bool
+    private let onCertificateTap: (() -> Void)?
 
     // MARK: - Init
 
@@ -39,13 +40,15 @@ public struct MyActivitySection: View {
     ///   - onActivityTap: 활동 이력 진입. 프로필 스냅샷이 아직 없으면 `nil`.
     ///   - isActivityPending: `true`면 목적지는 있는데 스냅샷을 기다리는 중이라는 뜻 —
     ///     행이 chevron 대신 진행 표시를 보여주고 탭을 막는다.
+    ///   - onCertificateTap: 수료증 ・인증서 목록 진입 (#1450).
     public init(
         sectionType: MyPageSectionType = .myActivity,
         studyCount: String?,
         activityCount: String?,
         onStudyTap: (() -> Void)? = nil,
         onActivityTap: (() -> Void)? = nil,
-        isActivityPending: Bool = false
+        isActivityPending: Bool = false,
+        onCertificateTap: (() -> Void)? = nil
     ) {
         self.sectionType = sectionType
         self.studyCount = studyCount
@@ -53,6 +56,7 @@ public struct MyActivitySection: View {
         self.onStudyTap = onStudyTap
         self.onActivityTap = onActivityTap
         self.isActivityPending = isActivityPending
+        self.onCertificateTap = onCertificateTap
     }
 
     // MARK: - Body
@@ -80,6 +84,15 @@ public struct MyActivitySection: View {
                     value: activityCount.map { "\($0)건" } ?? "-",
                     action: onActivityTap,
                     isPending: isActivityPending
+                )
+
+                MyPageListDivider()
+
+                MyPageListRow(
+                    systemIcon: "rosette",
+                    iconColor: MyPageListIconColor.green,
+                    title: "수료증 ・인증서",
+                    action: onCertificateTap
                 )
             }
         }

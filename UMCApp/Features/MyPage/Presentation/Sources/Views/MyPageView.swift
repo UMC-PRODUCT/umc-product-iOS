@@ -77,7 +77,10 @@ struct MyPageView: View {
                         onStudyTap: onOpenStudy,
                         onActivityTap: activityLogsAction,
                         // 활동 이력도 「내 정보 편집」과 같은 프로필 스냅샷을 기다린다.
-                        isActivityPending: viewModel.isCardEditPending
+                        isActivityPending: viewModel.isCardEditPending,
+                        onCertificateTap: {
+                            pathStore.push(MyPageDestination.certificates, on: .mypage)
+                        }
                     )
 
                     MyActiveLogSection { logType in

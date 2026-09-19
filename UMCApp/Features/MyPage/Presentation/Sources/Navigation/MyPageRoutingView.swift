@@ -37,6 +37,9 @@ struct MyPageRoutingView: View {
         case .activityLogs(let activityLogs):
             MyActivityLogsView(activityLogs: activityLogs)
 
+        case .certificates:
+            CertificateListView(container: container)
+
         case .cardEdit(let profileData):
             MyPageProfileView(container: container, profileData: profileData)
 
