@@ -49,6 +49,9 @@ enum MyPageDestination: Hashable {
     /// 목적지는 스냅샷을 싣지 않는다 — 탭 루트(``MyPageView``)와 같은 방식이다.
     case settings
 
+    /// 이메일 변경 (#1453). 화면은 `AuthPresentation`이 소유한다.
+    case changeEmail
+
     /// 비밀번호 변경. 화면은 `AuthPresentation` 이 소유한다.
     case changePassword
 }

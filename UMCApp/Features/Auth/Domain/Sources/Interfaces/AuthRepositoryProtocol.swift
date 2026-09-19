@@ -79,6 +79,12 @@ public protocol AuthRepositoryProtocol {
     ///   - newPassword: 새로 설정할 평문 비밀번호
     func changePassword(currentPassword: String, newPassword: String) async throws
 
+    /// 로그인 상태에서 이메일을 변경한다.
+    ///
+    /// 새 이메일로 `CHANGE_EMAIL` 목적 인증을 마친 뒤 받은 토큰을 넘긴다.
+    /// - Parameter emailVerificationToken: 새 이메일 인증 완료 토큰
+    func changeEmail(emailVerificationToken: String) async throws
+
     /// OAuth 수단 연동을 해제한다.
     /// - Parameters:
     ///   - memberOAuthId: 해제할 OAuth 연동 ID

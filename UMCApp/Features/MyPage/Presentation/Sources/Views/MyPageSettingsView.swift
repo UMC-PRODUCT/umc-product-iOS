@@ -35,8 +35,8 @@ struct MyPageSettingsView: View {
     @State private var connectingSocial: SocialType?
 
     @Environment(ErrorHandler.self) private var errorHandler
-    @Environment(\.appFlow) private var appFlow
     @Environment(PathStore.self) private var pathStore
+    @Environment(\.appFlow) private var appFlow
 
     private let container: DIContainer
 
@@ -78,7 +78,8 @@ struct MyPageSettingsView: View {
                     pathStore.push(MyPageDestination.changePassword, on: .mypage)
                 },
                 onLogout: { endSession("logout", perform: viewModel.logout) },
-                onDeleteAccount: { endSession("deleteAccount", perform: viewModel.deleteAccount) }
+                onDeleteAccount: { endSession("deleteAccount", perform: viewModel.deleteAccount) },
+                onChangeEmail: { pathStore.push(MyPageDestination.changeEmail, on: .mypage) }
             )
 
             UMCChannelSection()

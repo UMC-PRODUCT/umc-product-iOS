@@ -180,6 +180,20 @@ final class MockAuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         }
     }
 
+    // MARK: - changeEmail
+
+    var changeEmailError: Error?
+    private(set) var changeEmailCallCount = 0
+    private(set) var changeEmailReceivedToken: String?
+
+    func changeEmail(emailVerificationToken: String) async throws {
+        changeEmailCallCount += 1
+        changeEmailReceivedToken = emailVerificationToken
+        if let changeEmailError {
+            throw changeEmailError
+        }
+    }
+
     // MARK: - deleteMemberOAuth
 
     var deleteMemberOAuthError: Error?
