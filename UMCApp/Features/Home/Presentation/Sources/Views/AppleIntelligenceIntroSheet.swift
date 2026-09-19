@@ -23,7 +23,19 @@ fileprivate enum Constants {
     static let engineImage = "apple.intelligence"
     static let settingsImage = "gearshape"
 
-    static let headerIconSize: CGFloat = 16
+    static let heroIconSize: CGFloat = 72
+    static let heroFrameSize: CGFloat = 128
+    static let glowSize: CGFloat = 88
+    static let glowBlurRadius: CGFloat = 24
+    static let glowOpacity: Double = 0.45
+    static let glowRotationDuration: TimeInterval = 8
+    static let revealStartScale: CGFloat = 0.5
+    static let revealBlurRadius: CGFloat = 12
+    static let revealStartAngle: Double = -90
+    static let revealDelay: TimeInterval = 0.35
+    static let revealDuration: TimeInterval = 0.8
+    static let revealBounce: Double = 0.4
+
     static let featureIconSize: CGFloat = 20
     static let featureIconFrame: CGFloat = 28
     static let cardPadding: EdgeInsets = .init(
@@ -100,20 +112,17 @@ struct AppleIntelligenceIntroSheet: View {
     // MARK: - View Component
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-            HStack(spacing: DefaultSpacing.spacing8) {
-                Image(systemName: Constants.engineImage)
-                    .font(.system(size: Constants.headerIconSize, weight: .medium))
-                    .foregroundStyle(.appleIntelligence)
+        VStack(spacing: DefaultSpacing.spacing12) {
+            HeroSymbol()
 
-                Text(Constants.engineLabel)
-                    .appFont(.callout, weight: .semibold, color: .grey700)
-            }
-            .accessibilityElement(children: .combine)
+            Text(Constants.engineLabel)
+                .appFont(.callout, weight: .semibold, color: .grey700)
 
             Text(Constants.title)
                 .appFont(.title2, weight: .semibold, color: .grey900)
+                .multilineTextAlignment(.center)
         }
+        .frame(maxWidth: .infinity)
     }
 
     private var featureCard: some View {
@@ -185,6 +194,77 @@ extension AppleIntelligenceIntroSheet {
               case .unavailable(.appleIntelligenceNotEnabled) = availability
         else { return false }
         return true
+    }
+}
+
+// MARK: - HeroSymbol
+
+/// 시트 상단의 `apple.intelligence` 히어로 심볼. 회전하며 튀어 오르듯 등장한 뒤,
+/// 뒤편 글로우가 천천히 돌고 심볼은 숨 쉬듯 반복한다.
+private struct HeroSymbol: View {
+
+    // MARK: - Property
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @State private var isRevealed = false
+    @State private var isAmbient = false
+
+    // MARK: - Body
+
+    var body: some View {
+        ZStack {
+            glow
+
+            // apple.intelligence 는 Draw 주석이 없어 drawOn 이 효과가 없다 — 등장은 아래 스프링이 맡는다.
+            // breathe 기본값은 불투명도도 흔들어 그라디언트가 바래 보여 plain(스케일만)을 쓴다.
+            Image(systemName: Constants.engineImage)
+                .font(.system(size: Constants.heroIconSize, weight: .medium))
+                .foregroundStyle(.appleIntelligence)
+                .symbolEffect(.breathe.plain, isActive: isAmbient)
+        }
+        .frame(width: Constants.heroFrameSize, height: Constants.heroFrameSize)
+        .scaleEffect(isRevealed ? 1 : Constants.revealStartScale)
+        .rotationEffect(.degrees(isRevealed ? 0 : Constants.revealStartAngle))
+        .blur(radius: isRevealed ? 0 : Constants.revealBlurRadius)
+        .opacity(isRevealed ? 1 : 0)
+        .accessibilityHidden(true)
+        .onAppear(perform: reveal)
+    }
+
+    // MARK: - View Component
+
+    private var glow: some View {
+        Circle()
+            .fill(.appleIntelligence)
+            .frame(width: Constants.glowSize, height: Constants.glowSize)
+            .animation(
+                .linear(duration: Constants.glowRotationDuration)
+                    .repeatForever(autoreverses: false)
+            ) {
+                $0.rotationEffect(.degrees(isAmbient ? 360 : 0))
+            }
+            .blur(radius: Constants.glowBlurRadius)
+            .opacity(Constants.glowOpacity)
+    }
+
+    // MARK: - Function
+
+    private func reveal() {
+        guard !reduceMotion else {
+            isRevealed = true
+            return
+        }
+
+        // 시트가 올라오는 동안 등장이 끝나 버리지 않게 잠시 늦춘다.
+        withAnimation(
+            .spring(duration: Constants.revealDuration, bounce: Constants.revealBounce)
+                .delay(Constants.revealDelay)
+        ) {
+            isRevealed = true
+        } completion: {
+            isAmbient = true
+        }
     }
 }
 
