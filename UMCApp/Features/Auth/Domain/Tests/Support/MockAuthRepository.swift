@@ -60,6 +60,28 @@ final class MockAuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         }
     }
 
+    // MARK: - unregisterPushInstallation / revokeRefreshToken
+
+    /// 서버 세션 해제 호출 순서 기록
+    private(set) var revokeCallLog: [String] = []
+
+    var unregisterPushInstallationError: Error?
+    var revokeRefreshTokenError: Error?
+
+    func unregisterPushInstallation() async throws {
+        revokeCallLog.append("unregisterPushInstallation")
+        if let unregisterPushInstallationError {
+            throw unregisterPushInstallationError
+        }
+    }
+
+    func revokeRefreshToken() async throws {
+        revokeCallLog.append("revokeRefreshToken")
+        if let revokeRefreshTokenError {
+            throw revokeRefreshTokenError
+        }
+    }
+
     // MARK: - loginKakao
 
     var loginKakaoResult: Result<OAuthLoginResult, Error> = .failure(MockError.notStubbed)

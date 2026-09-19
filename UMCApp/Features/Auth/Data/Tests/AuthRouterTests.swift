@@ -302,6 +302,35 @@ struct AuthRouterEmailLoginTests {
     }
 }
 
+// MARK: - Suite: 로그아웃 서버 세션 해제 케이스 계약
+
+@Suite("AuthRouter — 로그아웃 서버 세션 해제 케이스 계약")
+struct AuthRouterLogoutTests {
+
+    @Test("logout — POST /api/v1/auth/logout, 바디는 { refreshToken }")
+    func logoutContract() throws {
+        let router = AuthRouter.logout(body: LogoutRequestDTO(refreshToken: "refresh-token"))
+        #expect(router.path == "/api/v1/auth/logout")
+        #expect(router.method == .post)
+        guard case .requestJSONEncodable = router.task else {
+            Issue.record("task가 .requestJSONEncodable 이어야 함 — 실제: \(router.task)")
+            return
+        }
+
+        let json = try encodeToJSON(LogoutRequestDTO(refreshToken: "refresh-token"))
+        #expect(json["refreshToken"] as? String == "refresh-token")
+        #expect(json.keys.count == 1)
+    }
+
+    @Test("unregisterFCMInstallation — DELETE /api/v1/notifications/fcm/installations/{id}")
+    func unregisterFCMInstallationContract() {
+        let router = AuthRouter.unregisterFCMInstallation(installationId: "install-1")
+        #expect(router.path == "/api/v1/notifications/fcm/installations/install-1")
+        #expect(router.method == .delete)
+        #expect(isRequestPlain(router.task))
+    }
+}
+
 // MARK: - Test Helpers
 
 private func makeEmailLoginRequestDTO() -> EmailLoginRequestDTO {

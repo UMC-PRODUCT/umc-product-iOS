@@ -253,6 +253,7 @@ public final class MyPageViewModel {
     @MainActor
     public func logout() async throws {
         UserDefaults.standard.set(false, forKey: AppStorageKey.canAutoLogin)
+        await container.resolve(RevokeSessionUseCaseProtocol.self).execute()
         try await tearDownSession()
     }
 
