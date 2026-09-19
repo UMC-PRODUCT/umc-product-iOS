@@ -53,20 +53,21 @@ public struct MyPagePostListQueryDTO: Encodable {
 /// - `GET /api/v1/posts/scrapped` — 스크랩한 글
 ///
 /// `userNickname`/`scrapCount`는 응답에 포함되지 않아 도메인 변환 시 `nil` / `0`으로 채웁니다.
+/// 세 엔드포인트는 서버의 deprecated `PostResponse.from(PostInfo)`로 응답을 만들어
+/// `authorId`·`authorPart`가 `null`로 올 수 있고, `isAuthor` 필드는 아예 없습니다.
 public struct MyPagePostResponseDTO: Codable {
     let postId: String
     let title: String
     let content: String
     let category: String
-    let authorId: String
+    let authorId: String?
     let authorName: String
     let authorProfileImage: String?
-    let authorPart: UMCPartType
+    let authorPart: UMCPartType?
     let createdAt: String
     let commentCount: String
     let likeCount: String
     let isLiked: Bool
-    let isAuthor: Bool
     let lightningInfo: LightningInfoDTO?
 
     private enum CodingKeys: String, CodingKey {
@@ -82,7 +83,6 @@ public struct MyPagePostResponseDTO: Codable {
         case commentCount
         case likeCount
         case isLiked
-        case isAuthor
         case lightningInfo
     }
 
@@ -92,15 +92,14 @@ public struct MyPagePostResponseDTO: Codable {
         title = try container.decode(String.self, forKey: .title)
         content = try container.decode(String.self, forKey: .content)
         category = try container.decode(String.self, forKey: .category)
-        authorId = try container.decodeFlexibleString(forKey: .authorId)
+        authorId = try container.decodeFlexibleStringIfPresent(forKey: .authorId)
         authorName = try container.decode(String.self, forKey: .authorName)
         authorProfileImage = try container.decodeIfPresent(String.self, forKey: .authorProfileImage)
-        authorPart = try container.decode(UMCPartType.self, forKey: .authorPart)
+        authorPart = try container.decodeIfPresent(UMCPartType.self, forKey: .authorPart)
         createdAt = try container.decode(String.self, forKey: .createdAt)
         commentCount = try container.decodeFlexibleString(forKey: .commentCount)
         likeCount = try container.decodeFlexibleString(forKey: .likeCount)
         isLiked = try container.decode(Bool.self, forKey: .isLiked)
-        isAuthor = try container.decode(Bool.self, forKey: .isAuthor)
         lightningInfo = try container.decodeIfPresent(LightningInfoDTO.self, forKey: .lightningInfo)
     }
 
@@ -110,15 +109,14 @@ public struct MyPagePostResponseDTO: Codable {
         try container.encode(title, forKey: .title)
         try container.encode(content, forKey: .content)
         try container.encode(category, forKey: .category)
-        try container.encode(authorId, forKey: .authorId)
+        try container.encodeIfPresent(authorId, forKey: .authorId)
         try container.encode(authorName, forKey: .authorName)
         try container.encodeIfPresent(authorProfileImage, forKey: .authorProfileImage)
-        try container.encode(authorPart, forKey: .authorPart)
+        try container.encodeIfPresent(authorPart, forKey: .authorPart)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(commentCount, forKey: .commentCount)
         try container.encode(likeCount, forKey: .likeCount)
         try container.encode(isLiked, forKey: .isLiked)
-        try container.encode(isAuthor, forKey: .isAuthor)
         try container.encodeIfPresent(lightningInfo, forKey: .lightningInfo)
     }
 }
@@ -143,7 +141,6 @@ public extension MyPagePostResponseDTO {
             commentCount: Int(commentCount) ?? 0,
             scrapCount: 0,
             isLiked: isLiked,
-            isAuthor: isAuthor,
             lightningInfo: lightningInfo?.toDomain()
         )
     }

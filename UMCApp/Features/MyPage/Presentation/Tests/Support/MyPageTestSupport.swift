@@ -210,7 +210,6 @@ func makeStubCommunityItem(
         likeCount: 0,
         commentCount: 0,
         scrapCount: 0,
-        isAuthor: false,
         lightningInfo: nil
     )
 }

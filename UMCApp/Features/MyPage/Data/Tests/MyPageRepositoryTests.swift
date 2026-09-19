@@ -282,8 +282,7 @@ private enum Fixture {
             "createdAt": "2026-01-01T00:00:00Z",
             "commentCount": "5",
             "likeCount": "10",
-            "isLiked": false,
-            "isAuthor": false
+            "isLiked": false
         }
         """
     }
