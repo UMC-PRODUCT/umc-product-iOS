@@ -182,9 +182,16 @@ public final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendab
     /// - Note: 백엔드(MEMBER-003)는 탈퇴 전 회원 정보 스냅샷을 `result`로 반환하지만
     ///   클라이언트는 사용하지 않으므로 `EmptyResult`로 성공 여부만 검증합니다.
     ///   (`EmptyResult`는 임의 JSON 객체·`result: null` 모두 흡수)
-    public func deleteMember() async throws {
+    public func deleteMember(googleAccessToken: String?, kakaoAccessToken: String?) async throws {
         do {
-            let response = try await adapter.request(MyPageRouter.deleteMember)
+            let response = try await adapter.request(
+                MyPageRouter.deleteMember(
+                    request: DeleteMemberRequestDTO(
+                        googleAccessToken: googleAccessToken,
+                        kakaoAccessToken: kakaoAccessToken
+                    )
+                )
+            )
             let apiResponse = try decoder.decode(
                 APIResponse<EmptyResult>.self,
                 from: response.data

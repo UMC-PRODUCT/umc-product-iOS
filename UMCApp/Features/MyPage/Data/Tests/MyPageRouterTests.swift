@@ -133,7 +133,9 @@ struct MyPageRouterMigratedPathMethodTests {
 
     @Test("deleteMember — path는 /api/v1/member, method는 .delete")
     func deleteMember() {
-        let router = MyPageRouter.deleteMember
+        let router = MyPageRouter.deleteMember(
+            request: DeleteMemberRequestDTO(googleAccessToken: nil, kakaoAccessToken: nil)
+        )
         #expect(router.path == "/api/v1/member")
         #expect(router.method == .delete)
     }
@@ -154,7 +156,9 @@ struct MyPageRouterMigratedPathMethodTests {
         let patch = MyPageRouter.patchMember(
             request: UpdateMemberProfileImageRequestDTO(profileImageId: "x")
         )
-        let delete = MyPageRouter.deleteMember
+        let delete = MyPageRouter.deleteMember(
+            request: DeleteMemberRequestDTO(googleAccessToken: nil, kakaoAccessToken: nil)
+        )
         #expect(patch.path == delete.path)      // 둘 다 /api/v1/member
         #expect(patch.method == .patch)
         #expect(delete.method == .delete)
@@ -166,14 +170,13 @@ struct MyPageRouterMigratedPathMethodTests {
 @Suite("MyPageRouter — 이식 케이스 task 형태 계약")
 struct MyPageRouterMigratedTaskTests {
 
-    @Test("조회·삭제 계열(getMemberProfile/getChallengerProfile/deleteMember) — task는 .requestPlain")
+    @Test("조회 계열(getMemberProfile/getChallengerProfile) — task는 .requestPlain")
     func plainTasks() {
         #expect(isRequestPlain(MyPageRouter.getMemberProfile(memberId: 7).task))
         #expect(isRequestPlain(MyPageRouter.getChallengerProfile(challengerId: 3).task))
-        #expect(isRequestPlain(MyPageRouter.deleteMember.task))
     }
 
-    @Test("본문 전송 계열(addChallengerRecord/patchMember/patchMemberProfileLinks) — task는 .requestJSONEncodable")
+    @Test("본문 전송 계열(기록 추가·프로필 수정·링크 수정·탈퇴) — task는 .requestJSONEncodable")
     func jsonEncodableTasks() {
         #expect(isRequestJSONEncodable(MyPageRouter.addChallengerRecord(code: "ABC").task))
         #expect(isRequestJSONEncodable(
@@ -186,6 +189,29 @@ struct MyPageRouterMigratedTaskTests {
                 request: UpdateMemberProfileLinksRequestDTO(links: [])
             ).task
         ))
+        #expect(isRequestJSONEncodable(
+            MyPageRouter.deleteMember(
+                request: DeleteMemberRequestDTO(googleAccessToken: nil, kakaoAccessToken: nil)
+            ).task
+        ))
+    }
+
+    @Test("deleteMember — task 바디에 Google·Kakao access token이 실린다")
+    func deleteMemberTaskBodyCarriesTokens() throws {
+        let router = MyPageRouter.deleteMember(
+            request: DeleteMemberRequestDTO(
+                googleAccessToken: "google-token",
+                kakaoAccessToken: "kakao-token"
+            )
+        )
+        guard case .requestJSONEncodable(let body) = router.task else {
+            Issue.record("Expected .requestJSONEncodable, got \(router.task)")
+            return
+        }
+        let json = try encodeToJSON(body)
+        #expect(json["googleAccessToken"] as? String == "google-token")
+        #expect(json["kakaoAccessToken"] as? String == "kakao-token")
+        #expect(json.keys.count == 2)
     }
 
     @Test("활동 게시글 3종 — task는 .requestParameters(URLEncoding.queryString) + page/size 포함")
@@ -270,6 +296,20 @@ struct MyPageRouterEncodingTests {
         #expect(links.count == 2)
         #expect(links.first?["type"] as? String == "GITHUB")
         #expect(links.first?["link"] as? String == "https://gh")
+    }
+
+    @Test("DeleteMemberRequestDTO — nil 토큰은 키째 빠진다 (서버는 해당 Provider revoke만 건너뜀)")
+    func deleteMemberDTOOmitsNilTokens() throws {
+        let kakaoOnly = try encodeToJSON(
+            DeleteMemberRequestDTO(googleAccessToken: nil, kakaoAccessToken: "kakao-token")
+        )
+        #expect(kakaoOnly["kakaoAccessToken"] as? String == "kakao-token")
+        #expect(kakaoOnly.keys.count == 1)
+
+        let empty = try encodeToJSON(
+            DeleteMemberRequestDTO(googleAccessToken: nil, kakaoAccessToken: nil)
+        )
+        #expect(empty.isEmpty)
     }
 
     @Test("MyPagePostListQueryDTO.toParameters — sort가 비면 page/size 2키만 포함")

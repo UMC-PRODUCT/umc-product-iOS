@@ -190,7 +190,10 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         disconnectingSocialType = connection.socialType
         defer { disconnectingSocialType = nil }
 
-        let verification = try await makeDeleteVerification(for: connection.socialType)
+        let verification = try await connection.socialType.fetchUnlinkAccessTokens(
+            kakaoLoginManager: kakaoLoginManager,
+            googleLoginManager: googleLoginManager
+        )
 
         try await deleteMemberOAuthUseCase.execute(
             memberOAuthId: connection.memberOAuthId,
@@ -232,23 +235,6 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
             try? await Task.sleep(for: .seconds(2))
             guard !Task.isCancelled else { return }
             self?.didRecentlyAddActivityLog = false
-        }
-    }
-    
-    /// 연동 해제 요청에 필요한 소셜별 검증 토큰을 발급받습니다.
-    ///
-    /// Apple은 서버가 별도 검증 토큰을 요구하지 않아 두 토큰 모두 `nil`입니다.
-    @MainActor
-    private func makeDeleteVerification(
-        for socialType: SocialType
-    ) async throws -> (googleAccessToken: String?, kakaoAccessToken: String?) {
-        switch socialType {
-        case .kakao:
-            return (nil, try await kakaoLoginManager.fetchAccessToken())
-        case .apple:
-            return (nil, nil)
-        case .google:
-            return (try await googleLoginManager.fetchAccessToken(), nil)
         }
     }
 }

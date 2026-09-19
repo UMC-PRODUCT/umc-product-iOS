@@ -24,8 +24,8 @@ public enum MyPageRouter {
     case patchMember(request: UpdateMemberProfileImageRequestDTO)
     /// 회원 정보 수정(외부 링크 반영)
     case patchMemberProfileLinks(request: UpdateMemberProfileLinksRequestDTO)
-    /// 회원 탈퇴
-    case deleteMember
+    /// 회원 탈퇴 (소셜 연동 해제용 access token 동봉)
+    case deleteMember(request: DeleteMemberRequestDTO)
     /// 내가 쓴 글 목록 (`GET /api/v1/posts/my`)
     case getMyPosts(query: MyPagePostListQueryDTO)
     /// 댓글 단 글 목록 (`GET /api/v1/posts/commented`)
@@ -91,7 +91,7 @@ extension MyPageRouter: BaseTargetType {
 
     public var task: Moya.Task {
         switch self {
-        case .getMemberProfile, .getChallengerProfile, .deleteMember:
+        case .getMemberProfile, .getChallengerProfile:
             return .requestPlain
         case .addChallengerRecord(let code):
             return .requestJSONEncodable(
@@ -100,6 +100,8 @@ extension MyPageRouter: BaseTargetType {
         case .patchMember(let request):
             return .requestJSONEncodable(request)
         case .patchMemberProfileLinks(let request):
+            return .requestJSONEncodable(request)
+        case .deleteMember(let request):
             return .requestJSONEncodable(request)
         case .getMyPosts(let query), .getCommentedPosts(let query), .getScrappedPosts(let query):
             // 기본값(.brackets)은 `sort[]=` 로 직렬화돼 Spring Pageable 이 `sort` 를 무시한다.

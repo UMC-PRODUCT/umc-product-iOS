@@ -37,7 +37,12 @@ public protocol MyPageRepositoryProtocol: Sendable {
     ) async throws -> ProfileData
     
     /// 회원 탈퇴를 수행합니다.
-    func deleteMember() async throws
+    ///
+    /// 전달한 access token의 Provider는 서버가 앱 연결도 함께 해제(revoke)합니다.
+    /// - Parameters:
+    ///   - googleAccessToken: Google 연동 해제용 액세스 토큰
+    ///   - kakaoAccessToken: Kakao 연동 해제용 액세스 토큰
+    func deleteMember(googleAccessToken: String?, kakaoAccessToken: String?) async throws
     
     /// 내가 쓴 글 목록을 조회합니다.
     func fetchMyPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage
