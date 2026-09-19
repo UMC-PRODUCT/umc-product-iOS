@@ -56,6 +56,8 @@ public enum AuthRouter: BaseTargetType {
     case changeEmail(body: ChangeEmailRequestDTO)
     /// 내 OAuth 연동 정보 조회
     case fetchMyOAuth
+    /// 내 종합 정보 조회 (v2 — 로컬 비밀번호 보유 여부 확인용)
+    case fetchMemberSummary
     /// 로그인 OAuth 수단 추가 연동
     case addMemberOAuth(body: AddMemberOAuthRequestDTO)
     /// 로그인 OAuth 수단 연동 해제
@@ -108,6 +110,8 @@ public enum AuthRouter: BaseTargetType {
             return "/api/v1/member/email"
         case .fetchMyOAuth:
             return "/api/v1/member-oauth/me"
+        case .fetchMemberSummary:
+            return "/api/v2/member/me"
         case .addMemberOAuth:
             return "/api/v1/member-oauth"
         case .deleteMemberOAuth(let memberOAuthId, _):
@@ -124,6 +128,8 @@ public enum AuthRouter: BaseTargetType {
     public var method: Moya.Method {
         switch self {
         case .checkEmailAvailability, .fetchSchools, .fetchTerms, .fetchMyOAuth:
+            return .get
+        case .fetchMemberSummary:
             return .get
         case .loginKakao, .loginApple, .loginGoogle, .loginByEmail,
              .sendEmailVerification, .resendEmailVerification, .verifyEmailCode,
@@ -179,6 +185,8 @@ public enum AuthRouter: BaseTargetType {
         case .changeEmail(let body):
             return .requestJSONEncodable(body)
         case .fetchMyOAuth:
+            return .requestPlain
+        case .fetchMemberSummary:
             return .requestPlain
         case .addMemberOAuth(let body):
             return .requestJSONEncodable(body)
