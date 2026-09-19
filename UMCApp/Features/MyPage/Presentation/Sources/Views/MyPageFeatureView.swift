@@ -40,6 +40,7 @@ public struct MyPageFeatureView: View {
 
     private let onOpenBusinessCard: (BusinessCardEntry) -> Void
     private let onOpenStudy: () -> Void
+    private let onOpenProjects: () -> Void
 
     // MARK: - Init
 
@@ -49,12 +50,15 @@ public struct MyPageFeatureView: View {
     ///   - onOpenStudy: 「나의 스터디」 행 탭 시 App 셸에 스터디 화면 진입을 요청한다. 스터디의
     ///     정본 소유자는 Activity 탭이므로 MyPage는 그 탭도, 그 안의 섹션도 알지 않는다 —
     ///     명함과 같은 규약으로 요청만 올리고 번역은 App 셸이 한다.
+    ///   - onOpenProjects: 「내 프로젝트」 행 탭 시 App 셸에 Project 화면 진입을 요청한다 (#1476).
     public init(
         onOpenBusinessCard: @escaping (BusinessCardEntry) -> Void,
-        onOpenStudy: @escaping () -> Void
+        onOpenStudy: @escaping () -> Void,
+        onOpenProjects: @escaping () -> Void
     ) {
         self.onOpenBusinessCard = onOpenBusinessCard
         self.onOpenStudy = onOpenStudy
+        self.onOpenProjects = onOpenProjects
     }
 
     // MARK: - Body
@@ -63,7 +67,8 @@ public struct MyPageFeatureView: View {
         MyPageView(
             container: di,
             onOpenBusinessCard: onOpenBusinessCard,
-            onOpenStudy: onOpenStudy
+            onOpenStudy: onOpenStudy,
+            onOpenProjects: onOpenProjects
         )
     }
 }

@@ -22,6 +22,7 @@ import MaintenanceDomain
 import MaintenancePresentation
 import MyPagePresentation
 import NoticePresentation
+import ProjectPresentation
 
 /// `.main` 상태의 루트 탭 셸.
 ///
@@ -148,6 +149,9 @@ struct RootTabView: View {
                 .navigationDestination(for: BusinessCardDestination.self) { destination in
                     BusinessCardRoutingView(destination: destination, container: di)
                 }
+                .navigationDestination(for: ProjectDestination.self) { destination in
+                    ProjectRoutingView(destination: destination, container: di)
+                }
                 #if DEBUG
                 .navigationDestination(for: BusinessCardDebugDestination.self) { _ in
                     BusinessCardDebugView(container: di)
@@ -217,6 +221,9 @@ struct RootTabView: View {
                 },
                 onOpenStudy: {
                     pendingActivityEntry = Self.enterActivityStudy(pathStore: pathStore)
+                },
+                onOpenProjects: {
+                    pathStore.push(ProjectDestination.myProjects, on: .mypage)
                 }
             )
         }
