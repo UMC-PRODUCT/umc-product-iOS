@@ -152,10 +152,14 @@ public struct CommunityThreadRepository: CommunityThreadRepositoryProtocol, @unc
     }
 
     public func inviteMembers(threadId: String, memberIds: [String]) async throws {
-        _ = try await payload(
-            EmptyResult.self,
-            from: .invite(threadId: threadId, body: InviteMembersBody(memberIds: memberIds))
-        )
+        do {
+            _ = try await payload(
+                EmptyResult.self,
+                from: .invite(threadId: threadId, body: InviteMembersBody(memberIds: memberIds))
+            )
+        } catch {
+            throw Self.inviteError(from: error)
+        }
     }
 
     public func kickMember(threadId: String, memberId: String) async throws {

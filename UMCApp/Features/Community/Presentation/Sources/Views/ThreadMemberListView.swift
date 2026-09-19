@@ -67,8 +67,12 @@ struct ThreadMemberListView: View {
             .alertPrompt(item: $inviteViewModel.alertPrompt)
             // 선택 화면에 전송 버튼이 없어 닫을 때 초대한다 (`ThreadInviteViewModel` 참고).
             .sheet(isPresented: $isInviteSheetPresented, onDismiss: invite) {
-                SelectedChallengerView(challenger: $inviteViewModel.invitees)
-                    .presentationDragIndicator(.visible)
+                SelectedChallengerView(
+                    challenger: $inviteViewModel.invitees,
+                    selectableMemberIds: inviteViewModel.invitableMemberIds
+                )
+                .presentationDragIndicator(.visible)
+                .task { await inviteViewModel.loadInvitableMembers() }
             }
             .task { await viewModel.load() }
             .onChange(of: viewModel.didLeave) { _, didLeave in
