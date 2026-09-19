@@ -194,6 +194,16 @@ final class MockAuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         }
     }
 
+    // MARK: - fetchHasLocalCredential
+
+    var fetchHasLocalCredentialResult: Result<Bool, Error> = .failure(MockError.notStubbed)
+    private(set) var fetchHasLocalCredentialCallCount = 0
+
+    func fetchHasLocalCredential() async throws -> Bool {
+        fetchHasLocalCredentialCallCount += 1
+        return try fetchHasLocalCredentialResult.get()
+    }
+
     // MARK: - deleteMemberOAuth
 
     var deleteMemberOAuthError: Error?

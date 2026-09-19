@@ -20,16 +20,26 @@ public struct AuthSection: View {
 
     private let sectionType: MyPageSectionType
     @Binding private var alertPrompt: AlertPrompt?
+    private let hasLocalCredential: Bool?
     private let onChangePassword: () -> Void
     private let onLogout: () -> Void
     private let onDeleteAccount: () -> Void
     private let onChangeEmail: () -> Void
 
+    // MARK: - Constant
+
+    fileprivate enum Constants {
+        static let registerPasswordTitle: String = "비밀번호 등록"
+    }
+
     // MARK: - Init
 
+    /// - Parameter hasLocalCredential: 로컬 비밀번호 보유 여부. `false`면 비밀번호 행이
+    ///   「비밀번호 등록」이 되고, `nil`(아직 모름)이면 행을 숨긴다.
     public init(
         sectionType: MyPageSectionType = .auth,
         alertPrompt: Binding<AlertPrompt?>,
+        hasLocalCredential: Bool?,
         onChangePassword: @escaping () -> Void,
         onLogout: @escaping () -> Void,
         onDeleteAccount: @escaping () -> Void,
@@ -37,6 +47,7 @@ public struct AuthSection: View {
     ) {
         self.sectionType = sectionType
         self._alertPrompt = alertPrompt
+        self.hasLocalCredential = hasLocalCredential
         self.onChangePassword = onChangePassword
         self.onLogout = onLogout
         self.onDeleteAccount = onDeleteAccount
@@ -57,7 +68,9 @@ public struct AuthSection: View {
 
     private var sectionContent: some View {
         ForEach(AuthType.allCases, id: \.rawValue) { auth in
-            content(auth)
+            if auth != .changePassword || hasLocalCredential != nil {
+                content(auth)
+            }
         }
     }
 
@@ -68,13 +81,18 @@ public struct AuthSection: View {
             // 회원 탈퇴는 빨간색으로 표시
             MyPageSectionRow(
                 systemIcon: auth.icon,
-                title: auth.rawValue,
+                title: title(for: auth),
                 rightText: "",
                 iconBackgroundColor: auth.color,
                 titleColor: auth == .accountDelete ? .red : .black
             )
         })
         .buttonStyle(.borderless)
+    }
+
+    private func title(for auth: AuthType) -> String {
+        guard auth == .changePassword, hasLocalCredential == false else { return auth.rawValue }
+        return Constants.registerPasswordTitle
     }
 
     /// 인증 타입에 따른 액션을 처리하고, 파괴적 작업은 AlertPrompt로 확인받는다.

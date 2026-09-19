@@ -1,10 +1,10 @@
 {
-  "originHash" : "3b4d5eb52fd91f9a8eac9168200d2f2c7ef1eaac081b00b937eaa9a0ee9c9563",
+  "originHash" : "b68a7561af912294b7ccb55e29d8e179b6abe2357c2e8b69dd36b5b92e85bd9c",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/abseil-cpp-binary.git",
+      "location" : "https://github.com/google/abseil-cpp-binary",
       "state" : {
         "revision" : "bbe8b69694d7873315fd3a4ad41efe043e1c07c5",
         "version" : "1.2024072200.0"
@@ -13,25 +13,25 @@
     {
       "identity" : "alamofire",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Alamofire/Alamofire.git",
+      "location" : "https://github.com/Alamofire/Alamofire",
       "state" : {
-        "revision" : "3f99050e75bbc6fe71fc323adabb039756680016",
-        "version" : "5.11.1"
+        "revision" : "bda9ed57d72988a3a2ada33d824583541f86eac6",
+        "version" : "5.12.2"
       }
     },
     {
       "identity" : "app-check",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/app-check.git",
+      "location" : "https://github.com/google/app-check",
       "state" : {
-        "revision" : "bb4002485ff867768dec13bf904a2ddb050bd1b1",
-        "version" : "11.3.0"
+        "revision" : "97f7d74dd0e8f3d0fe5fc75cc8957aa73bdc948a",
+        "version" : "11.3.2"
       }
     },
     {
       "identity" : "appauth-ios",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/openid/AppAuth-iOS.git",
+      "location" : "https://github.com/openid/AppAuth-iOS",
       "state" : {
         "revision" : "a7caeda164dc5108bf4649472b28a5af65dc6f33",
         "version" : "2.1.0"
@@ -58,7 +58,7 @@
     {
       "identity" : "googleappmeasurement",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/GoogleAppMeasurement.git",
+      "location" : "https://github.com/google/GoogleAppMeasurement",
       "state" : {
         "revision" : "ce606e3768abddff0510783e1a6d2f270b943b35",
         "version" : "12.16.0"
@@ -67,10 +67,10 @@
     {
       "identity" : "googledatatransport",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/GoogleDataTransport.git",
+      "location" : "https://github.com/google/GoogleDataTransport",
       "state" : {
-        "revision" : "617af071af9aa1d6a091d59a202910ac482128f9",
-        "version" : "10.1.0"
+        "revision" : "ba3358d3c3dbae8ef230b58a46b97ad65e84e974",
+        "version" : "10.1.1"
       }
     },
     {
@@ -85,16 +85,16 @@
     {
       "identity" : "googleutilities",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/GoogleUtilities.git",
+      "location" : "https://github.com/google/GoogleUtilities",
       "state" : {
-        "revision" : "9f183ae842be978784f2963a343682e0c46d8fb3",
-        "version" : "8.1.2"
+        "revision" : "92c8f6dc3ac375d6febdfcb3db68bc3d10633db3",
+        "version" : "8.1.3"
       }
     },
     {
       "identity" : "grpc-binary",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/grpc-binary.git",
+      "location" : "https://github.com/google/grpc-binary",
       "state" : {
         "revision" : "75b31c842f664a0f46a2e590a570e370249fd8f6",
         "version" : "1.69.1"
@@ -103,7 +103,7 @@
     {
       "identity" : "gtm-session-fetcher",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/gtm-session-fetcher.git",
+      "location" : "https://github.com/google/gtm-session-fetcher",
       "state" : {
         "revision" : "a2ab612cb980066ee56d90d60d8462992c07f24b",
         "version" : "3.5.0"
@@ -112,7 +112,7 @@
     {
       "identity" : "gtmappauth",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/GTMAppAuth.git",
+      "location" : "https://github.com/google/GTMAppAuth",
       "state" : {
         "revision" : "56e0ccf09a6dd29dc7e68bdf729598240ca8aa16",
         "version" : "5.0.0"
@@ -121,7 +121,7 @@
     {
       "identity" : "interop-ios-for-google-sdks",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/interop-ios-for-google-sdks.git",
+      "location" : "https://github.com/google/interop-ios-for-google-sdks",
       "state" : {
         "revision" : "040d087ac2267d2ddd4cca36c757d1c6a05fdbfe",
         "version" : "101.0.0"
@@ -139,7 +139,7 @@
     {
       "identity" : "kingfisher",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/onevcat/Kingfisher.git",
+      "location" : "https://github.com/onevcat/Kingfisher",
       "state" : {
         "revision" : "c92b84898e34ab46ff0dad86c02a0acbe2d87008",
         "version" : "8.8.0"
@@ -148,7 +148,7 @@
     {
       "identity" : "leveldb",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/firebase/leveldb.git",
+      "location" : "https://github.com/firebase/leveldb",
       "state" : {
         "revision" : "a0bc79961d7be727d258d33d5a6b2f1023270ba1",
         "version" : "1.22.5"
@@ -157,7 +157,7 @@
     {
       "identity" : "moya",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Moya/Moya.git",
+      "location" : "https://github.com/Moya/Moya",
       "state" : {
         "revision" : "c263811c1f3dbf002be9bd83107f7cdc38992b26",
         "version" : "15.0.3"
@@ -166,7 +166,7 @@
     {
       "identity" : "nanopb",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/firebase/nanopb.git",
+      "location" : "https://github.com/firebase/nanopb",
       "state" : {
         "revision" : "3851d94a41890dea16dc3db34caf60e585cb4163",
         "version" : "2.30910.1"
@@ -175,7 +175,7 @@
     {
       "identity" : "promises",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/promises.git",
+      "location" : "https://github.com/google/promises",
       "state" : {
         "revision" : "f4a19a3c313dc2616c70bb49d29a799fb16be837",
         "version" : "2.4.1"
@@ -184,7 +184,7 @@
     {
       "identity" : "reactiveswift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ReactiveCocoa/ReactiveSwift.git",
+      "location" : "https://github.com/ReactiveCocoa/ReactiveSwift",
       "state" : {
         "revision" : "c43bae3dac73fdd3cb906bd5a1914686ca71ed3c",
         "version" : "6.7.0"
@@ -193,7 +193,7 @@
     {
       "identity" : "rxswift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ReactiveX/RxSwift.git",
+      "location" : "https://github.com/ReactiveX/RxSwift",
       "state" : {
         "revision" : "132aea4f236ccadc51590b38af0357a331d51fa2",
         "version" : "6.10.2"

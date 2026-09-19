@@ -53,6 +53,9 @@ struct MyPageRoutingView: View {
 
         case .changePassword:
             ChangePasswordView(container: container, errorHandler: errorHandler)
+
+        case .registerPassword:
+            ChangePasswordView(container: container, errorHandler: errorHandler, mode: .register)
         }
     }
 }

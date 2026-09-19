@@ -60,6 +60,10 @@ struct StubAuthRepository: AuthRepositoryProtocol {
 
     func changeEmail(emailVerificationToken: String) async throws {}
 
+    func fetchHasLocalCredential() async throws -> Bool {
+        true
+    }
+
     func deleteMemberOAuth(
         memberOAuthId: String,
         googleAccessToken: String?,
