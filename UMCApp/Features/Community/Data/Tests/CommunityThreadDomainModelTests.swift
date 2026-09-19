@@ -97,6 +97,17 @@ struct CommunityThreadDomainModelTests {
         #expect(ThreadMessageType.system.rawValue == "SYSTEM")
     }
 
+    /// 서버 `requireManager` 와 같아야 한다 — 어긋나면 위임받은 쪽이나 넘긴 쪽이 메뉴를 잃는다.
+    @Test("초대·내보내기 권한은 개설자와 관리자에게 있고, 배지는 역할마다 다르다")
+    func roleManagementPermissionAndBadge() {
+        #expect(ThreadMemberRole.owner.canManageMembers)
+        #expect(ThreadMemberRole.admin.canManageMembers)
+        #expect(!ThreadMemberRole.member.canManageMembers)
+        #expect(ThreadMemberRole.owner.displayName == "개설자")
+        #expect(ThreadMemberRole.admin.displayName == "관리자")
+        #expect(ThreadMemberRole.member.displayName == "참여자")
+    }
+
     @Test("필터 queryValue 는 all/unread 소문자, 카테고리는 서버 rawValue 다")
     func filterQueryValue() {
         #expect(CommunityThreadFilter.all.queryValue == "all")

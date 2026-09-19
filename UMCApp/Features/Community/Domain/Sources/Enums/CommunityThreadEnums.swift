@@ -49,14 +49,24 @@ public enum ThreadMemberRole: String, Sendable, Hashable {
     case admin = "ADMIN"
     case member = "MEMBER"
 
-    /// 참여자 목록 배지 문구. 명세가 요구하는 구분은 개설자/참여자 둘뿐이다.
+    /// 참여자 목록 배지 문구.
     ///
-    /// `ADMIN` 은 개설자 위임 직후의 전 개설자 상태라(서버가 `OWNER` ↔ `ADMIN` 을 원자적으로
-    /// 스왑한다) 권한상 일반 참여자와 같게 다룬다 — 나가기도 위임도 막지 않는다.
+    /// `ADMIN` 은 개설자 위임 직후의 전 개설자 상태다(서버가 `OWNER` ↔ `ADMIN` 을 원자적으로
+    /// 스왑한다). 초대·내보내기 권한이 남아 있어 참여자와 구분해 보여 준다.
     public var displayName: String {
         switch self {
         case .owner: return "개설자"
-        case .admin, .member: return "참여자"
+        case .admin: return "관리자"
+        case .member: return "참여자"
+        }
+    }
+
+    /// 초대·내보내기를 할 수 있는지. 서버 `requireManager` 와 같은 기준이다.
+    /// 개설자 위임은 여기에 들지 않는다 — 서버가 `OWNER` 에게만 허용한다.
+    public var canManageMembers: Bool {
+        switch self {
+        case .owner, .admin: return true
+        case .member: return false
         }
     }
 }

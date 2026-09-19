@@ -19,14 +19,15 @@ fileprivate enum Constants {
 
 /// 참여자 목록 한 행 — 아바타 · 이름 · 파트 · 역할 배지.
 ///
-/// ⋯ 메뉴는 개설자에게만 붙는다. 붙일지 말지는 상위가 정하고 여기서는 받은 대로만 그린다.
+/// ⋯ 메뉴는 관리 권한이 있을 때만 붙는다. 항목별 노출은 상위가 정하고 여기서는 받은 대로만 그린다.
 struct ThreadMemberRow: View {
 
     // MARK: - Property
 
     let member: ThreadMember
     let isMe: Bool
-    let canManage: Bool
+    let canTransferOwnership: Bool
+    let canKick: Bool
     let onTransferOwnership: () -> Void
     let onKick: () -> Void
 
@@ -55,7 +56,7 @@ struct ThreadMemberRow: View {
 
             roleBadge
 
-            if canManage {
+            if canTransferOwnership || canKick {
                 manageMenu
             }
         }
@@ -64,8 +65,7 @@ struct ThreadMemberRow: View {
 
     // MARK: - View Component
 
-    /// 배지는 개설자/참여자 둘뿐이다. 위임으로 생기는 `ADMIN` 도 나가기·권한이 참여자와 같아
-    /// 별도 배지를 두면 화면마다 다른 이름으로 불리는 상태가 하나 더 늘어난다.
+    /// 개설자만 강조색을 쓴다. 관리자는 문구로만 구분한다.
     private var roleBadge: some View {
         InfoBadge(
             member.role.displayName,
@@ -76,8 +76,17 @@ struct ThreadMemberRow: View {
 
     private var manageMenu: some View {
         Menu {
-            Button("개설자 위임", systemImage: "crown", action: onTransferOwnership)
-            Button("내보내기", systemImage: "person.fill.xmark", role: .destructive, action: onKick)
+            if canTransferOwnership {
+                Button("개설자 위임", systemImage: "crown", action: onTransferOwnership)
+            }
+            if canKick {
+                Button(
+                    "내보내기",
+                    systemImage: "person.fill.xmark",
+                    role: .destructive,
+                    action: onKick
+                )
+            }
         } label: {
             Image(systemName: "ellipsis")
                 .foregroundStyle(Color.grey600)

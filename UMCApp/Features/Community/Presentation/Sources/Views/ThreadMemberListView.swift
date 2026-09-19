@@ -21,7 +21,7 @@ fileprivate enum Constants {
 
 /// 스레드 참여자 목록.
 ///
-/// 개설자에게만 행 ⋯ 메뉴(개설자 위임·내보내기)가 열린다. 위임 전용 화면을 따로 두지 않고
+/// 개설자·관리자에게 행 ⋯ 메뉴가 열린다(개설자 위임은 개설자만). 위임 전용 화면을 따로 두지 않고
 /// 이 메뉴 하나로 처리한다 (#1131 결정 2).
 struct ThreadMemberListView: View {
 
@@ -58,7 +58,7 @@ struct ThreadMemberListView: View {
             .navigationBarTitleDisplayMode(.inline)
             .umcDefaultBackground()
             .toolbar {
-                if viewModel.isOwner {
+                if viewModel.canInvite {
                     ToolbarItem(placement: .topBarTrailing) { inviteButton }
                 }
                 ToolbarItem(placement: .topBarTrailing) { leaveButton }
@@ -81,7 +81,7 @@ struct ThreadMemberListView: View {
 
     // MARK: - View Component
 
-    /// 초대 진입점. 개설자에게만 열린다 (#1136 완료 조건 1 · 시안 #36 상단 "초대").
+    /// 초대 진입점. 개설자·관리자에게 열린다 (#1136 완료 조건 1 · 시안 #36 상단 "초대").
     private var inviteButton: some View {
         Button("초대") { isInviteSheetPresented = true }
     }
@@ -128,7 +128,8 @@ struct ThreadMemberListView: View {
                     ThreadMemberRow(
                         member: member,
                         isMe: viewModel.isMe(member),
-                        canManage: viewModel.canManage(member),
+                        canTransferOwnership: viewModel.canTransferOwnership(to: member),
+                        canKick: viewModel.canKick(member),
                         onTransferOwnership: {
                             viewModel.confirmTransferOwnership(to: member)
                         },
