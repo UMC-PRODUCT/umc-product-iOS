@@ -83,6 +83,23 @@ struct ActivityStatRepositoryTests {
         #expect(try await sut.fetchStudyCount() == "1+")
     }
 
+    /// `/managed` 는 운영진 역할이 없으면 참여 스터디가 있어도 빈 목록을 준다. 그 0을
+    /// 그대로 내보내면 일반 챌린저 화면이 「나의 스터디 0건」이라고 단언한다 (#1447).
+    @Test("스터디 카운트 — 관리 스터디가 비었으면 0이 아니라 nil(「못 셌다」)이다")
+    func studyCountIsUnknownWhenManagedListIsEmpty() async throws {
+        let stub = StubRequesting()
+        stub.responsesByPath["/api/v1/study-groups/managed"] = Data("""
+        {"success":true,"code":"200","message":"ok",
+         "result":{"content":[],"nextCursor":null,"hasNext":false}}
+        """.utf8)
+        let sut = ActivityStatRepository(
+            networkRequesting: stub, memberProfileRepository: StubProfileRepository()
+        )
+
+        #expect(try await sut.fetchStudyCount() == nil)
+        #expect(try await sut.fetchMemberStats().studyCount == nil)
+    }
+
     /// 마이페이지 활동 목록과 **같은 배열**을 센다. 예전에는 여기서 `challengerRecords` 를
     /// 직접 세는 바람에 운영진 이력이 목록엔 보이고 숫자엔 빠졌다 (#1222).
     @Test("활동 카운트 — activityLogs 항목 수(운영진 역할 포함)와 일치한다")
