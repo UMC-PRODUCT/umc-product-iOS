@@ -61,12 +61,25 @@ struct MessageActionItemsTests {
         #expect(actions == [.reply, .copy, .report])
     }
 
+    @Test("수정할 수 있으면 복사 다음에 수정을 낸다")
+    func insertsEditAfterCopy() {
+        let actions = MessageAction.items(
+            deliveryState: .sent,
+            canReport: false,
+            canDelete: true,
+            canEdit: true
+        )
+
+        #expect(actions == [.reply, .copy, .edit, .delete])
+    }
+
     /// 삭제만 파괴적이다 — 신고까지 빨강이면 되돌릴 수 없는 쪽이 어디인지 흐려진다.
     @Test("파괴적 항목은 삭제뿐이다")
     func marksOnlyDeleteAsDestructive() {
         #expect(MessageAction.delete.isDestructive)
         #expect(!MessageAction.reply.isDestructive)
         #expect(!MessageAction.copy.isDestructive)
+        #expect(!MessageAction.edit.isDestructive)
         #expect(!MessageAction.report.isDestructive)
     }
 }

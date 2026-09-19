@@ -24,6 +24,7 @@ fileprivate enum Constants {
     /// 미스탭 비용이 크다.
     static let minimumTapTarget: CGFloat = 44
     static let deletedText = "삭제된 메시지예요"
+    static let editedText = "(수정됨)"
     /// 인용 블록 왼쪽 세로 막대. 컴포저 인용 칩과 같은 두께·캡슐 모양으로 맞춰 둔다.
     static let quoteBarWidth: CGFloat = 3
     /// 말풍선 안에 들어가는 블록이라 바깥 모서리(16)보다 작게 준다.
@@ -102,7 +103,7 @@ struct MessageBubble: View {
                     // 화면 표시와 무관하게 언제 보낸 메시지인지 항상 덧붙인다.
                     .accessibilityLabel { label in
                         label
-                        Text(timeText)
+                        Text(showsEditedMark ? "\(Constants.editedText) \(timeText)" : timeText)
                     }
 
                     if showsReactions {
@@ -143,8 +144,8 @@ struct MessageBubble: View {
     /// 읽기는 결합 라벨이 맡으므로 여기서는 VoiceOver 에서 숨긴다.
     @ViewBuilder
     private var timeLabel: some View {
-        if showsTime {
-            Text(timeText)
+        if let metaText {
+            Text(metaText)
                 .appFont(.caption2, color: .grey500)
                 .lineLimit(1)
                 .fixedSize()
@@ -364,6 +365,17 @@ struct MessageBubble: View {
         Self.timeFormatter.string(from: message.createdAt)
     }
 
+    /// "(수정됨)" 은 묶음 중간 말풍선에도 남긴다 — 시간과 달리 말풍선마다 값이 다르다.
+    private var metaText: String? {
+        let parts = [showsEditedMark ? Constants.editedText : nil, showsTime ? timeText : nil]
+            .compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
+    }
+
+    private var showsEditedMark: Bool {
+        message.isEdited && !message.isDeleted
+    }
+
     private var bubbleText: AttributedString {
         guard !message.isDeleted else { return AttributedString(Constants.deletedText) }
         return Self.attributed(
@@ -554,6 +566,7 @@ struct BubbleWidthLayout: Layout {
         replyTo: ThreadMessageReply? = nil,
         reactions: [ThreadMessageReaction] = [],
         deliveryState: ThreadMessageDeliveryState = .sent,
+        editedAt: Date? = nil,
         deletedAt: Date? = nil
     ) -> ThreadMessage {
         ThreadMessage(
@@ -567,6 +580,7 @@ struct BubbleWidthLayout: Layout {
             replyTo: replyTo,
             reactions: reactions,
             createdAt: base,
+            editedAt: editedAt,
             deletedAt: deletedAt,
             deliveryState: deliveryState
         )
@@ -661,6 +675,7 @@ struct BubbleWidthLayout: Layout {
             bubble(message(id: "4", content: "보내는 중", deliveryState: .sending), isMine: true)
             bubble(message(id: "5", content: "실패한 메시지", deliveryState: .failed), isMine: true)
             bubble(message(id: "6", content: "지워진 내용", deletedAt: base), isMine: false)
+            bubble(message(id: "20", content: "고친 메시지", editedAt: base), isMine: true)
             // 같은 발신자·같은 분 연속 메시지는 마지막 말풍선에만 시간을 붙인다.
             bubble(
                 message(id: "15", content: "이번 주 장소가 바뀌었어요"),

@@ -106,7 +106,8 @@ struct CommunityThreadRoomView: View {
                         actions: MessageAction.items(
                             deliveryState: message.deliveryState,
                             canReport: viewModel.canReport(message),
-                            canDelete: viewModel.canDelete(message)
+                            canDelete: viewModel.canDelete(message),
+                            canEdit: viewModel.canEdit(message)
                         ),
                         onReact: { emoji in
                             dismissActions()
@@ -186,9 +187,11 @@ struct CommunityThreadRoomView: View {
                         text: $viewModel.draft,
                         canSend: viewModel.canSend,
                         replyTarget: viewModel.replyTarget,
+                        editingSnippet: viewModel.editTarget?.content,
                         mentionCandidates: viewModel.mentionCandidates,
                         onSend: { Task { await viewModel.send() } },
                         onCancelReply: { viewModel.cancelReply() },
+                        onCancelEdit: { viewModel.cancelEdit() },
                         onSelectMention: { viewModel.selectMention($0) }
                     )
                     // 헤더가 오기 전에는 어느 방으로 보낼지 모른다. `.disabled` 는 높이를
@@ -615,6 +618,8 @@ struct CommunityThreadRoomView: View {
             viewModel.requestReply(message)
         case .copy:
             viewModel.copyContent(message)
+        case .edit:
+            viewModel.requestEdit(message)
         case .report:
             viewModel.requestReport(message)
         case .delete:

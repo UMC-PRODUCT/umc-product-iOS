@@ -32,7 +32,8 @@ public final class CommunityThreadRoomViewModel {
     /// "히스토리 로드 실패 = 인라인 + 재시도" 를 요구하므로 두 실패를 이 한 상태로 모은다.
     public private(set) var header: Loadable<CommunityThread> = .idle
     /// 표시 순서(오래된 것 → 최신). 서버는 최신순으로 주므로 담을 때 뒤집는다.
-    public private(set) var messages: [ThreadMessage] = []
+    /// `+Edit` 이 낙관적 수정을 찍으므로 setter 를 모듈 내부로 연다.
+    public internal(set) var messages: [ThreadMessage] = []
     public private(set) var isLoadingOlder = false
 
     /// 최하단을 벗어나 있는 동안 도착한 타인 메시지 수 (스펙 #35).
@@ -116,6 +117,13 @@ public final class CommunityThreadRoomViewModel {
     /// 화면이 직접 읽지 않는 값이라 관찰에서 뺀다.
     @ObservationIgnored var reportedMessageIds: Set<String> = []
     @ObservationIgnored var reportNoticeTask: Task<Void, Never>?
+
+    // MARK: - Edit Property
+
+    /// 수정 중인 메시지. `nil` 이 아니면 컴포저가 수정 모드다. 갱신은 `+Edit` 이 맡는다.
+    public internal(set) var editTarget: ThreadMessage?
+    /// `x-command-id` → 되돌릴 원문. 화면이 읽지 않는 값이라 관찰에서 뺀다.
+    @ObservationIgnored var pendingEdits: [String: PendingEdit] = [:]
 
     /// 참여자 목록 목적지를 만들 때 View 가 읽는다.
     let threadId: String
@@ -304,6 +312,7 @@ public final class CommunityThreadRoomViewModel {
     }
 
     public func send() async {
+        guard editTarget == nil else { return await submitEdit() }
         // 공백·상한 초과·쿨다운을 여기서 끊는다. 서버까지 보내 실패 버블을 만들 이유가 없다.
         guard canSend else { return }
 
@@ -515,8 +524,12 @@ public final class CommunityThreadRoomViewModel {
             membershipCheckTask?.cancel()
             membershipCheckTask = Task { [weak self] in await self?.backfill() }
 
-        case .commandAcknowledged, .readUpdated, .unknown:
+        case .commandAcknowledged(_, let commandId, _, _, _):
             // command.acknowledged 는 저장 확정이 아니라 접수 확인이다(§3.2) — 상태를 안 바꾼다.
+            // 다만 커밋 뒤에만 오므로 그 명령이 실패로 뒤집힐 일은 없다 — 수정 되돌리기 대기만 푼다.
+            settleEdit(commandId: commandId)
+
+        case .readUpdated, .unknown:
             // read.updated 는 남의 영수증과 구분할 수 없어 no-op (Task 14 와 같은 정책).
             break
         }
@@ -527,6 +540,7 @@ public final class CommunityThreadRoomViewModel {
         if error.isRateLimited {
             startSendCooldown()
         }
+        applyEditFailure(error)
         guard let clientMessageId = error.clientMessageId else { return }
         markFailed(clientMessageId: clientMessageId)
     }

@@ -17,6 +17,7 @@ fileprivate enum Constants {
     static let actionButtonSize: CGFloat = 32
     static let placeholder = "메시지를 입력해주세요"
     static let lineLimit = 1...4
+    static let editingTitle = "메시지 수정 중"
     /// 인용 칩 왼쪽의 세로 막대. 답장이라는 걸 아이콘 없이 알려 주는 표식이다.
     /// 말풍선 인용 블록과 같은 두께·캡슐 모양으로 맞춘다.
     static let quoteBarWidth: CGFloat = 3
@@ -42,10 +43,13 @@ struct MessageComposer: View {
     let canSend: Bool
     /// 답장 인용 칩. `nil` 이면 칩 자리가 아예 없다 (시안 #22).
     let replyTarget: ThreadMessageReply?
+    /// 수정 중인 원문. `nil` 이 아니면 인용 칩 자리에 수정 칩을 띄우고 전송 버튼이 수정 제출이 된다.
+    let editingSnippet: String?
     /// `@` 자동완성 후보. 비어 있으면 목록을 그리지 않는다.
     let mentionCandidates: [ThreadMember]
     let onSend: () -> Void
     let onCancelReply: () -> Void
+    let onCancelEdit: () -> Void
     let onSelectMention: (ThreadMember) -> Void
 
     /// 버튼 아이콘은 본문 크기를 따라 커지는데 원판이 고정이면 접근성 크기에서 글리프가 밖으로
@@ -64,19 +68,22 @@ struct MessageComposer: View {
             // 칩·카드·버튼의 glass 를 한 번에 그린다. 따로 그리면 glass 마다 오프스크린 패스가 돈다.
             GlassEffectContainer {
                 VStack(spacing: 0) {
-                    if let replyTarget {
-                        replyChip(replyTarget)
-                            // 아래로 미는 `move` 는 반투명 입력 카드 밑으로 칩이 비쳐 보여서 제자리
-                            // 확대로 띄운다. 동작 줄이기에서는 페이드만 남긴다.
-                            .transition(
-                                reduceMotion
-                                    ? .opacity
-                                    : .scale(
-                                        scale: DefaultConstant.transitionScale,
-                                        anchor: .bottom
-                                    )
-                                    .combined(with: .opacity)
-                            )
+                    if let editingSnippet {
+                        quoteChip(
+                            title: Constants.editingTitle,
+                            snippet: editingSnippet,
+                            cancelLabel: "수정 취소",
+                            onCancel: onCancelEdit
+                        )
+                        .transition(chipTransition)
+                    } else if let replyTarget {
+                        quoteChip(
+                            title: "\(replyTarget.senderName)님에게 답장",
+                            snippet: replyTarget.snippet,
+                            cancelLabel: "답장 취소",
+                            onCancel: onCancelReply
+                        )
+                        .transition(chipTransition)
                     }
 
                     inputRow
@@ -86,6 +93,7 @@ struct MessageComposer: View {
         // 화면 VStack 이 아니라 여기에 건다. 전송하면 인용 해제와 메시지 추가가 한 번에 일어나서,
         // 위에 걸면 메시지 배열까지 애니메이션 대상이 된다.
         .animation(.snappy, value: replyTarget)
+        .animation(.snappy, value: editingSnippet)
     }
 
     // MARK: - View Component
@@ -133,7 +141,7 @@ struct MessageComposer: View {
                         .contentShape(.rect)
                 }
                 .disabled(!canSend)
-                .accessibilityLabel("전송")
+                .accessibilityLabel(editingSnippet == nil ? "전송" : "수정 완료")
             }
             // 44pt 영역이 원판 둘레에 여백을 만들어 주므로 카드 안쪽 여백은 조금만 더한다.
             .padding(.horizontal, DefaultSpacing.spacing4)
@@ -153,8 +161,22 @@ struct MessageComposer: View {
         canSend ? .regular.tint(Color.indigo500).interactive() : .regular
     }
 
-    /// 답장 대상 요약 + 취소. 취소는 답장을 그만두는 유일한 경로라 44pt 를 채운다.
-    private func replyChip(_ reply: ThreadMessageReply) -> some View {
+    /// 아래로 미는 `move` 는 반투명 입력 카드 밑으로 칩이 비쳐 보여서 제자리 확대로 띄운다.
+    /// 동작 줄이기에서는 페이드만 남긴다.
+    private var chipTransition: AnyTransition {
+        reduceMotion
+            ? .opacity
+            : .scale(scale: DefaultConstant.transitionScale, anchor: .bottom)
+                .combined(with: .opacity)
+    }
+
+    /// 답장·수정 대상 요약 + 취소. 취소는 그 모드를 그만두는 유일한 경로라 44pt 를 채운다.
+    private func quoteChip(
+        title: String,
+        snippet: String,
+        cancelLabel: String,
+        onCancel: @escaping () -> Void
+    ) -> some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             // 막대는 글 높이만큼만 선다. 44pt 행 높이를 채우면 둥근 배경 곡선에 끝이 닿는다.
             HStack(spacing: DefaultSpacing.spacing8) {
@@ -163,10 +185,10 @@ struct MessageComposer: View {
                     .frame(width: Constants.quoteBarWidth)
 
                 VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                    Text("\(reply.senderName)님에게 답장")
+                    Text(title)
                         .appFont(.caption1, weight: .semibold, color: .indigo600)
 
-                    Text(reply.snippet)
+                    Text(snippet)
                         .appFont(.caption1, color: .grey600)
                         .lineLimit(1)
                 }
@@ -178,7 +200,7 @@ struct MessageComposer: View {
 
             Spacer(minLength: DefaultSpacing.spacing8)
 
-            Button(action: onCancelReply) {
+            Button(action: onCancel) {
                 // 본문보다 먼저 눈에 걸리지 않게 글리프만 작고 가늘게. 터치 영역은 44pt 그대로.
                 Image(systemName: "xmark")
                     .font(.caption.weight(.medium))
@@ -189,7 +211,7 @@ struct MessageComposer: View {
                     )
                     .contentShape(.rect)
             }
-            .accessibilityLabel("답장 취소")
+            .accessibilityLabel(cancelLabel)
         }
         // 배경 안쪽 여백. 인용 막대와 글이 둥근 모서리 곡선에 물리지 않게 띄운다. 반경이 고정이라
         // 글자가 커져 칩이 높아져도 곡선 깊이는 그대로다.
@@ -267,6 +289,7 @@ struct MessageComposer: View {
                 senderName: "김유엠",
                 snippet: "오늘 스터디 7시에 시작합니다"
             ),
+            editingSnippet: nil,
             mentionCandidates: [
                 ThreadMember(
                     id: "1",
@@ -285,6 +308,7 @@ struct MessageComposer: View {
             ],
             onSend: {},
             onCancelReply: {},
+            onCancelEdit: {},
             onSelectMention: { _ in }
         )
     }

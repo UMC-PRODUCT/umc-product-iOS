@@ -133,16 +133,34 @@ public actor CommunityThreadRealtimeClient: CommunityThreadRealtimeProtocol {
         )
     }
 
+    public func editMessage(
+        threadId: String,
+        messageId: String,
+        commandId: String,
+        content: String
+    ) async throws {
+        try await send(
+            destination: ThreadDestination.editMessage(threadId, messageId),
+            body: EditMessageBody(content: content),
+            commandId: commandId
+        )
+    }
+
     // MARK: - Function
 
     /// SEND 프레임 발행.
     ///
     /// `x-command-id` 는 서버가 요구하는 네이티브 헤더로 매 호출 새 값이 나간다.
     /// 재시도 멱등은 이 헤더가 아니라 호출자가 유지하는 `clientMessageId` 가 담당한다.
-    private func send(destination: String, body: some Encodable) async throws {
+    /// 에러 프레임에 `clientMessageId` 가 없는 명령(수정)만 호출자가 값을 넘겨 실패를 짝짓는다.
+    private func send(
+        destination: String,
+        body: some Encodable,
+        commandId: String = ThreadCommandID.generate()
+    ) async throws {
         try await connection.send(
             destination: destination,
-            headers: ["x-command-id": ThreadCommandID.generate()],
+            headers: ["x-command-id": commandId],
             body: try JSONEncoder().encode(body)
         )
     }

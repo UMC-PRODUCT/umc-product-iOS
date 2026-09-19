@@ -36,6 +36,10 @@ enum ThreadDestination {
         "\(messagePath(threadId, messageId))/delete"
     }
 
+    static func editMessage(_ threadId: String, _ messageId: String) -> String {
+        "\(messagePath(threadId, messageId))/edit"
+    }
+
     private static func messagePath(_ threadId: String, _ messageId: String) -> String {
         "\(messages(threadId))/\(messageId)"
     }

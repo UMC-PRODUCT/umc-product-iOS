@@ -32,6 +32,7 @@ extension CommunityThreadRoomViewModel {
     /// 칩에 띄울 문구는 로컬에서 만들어야 한다.
     public func requestReply(_ message: ThreadMessage) {
         guard canReply(message) else { return }
+        if editTarget != nil { cancelEdit() }
 
         replyTarget = ThreadMessageReply(
             messageId: message.id,

@@ -30,6 +30,13 @@ public protocol CommunityThreadRoomUseCaseProtocol: Sendable {
     func addReaction(threadId: String, messageId: String, emoji: String) async throws
     func removeReaction(threadId: String, messageId: String, emoji: String) async throws
     func deleteMessage(threadId: String, messageId: String) async throws
+    /// - Parameter commandId: 실패 에러 프레임과 짝지을 `x-command-id`. 호출자가 만들어 넘긴다.
+    func editMessage(
+        threadId: String,
+        messageId: String,
+        commandId: String,
+        content: String
+    ) async throws
     func reportMessage(messageId: String, reason: ThreadMessageReportReason) async throws
     func startRealtime() async
     func signals() async -> AsyncStream<CommunityRealtimeSignal>
@@ -145,6 +152,21 @@ public struct CommunityThreadRoomUseCase: CommunityThreadRoomUseCaseProtocol {
 
     public func deleteMessage(threadId: String, messageId: String) async throws {
         try await realtime.deleteMessage(threadId: threadId, messageId: messageId)
+    }
+
+    public func editMessage(
+        threadId: String,
+        messageId: String,
+        commandId: String,
+        content: String
+    ) async throws {
+        try Self.validateText(content)
+        try await realtime.editMessage(
+            threadId: threadId,
+            messageId: messageId,
+            commandId: commandId,
+            content: content
+        )
     }
 
     /// 신고 접수. 삭제와 달리 STOMP 가 아니라 REST 다 — 결과가 다른 참여자에게 방송되지 않는다.
