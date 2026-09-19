@@ -13,5 +13,7 @@ let project = coreProject(
     bundleIdSuffix: "widgetshared",
     dependencies: [
         .sdk(name: "WidgetKit", type: .framework, status: .required),
-    ]
+        .sdk(name: "ActivityKit", type: .framework, status: .required),
+    ],
+    includesTests: true
 )

@@ -22,6 +22,7 @@ import MaintenanceDomain
 import MaintenancePresentation
 import MyPagePresentation
 import NoticePresentation
+import UMCFoundation
 
 /// `.main` 상태의 루트 탭 셸.
 ///
@@ -51,6 +52,7 @@ struct RootTabView: View {
 
     @Environment(\.di) private var di
     @Environment(DeepLinkStore.self) private var deepLinkStore
+    @Environment(\.scenePhase) private var scenePhase
 
     // MARK: - Body
 
@@ -77,6 +79,21 @@ struct RootTabView: View {
         // 같은 함수로 받는다. 후자는 이 뷰가 처음 뜨는 시점에 한 번 꺼내면 된다.
         .task { consumePendingDeepLink() }
         .onChange(of: deepLinkStore.pending) { _, _ in consumePendingDeepLink() }
+        // 출석 Live Activity 는 포그라운드에서만 시작·갱신할 수 있다. 백그라운드로 가면
+        // id 가 바뀌며 Task 가 취소되고, 그 사이 단계 전환은 위젯의 staleDate 가 맡는다.
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            await AttendanceLiveActivityCoordinator.run(
+                useCase: di.resolve(ChallengerAttendanceUseCaseProtocol.self)
+            )
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(for: .attendanceSubmitted)
+        ) { notification in
+            let key = Notification.attendanceScheduleIdKey
+            guard let scheduleId = notification.userInfo?[key] as? String else { return }
+            Task { await AttendanceLiveActivityCoordinator.end(scheduleId: scheduleId) }
+        }
         #if DEBUG
         // 실행 인자 `-bcHarness`로 명함 검증 화면에 바로 진입한다.
         // (탭 조작 없이 시뮬레이터에서 검증을 재현하기 위한 경로 — 제품 동작 아님)

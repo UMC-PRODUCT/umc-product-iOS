@@ -85,6 +85,7 @@ final class ChallengerAttendanceViewModel {
             )
             session.updateState(.loaded(result))
             session.markSubmitted()
+            postAttendanceSubmitted(scheduleId: scheduleId)
 
         } catch let error as DomainError {
             session.updateState(.failed(.domain(error)))
@@ -141,6 +142,7 @@ final class ChallengerAttendanceViewModel {
             )
             session.updateState(.loaded(result))
             session.markSubmitted()
+            postAttendanceSubmitted(scheduleId: scheduleId)
 
         } catch let error as DomainError {
             session.updateState(.failed(.domain(error)))
@@ -280,6 +282,15 @@ final class ChallengerAttendanceViewModel {
                 : "\(minutes / 60)시간 \(remainder)분 남음"
         }
         return "\(minutes)분 남음"
+    }
+
+    /// 제출된 일정의 출석 Live Activity 를 앱이 끝내도록 알린다.
+    private func postAttendanceSubmitted(scheduleId: String) {
+        NotificationCenter.default.post(
+            name: .attendanceSubmitted,
+            object: nil,
+            userInfo: [Notification.attendanceScheduleIdKey: scheduleId]
+        )
     }
 
     private func submitExcuse(
