@@ -61,6 +61,7 @@ struct UMCAppApp: App {
         container.registerMyPageDependencies()
         container.registerCertificateDependencies()
         container.registerBusinessCardDependencies()
+        container.registerProjectDependencies()
         container.registerMaintenanceDependencies()
         container.registerWatchConnectivityDependencies()
         #if DEBUG
