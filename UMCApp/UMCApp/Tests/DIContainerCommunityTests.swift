@@ -11,6 +11,7 @@ import CoreDI
 import CoreNetwork
 import Foundation
 import Testing
+import UMCFoundation
 
 @testable import UMCApp
 
@@ -36,6 +37,10 @@ private func makeContainer(
             networkClient: AuthSystemFactory.makeNetworkClient(baseURL: baseURL),
             baseURL: baseURL
         )
+    }
+    // 채팅방 사진 전송이 공지와 같은 스토리지 저장소를 쓴다. 운영에서는 Notice 조립이 먼저 등록한다.
+    container.register(StorageRepositoryProtocol.self) {
+        StorageRepository(adapter: container.resolve(MoyaNetworkAdapter.self))
     }
     container.registerCommunityDependencies()
     return container

@@ -399,6 +399,67 @@ struct CommunityThreadRoomUseCaseTests {
         }
     }
 
+    // MARK: - Image
+
+    @Test("사진은 prepare → PUT → confirm 순서로 올리고 fileId 를 돌려준다")
+    func uploadsImageThroughStorage() async throws {
+        let storage = FakeStorageRepository()
+        let useCase = makeUseCase(storageRepository: storage)
+
+        let fileId = try await useCase.uploadImage(jpegData: Data([0xFF, 0xD8, 0xFF]))
+
+        #expect(fileId == "file-1")
+        #expect(storage.callOrder == ["prepare", "upload", "confirm"])
+        let prepare = try #require(storage.prepareCall)
+        // 서버가 확장자와 MIME 을 맞춰 본다 — 둘이 어긋나면 prepare 단계에서 거절된다.
+        #expect(prepare.fileName.hasSuffix(".jpg"))
+        #expect(prepare.contentType == "image/jpeg")
+        #expect(prepare.fileSize == 3)
+        #expect(prepare.category == .postImage)
+        #expect(storage.confirmedFileIds == ["file-1"])
+    }
+
+    @Test("사진 메시지는 본문 없이 fileId 만 싣고 실시간 채널로 간다")
+    func routesImageSendToRealtime() async throws {
+        let realtime = FakeThreadRealtime()
+        let useCase = makeUseCase(realtime: realtime)
+
+        try await useCase.sendImage(
+            threadId: "thread-1",
+            clientMessageId: "client-1",
+            fileMetadataIds: ["file-1"]
+        )
+
+        #expect(await realtime.sendCalls == [
+            FakeThreadRealtime.SendCall(
+                threadId: "thread-1",
+                clientMessageId: "client-1",
+                content: "",
+                fileMetadataIds: ["file-1"],
+                replyToId: nil,
+                mentionedMemberIds: []
+            ),
+        ])
+    }
+
+    @Test("첨부가 없거나 4장을 넘는 사진 메시지는 실시간 채널에 닿기 전에 막힌다")
+    func rejectsImageCountOutOfRange() async {
+        let realtime = FakeThreadRealtime()
+        let useCase = makeUseCase(realtime: realtime)
+
+        for fileIds in [[], ["1", "2", "3", "4", "5"]] {
+            await #expect(throws: AppError.self) {
+                try await useCase.sendImage(
+                    threadId: "thread-1",
+                    clientMessageId: "client-1",
+                    fileMetadataIds: fileIds
+                )
+            }
+        }
+
+        #expect(await realtime.sendCalls.isEmpty)
+    }
+
     // MARK: - Read Watermark
 
     @Test("읽음 갱신도 REST 가 아니라 실시간 채널로 간다")
@@ -569,9 +630,14 @@ struct CommunityThreadRoomUseCaseTests {
 
     private func makeUseCase(
         repository: FakeThreadRepository = FakeThreadRepository(),
-        realtime: FakeThreadRealtime = FakeThreadRealtime()
+        realtime: FakeThreadRealtime = FakeThreadRealtime(),
+        storageRepository: FakeStorageRepository = FakeStorageRepository()
     ) -> CommunityThreadRoomUseCase {
-        CommunityThreadRoomUseCase(repository: repository, realtime: realtime)
+        CommunityThreadRoomUseCase(
+            repository: repository,
+            realtime: realtime,
+            storageRepository: storageRepository
+        )
     }
 }
 
@@ -1209,4 +1275,63 @@ private func makeCommandError() -> RealtimeCommandError {
         message: "요청이 너무 많습니다",
         retryable: true
     )
+}
+
+/// 업로드 3단계의 순서와 prepare 인자를 기록한다. 응답 DTO 가 `Sendable` 이 아니라 actor 대신
+/// MyPage 테스트의 대역과 같은 `@unchecked Sendable` 클래스로 둔다.
+private final class FakeStorageRepository: StorageRepositoryProtocol, @unchecked Sendable {
+
+    struct PrepareCall: Equatable {
+        let fileName: String
+        let contentType: String
+        let fileSize: Int
+        let category: StorageFileCategory
+    }
+
+    // MARK: - Property
+
+    private(set) var callOrder: [String] = []
+    private(set) var prepareCall: PrepareCall?
+    private(set) var confirmedFileIds: [String] = []
+
+    // MARK: - Function
+
+    func prepareUpload(
+        fileName: String,
+        contentType: String,
+        fileSize: Int,
+        category: StorageFileCategory
+    ) async throws -> StoragePrepareUploadResponseDTO {
+        callOrder.append("prepare")
+        prepareCall = PrepareCall(
+            fileName: fileName,
+            contentType: contentType,
+            fileSize: fileSize,
+            category: category
+        )
+        return StoragePrepareUploadResponseDTO(
+            fileId: "file-1",
+            uploadUrl: "https://upload.test.invalid/put",
+            uploadMethod: "PUT",
+            headers: nil,
+            expiresAt: nil
+        )
+    }
+
+    func uploadFile(
+        to url: String,
+        data: Data,
+        method: String,
+        headers: [String: String]?,
+        contentType: String?
+    ) async throws {
+        callOrder.append("upload")
+    }
+
+    func confirmUpload(fileId: String) async throws {
+        callOrder.append("confirm")
+        confirmedFileIds.append(fileId)
+    }
+
+    func deleteFile(fileId: String) async throws {}
 }

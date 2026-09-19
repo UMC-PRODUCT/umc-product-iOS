@@ -87,6 +87,14 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
         mentionedMemberIds: [String]
     ) async throws {}
 
+    func uploadImage(jpegData: Data) async throws -> String { "" }
+
+    func sendImage(
+        threadId: String,
+        clientMessageId: String,
+        fileMetadataIds: [String]
+    ) async throws {}
+
     func markRead(threadId: String, lastReadMessageId: String) async throws {}
 
     func addReaction(threadId: String, messageId: String, emoji: String) async throws {}

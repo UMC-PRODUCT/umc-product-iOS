@@ -26,6 +26,14 @@ public protocol CommunityThreadRoomUseCaseProtocol: Sendable {
         replyToId: String?,
         mentionedMemberIds: [String]
     ) async throws
+    /// 사진 한 장을 스토리지에 올리고(prepare → PUT → confirm) 메시지에 실을 `fileId` 를 돌려준다.
+    func uploadImage(jpegData: Data) async throws -> String
+    /// 올려 둔 사진으로 IMAGE 메시지를 보낸다. 캡션·답장·멘션은 싣지 않는다.
+    func sendImage(
+        threadId: String,
+        clientMessageId: String,
+        fileMetadataIds: [String]
+    ) async throws
     func markRead(threadId: String, lastReadMessageId: String) async throws
     func addReaction(threadId: String, messageId: String, emoji: String) async throws
     func removeReaction(threadId: String, messageId: String, emoji: String) async throws
@@ -51,18 +59,26 @@ public struct CommunityThreadRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     public static let messageMaxLength = 2_000
     /// 반응 이모지 상한. 서버가 code point 로 세므로 여기서도 같은 단위로 센다.
     public static let reactionEmojiMaxLength = 32
+    /// 서버 IMAGE 메시지 한 통의 첨부 상한.
+    public static let imageMaxCount = 4
+    /// 화면이 사진을 JPEG 으로 다시 인코딩해 넘긴다. 서버가 확장자와 MIME 을 맞춰 보므로
+    /// 파일명도 같은 형식으로 만든다.
+    private static let imageContentType = "image/jpeg"
 
     private let repository: CommunityThreadRepositoryProtocol
     private let realtime: CommunityThreadRealtimeProtocol
+    private let storageRepository: StorageRepositoryProtocol
 
     // MARK: - Init
 
     public init(
         repository: CommunityThreadRepositoryProtocol,
-        realtime: CommunityThreadRealtimeProtocol
+        realtime: CommunityThreadRealtimeProtocol,
+        storageRepository: StorageRepositoryProtocol
     ) {
         self.repository = repository
         self.realtime = realtime
+        self.storageRepository = storageRepository
     }
 
     // MARK: - Static Function
@@ -130,6 +146,46 @@ public struct CommunityThreadRoomUseCase: CommunityThreadRoomUseCaseProtocol {
             fileMetadataIds: [],
             replyToId: replyToId,
             mentionedMemberIds: mentionedMemberIds
+        )
+    }
+
+    /// 카테고리는 `POST_IMAGE` 를 쓴다. 서버가 채팅 첨부의 카테고리를 따로 묻지 않고, 용량(10MB)과
+    /// 형식(jpg/png/webp/gif)이 채팅 이미지 정책과 같다.
+    public func uploadImage(jpegData: Data) async throws -> String {
+        let prepared = try await storageRepository.prepareUpload(
+            fileName: "\(UUID().uuidString.lowercased()).jpg",
+            contentType: Self.imageContentType,
+            fileSize: jpegData.count,
+            category: .postImage
+        )
+        try await storageRepository.uploadFile(
+            to: prepared.uploadUrl,
+            data: jpegData,
+            method: prepared.uploadMethod,
+            headers: prepared.headers,
+            contentType: Self.imageContentType
+        )
+        try await storageRepository.confirmUpload(fileId: prepared.fileId)
+        return prepared.fileId
+    }
+
+    public func sendImage(
+        threadId: String,
+        clientMessageId: String,
+        fileMetadataIds: [String]
+    ) async throws {
+        guard (1...Self.imageMaxCount).contains(fileMetadataIds.count) else {
+            throw AppError.validation(
+                .invalidValue(field: "사진", reason: "사진은 한 번에 1~4장까지 보낼 수 있어요")
+            )
+        }
+        try await realtime.sendMessage(
+            threadId: threadId,
+            clientMessageId: clientMessageId,
+            content: "",
+            fileMetadataIds: fileMetadataIds,
+            replyToId: nil,
+            mentionedMemberIds: []
         )
     }
 
