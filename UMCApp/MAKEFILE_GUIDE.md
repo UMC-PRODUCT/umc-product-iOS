@@ -34,7 +34,7 @@ source ~/.zshrc
 
 ```bash
 cd UMCApp
-make bootstrap   # mise.toml 기반으로 tuist 4.155.0 자동 설치
+make bootstrap   # mise.toml 기반으로 tuist 4.208.0 자동 설치
 make install     # SPM 의존성 설치
 make generate    # .xcworkspace / .xcodeproj 생성
 make open        # Xcode 실행
@@ -223,7 +223,7 @@ Tuist 버전을 올릴 때는 **`mise.toml` 만** 수정합니다. Makefile은 �
 ```toml
 # UMCApp/mise.toml
 [tools]
-tuist = "4.155.0"   # ← 이 값만 변경
+tuist = "4.208.0"   # ← 이 값만 변경
 ```
 
 변경 후 팀원들은 각자:
