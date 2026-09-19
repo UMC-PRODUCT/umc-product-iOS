@@ -10,6 +10,7 @@ import CoreDI
 import CoreDomain
 import CoreRouting
 import CoreUIComponents
+import FoundationModels
 import HomeDomain
 import NoticeDomain
 import StoreKit
@@ -23,6 +24,7 @@ import UMCFoundation
 /// 슬라이스 3(#915) 범위: 최신 기수의 최근 공지 5건을 표시하고, 탭 시 상세 화면으로 이동한다.
 /// 슬라이스 4(#982) 범위: 툴바(로고/알림 보관함)와 일정 카드 → 일정 상세 진입, 상벌점 변경
 /// 알림 수신 시 프로필 재조회, 4주 간격 앱스토어 리뷰 요청을 복구한다.
+/// #1471: Apple Intelligence 가 꺼진 사용자에게 AI 기능 안내 시트를 기기당 한 번 띄운다.
 /// `NavigationStack`은 루트 탭 셸이 소유하므로 이 뷰는 콘텐츠만 구성한다.
 struct HomeView: View {
 
@@ -37,6 +39,9 @@ struct HomeView: View {
     @State private var currentMonth: Date = .now
     @State private var isRetryingProfile = false
     @State private var isRetryingRecentNotice = false
+    @State private var isShowingAppleIntelligenceIntro = false
+    @AppStorage(AppStorageKey.hasShownAppleIntelligenceIntro)
+    private var hasShownAppleIntelligenceIntro = false
     private let onNoticeSelected: (NoticeDetail) -> Void
     private let onScheduleSelected: (String) -> Void
     private let onAlarmHistoryTapped: () -> Void
@@ -95,7 +100,13 @@ struct HomeView: View {
         }
         .task {
             await viewModel.fetchProfileIfNeeded()
-            requestReviewIfDue()
+            presentEntryPromptIfNeeded()
+        }
+        .sheet(
+            isPresented: $isShowingAppleIntelligenceIntro,
+            onDismiss: { hasShownAppleIntelligenceIntro = true }
+        ) {
+            AppleIntelligenceIntroSheet()
         }
         // 최초 진입(depth 0)과 홈 루트 복귀를 한 트리거로 처리한다. 별도 `.task`를 두면
         // 최초 진입에서 같은 달을 두 번 조회하게 된다.
@@ -314,6 +325,22 @@ struct HomeView: View {
         isRetryingRecentNotice = true
         defer { isRetryingRecentNotice = false }
         await viewModel.retryRecentNotices()
+    }
+
+    /// 홈 진입 모달을 한 번에 하나만 띄운다.
+    ///
+    /// Apple Intelligence 안내가 우선이다. 리뷰 요청은 기록을 남기지 않고 건너뛰므로
+    /// 시트를 닫은 뒤 다음 홈 진입에서 그대로 요청된다.
+    private func presentEntryPromptIfNeeded() {
+        let shouldPresentIntro = AppleIntelligenceIntroSheet.shouldPresent(
+            availability: SystemLanguageModel.default.availability,
+            hasBeenShown: hasShownAppleIntelligenceIntro
+        )
+        if shouldPresentIntro {
+            isShowingAppleIntelligenceIntro = true
+        } else {
+            requestReviewIfDue()
+        }
     }
 
     /// 마지막 요청 이후 4주가 지났으면 앱스토어 리뷰를 요청한다.
