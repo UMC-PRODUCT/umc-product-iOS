@@ -54,4 +54,7 @@ enum MyPageDestination: Hashable {
 
     /// 비밀번호 변경. 화면은 `AuthPresentation` 이 소유한다.
     case changePassword
+
+    /// 로컬 비밀번호가 없는 소셜 가입 회원의 비밀번호 최초 등록. 변경 화면을 등록 모드로 연다.
+    case registerPassword
 }
