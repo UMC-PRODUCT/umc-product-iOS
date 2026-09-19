@@ -69,6 +69,11 @@ public protocol AuthRepositoryProtocol {
     ///   - newPassword: 새로 설정할 평문 비밀번호
     func changePassword(currentPassword: String, newPassword: String) async throws
 
+    /// 로그인한 회원이 로컬(이메일/비밀번호) 자격증명을 가지고 있는지 조회한다.
+    ///
+    /// 소셜로만 가입한 회원은 `false`다. 비밀번호 등록/변경 분기에 쓴다.
+    func fetchHasLocalCredential() async throws -> Bool
+
     /// OAuth 수단 연동을 해제한다.
     /// - Parameters:
     ///   - memberOAuthId: 해제할 OAuth 연동 ID

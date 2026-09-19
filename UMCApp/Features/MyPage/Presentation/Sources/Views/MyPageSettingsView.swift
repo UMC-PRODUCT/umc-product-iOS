@@ -31,6 +31,9 @@ struct MyPageSettingsView: View {
     /// 애플 캘린더 연동 토글 상태(#1311). 설정 섹션이 읽고, 권한 안내 Alert은 이 화면이 띄운다.
     @State private var calendarSyncViewModel: CalendarSyncViewModel
 
+    /// 회원관리 비밀번호 행의 등록/변경 분기 상태.
+    @State private var localCredentialViewModel: LocalCredentialViewModel
+
     /// 연동 요청 중인 소셜. 외부 로그인 시트가 떠 있는 동안 중복 탭을 막는 화면 상태다.
     @State private var connectingSocial: SocialType?
 
@@ -47,6 +50,9 @@ struct MyPageSettingsView: View {
         self.container = container
         _viewModel = State(initialValue: MyPageViewModel(container: container))
         _calendarSyncViewModel = State(initialValue: CalendarSyncViewModel(container: container))
+        _localCredentialViewModel = State(
+            initialValue: LocalCredentialViewModel(container: container)
+        )
     }
 
     // MARK: - Body
@@ -74,8 +80,9 @@ struct MyPageSettingsView: View {
 
             AuthSection(
                 alertPrompt: $viewModel.alertPrompt,
+                hasLocalCredential: localCredentialViewModel.hasLocalCredential,
                 onChangePassword: {
-                    pathStore.push(MyPageDestination.changePassword, on: .mypage)
+                    pathStore.push(passwordDestination, on: .mypage)
                 },
                 onLogout: { endSession("logout", perform: viewModel.logout) },
                 onDeleteAccount: { endSession("deleteAccount", perform: viewModel.deleteAccount) }
@@ -90,9 +97,16 @@ struct MyPageSettingsView: View {
         .task {
             await viewModel.fetchProfile()
         }
+        .task {
+            await localCredentialViewModel.fetch()
+        }
     }
 
     // MARK: - Function
+
+    private var passwordDestination: MyPageDestination {
+        localCredentialViewModel.hasLocalCredential == false ? .registerPassword : .changePassword
+    }
 
     /// 소셜 연동을 요청하고 결과를 프로필 상태에 반영한다.
     private func connect(_ social: SocialType) {

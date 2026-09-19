@@ -29,6 +29,7 @@ public enum NavigationTitle {
         case signUp = "회원가입"
         case resetPassword = "비밀번호 재설정"
         case changePassword = "비밀번호 변경"
+        case registerPassword = "비밀번호 등록"
     }
 
     /// 공지사항 화면용 타이틀

@@ -13,6 +13,9 @@ import UMCFoundation
 
 /// 비밀번호 변경 화면 — 로그인한 회원이 현재 비밀번호를 확인받고 새 비밀번호로 교체한다.
 ///
+/// ``ChangePasswordMode/register``로 열면 소셜로만 가입한 회원이 현재 비밀번호 없이 비밀번호를
+/// 처음 등록한다. 입력 규칙과 레이아웃은 변경과 같고 현재 비밀번호 필드만 빠진다.
+///
 /// - Note: 마이페이지에서 push되는 화면이므로 자체 `NavigationStack`을 두지 않는다
 ///   (`ResetPasswordView`와 동일).
 public struct ChangePasswordView: View {
@@ -33,18 +36,26 @@ public struct ChangePasswordView: View {
         static let newPasswordPlaceholder: String = "8자 이상 입력"
         static let newPasswordGuide: String = "8자 이상 입력해 주세요."
         static let submitTitle: String = "변경하기"
+        static let registerSubmitTitle: String = "등록하기"
         static let completedTitle: String = "비밀번호 변경 완료"
         static let completedMessage: String = "변경된 비밀번호로 다시 로그인해 주세요."
+        static let registerCompletedTitle: String = "비밀번호 등록 완료"
+        static let registerCompletedMessage: String = "이제 이메일과 비밀번호로도 로그인할 수 있어요."
         static let confirmTitle: String = "확인"
         static let messageLeadingPadding: CGFloat = 10
     }
 
     // MARK: - Init
 
-    public init(container: DIContainer, errorHandler: ErrorHandler) {
+    public init(
+        container: DIContainer,
+        errorHandler: ErrorHandler,
+        mode: ChangePasswordMode = .change
+    ) {
         _viewModel = State(initialValue: ChangePasswordViewModel(
             container: container,
-            errorHandler: errorHandler
+            errorHandler: errorHandler,
+            mode: mode
         ))
     }
 
@@ -53,7 +64,9 @@ public struct ChangePasswordView: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
-                currentPasswordField
+                if !isRegistering {
+                    currentPasswordField
+                }
                 newPasswordField
                 changeErrorMessageView
             }
@@ -61,7 +74,12 @@ public struct ChangePasswordView: View {
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
         .scrollDismissesKeyboard(.interactively)
-        .navigation(naviTitle: NavigationTitle.Auth.changePassword, displayMode: .inline)
+        .navigation(
+            naviTitle: isRegistering
+                ? NavigationTitle.Auth.registerPassword
+                : NavigationTitle.Auth.changePassword,
+            displayMode: .inline
+        )
         .safeAreaInset(edge: .bottom) {
             submitButton
         }
@@ -143,7 +161,7 @@ public struct ChangePasswordView: View {
                     ProgressView()
                         .tint(.white)
                 } else {
-                    Text(Constants.submitTitle)
+                    Text(isRegistering ? Constants.registerSubmitTitle : Constants.submitTitle)
                         .appFont(.subheadline, weight: .semibold, color: .white)
                 }
             }
@@ -158,21 +176,37 @@ public struct ChangePasswordView: View {
 
     // MARK: - Function
 
+    private var isRegistering: Bool {
+        viewModel.mode == .register
+    }
+
     private func submit() {
         focusedField = nil
-        Task { await viewModel.changePassword() }
+        Task { await viewModel.submit() }
     }
 
     private func handleChangePasswordStateChange(_ newState: Loadable<Bool>) {
         guard case .loaded = newState else { return }
 
         alertPrompt = AlertPrompt(
-            title: Constants.completedTitle,
-            message: Constants.completedMessage,
+            title: isRegistering ? Constants.registerCompletedTitle : Constants.completedTitle,
+            message: isRegistering
+                ? Constants.registerCompletedMessage
+                : Constants.completedMessage,
             positiveBtnTitle: Constants.confirmTitle,
             positiveBtnAction: { dismiss() }
         )
     }
+}
+
+// MARK: - Mode
+
+/// 비밀번호 화면 모드.
+public enum ChangePasswordMode: Sendable {
+    /// 현재 비밀번호를 확인받고 새 비밀번호로 바꾼다.
+    case change
+    /// 로컬 비밀번호가 없는 소셜 가입 회원이 비밀번호를 처음 등록한다.
+    case register
 }
 
 // MARK: - Focus Field
