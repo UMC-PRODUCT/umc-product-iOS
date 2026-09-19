@@ -27,7 +27,8 @@ let project = featureProject(
         // CoreNetwork의 소셜 로그인 매니저를 사용한다.
         .project(target: "CoreNetwork", path: .relativeToRoot("Core/Network")),
         .project(target: "AuthDomain", path: .relativeToRoot("Features/Auth")),
-        // 설정 화면 회원관리의 비밀번호 변경 행이 AuthPresentation의 ChangePasswordView로 push 한다.
+        // 설정 화면 회원관리의 비밀번호 변경 행은 ChangePasswordView로,
+        // 이메일 변경 행(#1453)은 ChangeEmailView로 push 한다(둘 다 AuthPresentation).
         .project(target: "AuthPresentation", path: .relativeToRoot("Features/Auth")),
         .project(target: "BadgeDomain", path: .relativeToRoot("Features/Badge")),
         // 애플 캘린더 연동 토글(#1311)이 HomeDomain의 CalendarSyncRepository/
@@ -42,8 +43,6 @@ let project = featureProject(
         .project(
             target: "BusinessCardPresentation", path: .relativeToRoot("Features/BusinessCard")
         ),
-        // 설정의 이메일 변경 행(#1453)이 AuthPresentation의 ChangeEmailView로 push 한다.
-        .project(target: "AuthPresentation", path: .relativeToRoot("Features/Auth")),
     ],
     includesDomainTests: true,
     domainTestDependencies: [
