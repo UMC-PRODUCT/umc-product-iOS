@@ -36,6 +36,7 @@ struct MyPageView: View {
     private let container: DIContainer
     private let onOpenBusinessCard: (BusinessCardEntry) -> Void
     private let onOpenStudy: () -> Void
+    private let onOpenProjects: () -> Void
 
     // MARK: - Init
 
@@ -43,16 +44,19 @@ struct MyPageView: View {
     ///   - container: 섹션·목적지 화면이 UseCase를 resolve할 DI 컨테이너
     ///   - onOpenBusinessCard: 명함 카드 버튼·「받은 명함」 행이 App 셸에 명함 진입을 요청한다.
     ///   - onOpenStudy: 「나의 스터디」 행이 App 셸에 스터디 화면 진입을 요청한다.
+    ///   - onOpenProjects: 「내 프로젝트」 행이 App 셸에 Project 화면 진입을 요청한다.
     ///   - viewModel: 프리뷰/테스트용 주입 지점 (기본값: container로 생성)
     init(
         container: DIContainer,
         onOpenBusinessCard: @escaping (BusinessCardEntry) -> Void,
         onOpenStudy: @escaping () -> Void,
+        onOpenProjects: @escaping () -> Void,
         viewModel: MyPageViewModel? = nil
     ) {
         self.container = container
         self.onOpenBusinessCard = onOpenBusinessCard
         self.onOpenStudy = onOpenStudy
+        self.onOpenProjects = onOpenProjects
         _viewModel = State(initialValue: viewModel ?? MyPageViewModel(container: container))
     }
 
@@ -80,7 +84,8 @@ struct MyPageView: View {
                         isActivityPending: viewModel.isCardEditPending,
                         onCertificateTap: {
                             pathStore.push(MyPageDestination.certificates, on: .mypage)
-                        }
+                        },
+                        onProjectTap: onOpenProjects
                     )
 
                     MyActiveLogSection { logType in
