@@ -150,6 +150,9 @@ let project = Project(
                     path: .relativeToRoot("Features/Maintenance")
                 ),
                 .project(target: "MaintenanceData", path: .relativeToRoot("Features/Maintenance")),
+                .project(target: "ProjectDomain", path: .relativeToRoot("Features/Project")),
+                .project(target: "ProjectPresentation", path: .relativeToRoot("Features/Project")),
+                .project(target: "ProjectData", path: .relativeToRoot("Features/Project")),
                 .project(target: "CoreNearbyExchange", path: .relativeToRoot("Core/NearbyExchange")),
                 // 워치 타겟이 같은 모듈을 링크하지만 그건 watchOS 슬라이스다. iPhone 쪽
                 // WCSession 을 활성화하려면 앱 타겟이 iOS 슬라이스를 따로 링크해야 한다.
