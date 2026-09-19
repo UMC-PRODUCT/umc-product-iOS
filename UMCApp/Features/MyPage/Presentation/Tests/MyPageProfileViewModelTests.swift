@@ -125,6 +125,30 @@ struct MyPageProfileViewModelTests {
         #expect(viewModel.canSubmit == false)
     }
 
+    @Test("GitHub만 수정해도 편집하지 않은 Instagram·개인 링크 기존 값이 함께 제출된다")
+    func submitLinkUpdateKeepsUneditedLinks() async throws {
+        let mock = MockMyPageRepository()
+        mock.updateProfileLinksResult = .success(makeStubProfileData())
+        let original = makeStubProfileData(profileLink: [
+            ProfileLink(type: .github, url: "https://github.com/old"),
+            ProfileLink(type: .instagram, url: "https://instagram.com/tester"),
+            ProfileLink(type: .personal, url: "https://tester.dev")
+        ])
+        let viewModel = makeViewModel(profile: original, repository: mock)
+
+        viewModel.profileData.profileLink[0].url = "https://github.com/new"
+        try await viewModel.submitProfileUpdate()
+
+        let sent = Dictionary(
+            uniqueKeysWithValues: (mock.updateProfileLinksReceivedLinks ?? []).map {
+                ($0.type, $0.url)
+            }
+        )
+        #expect(sent[.github] == "https://github.com/new")
+        #expect(sent[.instagram] == "https://instagram.com/tester")
+        #expect(sent[.personal] == "https://tester.dev")
+    }
+
     @Test("이미지+링크 동시 변경 시 두 UseCase 모두 호출")
     func submitImageAndLinkCallsBothUseCases() async throws {
         let mock = MockMyPageRepository()

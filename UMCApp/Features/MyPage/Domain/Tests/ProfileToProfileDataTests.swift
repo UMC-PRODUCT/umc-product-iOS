@@ -146,26 +146,28 @@ struct ProfileToProfileDataTests {
         #expect(admin11?.roles.contains(.schoolPartLeader) == true)
     }
 
-    @Test("profile 외부 링크가 SocialLinkType 3종(github/linkedin/blog)으로 매핑된다")
+    @Test("profile 외부 링크 5종이 모두 SocialLinkType으로 매핑된다")
     func profileLinksMappedToSocialLinkTypes() {
         let externalLinks = ProfileExternalLinks(
             id: "1",
             linkedIn: "https://linkedin.com/in/me",
-            instagram: nil,
+            instagram: "https://instagram.com/me",
             github: "https://github.com/me",
             blog: "https://blog.me",
-            personal: nil
+            personal: "https://me.dev"
         )
         let profile = Self.makeProfile(externalLinks: externalLinks)
         let result = profile.toProfileData()
 
-        let github = result.profileLink.first { $0.type == .github }
-        let linkedin = result.profileLink.first { $0.type == .linkedin }
-        let blog = result.profileLink.first { $0.type == .blog }
+        let urls = Dictionary(
+            uniqueKeysWithValues: result.profileLink.map { ($0.type, $0.url) }
+        )
 
-        #expect(github?.url == "https://github.com/me")
-        #expect(linkedin?.url == "https://linkedin.com/in/me")
-        #expect(blog?.url == "https://blog.me")
+        #expect(urls[.github] == "https://github.com/me")
+        #expect(urls[.linkedin] == "https://linkedin.com/in/me")
+        #expect(urls[.blog] == "https://blog.me")
+        #expect(urls[.instagram] == "https://instagram.com/me")
+        #expect(urls[.personal] == "https://me.dev")
     }
 
     /// 11기 챌린저는 전원 이 두 파트다. 매핑이 없으면 `fallbackPart` 를 타고 **운영진**

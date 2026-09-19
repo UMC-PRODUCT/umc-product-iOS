@@ -17,6 +17,10 @@ public enum SocialLinkType: String, CaseIterable {
     case linkedin = "LINKEDIN"
     /// 개인 블로그 링크
     case blog = "BLOG"
+    /// 인스타그램 링크
+    case instagram = "INSTAGRAM"
+    /// 개인 웹사이트·포트폴리오 링크
+    case personal = "PERSONAL"
 
     /// API 요청/응답에서 사용하는 type 문자열
     public var apiType: String {
@@ -24,6 +28,8 @@ public enum SocialLinkType: String, CaseIterable {
         case .github:    return "GITHUB"
         case .linkedin:  return "LINKEDIN"
         case .blog:      return "BLOG"
+        case .instagram: return "INSTAGRAM"
+        case .personal:  return "PERSONAL"
         }
     }
 
@@ -33,6 +39,8 @@ public enum SocialLinkType: String, CaseIterable {
         case "GITHUB":    self = .github
         case "LINKEDIN":  self = .linkedin
         case "BLOG":      self = .blog
+        case "INSTAGRAM": self = .instagram
+        case "PERSONAL":  self = .personal
         default:          return nil
         }
     }

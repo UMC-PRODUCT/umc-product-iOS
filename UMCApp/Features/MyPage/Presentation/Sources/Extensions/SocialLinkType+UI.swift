@@ -27,6 +27,11 @@ public extension SocialLinkType {
             return .linkedInColor
         case .blog:
             return .blogColor
+        // 전용 에셋이 없어 UMC 채널 행의 인스타그램 로고·블로그의 체인링크를 같이 쓴다.
+        case .instagram:
+            return .umcInstagram
+        case .personal:
+            return .blogColor
         }
     }
 
@@ -42,6 +47,10 @@ public extension SocialLinkType {
             return "LinkedIn"
         case .blog:
             return "Blog"
+        case .instagram:
+            return "Instagram"
+        case .personal:
+            return "개인 링크"
         }
     }
 
@@ -52,9 +61,9 @@ public extension SocialLinkType {
     /// (`LinkedIn` → 「인」의 ㄴ 받침) 문자열로는 판별할 수 없어 종류별로 못박는다.
     var objectParticle: String {
         switch self {
-        case .github, .blog:
+        case .github, .blog, .personal:
             return "를"
-        case .linkedin:
+        case .linkedin, .instagram:
             return "을"
         }
     }
@@ -68,6 +77,10 @@ public extension SocialLinkType {
             return "https://linkedin.com/in/yourprofile"
         case .blog:
             return "https://yourblog.com"
+        case .instagram:
+            return "https://instagram.com/yourid"
+        case .personal:
+            return "https://yourwebsite.com"
         }
     }
 }
