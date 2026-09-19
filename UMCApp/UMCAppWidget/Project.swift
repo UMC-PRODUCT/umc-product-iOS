@@ -16,5 +16,7 @@ let project = widgetExtensionProject(
     entitlements: .file(path: "UMCAppWidget.entitlements"),
     dependencies: [
         .project(target: "CoreWidgetShared", path: .relativeToRoot("Core/WidgetShared")),
+        // 출석 Live Activity 의 색·타이포 토큰
+        .project(target: "CoreDesignSystem", path: .relativeToRoot("Core/DesignSystem")),
     ]
 )

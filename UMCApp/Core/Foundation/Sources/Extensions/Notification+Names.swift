@@ -44,6 +44,12 @@ public extension Notification.Name {
     ///   실어 보냅니다. 수신 측은 전체 재조회라 지금은 읽지 않지만, 계약상 함께 나릅니다.
     static let attendanceStatusChanged = Notification.Name("attendanceStatusChanged")
 
+    /// 챌린저가 출석을 요청(GPS)했거나 사유를 제출한 직후의 로컬 알림.
+    ///
+    /// 앱이 해당 일정의 출석 Live Activity 를 바로 끝냅니다. 대상 일정 식별자는
+    /// ``Notification/attendanceScheduleIdKey`` 로 실어 보냅니다.
+    static let attendanceSubmitted = Notification.Name("attendanceSubmitted")
+
     /// 기수 매핑 정보가 갱신되었을 때 발송되는 알림.
     static let generationMappingsUpdated = Notification.Name("generationMappingsUpdated")
 
@@ -56,6 +62,7 @@ public extension Notification.Name {
 
 public extension Notification {
 
-    /// ``Notification/Name/attendanceStatusChanged`` userInfo 에 실리는 일정 식별자 키.
+    /// ``Notification/Name/attendanceStatusChanged``·``Notification/Name/attendanceSubmitted``
+    /// userInfo 에 실리는 일정 식별자 키.
     static let attendanceScheduleIdKey: String = "scheduleId"
 }
