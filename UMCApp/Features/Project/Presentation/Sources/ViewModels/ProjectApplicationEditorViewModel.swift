@@ -270,7 +270,7 @@ final class ProjectApplicationEditorViewModel {
         formResponseStatus: ProjectFormResponseStatus
     ) -> ProjectApplicationStatus {
         if let detailStatus { return detailStatus }
-        switch formResponseStatus {
+        return switch formResponseStatus {
         case .draft: .draft
         case .submitted: .submitted
         case .unknown: .unknown
