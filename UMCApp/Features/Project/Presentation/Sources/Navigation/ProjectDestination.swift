@@ -16,6 +16,9 @@ public enum ProjectDestination: Hashable {
     /// 내 프로젝트 — 관리 프로젝트·초안·내 지원 내역 (#1476).
     case myProjects
 
+    /// 운영진 프로젝트 운영 — 공개·정원·중단·완료·매칭 차수·통계 (#1479).
+    case admin
+
     /// 프로젝트 상세 + 팀원 구성.
     case detail(projectId: String)
 

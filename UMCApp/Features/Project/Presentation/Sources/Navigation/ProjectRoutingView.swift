@@ -35,6 +35,9 @@ public struct ProjectRoutingView: View {
         case .myProjects:
             MyProjectsView(container: container)
 
+        case .admin:
+            ProjectAdminView(container: container)
+
         case .detail(let projectId):
             ProjectDetailView(container: container, projectId: projectId)
 
