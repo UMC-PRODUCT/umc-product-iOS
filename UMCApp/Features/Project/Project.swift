@@ -33,6 +33,8 @@ let project = featureProject(
     includesPresentationTests: true,
     presentationTestDependencies: [
         .target(name: "ProjectDomain"),
+        .project(target: "CoreDI", path: .relativeToRoot("Core/DI")),
+        .project(target: "CoreDomain", path: .relativeToRoot("Core/Domain")),
         .target(name: "ProjectData"),
         .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
     ]

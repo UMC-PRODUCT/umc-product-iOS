@@ -16,6 +16,9 @@ public enum ProjectDestination: Hashable {
     /// 내 프로젝트 — 관리 프로젝트·초안·내 지원 내역 (#1476).
     case myProjects
 
+    /// 현재 기수에 공개된 진행 중 프로젝트 탐색.
+    case browse
+
     /// 운영진 프로젝트 운영 — 공개·정원·중단·완료·매칭 차수·통계 (#1479).
     case admin
 
@@ -33,4 +36,16 @@ public enum ProjectDestination: Hashable {
 
     /// 지원 폼 조회·편집.
     case applicationForm(projectId: String)
+
+    /// 챌린저 지원서 작성·임시 저장·제출·철회.
+    case editApplication(projectId: String, applicationId: String?)
+
+    /// 프로젝트 한 건의 지원자 목록.
+    case applicants(projectId: String, canDecide: Bool)
+
+    /// 관리 프로젝트 여러 건의 지원자 통합 목록.
+    case applicationInbox(projectIds: [String], decidableProjectIds: [String])
+
+    /// 지원서 상세와 합불 심사. 지원자 본인 조회는 `canDecide`가 `false`다.
+    case reviewApplication(projectId: String, applicationId: String, canDecide: Bool)
 }
