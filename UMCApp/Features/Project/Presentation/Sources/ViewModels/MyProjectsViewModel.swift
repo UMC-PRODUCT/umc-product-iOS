@@ -28,6 +28,8 @@ final class MyProjectsViewModel {
     private(set) var applicationStatus: ProjectApplicationStatus?
     private(set) var isLoadingNextPage = false
     private(set) var isCreatingDraft = false
+    private(set) var reviewProjectIds: [String] = []
+    private(set) var decidableProjectIds: [String] = []
 
     private let projectUseCase: ProjectUseCaseProtocol
     private let applicationUseCase: ProjectApplicationUseCaseProtocol
@@ -106,6 +108,9 @@ final class MyProjectsViewModel {
         current.nextPage += 1
         current.hasNext = page.hasNext
         managed = .loaded(current)
+        let access = await applicationAccess(projectIds: current.projects.map(\.id))
+        reviewProjectIds = access.readable
+        decidableProjectIds = access.decidable
     }
 
     func fetchManaged() async {
@@ -131,8 +136,13 @@ final class MyProjectsViewModel {
                 nextPage: 1,
                 hasNext: page.hasNext
             ))
+            let access = await applicationAccess(projectIds: page.items.map(\.id))
+            reviewProjectIds = access.readable
+            decidableProjectIds = access.decidable
         } catch {
             managed = .failed(AppError.from(error))
+            reviewProjectIds = []
+            decidableProjectIds = []
         }
     }
 
@@ -170,6 +180,18 @@ final class MyProjectsViewModel {
               let members = try? await projectUseCase.fetchMembers(projectIds: projectIds)
         else { return [:] }
         return members.mapValues(\.headCount)
+    }
+
+    private func applicationAccess(
+        projectIds: [String]
+    ) async -> (readable: [String], decidable: [String]) {
+        guard !projectIds.isEmpty,
+              let permissions = try? await projectUseCase.fetchPermissions(projectIds: projectIds)
+        else { return ([], []) }
+        return (
+            permissions.filter { $0.application.canReadList.allowed }.map(\.projectId),
+            permissions.filter { $0.application.canDecide.allowed }.map(\.projectId)
+        )
     }
 }
 

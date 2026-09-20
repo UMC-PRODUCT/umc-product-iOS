@@ -56,6 +56,11 @@ struct MyProjectsView: View {
         .navigation(naviTitle: NavigationTitle.Project.myProjects, displayMode: .inline)
         .umcDefaultBackground()
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                NavigationLink(value: ProjectDestination.browse) {
+                    Label("프로젝트 찾기", systemImage: "magnifyingglass")
+                }
+            }
             if !viewModel.generations.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
                     gisuMenu
@@ -80,6 +85,16 @@ struct MyProjectsView: View {
 
         case .loaded(let managed):
             Section(Constants.managedHeader) {
+                if !viewModel.reviewProjectIds.isEmpty {
+                    NavigationLink(
+                        value: ProjectDestination.applicationInbox(
+                            projectIds: viewModel.reviewProjectIds,
+                            decidableProjectIds: viewModel.decidableProjectIds
+                        )
+                    ) {
+                        Label("전체 지원자 관리", systemImage: "tray.full")
+                    }
+                }
                 if let draft = managed.draft {
                     projectRow(
                         projectId: draft.id,
@@ -134,12 +149,22 @@ struct MyProjectsView: View {
 
             case .loaded(let applications):
                 ForEach(applications, id: \.listId) { application in
-                    projectRow(
-                        projectId: application.projectId,
-                        name: application.project?.name ?? "-",
-                        subtitle: application.matchingRound?.phase?.title,
-                        badge: application.status?.title
-                    )
+                    if let applicationId = application.applicationId {
+                        NavigationLink(
+                            value: applicationDestination(
+                                projectId: application.projectId,
+                                applicationId: applicationId
+                            )
+                        ) {
+                            applicationRow(application)
+                        }
+                    } else {
+                        NavigationLink(
+                            value: ProjectDestination.detail(projectId: application.projectId)
+                        ) {
+                            applicationRow(application)
+                        }
+                    }
                 }
 
             case .failed(let error):
@@ -211,6 +236,24 @@ struct MyProjectsView: View {
         }
     }
 
+    private func applicationRow(_ application: MyProjectApplication) -> some View {
+        HStack(spacing: DefaultSpacing.spacing12) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                Text(application.project?.name ?? "-")
+                    .appFont(.subheadline, weight: .semibold, color: .grey900)
+                if let phase = application.matchingRound?.phase {
+                    Text(phase.title)
+                        .appFont(.footnote, color: .grey500)
+                }
+            }
+            Spacer()
+            if let status = application.status {
+                InfoBadge(status.title)
+            }
+        }
+        .padding(.vertical, DefaultSpacing.spacing4)
+    }
+
     private var loadingRow: some View {
         Progress(size: .small)
             .frame(maxWidth: .infinity)
@@ -271,5 +314,12 @@ struct MyProjectsView: View {
                 )
             }
         }
+    }
+
+    private func applicationDestination(
+        projectId: String,
+        applicationId: String
+    ) -> ProjectDestination {
+        .editApplication(projectId: projectId, applicationId: applicationId)
     }
 }
