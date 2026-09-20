@@ -115,7 +115,8 @@ struct ProjectApplicationEditorView: View {
                     Text(description)
                         .appFont(.footnote, color: .grey500)
                 }
-                if question.type.usesOptions {
+                switch question.type {
+                case .radio, .checkbox, .dropdown:
                     ForEach(question.options, id: \.orderNo) { option in
                         if let optionId = option.optionId {
                             Toggle(
@@ -129,13 +130,19 @@ struct ProjectApplicationEditorView: View {
                             .toggleStyle(.button)
                         }
                     }
-                } else {
+                case .shortText, .longText, .portfolio:
                     TextField(
                         answerPlaceholder(for: question.type),
                         text: textBinding(questionId: questionId),
                         axis: question.type == .longText ? .vertical : .horizontal
                     )
                     .disabled(!viewModel.canEdit)
+                case .file, .schedule, .unknown:
+                    Label(
+                        "이 질문 유형은 현재 앱에서 작성할 수 없어요.",
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    .appFont(.footnote, color: .red500)
                 }
             }
             .padding(.vertical, DefaultSpacing.spacing4)
@@ -156,7 +163,14 @@ struct ProjectApplicationEditorView: View {
                     .disabled(viewModel.isPerformingAction)
             }
         } footer: {
-            Text("현재 상태: \(viewModel.status.title)")
+            if let unsupportedQuestion = viewModel.unsupportedQuestions.first {
+                Text(
+                    "‘\(unsupportedQuestion.title)’ 질문은 아직 지원하지 않아 "
+                        + "임시 저장과 제출을 할 수 없어요."
+                )
+            } else {
+                Text("현재 상태: \(viewModel.status?.title ?? "작성 중")")
+            }
         }
     }
 
@@ -187,8 +201,6 @@ struct ProjectApplicationEditorView: View {
 
     private func answerPlaceholder(for type: ProjectQuestionType) -> String {
         switch type {
-        case .schedule: "가능한 일정을 입력해 주세요"
-        case .file: "첨부 파일 정보를 입력해 주세요"
         case .portfolio: "포트폴리오 링크를 입력해 주세요"
         default: "답변을 입력해 주세요"
         }

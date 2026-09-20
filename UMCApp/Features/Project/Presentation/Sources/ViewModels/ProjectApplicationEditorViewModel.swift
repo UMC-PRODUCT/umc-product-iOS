@@ -25,7 +25,7 @@ final class ProjectApplicationEditorViewModel {
     private(set) var form: Loadable<ProjectApplicationForm> = .idle
     private(set) var matchingRounds: Loadable<[ProjectMatchingRound]> = .idle
     private(set) var applicationId: String?
-    private(set) var status: ProjectApplicationStatus = .draft
+    private(set) var status: ProjectApplicationStatus?
     private(set) var isPerformingAction = false
     var selectedMatchingRoundId: String?
     var answers: [String: ProjectApplicationAnswerDraft] = [:]
@@ -62,51 +62,32 @@ final class ProjectApplicationEditorViewModel {
 
     // MARK: - Computed Property
 
-    var canEdit: Bool { status == .draft }
+    var canEdit: Bool { applicationId == nil || status == .draft }
 
     var canCancel: Bool { status == .draft || status == .submitted }
 
     var canSave: Bool {
-        canEdit && form.value != nil && (applicationId != nil || selectedMatchingRoundId != nil)
+        canEdit
+            && form.value != nil
+            && unsupportedQuestions.isEmpty
+            && (applicationId != nil || selectedMatchingRoundId != nil)
+    }
+
+    var unsupportedQuestions: [ProjectFormQuestion] {
+        form.value?.sections
+            .flatMap(\.questions)
+            .filter { Self.isUnsupported($0.type) } ?? []
     }
 
     // MARK: - Function
 
     func fetch() async {
         form = .loading
-        if applicationId == nil {
-            matchingRounds = .loading
-        }
         do {
-            let fetchedForm = try await applicationUseCase.fetchApplicationForm(
-                projectId: projectId
-            )
-            guard let fetchedForm else {
-                throw AppError.validation(.invalidValue(
-                    field: "지원 폼",
-                    reason: "아직 지원 폼이 공개되지 않았어요"
-                ))
-            }
-            form = .loaded(fetchedForm)
-            initializeAnswers(from: fetchedForm.sections)
-
             if let applicationId {
-                let detail = try await applicationUseCase.fetchApplication(
-                    projectId: projectId,
-                    applicationId: applicationId
-                )
-                status = detail.status ?? .draft
-                selectedMatchingRoundId = detail.matchingRound?.id
-                if let sections = detail.formResponse?.sections {
-                    initializeAnswers(from: sections)
-                }
+                try await fetchExistingApplication(applicationId: applicationId)
             } else {
-                let rounds = try await matchingRoundUseCase.fetchMatchingRounds(
-                    chapterId: chapterId,
-                    time: Date()
-                )
-                matchingRounds = .loaded(rounds)
-                selectedMatchingRoundId = rounds.first?.id
+                try await fetchNewApplicationForm()
             }
         } catch {
             form = .failed(AppError.from(error))
@@ -137,6 +118,9 @@ final class ProjectApplicationEditorViewModel {
     }
 
     func save() async throws {
+        if let unsupportedQuestion = unsupportedQuestions.first {
+            throw Self.unsupportedQuestionError(unsupportedQuestion)
+        }
         guard canSave else {
             throw AppError.validation(.invalidValue(
                 field: "지원서",
@@ -183,7 +167,7 @@ final class ProjectApplicationEditorViewModel {
     }
 
     func cancel(reason: String?) async throws {
-        guard let applicationId, status != .cancelled else { return }
+        guard let applicationId, canCancel else { return }
         isPerformingAction = true
         defer { isPerformingAction = false }
         let cancelled = try await applicationUseCase.cancelApplication(
@@ -199,19 +183,128 @@ final class ProjectApplicationEditorViewModel {
         return try sections.flatMap(\.questions).compactMap { question in
             guard let questionId = question.questionId else { return nil }
             let draft = answers[questionId] ?? ProjectApplicationAnswerDraft()
-            if question.isRequired
-                && draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                && draft.selectedOptionIds.isEmpty
-                && draft.fileIds.isEmpty {
+            if Self.isUnsupported(question.type) {
+                throw Self.unsupportedQuestionError(question)
+            }
+            if question.isRequired && Self.isEmptyAnswer(draft, for: question.type) {
                 throw AppError.validation(.empty(field: question.title))
+            }
+            let textValue: String?
+            let selectedOptionIds: [String]
+            let fileIds: [String]
+            switch question.type {
+            case .shortText, .longText:
+                textValue = draft.text.nilIfEmpty
+                selectedOptionIds = []
+                fileIds = []
+            case .radio, .checkbox, .dropdown:
+                textValue = nil
+                selectedOptionIds = draft.selectedOptionIds.sorted()
+                fileIds = []
+            case .portfolio:
+                textValue = draft.text.nilIfEmpty
+                selectedOptionIds = []
+                fileIds = draft.fileIds
+            case .file, .schedule, .unknown:
+                throw Self.unsupportedQuestionError(question)
             }
             return ProjectAnswerInput(
                 questionId: questionId,
-                textValue: draft.text.nilIfEmpty,
-                selectedOptionIds: draft.selectedOptionIds.sorted(),
-                fileIds: draft.fileIds
+                textValue: textValue,
+                selectedOptionIds: selectedOptionIds,
+                fileIds: fileIds
             )
         }
+    }
+
+    private func fetchExistingApplication(applicationId: String) async throws {
+        let detail = try await applicationUseCase.fetchApplication(
+            projectId: projectId,
+            applicationId: applicationId
+        )
+        guard let response = detail.formResponse else {
+            throw AppError.validation(.invalidValue(
+                field: "지원서",
+                reason: "지원 당시 질문과 답변을 확인할 수 없어요"
+            ))
+        }
+        let snapshot = ProjectApplicationForm(
+            projectId: projectId,
+            applicationFormId: response.formId,
+            title: nil,
+            description: nil,
+            sections: response.sections
+        )
+        status = Self.applicationStatus(
+            detailStatus: detail.status,
+            formResponseStatus: response.status
+        )
+        selectedMatchingRoundId = detail.matchingRound?.id
+        form = .loaded(snapshot)
+        initializeAnswers(from: response.sections)
+    }
+
+    private func fetchNewApplicationForm() async throws {
+        matchingRounds = .loading
+        let fetchedForm = try await applicationUseCase.fetchApplicationForm(
+            projectId: projectId
+        )
+        guard let fetchedForm else {
+            throw AppError.validation(.invalidValue(
+                field: "지원 폼",
+                reason: "아직 지원 폼이 공개되지 않았어요"
+            ))
+        }
+        let rounds = try await matchingRoundUseCase.fetchMatchingRounds(
+            chapterId: chapterId,
+            time: Date()
+        )
+        form = .loaded(fetchedForm)
+        matchingRounds = .loaded(rounds)
+        selectedMatchingRoundId = rounds.first?.id
+        initializeAnswers(from: fetchedForm.sections)
+    }
+
+    private static func applicationStatus(
+        detailStatus: ProjectApplicationStatus?,
+        formResponseStatus: ProjectFormResponseStatus
+    ) -> ProjectApplicationStatus {
+        if let detailStatus { return detailStatus }
+        switch formResponseStatus {
+        case .draft: .draft
+        case .submitted: .submitted
+        case .unknown: .unknown
+        }
+    }
+
+    private static func isUnsupported(_ type: ProjectQuestionType) -> Bool {
+        type == .file || type == .schedule || type == .unknown
+    }
+
+    private static func isEmptyAnswer(
+        _ draft: ProjectApplicationAnswerDraft,
+        for type: ProjectQuestionType
+    ) -> Bool {
+        switch type {
+        case .shortText, .longText:
+            draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case .radio, .checkbox, .dropdown:
+            draft.selectedOptionIds.isEmpty
+        case .portfolio:
+            draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && draft.fileIds.isEmpty
+        case .file, .schedule, .unknown:
+            true
+        }
+    }
+
+    private static func unsupportedQuestionError(
+        _ question: ProjectFormQuestion
+    ) -> AppError {
+        AppError.validation(.invalidValue(
+            field: question.title,
+            reason: "이 질문 유형은 현재 앱에서 지원하지 않아요"
+        ))
     }
 
     private func initializeAnswers(from sections: [ProjectFormSection]) {

@@ -88,9 +88,80 @@ struct ProjectApplicationFlowViewModelTests {
         #expect(viewModel.status == .submitted)
     }
 
+    @Test("기존 지원서는 상세의 질문 스냅샷을 사용한다")
+    func existingApplicationUsesDetailSnapshot() async {
+        let applicationUseCase = ProjectApplicationUseCaseSpy()
+        applicationUseCase.detail = Self.draftApplicationDetail
+        let viewModel = ProjectApplicationEditorViewModel(
+            projectId: "101",
+            applicationId: "301",
+            applicationUseCase: applicationUseCase,
+            matchingRoundUseCase: ProjectMatchingRoundUseCaseSpy(),
+            chapterId: nil
+        )
+
+        await viewModel.fetch()
+
+        #expect(applicationUseCase.fetchApplicationFormCallCount == 0)
+        #expect(applicationUseCase.fetchApplicationCallCount == 1)
+        #expect(
+            viewModel.form.value?.sections.flatMap(\.questions).map(\.questionId) == ["401"]
+        )
+    }
+
+    @Test("상세 표시 상태가 nil이면 제출 폼 응답 상태로 편집을 차단한다")
+    func hiddenDecisionStatusUsesSubmittedFormResponseStatus() async {
+        let applicationUseCase = ProjectApplicationUseCaseSpy()
+        applicationUseCase.detail = Self.hiddenDecisionApplicationDetail
+        let viewModel = ProjectApplicationEditorViewModel(
+            projectId: "101",
+            applicationId: "301",
+            applicationUseCase: applicationUseCase,
+            matchingRoundUseCase: ProjectMatchingRoundUseCaseSpy(),
+            chapterId: nil
+        )
+
+        await viewModel.fetch()
+
+        #expect(viewModel.status == .submitted)
+        #expect(viewModel.canEdit == false)
+        #expect(viewModel.canSave == false)
+    }
+
+    @Test("파일·일정 질문은 잘못된 textValue 저장 요청을 만들지 않는다")
+    func unsupportedAnswerTypesBlockSaving() async {
+        for questionType in [ProjectQuestionType.file, .schedule] {
+            let applicationUseCase = ProjectApplicationUseCaseSpy()
+            applicationUseCase.form = Self.applicationForm(questionType: questionType)
+            let matchingRoundUseCase = ProjectMatchingRoundUseCaseSpy()
+            matchingRoundUseCase.rounds = [Self.matchingRound]
+            let viewModel = ProjectApplicationEditorViewModel(
+                projectId: "101",
+                applicationId: nil,
+                applicationUseCase: applicationUseCase,
+                matchingRoundUseCase: matchingRoundUseCase,
+                chapterId: "9"
+            )
+            await viewModel.fetch()
+            viewModel.updateText(questionId: "401", text: "잘못된 문자열 답변")
+
+            await #expect(throws: AppError.self) {
+                try await viewModel.save()
+            }
+            await #expect(throws: AppError.self) {
+                try await viewModel.submit()
+            }
+
+            #expect(viewModel.canSave == false)
+            #expect(applicationUseCase.createdApplications.isEmpty)
+            #expect(applicationUseCase.updatedApplications.isEmpty)
+        }
+    }
+
     @Test("지원 철회 결과가 취소 상태로 전환된다")
     func cancellationUpdatesStatus() async throws {
         let applicationUseCase = ProjectApplicationUseCaseSpy()
+        applicationUseCase.detail = Self.draftApplicationDetail
         applicationUseCase.cancelledResult = .init(applicationId: "301", status: .cancelled)
         let viewModel = ProjectApplicationEditorViewModel(
             projectId: "101",
@@ -99,6 +170,7 @@ struct ProjectApplicationFlowViewModelTests {
             matchingRoundUseCase: ProjectMatchingRoundUseCaseSpy(),
             chapterId: nil
         )
+        await viewModel.fetch()
 
         try await viewModel.cancel(reason: "다른 프로젝트 지원")
 
@@ -211,6 +283,55 @@ private extension ProjectApplicationFlowViewModelTests {
         ]
     )
 
+    static func applicationForm(
+        questionType: ProjectQuestionType
+    ) -> ProjectApplicationForm {
+        ProjectApplicationForm(
+            projectId: "101",
+            applicationFormId: "501",
+            title: "지원서",
+            description: nil,
+            sections: [applicationSection(questionType: questionType)]
+        )
+    }
+
+    static func applicationSection(
+        questionType: ProjectQuestionType = .longText
+    ) -> ProjectFormSection {
+        ProjectFormSection(
+            sectionId: "1",
+            type: .common,
+            allowedParts: [],
+            title: "지원 당시 공통 질문",
+            description: nil,
+            orderNo: "1",
+            questions: [
+                ProjectFormQuestion(
+                    questionId: "401",
+                    type: questionType,
+                    title: "지원 동기",
+                    description: nil,
+                    isRequired: true,
+                    orderNo: "1",
+                    options: []
+                )
+            ]
+        )
+    }
+
+    static func formResponse(
+        status: ProjectFormResponseStatus
+    ) -> ProjectFormResponse {
+        ProjectFormResponse(
+            formResponseId: "601",
+            formId: "501",
+            status: status,
+            submittedAt: status == .submitted ? Date(timeIntervalSince1970: 100) : nil,
+            lastSavedAt: Date(timeIntervalSince1970: 50),
+            sections: [applicationSection()]
+        )
+    }
+
     static let matchingRound = ProjectMatchingRound(
         id: "201",
         name: "1차 매칭",
@@ -261,7 +382,17 @@ private extension ProjectApplicationFlowViewModelTests {
         status: .draft,
         submittedAt: nil,
         statusChangedAt: nil,
-        formResponse: nil
+        formResponse: formResponse(status: .draft)
+    )
+
+    static let hiddenDecisionApplicationDetail = ProjectApplicationDetail(
+        applicationId: "301",
+        applicant: applicant,
+        matchingRound: .init(id: "201", type: .planDeveloper, phase: .first),
+        status: nil,
+        submittedAt: Date(timeIntervalSince1970: 100),
+        statusChangedAt: nil,
+        formResponse: formResponse(status: .submitted)
     )
 }
 
@@ -354,8 +485,13 @@ private final class ProjectApplicationUseCaseSpy:
     var singleApplicationQueries: [SingleQuery] = []
     var batchApplicationQueries: [BatchQuery] = []
     var decisions: [ProjectApplicationDecision] = []
+    var fetchApplicationFormCallCount = 0
+    var fetchApplicationCallCount = 0
 
-    func fetchApplicationForm(projectId: String) async throws -> ProjectApplicationForm? { form }
+    func fetchApplicationForm(projectId: String) async throws -> ProjectApplicationForm? {
+        fetchApplicationFormCallCount += 1
+        return form
+    }
     func saveApplicationForm(projectId: String, title: String?, description: String?,
                              sections: [ProjectFormSection]) async throws
         -> ProjectApplicationForm { throw TestError.unused }
@@ -409,6 +545,7 @@ private final class ProjectApplicationUseCaseSpy:
     }
     func fetchApplication(projectId: String, applicationId: String) async throws
         -> ProjectApplicationDetail {
+        fetchApplicationCallCount += 1
         guard let detail else { throw TestError.unused }
         return detail
     }
