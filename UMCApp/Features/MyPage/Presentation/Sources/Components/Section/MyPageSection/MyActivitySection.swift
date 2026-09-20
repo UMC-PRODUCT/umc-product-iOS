@@ -9,13 +9,14 @@ import CoreDesignSystem
 import CoreUIComponents
 import SwiftUI
 
-/// v3 루트의 「나의 활동」 섹션 — 나의 스터디 / 나의 활동・프로젝트.
+/// v3 루트의 「나의 활동」 섹션 — 나의 스터디 / 나의 활동・프로젝트 / 내 프로젝트 / 수료증.
 ///
 /// - 나의 스터디(MP-F10): 스터디 화면의 정본 소유자가 Activity 피처라 그 탭으로 옮긴다.
 ///   스터디 상세 목적지는 아직 없어 탭 전환까지만 하고 push 는 하지 않는다.
-/// - 나의 활동・프로젝트(MP-F11): MyPage 안의 활동 이력 목록으로 push 한다. 「프로젝트」 축은
-///   서버·도메인·DTO 에 엔티티가 없어 그릴 값 자체가 없다 — 행 제목만 시안대로 두고 목록은
-///   활동 이력만 담는다.
+/// - 나의 활동・프로젝트(MP-F11): MyPage 안의 활동 이력(프로필 activityLogs) 목록으로 push 한다.
+///   행 제목은 시안대로 두지만 매칭 프로젝트는 담지 않는다.
+/// - 내 프로젝트(#1476): 매칭 프로젝트(`/api/v1/projects`)는 Project 피처가 소유한다.
+///   MyPage 는 콜백만 올리고 App 셸이 Project 화면을 push 한다.
 ///
 /// 액션이 `nil`이면 ``MyPageListRow``가 탭 제스처를 아예 달지 않는다.
 public struct MyActivitySection: View {
@@ -29,6 +30,7 @@ public struct MyActivitySection: View {
     private let onActivityTap: (() -> Void)?
     private let isActivityPending: Bool
     private let onCertificateTap: (() -> Void)?
+    private let onProjectTap: (() -> Void)?
 
     // MARK: - Init
 
@@ -41,6 +43,7 @@ public struct MyActivitySection: View {
     ///   - isActivityPending: `true`면 목적지는 있는데 스냅샷을 기다리는 중이라는 뜻 —
     ///     행이 chevron 대신 진행 표시를 보여주고 탭을 막는다.
     ///   - onCertificateTap: 수료증 ・인증서 목록 진입 (#1450).
+    ///   - onProjectTap: 내 프로젝트 진입 (#1476).
     public init(
         sectionType: MyPageSectionType = .myActivity,
         studyCount: String?,
@@ -48,7 +51,8 @@ public struct MyActivitySection: View {
         onStudyTap: (() -> Void)? = nil,
         onActivityTap: (() -> Void)? = nil,
         isActivityPending: Bool = false,
-        onCertificateTap: (() -> Void)? = nil
+        onCertificateTap: (() -> Void)? = nil,
+        onProjectTap: (() -> Void)? = nil
     ) {
         self.sectionType = sectionType
         self.studyCount = studyCount
@@ -57,6 +61,7 @@ public struct MyActivitySection: View {
         self.onActivityTap = onActivityTap
         self.isActivityPending = isActivityPending
         self.onCertificateTap = onCertificateTap
+        self.onProjectTap = onProjectTap
     }
 
     // MARK: - Body
@@ -84,6 +89,15 @@ public struct MyActivitySection: View {
                     value: activityCount.map { "\($0)건" } ?? "-",
                     action: onActivityTap,
                     isPending: isActivityPending
+                )
+
+                MyPageListDivider()
+
+                MyPageListRow(
+                    systemIcon: "briefcase",
+                    iconColor: MyPageListIconColor.blue,
+                    title: "내 프로젝트",
+                    action: onProjectTap
                 )
 
                 MyPageListDivider()
