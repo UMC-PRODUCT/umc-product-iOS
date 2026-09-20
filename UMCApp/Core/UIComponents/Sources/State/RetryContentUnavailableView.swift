@@ -26,7 +26,12 @@ extension EnvironmentValues {
     ///
     /// `CoreUIComponents` 가 KakaoSDK 에 의존하지 않도록 열기는 밖에서 넘겨받는다.
     /// 주입되지 않은 곳(프리뷰 등)에서는 문의 버튼을 띄우지 않는다.
-    @Entry public var openInquiryChannel: (@MainActor () -> Void)? = nil
+    @Entry public var inquiryChannelOpener: (any InquiryChannelOpening)? = nil
+}
+
+@MainActor
+public protocol InquiryChannelOpening: AnyObject {
+    func open(errorHandler: ErrorHandler)
 }
 
 /// 로딩 실패 시 재시도 액션을 함께 제공하는 공통 Unavailable View입니다.
@@ -49,7 +54,8 @@ public struct RetryContentUnavailableView: View {
     public let screenName: String
     public let retryAction: () async -> Void
 
-    @Environment(\.openInquiryChannel) private var openInquiryChannel
+    @Environment(\.inquiryChannelOpener) private var inquiryChannelOpener
+    @Environment(ErrorHandler.self) private var errorHandler
     @State private var reportPrompt: AlertPrompt?
     /// 리포트의 발생 시각. 실패 화면이 처음 뜬 시점으로 잡는다.
     @State private var failedAt = Date()
@@ -116,7 +122,7 @@ public struct RetryContentUnavailableView: View {
                 .buttonStyle(.glassProminent)
                 .disabled(isRetrying)
 
-                if let error, error.isReportable, openInquiryChannel != nil {
+                if let error, error.isReportable, inquiryChannelOpener != nil {
                     Button(Constants.reportTitle) {
                         presentReportPrompt(for: error)
                     }
@@ -140,7 +146,7 @@ public struct RetryContentUnavailableView: View {
             positiveBtnTitle: Constants.reportConfirmTitle,
             positiveBtnAction: {
                 UIPasteboard.general.string = report
-                openInquiryChannel?()
+                inquiryChannelOpener?.open(errorHandler: errorHandler)
             },
             negativeBtnTitle: Constants.reportCancelTitle
         )

@@ -16,6 +16,15 @@ import MaintenancePresentation
 import SwiftUI
 import UMCFoundation
 
+@MainActor
+private final class KakaoInquiryChannelOpener: InquiryChannelOpening {
+    private let manager = KakaoPlusManager()
+
+    func open(errorHandler: ErrorHandler) {
+        manager.openKakaoChannel(errorHandler: errorHandler)
+    }
+}
+
 /// 앱 루트 화면.
 ///
 /// `AppFlowViewModel`의 상태에 따라 Bootstrap / Login / SignUp / Main(탭 셸)을 스위칭한다.
@@ -25,6 +34,7 @@ struct AppRootView: View {
     // MARK: - Property
 
     @State private var viewModel = AppFlowViewModel()
+    @State private var inquiryChannelOpener = KakaoInquiryChannelOpener()
 
     /// 영속 스토어 폴백 고지. 실행당 한 번만 뜬다.
     @State private var storageAlert: AlertPrompt?
@@ -32,8 +42,6 @@ struct AppRootView: View {
 
     @Environment(\.di) private var di
     @Environment(ErrorHandler.self) private var errorHandler
-
-    private let kakaoPlusManager = KakaoPlusManager()
 
     // MARK: - Body
 
@@ -76,9 +84,7 @@ struct AppRootView: View {
         }
         .environment(\.appFlow, viewModel.appFlow)
         // 실패 화면의 문의 버튼이 여는 카카오톡 채널 (`RetryContentUnavailableView`).
-        .environment(\.openInquiryChannel) {
-            kakaoPlusManager.openKakaoChannel(errorHandler: errorHandler)
-        }
+        .environment(\.inquiryChannelOpener, inquiryChannelOpener)
         .alertPrompt(item: $storageAlert)
         .task { noticeEphemeralStoreIfNeeded() }
         .onReceive(
