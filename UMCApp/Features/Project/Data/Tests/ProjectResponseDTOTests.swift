@@ -21,6 +21,47 @@ struct ProjectResponseDTOTests {
 
     // MARK: - Project
 
+    @Test("지원 폼은 숫자 id·순서를 String 도메인 값으로 디코딩한다")
+    func applicationFormDecodesFlexibleIdentifiers() throws {
+        let json = """
+        {
+          "projectId": 101,
+          "applicationFormId": "201",
+          "title": "지원서",
+          "sections": [{
+            "sectionId": 301,
+            "type": "PART",
+            "allowedParts": ["DESIGN", "NEW_PART"],
+            "title": "디자인",
+            "orderNo": 0,
+            "questions": [{
+              "questionId": "401",
+              "type": "RADIO",
+              "title": "경험",
+              "isRequired": true,
+              "orderNo": "0",
+              "options": [{
+                "optionId": 501,
+                "content": "있음",
+                "orderNo": 0,
+                "isOther": false
+              }]
+            }]
+          }]
+        }
+        """
+
+        let form = try JSONDecoder()
+            .decode(ProjectApplicationFormResponseDTO.self, from: Data(json.utf8))
+            .toDomain()
+
+        #expect(form.projectId == "101")
+        #expect(form.sections.first?.sectionId == "301")
+        #expect(form.sections.first?.allowedParts == [.design])
+        #expect(form.sections.first?.questions.first?.questionId == "401")
+        #expect(form.sections.first?.questions.first?.options.first?.optionId == "501")
+    }
+
     @Test("목록 페이지 — 문자열·숫자 id 와 인원 수를 모두 String 으로 받는다")
     func summaryPageDecodesMixedNumbers() throws {
         let json = """

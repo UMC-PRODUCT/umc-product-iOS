@@ -18,4 +18,16 @@ public enum ProjectDestination: Hashable {
 
     /// 프로젝트 상세 + 팀원 구성.
     case detail(projectId: String)
+
+    /// 프로젝트 기본 정보 수정.
+    case editInfo(projectId: String)
+
+    /// 팀원·보조 PM 관리.
+    case manageMembers(projectId: String)
+
+    /// PM 소유권 양도.
+    case transferOwnership(projectId: String)
+
+    /// 지원 폼 조회·편집.
+    case applicationForm(projectId: String)
 }

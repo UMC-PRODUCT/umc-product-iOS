@@ -7,6 +7,7 @@
 
 import Foundation
 import ProjectDomain
+import UMCFoundation
 
 /// Project Presentation 레이어의 UseCase Bundle Protocol.
 /// ViewModel이 개별 UseCase 대신 Provider 한 개로 묶어 받는다 (MyPage 패턴).
@@ -32,9 +33,13 @@ public final class ProjectUseCaseProvider: ProjectUseCaseProviding {
     public init(
         projectRepository: ProjectRepositoryProtocol,
         applicationRepository: ProjectApplicationRepositoryProtocol,
-        matchingRoundRepository: ProjectMatchingRoundRepositoryProtocol
+        matchingRoundRepository: ProjectMatchingRoundRepositoryProtocol,
+        storageRepository: StorageRepositoryProtocol
     ) {
-        self.projectUseCase = ProjectUseCase(repository: projectRepository)
+        self.projectUseCase = ProjectUseCase(
+            repository: projectRepository,
+            storageRepository: storageRepository
+        )
         self.applicationUseCase = ProjectApplicationUseCase(repository: applicationRepository)
         self.matchingRoundUseCase = ProjectMatchingRoundUseCase(
             repository: matchingRoundRepository

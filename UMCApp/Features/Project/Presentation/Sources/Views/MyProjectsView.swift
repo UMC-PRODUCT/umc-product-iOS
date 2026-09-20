@@ -21,6 +21,7 @@ struct MyProjectsView: View {
     // MARK: - Property
 
     @State private var viewModel: MyProjectsViewModel
+    @State private var alertPrompt: AlertPrompt?
     @Environment(ErrorHandler.self) private var errorHandler
 
     fileprivate enum Constants {
@@ -31,6 +32,7 @@ struct MyProjectsView: View {
         static let statusFilterTitle = "지원 상태"
         static let statusFilterIcon = "line.3.horizontal.decrease.circle"
         static let gisuMenuTitle = "기수 선택"
+        static let createDraft = "새 프로젝트 만들기"
     }
 
     // MARK: - Init
@@ -63,6 +65,7 @@ struct MyProjectsView: View {
         .task {
             await viewModel.fetch()
         }
+        .alertPrompt(item: $alertPrompt)
     }
 
     // MARK: - View Component
@@ -74,9 +77,6 @@ struct MyProjectsView: View {
             Section(Constants.managedHeader) {
                 loadingRow
             }
-
-        case .loaded(let managed) where managed.isEmpty:
-            EmptyView()
 
         case .loaded(let managed):
             Section(Constants.managedHeader) {
@@ -103,6 +103,15 @@ struct MyProjectsView: View {
                 }
                 if viewModel.isLoadingNextPage {
                     loadingRow
+                }
+                if viewModel.canCreateDraft {
+                    Button(action: confirmDraftCreation) {
+                        Label(Constants.createDraft, systemImage: "plus.circle")
+                    }
+                    .disabled(viewModel.isCreatingDraft)
+                } else if managed.isEmpty {
+                    Text("관리하는 프로젝트가 없어요")
+                        .appFont(.footnote, color: .grey500)
                 }
             }
 
@@ -236,6 +245,29 @@ struct MyProjectsView: View {
                 errorHandler.handle(
                     error,
                     context: ErrorContext(feature: "Project", action: "loadManagedProjects")
+                )
+            }
+        }
+    }
+
+    private func confirmDraftCreation() {
+        alertPrompt = AlertPrompt(
+            title: Constants.createDraft,
+            message: "선택한 기수에 프로젝트 초안을 만들까요?",
+            positiveBtnTitle: "만들기",
+            positiveBtnAction: createDraft,
+            negativeBtnTitle: "취소"
+        )
+    }
+
+    private func createDraft() {
+        Task {
+            do {
+                try await viewModel.createDraft()
+            } catch {
+                errorHandler.handle(
+                    error,
+                    context: ErrorContext(feature: "Project", action: "createDraftProject")
                 )
             }
         }

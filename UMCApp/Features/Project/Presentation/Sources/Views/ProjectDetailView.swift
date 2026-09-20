@@ -18,6 +18,9 @@ struct ProjectDetailView: View {
     // MARK: - Property
 
     @State private var viewModel: ProjectDetailViewModel
+    @State private var alertPrompt: AlertPrompt?
+    @Environment(\.dismiss) private var dismiss
+    @Environment(ErrorHandler.self) private var errorHandler
 
     fileprivate enum Constants {
         static let icon = "briefcase"
@@ -30,6 +33,7 @@ struct ProjectDetailView: View {
         static let partQuotaHeader = "파트별 모집"
         static let membersHeader = "팀원"
         static let membersEmpty = "아직 팀원이 없어요"
+        static let managementHeader = "프로젝트 관리"
     }
 
     // MARK: - Init
@@ -49,6 +53,10 @@ struct ProjectDetailView: View {
             .task {
                 await viewModel.fetch()
             }
+            .alertPrompt(item: $alertPrompt)
+            .onChange(of: viewModel.didDelete) { _, didDelete in
+                if didDelete { dismiss() }
+            }
     }
 
     // MARK: - View Component
@@ -64,6 +72,7 @@ struct ProjectDetailView: View {
             List {
                 headerSection(project)
                 infoSection(project)
+                managementSection(project)
                 if !project.partQuotas.isEmpty {
                     partQuotaSection(project.partQuotas)
                 }
@@ -86,6 +95,61 @@ struct ProjectDetailView: View {
                 error: error,
                 retryAction: { await viewModel.fetch() }
             )
+        }
+    }
+
+    @ViewBuilder
+    private func managementSection(_ project: ProjectDetail) -> some View {
+        if let permission = viewModel.permission {
+            Section(Constants.managementHeader) {
+                if permission.canEditInfo.allowed {
+                    NavigationLink(value: ProjectDestination.editInfo(projectId: project.id)) {
+                        Label("기본 정보 수정", systemImage: "square.and.pencil")
+                    }
+                }
+                if permission.member.canCreate.allowed || permission.member.canDelete.allowed {
+                    NavigationLink(
+                        value: ProjectDestination.manageMembers(projectId: project.id)
+                    ) {
+                        Label("팀원·보조 PM 관리", systemImage: "person.3")
+                    }
+                }
+                if permission.canTransferOwnership.allowed {
+                    NavigationLink(
+                        value: ProjectDestination.transferOwnership(projectId: project.id)
+                    ) {
+                        Label("PM 소유권 양도", systemImage: "arrow.left.arrow.right")
+                    }
+                }
+                let canOpenApplicationForm = permission.applicationForm.canRead.allowed
+                    || permission.applicationForm.canCreate.allowed
+                    || permission.applicationForm.canEdit.allowed
+                if canOpenApplicationForm
+                    && ProjectManagementPolicy.canSaveApplicationForm(
+                        canCreate: permission.applicationForm.canCreate.allowed,
+                        canEdit: permission.applicationForm.canEdit.allowed,
+                        status: project.status
+                    ) {
+                    NavigationLink(
+                        value: ProjectDestination.applicationForm(projectId: project.id)
+                    ) {
+                        Label("지원 폼 편집", systemImage: "list.clipboard")
+                    }
+                }
+                if permission.status.canRequestReview.allowed && project.status == .draft {
+                    Button(action: confirmSubmission) {
+                        Label("검토 요청", systemImage: "paperplane")
+                    }
+                    .disabled(viewModel.isPerformingAction)
+                }
+                if ProjectManagementPolicy.canDelete(
+                    capabilityAllowed: permission.canDelete.allowed,
+                    status: project.status
+                ) {
+                    Button("프로젝트 삭제", role: .destructive, action: confirmDeletion)
+                        .disabled(viewModel.isPerformingAction)
+                }
+            }
         }
     }
 
@@ -187,6 +251,57 @@ struct ProjectDetailView: View {
             Spacer()
             Text(role)
                 .appFont(.footnote, color: .grey500)
+        }
+    }
+
+    // MARK: - Function
+
+    private func confirmSubmission() {
+        alertPrompt = AlertPrompt(
+            title: "검토 요청",
+            message: "프로젝트를 제출하면 검토 대기 상태로 전환돼요.",
+            positiveBtnTitle: "요청",
+            positiveBtnAction: submitForReview,
+            negativeBtnTitle: "취소"
+        )
+    }
+
+    private func confirmDeletion() {
+        alertPrompt = AlertPrompt(
+            title: "프로젝트 삭제",
+            message: "삭제한 프로젝트는 복구할 수 없어요. 계속할까요?",
+            positiveBtnTitle: "삭제",
+            positiveBtnAction: deleteProject,
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: true
+        )
+    }
+
+    private func submitForReview() {
+        perform(action: "submitProject") {
+            try await viewModel.submitForReview()
+        }
+    }
+
+    private func deleteProject() {
+        perform(action: "deleteProject") {
+            try await viewModel.deleteProject()
+        }
+    }
+
+    private func perform(
+        action: String,
+        operation: @escaping @MainActor () async throws -> Void
+    ) {
+        Task {
+            do {
+                try await operation()
+            } catch {
+                errorHandler.handle(
+                    error,
+                    context: ErrorContext(feature: "Project", action: action)
+                )
+            }
         }
     }
 }

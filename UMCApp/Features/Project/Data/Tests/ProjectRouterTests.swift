@@ -269,6 +269,52 @@ struct ProjectRouterTests {
         #expect(json == #"{"name":"새 이름"}"#)
     }
 
+    @Test("지원 폼 전체 상태는 id·순서와 파트를 서버 형식으로 보낸다")
+    func applicationFormBodyMatchesServerContract() throws {
+        let section = ProjectFormSection(
+            sectionId: "11",
+            type: .part,
+            allowedParts: [.pm, .design],
+            title: "디자인",
+            description: nil,
+            orderNo: "0",
+            questions: [
+                ProjectFormQuestion(
+                    questionId: "21",
+                    type: .radio,
+                    title: "경험",
+                    description: nil,
+                    isRequired: true,
+                    orderNo: "0",
+                    options: [
+                        ProjectFormOption(
+                            optionId: "31",
+                            content: "있음",
+                            orderNo: "0",
+                            isOther: false
+                        ),
+                    ]
+                ),
+            ]
+        )
+        let body = try UpsertApplicationFormRequestDTO(
+            title: "지원서",
+            description: nil,
+            sections: [section]
+        )
+
+        let data = try JSONEncoder().encode(body)
+        let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let sections = try #require(object["sections"] as? [[String: Any]])
+        let encodedSection = try #require(sections.first)
+        let questions = try #require(encodedSection["questions"] as? [[String: Any]])
+
+        #expect(encodedSection["sectionId"] as? Int == 11)
+        #expect(encodedSection["orderNo"] as? Int == 0)
+        #expect(encodedSection["allowedParts"] as? [String] == ["DESIGN", "PLAN"])
+        #expect(questions.first?["questionId"] as? Int == 21)
+    }
+
     // MARK: - BaseTargetType
 
     @Test(

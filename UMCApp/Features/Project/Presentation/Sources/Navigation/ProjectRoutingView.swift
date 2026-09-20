@@ -37,6 +37,18 @@ public struct ProjectRoutingView: View {
 
         case .detail(let projectId):
             ProjectDetailView(container: container, projectId: projectId)
+
+        case .editInfo(let projectId):
+            ProjectInfoEditorView(container: container, projectId: projectId)
+
+        case .manageMembers(let projectId):
+            ProjectMemberManagementView(container: container, projectId: projectId)
+
+        case .transferOwnership(let projectId):
+            ProjectOwnershipTransferView(container: container, projectId: projectId)
+
+        case .applicationForm(let projectId):
+            ProjectApplicationFormEditorView(container: container, projectId: projectId)
         }
     }
 }

@@ -97,5 +97,9 @@ public enum StorageFileCategory: String, Codable {
     case workbookSubmission = "WORKBOOK_SUBMISSION"
     case schoolLogo = "SCHOOL_LOGO"
     case portfolio = "PORTFOLIO"
+    /// 프로젝트 썸네일 — 서버 한도 10MB, jpg/jpeg/png (#1477).
+    case projectThumbnail = "PROJECT_THUMBNAIL"
+    /// 프로젝트 로고 — 서버 한도 10MB, jpg/jpeg/png/svg (#1477).
+    case projectLogo = "PROJECT_LOGO"
     case etc = "ETC"
 }

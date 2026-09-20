@@ -48,6 +48,9 @@ public protocol ProjectUseCaseProtocol: Sendable {
         reason: String
     ) async throws
     func deleteProject(projectId: String) async throws
+    /// 썸네일·로고를 Storage 에 올린 뒤 `fileId` 를 돌려준다.
+    /// 그 값을 ``updateProject(projectId:update:)`` 의 파일 id 로 넘긴다.
+    func uploadImage(jpegData: Data, category: StorageFileCategory) async throws -> String
     func publishProject(projectId: String) async throws -> ProjectStatusResult
     func updatePartQuotas(projectId: String, entries: [ProjectPartQuotaEntry]) async throws
     func abortProject(projectId: String, reason: String) async throws

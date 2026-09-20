@@ -27,6 +27,7 @@ final class MyProjectsViewModel {
     private(set) var selectedGisuId: String?
     private(set) var applicationStatus: ProjectApplicationStatus?
     private(set) var isLoadingNextPage = false
+    private(set) var isCreatingDraft = false
 
     private let projectUseCase: ProjectUseCaseProtocol
     private let applicationUseCase: ProjectApplicationUseCaseProtocol
@@ -55,6 +56,14 @@ final class MyProjectsViewModel {
 
     var selectedGeneration: String? {
         generations.first { $0.gisuId == selectedGisuId }?.gen
+    }
+
+    var canCreateDraft: Bool {
+        selectedGisuId != nil
+            && managed.value?.draft == nil
+            && UserDefaults.standard.string(forKey: AppStorageKey.responsiblePart)
+                == UMCPartType.pm.apiValue
+            && !isCreatingDraft
     }
 
     // MARK: - Function
@@ -142,6 +151,17 @@ final class MyProjectsViewModel {
         } catch {
             applications = .failed(AppError.from(error))
         }
+    }
+
+    func createDraft() async throws {
+        guard let gisuId = selectedGisuId, canCreateDraft else { return }
+        isCreatingDraft = true
+        defer { isCreatingDraft = false }
+        _ = try await projectUseCase.createDraftProject(
+            gisuId: gisuId,
+            productOwnerMemberId: nil
+        )
+        await fetchManaged()
     }
 
     /// 인원 수는 보조 정보라 실패하면 비워 둔다. 서버는 읽기 권한 없는 프로젝트를 조용히 뺀다.

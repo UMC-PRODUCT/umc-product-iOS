@@ -62,6 +62,48 @@ extension ProjectPartQuotaStatus {
     }
 }
 
+extension ProjectMemberStatus {
+    var title: String {
+        switch self {
+        case .active: "활동 중"
+        case .completed: "활동 완료"
+        case .withdrawn: "중도 이탈"
+        case .dismissed: "퇴출"
+        case .unknown: "알 수 없음"
+        }
+    }
+}
+
+extension ProjectFormSectionType {
+    var title: String {
+        switch self {
+        case .common: "공통"
+        case .part: "파트별"
+        case .unknown: "알 수 없음"
+        }
+    }
+}
+
+extension ProjectQuestionType {
+    var title: String {
+        switch self {
+        case .shortText: "단답형"
+        case .longText: "장문형"
+        case .radio: "단일 선택"
+        case .checkbox: "복수 선택"
+        case .dropdown: "드롭다운"
+        case .schedule: "일정"
+        case .file: "파일"
+        case .portfolio: "포트폴리오"
+        case .unknown: "알 수 없음"
+        }
+    }
+
+    var usesOptions: Bool {
+        self == .radio || self == .checkbox || self == .dropdown
+    }
+}
+
 extension ProjectMemberBrief {
     /// 실명이 마스킹·누락되면 닉네임, 그것도 없으면 대시.
     var displayName: String {
