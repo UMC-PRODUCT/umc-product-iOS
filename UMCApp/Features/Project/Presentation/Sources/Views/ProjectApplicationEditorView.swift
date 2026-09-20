@@ -47,7 +47,7 @@ struct ProjectApplicationEditorView: View {
                 if let title = form.title, !title.isEmpty {
                     Section {
                         Text(title)
-                            .appFont(.headline, color: .grey900)
+                            .appFont(.body, weight: .semibold, color: .grey900)
                         if let description = form.description, !description.isEmpty {
                             Text(description)
                                 .appFont(.subheadline, color: .grey600)

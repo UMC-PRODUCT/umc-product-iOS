@@ -106,7 +106,7 @@ struct ProjectApplicantRow: View {
         HStack(spacing: DefaultSpacing.spacing12) {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                 Text(application.applicant.displayName)
-                    .appFont(.calloutEmphasis, color: .grey900)
+                    .appFont(.callout, weight: .semibold, color: .grey900)
                 let detail = [
                     application.applicant.schoolName,
                     application.applicant.part?.name,

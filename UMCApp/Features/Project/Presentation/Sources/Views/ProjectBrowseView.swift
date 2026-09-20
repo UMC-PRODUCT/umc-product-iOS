@@ -83,7 +83,7 @@ struct ProjectBrowseView: View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             HStack {
                 Text(project.name)
-                    .appFont(.calloutEmphasis, color: .grey900)
+                    .appFont(.callout, weight: .semibold, color: .grey900)
                 Spacer()
                 if let status = project.partQuotaStatus {
                     InfoBadge(status.title)
