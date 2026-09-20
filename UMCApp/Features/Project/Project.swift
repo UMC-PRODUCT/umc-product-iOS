@@ -29,5 +29,11 @@ let project = featureProject(
         .target(name: "ProjectDomain"),
         .project(target: "CoreNetwork", path: .relativeToRoot("Core/Network")),
         .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
+    ],
+    includesPresentationTests: true,
+    presentationTestDependencies: [
+        .target(name: "ProjectDomain"),
+        .target(name: "ProjectData"),
+        .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
     ]
 )
