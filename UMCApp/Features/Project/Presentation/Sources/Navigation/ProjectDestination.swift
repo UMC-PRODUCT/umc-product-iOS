@@ -19,6 +19,9 @@ public enum ProjectDestination: Hashable {
     /// 현재 기수에 공개된 진행 중 프로젝트 탐색.
     case browse
 
+    /// 운영진 프로젝트 운영 — 공개·정원·중단·완료·매칭 차수·통계 (#1479).
+    case admin
+
     /// 프로젝트 상세 + 팀원 구성.
     case detail(projectId: String)
 

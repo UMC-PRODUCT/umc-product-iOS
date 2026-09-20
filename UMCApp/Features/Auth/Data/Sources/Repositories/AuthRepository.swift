@@ -169,6 +169,20 @@ public struct AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
         try await requestMemberOAuthList(AuthRouter.fetchMyOAuth)
     }
 
+    public func fetchHasLocalCredential() async throws -> Bool {
+        let response = try await adapter.request(AuthRouter.fetchMemberSummary)
+
+        do {
+            let apiResponse = try JSONDecoder().decode(
+                APIResponse<MemberSummaryResponseDTO>.self,
+                from: response.data
+            )
+            return try apiResponse.unwrap().hasLocalCredential
+        } catch let decodingError as DecodingError {
+            throw RepositoryError.decodingError(detail: "\(decodingError)")
+        }
+    }
+
     public func addMemberOAuth(oAuthVerificationToken: String) async throws -> [MemberOAuth] {
         try await requestMemberOAuthList(
             AuthRouter.addMemberOAuth(
@@ -482,11 +496,18 @@ extension AuthRepository: AuthRegistrationRepositoryProtocol {
     }
 
     public func registerCredential(rawPassword: String) async throws {
-        let response = try await adapter.request(
-            AuthRouter.registerCredential(
-                body: RegisterCredentialRequestDTO(rawPassword: rawPassword)
+        let response: Response
+        do {
+            response = try await adapter.request(
+                AuthRouter.registerCredential(
+                    body: RegisterCredentialRequestDTO(rawPassword: rawPassword)
+                )
             )
-        )
+        } catch let networkError as NetworkError {
+            // 비밀번호 정책 위반·중복 등록이 비-2xx로 오므로 `changePassword`와 같이 정규화해
+            // 화면이 서버 메시지를 인라인으로 쓸 수 있게 한다.
+            throw Self.parseServerError(from: networkError) ?? networkError
+        }
 
         do {
             let apiResponse = try JSONDecoder().decode(

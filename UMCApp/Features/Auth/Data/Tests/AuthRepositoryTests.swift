@@ -399,3 +399,46 @@ struct AuthRepositoryLoginByEmailTests {
         }
     }
 }
+
+// MARK: - Suite: 로컬 비밀번호 등록/보유 여부
+
+@MainActor
+@Suite("AuthRepository — local credential")
+struct AuthRepositoryLocalCredentialTests {
+
+    @Test("v2 /member/me(GET, 인증)의 hasLocalCredential을 그대로 반환한다")
+    func fetchHasLocalCredentialReadsSummary() async throws {
+        let (sut, stub, _) = makeRepository(.success(Fixture.success("""
+        { "id": "42", "name": "제옹", "hasLocalCredential": false }
+        """)))
+
+        let hasLocalCredential = try await sut.fetchHasLocalCredential()
+
+        #expect(hasLocalCredential == false)
+        #expect(stub.requestCount == 1)
+        #expect(stub.lastPath == "/api/v2/member/me")
+        #expect(stub.lastMethod == .get)
+    }
+
+    @Test("hasLocalCredential 키가 없으면 true(기존 「비밀번호 변경」 동작)로 본다")
+    func fetchHasLocalCredentialDefaultsToTrueWhenMissing() async throws {
+        let (sut, _, _) = makeRepository(.success(Fixture.success("{ \"id\": \"42\" }")))
+
+        #expect(try await sut.fetchHasLocalCredential() == true)
+    }
+
+    @Test("registerCredential의 비-2xx NetworkError는 RepositoryError.serverError로 정규화한다")
+    func registerCredentialMapsNetworkErrorToServerError() async {
+        let (sut, _, _) = makeRepository(.failure(Fixture.networkRequestFailed(
+            statusCode: 400,
+            code: "CREDENTIAL_ALREADY_REGISTERED",
+            message: "이미 비밀번호가 등록되어 있습니다."
+        )))
+
+        await #expect(throws: RepositoryError.serverError(
+            code: "CREDENTIAL_ALREADY_REGISTERED", message: "이미 비밀번호가 등록되어 있습니다."
+        )) {
+            try await sut.registerCredential(rawPassword: "password1234")
+        }
+    }
+}

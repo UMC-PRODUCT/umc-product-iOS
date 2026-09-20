@@ -646,8 +646,41 @@ enum StubSessionFixtures {
             )
         }
 
+        let attendance = liveAttendanceSchedule
+        if attendance.startsAt <= to, attendance.attendanceWindowEndsAt >= from {
+            result[calendar.startOfDay(for: attendance.startsAt), default: []].append(attendance)
+        }
+
         return result
     }
+
+    /// 출석 Live Activity(#1434) 확인용 — 첫 조회 시각 기준으로 출석 창이 열려 있는 일정.
+    ///
+    /// 켜자마자 정시 구간이라 Live Activity·Dynamic Island 가 바로 뜨고, 5분 뒤 지각,
+    /// 10분 뒤 마감으로 넘어간다. `static let` 이라 재조회해도 카운트다운이 밀리지 않는다
+    /// (앱을 다시 켜면 새로 잡힌다).
+    private static let liveAttendanceSchedule: ScheduleDetailData = {
+        let anchor = Date.now
+        return ScheduleDetailData(
+            scheduleId: "898",
+            name: "출석 Live Activity 확인",
+            description: "stub 세션 일정입니다. 출석 창이 실행 시각 기준으로 열립니다.",
+            tags: ["스터디"],
+            startsAt: anchor,
+            endsAt: anchor.addingTimeInterval(7_200),
+            isParticipant: true,
+            location: ScheduleLocation(
+                latitude: 37.5665,
+                longitude: 126.9780,
+                locationName: "한성대학교 상상관"
+            ),
+            attendancePolicy: ScheduleAttendancePolicy(
+                checkInStartAt: anchor.addingTimeInterval(-60),
+                onTimeEndAt: anchor.addingTimeInterval(5 * 60),
+                lateEndAt: anchor.addingTimeInterval(10 * 60)
+            )
+        )
+    }()
 
     // MARK: - Member
 

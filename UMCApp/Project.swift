@@ -95,6 +95,8 @@ let project = Project(
                     ],
                     // 백그라운드에서 도착한 푸시를 AppDelegate가 받아 알림 보관함에 저장한다.
                     "UIBackgroundModes": ["remote-notification"],
+                    // 출석 세션 카운트다운 Live Activity (UMCAppWidget 의 ActivityConfiguration)
+                    "NSSupportsLiveActivities": true,
                 ]
             ),
             buildableFolders: [
@@ -161,6 +163,8 @@ let project = Project(
                 .external(name: "FirebaseCore"),
                 .external(name: "FirebaseMessaging"),
                 .project(target: "UMCAppWidget", path: "UMCAppWidget"),
+                // Live Activity 를 시작·갱신하려면 위젯과 같은 ActivityAttributes 타입이 필요하다.
+                .project(target: "CoreWidgetShared", path: .relativeToRoot("Core/WidgetShared")),
                 // 워치 앱은 이번 릴리즈에 담지 않는다 — 다음 릴리즈에서 이 줄만 되살리면 된다.
                 // (임베드 의존성만 끊은 것이라 UMCWatchApp/UMCWatchComplication 프로젝트와
                 //  `make build-watch` 는 그대로 살아 있다.)

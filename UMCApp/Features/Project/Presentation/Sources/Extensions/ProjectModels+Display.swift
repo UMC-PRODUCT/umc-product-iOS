@@ -41,12 +41,26 @@ extension ProjectApplicationStatus {
 }
 
 extension ProjectMatchingPhase {
+    static let editableCases: [ProjectMatchingPhase] = [.first, .second, .third]
+
     var title: String {
         switch self {
         case .first: "1차 매칭"
         case .second: "2차 매칭"
         case .third: "3차 매칭"
         case .randomMatching: "랜덤 매칭"
+        case .unknown: "알 수 없음"
+        }
+    }
+}
+
+extension ProjectMatchingType {
+    static let editableCases: [ProjectMatchingType] = [.planDesign, .planDeveloper]
+
+    var title: String {
+        switch self {
+        case .planDesign: "기획·디자인"
+        case .planDeveloper: "기획·개발"
         case .unknown: "알 수 없음"
         }
     }

@@ -36,6 +36,11 @@ public enum AppStorageKey {
     /// - Note: 키 문자열은 레거시 앱(`AppProduct`)과 동일하게 유지한다. 이미 리뷰 요청을 받은
     ///   사용자가 앱 업데이트 직후 다시 요청받지 않도록 기존 저장값을 그대로 승계해야 한다.
     public static let lastReviewRequestDate: String = "lastReviewRequestDate"
+    /// 홈 진입 시 Apple Intelligence 기능 안내 시트를 이미 보여 줬는지 (`Bool`)
+    ///
+    /// 기기 설정에 대한 안내라 기기 단위로 한 번만 띄운다 — `sessionScopedKeys` 에 넣지 않는다.
+    public static let hasShownAppleIntelligenceIntro: String = "hasShownAppleIntelligenceIntro"
+
     // MARK: - Profile (최신 기수 기준)
 
     /// 서버 기수 식별 ID

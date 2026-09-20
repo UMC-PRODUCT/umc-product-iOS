@@ -23,6 +23,7 @@ struct MyProjectsView: View {
     @State private var viewModel: MyProjectsViewModel
     @State private var alertPrompt: AlertPrompt?
     @Environment(ErrorHandler.self) private var errorHandler
+    private let canAccessProjectAdmin: Bool
 
     fileprivate enum Constants {
         static let managedHeader = "내가 관리하는 프로젝트"
@@ -33,18 +34,27 @@ struct MyProjectsView: View {
         static let statusFilterIcon = "line.3.horizontal.decrease.circle"
         static let gisuMenuTitle = "기수 선택"
         static let createDraft = "새 프로젝트 만들기"
+        static let adminHeader = "운영"
+        static let adminTitle = "프로젝트 운영"
+        static let adminDescription = "공개·정원·매칭 차수·통계를 관리해요"
     }
 
     // MARK: - Init
 
     init(container: DIContainer) {
         _viewModel = State(initialValue: MyProjectsViewModel(container: container))
+        canAccessProjectAdmin = ProjectAdminAccessPolicy.canEnter(
+            role: ProjectAdminAccessPolicy.currentRole()
+        )
     }
 
     // MARK: - Body
 
     var body: some View {
         List {
+            if canAccessProjectAdmin {
+                adminSection
+            }
             managedSection
             applicationsSection
         }
@@ -74,6 +84,19 @@ struct MyProjectsView: View {
     }
 
     // MARK: - View Component
+
+    private var adminSection: some View {
+        Section(Constants.adminHeader) {
+            NavigationLink(value: ProjectDestination.admin) {
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                    Text(Constants.adminTitle)
+                        .appFont(.subheadline, weight: .semibold, color: .grey900)
+                    Text(Constants.adminDescription)
+                        .appFont(.footnote, color: .grey500)
+                }
+            }
+        }
+    }
 
     @ViewBuilder
     private var managedSection: some View {
