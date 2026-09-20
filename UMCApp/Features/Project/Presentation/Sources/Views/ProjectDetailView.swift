@@ -121,6 +121,24 @@ struct ProjectDetailView: View {
                         Label("PM 소유권 양도", systemImage: "arrow.left.arrow.right")
                     }
                 }
+                if permission.application.canCreate.allowed {
+                    NavigationLink(
+                        value: ProjectDestination.editApplication(
+                            projectId: project.id,
+                            applicationId: nil
+                        )
+                    ) {
+                        Label("프로젝트 지원", systemImage: "doc.badge.plus")
+                    }
+                }
+                if permission.application.canReadList.allowed {
+                    NavigationLink(value: ProjectDestination.applicants(
+                        projectId: project.id,
+                        canDecide: permission.application.canDecide.allowed
+                    )) {
+                        Label("지원자 관리", systemImage: "person.2")
+                    }
+                }
                 let canOpenApplicationForm = permission.applicationForm.canRead.allowed
                     || permission.applicationForm.canCreate.allowed
                     || permission.applicationForm.canEdit.allowed

@@ -35,6 +35,9 @@ public struct ProjectRoutingView: View {
         case .myProjects:
             MyProjectsView(container: container)
 
+        case .browse:
+            ProjectBrowseView(container: container)
+
         case .detail(let projectId):
             ProjectDetailView(container: container, projectId: projectId)
 
@@ -49,6 +52,35 @@ public struct ProjectRoutingView: View {
 
         case .applicationForm(let projectId):
             ProjectApplicationFormEditorView(container: container, projectId: projectId)
+
+        case .editApplication(let projectId, let applicationId):
+            ProjectApplicationEditorView(
+                container: container,
+                projectId: projectId,
+                applicationId: applicationId
+            )
+
+        case .applicants(let projectId, let canDecide):
+            ProjectApplicantsView(
+                container: container,
+                projectId: projectId,
+                canDecide: canDecide
+            )
+
+        case .applicationInbox(let projectIds, let decidableProjectIds):
+            ProjectApplicationInboxView(
+                container: container,
+                projectIds: projectIds,
+                decidableProjectIds: decidableProjectIds
+            )
+
+        case .reviewApplication(let projectId, let applicationId, let canDecide):
+            ProjectApplicationReviewView(
+                container: container,
+                projectId: projectId,
+                applicationId: applicationId,
+                canDecide: canDecide
+            )
         }
     }
 }

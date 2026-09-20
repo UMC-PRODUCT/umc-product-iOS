@@ -117,6 +117,12 @@ extension ProjectTeamMember {
     }
 }
 
+extension ProjectApplicant {
+    var displayName: String {
+        name ?? nickname ?? "-"
+    }
+}
+
 extension ProjectMembers {
     /// PO·보조 PO·파트 멤버를 모두 센 인원.
     var headCount: Int {
