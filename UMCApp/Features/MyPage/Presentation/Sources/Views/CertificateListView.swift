@@ -66,7 +66,7 @@ struct CertificateListView: View {
     private var content: some View {
         switch viewModel.certificates {
         case .idle, .loading:
-            Progress()
+            ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .loaded(let certificates) where certificates.isEmpty:

@@ -39,7 +39,7 @@ struct ProjectApplicationEditorView: View {
     private var content: some View {
         switch viewModel.form {
         case .idle, .loading:
-            Progress()
+            ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .loaded(let form):

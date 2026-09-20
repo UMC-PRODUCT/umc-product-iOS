@@ -41,7 +41,7 @@ struct ProjectApplicationInboxView: View {
     private var content: some View {
         switch viewModel.sections {
         case .idle, .loading:
-            Progress()
+            ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .loaded(let sections) where sections.isEmpty:
             ContentUnavailableView("지원자가 없어요", systemImage: "person.2")

@@ -41,7 +41,7 @@ struct ProjectBrowseView: View {
     private var content: some View {
         switch viewModel.projects {
         case .idle, .loading:
-            Progress()
+            ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .loaded(let projects) where projects.isEmpty:

@@ -100,7 +100,7 @@ private struct MyActivePostListView: View {
     private var content: some View {
         switch viewModel.postState {
         case .idle, .loading:
-            Progress()
+            ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .loaded(let items):

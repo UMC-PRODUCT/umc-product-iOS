@@ -46,7 +46,7 @@ struct ProjectApplicantsView: View {
     private var content: some View {
         switch viewModel.applications {
         case .idle, .loading:
-            Progress()
+            ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .loaded(let applications) where applications.isEmpty:
             ContentUnavailableView("지원자가 없어요", systemImage: "person.2")

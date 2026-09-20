@@ -72,7 +72,7 @@ struct ProjectInfoEditorView: View {
     private var content: some View {
         switch viewModel.loadState {
         case .idle, .loading:
-            Progress()
+            ProgressView()
 
         case .loaded:
             Form {
