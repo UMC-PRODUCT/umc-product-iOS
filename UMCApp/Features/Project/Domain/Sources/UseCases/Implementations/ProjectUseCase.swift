@@ -14,11 +14,18 @@ public final class ProjectUseCase: ProjectUseCaseProtocol {
     // MARK: - Property
 
     private let repository: ProjectRepositoryProtocol
+    private let storageRepository: StorageRepositoryProtocol
+
+    private static let imageContentType = "image/jpeg"
 
     // MARK: - Init
 
-    public init(repository: ProjectRepositoryProtocol) {
+    public init(
+        repository: ProjectRepositoryProtocol,
+        storageRepository: StorageRepositoryProtocol
+    ) {
         self.repository = repository
+        self.storageRepository = storageRepository
     }
 
     // MARK: - Function
@@ -133,6 +140,24 @@ public final class ProjectUseCase: ProjectUseCaseProtocol {
 
     public func completeProjects(projectIds: [String]) async throws {
         try await repository.completeProjects(projectIds: projectIds)
+    }
+
+    public func uploadImage(jpegData: Data, category: StorageFileCategory) async throws -> String {
+        let prepared = try await storageRepository.prepareUpload(
+            fileName: "\(UUID().uuidString.lowercased()).jpg",
+            contentType: Self.imageContentType,
+            fileSize: jpegData.count,
+            category: category
+        )
+        try await storageRepository.uploadFile(
+            to: prepared.uploadUrl,
+            data: jpegData,
+            method: prepared.uploadMethod,
+            headers: prepared.headers,
+            contentType: Self.imageContentType
+        )
+        try await storageRepository.confirmUpload(fileId: prepared.fileId)
+        return prepared.fileId
     }
 
     public func fetchPermissions(projectIds: [String]) async throws -> [ProjectPermission] {

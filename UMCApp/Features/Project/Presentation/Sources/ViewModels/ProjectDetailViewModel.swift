@@ -26,6 +26,8 @@ final class ProjectDetailViewModel {
     /// 내 권한. 조회에 실패하면 `nil` 이고 모든 진입을 막힌 것으로 본다.
     /// 수정·팀원 관리·지원 관리 진입(#1477·#1478)이 이 값으로 노출을 가른다.
     private(set) var permission: ProjectPermission?
+    private(set) var isPerformingAction = false
+    private(set) var didDelete = false
 
     private let projectId: String
     private let useCase: ProjectUseCaseProtocol
@@ -72,5 +74,21 @@ final class ProjectDetailViewModel {
         } catch {
             members = .failed(AppError.from(error))
         }
+    }
+
+    func submitForReview() async throws {
+        guard !isPerformingAction else { return }
+        isPerformingAction = true
+        defer { isPerformingAction = false }
+        _ = try await useCase.submitProject(projectId: projectId)
+        await fetch()
+    }
+
+    func deleteProject() async throws {
+        guard !isPerformingAction else { return }
+        isPerformingAction = true
+        defer { isPerformingAction = false }
+        try await useCase.deleteProject(projectId: projectId)
+        didDelete = true
     }
 }
