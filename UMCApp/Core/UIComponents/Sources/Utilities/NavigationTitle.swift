@@ -83,6 +83,13 @@ public enum NavigationTitle {
         case productTeam = "UMC PRODUCT"
     }
 
+    /// 프로젝트 매칭 화면용 타이틀
+    public enum Project: String, NavigationTitleRepresentable {
+        /// 마이페이지 「내 프로젝트」 행이 여는 목록 — 행 레이블과 같아야 한다.
+        case myProjects = "내 프로젝트"
+        case detail = "프로젝트 상세"
+    }
+
     /// 운영/관리자 화면용 타이틀
     public enum Maintenance: String, NavigationTitleRepresentable {
         case adminPanel = "관리자 패널"

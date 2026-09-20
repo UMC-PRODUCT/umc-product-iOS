@@ -10,6 +10,7 @@ import CoreNetwork
 import ProjectData
 import ProjectDomain
 import ProjectPresentation
+import UMCFoundation
 
 // Project(프로젝트 매칭) 의존성 등록 — Repository 3종 + UseCase Provider.
 extension DIContainer {
@@ -29,7 +30,9 @@ extension DIContainer {
             ProjectUseCaseProvider(
                 projectRepository: self.resolve(ProjectRepositoryProtocol.self),
                 applicationRepository: self.resolve(ProjectApplicationRepositoryProtocol.self),
-                matchingRoundRepository: self.resolve(ProjectMatchingRoundRepositoryProtocol.self)
+                matchingRoundRepository: self.resolve(ProjectMatchingRoundRepositoryProtocol.self),
+                // 저장소 등록은 ``registerNoticeDependencies()`` 가 먼저 수행한다.
+                storageRepository: self.resolve(StorageRepositoryProtocol.self)
             )
         }
     }
