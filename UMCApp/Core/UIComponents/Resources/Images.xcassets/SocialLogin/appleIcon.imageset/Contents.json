@@ -2,7 +2,8 @@
   "images" : [
     {
       "filename" : "appleIcon.pdf",
-      "idiom" : "universal"
+      "idiom" : "universal",
+      "preserves-vector-representation" : true
     }
   ],
   "info" : {
