@@ -151,7 +151,7 @@ public enum AppError: Error, LocalizedError, Equatable {
 
     // MARK: - Reportable
 
-    /// 앱 결함으로 보고 `앱 문제 알리기`를 띄울 에러인지 여부.
+    /// 앱 결함으로 보고 문의 버튼을 띄울 에러인지 여부.
     ///
     /// 네트워크 단절·권한·서버 비즈니스 에러는 앱 결함이 아니므로 제외한다.
     public var isReportable: Bool {
