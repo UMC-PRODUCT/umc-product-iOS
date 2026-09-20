@@ -8,13 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**UMC(University MakeUs Challenge) 동아리 운영 관리 앱** — SwiftUI + iOS 26.2+ (Liquid Glass)
+**UMC(University MakeUs Challenge) 동아리 운영 관리 앱** — SwiftUI + iOS 26.4+ (Liquid Glass)
 
 - **App Statement**: "Focus on Growth, We Handle the Ops"
 - **목적**: 동아리 운영 도구 일원화 (디스코드/구글시트/노션 분산 문제 해결)
-- **주요 모듈**: 인증/온보딩, 홈 대시보드, 공지사항, 운영/학교 관리, 스터디/활동, 커뮤니티, 마이페이지
-- **Killer Features**: The Ping (공지 수신 확인), Mobile-First Admin, GPS 기반 스마트 출석
-- **현재 버전**: 2.2.0 (최신 릴리즈 태그 `v2.2.0`)
+- **주요 모듈**: 인증/온보딩, 홈 대시보드, 공지사항, 운영/학교 관리, 스터디/활동, 커뮤니티, 프로젝트 지원·심사, 명함 교환, 마이페이지, watchOS 앱, Live Activity
+- **구현 기능 예시**: The Ping, GPS 스마트 출석, STOMP 커뮤니티(사진 메시지 포함), 프로젝트 목록·운영진 관리·지원·지원자 심사, 명함 근거리 교환, Apple Intelligence 안내, 출석 Live Activity
+- **App Store 릴리즈**: 2.2.0 (레거시 `AppProduct/` 동결 기준, 태그 `v2.2.0`). 이후 개발은 `UMCApp/`에서 진행 중이며 이 버전과 구분한다.
 - **두 빌드 축**: `AppProduct/`(레거시 xcodeproj, **`v2.2.0`에 동결 — 수정 금지**) + `UMCApp/`(Tuist) — **모든 신규·유지보수·이식 작업은 `UMCApp/`에서만 수행** (핵심 규칙 #9 참조)
 
 ## 아키텍처 한눈에
@@ -45,8 +45,8 @@ View ←→ ViewModel(@Observable) → UseCase(Protocol) → Repository → Data
 5. **Mock 데이터는 `#if DEBUG` 가드** — 릴리스 빌드 미포함.
 6. **Network Router에 인라인 딕셔너리 금지** — 파라미터는 Query/Body DTO로 캡슐화.
 7. **식별자에 의미 없는 숫자 접미사 금지** — `text1`/`btn2Color` 등 금지, 역할이 드러나는 이름 부여.
-8. **커밋·PR·이슈에 AI 작성 흔적(attribution) 절대 금지** — 커밋 메시지의 `Co-Authored-By` 라인,
-   PR·이슈 제목/본문의 `🤖 Generated with [Claude Code](...)` 푸터 등 AI가 작성했음을 드러내는 문구 일체 추가 금지.
+8. **커밋·PR·이슈에 AI 작성 흔적(attribution) 절대 금지** — `Co-Authored-By` 트레일러,
+   generated-by 푸터 등 AI가 작성했음을 드러내는 문구를 어떤 Git/GitHub 산출물에도 추가하지 않는다.
 9. **`AppProduct/`(레거시)는 `v2.2.0` 릴리즈 상태로 동결 — 절대 수정 금지.**
    PR 피드백 반영·버그 수정·리팩터·이식·마이그레이션 등 **어떤 작업에서도 `AppProduct/` 하위 파일을 절대 건드리지 않는다.** 모든 작업은 `UMCApp/`(Tuist)에서만 수행한다.
    - 위 핵심 규칙·코딩 규약(특히 #2 서버 정수 `String` 통일 등)은 **`UMCApp/`(활성 코드베이스)에만** 적용된다. AppProduct는 동결 상태이므로 이런 규칙을 소급 적용하려고 손대서도 안 된다.
@@ -131,30 +131,17 @@ Apple 프레임워크 API — 신규 Apple API를 다룰 때:
 | Apple 프레임워크 가이드(20종) | `docs/claude/apple-frameworks/INDEX.md` | `glassEffect`·`GlassEffectContainer`(Liquid Glass) · 툴바 신규 API · `AttributedString`/리치 텍스트 · FoundationModels(온디바이스 LLM) · SwiftData 상속 · `@MainActor`/actor/async 동시성 · Swift Charts 3D · WebKit·AlarmKit·MapKit·StoreKit 연동 |
 | Apple 스킬팩(9종 · reference 66종, Apple 원문) | `docs/claude/apple-frameworks/INDEX.md` §3 | **SwiftUI·App Intents 코드를 새로 쓰거나 리뷰할 때.** `@Observable`/`@State`/`@Binding` 소유권 · `@Environment`/`@Entry` 무효화 경고 · `ForEach`/`List` identity(`id: \.self` 안티패턴) · soft-deprecated API 확인(`NavigationView`, 구 `onChange`) · 조건부 `.if` 모디파이어 · 뷰 분해/init 비용 · `Animatable` · App Intents 스키마/`AppEnum` · UIKit 현대화 · Xcode 보안 빌드 설정 |
 
-기획·설계 문서 — **별도 레포로 분리되어 있다**:
+기획·설계 문서 — 기존 개인 기획 레포는 삭제되었다. 별도 기획 레포를 전제로 하지 않는다.
 
-| 대상 | 위치 | 언제 참고하나 |
-|------|------|--------------|
-| 기획 문서 레포 | https://github.com/UMC-PRODUCT/Mobile_Planning_Repo (private) | 기능 설계 스펙·구현 계획·서버 전달용 명세를 읽거나 **새로 쓸 때** |
-
-- 폴더: `server/`(서버팀 전달용 API·푸시 명세) · `specs/`(기능 설계 스펙, PRD) · `plans/`(구현 계획)
-- 파일명: `{기능}_{제목}_{종류}.md` — 밑줄 3분할. (예: `푸시_푸시 딥링크_서버명세.md`)
-  맨 앞 기능 이름으로 정렬되므로 같은 기능의 문서가 한자리에 모인다.
-  종류는 `설계` · `PRD` · `구현계획` · `설계리뷰` · `서버명세` · `서버갭`.
-  **작성일은 파일명에 넣지 않는다** — 문서 본문 상단 `작성일:` 줄에 적는다.
-  고유명사·API 이름(`macOS`, `Command API`, `NavigationTitle`)은 원문 표기를 유지한다.
-- **새 기획·설계 문서는 이 레포에 쓴다** — 코드 레포(`docs/`)에 만들지 않는다.
-  과거 `docs/superpowers/` 는 `.gitignore` 에 걸려 있어 문서가 버전 관리 밖에 방치됐고,
-  그래서 문서 축을 아예 분리했다. 그 ignore 규칙은 재발 방지용으로 남겨 둔다.
-- 조회 수단: `gh api repos/UMC-PRODUCT/Mobile_Planning_Repo/contents/...` 또는 로컬 클론.
-- 코드 레벨 규약(아키텍처·코딩 스타일·빌드)은 분리 대상이 아니다 — `docs/claude/` 에 그대로 있다.
+- 현재 구현 상태와 코드 레벨 규약은 이 저장소의 `UMCApp/` 및 `docs/claude/`를 기준으로 확인한다.
+- 새 설계·구현 계획 문서를 요청받으면 목적에 맞는 저장 위치가 지정되어 있는지 먼저 확인한다. 저장소가 지정되지 않았다면 임의의 외부 레포를 가정하지 않는다.
 
 백엔드(서버) — API 연동·서버 상태 확인이 필요할 때:
 
 | 대상 | 위치 | 언제 참고하나 |
 |------|------|--------------|
-| Cygnus 서버 레포 | https://github.com/UMC-PRODUCT/cygnus-server/tree/main | API 엔드포인트·요청/응답 스펙 확인, 서버 구현/배포 상태 점검, iOS DTO와 실제 응답이 어긋날 때 원인 추적 |
+| 서버 레포 | [UMC-PRODUCT/umc-product-server](https://github.com/UMC-PRODUCT/umc-product-server) | API 엔드포인트·요청/응답 스펙 확인, 서버 구현/배포 상태 점검, iOS DTO와 실제 응답이 어긋날 때 원인 추적 |
 
-- 조회 수단: `gh` CLI(`gh api repos/UMC-PRODUCT/cygnus-server/contents/...`, `gh search code --repo UMC-PRODUCT/cygnus-server ...`) 또는 `WebFetch`.
+- 조회 수단: `gh api repos/UMC-PRODUCT/umc-product-server/contents/...` 또는 `gh search code --repo UMC-PRODUCT/umc-product-server ...`를 사용한다.
 - **읽기 전용으로만 사용** — 서버 레포에 커밋·PR·이슈를 만들지 않는다(메인테이너가 명시적으로 지시한 경우 제외).
 - 스펙 추측 금지: 필드명·타입·nullable 여부는 서버의 컨트롤러/DTO 실제 코드로 확인한 뒤 iOS Response DTO에 반영한다(핵심 규칙 #2·#3과 함께 적용).

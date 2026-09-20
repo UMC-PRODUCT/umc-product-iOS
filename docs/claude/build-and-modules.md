@@ -76,26 +76,31 @@ UMCApp/
 │   └── ProjectDescriptionHelpers/
 │       ├── Project+Core.swift     # Core 모듈 공통 헬퍼
 │       └── Project+Feature.swift  # Feature 모듈 공통 헬퍼
-├── Core/                          # 8개 공유 인프라 모듈
+├── Core/                          # 10개 공유 인프라 모듈
 │   ├── Foundation/                # 기반 유틸리티, Config
 │   ├── Network/                   # 네트워크 레이어 (Moya)
 │   ├── DesignSystem/              # 디자인 토큰, 색상
 │   ├── UIComponents/              # 공용 UI 컴포넌트 (Kingfisher)
 │   ├── DI/                        # 의존성 주입 컨테이너
+│   ├── Photo/                     # 사진 선택·처리 공통 기능
 │   ├── NearbyExchange/            # 근거리 명함 교환 인프라
 │   ├── WatchConnectivity/         # iOS ↔ watchOS 통신
+│   ├── WatchDesignSystem/         # watchOS 전용 디자인 시스템
 │   └── WidgetShared/              # Widget-App 공유 모델
-├── Features/                      # 8개 기능 모듈
+├── Features/                      # 10개 기능 모듈
 │   ├── Activity/
 │   ├── Auth/
 │   ├── Badge/
 │   ├── BusinessCard/              # 전자명함 (2D 카드 UI · QR · 근거리 교환)
 │   ├── Community/
 │   ├── Home/
+│   ├── Maintenance/                # 점검 상태 및 원격 운영 안내
 │   ├── MyPage/
-│   └── Notice/
+│   ├── Notice/
+│   └── Project/                    # 프로젝트 목록·운영진 관리·지원·지원자 심사
 ├── UMCAppWidget/                  # Widget Extension 타겟
-└── UMCWatchApp/                   # watchOS Companion App 타겟
+├── UMCWatchApp/                   # watchOS Companion App 타겟
+└── UMCWatchComplication/          # watchOS Complication 타겟
 ```
 
 ### 모듈 의존성 방향
