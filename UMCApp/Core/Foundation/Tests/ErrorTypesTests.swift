@@ -113,7 +113,7 @@ struct AppErrorComputedTests {
         #expect(error.errorDescription == "boom")
     }
 
-    @Test("앱 문제 알리기는 디코딩·응답 검증 실패와 unknown 에만 노출한다")
+    @Test("문의 버튼은 디코딩·응답 검증 실패와 unknown 에만 노출한다")
     func isReportable() {
         #expect(AppError.repository(.decodingError(detail: nil)).isReportable == true)
         #expect(AppError.repository(.invalidResponse(detail: nil)).isReportable == true)
@@ -123,7 +123,7 @@ struct AppErrorComputedTests {
         #expect(AppError.auth(.sessionExpired).isReportable == false)
     }
 
-    /// 오프라인이 `.unknown` 으로 떨어지면 앱 문제 알리기 버튼이 뜬다.
+    /// 오프라인이 `.unknown` 으로 떨어지면 문의 버튼이 뜬다.
     @Test("from 은 URLError 를 network 로 변환한다")
     func fromURLError() {
         #expect(AppError.from(URLError(.notConnectedToInternet)) == .network(.noNetwork))

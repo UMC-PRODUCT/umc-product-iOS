@@ -75,7 +75,7 @@ struct AppRootView: View {
             Task { await AttendanceLiveActivityCoordinator.endAll() }
         }
         .environment(\.appFlow, viewModel.appFlow)
-        // 실패 화면의 `앱 문제 알리기`가 여는 문의 채널 (`RetryContentUnavailableView`).
+        // 실패 화면의 문의 버튼이 여는 카카오톡 채널 (`RetryContentUnavailableView`).
         .environment(\.openInquiryChannel) {
             kakaoPlusManager.openKakaoChannel(errorHandler: errorHandler)
         }

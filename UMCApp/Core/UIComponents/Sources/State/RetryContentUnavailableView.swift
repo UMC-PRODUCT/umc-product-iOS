@@ -12,7 +12,7 @@ import UMCFoundation
 // MARK: - Constants
 
 fileprivate enum Constants {
-    static let reportTitle = "앱 문제 알리기"
+    static let reportTitle = "카카오톡 채널로 문의"
     static let reportMessage = "오류 내용이 자동으로 복사돼요. "
         + "카카오톡 문의 채널로 넘어가서 채팅창에 붙여넣기해서 문의해 주시기 바랍니다."
     static let reportConfirmTitle = "문의 채널로 이동"
@@ -25,13 +25,13 @@ extension EnvironmentValues {
     /// 문의 채널(카카오톡)을 여는 액션. 앱 루트가 주입한다.
     ///
     /// `CoreUIComponents` 가 KakaoSDK 에 의존하지 않도록 열기는 밖에서 넘겨받는다.
-    /// 주입되지 않은 곳(프리뷰 등)에서는 `앱 문제 알리기` 버튼을 띄우지 않는다.
+    /// 주입되지 않은 곳(프리뷰 등)에서는 문의 버튼을 띄우지 않는다.
     @Entry public var openInquiryChannel: (@MainActor () -> Void)? = nil
 }
 
 /// 로딩 실패 시 재시도 액션을 함께 제공하는 공통 Unavailable View입니다.
 ///
-/// `error` 가 앱 결함(``AppError/isReportable``)이면 `다시 시도` 아래에 `앱 문제 알리기`를
+/// `error` 가 앱 결함(``AppError/isReportable``)이면 재시도와 함께 문의 버튼을
 /// 띄운다. 채팅에 본문을 미리 채울 수 없어서(카카오 SDK 제약), 안내 알럿에서 확인하면 리포트를
 /// 클립보드에 복사한 뒤 문의 채널을 연다. 취소하면 사용자 클립보드를 건드리지 않는다.
 public struct RetryContentUnavailableView: View {
@@ -57,7 +57,7 @@ public struct RetryContentUnavailableView: View {
     // MARK: - Initializer
 
     /// - Parameters:
-    ///   - error: 실패 원인. 앱 결함일 때만 `앱 문제 알리기`를 띄운다.
+    ///   - error: 실패 원인. 앱 결함일 때만 문의 버튼을 띄운다.
     ///   - screenName: 리포트에 적을 화면. 기본값은 호출한 파일(`#fileID`).
     public init(
         title: String,
@@ -93,32 +93,36 @@ public struct RetryContentUnavailableView: View {
             Text(description)
                 .multilineTextAlignment(.center)
         } actions: {
-            Button {
-                Task {
-                    await retryAction()
-                }
-            } label: {
-                ZStack {
-                    Text(retryTitle)
-                        .opacity(isRetrying ? 0 : 1)
-                    if isRetrying {
-                        ProgressView()
-                            .controlSize(.small)
+            HStack(spacing: 12) {
+                Button {
+                    Task {
+                        await retryAction()
                     }
+                } label: {
+                    ZStack {
+                        Text(retryTitle)
+                            .opacity(isRetrying ? 0 : 1)
+                        if isRetrying {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+                    .frame(
+                        minWidth: minRetryButtonWidth,
+                        maxWidth: .infinity,
+                        minHeight: max(minRetryButtonHeight, 44)
+                    )
                 }
-                .frame(
-                    minWidth: minRetryButtonWidth,
-                    minHeight: minRetryButtonHeight
-                )
-            }
-            .buttonStyle(.glassProminent)
-            .disabled(isRetrying)
+                .buttonStyle(.glassProminent)
+                .disabled(isRetrying)
 
-            if let error, error.isReportable, openInquiryChannel != nil {
-                Button(Constants.reportTitle) {
-                    presentReportPrompt(for: error)
+                if let error, error.isReportable, openInquiryChannel != nil {
+                    Button(Constants.reportTitle) {
+                        presentReportPrompt(for: error)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .buttonStyle(.glass)
                 }
-                .buttonStyle(.glass)
             }
         }
         .padding(.top, topPadding)
