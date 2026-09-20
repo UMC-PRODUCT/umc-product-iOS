@@ -54,7 +54,7 @@ make help              # 전체 타겟 목록
 
 | 파일 | 역할 |
 |------|------|
-| `mise.toml` | Tuist 버전 고정 (현재 `4.155.0`) — 팀 전원 동일 버전 보장 |
+| `mise.toml` | Tuist 버전 고정 (현재 `4.208.0`) — 팀 전원 동일 버전 보장 |
 | `Makefile` | `mise exec -- tuist …` 래퍼. 모든 Tuist/xcodebuild 명령의 **표준 진입점** |
 | `MAKEFILE_GUIDE.md` | 팀원용 사용 가이드 |
 
@@ -185,7 +185,7 @@ featureProject(
 
 ### 주요 설정
 
-- **Tuist 버전**: `UMCApp/mise.toml` 고정 (`4.155.0`)
+- **Tuist 버전**: `UMCApp/mise.toml` 고정 (`4.208.0`)
 - **Deployment Target**: iOS 26.4 (`Project.swift` 기준). watchOS 개방 타겟은 watchOS 26.4 병기 ("플랫폼(destination) 정책" 참고)
 - **Product Type**: 모든 모듈 `.staticFramework`
 - **Bundle ID**: Core → `dev.umc.core.*` / Feature → `dev.umc.feature.*.*`

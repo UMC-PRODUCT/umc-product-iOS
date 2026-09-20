@@ -68,6 +68,12 @@ struct AppRootView: View {
             }
         }
         .animation(.easeInOut(duration: DefaultConstant.animationTime), value: viewModel.state)
+        // 메인을 떠나면(로그아웃·세션 만료) 남은 출석 Live Activity 를 모두 내린다.
+        // `RootTabView.onDisappear` 는 전체 화면 모달에도 불려 여기서 판단한다.
+        .onChange(of: viewModel.state) { oldState, _ in
+            guard oldState == .main else { return }
+            Task { await AttendanceLiveActivityCoordinator.endAll() }
+        }
         .environment(\.appFlow, viewModel.appFlow)
         // 실패 화면의 `앱 문제 알리기`가 여는 문의 채널 (`RetryContentUnavailableView`).
         .environment(\.openInquiryChannel) {

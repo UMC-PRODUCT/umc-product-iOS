@@ -125,6 +125,9 @@ extension DIContainer {
         register(ChangePasswordUseCaseProtocol.self) {
             ChangePasswordUseCase(repository: self.resolve(AuthRepositoryProtocol.self))
         }
+        register(FetchHasLocalCredentialUseCaseProtocol.self) {
+            FetchHasLocalCredentialUseCase(repository: self.resolve(AuthRepositoryProtocol.self))
+        }
 
         // MARK: - 이메일 변경(ChangeEmail) 관련 UseCase
 
