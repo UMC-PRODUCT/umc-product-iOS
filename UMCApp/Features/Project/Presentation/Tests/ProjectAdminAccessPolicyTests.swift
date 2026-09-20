@@ -53,6 +53,30 @@ struct ProjectAdminAccessPolicyTests {
             ).isEmpty
         )
     }
+
+    @Test(
+        "매칭 차수 관리는 총괄단과 지부장만 가능하다",
+        arguments: [
+            ManagementTeam.superAdmin,
+            .centralPresident,
+            .centralVicePresident,
+            .chapterPresident,
+        ]
+    )
+    func matchingRoundManagementAllowsOnlyLeadership(role: ManagementTeam) {
+        #expect(ProjectAdminAccessPolicy.canManageMatchingRounds(role: role))
+    }
+
+    @Test(
+        "중앙 운영국과 교육국은 매칭 차수를 관리할 수 없다",
+        arguments: [
+            ManagementTeam.centralOperatingTeamMember,
+            .centralEducationTeamMember,
+        ]
+    )
+    func matchingRoundManagementDeniesCentralMembers(role: ManagementTeam) {
+        #expect(ProjectAdminAccessPolicy.canManageMatchingRounds(role: role) == false)
+    }
 }
 
 private func makePermission(

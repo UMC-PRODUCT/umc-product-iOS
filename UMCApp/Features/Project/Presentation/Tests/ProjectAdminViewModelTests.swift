@@ -52,8 +52,49 @@ struct ProjectAdminViewModelTests {
         form.name = "1차 매칭"
         #expect(form.isValid)
 
+        form.decisionDeadline = form.endsAt
+        #expect(form.isValid == false)
+
         form.decisionDeadline = form.endsAt.addingTimeInterval(-1)
         #expect(form.isValid == false)
+    }
+
+    @Test("관리 프로젝트가 100개를 넘으면 마지막 페이지까지 합친다")
+    func loadsEveryManagedProjectPage() async throws {
+        let firstItems = (0..<100).map { makeProject(id: String($0)) }
+        let lastItem = makeProject(id: "100")
+        var requestedPages: [Int] = []
+
+        let projects = try await ProjectManagedPageLoader.fetchAll(pageSize: 100) { page, size in
+            requestedPages.append(page)
+            return ProjectPage(
+                items: page == 0 ? firstItems : [lastItem],
+                page: String(page),
+                size: String(size),
+                totalElements: "101",
+                totalPages: "2",
+                hasNext: page == 0,
+                hasPrevious: page > 0
+            )
+        }
+
+        #expect(requestedPages == [0, 1])
+        #expect(projects.count == 101)
+        #expect(projects.last?.id == "100")
+    }
+
+    @Test("권한 조회는 서버 상한인 100개씩 나눈다")
+    func splitsPermissionRequestsAtServerLimit() async throws {
+        let projectIds = (0...100).map { String($0) }
+        var requestedBatches: [[String]] = []
+
+        _ = try await ProjectPermissionBatchLoader.fetchAll(projectIds: projectIds) { batch in
+            requestedBatches.append(batch)
+            return []
+        }
+
+        #expect(requestedBatches.map(\.count) == [100, 1])
+        #expect(requestedBatches.flatMap { $0 } == projectIds)
     }
 
     private func makeViewModel(role: ManagementTeam) -> ProjectAdminViewModel {
@@ -66,5 +107,18 @@ struct ProjectAdminViewModelTests {
             chapterId: "5"
         )
     }
+}
+
+private func makeProject(id: String) -> ProjectSummary {
+    ProjectSummary(
+        id: id,
+        name: "프로젝트 \(id)",
+        description: nil,
+        thumbnailImageURL: nil,
+        status: .inProgress,
+        productOwner: nil,
+        partQuotas: [],
+        partQuotaStatus: nil
+    )
 }
 #endif

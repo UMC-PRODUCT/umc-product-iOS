@@ -23,8 +23,14 @@ enum ProjectAdminAccessPolicy {
     }
 
     static func canManageMatchingRounds(role: ManagementTeam?) -> Bool {
-        guard let role else { return false }
-        return role.level >= ManagementTeam.chapterPresident.level
+        switch role {
+        case .superAdmin, .centralPresident, .centralVicePresident, .chapterPresident:
+            true
+        case .centralOperatingTeamMember, .centralEducationTeamMember,
+             .schoolPresident, .schoolVicePresident, .schoolPartLeader,
+             .schoolEtcAdmin, .challenger, .none:
+            false
+        }
     }
 
     static func availableActions(
@@ -88,6 +94,46 @@ struct ProjectMatchingRoundForm: Equatable {
             && phase != .unknown
             && type != .unknown
             && startsAt < endsAt
-            && endsAt <= decisionDeadline
+            && endsAt < decisionDeadline
+    }
+}
+
+@MainActor
+enum ProjectManagedPageLoader {
+    static func fetchAll(
+        pageSize: Int,
+        fetchPage: (Int, Int) async throws -> ProjectPage<ProjectSummary>
+    ) async throws -> [ProjectSummary] {
+        var projects: [ProjectSummary] = []
+        var pageIndex = 0
+        var hasNext: Bool
+
+        repeat {
+            let page = try await fetchPage(pageIndex, pageSize)
+            projects.append(contentsOf: page.items)
+            hasNext = page.hasNext
+            pageIndex += 1
+        } while hasNext
+
+        return projects
+    }
+}
+
+@MainActor
+enum ProjectPermissionBatchLoader {
+    private static let batchSize = 100
+
+    static func fetchAll(
+        projectIds: [String],
+        fetchBatch: ([String]) async throws -> [ProjectPermission]
+    ) async throws -> [ProjectPermission] {
+        var permissions: [ProjectPermission] = []
+        for startIndex in stride(from: 0, to: projectIds.count, by: batchSize) {
+            let endIndex = min(startIndex + batchSize, projectIds.count)
+            permissions += try await fetchBatch(
+                Array(projectIds[startIndex..<endIndex])
+            )
+        }
+        return permissions
     }
 }

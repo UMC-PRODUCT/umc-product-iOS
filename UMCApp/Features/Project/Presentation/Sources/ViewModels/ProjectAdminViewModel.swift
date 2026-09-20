@@ -95,13 +95,17 @@ final class ProjectAdminViewModel {
 
         dashboard = .loading
         do {
-            let page = try await projectUseCase.fetchManagedProjects(
-                gisuId: gisuId,
-                keyword: nil,
-                page: 0,
-                size: Self.pageSize
-            )
-            let projectIds = page.items.map(\.id)
+            let projects = try await ProjectManagedPageLoader.fetchAll(
+                pageSize: Self.pageSize
+            ) { page, size in
+                try await self.projectUseCase.fetchManagedProjects(
+                    gisuId: gisuId,
+                    keyword: nil,
+                    page: page,
+                    size: size
+                )
+            }
+            let projectIds = projects.map(\.id)
             let permissions = try await fetchPermissionMap(projectIds: projectIds)
             let statistics = try await fetchStatistics(
                 projectIds: projectIds.filter {
@@ -109,7 +113,7 @@ final class ProjectAdminViewModel {
                 }
             )
             dashboard = .loaded(ProjectAdminDashboard(
-                projects: page.items,
+                projects: projects,
                 permissions: permissions,
                 statistics: statistics
             ))
@@ -290,7 +294,11 @@ final class ProjectAdminViewModel {
     private func fetchPermissionMap(projectIds: [String]) async throws
         -> [String: ProjectPermission] {
         guard !projectIds.isEmpty else { return [:] }
-        let permissions = try await projectUseCase.fetchPermissions(projectIds: projectIds)
+        let permissions = try await ProjectPermissionBatchLoader.fetchAll(
+            projectIds: projectIds
+        ) { projectIds in
+            try await self.projectUseCase.fetchPermissions(projectIds: projectIds)
+        }
         return Dictionary(uniqueKeysWithValues: permissions.map { ($0.projectId, $0) })
     }
 
