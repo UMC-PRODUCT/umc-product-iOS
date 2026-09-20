@@ -16,9 +16,7 @@ public extension SocialLinkType {
 
     /// 링크 종류의 브랜드 아이콘 (컬러, 32×32 라운드 8 틀에 얹는다).
     ///
-    /// 시안(`Figma 12736:32709` 외부 링크 · `12804:30609` 외부 프로필 링크)이 SF Symbol
-    /// 이 아니라 서비스 브랜드 이미지를 쓴다 — 설정·프로필 수정 두 화면이 같은 에셋을
-    /// 공유한다.
+    /// 서비스 로고가 있는 항목은 브랜드 이미지를, 블로그는 SF Symbol을 쓴다.
     var brandIcon: Image {
         switch self {
         case .github:
@@ -26,8 +24,8 @@ public extension SocialLinkType {
         case .linkedin:
             return .linkedInColor
         case .blog:
-            return .blogColor
-        // 전용 에셋이 없어 UMC 채널 행의 인스타그램 로고·블로그의 체인링크를 같이 쓴다.
+            return Image(systemName: "text.alignleft")
+        // 전용 에셋이 없어 UMC 채널의 인스타그램 로고를 쓴다.
         case .instagram:
             return .umcInstagram
         case .personal:
