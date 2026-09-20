@@ -8,6 +8,7 @@
 import CoreDesignSystem
 import FoundationModels
 import SwiftUI
+import UIKit
 
 // MARK: - Constants
 
@@ -17,6 +18,8 @@ fileprivate enum Constants {
     static let title = "Apple Intelligence 를 켜면\nAI 기능을 쓸 수 있어요"
     static let settingsTitle = "켜는 방법"
     static let settingsPath = "설정 > Apple Intelligence 및 Siri"
+    static let openSettingsTitle = "설정 열기"
+    static let settingsFallbackTitle = "설정으로 이동할 수 없어요"
     static let settingsHint = "켜고 나면 모델을 내려받는 동안 잠시 기다려야 할 수 있어요."
     static let dismissLabel = "닫기"
 
@@ -75,13 +78,13 @@ fileprivate enum Constants {
 /// AI 진입 버튼은 모델이 쓸 수 있을 때만 보이므로, 꺼 둔 사용자는 기능이 있다는 것조차
 /// 알 수 없다. 홈 진입 시 한 번만 띄운다 (`HomeView`).
 ///
-/// - Note: Apple Intelligence 설정 화면으로 바로 가는 공개 URL 이 없어 경로를 글로 안내한다.
-///   `UIApplication.openSettingsURLString` 은 앱 설정으로만 이동한다.
+/// Apple Intelligence 설정 URL을 지원하지 않는 OS에서는 기존 설정 경로를 다시 안내한다.
 struct AppleIntelligenceIntroSheet: View {
 
     // MARK: - Property
 
     @Environment(\.dismiss) private var dismiss
+    @State private var showsSettingsFallback = false
 
     // MARK: - Body
 
@@ -107,6 +110,11 @@ struct AppleIntelligenceIntroSheet: View {
             }
         }
         .presentationDetents([.large])
+        .alert(Constants.settingsFallbackTitle, isPresented: $showsSettingsFallback) {
+            Button(Constants.dismissLabel, role: .cancel) {}
+        } message: {
+            Text(Constants.settingsPath)
+        }
     }
 
     // MARK: - View Component
@@ -165,6 +173,9 @@ struct AppleIntelligenceIntroSheet: View {
             Text(Constants.settingsPath)
                 .appFont(.body, weight: .semibold, color: .grey900)
 
+            Button(Constants.openSettingsTitle, action: openSettings)
+                .buttonStyle(.glassProminent)
+
             Text(Constants.settingsHint)
                 .appFont(.footnote, color: .grey500)
         }
@@ -174,7 +185,20 @@ struct AppleIntelligenceIntroSheet: View {
             .regular,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
-        .accessibilityElement(children: .combine)
+    }
+
+    private func openSettings() {
+        guard let url = URL(string: "App-prefs:root=APPLE_INTELLIGENCE") else {
+            showsSettingsFallback = true
+            return
+        }
+
+        Task { @MainActor in
+            guard await UIApplication.shared.open(url) else {
+                showsSettingsFallback = true
+                return
+            }
+        }
     }
 }
 
