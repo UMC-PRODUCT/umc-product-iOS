@@ -47,7 +47,7 @@ public let recommendedSettings: SettingsDictionary = [
     "MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS": "gnu17 gnu++20",
     "ENABLE_USER_SCRIPT_SANDBOXING": "YES",
     "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
-    "MARKETING_VERSION": "3.1.0",
+    "MARKETING_VERSION": "3.2.0",
     "CURRENT_PROJECT_VERSION": .string(buildNumber),
     "DEVELOPMENT_TEAM": "8B8B4462NV",
     "CODE_SIGN_STYLE": "Automatic",
