@@ -81,7 +81,7 @@ public struct CardScanView: View {
     private var content: some View {
         switch viewModel.state {
         case .preparing:
-            Progress()
+            ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .scanning:

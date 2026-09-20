@@ -48,7 +48,7 @@ struct ProjectApplicationReviewView: View {
     private var content: some View {
         switch viewModel.application {
         case .idle, .loading:
-            Progress()
+            ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .loaded(let application):
             List {

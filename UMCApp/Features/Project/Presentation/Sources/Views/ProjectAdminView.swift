@@ -108,7 +108,7 @@ struct ProjectAdminView: View {
         } else {
             switch viewModel.dashboard {
             case .idle, .loading:
-                Progress()
+                ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             case .loaded(let dashboard):

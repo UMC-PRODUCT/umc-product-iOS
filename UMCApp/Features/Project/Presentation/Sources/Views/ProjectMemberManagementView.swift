@@ -67,7 +67,7 @@ struct ProjectMemberManagementView: View {
     private var content: some View {
         switch viewModel.members {
         case .idle, .loading:
-            Progress()
+            ProgressView()
 
         case .loaded(let members):
             List {

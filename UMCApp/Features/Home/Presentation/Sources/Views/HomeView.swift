@@ -136,12 +136,13 @@ struct HomeView: View {
             LoadingView(.home(.seasonLoading))
         case .loaded(let seasonTypes):
             seasonLoaded(seasonTypes)
-        case .failed:
+        case .failed(let error):
             RetryContentUnavailableView(
                 title: "홈 정보를 불러오지 못했어요",
                 systemImage: "exclamationmark.triangle",
                 description: "네트워크 상태를 확인한 뒤 다시 시도해주세요.",
                 isRetrying: isRetryingProfile,
+                error: error,
                 retryAction: { await retryProfile() }
             )
         }
@@ -221,12 +222,13 @@ struct HomeView: View {
                 LoadingView(.home(.recentNoticeLoading))
             case .loaded(let notices):
                 recentNoticeLoaded(notices)
-            case .failed:
+            case .failed(let error):
                 RetryContentUnavailableView(
                     title: "최근 공지를 불러오지 못했어요",
                     systemImage: "exclamationmark.triangle",
                     description: "네트워크 상태를 확인한 뒤 다시 시도해주세요.",
                     isRetrying: isRetryingRecentNotice,
+                    error: error,
                     retryAction: { await retryRecentNotices() }
                 )
             }
@@ -332,6 +334,13 @@ struct HomeView: View {
     /// Apple Intelligence 안내가 우선이다. 리뷰 요청은 기록을 남기지 않고 건너뛰므로
     /// 시트를 닫은 뒤 다음 홈 진입에서 그대로 요청된다.
     private func presentEntryPromptIfNeeded() {
+        #if DEBUG
+        if CommandLine.arguments.contains("-showAppleIntelligenceIntro") {
+            isShowingAppleIntelligenceIntro = true
+            return
+        }
+        #endif
+
         let shouldPresentIntro = AppleIntelligenceIntroSheet.shouldPresent(
             availability: SystemLanguageModel.default.availability,
             hasBeenShown: hasShownAppleIntelligenceIntro

@@ -142,7 +142,7 @@ struct MyPageView: View {
     private var cardContent: some View {
         switch viewModel.myCard {
         case .idle, .loading:
-            Progress()
+            ProgressView()
                 .frame(maxWidth: .infinity)
 
         case .loaded(let card):
