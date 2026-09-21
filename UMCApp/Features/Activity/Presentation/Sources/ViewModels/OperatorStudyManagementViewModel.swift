@@ -181,6 +181,11 @@ final class OperatorStudyManagementViewModel {
     // MARK: - Computed Property
 
     /// 현재 사용자 기수 ID (서버 응답 `String`). 서버 전달·검증 전용 — 화면에 쓰지 않는다.
+    func generation(for group: StudyGroupInfo) -> String? {
+        guard let gisuId = group.gisuId else { return nil }
+        return genRepository?.gen(forGisuId: gisuId)
+    }
+
     var currentGisuId: String? { gisuIdProvider() }
 
     /// 화면에 표시할 현재 기수 값(`gen`).
@@ -825,14 +830,14 @@ final class OperatorStudyManagementViewModel {
     /// 멤버 추가 시트 표시
     func showAddMemberSheet(for group: StudyGroupInfo) {
         memberUpdateTargetGroup = group
-        selectedChallengers = group.members.map { challengerInfo(from: $0, part: group.part) }
+        selectedChallengers = group.members.map { challengerInfo(from: $0, part: group.part, generation: generation(for: group)) }
         addMemberGroup = group
     }
 
     /// 멘토 추가 시트 표시
     func showAddMentorSheet(for group: StudyGroupInfo) {
         mentorUpdateTargetGroup = group
-        selectedMentors = group.mentors.map { challengerInfo(from: $0, part: group.part) }
+        selectedMentors = group.mentors.map { challengerInfo(from: $0, part: group.part, generation: generation(for: group)) }
         addMentorGroup = group
     }
 
@@ -1265,12 +1270,13 @@ final class OperatorStudyManagementViewModel {
 
     private func challengerInfo(
         from member: StudyGroupMember,
-        part: UMCPartType
+        part: UMCPartType,
+        generation: String?
     ) -> ChallengerInfo {
         ChallengerInfo(
             memberId: member.memberID ?? member.serverID,
             challengerId: member.challengerID ?? member.memberID ?? member.serverID,
-            gen: "",
+            gen: generation ?? "",
             name: member.name,
             nickname: member.nickname ?? member.name,
             schoolName: member.university,

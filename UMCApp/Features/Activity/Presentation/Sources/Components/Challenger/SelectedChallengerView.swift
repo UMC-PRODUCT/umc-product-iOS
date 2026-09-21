@@ -36,6 +36,8 @@ public struct SelectedChallengerView: View {
 
     /// 검색으로 추가할 수 있는 memberId. `nil` 이면 제한하지 않습니다.
     private let selectableMemberIds: Set<String>?
+    private let preferredGeneration: String?
+    private let preferredPart: UMCPartType?
 
     /// 현재 사용자의 memberId (본인은 삭제 방지)
     private var myMemberIdSet: Set<String> {
@@ -52,11 +54,15 @@ public struct SelectedChallengerView: View {
     public init(
         challenger: Binding<[ChallengerInfo]>,
         searchUseCase: SearchChallengersUseCaseProtocol? = nil,
-        selectableMemberIds: Set<String>? = nil
+        selectableMemberIds: Set<String>? = nil,
+        preferredGeneration: String? = nil,
+        preferredPart: UMCPartType? = nil
     ) {
         self._challenger = challenger
         self.searchUseCase = searchUseCase
         self.selectableMemberIds = selectableMemberIds
+        self.preferredGeneration = preferredGeneration
+        self.preferredPart = preferredPart
     }
 
     // MARK: - Body
@@ -84,9 +90,20 @@ public struct SelectedChallengerView: View {
                     SearchChallengerView(
                         useCase: resolvedSearchUseCase,
                         selectedChallengers: $challenger,
-                        selectableMemberIds: selectableMemberIds
+                        selectableMemberIds: selectableMemberIds,
+                        preferredGeneration: preferredGeneration,
+                        preferredPart: preferredPart
                     )
                 }
+        }
+        .onAppear {
+            let selection = SearchChallengerViewModel(
+                searchChallengersUseCase: resolvedSearchUseCase,
+                preferredGeneration: preferredGeneration,
+                preferredPart: preferredPart
+            )
+            selection.initializeSelection(with: challenger)
+            challenger = selection.confirmedSelection(previousSelection: challenger)
         }
     }
 
@@ -146,7 +163,7 @@ public struct SelectedChallengerView: View {
     }
 
     private func removeChallenger(_ info: ChallengerInfo) {
-        challenger.removeAll { $0.id == info.id }
+        challenger.removeAll { $0.memberId == info.memberId }
     }
 }
 

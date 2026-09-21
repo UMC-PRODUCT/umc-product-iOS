@@ -34,6 +34,9 @@ final class SearchChallengerViewModel {
 
     // MARK: - Property
 
+    private let preferredGeneration: String?
+    private let preferredPart: UMCPartType?
+
     private let searchChallengersUseCase: SearchChallengersUseCaseProtocol
 
     /// 현재 검색 결과 목록
@@ -43,7 +46,11 @@ final class SearchChallengerViewModel {
     var allChallengers: [ChallengerInfo] { loadState.value ?? [] }
 
     /// 현재 선택된 챌린저들의 행 식별 키 목록
-    var selectedKeys: Set<String> = []
+    var selectedKeys: Set<String> {
+        Set((allChallengers + Array(selectedChallengersMap.values))
+            .filter { selectedChallengersMap[$0.memberId] != nil }
+            .map(\.selectionKey))
+    }
 
     /// 선택된 챌린저 정보를 별도 보관 (검색 결과가 바뀌어도 선택 유지)
     var selectedChallengersMap: [String: ChallengerInfo] = [:]
@@ -82,7 +89,13 @@ final class SearchChallengerViewModel {
     // MARK: - Initializer
 
     /// - Parameter searchChallengersUseCase: 챌린저 검색 UseCase
-    init(searchChallengersUseCase: SearchChallengersUseCaseProtocol) {
+    init(
+        searchChallengersUseCase: SearchChallengersUseCaseProtocol,
+        preferredGeneration: String? = nil,
+        preferredPart: UMCPartType? = nil
+    ) {
+        self.preferredGeneration = preferredGeneration
+        self.preferredPart = preferredPart
         self.searchChallengersUseCase = searchChallengersUseCase
     }
 
@@ -136,9 +149,9 @@ final class SearchChallengerViewModel {
             // 페이지를 기다리는 사이 키워드가 바뀌었으면 다른 검색의 결과가 되므로 버린다.
             guard latestRequestID == requestID else { return }
 
-            let knownKeys = Set(existing.map(\.selectionKey))
+            var knownKeys = Set(existing.map(\.selectionKey))
             let newChallengers = page.challengers.filter {
-                !knownKeys.contains($0.selectionKey)
+                knownKeys.insert($0.selectionKey).inserted
             }
             loadState = .loaded(existing + newChallengers)
             hasNext = page.hasNext
@@ -159,29 +172,28 @@ final class SearchChallengerViewModel {
     /// 동일 인물이 기수·파트별로 여러 행에 나올 수 있는데, 그룹 추가 API 는 멤버 단위라
     /// 한 행만 골라두면 나머지 행이 선택 안 된 상태로 남아 목록이 실제 선택과 어긋납니다.
     func toggleSelection(_ challenger: ChallengerInfo) {
-        let isSelected = selectedKeys.contains(challenger.selectionKey)
-        let siblings = allChallengers.filter { $0.memberId == challenger.memberId }
-
-        for sibling in siblings {
-            let key = sibling.selectionKey
-            if isSelected {
-                selectedKeys.remove(key)
-                selectedChallengersMap.removeValue(forKey: key)
-            } else {
-                selectedKeys.insert(key)
-                selectedChallengersMap[key] = sibling
-            }
+        if selectedChallengersMap[challenger.memberId] != nil {
+            selectedChallengersMap.removeValue(forKey: challenger.memberId)
+        } else {
+            selectRepresentative(challenger)
         }
     }
 
     /// 상위 화면에서 이미 선택돼 있던 목록을 선택 상태에 반영합니다.
     func initializeSelection(with challengers: [ChallengerInfo]) {
-        let selectionMap = Dictionary(
-            challengers.map { ($0.selectionKey, $0) },
-            uniquingKeysWith: { _, latest in latest }
-        )
-        selectedKeys = Set(selectionMap.keys)
-        selectedChallengersMap = selectionMap
+        selectedChallengersMap = [:]
+        for challenger in challengers {
+            selectRepresentative(challenger)
+        }
+    }
+
+    private func selectRepresentative(_ challenger: ChallengerInfo) {
+        let candidates = allChallengers.filter { $0.memberId == challenger.memberId }
+            + [challenger] + [selectedChallengersMap[challenger.memberId]].compactMap { $0 }
+        selectedChallengersMap[challenger.memberId] = candidates.first {
+            (preferredGeneration == nil || $0.gen == preferredGeneration)
+                && (preferredPart == nil || $0.part == preferredPart)
+        } ?? challenger
     }
 
     /// 확정된 선택 목록을 반환합니다.
@@ -197,7 +209,7 @@ final class SearchChallengerViewModel {
         var handledKeys: Set<String> = []
 
         for challenger in previousSelection {
-            let key = challenger.selectionKey
+            let key = challenger.memberId
             guard let updated = selectedChallengersMap[key] else { continue }
             guard handledKeys.insert(key).inserted else { continue }
             ordered.append(updated)
@@ -205,7 +217,7 @@ final class SearchChallengerViewModel {
 
         let appended = selectedChallengersMap.values
             .sorted { $0.selectionKey < $1.selectionKey }
-            .filter { handledKeys.insert($0.selectionKey).inserted }
+            .filter { handledKeys.insert($0.memberId).inserted }
 
         return ordered + appended
     }
@@ -245,7 +257,8 @@ final class SearchChallengerViewModel {
             guard latestRequestID == requestID else { return }
             hasNext = page.hasNext
             nextCursor = page.nextCursor
-            loadState = .loaded(page.challengers)
+            var seen = Set<String>()
+            loadState = .loaded(page.challengers.filter { seen.insert($0.selectionKey).inserted })
         } catch is CancellationError {
             guard latestRequestID == requestID else { return }
             loadState = stateBeforeSearch
@@ -371,11 +384,7 @@ extension SearchChallengerViewModel {
 
     /// 같은 `memberId` 를 가진 모든 행을 선택합니다 (탭 선택과 동일 규칙).
     private func selectAllSiblings(of challenger: ChallengerInfo) {
-        let siblings = allChallengers.filter { $0.memberId == challenger.memberId }
-        for sibling in siblings {
-            selectedKeys.insert(sibling.selectionKey)
-            selectedChallengersMap[sibling.selectionKey] = sibling
-        }
+        selectRepresentative(challenger)
     }
 
     private func presentImportResult(
