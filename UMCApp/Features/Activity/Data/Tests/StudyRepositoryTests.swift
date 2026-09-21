@@ -387,7 +387,7 @@ struct StudyRepositoryCurriculumTests {
     func fetchWeeklyCurriculumOptionsMapsAndSorts() async throws {
         let (sut, _) = makeRepository(.success(Fixture.success(Fixture.curriculumObject)))
 
-        let options = try await sut.fetchWeeklyCurriculumOptions()
+        let options = try await sut.fetchWeeklyCurriculumOptions(gisuId: "17", part: "PLAN")
 
         #expect(options.map(\.weeklyCurriculumId) == ["w1", "w2"])
         #expect(options.map(\.weekNo) == ["1", "2"])     // 도메인 모델은 weekNo: String
@@ -461,7 +461,7 @@ private enum CurriculumFetch: Sendable {
         case .overview:
             _ = try await sut.fetchCurriculumOverview()
         case .weeklyOptions:
-            _ = try await sut.fetchWeeklyCurriculumOptions()
+            _ = try await sut.fetchWeeklyCurriculumOptions(gisuId: "17", part: "PLAN")
         }
     }
 }

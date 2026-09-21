@@ -40,7 +40,9 @@ final class PreviewStudyScheduleMembersUseCase: FetchStudyMembersUseCaseProtocol
 /// 프리뷰에서 호출될 일이 없어 계약 밖으로 둔다.
 final class PreviewStudyScheduleRepository: StudyRepositoryProtocol {
 
-    func fetchWeeklyCurriculumOptions() async throws -> [WeeklyCurriculumOption] {
+    func fetchWeeklyCurriculumOptions(
+        gisuId: String, part: String
+    ) async throws -> [WeeklyCurriculumOption] {
         [
             WeeklyCurriculumOption(weeklyCurriculumId: "1", weekNo: "1", title: "OT"),
             WeeklyCurriculumOption(weeklyCurriculumId: "2", weekNo: "2", title: "Git & GitHub"),
@@ -61,7 +63,8 @@ final class PreviewStudyScheduleRepository: StudyRepositoryProtocol {
     }
 
     func fetchStudyGroupDetail(groupId: String) async throws -> StudyGroupInfo {
-        throw DomainError.custom(message: "프리뷰 계약 밖")
+        StudyGroupInfo(serverID: groupId, gisuId: "17", studyPart: "PLAN",
+                       name: "PM", part: .pm, createdDate: .now, mentors: [])
     }
 
     func resolveChallengerId(
