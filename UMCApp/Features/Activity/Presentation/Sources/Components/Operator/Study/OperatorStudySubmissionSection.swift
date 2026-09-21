@@ -22,8 +22,7 @@ struct OperatorStudySubmissionSection: View {
 
     let viewModel: OperatorStudyManagementViewModel
 
-    /// 워크북 상세 진입 요청 — 상세 화면이 미이식이라 안내 알럿은 상위(셸)가 띄운다.
-    let onSelectWorkbook: () -> Void
+    let onSelectWorkbook: (StudyManagementItem) -> Void
 
     // MARK: - Constants
 
@@ -149,11 +148,7 @@ struct OperatorStudySubmissionSection: View {
             GlassEffectContainer(spacing: DefaultSpacing.spacing16) {
                 LazyVStack(spacing: DefaultSpacing.spacing16) {
                     ForEach(rows) { submission in
-                        StudyManagementCard(submission: submission) { _ in
-                            // TODO: 워크북 상세(WORKBOOK-102) 진입 결선 - [26.08.03] 이재원
-                            //  — 상세 화면이 미이식이라 진입은 보류하고 안내만 표시한다.
-                            onSelectWorkbook()
-                        }
+                        StudyManagementCard(submission: submission, onSelectWeek: onSelectWorkbook)
                         .task {
                             await viewModel.loadMoreSubmissionsIfNeeded(
                                 currentMemberID: submission.studyGroupMemberId

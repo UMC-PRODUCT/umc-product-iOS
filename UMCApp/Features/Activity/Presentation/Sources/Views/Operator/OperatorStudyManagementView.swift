@@ -39,10 +39,7 @@ struct OperatorStudyManagementView: View {
     /// 현재 보고 있는 섹션 (그룹 관리 / 제출 현황)
     @State private var selectedSection: ManagementSection = .groups
 
-    /// 워크북 상세 미결선 안내 표시 여부
-    ///
-    /// 제출 현황에서 워크북 상세(`WORKBOOK-102`)로 이동해야 하나 상세 화면이 아직 미이식이라
-    /// 진입을 보류하고 안내만 표시한다.
+    @State private var selectedWorkbook: StudyManagementItem?
     @State private var showWorkbookDetailUnavailable = false
 
     // MARK: - Section
@@ -75,8 +72,8 @@ struct OperatorStudyManagementView: View {
 
     private enum Constants {
         static let sectionPickerTitle: String = "스터디 관리 섹션"
-        static let workbookUnavailableTitle: String = "준비 중"
-        static let workbookUnavailableMessage: String = "워크북 상세 화면은 커리큘럼 상세 이식 후 연결됩니다."
+        static let workbookUnavailableTitle: String = "워크북 미배포"
+        static let workbookUnavailableMessage: String = "선택한 주차의 개인 워크북이 아직 배포되지 않았습니다."
         static let confirmTitle: String = "확인"
     }
 
@@ -94,8 +91,12 @@ struct OperatorStudyManagementView: View {
                     onRegisterSchedule: onRegisterSchedule
                 )
             case .submissions:
-                OperatorStudySubmissionSection(viewModel: viewModel) {
-                    showWorkbookDetailUnavailable = true
+                OperatorStudySubmissionSection(viewModel: viewModel) { item in
+                    if let id = item.challengerWorkbookId, !id.isEmpty {
+                        selectedWorkbook = item
+                    } else {
+                        showWorkbookDetailUnavailable = true
+                    }
                 }
             }
         }
@@ -140,6 +141,13 @@ struct OperatorStudyManagementView: View {
                 SelectedChallengerView(
                     challenger: $viewModel.selectedMentors
                 )
+            }
+            .sheet(item: $selectedWorkbook) { item in
+                NavigationStack {
+                    WorkbookRoute(workbookId: item.challengerWorkbookId) {
+                        await viewModel.retrySubmissions()
+                    }
+                }
             }
             .alertPrompt(item: $viewModel.alertPrompt)
             .alert(

@@ -16,14 +16,6 @@ import UMCFoundation
 /// - `curriculumState`: 진행률(`CurriculumProgressModel`)
 /// - `missionsState`: 주차별 미션(`[MissionCardModel]`)
 ///
-/// 상태를 둘로 나눠 두는 이유는 `ChallengerStudyView` 가 둘을 다르게 소비하기 때문입니다
-/// (미션이 비면 진행률 대신 안내 가이드를 노출). 제출 현황(#586)·과제 제출(#587)이 결선되면
-/// 미션은 별도 응답에서 파생돼 진행률과 갈라지므로, 그때 조회 경로만 분리하면 됩니다.
-///
-/// - Note: 제출 현황 API(`WORKBOOK-104`)는 **운영진 스코프**(요청자가 관리할 수 있는 그룹의
-///   스터디원 목록)로 결선돼 운영진 화면에만 쓰입니다. 챌린저 본인 시점의 제출 현황(#586)은
-///   워크북 단건 조회(`WORKBOOK-102`)를 써야 하는데 그 화면이 아직 미이식이라 여전히
-///   비활성화 상태입니다. 과제 제출(#587)도 대상 API가 없습니다 (하단 TODO 참고).
 @MainActor
 @Observable
 final class ChallengerStudyViewModel {
@@ -102,11 +94,4 @@ final class ChallengerStudyViewModel {
         missionsState = .failed(error)
     }
 
-    // MARK: - 제출 현황 (백엔드 후행)
-
-    // TODO: 스터디 제출 현황 조회(#586) 결선 - [26.06.26] 이재원
-    //  — 운영진 목록(WORKBOOK-104)은 결선됐으나 챌린저 본인 시점은 워크북 단건
-    //    조회(WORKBOOK-102)가 필요하고 그 화면이 미이식이라 비활성화 유지.
-    // TODO: 커리큘럼 과제 제출(#587) 결선 - [26.06.26] 이재원
-    //  — 백엔드 과제 제출 API 미제공으로 비활성화.
 }

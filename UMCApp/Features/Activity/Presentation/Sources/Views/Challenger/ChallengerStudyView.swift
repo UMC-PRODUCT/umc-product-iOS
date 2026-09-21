@@ -31,7 +31,13 @@ struct ChallengerStudyView: View {
 
     var body: some View {
         Group {
-            contentView(viewModel: viewModel)
+            VStack {
+                NavigationLink("내 워크북 · 미션 제출") {
+                    WorkbookRoute(onChanged: { await viewModel.load() })
+                }
+                .buttonStyle(.glass)
+                contentView(viewModel: viewModel)
+            }
         }
         .task {
             await viewModel.load()

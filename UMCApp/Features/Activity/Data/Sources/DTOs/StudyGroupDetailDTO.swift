@@ -18,11 +18,11 @@ import UMCFoundation
 /// 서버 `StudyGroupResponse` 계약에 맞춘 키만 디코딩한다. 서버 식별자(`studyGroupId`,
 /// `memberId`)는 정수로 내려오지만 전 레이어 `String` 통일 규칙에 따라 `String` 으로 받는다.
 ///
-/// - Note: 서버가 함께 내려주는 `gisuId` 는 도메인에서 쓰지 않아 디코딩하지 않는다.
 struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
 
     // MARK: - Property
 
+    let gisuId: String?
     let studyGroupId: String
     let name: String
     let studyPart: String
@@ -44,6 +44,7 @@ struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
     // MARK: - CodingKeys
 
     private enum CodingKeys: String, CodingKey {
+        case gisuId
         case studyGroupId
         case name
         case studyPart
@@ -56,6 +57,7 @@ struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        gisuId = container.decodeFlexibleStringOrNil(forKey: .gisuId)
         studyGroupId = container.decodeFlexibleStringOrNil(forKey: .studyGroupId) ?? ""
         name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
         studyPart = try container.decodeIfPresent(String.self, forKey: .studyPart) ?? ""
@@ -74,6 +76,7 @@ struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(gisuId, forKey: .gisuId)
         try container.encode(studyGroupId, forKey: .studyGroupId)
         try container.encode(name, forKey: .name)
         try container.encode(studyPart, forKey: .studyPart)
@@ -87,14 +90,14 @@ struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
 
 /// 스터디 그룹 소속 챌린저(파트장/스터디원) 정보 DTO
 ///
-/// 서버 `StudyGroupMemberResponse` 계약에 맞춘 키만 디코딩한다. 응답에 함께 오는 `schoolId` 는
-/// 도메인에서 쓰지 않아 생략한다.
+/// 서버 `StudyGroupMemberResponse` 계약에 맞춘 키를 디코딩한다.
 struct StudyGroupChallengerDTO: Codable, Sendable, Equatable {
 
     // MARK: - Property
 
     let memberId: String
     let memberName: String
+    let schoolId: String
     let schoolName: String
     let profileImageURL: String?
     /// 베스트 워크북 표시 점수.
@@ -110,6 +113,7 @@ struct StudyGroupChallengerDTO: Codable, Sendable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case memberId
         case memberName
+        case schoolId
         case schoolName
         case profileImageURL = "profileImageUrl"
         case bestWorkbookPoint
@@ -121,6 +125,7 @@ struct StudyGroupChallengerDTO: Codable, Sendable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         memberId = container.decodeFlexibleStringOrNil(forKey: .memberId) ?? ""
         memberName = try container.decodeIfPresent(String.self, forKey: .memberName) ?? ""
+        schoolId = container.decodeFlexibleStringOrNil(forKey: .schoolId) ?? ""
         schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
         profileImageURL = try container.decodeIfPresent(String.self, forKey: .profileImageURL)
         bestWorkbookPoint = try container.decodeIntFlexibleIfPresent(forKey: .bestWorkbookPoint)
@@ -132,6 +137,7 @@ struct StudyGroupChallengerDTO: Codable, Sendable, Equatable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(memberId, forKey: .memberId)
         try container.encode(memberName, forKey: .memberName)
+        try container.encode(schoolId, forKey: .schoolId)
         try container.encode(schoolName, forKey: .schoolName)
         try container.encodeIfPresent(profileImageURL, forKey: .profileImageURL)
         try container.encodeIfPresent(bestWorkbookPoint, forKey: .bestWorkbookPoint)
@@ -200,6 +206,8 @@ extension StudyGroupDetailDTO {
 
         return StudyGroupInfo(
             serverID: studyGroupId,
+            gisuId: gisuId,
+            studyPart: studyPart,
             name: name.isEmpty ? (defaultGroupName ?? "") : name,
             part: partType,
             createdDate: parsedDate,
