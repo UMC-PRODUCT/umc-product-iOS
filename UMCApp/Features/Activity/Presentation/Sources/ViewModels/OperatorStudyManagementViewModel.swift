@@ -123,11 +123,9 @@ final class OperatorStudyManagementViewModel {
     /// 선택된 주차 필터 (비어 있으면 전체 주차)
     private(set) var selectedSubmissionWeekNos: [String] = []
 
-    /// 주차 필터 후보
-    ///
-    /// 서버가 주차 목록 전용 엔드포인트를 주지 않아, **주차 필터가 걸리지 않은** 조회 결과에서
-    /// 파생합니다. 주차 필터가 걸린 응답으로 갱신하면 후보가 선택지로 좁아져 해제할 수 없게 됩니다.
-    private(set) var availableSubmissionWeekNos: [String] = []
+    private(set) var submissionWeeksState: Loadable<[String]> = .idle
+    var availableSubmissionWeekNos: [String] { submissionWeeksState.value ?? [] }
+    private var loadedWeeksGroupId: String?
 
     /// 제출 현황 다음 페이지 커서 (직전 페이지 마지막 `studyGroupMemberId`)
     private var submissionNextCursor: String?
@@ -203,6 +201,8 @@ final class OperatorStudyManagementViewModel {
     private var isLoadedListMatchingCurrentFilter: Bool {
         loadedSubmissionGroupId == selectedSubmissionGroupId
             && loadedSubmissionWeekNos == selectedSubmissionWeekNos
+            && loadedWeeksGroupId == selectedSubmissionGroupId
+            && submissionWeeksState.value != nil
     }
 
     // MARK: - Function (일정 등록 권한)
@@ -353,6 +353,7 @@ final class OperatorStudyManagementViewModel {
     ///
     /// - Parameter weekNo: 토글할 주차 번호 (서버 응답 `String`)
     func toggleSubmissionWeek(_ weekNo: String) async {
+        guard availableSubmissionWeekNos.contains(weekNo) else { return }
         var weekNos = selectedSubmissionWeekNos
         if let index = weekNos.firstIndex(of: weekNo) {
             weekNos.remove(at: index)
@@ -396,7 +397,6 @@ final class OperatorStudyManagementViewModel {
 
             submissionNextCursor = nextPage.nextCursor
             submissionHasNext = nextPage.hasNext
-            updateAvailableWeekNos(from: submissions)
         } catch is CancellationError {
             // 뷰 라이프사이클 취소 — 실패가 아니므로 목록을 그대로 둔다.
         } catch let error as DomainError {
@@ -1120,6 +1120,8 @@ final class OperatorStudyManagementViewModel {
         // 남는 목록은 `hasNext == false` 라 스크롤해도 다음 페이지를 못 부른다.
         let previousCursor = submissionNextCursor
         let previousHasNext = submissionHasNext
+        let previousWeeksState = submissionWeeksState
+        let previousWeeksGroupId = loadedWeeksGroupId
 
         // 필터 적용과 그 롤백을 한 곳에 둔다. 필터만 바뀌고 조회가 취소되면 칩은 새 필터를,
         // 목록은 옛 필터의 결과를 가리켜 둘이 어긋난 채로 굳는다.
@@ -1127,7 +1129,9 @@ final class OperatorStudyManagementViewModel {
         selectedSubmissionWeekNos = weekNos
 
         isReloadingSubmissions = true
-        defer { isReloadingSubmissions = false }
+        defer {
+            if requestID == submissionRequestID { isReloadingSubmissions = false }
+        }
 
         submissionsState = .loading
         isLoadingMoreSubmissions = false
@@ -1135,6 +1139,17 @@ final class OperatorStudyManagementViewModel {
         submissionHasNext = false
 
         do {
+            if loadedWeeksGroupId != groupId || submissionWeeksState.value == nil {
+                submissionWeeksState = .loading
+                let weeks = try await useCase.fetchStudySubmissionWeeks(studyGroupId: groupId)
+                guard requestID == submissionRequestID else { return }
+                let options = Array(Set(weeks)).sorted {
+                    (Int($0) ?? 0) < (Int($1) ?? 0)
+                }
+                submissionWeeksState = .loaded(options)
+                loadedWeeksGroupId = groupId
+            }
+            selectedSubmissionWeekNos = weekNos.filter(availableSubmissionWeekNos.contains)
             let page = try await useCase.fetchStudyMemberSubmissions(
                 studyGroupId: selectedSubmissionGroupId,
                 weekNos: selectedSubmissionWeekNos,
@@ -1148,10 +1163,11 @@ final class OperatorStudyManagementViewModel {
             submissionHasNext = page.hasNext
             submissionsState = .loaded(submissions)
             loadedSubmissionGroupId = groupId
-            loadedSubmissionWeekNos = weekNos
-            updateAvailableWeekNos(from: page.content)
+            loadedSubmissionWeekNos = selectedSubmissionWeekNos
         } catch is CancellationError {
             guard requestID == submissionRequestID else { return }
+            submissionWeeksState = previousWeeksState.isLoading ? .idle : previousWeeksState
+            loadedWeeksGroupId = previousWeeksGroupId
             rollbackSubmissions(
                 state: previousState,
                 groupId: previousGroupId,
@@ -1162,6 +1178,8 @@ final class OperatorStudyManagementViewModel {
         } catch let error as NSError
             where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
             guard requestID == submissionRequestID else { return }
+            submissionWeeksState = previousWeeksState.isLoading ? .idle : previousWeeksState
+            loadedWeeksGroupId = previousWeeksGroupId
             rollbackSubmissions(
                 state: previousState,
                 groupId: previousGroupId,
@@ -1186,6 +1204,9 @@ final class OperatorStudyManagementViewModel {
             submissionsState = .failed(.unknown(
                 message: "제출 현황을 불러오지 못했습니다."
             ))
+        }
+        if submissionWeeksState.isLoading, case .failed(let error) = submissionsState {
+            submissionWeeksState = .failed(error)
         }
     }
 
@@ -1213,27 +1234,6 @@ final class OperatorStudyManagementViewModel {
     private func loadStudyGroupNamesIfNeeded() async {
         guard studyGroupNames.isEmpty else { return }
         studyGroupNames = (try? await useCase.fetchStudyGroupNames()) ?? []
-    }
-
-    /// 주차 필터 후보를 갱신한다.
-    ///
-    /// 주차 필터가 걸린 응답은 선택한 주차만 담고 있어 후보를 좁혀 버리므로 무시한다.
-    ///
-    /// 호출자는 **그 시점까지 로드된 전체 행**을 넘긴다. 첫 페이지 조회는 새 목록을, 추가 로드는
-    /// 누적된 목록을 넘기므로, 첫 페이지에 없던 주차도 스크롤하면 후보에 들어오고 그룹 필터를
-    /// 바꾸면 이전 그룹의 주차가 남지 않는다.
-    ///
-    /// - Parameter rows: 현재 로드된 전체 스터디원 행
-    private func updateAvailableWeekNos(from rows: [StudyMemberSubmission]) {
-        guard selectedSubmissionWeekNos.isEmpty else { return }
-
-        let weekNos = Set(rows.flatMap { $0.weeks.map(\.weekNo) })
-        availableSubmissionWeekNos = weekNos.sorted { lhs, rhs in
-            let lhsNo = Int(lhs) ?? Int.max
-            let rhsNo = Int(rhs) ?? Int.max
-            if lhsNo == rhsNo { return lhs < rhs }
-            return lhsNo < rhsNo
-        }
     }
 
     private func presentAlert(title: String, message: String) {

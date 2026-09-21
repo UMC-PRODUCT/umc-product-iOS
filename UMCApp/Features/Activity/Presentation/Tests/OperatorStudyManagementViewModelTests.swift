@@ -243,6 +243,20 @@ private final class MockOperatorStudyManagementUseCase: @unchecked Sendable,
         return groupNames
     }
 
+    var weeksByGroup: [String: [String]] = ["": ["1", "2"]]
+    var weeksError: Error?
+    var gatedWeeksGroup: String?
+    var weeksContinuation: CheckedContinuation<Void, Never>?
+
+    func fetchStudySubmissionWeeks(studyGroupId: String?) async throws -> [String] {
+        let weeks = weeksByGroup[studyGroupId ?? ""] ?? ["1", "2"]
+        if let gatedWeeksGroup, gatedWeeksGroup == studyGroupId {
+            await withCheckedContinuation { weeksContinuation = $0 }
+        }
+        if let weeksError { throw weeksError }
+        return weeks
+    }
+
     func fetchStudyMemberSubmissions(
         studyGroupId: String?,
         weekNos: [String],
@@ -1225,7 +1239,7 @@ struct OperatorStudyManagementSubmissionTests {
         #expect(useCase.submissionCalls.last?.weekNos == [])
     }
 
-    @Test("주차 후보는 주차 필터가 걸리지 않은 응답에서만 갱신된다")
+    @Test("주차 후보는 목록 필터와 독립적인 API 응답을 유지한다")
     func weekOptionsIgnoreFilteredResponse() async {
         let useCase = MockOperatorStudyManagementUseCase()
         useCase.submissionPages = [
@@ -1255,9 +1269,10 @@ struct OperatorStudyManagementSubmissionTests {
         #expect(viewModel.availableSubmissionWeekNos == ["1", "2"])
     }
 
-    @Test("주차 후보는 다음 페이지의 주차까지 누적한다")
+    @Test("주차 후보는 첫 페이지부터 전체 파트의 주차를 포함한다")
     func weekOptionsGrowAcrossPages() async {
         let useCase = MockOperatorStudyManagementUseCase()
+        useCase.weeksByGroup = ["": ["1", "2", "11", "12"]]
         useCase.submissionPages = [
             makeSubmissionPage(
                 content: [
@@ -1280,16 +1295,17 @@ struct OperatorStudyManagementSubmissionTests {
         ]
         let viewModel = makeViewModel(useCase: useCase)
         await viewModel.fetchSubmissions()
-        #expect(viewModel.availableSubmissionWeekNos == ["1"])
+        #expect(viewModel.availableSubmissionWeekNos == ["1", "2", "11", "12"])
 
         await viewModel.loadMoreSubmissionsIfNeeded(currentMemberID: "1")
 
-        #expect(viewModel.availableSubmissionWeekNos == ["1", "2"])
+        #expect(viewModel.availableSubmissionWeekNos == ["1", "2", "11", "12"])
     }
 
     @Test("그룹을 바꾸면 이전 그룹의 주차 후보가 남지 않는다")
     func weekOptionsResetOnGroupChange() async {
         let useCase = MockOperatorStudyManagementUseCase()
+        useCase.weeksByGroup = ["": ["1", "2"], "G-7": ["3"]]
         useCase.submissionPagesByGroupId = [
             "": makeSubmissionPage(
                 content: [
@@ -1311,9 +1327,44 @@ struct OperatorStudyManagementSubmissionTests {
         let viewModel = makeViewModel(useCase: useCase)
         await viewModel.fetchSubmissions()
 
+        await viewModel.toggleSubmissionWeek("2")
         await viewModel.selectSubmissionGroup("G-7")
 
         #expect(viewModel.availableSubmissionWeekNos == ["3"])
+        #expect(useCase.submissionCalls.last?.weekNos == [])
+    }
+
+    @Test("빈 멤버 목록에서도 주차 API 실패와 정상 빈 응답을 구분하고 재시도한다")
+    func weekFailureAndEmptyResponse() async {
+        let useCase = MockOperatorStudyManagementUseCase()
+        useCase.weeksError = NSError(domain: "STUDY_GROUP_NOT_MATCHED", code: 400)
+        let viewModel = makeViewModel(useCase: useCase)
+        await viewModel.fetchSubmissions()
+        guard case .failed = viewModel.submissionWeeksState else {
+            Issue.record("Expected weeks failure")
+            return
+        }
+        #expect(useCase.submissionCalls.isEmpty)
+        useCase.weeksError = nil
+        useCase.weeksByGroup = ["": []]
+        await viewModel.retrySubmissions()
+        #expect(viewModel.submissionWeeksState.value == [])
+        #expect(useCase.submissionCalls.count == 1)
+    }
+
+    @Test("이전 그룹 주차 지연 응답은 현재 옵션과 목록을 덮어쓰지 않는다")
+    func staleWeeksResponseIsIgnored() async {
+        let useCase = MockOperatorStudyManagementUseCase()
+        useCase.weeksByGroup = ["A": ["1"], "B": ["12"]]
+        useCase.gatedWeeksGroup = "A"
+        let viewModel = makeViewModel(useCase: useCase)
+        let oldRequest = Task { await viewModel.selectSubmissionGroup("A") }
+        for _ in 0..<100 where useCase.weeksContinuation == nil { await Task.yield() }
+        await viewModel.selectSubmissionGroup("B")
+        useCase.weeksContinuation?.resume()
+        await oldRequest.value
+        #expect(viewModel.availableSubmissionWeekNos == ["12"])
+        #expect(useCase.submissionCalls.map(\.studyGroupId) == ["B"])
     }
 
     // MARK: - 필터 ↔ 목록 정합

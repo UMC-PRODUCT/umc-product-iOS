@@ -74,6 +74,8 @@ public protocol StudyRepositoryProtocol {
 
     // MARK: - 스터디원 제출 현황
 
+    func fetchStudySubmissionWeeks(studyGroupId: String?) async throws -> [String]
+
     /// 스터디원 워크북 제출 현황 페이지 조회
     ///
     /// `GET /api/v2/curriculums/workbook-submissions`

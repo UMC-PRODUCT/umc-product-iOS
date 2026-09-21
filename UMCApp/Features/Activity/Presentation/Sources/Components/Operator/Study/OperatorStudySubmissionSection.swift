@@ -108,6 +108,27 @@ struct OperatorStudySubmissionSection: View {
             }
             .scrollIndicators(.hidden)
 
+            switch viewModel.submissionWeeksState {
+            case .idle:
+                EmptyView()
+            case .loading:
+                ProgressView("주차 목록을 불러오는 중입니다.")
+            case .failed(let error):
+                RetryContentUnavailableView(
+                    title: "주차 목록을 불러오지 못했어요",
+                    systemImage: "exclamationmark.triangle",
+                    description: error.userMessage,
+                    isRetrying: false
+                ) {
+                    await viewModel.retrySubmissions()
+                }
+            case .loaded(let weeks) where weeks.isEmpty:
+                Text("조회 가능한 주차가 없습니다.")
+                    .appFont(.footnote, color: .grey500)
+            case .loaded:
+                EmptyView()
+            }
+
             if !viewModel.availableSubmissionWeekNos.isEmpty {
                 ScrollView(.horizontal) {
                     HStack(spacing: DefaultSpacing.spacing8) {

@@ -48,6 +48,8 @@ public protocol OperatorStudyManagementUseCaseProtocol {
     /// 관리 가능한 스터디 그룹 이름 목록 조회 (제출 현황 그룹 필터용)
     func fetchStudyGroupNames() async throws -> [StudyGroupName]
 
+    func fetchStudySubmissionWeeks(studyGroupId: String?) async throws -> [String]
+
     /// 스터디원 워크북 제출 현황 페이지 조회
     ///
     /// - Parameters:
