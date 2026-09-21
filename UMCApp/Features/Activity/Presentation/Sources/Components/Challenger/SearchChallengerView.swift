@@ -30,6 +30,8 @@ struct SearchChallengerView: View {
 
     /// 고를 수 있는 memberId. `nil` 이면 제한하지 않는다.
     private let selectableMemberIds: Set<String>?
+    private let preferredGeneration: String?
+    private let preferredPart: UMCPartType?
 
     /// 검색창 입력 (로컬 상태로 둬 입력 지연을 피한다)
     @State private var searchText = ""
@@ -69,12 +71,20 @@ struct SearchChallengerView: View {
     init(
         useCase: SearchChallengersUseCaseProtocol,
         selectedChallengers: Binding<[ChallengerInfo]>,
-        selectableMemberIds: Set<String>? = nil
+        selectableMemberIds: Set<String>? = nil,
+        preferredGeneration: String? = nil,
+        preferredPart: UMCPartType? = nil
     ) {
         self._selectedChallengers = selectedChallengers
         self.selectableMemberIds = selectableMemberIds
+        self.preferredGeneration = preferredGeneration
+        self.preferredPart = preferredPart
         self._viewModel = State(
-            initialValue: SearchChallengerViewModel(searchChallengersUseCase: useCase)
+            initialValue: SearchChallengerViewModel(
+                searchChallengersUseCase: useCase,
+                preferredGeneration: preferredGeneration,
+                preferredPart: preferredPart
+            )
         )
     }
 
@@ -150,7 +160,7 @@ struct SearchChallengerView: View {
     private func resultList(_ challengers: [ChallengerInfo]) -> some View {
         ChallengerFormView(
             challengers: .constant(challengers),
-            selectedKeys: $viewModel.selectedKeys,
+            selectedKeys: .constant(viewModel.selectedKeys),
             showCheckBox: true,
             onTap: viewModel.toggleSelection,
             onBottomReached: {
@@ -206,7 +216,9 @@ struct SearchChallengerView: View {
     }
 
     private func isSelectable(_ challenger: ChallengerInfo) -> Bool {
-        selectableMemberIds?.contains(challenger.memberId) ?? true
+        (selectableMemberIds?.contains(challenger.memberId) ?? true)
+            && (preferredGeneration == nil || challenger.gen == preferredGeneration)
+            && (preferredPart == nil || challenger.part == preferredPart)
     }
 
     private func handleCSVImport(_ result: Result<[URL], Error>) {

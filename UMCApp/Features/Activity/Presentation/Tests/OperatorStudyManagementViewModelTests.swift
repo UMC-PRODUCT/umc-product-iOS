@@ -741,7 +741,7 @@ struct OperatorStudyManagementViewModelMembershipTests {
     func applySelectedChallengersSendsOnlyDiff() async {
         let useCase = MockOperatorStudyManagementUseCase()
         let memberA = makeMember(serverID: "1", memberID: "1", challengerID: "101")
-        let memberB = makeMember(serverID: "2", memberID: "2", challengerID: "102")
+        let memberB = makeMember(serverID: "2", memberID: "2", challengerID: nil)
         let group = makeGroup(serverID: "G-1", members: [memberA, memberB])
         useCase.pageResults = [makePage(content: [group])]
         let viewModel = makeViewModel(useCase: useCase)
@@ -756,8 +756,8 @@ struct OperatorStudyManagementViewModelMembershipTests {
 
         await viewModel.applySelectedChallengers()
 
-        #expect(useCase.addMemberCalls.map(\.memberId) == ["103"])
-        #expect(useCase.removeMemberCalls.map(\.memberId) == ["102"])
+        #expect(useCase.addMemberCalls.map(\.memberId) == ["3"])
+        #expect(useCase.removeMemberCalls.map(\.memberId) == ["2"])
         #expect(viewModel.studyGroupDetails.first?.members.map(\.memberID) == ["1", "3"])
     }
 
@@ -771,7 +771,9 @@ struct OperatorStudyManagementViewModelMembershipTests {
         await viewModel.fetchGroupManagementData()
 
         viewModel.showAddMemberSheet(for: group)
-        // 선택을 그대로 유지 (변경 없음)
+        viewModel.selectedChallengers = [
+            makeChallenger(memberId: "1", challengerId: "999", gen: "12")
+        ]
         await viewModel.applySelectedChallengers()
 
         #expect(useCase.addMemberCalls.isEmpty)
@@ -797,9 +799,30 @@ struct OperatorStudyManagementViewModelMembershipTests {
 
         await viewModel.applySelectedMentors()
 
-        #expect(useCase.addMentorCalls.map(\.mentorId) == ["707"])
-        #expect(useCase.removeMentorCalls.map(\.mentorId) == ["808"])
+        #expect(useCase.addMentorCalls.map(\.mentorId) == ["7"])
+        #expect(useCase.removeMentorCalls.map(\.mentorId) == ["8"])
         #expect(viewModel.studyGroupDetails.first?.mentors.map(\.memberID) == ["9", "7"])
+    }
+
+    @Test("프로필 보강 없이 부분 실패하면 서버 목록 재조회와 오류 안내 유지")
+    func partialFailureRefreshesMembership() async {
+        let useCase = MockOperatorStudyManagementUseCase()
+        let member = makeMember(serverID: "1", memberID: "1")
+        let group = makeGroup(serverID: "G-1", members: [member])
+        useCase.pageResults = [makePage(content: [group]), makePage(content: [group])]
+        useCase.removeMemberError = NSError(domain: "membership", code: 1)
+        let viewModel = makeViewModel(useCase: useCase)
+        await viewModel.fetchGroupManagementData()
+        viewModel.showAddMemberSheet(for: group)
+        viewModel.selectedChallengers = [makeChallenger(memberId: "2", challengerId: "202")]
+
+        await viewModel.applySelectedChallengers()
+        for _ in 0..<100 where useCase.fetchPageCalls.count < 2 { await Task.yield() }
+
+        #expect(useCase.addMemberCalls.map(\.memberId) == ["2"])
+        #expect(useCase.resolveCalls.isEmpty)
+        #expect(useCase.fetchPageCalls.count == 2)
+        #expect(viewModel.alertPrompt?.title == "일부 변경 실패")
     }
 
     @Test("멘토 단건 삭제 — 마지막 멘토는 차단")
@@ -830,7 +853,7 @@ struct OperatorStudyManagementViewModelMembershipTests {
 
         await viewModel.removeMentor(mentorA, from: group)
 
-        #expect(useCase.removeMentorCalls.map(\.mentorId) == ["909"])
+        #expect(useCase.removeMentorCalls.map(\.mentorId) == ["9"])
         #expect(viewModel.studyGroupDetails.first?.mentors.map(\.serverID) == ["8"])
     }
 
@@ -845,7 +868,7 @@ struct OperatorStudyManagementViewModelMembershipTests {
 
         await viewModel.removeMember(memberA, from: group)
 
-        #expect(useCase.removeMemberCalls.map(\.memberId) == ["101"])
+        #expect(useCase.removeMemberCalls.map(\.memberId) == ["1"])
         #expect(viewModel.studyGroupDetails.first?.members.isEmpty == true)
     }
 }

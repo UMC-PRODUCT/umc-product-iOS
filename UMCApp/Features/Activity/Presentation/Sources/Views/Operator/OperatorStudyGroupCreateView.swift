@@ -89,7 +89,12 @@ struct OperatorStudyGroupCreateView: View {
                 .interactiveDismissDisabled()
         }
         .sheet(isPresented: $showMemberSheet) {
-            SelectedChallengerView(challenger: $selectedMembers)
+            SelectedChallengerView(
+                challenger: $selectedMembers,
+                preferredGeneration: viewModel.currentGeneration,
+                preferredPart: selectedPart,
+                requiresStudyContext: true
+            )
                 .interactiveDismissDisabled()
         }
     }
