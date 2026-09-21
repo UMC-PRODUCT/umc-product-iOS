@@ -154,7 +154,9 @@ private final class MockStudyRepository: @unchecked Sendable, StudyRepositoryPro
         throw MockError.unimplemented
     }
 
-    func fetchWeeklyCurriculumOptions() async throws -> [WeeklyCurriculumOption] {
+    func fetchWeeklyCurriculumOptions(
+        gisuId: String, part: String
+    ) async throws -> [WeeklyCurriculumOption] {
         throw MockError.unimplemented
     }
 

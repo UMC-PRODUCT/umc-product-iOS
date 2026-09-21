@@ -112,8 +112,14 @@ private final class MockStudyScheduleRepository: @unchecked Sendable,
 
     var weeklyOptionsResult: Result<[WeeklyCurriculumOption], Error> = .success([makeOption()])
     private(set) var fetchWeeklyCurriculumOptionsCallCount = 0
+    private(set) var requestedGisuId: String?
+    private(set) var requestedPart: String?
 
-    func fetchWeeklyCurriculumOptions() async throws -> [WeeklyCurriculumOption] {
+    func fetchWeeklyCurriculumOptions(
+        gisuId: String, part: String
+    ) async throws -> [WeeklyCurriculumOption] {
+        requestedGisuId = gisuId
+        requestedPart = part
         fetchWeeklyCurriculumOptionsCallCount += 1
         return try weeklyOptionsResult.get()
     }
@@ -136,7 +142,8 @@ private final class MockStudyScheduleRepository: @unchecked Sendable,
     }
 
     func fetchStudyGroupDetail(groupId: String) async throws -> StudyGroupInfo {
-        fatalError("fetchStudyGroupDetail 은 StudyScheduleRegistrationViewModel 계약 밖입니다.")
+        StudyGroupInfo(serverID: groupId, gisuId: "17", studyPart: "PLAN",
+                       name: "PM", part: .pm, createdDate: fixedNow, mentors: [])
     }
 
     func resolveChallengerId(
@@ -304,6 +311,22 @@ struct StudyScheduleRegistrationViewModelCanSubmitTests {
         await viewModel.loadParticipantMembers()
         #expect(await viewModel.submitSchedule())
         #expect(register.createdRequests.first?.participantMemberIds == ["2", "3", "1"])
+    }
+
+    @Test("그룹 기수·파트로 조회하고 다른 옵션은 생성 전에 차단한다")
+    func groupContextAndStaleOption() async {
+        let repository = MockStudyScheduleRepository()
+        let register = MockRegisterStudyScheduleUseCase()
+        let viewModel = makeViewModel(repository: repository, registerUseCase: register)
+        viewModel.isOnline = true
+        await viewModel.loadWeeklyOptions()
+        await viewModel.loadCapabilities()
+        await viewModel.loadParticipantMembers()
+        #expect(repository.requestedGisuId == "17")
+        #expect(repository.requestedPart == "PLAN")
+        viewModel.selectedWeeklyOption = makeOption(id: "other-group")
+        #expect(await viewModel.submitSchedule() == false)
+        #expect(register.createdRequests.isEmpty)
     }
 
     @Test("필수 입력 충족 → 등록 가능")
@@ -674,7 +697,7 @@ struct StudyScheduleRegistrationViewModelWeeklyOptionsTests {
         #expect(viewModel.selectedWeeklyOption == first)
     }
 
-    @Test("성공 + 이미 선택됨 → 자동 선택이 덮어쓰지 않음")
+    @Test("옵션 재조회 → 이전 선택을 초기화한다")
     func keepsExistingSelection() async {
         let repository = MockStudyScheduleRepository()
         repository.weeklyOptionsResult = .success([
@@ -687,7 +710,7 @@ struct StudyScheduleRegistrationViewModelWeeklyOptionsTests {
 
         await viewModel.loadWeeklyOptions()
 
-        #expect(viewModel.selectedWeeklyOption == preset)
+        #expect(viewModel.selectedWeeklyOption == makeOption())
     }
 
     @Test("빈 목록 → loaded([]) + 선택 없음")

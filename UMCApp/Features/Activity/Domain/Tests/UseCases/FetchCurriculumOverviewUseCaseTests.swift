@@ -81,7 +81,9 @@ private final class MockStudyRepository: @unchecked Sendable, StudyRepositoryPro
 
     // MARK: 계약 밖 메서드 (호출 시 실패 — 본 UseCase 는 사용하지 않음)
 
-    func fetchWeeklyCurriculumOptions() async throws -> [WeeklyCurriculumOption] {
+    func fetchWeeklyCurriculumOptions(
+        gisuId: String, part: String
+    ) async throws -> [WeeklyCurriculumOption] {
         fatalError("fetchWeeklyCurriculumOptions 는 FetchCurriculumOverviewUseCase 계약 밖입니다.")
     }
 

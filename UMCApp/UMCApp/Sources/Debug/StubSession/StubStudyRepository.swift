@@ -22,7 +22,9 @@ struct StubStudyRepository: StudyRepositoryProtocol {
         StubSessionFixtures.curriculumOverview
     }
 
-    func fetchWeeklyCurriculumOptions() async throws -> [WeeklyCurriculumOption] {
+    func fetchWeeklyCurriculumOptions(
+        gisuId: String, part: String
+    ) async throws -> [WeeklyCurriculumOption] {
         StubSessionFixtures.weeklyCurriculumOptions
     }
 
