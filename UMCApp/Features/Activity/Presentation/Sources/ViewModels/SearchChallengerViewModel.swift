@@ -354,7 +354,7 @@ extension SearchChallengerViewModel {
         }
 
         let dataRows = Array(rows.dropFirst())
-        var matchedCount = 0
+        var matchedMembers = Set<String>()
         var unmatchedNames: [String] = []
 
         for row in dataRows {
@@ -373,12 +373,16 @@ extension SearchChallengerViewModel {
             }
 
             selectAllSiblings(of: matched)
-            matchedCount += 1
+            if selectedChallengersMap[matched.memberId] != nil {
+                matchedMembers.insert(matched.memberId)
+            } else {
+                unmatchedNames.append("\(searchName)/\(searchNickname)")
+            }
         }
 
         presentImportResult(
             totalRows: dataRows.count,
-            matchedCount: matchedCount,
+            matchedCount: matchedMembers.count,
             unmatchedNames: unmatchedNames
         )
     }
@@ -400,7 +404,7 @@ extension SearchChallengerViewModel {
         matchedCount: Int,
         unmatchedNames: [String]
     ) {
-        var message = "총 \(totalRows)명 중 \(matchedCount)명 매칭 완료"
+        var message = "총 \(totalRows)행에서 \(matchedCount)명 매칭 완료"
         if !unmatchedNames.isEmpty {
             message += "\n\n매칭 실패:\n\(unmatchedNames.joined(separator: ", "))"
         }

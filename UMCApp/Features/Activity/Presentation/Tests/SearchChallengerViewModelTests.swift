@@ -594,7 +594,7 @@ struct SearchChallengerViewModelCSVTests {
 
         let prompt = sut.alertPrompt
         #expect(prompt?.title == "CSV 가져오기 결과")
-        #expect(prompt?.message.contains("총 2명 중 1명 매칭 완료") == true)
+        #expect(prompt?.message.contains("총 2행에서 1명 매칭 완료") == true)
         #expect(prompt?.message.contains("없는사람/없음") == true)
     }
 
