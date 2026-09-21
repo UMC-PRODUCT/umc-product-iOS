@@ -17,7 +17,7 @@ import UMCFoundation
 /// 출석 정책 시각의 단조 증가/일정 범위를 인라인 검증합니다.
 ///
 /// 등록은 서버 계약상 두 단계입니다.
-/// 1. 본인을 뺀 참여자 + 출석 정책으로 일정을 생성해 `scheduleId` 를 받습니다.
+/// 1. 본인을 포함한 참여자 + 출석 정책으로 일정을 생성해 `scheduleId` 를 받습니다.
 /// 2. 그 `scheduleId` 를 스터디 그룹·주차 커리큘럼에 연결합니다.
 ///
 /// 2단계가 실패하면 ``alertPrompt`` 로 재시도/취소를 묻고, 취소를 고르면 1단계 일정을
@@ -31,6 +31,7 @@ final class StudyScheduleRegistrationViewModel {
     private let studyMembersUseCase: FetchStudyMembersUseCaseProtocol
     private let studyRepository: StudyRepositoryProtocol
     private let registerScheduleUseCase: RegisterStudyScheduleUseCaseProtocol
+    private let capabilitiesUseCase: FetchScheduleCapabilitiesUseCaseProtocol
     private let errorHandler: ErrorHandler
     private let studyGroupId: String
     private let currentMemberId: String?
@@ -89,11 +90,13 @@ final class StudyScheduleRegistrationViewModel {
     /// 주차 옵션 로딩 상태
     private(set) var weeklyOptionsState: Loadable<[WeeklyCurriculumOption]> = .idle
 
-    /// 참여자 목록 (본인 제외 멘토 + 스터디원)
+    /// 참여자 목록 (멘토 + 스터디원)
     private(set) var participantMembers: [StudyGroupMember] = []
 
     /// 참여자 로딩 상태
     private(set) var participantsState: Loadable<[StudyGroupMember]> = .idle
+
+    private(set) var capabilitiesState: Loadable<ScheduleCapabilities> = .idle
 
     // MARK: - Attendance Policy
 
@@ -119,6 +122,7 @@ final class StudyScheduleRegistrationViewModel {
             && !studyGroupId.isEmpty
             && endDate >= startDate
             && hasValidWeeklyOption
+            && registrationError == nil
             && attendancePolicyError == nil
     }
 
@@ -126,6 +130,41 @@ final class StudyScheduleRegistrationViewModel {
         guard case .loaded(let options) = weeklyOptionsState,
               let selectedWeeklyOption else { return false }
         return options.contains(selectedWeeklyOption)
+    }
+
+    var registrationError: String? {
+        guard case .loaded(let capabilities) = capabilitiesState else {
+            return "일정 등록 권한을 불러와 주세요."
+        }
+        guard capabilities.canCreateSchedule,
+              capabilities.canCreateAttendanceRequiredSchedule else {
+            return "출석이 필요한 일정을 등록할 권한이 없어요."
+        }
+        guard case .loaded = participantsState else {
+            return "참여자 목록을 불러와 주세요."
+        }
+        guard let ids = participantIDs else {
+            return "본인 또는 참여자의 회원 ID가 올바르지 않아요. 참여자 목록을 다시 불러와 주세요."
+        }
+        guard let limit = Int(capabilities.maxParticipantCount), limit >= 0 else {
+            return "초대 인원 한도를 확인할 수 없어요. 권한을 다시 불러와 주세요."
+        }
+        guard ids.count <= limit else {
+            return "본인 포함 참여자 \(ids.count)명이 초대 한도 \(limit)명을 초과했어요."
+        }
+        return nil
+    }
+
+    private var participantIDs: [String]? {
+        var ids: [String] = []
+        for rawID in participantMembers.map(\.memberID) + [currentMemberId] {
+            guard let rawID, !rawID.isEmpty,
+                  rawID.allSatisfy({ $0.isASCII && $0.isNumber }),
+                  let id = Int64(rawID), id > 0 else { return nil }
+            let normalized = String(id)
+            if !ids.contains(normalized) { ids.append(normalized) }
+        }
+        return ids
     }
 
     /// 대면 일정에 필요한 장소 정보(이름 + 좌표)가 모두 갖춰졌는지
@@ -143,7 +182,7 @@ final class StudyScheduleRegistrationViewModel {
     ///   - studyRepository: 주차 커리큘럼 옵션 조회 Repository
     ///   - registerScheduleUseCase: 일정 생성·연결·롤백 UseCase
     ///   - errorHandler: 전역 에러 핸들러 (1단계 생성 실패 알림용)
-    ///   - currentMemberId: 본인 멤버 ID — 참여자 목록에서 제외 (기본값은 저장된 값)
+    ///   - currentMemberId: 본인 멤버 ID — 최종 전송 집합에 포함 (기본값은 저장된 값)
     init(
         studyName: String,
         studyGroupId: String,
@@ -151,6 +190,7 @@ final class StudyScheduleRegistrationViewModel {
         studyRepository: StudyRepositoryProtocol,
         registerScheduleUseCase: RegisterStudyScheduleUseCaseProtocol,
         errorHandler: ErrorHandler,
+        capabilitiesUseCase: FetchScheduleCapabilitiesUseCaseProtocol,
         currentMemberId: String? = AppStorageKey.memberIdString()
     ) {
         self.studyName = studyName
@@ -159,13 +199,14 @@ final class StudyScheduleRegistrationViewModel {
         self.studyRepository = studyRepository
         self.registerScheduleUseCase = registerScheduleUseCase
         self.errorHandler = errorHandler
+        self.capabilitiesUseCase = capabilitiesUseCase
         self.currentMemberId = currentMemberId
         prefillAttendancePolicyIfNeeded()
     }
 
     // MARK: - Loading
 
-    /// 스터디 그룹 멤버(멘토 + 스터디원)를 조회해 본인을 제외하고 보관합니다.
+    /// 스터디 그룹 멤버(멘토 + 스터디원)를 조회해 보관합니다.
     ///
     /// 화면이 `.task` 로 호출하므로 빠른 이탈·탭 전환에서 `CancellationError` 또는
     /// `URLError(.cancelled)` 가 던져집니다. 취소는 실패가 아니라 "안 하기로 한 것" 이라
@@ -178,11 +219,8 @@ final class StudyScheduleRegistrationViewModel {
         do {
             let allMembers = try await studyMembersUseCase
                 .fetchStudyGroupMembers(groupId: studyGroupId)
-            let filtered = currentMemberId.map { selfId in
-                allMembers.filter { $0.memberID != selfId }
-            } ?? allMembers
-            participantMembers = filtered
-            participantsState = .loaded(filtered)
+            participantMembers = allMembers
+            participantsState = .loaded(allMembers)
         } catch let error where error.isCancellation {
             participantsState = previousState
         } catch let error as DomainError {
@@ -191,6 +229,21 @@ final class StudyScheduleRegistrationViewModel {
             participantsState = .failed(error)
         } catch {
             participantsState = .failed(.unknown(message: error.localizedDescription))
+        }
+    }
+
+    func loadCapabilities() async {
+        if case .loading = capabilitiesState { return }
+        let previousState = capabilitiesState
+        capabilitiesState = .loading
+        do {
+            capabilitiesState = .loaded(try await capabilitiesUseCase.execute())
+        } catch let error where error.isCancellation {
+            capabilitiesState = previousState
+        } catch let error as AppError {
+            capabilitiesState = .failed(error)
+        } catch {
+            capabilitiesState = .failed(.unknown(message: error.localizedDescription))
         }
     }
 
@@ -314,14 +367,18 @@ final class StudyScheduleRegistrationViewModel {
     /// - Returns: 두 단계가 모두 성공한 경우에만 `true`
     func submitSchedule() async -> Bool {
         guard !isSubmitting else { return false }
-        guard canSubmit, let weeklyOption = selectedWeeklyOption else { return false }
+        validateAttendancePolicy()
+        guard canSubmit, let weeklyOption = selectedWeeklyOption,
+              let participantIDs else { return false }
 
         isSubmitting = true
         defer { isSubmitting = false }
 
         let scheduleId: String
         do {
-            scheduleId = try await registerScheduleUseCase.createSchedule(makeScheduleRequest())
+            scheduleId = try await registerScheduleUseCase.createSchedule(
+                makeScheduleRequest(participantIDs: participantIDs)
+            )
         } catch {
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Activity",
@@ -343,11 +400,10 @@ final class StudyScheduleRegistrationViewModel {
 
     /// 1단계 일정 생성 페이로드를 구성합니다.
     ///
-    /// - 본인은 참여자에서 제외합니다 (``participantMembers`` 가 이미 걸러진 목록).
-    /// - 멤버 식별자가 없는 항목은 서버가 참여자로 받을 수 없어 제외합니다.
+    /// - 검증된 참여자 ID 집합에는 본인이 명시적으로 포함됩니다.
     /// - 태그는 스터디 일정 고정입니다.
     /// - 출석 정책은 자동 prefill 또는 사용자가 고친 세 시각으로 구성합니다.
-    private func makeScheduleRequest() -> ScheduleCreationRequest {
+    private func makeScheduleRequest(participantIDs: [String]) -> ScheduleCreationRequest {
         let location = placeCoordinate.map { coordinate in
             ScheduleLocation(
                 latitude: coordinate.latitude,
@@ -361,7 +417,7 @@ final class StudyScheduleRegistrationViewModel {
             startsAt: startDate,
             endsAt: endDate,
             location: isOnline ? nil : location,
-            participantMemberIds: participantMembers.compactMap(\.memberID),
+            participantMemberIds: participantIDs,
             tags: [ScheduleIconCategory.study.rawValue],
             attendancePolicy: ScheduleAttendancePolicy(
                 checkInStartAt: attendanceCheckInStartAt,
