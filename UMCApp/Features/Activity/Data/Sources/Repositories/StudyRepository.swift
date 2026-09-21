@@ -192,6 +192,16 @@ public final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable
 
     // MARK: - 스터디원 제출 현황
 
+    public func fetchStudySubmissionWeeks(studyGroupId: String?) async throws -> [String] {
+        let response = try await networkRequesting.request(
+            StudyRouter.getStudySubmissionWeeks(
+                query: StudySubmissionWeeksQuery(studyGroupId: studyGroupId)
+            )
+        )
+        let payload = try decoder.decode(APIResponse<StudySubmissionWeeksDTO>.self, from: response.data)
+        return try payload.unwrap().weekNos
+    }
+
     /// 스터디원 제출 현황 한 페이지를 조회한다.
     ///
     /// 그룹 상세 조회와 달리 멤버 프로필 보강이 필요 없다 — 서버가 이름·학교·프로필을

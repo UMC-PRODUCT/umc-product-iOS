@@ -62,6 +62,10 @@ final class PreviewOperatorStudyManagementUseCase: OperatorStudyManagementUseCas
         OperatorStudyPreviewData.groupNames
     }
 
+    func fetchStudySubmissionWeeks(studyGroupId: String?) async throws -> [String] {
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
+    }
+
     func fetchStudyMemberSubmissions(
         studyGroupId: String?,
         weekNos: [String],

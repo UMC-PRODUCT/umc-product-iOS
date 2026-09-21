@@ -37,6 +37,7 @@ enum StudyRouter: Sendable {
     // MARK: - 제출 현황
 
     /// 스터디원 워크북 제출 현황 조회 — `GET /api/v2/curriculums/workbook-submissions`
+    case getStudySubmissionWeeks(query: StudySubmissionWeeksQuery)
     case getStudyMemberSubmissions(query: StudyMemberSubmissionQuery)
 
     // MARK: - 멤버 / 포인트
@@ -88,6 +89,8 @@ extension StudyRouter: BaseTargetType {
             return "/api/v1/member/profile/\(memberId)"
         case .getStudyGroupNames:
             return "/api/v1/study-groups/names"
+        case .getStudySubmissionWeeks:
+            return "/api/v2/curriculums/workbook-submissions/weeks"
         case .getStudyMemberSubmissions:
             return "/api/v2/curriculums/workbook-submissions"
         case .searchChallengersOffset:
@@ -127,6 +130,7 @@ extension StudyRouter: BaseTargetType {
              .getMemberProfile,
              .getStudyGroupNames,
              .getStudyMemberSubmissions,
+             .getStudySubmissionWeeks,
              .searchChallengersOffset,
              .searchChallengersCursor,
              .getChallengerProfile:
@@ -167,6 +171,11 @@ extension StudyRouter: BaseTargetType {
                 encoding: URLEncoding.queryString
             )
         case .searchChallengersCursor(let query):
+            return .requestParameters(
+                parameters: query.toParameters,
+                encoding: URLEncoding.queryString
+            )
+        case .getStudySubmissionWeeks(let query):
             return .requestParameters(
                 parameters: query.toParameters,
                 encoding: URLEncoding.queryString

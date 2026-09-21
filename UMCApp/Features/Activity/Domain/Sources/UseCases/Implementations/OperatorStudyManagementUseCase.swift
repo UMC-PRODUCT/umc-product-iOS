@@ -53,6 +53,10 @@ public final class OperatorStudyManagementUseCase: OperatorStudyManagementUseCas
         try await repository.fetchStudyGroupNames()
     }
 
+    public func fetchStudySubmissionWeeks(studyGroupId: String?) async throws -> [String] {
+        try await repository.fetchStudySubmissionWeeks(studyGroupId: studyGroupId)
+    }
+
     public func fetchStudyMemberSubmissions(
         studyGroupId: String?,
         weekNos: [String],
