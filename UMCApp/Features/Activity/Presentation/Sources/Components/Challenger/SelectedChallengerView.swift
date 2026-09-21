@@ -38,6 +38,7 @@ public struct SelectedChallengerView: View {
     private let selectableMemberIds: Set<String>?
     private let preferredGeneration: String?
     private let preferredPart: UMCPartType?
+    private let requiresStudyContext: Bool
 
     /// 현재 사용자의 memberId (본인은 삭제 방지)
     private var myMemberIdSet: Set<String> {
@@ -56,13 +57,15 @@ public struct SelectedChallengerView: View {
         searchUseCase: SearchChallengersUseCaseProtocol? = nil,
         selectableMemberIds: Set<String>? = nil,
         preferredGeneration: String? = nil,
-        preferredPart: UMCPartType? = nil
+        preferredPart: UMCPartType? = nil,
+        requiresStudyContext: Bool = false
     ) {
         self._challenger = challenger
         self.searchUseCase = searchUseCase
         self.selectableMemberIds = selectableMemberIds
         self.preferredGeneration = preferredGeneration
         self.preferredPart = preferredPart
+        self.requiresStudyContext = requiresStudyContext
     }
 
     // MARK: - Body
@@ -84,7 +87,7 @@ public struct SelectedChallengerView: View {
 
                     ToolBarCollection.AddBtn(action: {
                         showsSearch = true
-                    })
+                    }, disable: !canSearch)
                 }
                 .navigationDestination(isPresented: $showsSearch) {
                     SearchChallengerView(
@@ -97,6 +100,7 @@ public struct SelectedChallengerView: View {
                 }
         }
         .onAppear {
+            guard canSearch else { return }
             let selection = SearchChallengerViewModel(
                 searchChallengersUseCase: resolvedSearchUseCase,
                 preferredGeneration: preferredGeneration,
@@ -119,6 +123,10 @@ public struct SelectedChallengerView: View {
             )
         } else {
             List {
+                if !canSearch {
+                    Text("그룹 기수·파트를 확인하지 못했습니다. 목록을 새로고침해 주세요.")
+                        .appFont(.footnote, color: .grey500)
+                }
                 ForEach(challenger) { info in
                     challengerRow(info)
                 }
@@ -157,6 +165,10 @@ public struct SelectedChallengerView: View {
     }
 
     // MARK: - Function
+
+    private var canSearch: Bool {
+        !requiresStudyContext || (preferredGeneration != nil && preferredPart != nil)
+    }
 
     private var resolvedSearchUseCase: SearchChallengersUseCaseProtocol {
         searchUseCase ?? container.resolve(SearchChallengersUseCaseProtocol.self)

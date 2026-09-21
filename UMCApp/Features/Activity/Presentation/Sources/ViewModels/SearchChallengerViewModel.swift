@@ -154,6 +154,7 @@ final class SearchChallengerViewModel {
                 knownKeys.insert($0.selectionKey).inserted
             }
             loadState = .loaded(existing + newChallengers)
+            refreshSelectedRepresentatives()
             hasNext = page.hasNext
             nextCursor = page.nextCursor
         } catch {
@@ -193,7 +194,13 @@ final class SearchChallengerViewModel {
         selectedChallengersMap[challenger.memberId] = candidates.first {
             (preferredGeneration == nil || $0.gen == preferredGeneration)
                 && (preferredPart == nil || $0.part == preferredPart)
-        } ?? challenger
+        }
+    }
+
+    private func refreshSelectedRepresentatives() {
+        for challenger in Array(selectedChallengersMap.values) {
+            selectRepresentative(challenger)
+        }
     }
 
     /// 확정된 선택 목록을 반환합니다.
@@ -259,6 +266,7 @@ final class SearchChallengerViewModel {
             nextCursor = page.nextCursor
             var seen = Set<String>()
             loadState = .loaded(page.challengers.filter { seen.insert($0.selectionKey).inserted })
+            refreshSelectedRepresentatives()
         } catch is CancellationError {
             guard latestRequestID == requestID else { return }
             loadState = stateBeforeSearch

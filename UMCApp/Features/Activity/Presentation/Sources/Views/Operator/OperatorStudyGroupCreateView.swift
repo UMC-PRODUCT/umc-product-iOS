@@ -92,7 +92,8 @@ struct OperatorStudyGroupCreateView: View {
             SelectedChallengerView(
                 challenger: $selectedMembers,
                 preferredGeneration: viewModel.currentGeneration,
-                preferredPart: selectedPart
+                preferredPart: selectedPart,
+                requiresStudyContext: true
             )
                 .interactiveDismissDisabled()
         }
