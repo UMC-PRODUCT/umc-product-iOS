@@ -466,7 +466,7 @@ final class OperatorStudyManagementViewModel {
             studyGroupDetails[index].members = selectedChallengers
                 .filter { seen.insert($0.memberId).inserted }
                 .map {
-                    studyGroupMember(from: $0, resolvedChallengerIDs: [:])
+                    studyGroupMember(from: $0)
                 }
         } else {
             presentAlert(
@@ -536,7 +536,7 @@ final class OperatorStudyManagementViewModel {
             studyGroupDetails[index].mentors = selectedMentors
                 .filter { seen.insert($0.memberId).inserted }
                 .map {
-                    studyGroupMember(from: $0, resolvedChallengerIDs: [:], role: .leader)
+                    studyGroupMember(from: $0, role: .leader)
                 }
         } else {
             presentAlert(
@@ -688,11 +688,23 @@ final class OperatorStudyManagementViewModel {
             return false
         }
 
-        guard !mentors.isEmpty else {
+        guard let mentorSelection = validatedSelection(mentors),
+              let memberSelection = validatedSelection(members) else {
+            presentAlert(
+                title: "그룹 생성 실패",
+                message: "선택한 회원의 ID가 올바르지 않습니다. 회원을 다시 선택해 주세요."
+            )
+            return false
+        }
+        guard !mentorSelection.ids.isEmpty else {
             presentAlert(
                 title: "그룹 생성 실패",
                 message: "최소 1명의 담당 파트장(멘토)이 필요합니다."
             )
+            return false
+        }
+        guard !memberSelection.ids.isEmpty else {
+            presentAlert(title: "그룹 생성 실패", message: "최소 1명의 스터디원이 필요합니다.")
             return false
         }
 
@@ -704,50 +716,20 @@ final class OperatorStudyManagementViewModel {
             return false
         }
 
-        let resolvedChallengerIDs = await resolveChallengerIDs(from: mentors + members)
-
-        let unresolvedMentor = mentors.contains {
-            resolvedChallengerIDs[$0.selectionKey] == nil
-        }
-        guard !unresolvedMentor else {
-            presentAlert(
-                title: "그룹 생성 실패",
-                message: "선택한 멘토의 챌린저 ID를 확인하지 못했습니다. 다시 시도해 주세요."
-            )
-            return false
-        }
-
-        let unresolvedMemberExists = members.contains {
-            resolvedChallengerIDs[$0.selectionKey] == nil
-        }
-        guard !unresolvedMemberExists else {
-            presentAlert(
-                title: "그룹 생성 실패",
-                message: "초대한 멤버의 챌린저 ID를 확인하지 못했습니다. 다시 시도해 주세요."
-            )
-            return false
-        }
-
-        let mentorIds = mentors.compactMap { resolvedChallengerIDs[$0.selectionKey] }
-        let memberIds = members
-            .compactMap { resolvedChallengerIDs[$0.selectionKey] }
-            .filter { !mentorIds.contains($0) }
-
         do {
             try await useCase.createStudyGroup(
                 gisuId: gisuId,
                 name: trimmedName,
                 part: part,
-                memberIds: memberIds,
-                mentorIds: mentorIds
+                memberIds: memberSelection.ids,
+                mentorIds: mentorSelection.ids
             )
             appendCreatedGroupToLocalState(
                 gisuId: gisuId,
                 name: trimmedName,
                 part: part,
-                mentors: mentors,
-                members: members,
-                resolvedChallengerIDs: resolvedChallengerIDs
+                mentors: mentorSelection.challengers,
+                members: memberSelection.challengers
             )
             refreshStudyGroupManagementDataInBackground()
 
@@ -824,45 +806,22 @@ final class OperatorStudyManagementViewModel {
         addMentorGroup = group
     }
 
-    // MARK: - Private (챌린저 ID 해석)
-
-    private func resolveChallengerIDs(
-        from challengers: [ChallengerInfo]
-    ) async -> [String: String] {
-        var resolved: [String: String] = [:]
+    private func validatedSelection(
+        _ challengers: [ChallengerInfo]
+    ) -> (ids: [String], challengers: [ChallengerInfo])? {
+        var ids: [String] = []
+        var selected: [ChallengerInfo] = []
+        var seen = Set<Int64>()
         for challenger in challengers {
-            if let id = await resolveChallengerID(for: challenger) {
-                resolved[challenger.selectionKey] = id
+            let rawID = challenger.memberId
+            guard !rawID.isEmpty, rawID.allSatisfy({ $0.isASCII && $0.isNumber }),
+                  let id = Int64(rawID), id > 0 else { return nil }
+            if seen.insert(id).inserted {
+                ids.append(String(id))
+                selected.append(challenger)
             }
         }
-        return resolved
-    }
-
-    private func resolveChallengerID(for challenger: ChallengerInfo) async -> String? {
-        // memberId 와 다른 명시적 챌린저 ID 가 있으면 그대로 사용
-        let hasDistinctChallengerID = Self.isUsableID(challenger.challengerId)
-            && challenger.challengerId != challenger.memberId
-        if hasDistinctChallengerID {
-            return challenger.challengerId
-        }
-
-        do {
-            if let resolvedID = try await useCase.resolveChallengerId(
-                memberId: challenger.memberId,
-                preferredGeneration: challenger.gen.isEmpty ? nil : challenger.gen
-            ), Self.isUsableID(resolvedID) {
-                return resolvedID
-            }
-        } catch {
-            // 해석 실패는 무시하고 폴백으로 진행
-        }
-
-        // memberId 가 유효하지 않으면 challengerId 폴백
-        if !Self.isUsableID(challenger.memberId), Self.isUsableID(challenger.challengerId) {
-            return challenger.challengerId
-        }
-
-        return nil
+        return (ids, selected)
     }
 
     // MARK: - Private (로컬 상태 반영)
@@ -872,18 +831,15 @@ final class OperatorStudyManagementViewModel {
         name: String,
         part: UMCPartType,
         mentors: [ChallengerInfo],
-        members: [ChallengerInfo],
-        resolvedChallengerIDs: [String: String]
+        members: [ChallengerInfo]
     ) {
         let localServerID = "\(Constants.localGroupIDPrefix)\(UUID().uuidString)"
         let mentorMembers: [StudyGroupMember] = mentors.map { mentor in
             studyGroupMember(
                 from: mentor,
-                resolvedChallengerIDs: resolvedChallengerIDs,
                 role: .leader
             )
         }
-        let mentorMemberIds = Set(mentors.map(\.memberId))
         let localGroup = StudyGroupInfo(
             serverID: localServerID,
             gisuId: gisuId,
@@ -892,13 +848,7 @@ final class OperatorStudyManagementViewModel {
             part: part,
             createdDate: Date(),
             mentors: mentorMembers,
-            members: members.compactMap { challenger in
-                guard !mentorMemberIds.contains(challenger.memberId) else { return nil }
-                return studyGroupMember(
-                    from: challenger,
-                    resolvedChallengerIDs: resolvedChallengerIDs
-                )
-            }
+            members: members.map { studyGroupMember(from: $0) }
         )
 
         switch studyGroupDetailsState {
@@ -1273,12 +1223,11 @@ final class OperatorStudyManagementViewModel {
 
     private func studyGroupMember(
         from challenger: ChallengerInfo,
-        resolvedChallengerIDs: [String: String],
         role: StudyGroupMember.MemberRole = .member
     ) -> StudyGroupMember {
         StudyGroupMember(
             serverID: challenger.memberId,
-            challengerID: resolvedChallengerIDs[challenger.selectionKey] ?? challenger.challengerId,
+            challengerID: challenger.challengerId,
             memberID: challenger.memberId,
             name: challenger.name,
             nickname: challenger.nickname,

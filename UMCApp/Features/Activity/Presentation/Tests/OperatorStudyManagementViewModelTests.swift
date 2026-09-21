@@ -310,8 +310,8 @@ private final class MockOperatorStudyManagementUseCase: @unchecked Sendable,
         memberIds: [String],
         mentorIds: [String]
     ) async throws {
-        if let createError { throw createError }
         createCalls.append((gisuId, name, part, memberIds, mentorIds))
+        if let createError { throw createError }
     }
 
     func updateStudyGroup(groupId: String, name: String) async throws {
@@ -433,7 +433,7 @@ struct OperatorStudyManagementViewModelLoadTests {
             name: "새 스터디",
             part: .front(type: .ios),
             mentors: [makeChallenger(memberId: "9", challengerId: "909")],
-            members: []
+            members: [makeChallenger(memberId: "1", challengerId: "101")]
         )
         #expect(created == true)
 
@@ -475,7 +475,7 @@ struct OperatorStudyManagementViewModelCreateTests {
             name: name,
             part: .front(type: .ios),
             mentors: mentors,
-            members: []
+            members: [makeChallenger(memberId: "1", challengerId: "101")]
         )
 
         #expect(created == false)
@@ -483,48 +483,110 @@ struct OperatorStudyManagementViewModelCreateTests {
         #expect(viewModel.alertPrompt != nil)
     }
 
-    @Test("생성 성공 → 멘토와 중복된 멤버는 memberIds 에서 제외 + 낙관적 삽입")
-    func createSucceedsAndSplitsMentorMemberIds() async throws {
+    @Test("생성 — 회원 ID를 역할별로 중복 제거하고 겸임과 낙관적 상태를 보존한다")
+    func createUsesMemberIdsAndPreservesBothRoles() async throws {
         let useCase = MockOperatorStudyManagementUseCase()
         let viewModel = makeViewModel(useCase: useCase, gisuId: "11")
-        let mentor = makeChallenger(memberId: "9", challengerId: "909")
-        let memberA = makeChallenger(memberId: "1", challengerId: "101")
-        let mentorClone = makeChallenger(memberId: "9", challengerId: "909")
+        let mentor = makeChallenger(
+            memberId: "9", challengerId: "909", gen: "10", part: .admin
+        )
+        let member = makeChallenger(memberId: "1", challengerId: "101")
+        let duplicate = makeChallenger(memberId: "01", challengerId: "102", gen: "10")
 
         let created = await viewModel.createGroup(
             name: "iOS 스터디",
             part: .front(type: .ios),
-            mentors: [mentor],
-            members: [memberA, mentorClone]
+            mentors: [mentor, mentor],
+            members: [member, duplicate, mentor]
         )
 
-        #expect(created == true)
+        #expect(created)
         let call = try #require(useCase.createCalls.first)
         #expect(call.gisuId == "11")
-        #expect(call.mentorIds == ["909"])
-        #expect(call.memberIds == ["101"])  // 909(멘토)는 제외
-        // 낙관적 삽입: 백그라운드 새로고침 전 상태를 즉시 검증
-        #expect(viewModel.studyGroupDetails.first?.name == "iOS 스터디")
+        #expect(call.mentorIds == ["9"])
+        #expect(call.memberIds == ["1", "9"])
+        #expect(useCase.resolveCalls.isEmpty)
+        let group = try #require(viewModel.studyGroupDetails.first)
+        #expect(group.mentors.map(\.memberID) == ["9"])
+        #expect(group.members.map(\.memberID) == ["1", "9"])
+        #expect(group.members.map(\.challengerID) == ["101", "909"])
     }
 
-    @Test("생성 — challengerId 가 memberId 와 같으면 resolve 로 해석")
-    func createResolvesChallengerIdWhenNotDistinct() async {
+    @Test("생성 — 유일 스터디원의 멘토 겸임과 챌린저 ID 누락을 허용한다")
+    func createDoesNotRequireChallengerLookup() async {
         let useCase = MockOperatorStudyManagementUseCase()
-        useCase.resolveMap = ["5": "505"]
         let viewModel = makeViewModel(useCase: useCase, gisuId: "11")
-        // challengerId == memberId → 구분 불가 → resolve 위임
-        let mentor = makeChallenger(memberId: "5", challengerId: "5")
+        let mentor = makeChallenger(memberId: "5", challengerId: "")
 
         let created = await viewModel.createGroup(
             name: "iOS 스터디",
             part: .front(type: .ios),
             mentors: [mentor],
-            members: []
+            members: [mentor]
         )
 
-        #expect(created == true)
-        #expect(useCase.resolveCalls.map(\.memberId) == ["5"])
-        #expect(useCase.createCalls.first?.mentorIds == ["505"])
+        #expect(created)
+        #expect(useCase.resolveCalls.isEmpty)
+        #expect(useCase.createCalls.first?.mentorIds == ["5"])
+        #expect(useCase.createCalls.first?.memberIds == ["5"])
+    }
+
+    @Test(
+        "생성 — 비정상 회원 ID는 역할에 관계없이 요청 전에 차단한다",
+        arguments: ["", "0", "-1", "+1", "1.0", " 1", "abc", "１２", "9223372036854775808"],
+        [true, false]
+    )
+    func createRejectsInvalidMemberId(id: String, isMentor: Bool) async {
+        let useCase = MockOperatorStudyManagementUseCase()
+        let viewModel = makeViewModel(useCase: useCase)
+        let invalid = makeChallenger(memberId: id, challengerId: "101")
+        let valid = makeChallenger(memberId: "9", challengerId: "909")
+
+        let created = await viewModel.createGroup(
+            name: "iOS 스터디",
+            part: .front(type: .ios),
+            mentors: [isMentor ? invalid : valid],
+            members: [isMentor ? valid : invalid]
+        )
+
+        #expect(!created)
+        #expect(useCase.createCalls.isEmpty)
+        #expect(useCase.resolveCalls.isEmpty)
+        #expect(viewModel.alertPrompt?.message.contains("회원의 ID") == true)
+    }
+
+    @Test("생성 — 스터디원이 없으면 요청 전에 차단한다")
+    func createRequiresMember() async {
+        let useCase = MockOperatorStudyManagementUseCase()
+        let viewModel = makeViewModel(useCase: useCase)
+        let created = await viewModel.createGroup(
+            name: "iOS 스터디",
+            part: .front(type: .ios),
+            mentors: [makeChallenger(memberId: "9")],
+            members: []
+        )
+        #expect(!created)
+        #expect(useCase.createCalls.isEmpty)
+        #expect(viewModel.alertPrompt?.message == "최소 1명의 스터디원이 필요합니다.")
+    }
+
+    @Test("생성 — 서버의 스터디원 자격 검증 메시지를 보존한다")
+    func createPreservesDomainValidationMessage() async {
+        let useCase = MockOperatorStudyManagementUseCase()
+        let message = "해당 기수의 ACTIVE 챌린저만 스터디원으로 등록할 수 있습니다."
+        useCase.createError = DomainError.custom(message: message)
+        let viewModel = makeViewModel(useCase: useCase)
+
+        let created = await viewModel.createGroup(
+            name: "iOS 스터디",
+            part: .front(type: .ios),
+            mentors: [makeChallenger(memberId: "9", gen: "10", part: .admin)],
+            members: [makeChallenger(memberId: "1", challengerId: "101")]
+        )
+
+        #expect(!created)
+        #expect(useCase.createCalls.count == 1)
+        #expect(viewModel.alertPrompt?.message == message)
     }
 
     @Test("생성 403(AUTHORIZATION) → 권한 안내 Alert + 실패 반환")
@@ -538,7 +600,7 @@ struct OperatorStudyManagementViewModelCreateTests {
             name: "iOS 스터디",
             part: .front(type: .ios),
             mentors: [makeChallenger(memberId: "9", challengerId: "909")],
-            members: []
+            members: [makeChallenger(memberId: "1", challengerId: "101")]
         )
 
         #expect(created == false)
@@ -557,7 +619,7 @@ struct OperatorStudyManagementViewModelCreateTests {
             name: "iOS 스터디",
             part: .front(type: .ios),
             mentors: [makeChallenger(memberId: "9", challengerId: "909")],
-            members: []
+            members: [makeChallenger(memberId: "1", challengerId: "101")]
         )
 
         #expect(created == false)
@@ -579,7 +641,7 @@ struct OperatorStudyManagementViewModelCreateTests {
             name: "iOS 스터디",
             part: .front(type: .ios),
             mentors: [makeChallenger(memberId: "9", challengerId: "909")],
-            members: []
+            members: [makeChallenger(memberId: "1", challengerId: "101")]
         )
 
         #expect(created == false)
@@ -606,7 +668,7 @@ struct OperatorStudyManagementViewModelCreateTests {
             name: "iOS 스터디",
             part: .front(type: .ios),
             mentors: [makeChallenger(memberId: "9", challengerId: "909")],
-            members: []
+            members: [makeChallenger(memberId: "1", challengerId: "101")]
         )
 
         #expect(created == false)
@@ -641,7 +703,7 @@ struct OperatorStudyManagementViewModelCreateTests {
             name: "iOS 스터디",
             part: .front(type: .ios),
             mentors: [makeChallenger(memberId: "9", challengerId: "909")],
-            members: []
+            members: [makeChallenger(memberId: "1", challengerId: "101")]
         )
 
         #expect(created == false)
@@ -661,7 +723,7 @@ struct OperatorStudyManagementViewModelCreateTests {
             name: "iOS 스터디",
             part: .front(type: .ios),
             mentors: [makeChallenger(memberId: "9", challengerId: "909")],
-            members: []
+            members: [makeChallenger(memberId: "1", challengerId: "101")]
         )
 
         #expect(created == false)

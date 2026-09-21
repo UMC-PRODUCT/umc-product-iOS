@@ -23,8 +23,8 @@ struct StudyGroupCreateRequestDTO: Encodable, Sendable {
     let name: String
     /// 파트 API 값 (``UMCPartType/apiValue``)
     let part: String
-    /// 스터디원 챌린저 식별자 목록
+    /// 스터디원 회원 식별자 목록
     let memberIds: [Int]
-    /// 담당 파트장(멘토) 챌린저 식별자 목록
+    /// 담당 파트장(멘토) 회원 식별자 목록
     let mentorIds: [Int]
 }
