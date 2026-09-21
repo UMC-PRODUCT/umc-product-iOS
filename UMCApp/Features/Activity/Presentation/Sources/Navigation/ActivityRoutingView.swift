@@ -8,6 +8,7 @@
 import SwiftUI
 
 import ActivityDomain
+import HomeDomain
 import CoreDI
 import UMCFoundation
 
@@ -99,7 +100,8 @@ private struct StudyScheduleRegistrationRoute: View {
                 studyMembersUseCase: di.resolve(FetchStudyMembersUseCaseProtocol.self),
                 studyRepository: di.resolve(StudyRepositoryProtocol.self),
                 registerScheduleUseCase: di.resolve(RegisterStudyScheduleUseCaseProtocol.self),
-                errorHandler: errorHandler
+                errorHandler: errorHandler,
+                capabilitiesUseCase: di.resolve(FetchScheduleCapabilitiesUseCaseProtocol.self)
             )
         }
     }

@@ -58,6 +58,39 @@ struct StudyScheduleRegistrationView: View {
                 attendancePolicySection
             }
 
+            Section("등록 권한 · 참여자") {
+                switch viewModel.capabilitiesState {
+                case .idle, .loading:
+                    ProgressView("권한 불러오는 중…")
+                case .failed:
+                    Button("권한 다시 불러오기") {
+                        Task { await viewModel.loadCapabilities() }
+                    }
+                case .loaded:
+                    EmptyView()
+                }
+                switch viewModel.participantsState {
+                case .idle, .loading:
+                    ProgressView("참여자 불러오는 중…")
+                case .failed:
+                    Button("참여자 다시 불러오기") {
+                        Task { await viewModel.loadParticipantMembers() }
+                    }
+                case .loaded:
+                    Text("작성자 본인을 포함해 등록합니다.")
+                        .appFont(.footnote, color: Color.grey500)
+                }
+                if let message = viewModel.registrationError {
+                    Text(message).appFont(.footnote, color: Color.red500)
+                    Button("권한 · 참여자 다시 불러오기") {
+                        Task {
+                            await viewModel.loadCapabilities()
+                            await viewModel.loadParticipantMembers()
+                        }
+                    }
+                }
+            }
+
             placeSection
         }
         .scrollDismissesKeyboard(.interactively)
@@ -78,7 +111,8 @@ struct StudyScheduleRegistrationView: View {
         .task {
             async let weekly: Void = viewModel.loadWeeklyOptions()
             async let participants: Void = viewModel.loadParticipantMembers()
-            _ = await (weekly, participants)
+            async let capabilities: Void = viewModel.loadCapabilities()
+            _ = await (weekly, participants, capabilities)
         }
         .onChange(of: viewModel.startDate) {
             viewModel.prefillAttendancePolicyIfNeeded()

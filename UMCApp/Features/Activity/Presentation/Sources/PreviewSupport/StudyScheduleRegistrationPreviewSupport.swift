@@ -125,6 +125,14 @@ final class PreviewRegisterStudyScheduleUseCase: RegisterStudyScheduleUseCasePro
     func deleteSchedule(scheduleId: String) async throws {}
 }
 
+final class PreviewScheduleCapabilitiesUseCase: FetchScheduleCapabilitiesUseCaseProtocol {
+    func execute() async throws -> ScheduleCapabilities {
+        ScheduleCapabilities(canCreateSchedule: true,
+                             canCreateAttendanceRequiredSchedule: true,
+                             maxParticipantCount: "10")
+    }
+}
+
 // MARK: - Preview Factory
 
 /// 주차 옵션과 참여자가 채워지는 프리뷰용 일정 등록 ViewModel.
@@ -137,7 +145,8 @@ func previewStudyScheduleRegistrationViewModel() -> StudyScheduleRegistrationVie
         studyRepository: PreviewStudyScheduleRepository(),
         registerScheduleUseCase: PreviewRegisterStudyScheduleUseCase(),
         errorHandler: ErrorHandler(),
-        currentMemberId: nil
+        capabilitiesUseCase: PreviewScheduleCapabilitiesUseCase(),
+        currentMemberId: "1"
     )
 }
 #endif

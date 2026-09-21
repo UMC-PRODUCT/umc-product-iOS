@@ -48,7 +48,8 @@ private func makeViewModel(
     repository: MockStudyScheduleRepository = MockStudyScheduleRepository(),
     registerUseCase: MockRegisterStudyScheduleUseCase = MockRegisterStudyScheduleUseCase(),
     errorHandler: ErrorHandler = ErrorHandler(),
-    currentMemberId: String? = nil
+    capabilities: MockCapabilitiesUseCase = MockCapabilitiesUseCase(),
+    currentMemberId: String? = "1"
 ) -> StudyScheduleRegistrationViewModel {
     StudyScheduleRegistrationViewModel(
         studyName: studyName,
@@ -57,6 +58,7 @@ private func makeViewModel(
         studyRepository: repository,
         registerScheduleUseCase: registerUseCase,
         errorHandler: errorHandler,
+        capabilitiesUseCase: capabilities,
         currentMemberId: currentMemberId
     )
 }
@@ -66,14 +68,24 @@ private func makeViewModel(
 private func makeReadyViewModel(
     registerUseCase: MockRegisterStudyScheduleUseCase = MockRegisterStudyScheduleUseCase(),
     errorHandler: ErrorHandler = ErrorHandler()
-) -> StudyScheduleRegistrationViewModel {
+) async -> StudyScheduleRegistrationViewModel {
     let viewModel = makeViewModel(registerUseCase: registerUseCase, errorHandler: errorHandler)
     viewModel.isOnline = true
-    viewModel.selectedWeeklyOption = makeOption()
+    await viewModel.loadWeeklyOptions()
+    await viewModel.loadParticipantMembers()
+    await viewModel.loadCapabilities()
     return viewModel
 }
 
 private struct DummyError: Error {}
+
+private final class MockCapabilitiesUseCase: FetchScheduleCapabilitiesUseCaseProtocol {
+    var result: Result<ScheduleCapabilities, Error> = .success(ScheduleCapabilities(
+        canCreateSchedule: true, canCreateAttendanceRequiredSchedule: true,
+        maxParticipantCount: "3"
+    ))
+    func execute() async throws -> ScheduleCapabilities { try result.get() }
+}
 
 // MARK: - Mocks
 
@@ -98,7 +110,7 @@ private final class MockFetchStudyMembersUseCase: @unchecked Sendable,
 private final class MockStudyScheduleRepository: @unchecked Sendable,
     StudyRepositoryProtocol {
 
-    var weeklyOptionsResult: Result<[WeeklyCurriculumOption], Error> = .success([])
+    var weeklyOptionsResult: Result<[WeeklyCurriculumOption], Error> = .success([makeOption()])
     private(set) var fetchWeeklyCurriculumOptionsCallCount = 0
 
     func fetchWeeklyCurriculumOptions() async throws -> [WeeklyCurriculumOption] {
@@ -248,21 +260,67 @@ private final class MockRegisterStudyScheduleUseCase: @unchecked Sendable,
 @Suite("StudyScheduleRegistrationViewModel — 등록 가능 여부 (도메인 규칙)")
 struct StudyScheduleRegistrationViewModelCanSubmitTests {
 
+    @Test("참여자 미로딩·실패·잘못된 ID·권한·한도는 생성 전 차단한다")
+    func prerequisitesBlockCreation() async {
+        let members = MockFetchStudyMembersUseCase()
+        let capabilities = MockCapabilitiesUseCase()
+        let register = MockRegisterStudyScheduleUseCase()
+        let viewModel = makeViewModel(membersUseCase: members,
+                                     registerUseCase: register, capabilities: capabilities)
+        viewModel.isOnline = true
+        await viewModel.loadWeeklyOptions()
+        await viewModel.loadCapabilities()
+        #expect(await viewModel.submitSchedule() == false)
+        members.result = .failure(DummyError())
+        await viewModel.loadParticipantMembers()
+        #expect(await viewModel.submitSchedule() == false)
+        for invalidID in [nil, "", "-1", "abc", "0"] as [String?] {
+            members.result = .success([makeMember(memberID: invalidID)])
+            await viewModel.loadParticipantMembers()
+            #expect(await viewModel.submitSchedule() == false)
+        }
+        members.result = .success([makeMember(memberID: "2"), makeMember(memberID: "3")])
+        await viewModel.loadParticipantMembers()
+        capabilities.result = .success(ScheduleCapabilities(
+            canCreateSchedule: true, canCreateAttendanceRequiredSchedule: false,
+            maxParticipantCount: "3"
+        ))
+        await viewModel.loadCapabilities()
+        #expect(await viewModel.submitSchedule() == false)
+        capabilities.result = .success(ScheduleCapabilities(
+            canCreateSchedule: true, canCreateAttendanceRequiredSchedule: true,
+            maxParticipantCount: "2"
+        ))
+        await viewModel.loadCapabilities()
+        #expect(await viewModel.submitSchedule() == false)
+        #expect(register.createdRequests.isEmpty)
+        capabilities.result = .success(ScheduleCapabilities(
+            canCreateSchedule: true, canCreateAttendanceRequiredSchedule: true,
+            maxParticipantCount: "3"
+        ))
+        await viewModel.loadCapabilities()
+        members.result = .success([makeMember(memberID: "2"), makeMember(memberID: "02"),
+                                   makeMember(memberID: "3"), makeMember(memberID: "1")])
+        await viewModel.loadParticipantMembers()
+        #expect(await viewModel.submitSchedule())
+        #expect(register.createdRequests.first?.participantMemberIds == ["2", "3", "1"])
+    }
+
     @Test("필수 입력 충족 → 등록 가능")
-    func readyViewModelIsSubmittable() {
-        #expect(makeReadyViewModel().canSubmit == true)
+    func readyViewModelIsSubmittable() async {
+        #expect(await makeReadyViewModel().canSubmit == true)
     }
 
     @Test("스터디명이 공백/개행뿐 → 불가", arguments: ["", "   ", "\n", " \n "])
-    func blankStudyNameBlocksSubmit(name: String) {
-        let viewModel = makeReadyViewModel()
+    func blankStudyNameBlocksSubmit(name: String) async {
+        let viewModel = await makeReadyViewModel()
         viewModel.studyName = name
         #expect(viewModel.canSubmit == false)
     }
 
     @Test("대면인데 장소가 공백/개행뿐 → 불가", arguments: ["", "   ", "\n", " \n "])
-    func inPersonWithBlankPlaceBlocksSubmit(place: String) {
-        let viewModel = makeReadyViewModel()
+    func inPersonWithBlankPlaceBlocksSubmit(place: String) async {
+        let viewModel = await makeReadyViewModel()
         viewModel.isOnline = false
         viewModel.placeName = place
         viewModel.placeCoordinate = Coordinate(latitude: 37.5, longitude: 127.0)
@@ -270,16 +328,16 @@ struct StudyScheduleRegistrationViewModelCanSubmitTests {
     }
 
     @Test("대면인데 좌표 미선택 → 불가 (지오펜스 기준점이 없으므로)")
-    func inPersonWithoutCoordinateBlocksSubmit() {
-        let viewModel = makeReadyViewModel()
+    func inPersonWithoutCoordinateBlocksSubmit() async {
+        let viewModel = await makeReadyViewModel()
         viewModel.isOnline = false
         viewModel.placeName = "한성대 상상관"
         #expect(viewModel.canSubmit == false)
     }
 
     @Test("대면 + 장소명 + 좌표 → 가능")
-    func inPersonWithPlaceAllowsSubmit() {
-        let viewModel = makeReadyViewModel()
+    func inPersonWithPlaceAllowsSubmit() async {
+        let viewModel = await makeReadyViewModel()
         viewModel.isOnline = false
         viewModel.placeName = "한성대 상상관"
         viewModel.placeCoordinate = Coordinate(latitude: 37.5, longitude: 127.0)
@@ -295,22 +353,22 @@ struct StudyScheduleRegistrationViewModelCanSubmitTests {
     }
 
     @Test("종료가 시작보다 빠름 → 불가")
-    func endBeforeStartBlocksSubmit() {
-        let viewModel = makeReadyViewModel()
+    func endBeforeStartBlocksSubmit() async {
+        let viewModel = await makeReadyViewModel()
         viewModel.endDate = viewModel.startDate.addingTimeInterval(-1)
         #expect(viewModel.canSubmit == false)
     }
 
     @Test("주차 커리큘럼 미선택 → 불가")
-    func missingWeeklyOptionBlocksSubmit() {
-        let viewModel = makeReadyViewModel()
+    func missingWeeklyOptionBlocksSubmit() async {
+        let viewModel = await makeReadyViewModel()
         viewModel.selectedWeeklyOption = nil
         #expect(viewModel.canSubmit == false)
     }
 
     @Test("출석 정책 검증 에러 존재 → 불가")
-    func attendancePolicyErrorBlocksSubmit() {
-        let viewModel = makeReadyViewModel()
+    func attendancePolicyErrorBlocksSubmit() async {
+        let viewModel = await makeReadyViewModel()
         // 출석 시작 ≥ 출석 인정 마감 → 단조 증가 위반
         viewModel.attendanceOnTimeEndAt = viewModel.attendanceCheckInStartAt
         viewModel.attendanceTimesChanged()
@@ -507,7 +565,7 @@ struct StudyScheduleRegistrationViewModelCancellationTests {
     @Test("참여자 조회 취소 → 실패로 전이하지 않고 직전 결과를 유지한다")
     func cancelledParticipantsKeepsPreviousState() async {
         let useCase = MockFetchStudyMembersUseCase()
-        let member = makeMember(memberID: "M-1")
+        let member = makeMember(memberID: "2")
         useCase.result = .success([member])
         let viewModel = makeViewModel(membersUseCase: useCase)
         await viewModel.loadParticipantMembers()
@@ -539,20 +597,20 @@ struct StudyScheduleRegistrationViewModelCancellationTests {
 @Suite("StudyScheduleRegistrationViewModel — 참여자 로딩 (도메인 규칙)")
 struct StudyScheduleRegistrationViewModelParticipantsTests {
 
-    @Test("성공 + 본인 ID 일치 → 본인 제외하고 loaded")
-    func loadsParticipantsExcludingSelf() async {
+    @Test("성공 → 본인을 포함한 전체 멤버 loaded")
+    func loadsParticipantsIncludingSelf() async {
         let useCase = MockFetchStudyMembersUseCase()
         useCase.result = .success([
-            makeMember(memberID: "M-1"),
-            makeMember(memberID: "M-2"),
-            makeMember(memberID: "M-self"),
+            makeMember(memberID: "2"),
+            makeMember(memberID: "3"),
+            makeMember(memberID: "1"),
         ])
-        let viewModel = makeViewModel(membersUseCase: useCase, currentMemberId: "M-self")
+        let viewModel = makeViewModel(membersUseCase: useCase, currentMemberId: "1")
 
         await viewModel.loadParticipantMembers()
 
-        #expect(viewModel.participantMembers.map(\.memberID) == ["M-1", "M-2"])
-        #expect(viewModel.participantsState.value?.map(\.memberID) == ["M-1", "M-2"])
+        #expect(viewModel.participantMembers.map(\.memberID) == ["2", "3", "1"])
+        #expect(viewModel.participantsState.value?.map(\.memberID) == ["2", "3", "1"])
         #expect(useCase.lastGroupId == "1")
     }
 
@@ -560,14 +618,14 @@ struct StudyScheduleRegistrationViewModelParticipantsTests {
     func loadsAllParticipantsWithoutSelfId() async {
         let useCase = MockFetchStudyMembersUseCase()
         useCase.result = .success([
-            makeMember(memberID: "M-1"),
-            makeMember(memberID: "M-2"),
+            makeMember(memberID: "2"),
+            makeMember(memberID: "3"),
         ])
         let viewModel = makeViewModel(membersUseCase: useCase, currentMemberId: nil)
 
         await viewModel.loadParticipantMembers()
 
-        #expect(viewModel.participantMembers.map(\.memberID) == ["M-1", "M-2"])
+        #expect(viewModel.participantMembers.map(\.memberID) == ["2", "3"])
     }
 
     @Test("DomainError → failed(.domain) 인라인 상태")
@@ -679,7 +737,7 @@ struct StudyScheduleRegistrationViewModelSubmitTests {
     func submitSucceedsWhenBothStepsSucceed() async {
         let register = MockRegisterStudyScheduleUseCase()
         register.createResult = .success("SCH-9")
-        let viewModel = makeReadyViewModel(registerUseCase: register)
+        let viewModel = await makeReadyViewModel(registerUseCase: register)
 
         let result = await viewModel.submitSchedule()
 
@@ -695,7 +753,7 @@ struct StudyScheduleRegistrationViewModelSubmitTests {
     func submitFailsWhenCreateFails() async {
         let register = MockRegisterStudyScheduleUseCase()
         register.createResult = .failure(DummyError())
-        let viewModel = makeReadyViewModel(registerUseCase: register)
+        let viewModel = await makeReadyViewModel(registerUseCase: register)
 
         let result = await viewModel.submitSchedule()
 
@@ -708,7 +766,7 @@ struct StudyScheduleRegistrationViewModelSubmitTests {
     func concurrentSubmitIsGuarded() async {
         let register = MockRegisterStudyScheduleUseCase()
         register.gateCreate = true
-        let viewModel = makeReadyViewModel(registerUseCase: register)
+        let viewModel = await makeReadyViewModel(registerUseCase: register)
 
         let first = Task { await viewModel.submitSchedule() }
         await drainUntil { register.createdRequests.count == 1 }
@@ -726,7 +784,7 @@ struct StudyScheduleRegistrationViewModelSubmitTests {
     func submitPresentsAlertWhenLinkFails() async {
         let register = MockRegisterStudyScheduleUseCase()
         register.linkResult = .failure(DummyError())
-        let viewModel = makeReadyViewModel(registerUseCase: register)
+        let viewModel = await makeReadyViewModel(registerUseCase: register)
 
         let result = await viewModel.submitSchedule()
 
@@ -739,7 +797,7 @@ struct StudyScheduleRegistrationViewModelSubmitTests {
     func retryAfterLinkFailureLinksWithoutRollback() async {
         let register = MockRegisterStudyScheduleUseCase()
         register.linkResult = .failure(DummyError())
-        let viewModel = makeReadyViewModel(registerUseCase: register)
+        let viewModel = await makeReadyViewModel(registerUseCase: register)
         _ = await viewModel.submitSchedule()
 
         register.linkResult = .success(())
@@ -755,7 +813,7 @@ struct StudyScheduleRegistrationViewModelSubmitTests {
         let register = MockRegisterStudyScheduleUseCase()
         register.createResult = .success("SCH-9")
         register.linkResult = .failure(DummyError())
-        let viewModel = makeReadyViewModel(registerUseCase: register)
+        let viewModel = await makeReadyViewModel(registerUseCase: register)
         _ = await viewModel.submitSchedule()
 
         viewModel.alertPrompt?.negativeBtnAction?()
@@ -769,7 +827,7 @@ struct StudyScheduleRegistrationViewModelSubmitTests {
         let register = MockRegisterStudyScheduleUseCase()
         register.linkResult = .failure(DummyError())
         register.deleteResult = .failure(DummyError())
-        let viewModel = makeReadyViewModel(registerUseCase: register)
+        let viewModel = await makeReadyViewModel(registerUseCase: register)
         _ = await viewModel.submitSchedule()
 
         viewModel.alertPrompt?.negativeBtnAction?()
@@ -788,7 +846,7 @@ struct StudyScheduleRegistrationViewModelPayloadTests {
     @Test("비대면 → 장소 없이 전송하고 스터디 태그를 붙인다")
     func onlineScheduleOmitsLocation() async throws {
         let register = MockRegisterStudyScheduleUseCase()
-        let viewModel = makeReadyViewModel(registerUseCase: register)
+        let viewModel = await makeReadyViewModel(registerUseCase: register)
 
         _ = await viewModel.submitSchedule()
 
@@ -800,7 +858,7 @@ struct StudyScheduleRegistrationViewModelPayloadTests {
     @Test("대면 → 선택한 좌표와 장소명을 실어 보낸다")
     func inPersonScheduleSendsSelectedPlace() async throws {
         let register = MockRegisterStudyScheduleUseCase()
-        let viewModel = makeReadyViewModel(registerUseCase: register)
+        let viewModel = await makeReadyViewModel(registerUseCase: register)
         viewModel.isOnline = false
         viewModel.placeName = "  한성대 상상관  "
         viewModel.placeCoordinate = Coordinate(latitude: 37.582, longitude: 127.010)
@@ -813,28 +871,30 @@ struct StudyScheduleRegistrationViewModelPayloadTests {
         #expect(location.longitude == 127.010)
     }
 
-    @Test("본인을 뺀 참여자 목록과 출석 정책 세 시각을 그대로 전송한다")
+    @Test("본인을 포함한 참여자 목록과 출석 정책 세 시각을 그대로 전송한다")
     func payloadCarriesParticipantsAndPolicy() async throws {
         let membersUseCase = MockFetchStudyMembersUseCase()
         membersUseCase.result = .success([
-            makeMember(memberID: "M-self"),
-            makeMember(memberID: "M-1"),
-            makeMember(memberID: "M-2"),
+            makeMember(memberID: "1"),
+            makeMember(memberID: "2"),
+            makeMember(memberID: "3"),
         ])
         let register = MockRegisterStudyScheduleUseCase()
         let viewModel = makeViewModel(
             membersUseCase: membersUseCase,
             registerUseCase: register,
-            currentMemberId: "M-self"
+            currentMemberId: "1"
         )
         viewModel.isOnline = true
         viewModel.selectedWeeklyOption = makeOption()
         await viewModel.loadParticipantMembers()
+        await viewModel.loadWeeklyOptions()
+        await viewModel.loadCapabilities()
 
         _ = await viewModel.submitSchedule()
 
         let request = try #require(register.createdRequests.first)
-        #expect(request.participantMemberIds == ["M-1", "M-2"])
+        #expect(request.participantMemberIds == ["1", "2", "3"])
         #expect(request.attendancePolicy?.checkInStartAt == viewModel.attendanceCheckInStartAt)
         #expect(request.attendancePolicy?.onTimeEndAt == viewModel.attendanceOnTimeEndAt)
         #expect(request.attendancePolicy?.lateEndAt == viewModel.attendanceLateEndAt)
