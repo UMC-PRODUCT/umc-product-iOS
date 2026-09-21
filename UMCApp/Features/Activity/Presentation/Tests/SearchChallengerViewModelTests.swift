@@ -479,7 +479,7 @@ struct SearchChallengerViewModelSelectionTests {
         sut.initializeSelection(with: [makeChallenger(memberId: "1")])
 
         #expect(sut.selectedKeys == ["1|9|IOS"])
-        #expect(sut.selectedChallengersMap["1|9|IOS"]?.memberId == "1")
+        #expect(sut.selectedChallengersMap["1"]?.memberId == "1")
     }
 
     @Test("확정 목록은 기존 선택 순서를 앞에 두고 새 선택을 뒤에 붙인다")
@@ -499,6 +499,39 @@ struct SearchChallengerViewModelSelectionTests {
         let confirmed = sut.confirmedSelection(previousSelection: previous)
 
         #expect(confirmed.map(\.memberId) == ["2", "1", "3"])
+    }
+
+    @Test("중복 초기값과 CSV도 그룹 기수 대표 기록 한 명으로 확정한다")
+    func confirmsOneMemberWithMatchingGeneration() async {
+        let older = makeChallenger(memberId: "1", gen: "9")
+        let current = makeChallenger(memberId: "1", gen: "10")
+        let useCase = MockSearchChallengersUseCase([.page(makePage([older, current]))])
+        let sut = SearchChallengerViewModel(
+            searchChallengersUseCase: useCase,
+            preferredGeneration: "10",
+            preferredPart: .front(type: .ios)
+        )
+        sut.initializeSelection(with: [older, current, older])
+        #expect(sut.confirmedSelection(previousSelection: [older, current]).map(\.gen) == ["10"])
+        await sut.performSearch(keyword: "길동")
+        sut.toggleSelection(older)
+        #expect(sut.confirmedSelection(previousSelection: []).isEmpty)
+        sut.applyCSVContent("이름,닉네임\n홍길동,길동\n홍길동,길동")
+        #expect(sut.confirmedSelection(previousSelection: []).map(\.gen) == ["10"])
+    }
+
+    @Test("첫 페이지와 추가 페이지 내부 중복을 모두 제거한다")
+    func deduplicatesEveryPage() async {
+        let first = makeChallenger(memberId: "1")
+        let second = makeChallenger(memberId: "2")
+        let (sut, _) = makeViewModel([
+            .page(makePage([first, first], hasNext: true, nextCursor: 1)),
+            .page(makePage([first, second, second]))
+        ])
+        await sut.performSearch(keyword: "길동")
+        #expect(sut.allChallengers.count == 1)
+        await sut.fetchNextPage()
+        #expect(sut.allChallengers.map(\.memberId) == ["1", "2"])
     }
 
     @Test("확정 전에 해제한 항목은 결과에서 빠진다")
@@ -561,7 +594,7 @@ struct SearchChallengerViewModelCSVTests {
 
         let prompt = sut.alertPrompt
         #expect(prompt?.title == "CSV 가져오기 결과")
-        #expect(prompt?.message.contains("총 2명 중 1명 매칭 완료") == true)
+        #expect(prompt?.message.contains("총 2행에서 1명 매칭 완료") == true)
         #expect(prompt?.message.contains("없는사람/없음") == true)
     }
 

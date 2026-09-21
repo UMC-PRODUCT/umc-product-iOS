@@ -36,6 +36,9 @@ public struct SelectedChallengerView: View {
 
     /// 검색으로 추가할 수 있는 memberId. `nil` 이면 제한하지 않습니다.
     private let selectableMemberIds: Set<String>?
+    private let preferredGeneration: String?
+    private let preferredPart: UMCPartType?
+    private let requiresStudyContext: Bool
 
     /// 현재 사용자의 memberId (본인은 삭제 방지)
     private var myMemberIdSet: Set<String> {
@@ -52,11 +55,17 @@ public struct SelectedChallengerView: View {
     public init(
         challenger: Binding<[ChallengerInfo]>,
         searchUseCase: SearchChallengersUseCaseProtocol? = nil,
-        selectableMemberIds: Set<String>? = nil
+        selectableMemberIds: Set<String>? = nil,
+        preferredGeneration: String? = nil,
+        preferredPart: UMCPartType? = nil,
+        requiresStudyContext: Bool = false
     ) {
         self._challenger = challenger
         self.searchUseCase = searchUseCase
         self.selectableMemberIds = selectableMemberIds
+        self.preferredGeneration = preferredGeneration
+        self.preferredPart = preferredPart
+        self.requiresStudyContext = requiresStudyContext
     }
 
     // MARK: - Body
@@ -78,15 +87,27 @@ public struct SelectedChallengerView: View {
 
                     ToolBarCollection.AddBtn(action: {
                         showsSearch = true
-                    })
+                    }, disable: !canSearch)
                 }
                 .navigationDestination(isPresented: $showsSearch) {
                     SearchChallengerView(
                         useCase: resolvedSearchUseCase,
                         selectedChallengers: $challenger,
-                        selectableMemberIds: selectableMemberIds
+                        selectableMemberIds: selectableMemberIds,
+                        preferredGeneration: preferredGeneration,
+                        preferredPart: preferredPart
                     )
                 }
+        }
+        .onAppear {
+            guard canSearch else { return }
+            let selection = SearchChallengerViewModel(
+                searchChallengersUseCase: resolvedSearchUseCase,
+                preferredGeneration: preferredGeneration,
+                preferredPart: preferredPart
+            )
+            selection.initializeSelection(with: challenger)
+            challenger = selection.confirmedSelection(previousSelection: challenger)
         }
     }
 
@@ -102,6 +123,10 @@ public struct SelectedChallengerView: View {
             )
         } else {
             List {
+                if !canSearch {
+                    Text("그룹 기수·파트를 확인하지 못했습니다. 목록을 새로고침해 주세요.")
+                        .appFont(.footnote, color: .grey500)
+                }
                 ForEach(challenger) { info in
                     challengerRow(info)
                 }
@@ -141,12 +166,16 @@ public struct SelectedChallengerView: View {
 
     // MARK: - Function
 
+    private var canSearch: Bool {
+        !requiresStudyContext || (preferredGeneration != nil && preferredPart != nil)
+    }
+
     private var resolvedSearchUseCase: SearchChallengersUseCaseProtocol {
         searchUseCase ?? container.resolve(SearchChallengersUseCaseProtocol.self)
     }
 
     private func removeChallenger(_ info: ChallengerInfo) {
-        challenger.removeAll { $0.id == info.id }
+        challenger.removeAll { $0.memberId == info.memberId }
     }
 }
 

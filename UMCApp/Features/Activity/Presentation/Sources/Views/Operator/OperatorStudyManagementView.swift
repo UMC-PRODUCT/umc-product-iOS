@@ -121,9 +121,12 @@ struct OperatorStudyManagementView: View {
                         await viewModel.applySelectedChallengers()
                     }
                 }
-            ) { _ in
+            ) { group in
                 SelectedChallengerView(
-                    challenger: $viewModel.selectedChallengers
+                    challenger: $viewModel.selectedChallengers,
+                    preferredGeneration: viewModel.generation(for: group),
+                    preferredPart: group.studyPart.flatMap(UMCPartType.init(apiValue:)),
+                    requiresStudyContext: true
                 )
             }
             .sheet(item: $viewModel.editingGroup) { _ in
