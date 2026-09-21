@@ -16,6 +16,8 @@ public struct StudyGroupInfo: Identifiable, Equatable {
     // MARK: - Property
 
     public let id: UUID
+    public let gisuId: String?
+    public let studyPart: String?
     public let serverID: String
     public let name: String
     public let part: UMCPartType
@@ -43,6 +45,8 @@ public struct StudyGroupInfo: Identifiable, Equatable {
     public init(
         id: UUID = UUID(),
         serverID: String,
+        gisuId: String? = nil,
+        studyPart: String? = nil,
         name: String,
         part: UMCPartType,
         createdDate: Date,
@@ -51,6 +55,8 @@ public struct StudyGroupInfo: Identifiable, Equatable {
     ) {
         self.id = id
         self.serverID = serverID
+        self.gisuId = gisuId
+        self.studyPart = studyPart
         self.name = name
         self.part = part
         self.createdDate = createdDate
