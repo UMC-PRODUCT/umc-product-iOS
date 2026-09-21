@@ -80,6 +80,13 @@ private func makeSingleMentorJSON(bestWorkbookPointField: String) -> String {
 
 @Suite("StudyGroupDetailDTO — 디코딩 매핑 (서버 contract)")
 struct StudyGroupDetailDTOTests {
+    @Test("그룹 기수 ID는 문자열과 정수 모두 보존한다", arguments: ["17", "\"17\""])
+    func preservesGroupContext(gisuJSON: String) throws {
+        let dto = try decodeDetail("{\"gisuId\":\(gisuJSON),\"studyPart\":\"PLAN\"}")
+        #expect(dto.toDomain().gisuId == "17")
+        #expect(dto.toDomain().studyPart == "PLAN")
+    }
+
 
     // MARK: - Decoding (happy path)
 

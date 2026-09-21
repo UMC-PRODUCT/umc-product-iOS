@@ -100,8 +100,14 @@ public final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable
     ///
     /// 전용 엔드포인트가 아직 없어 커리큘럼 개요(`getCurriculum`)의 주차 목록에서 파생한다.
     /// 주차 번호(`weekNo`)는 도메인 모델이 `String` 이므로 변환해 담는다.
-    public func fetchWeeklyCurriculumOptions() async throws -> [WeeklyCurriculumOption] {
-        let curriculum = try await fetchCurriculum()
+    public func fetchWeeklyCurriculumOptions(
+        gisuId: String, part: String
+    ) async throws -> [WeeklyCurriculumOption] {
+        guard Int64(gisuId).map({ $0 > 0 }) == true,
+              let studyPart = UMCPartType(apiValue: part), studyPart != .admin else {
+            throw DomainError.custom(message: "스터디 그룹의 기수·파트 정보를 확인해 주세요.")
+        }
+        let curriculum = try await fetchCurriculum(gisuId: gisuId, part: part)
         return curriculum.dto.weeks
             .sorted { $0.weekNo < $1.weekNo }
             .map {
@@ -314,7 +320,11 @@ private extension StudyRepository {
         guard let gisuId = context.gisuId else {
             throw DomainError.curriculumUnavailableForGeneration
         }
-        let part = context.part
+        return try await fetchCurriculum(gisuId: gisuId, part: context.part)
+    }
+
+    func fetchCurriculum(gisuId: String, part: String) async throws
+        -> (dto: CurriculumDTO, part: String) {
         let response: Response
         do {
             response = try await networkRequesting.request(

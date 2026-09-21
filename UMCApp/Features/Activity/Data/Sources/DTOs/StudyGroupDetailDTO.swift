@@ -18,11 +18,11 @@ import UMCFoundation
 /// 서버 `StudyGroupResponse` 계약에 맞춘 키만 디코딩한다. 서버 식별자(`studyGroupId`,
 /// `memberId`)는 정수로 내려오지만 전 레이어 `String` 통일 규칙에 따라 `String` 으로 받는다.
 ///
-/// - Note: 서버가 함께 내려주는 `gisuId` 는 도메인에서 쓰지 않아 디코딩하지 않는다.
 struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
 
     // MARK: - Property
 
+    let gisuId: String?
     let studyGroupId: String
     let name: String
     let studyPart: String
@@ -44,6 +44,7 @@ struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
     // MARK: - CodingKeys
 
     private enum CodingKeys: String, CodingKey {
+        case gisuId
         case studyGroupId
         case name
         case studyPart
@@ -56,6 +57,7 @@ struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        gisuId = container.decodeFlexibleStringOrNil(forKey: .gisuId)
         studyGroupId = container.decodeFlexibleStringOrNil(forKey: .studyGroupId) ?? ""
         name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
         studyPart = try container.decodeIfPresent(String.self, forKey: .studyPart) ?? ""
@@ -74,6 +76,7 @@ struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(gisuId, forKey: .gisuId)
         try container.encode(studyGroupId, forKey: .studyGroupId)
         try container.encode(name, forKey: .name)
         try container.encode(studyPart, forKey: .studyPart)
@@ -200,6 +203,8 @@ extension StudyGroupDetailDTO {
 
         return StudyGroupInfo(
             serverID: studyGroupId,
+            gisuId: gisuId,
+            studyPart: studyPart,
             name: name.isEmpty ? (defaultGroupName ?? "") : name,
             part: partType,
             createdDate: parsedDate,

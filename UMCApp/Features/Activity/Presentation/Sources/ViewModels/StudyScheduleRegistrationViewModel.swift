@@ -118,8 +118,14 @@ final class StudyScheduleRegistrationViewModel {
             && (isOnline || hasResolvedPlace)
             && !studyGroupId.isEmpty
             && endDate >= startDate
-            && selectedWeeklyOption != nil
+            && hasValidWeeklyOption
             && attendancePolicyError == nil
+    }
+
+    private var hasValidWeeklyOption: Bool {
+        guard case .loaded(let options) = weeklyOptionsState,
+              let selectedWeeklyOption else { return false }
+        return options.contains(selectedWeeklyOption)
     }
 
     /// 대면 일정에 필요한 장소 정보(이름 + 좌표)가 모두 갖춰졌는지
@@ -198,8 +204,17 @@ final class StudyScheduleRegistrationViewModel {
         if case .loading = weeklyOptionsState { return }
         let previousState = weeklyOptionsState
         weeklyOptionsState = .loading
+        selectedWeeklyOption = nil
         do {
-            let options = try await studyRepository.fetchWeeklyCurriculumOptions()
+            let group = try await studyRepository.fetchStudyGroupDetail(groupId: studyGroupId)
+            guard let gisuId = group.gisuId, let part = group.studyPart,
+                  Int64(gisuId).map({ $0 > 0 }) == true,
+                  let studyPart = UMCPartType(apiValue: part), studyPart != .admin else {
+                throw DomainError.custom(message: "스터디 그룹의 기수·파트 정보를 확인해 주세요.")
+            }
+            let options = try await studyRepository.fetchWeeklyCurriculumOptions(
+                gisuId: gisuId, part: part
+            )
             weeklyOptions = options
             weeklyOptionsState = .loaded(options)
             if selectedWeeklyOption == nil {

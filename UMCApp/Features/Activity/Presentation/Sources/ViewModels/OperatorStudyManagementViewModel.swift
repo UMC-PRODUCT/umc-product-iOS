@@ -654,6 +654,8 @@ final class OperatorStudyManagementViewModel {
         studyGroupDetails[index] = StudyGroupInfo(
             id: old.id,
             serverID: old.serverID,
+            gisuId: old.gisuId,
+            studyPart: old.studyPart,
             name: trimmedName,
             part: old.part,
             createdDate: old.createdDate,
@@ -735,6 +737,7 @@ final class OperatorStudyManagementViewModel {
                 mentorIds: mentorIds
             )
             appendCreatedGroupToLocalState(
+                gisuId: gisuId,
                 name: trimmedName,
                 part: part,
                 mentors: mentors,
@@ -860,6 +863,7 @@ final class OperatorStudyManagementViewModel {
     // MARK: - Private (로컬 상태 반영)
 
     private func appendCreatedGroupToLocalState(
+        gisuId: String,
         name: String,
         part: UMCPartType,
         mentors: [ChallengerInfo],
@@ -877,6 +881,8 @@ final class OperatorStudyManagementViewModel {
         let mentorMemberIds = Set(mentors.map(\.memberId))
         let localGroup = StudyGroupInfo(
             serverID: localServerID,
+            gisuId: gisuId,
+            studyPart: part.apiValue,
             name: name,
             part: part,
             createdDate: Date(),

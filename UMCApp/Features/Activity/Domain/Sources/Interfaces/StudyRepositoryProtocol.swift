@@ -25,7 +25,9 @@ public protocol StudyRepositoryProtocol {
     ///
     /// ``linkStudyGroupSchedule(scheduleId:studyGroupId:weeklyCurriculumId:)``
     /// 의 `weeklyCurriculumId` 선택지로 사용됩니다.
-    func fetchWeeklyCurriculumOptions() async throws -> [WeeklyCurriculumOption]
+    func fetchWeeklyCurriculumOptions(
+        gisuId: String, part: String
+    ) async throws -> [WeeklyCurriculumOption]
 
     // MARK: - 운영진 스터디 그룹 조회
 
