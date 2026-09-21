@@ -90,14 +90,14 @@ struct StudyGroupDetailDTO: Codable, Sendable, Equatable {
 
 /// 스터디 그룹 소속 챌린저(파트장/스터디원) 정보 DTO
 ///
-/// 서버 `StudyGroupMemberResponse` 계약에 맞춘 키만 디코딩한다. 응답에 함께 오는 `schoolId` 는
-/// 도메인에서 쓰지 않아 생략한다.
+/// 서버 `StudyGroupMemberResponse` 계약에 맞춘 키를 디코딩한다.
 struct StudyGroupChallengerDTO: Codable, Sendable, Equatable {
 
     // MARK: - Property
 
     let memberId: String
     let memberName: String
+    let schoolId: String
     let schoolName: String
     let profileImageURL: String?
     /// 베스트 워크북 표시 점수.
@@ -113,6 +113,7 @@ struct StudyGroupChallengerDTO: Codable, Sendable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case memberId
         case memberName
+        case schoolId
         case schoolName
         case profileImageURL = "profileImageUrl"
         case bestWorkbookPoint
@@ -124,6 +125,7 @@ struct StudyGroupChallengerDTO: Codable, Sendable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         memberId = container.decodeFlexibleStringOrNil(forKey: .memberId) ?? ""
         memberName = try container.decodeIfPresent(String.self, forKey: .memberName) ?? ""
+        schoolId = container.decodeFlexibleStringOrNil(forKey: .schoolId) ?? ""
         schoolName = try container.decodeIfPresent(String.self, forKey: .schoolName) ?? ""
         profileImageURL = try container.decodeIfPresent(String.self, forKey: .profileImageURL)
         bestWorkbookPoint = try container.decodeIntFlexibleIfPresent(forKey: .bestWorkbookPoint)
@@ -135,6 +137,7 @@ struct StudyGroupChallengerDTO: Codable, Sendable, Equatable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(memberId, forKey: .memberId)
         try container.encode(memberName, forKey: .memberName)
+        try container.encode(schoolId, forKey: .schoolId)
         try container.encode(schoolName, forKey: .schoolName)
         try container.encodeIfPresent(profileImageURL, forKey: .profileImageURL)
         try container.encodeIfPresent(bestWorkbookPoint, forKey: .bestWorkbookPoint)
