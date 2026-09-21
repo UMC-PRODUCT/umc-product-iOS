@@ -428,34 +428,23 @@ final class OperatorStudyManagementViewModel {
         }
         let serverGroupId = targetGroup.serverID
 
-        let currentChallengerIDs = Set(
-            studyGroupDetails[index].members
-                .compactMap(\.challengerID)
-                .filter(Self.isUsableID)
+        let currentMemberIDs = Set(
+            studyGroupDetails[index].members.map(\.memberID).filter(Self.isUsableID)
         )
-        let resolvedChallengerIDs = await resolveChallengerIDs(from: selectedChallengers)
-        let unresolvedCount = selectedChallengers.count - resolvedChallengerIDs.count
-        guard unresolvedCount == 0 else {
-            presentAlert(
-                title: "변경 실패",
-                message: "선택한 멤버의 챌린저 ID를 확인하지 못했습니다. 다시 시도해 주세요."
-            )
+        guard selectedChallengers.allSatisfy({ Self.isUsableID($0.memberId) }) else {
+            presentAlert(title: "변경 실패", message: "선택한 회원의 ID를 확인하지 못했습니다.")
             resetMemberSelection()
             return
         }
-        let updatedChallengerIDs = Set(
-            selectedChallengers
-                .compactMap { resolvedChallengerIDs[$0.selectionKey] }
-                .filter(Self.isUsableID)
-        )
+        let updatedMemberIDs = Set(selectedChallengers.map(\.memberId))
 
-        if currentChallengerIDs == updatedChallengerIDs {
+        if currentMemberIDs == updatedMemberIDs {
             resetMemberSelection()
             return
         }
 
-        let toAdd = updatedChallengerIDs.subtracting(currentChallengerIDs)
-        let toRemove = currentChallengerIDs.subtracting(updatedChallengerIDs)
+        let toAdd = updatedMemberIDs.subtracting(currentMemberIDs)
+        let toRemove = currentMemberIDs.subtracting(updatedMemberIDs)
 
         let failures = await applyMembershipChanges(
             groupId: serverGroupId,
@@ -468,9 +457,12 @@ final class OperatorStudyManagementViewModel {
         )
 
         if failures.isEmpty {
-            studyGroupDetails[index].members = selectedChallengers.map {
-                studyGroupMember(from: $0, resolvedChallengerIDs: resolvedChallengerIDs)
-            }
+            var seen = Set<String>()
+            studyGroupDetails[index].members = selectedChallengers
+                .filter { seen.insert($0.memberId).inserted }
+                .map {
+                    studyGroupMember(from: $0, resolvedChallengerIDs: [:])
+                }
         } else {
             presentAlert(
                 title: "일부 변경 실패",
@@ -506,34 +498,23 @@ final class OperatorStudyManagementViewModel {
             return
         }
 
-        let currentChallengerIDs = Set(
-            studyGroupDetails[index].mentors
-                .compactMap(\.challengerID)
-                .filter(Self.isUsableID)
+        let currentMemberIDs = Set(
+            studyGroupDetails[index].mentors.map(\.memberID).filter(Self.isUsableID)
         )
-        let resolvedChallengerIDs = await resolveChallengerIDs(from: selectedMentors)
-        let unresolvedCount = selectedMentors.count - resolvedChallengerIDs.count
-        guard unresolvedCount == 0 else {
-            presentAlert(
-                title: "변경 실패",
-                message: "선택한 멘토의 챌린저 ID를 확인하지 못했습니다. 다시 시도해 주세요."
-            )
+        guard selectedMentors.allSatisfy({ Self.isUsableID($0.memberId) }) else {
+            presentAlert(title: "변경 실패", message: "선택한 회원의 ID를 확인하지 못했습니다.")
             resetMentorSelection()
             return
         }
-        let updatedChallengerIDs = Set(
-            selectedMentors
-                .compactMap { resolvedChallengerIDs[$0.selectionKey] }
-                .filter(Self.isUsableID)
-        )
+        let updatedMemberIDs = Set(selectedMentors.map(\.memberId))
 
-        if currentChallengerIDs == updatedChallengerIDs {
+        if currentMemberIDs == updatedMemberIDs {
             resetMentorSelection()
             return
         }
 
-        let toAdd = updatedChallengerIDs.subtracting(currentChallengerIDs)
-        let toRemove = currentChallengerIDs.subtracting(updatedChallengerIDs)
+        let toAdd = updatedMemberIDs.subtracting(currentMemberIDs)
+        let toRemove = currentMemberIDs.subtracting(updatedMemberIDs)
 
         let failures = await applyMembershipChanges(
             groupId: serverGroupId,
@@ -546,13 +527,12 @@ final class OperatorStudyManagementViewModel {
         )
 
         if failures.isEmpty {
-            studyGroupDetails[index].mentors = selectedMentors.map {
-                studyGroupMember(
-                    from: $0,
-                    resolvedChallengerIDs: resolvedChallengerIDs,
-                    role: .leader
-                )
-            }
+            var seen = Set<String>()
+            studyGroupDetails[index].mentors = selectedMentors
+                .filter { seen.insert($0.memberId).inserted }
+                .map {
+                    studyGroupMember(from: $0, resolvedChallengerIDs: [:], role: .leader)
+                }
         } else {
             presentAlert(
                 title: "일부 변경 실패",
@@ -567,7 +547,7 @@ final class OperatorStudyManagementViewModel {
     /// 멤버 단건 삭제 (chip context menu)
     func removeMember(_ member: StudyGroupMember, from group: StudyGroupInfo) async {
         guard isPersistedServerGroup(group.serverID),
-              let challengerId = member.challengerID, Self.isUsableID(challengerId),
+              Self.isUsableID(member.memberID),
               let index = studyGroupDetails.firstIndex(where: { $0.id == group.id })
         else {
             presentAlert(title: "삭제 실패", message: "유효하지 않은 식별자입니다.")
@@ -577,7 +557,7 @@ final class OperatorStudyManagementViewModel {
         do {
             try await useCase.removeStudyGroupMember(
                 groupId: group.serverID,
-                memberId: challengerId
+                memberId: member.memberID
             )
             studyGroupDetails[index].members.removeAll { $0.id == member.id }
         } catch let error as DomainError {
@@ -604,7 +584,7 @@ final class OperatorStudyManagementViewModel {
         }
 
         guard isPersistedServerGroup(group.serverID),
-              let challengerId = mentor.challengerID, Self.isUsableID(challengerId)
+              Self.isUsableID(mentor.memberID)
         else {
             presentAlert(title: "삭제 실패", message: "유효하지 않은 식별자입니다.")
             return
@@ -613,7 +593,7 @@ final class OperatorStudyManagementViewModel {
         do {
             try await useCase.removeStudyGroupMentor(
                 groupId: group.serverID,
-                mentorId: challengerId
+                mentorId: mentor.memberID
             )
             studyGroupDetails[index].mentors.removeAll { $0.id == mentor.id }
         } catch let error as DomainError {
@@ -1063,7 +1043,7 @@ final class OperatorStudyManagementViewModel {
     // MARK: - Private (Helper)
 
     /// 멤버/멘토 추가·제거를 순차 적용하고 실패 메시지를 모읍니다.
-    /// `add`/`remove` 는 대상 UseCase 메서드(`(groupId, challengerId)`)이며,
+    /// `add`/`remove` 는 대상 UseCase 메서드(`(groupId, memberId)`)이며,
     /// 실패 시 도메인 메시지 또는 기본 메시지를 누적해 반환합니다.
     private func applyMembershipChanges(
         groupId: String,
@@ -1075,18 +1055,18 @@ final class OperatorStudyManagementViewModel {
         removeFailureMessage: String
     ) async -> [String] {
         var failures: [String] = []
-        for challengerId in toAdd {
+        for memberId in toAdd {
             do {
-                try await add(groupId, challengerId)
+                try await add(groupId, memberId)
             } catch let error as DomainError {
                 failures.append(error.userMessage)
             } catch {
                 failures.append(addFailureMessage)
             }
         }
-        for challengerId in toRemove {
+        for memberId in toRemove {
             do {
-                try await remove(groupId, challengerId)
+                try await remove(groupId, memberId)
             } catch let error as DomainError {
                 failures.append(error.userMessage)
             } catch {
@@ -1286,7 +1266,7 @@ final class OperatorStudyManagementViewModel {
     ) -> StudyGroupMember {
         StudyGroupMember(
             serverID: challenger.memberId,
-            challengerID: resolvedChallengerIDs[challenger.selectionKey],
+            challengerID: resolvedChallengerIDs[challenger.selectionKey] ?? challenger.challengerId,
             memberID: challenger.memberId,
             name: challenger.name,
             nickname: challenger.nickname,
