@@ -429,7 +429,7 @@ final class OperatorStudyManagementViewModel {
         let serverGroupId = targetGroup.serverID
 
         let currentMemberIDs = Set(
-            studyGroupDetails[index].members.map(\.memberID).filter(Self.isUsableID)
+            studyGroupDetails[index].members.compactMap(\.memberID).filter(Self.isUsableID)
         )
         guard selectedChallengers.allSatisfy({ Self.isUsableID($0.memberId) }) else {
             presentAlert(title: "변경 실패", message: "선택한 회원의 ID를 확인하지 못했습니다.")
@@ -499,7 +499,7 @@ final class OperatorStudyManagementViewModel {
         }
 
         let currentMemberIDs = Set(
-            studyGroupDetails[index].mentors.map(\.memberID).filter(Self.isUsableID)
+            studyGroupDetails[index].mentors.compactMap(\.memberID).filter(Self.isUsableID)
         )
         guard selectedMentors.allSatisfy({ Self.isUsableID($0.memberId) }) else {
             presentAlert(title: "변경 실패", message: "선택한 회원의 ID를 확인하지 못했습니다.")
@@ -547,7 +547,7 @@ final class OperatorStudyManagementViewModel {
     /// 멤버 단건 삭제 (chip context menu)
     func removeMember(_ member: StudyGroupMember, from group: StudyGroupInfo) async {
         guard isPersistedServerGroup(group.serverID),
-              Self.isUsableID(member.memberID),
+              let memberId = member.memberID, Self.isUsableID(memberId),
               let index = studyGroupDetails.firstIndex(where: { $0.id == group.id })
         else {
             presentAlert(title: "삭제 실패", message: "유효하지 않은 식별자입니다.")
@@ -557,7 +557,7 @@ final class OperatorStudyManagementViewModel {
         do {
             try await useCase.removeStudyGroupMember(
                 groupId: group.serverID,
-                memberId: member.memberID
+                memberId: memberId
             )
             studyGroupDetails[index].members.removeAll { $0.id == member.id }
         } catch let error as DomainError {
@@ -584,7 +584,7 @@ final class OperatorStudyManagementViewModel {
         }
 
         guard isPersistedServerGroup(group.serverID),
-              Self.isUsableID(mentor.memberID)
+              let memberId = mentor.memberID, Self.isUsableID(memberId)
         else {
             presentAlert(title: "삭제 실패", message: "유효하지 않은 식별자입니다.")
             return
@@ -593,7 +593,7 @@ final class OperatorStudyManagementViewModel {
         do {
             try await useCase.removeStudyGroupMentor(
                 groupId: group.serverID,
-                mentorId: mentor.memberID
+                mentorId: memberId
             )
             studyGroupDetails[index].mentors.removeAll { $0.id == mentor.id }
         } catch let error as DomainError {
