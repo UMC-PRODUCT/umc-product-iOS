@@ -365,20 +365,16 @@ final class MemberListViewModel {
             .fetchAttendanceRecords(memberId: memberId)
 
         let records = await recordsTask ?? member.attendanceRecords
-        let pointHistory = await pointHistoryTask ?? member.penaltyHistory
+        let fetchedHistory = await pointHistoryTask
+        let pointHistory = fetchedHistory ?? member.penaltyHistory
         let generationPoints = await genPointsTask ?? []
 
-        let penaltyItems = pointHistory.filter { !$0.pointType.isReward }
-        let rewardItems = pointHistory.filter { $0.pointType.isReward }
-        let totalPenalty = penaltyItems.isEmpty
-            ? member.penalty
-            : penaltyItems.reduce(0) { $0 + $1.penaltyScore }
-        // 상점도 벌점과 대칭 폴백: 재조회 히스토리에 상점 항목이 없으면 기존 상점을 보존한다
-        // (단건 재조회가 리스트 카드에도 반영되므로, 벌점만 있는 히스토리로 상점을 0 으로
-        // 지우지 않도록). penaltyItems 폴백과 동형.
-        let totalReward = rewardItems.isEmpty
-            ? member.rewardPoints
-            : rewardItems.reduce(0) { $0 + $1.penaltyScore }
+        let penaltyItems = pointHistory.filter { !$0.isReward }
+        let rewardItems = pointHistory.filter { $0.isReward }
+        let totalPenalty = fetchedHistory == nil
+            ? member.penalty : penaltyItems.reduce(0) { $0 + $1.penaltyScore }
+        let totalReward = fetchedHistory == nil
+            ? member.rewardPoints : rewardItems.reduce(0) { $0 + $1.penaltyScore }
 
         return MemberManagementItem(
             id: member.id,

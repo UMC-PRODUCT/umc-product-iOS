@@ -27,11 +27,13 @@ public struct OperatorMemberPenaltyHistory: Identifiable, Equatable {
     /// 사유
     public let reason: String
 
-    /// 포인트 점수의 절대값 (부호 없음)
-    ///
-    /// 상점/벌점 구분은 이 값의 부호가 아니라 ``pointType`` 의 ``ChallengerPointType/isReward`` 로만 판별합니다.
-    /// 따라서 항상 0 이상의 절대값을 보관합니다.
-    public let penaltyScore: Double
+    public let signedPoint: Double
+    public var penaltyScore: Double { abs(signedPoint) }
+    public var isReward: Bool { Self.isReward(type: pointType, signedPoint: signedPoint) }
+
+    public static func isReward(type: ChallengerPointType, signedPoint: Double) -> Bool {
+        type.isCustom ? signedPoint > 0 : type.isReward
+    }
 
     /// 포인트 유형
     public let pointType: ChallengerPointType
@@ -44,13 +46,14 @@ public struct OperatorMemberPenaltyHistory: Identifiable, Equatable {
         date: Date,
         reason: String,
         penaltyScore: Double,
-        pointType: ChallengerPointType
+        pointType: ChallengerPointType,
+        signedPoint: Double? = nil
     ) {
         self.id = id
         self.challengerPointId = challengerPointId
         self.date = date
         self.reason = reason
-        self.penaltyScore = penaltyScore
+        self.signedPoint = signedPoint ?? penaltyScore
         self.pointType = pointType
     }
 }

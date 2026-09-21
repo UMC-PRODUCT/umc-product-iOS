@@ -416,18 +416,12 @@ private extension MemberRepository {
         currentMemberId: String?
     ) -> MemberManagementItem {
         let allPoints = record?.resolvedPoints ?? []
-        let penaltyPoints = allPoints.filter { !isReward(pointType: $0.pointType) }
-        let rewardPoints = allPoints.filter { isReward(pointType: $0.pointType) }
+        let penaltyPoints = allPoints.filter { !isReward(pointType: $0.pointType, signedPoint: $0.point) }
+        let rewardPoints = allPoints.filter { isReward(pointType: $0.pointType, signedPoint: $0.point) }
 
-        let totalPenalty: Double
-        let penaltyHistories: [OperatorMemberPenaltyHistory]
-        if penaltyPoints.isEmpty {
-            totalPenalty = descriptor.fallbackPenalty
-            penaltyHistories = []
-        } else {
-            totalPenalty = penaltyPoints.reduce(0) { $0 + abs($1.point) }
-            penaltyHistories = makePenaltyHistories(from: penaltyPoints, includeWarning: true)
-        }
+        let totalPenalty = record == nil ? descriptor.fallbackPenalty
+            : penaltyPoints.reduce(0) { $0 + abs($1.point) }
+        let penaltyHistories = makePenaltyHistories(from: allPoints, includeWarning: true)
         let totalReward = rewardPoints.reduce(0) { $0 + abs($1.point) }
 
         return MemberManagementItem(
@@ -564,10 +558,10 @@ private extension MemberRepository {
             guard record.gisu > 0 else { return nil }
             let allPoints = record.resolvedPoints
             let reward = allPoints
-                .filter { isReward(pointType: $0.pointType) }
+                .filter { isReward(pointType: $0.pointType, signedPoint: $0.point) }
                 .reduce(0) { $0 + abs($1.point) }
             let penalty = allPoints
-                .filter { !isReward(pointType: $0.pointType) }
+                .filter { !isReward(pointType: $0.pointType, signedPoint: $0.point) }
                 .reduce(0) { $0 + abs($1.point) }
             return GenerationPointSummary(
                 gisu: record.gisu,
@@ -600,21 +594,16 @@ private extension MemberRepository {
                         ?? Date(),
                     reason: point.description.nonEmpty ?? resolvedType.displayName,
                     penaltyScore: abs(point.point),
-                    pointType: resolvedType
+                    pointType: resolvedType,
+                    signedPoint: point.point
                 )
             }
             .sorted { $0.date > $1.date }
     }
 
-    /// 포인트 유형 문자열이 상점(보상)인지 판별합니다(미지의 유형은 벌점으로 간주).
-    ///
-    /// - Note: 분류는 ``UMCFoundation/ChallengerPointType/isReward``(유형의 기본 배점 부호)에
-    ///   위임하므로, 레거시 호환으로 양수(1)인 `WARNING`/`OUT` 은 상점으로, 기본 배점 0 인
-    ///   `CUSTOM` 은 벌점으로 분류됩니다(레거시 동일 동작). 일반 부여 흐름은
-    ///   `availableTypes(for:)` 에서 `WARNING`/`OUT` 을 제외하므로 영향이 제한적입니다. 서버
-    ///   `point` 부호 기반 정밀 분류는 contract 확정 후 별도 보강합니다.
-    func isReward(pointType raw: String) -> Bool {
-        ChallengerPointType(rawValue: raw.uppercased())?.isReward == true
+    func isReward(pointType raw: String, signedPoint: Double) -> Bool {
+        guard let type = ChallengerPointType(rawValue: raw.uppercased()) else { return false }
+        return OperatorMemberPenaltyHistory.isReward(type: type, signedPoint: signedPoint)
     }
 
     /// 결과 본문이 없는 변경(부여/삭제) 요청의 공통 호출·검증.
