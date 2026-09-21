@@ -346,7 +346,7 @@ final class MemberListViewModel {
         return false
     }
 
-    /// 멤버의 상세 정보(출석 기록, 포인트 히스토리, 기수 포인트)를 조회합니다.
+    /// 멤버의 상세 정보(포인트 히스토리, 기수 포인트)를 조회합니다.
     private func fetchMemberDetail(
         for member: MemberManagementItem
     ) async -> MemberManagementItem {
@@ -361,10 +361,6 @@ final class MemberListViewModel {
         )
         async let genPointsTask = try? fetchMembersUseCase
             .fetchGenerationPointSummaries(memberId: memberId)
-        async let recordsTask = try? fetchMembersUseCase
-            .fetchAttendanceRecords(memberId: memberId)
-
-        let records = await recordsTask ?? member.attendanceRecords
         let pointHistory = await pointHistoryTask ?? member.penaltyHistory
         let generationPoints = await genPointsTask ?? []
 
@@ -396,7 +392,7 @@ final class MemberListViewModel {
             rewardPoints: totalReward,
             badge: member.badge,
             managementTeam: member.managementTeam,
-            attendanceRecords: records,
+            attendanceRecords: member.attendanceRecords,
             penaltyHistory: pointHistory,
             canViewPenaltyHistory: true,
             generationPoints: generationPoints

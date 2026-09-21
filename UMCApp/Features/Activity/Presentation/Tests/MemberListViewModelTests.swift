@@ -97,6 +97,7 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
     var pointHistory: [OperatorMemberPenaltyHistory] = []
     var generationPoints: [GenerationPointSummary] = []
     var attendanceRecords: [MemberAttendanceRecord] = []
+    private(set) var attendanceRequestCount = 0
     var allGenerations: String = ""
 
     // MARK: 호출 기록
@@ -156,7 +157,8 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
     func fetchAttendanceRecords(
         memberId: String
     ) async throws -> [MemberAttendanceRecord] {
-        attendanceRecords
+        attendanceRequestCount += 1
+        throw DummyError()
     }
 }
 
@@ -165,6 +167,22 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
 @MainActor
 @Suite("MemberListViewModel — 첫 페이지 로딩 (도메인 규칙)")
 struct MemberListViewModelFirstPageTests {
+
+    @Test("상세 진입과 포인트 부여·삭제는 출석 API를 호출하지 않는다")
+    func detailAndPointRefreshSkipAttendance() async {
+        let member = makeMember(memberID: "1", challengerID: "C-1")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([member], hasNext: false, currentPage: 0)
+        let viewModel = makeViewModel(useCase: useCase)
+        await viewModel.fetchMembers()
+        await viewModel.openChallengerMemberDetail(member)
+        #expect(viewModel.selectedMember?.memberID == "1")
+        #expect(!viewModel.isLoadingMemberDetail)
+        #expect(await viewModel.submitPoint(member: member, pointType: .studyLate,
+                                             pointValue: 2, description: "지각"))
+        #expect(await viewModel.deletePoint(member: member, history: makeHistory()) == nil)
+        #expect(useCase.attendanceRequestCount == 0)
+    }
 
     @Test("첫 페이지 성공 → loaded 전이 + 페이지네이션 상태 반영")
     func firstPageLoadsAndSetsPagination() async {
