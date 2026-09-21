@@ -333,7 +333,7 @@ private struct PenaltyHistoryRowPresenter: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        let isReward = history.pointType.isReward
+        let isReward = history.isReward
 
         HStack(spacing: DefaultSpacing.spacing16) {
             Text(history.date.toYearMonthDay())

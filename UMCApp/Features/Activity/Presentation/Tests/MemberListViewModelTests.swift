@@ -95,6 +95,7 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
     var grantPointError: Error?
     var deletePointError: Error?
     var pointHistory: [OperatorMemberPenaltyHistory] = []
+    var pointHistoryError: Error?
     var generationPoints: [GenerationPointSummary] = []
     var attendanceRecords: [MemberAttendanceRecord] = []
     private(set) var attendanceRequestCount = 0
@@ -141,7 +142,8 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
     func fetchPointHistory(
         challengerId: String
     ) async throws -> [OperatorMemberPenaltyHistory] {
-        pointHistory
+        if let pointHistoryError { throw pointHistoryError }
+        return pointHistory
     }
 
     func fetchAllGenerations(memberId: String) async throws -> String {
@@ -476,8 +478,24 @@ struct MemberListViewModelSubmitPointTests {
         #expect(loaded.first { $0.memberID == "2" }?.penalty == 0)
     }
 
-    @Test("벌점 부여 후 재조회 → 히스토리에 상점 없어도 기존 상점 배지 보존(0 소거 X)")
-    func submitPreservesExistingRewardWhenHistoryHasNoReward() async {
+    @Test("조회 실패는 기존 합계를 보존하고 성공한 빈 이력은 0으로 초기화한다")
+    func failedAndEmptyHistoryAreDistinct() async {
+        let member = makeMember(memberID: "1", challengerID: "C-1", rewardPoints: 5)
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([member], hasNext: false, currentPage: 0)
+        let viewModel = makeViewModel(useCase: useCase)
+        await viewModel.fetchMembers()
+        useCase.pointHistoryError = DummyError()
+        await viewModel.openChallengerMemberDetail(member)
+        #expect(viewModel.selectedMember?.rewardPoints == 5)
+        useCase.pointHistoryError = nil
+        await viewModel.openChallengerMemberDetail(member)
+        #expect(viewModel.selectedMember?.rewardPoints == 0)
+        #expect(viewModel.selectedMember?.penalty == 0)
+    }
+
+    @Test("재조회 성공 후 상점 기록이 없으면 이전 상점을 지운다")
+    func submitClearsRewardWhenSuccessfulHistoryHasNoReward() async {
         let member = makeMember(memberID: "1", challengerID: "C-1", rewardPoints: 5)
         let useCase = MockFetchMembersUseCase()
         useCase.pages[0] = makePage([member], hasNext: false, currentPage: 0)
@@ -495,7 +513,7 @@ struct MemberListViewModelSubmitPointTests {
 
         let updated = viewModel.membersState.value?.first { $0.memberID == "1" }
         #expect(updated?.penalty == 2)          // 히스토리 벌점 반영
-        #expect(updated?.rewardPoints == 5)     // 기존 상점 보존(0 으로 소거되지 않음)
+        #expect(updated?.rewardPoints == 0)
     }
 
     @Test("상세 시트 열림 상태에서 부여 → selectedMember 가 stable id 로 갱신")

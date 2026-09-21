@@ -62,10 +62,10 @@ final class OperatorMemberDetailSheetViewModel {
     func syncState(from member: MemberManagementItem) {
         penaltyHistory = member.penaltyHistory
         totalPenalty = member.penaltyHistory
-            .filter { !$0.pointType.isReward }
+            .filter { !$0.isReward }
             .reduce(0) { $0 + $1.penaltyScore }
         totalReward = member.penaltyHistory
-            .filter { $0.pointType.isReward }
+            .filter { $0.isReward }
             .reduce(0) { $0 + $1.penaltyScore }
     }
 
@@ -76,23 +76,17 @@ final class OperatorMemberDetailSheetViewModel {
         let success = await onGrantPoint(type, value, reason)
         guard success else { return false }
 
-        // 상/벌 구분: Custom 은 value 부호, 그 외는 pointType.isReward 로 판단한다.
-        // - Note: 저장되는 OperatorMemberPenaltyHistory 는 점수를 절대값으로만 보관하고
-        //   상/벌을 pointType.isReward 로 판별한다. ChallengerPointType.custom.isReward 는
-        //   항상 false 이므로, Custom '상점' 은 서버 재조회·syncState round-trip 시 부호가
-        //   보존되지 않아 벌점으로 집계된다. 즉시 부여 결과는 아래 value 부호로 정확히
-        //   반영되지만, 부호 보존 자체는 도메인 모델(#900 이식) 한계로 별도 티켓에서 다룬다.
-        let isRewardPoint = type.isCustom ? value > 0 : type.isReward
         let newHistory = OperatorMemberPenaltyHistory(
             date: Date(),
             reason: reason,
             penaltyScore: Double(abs(value)),
-            pointType: type
+            pointType: type,
+            signedPoint: Double(value)
         )
         withAnimation(Self.animation) {
             penaltyHistory.append(newHistory)
             penaltyHistory.sort { $0.date > $1.date }
-            if isRewardPoint {
+            if newHistory.isReward {
                 totalReward += Double(abs(value))
             } else {
                 totalPenalty += Double(abs(value))
@@ -117,7 +111,7 @@ final class OperatorMemberDetailSheetViewModel {
 
         guard let index = penaltyHistory.firstIndex(where: { $0.id == history.id }) else { return }
         let deletedScore = penaltyHistory[index].penaltyScore
-        let isReward = penaltyHistory[index].pointType.isReward
+        let isReward = penaltyHistory[index].isReward
 
         withAnimation(Self.animation) {
             penaltyHistory.remove(at: index)

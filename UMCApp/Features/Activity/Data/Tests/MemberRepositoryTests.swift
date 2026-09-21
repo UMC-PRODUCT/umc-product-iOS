@@ -423,7 +423,7 @@ struct MemberRepositoryListTests {
             points: [
                 Fixture.point(id: "1", pointType: "STUDY_LATE", point: -2,
                               createdAt: "2026-06-01T09:00:00.000Z"),
-                Fixture.point(id: "2", pointType: "BLOG_CHALLENGE", point: 3,
+                Fixture.point(id: "2", pointType: "CUSTOM", point: 3,
                               createdAt: "2026-06-02T09:00:00.000Z")
             ]
         )
@@ -437,11 +437,11 @@ struct MemberRepositoryListTests {
 
         #expect(member.penalty == 2)            // abs(-2)
         #expect(member.rewardPoints == 3)       // abs(3)
-        #expect(member.penaltyHistory.count == 1)
+        #expect(member.penaltyHistory.count == 2)
     }
 
-    @Test("fetchMembersPage — 벌점 항목이 없으면 검색 pointSum 을 폴백 벌점으로 사용한다")
-    func fetchMembersPageUsesFallbackPenalty() async throws {
+    @Test("fetchMembersPage — 기록 조회 성공 후 빈 포인트는 이전 합계를 0으로 초기화한다")
+    func fetchMembersPageClearsEmptyPoints() async throws {
         let page = Fixture.offsetPage(
             items: [Fixture.offsetItem(memberId: "100", pointSum: 5)]
         )
@@ -454,7 +454,7 @@ struct MemberRepositoryListTests {
         let result = try await sut.fetchMembersPage(page: 0)
         let member = try #require(result.members.first)
 
-        #expect(member.penalty == 5)
+        #expect(member.penalty == 0)
         #expect(member.penaltyHistory.isEmpty)
     }
 
@@ -728,6 +728,21 @@ struct MemberRepositoryPointMutationTests {
 @Suite("MemberRepository — 포인트 히스토리·기수 요약 (도메인 규칙)")
 struct MemberRepositoryHistoryTests {
 
+    @Test("CUSTOM 조회는 계산 부호와 표시 절댓값을 분리한다")
+    func customHistoryPreservesSign() async throws {
+        let profile = Fixture.challengerProfile(points: [
+            Fixture.point(id: "1", pointType: "CUSTOM", point: 3,
+                          createdAt: "2026-06-02T09:00:00.000Z"),
+            Fixture.point(id: "2", pointType: "CUSTOM", point: -2,
+                          createdAt: "2026-06-01T09:00:00.000Z")
+        ])
+        let (sut, _) = makeRepository(.success(Fixture.success(profile)))
+        let history = try await sut.fetchPointHistory(challengerId: "7")
+        #expect(history.map(\.signedPoint) == [3, -2])
+        #expect(history.map(\.penaltyScore) == [3, 2])
+        #expect(history.map(\.isReward) == [true, false])
+    }
+
     @Test("fetchPointHistory — WARNING 을 제외하고 최신순으로 매핑한다")
     func fetchPointHistoryExcludesWarningAndSorts() async throws {
         let profile = Fixture.challengerProfile(points: [
@@ -779,9 +794,9 @@ struct MemberRepositoryHistoryTests {
     @Test("fetchGenerationPointSummaries — 기수별 상/벌점을 분리해 오름차순 정렬한다")
     func fetchGenerationPointSummariesSplitsAndSorts() async throws {
         let record7 = Fixture.record(gisu: 7, points: [
-            Fixture.point(id: "1", pointType: "BLOG_CHALLENGE", point: 3,
+            Fixture.point(id: "1", pointType: "CUSTOM", point: 3,
                           createdAt: "2026-06-01T09:00:00.000Z"),
-            Fixture.point(id: "2", pointType: "STUDY_LATE", point: -2,
+            Fixture.point(id: "2", pointType: "CUSTOM", point: -2,
                           createdAt: "2026-06-01T09:00:00.000Z")
         ])
         let record8 = Fixture.record(gisu: 8, points: [

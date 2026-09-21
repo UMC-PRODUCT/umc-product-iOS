@@ -75,7 +75,7 @@ private final class DeleteRecorder: @unchecked Sendable {
 @Suite("OperatorMemberDetailSheetViewModel — 히스토리 동기화 (도메인 규칙)")
 struct OperatorMemberDetailSheetViewModelSyncTests {
 
-    @Test("syncState → pointType.isReward 기준으로 상/벌 합계 집계")
+    @Test("syncState → 히스토리 분류 기준으로 상/벌 합계 집계")
     func syncStateAggregatesFromHistory() {
         let reward = makeHistory(pointType: .bestWorkbook, penaltyScore: 2)
         let penalty = makeHistory(pointType: .studyLate, penaltyScore: 3)
@@ -99,20 +99,25 @@ struct OperatorMemberDetailSheetViewModelSyncTests {
         #expect(viewModel.totalPenalty == 0)
     }
 
-    // 도메인 모델 한계 박제(mistakes-log 사례 14): OperatorMemberPenaltyHistory 는 점수를
-    // 절대값으로만 보관하고 상/벌을 pointType.isReward 로만 판별한다. custom.isReward 는
-    // 항상 false 이므로 Custom '상점' 히스토리는 syncState round-trip 시 벌점으로 집계된다.
-    // 부호 보존은 도메인 모델(#900) 변경이 필요해 별도 티켓에서 다룬다.
-    @Test("Custom 히스토리 → pointType.isReward(false) 기준이라 벌점으로 집계됨(한계 박제)")
-    func syncStateCustomCountedAsPenalty() {
-        let custom = makeHistory(pointType: .custom, penaltyScore: 5)
+    @Test("CUSTOM 부호는 재조회와 삭제 후에도 같은 합계로 유지된다")
+    func signedCustomRoundTripAndDelete() async {
+        let reward = makeHistory(pointType: .custom, penaltyScore: 3)
+        let penalty = makeHistory(pointType: .custom, penaltyScore: -2)
         let viewModel = makeViewModel()
-
-        viewModel.syncState(from: makeMember(penaltyHistory: [custom]))
-
-        #expect(viewModel.totalPenalty == 5)
+        viewModel.syncState(from: makeMember(penaltyHistory: [reward, penalty]))
+        #expect(reward.isReward)
+        #expect(!penalty.isReward)
+        #expect(penalty.penaltyScore == 2)
+        #expect(viewModel.totalReward == 3)
+        #expect(viewModel.totalPenalty == 2)
+        await viewModel.deletePenalty(reward, canView: true)
         #expect(viewModel.totalReward == 0)
+        #expect(viewModel.totalPenalty == 2)
+        await viewModel.deletePenalty(penalty, canView: true)
+        #expect(viewModel.totalReward == 0)
+        #expect(viewModel.totalPenalty == 0)
     }
+
 }
 
 // MARK: - grantPoint
