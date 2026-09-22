@@ -33,23 +33,24 @@ WATCH_DESTINATION ?= generic/platform=watchOS Simulator
 MISE ?= mise
 TUIST := $(MISE) exec -- tuist
 
-# 빌드 번호 — 배포 브랜치(`release/3.0.0/99` · `testFlight/99`)의 끝 숫자를 그대로 쓴다.
+# 빌드 번호 — 배포 브랜치(`release/3.0.0/99` · `testflight/internal/3.0.0/99`)의
+# 끝 숫자를 그대로 쓴다.
 # 매니페스트(Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift)가 이 값을
 # CURRENT_PROJECT_VERSION 으로 읽으므로, 브랜치만 규칙대로 자르면 아카이브 전에 따로 넘길 게 없다.
 # 배포 브랜치가 아니면 빈 값 → 내보내지 않고 매니페스트 기본값 1(로컬 개발용)로 떨어진다.
 # `TUIST_BUILD_NUMBER=96 make generate` 로 직접 주면 그쪽이 우선한다(?= 라 덮어쓰지 않는다).
 # CI_BRANCH 는 Xcode Cloud 가 주는 값 — 거기선 HEAD 가 detached 라 git 으로는 브랜치명이 안 나온다.
 BRANCH := $(if $(CI_BRANCH),$(CI_BRANCH),$(shell git rev-parse --abbrev-ref HEAD 2>/dev/null))
-TUIST_BUILD_NUMBER ?= $(shell printf '%s' '$(BRANCH)' | sed -nE 's,^(release|testFlight)/([0-9.]+/)?([0-9]+)$$,\3,p')
+TUIST_BUILD_NUMBER ?= $(shell printf '%s' '$(BRANCH)' | sed -nE 's,^(release|testFlight|testflight/internal)/([0-9.]+/)?([0-9]+)$$,\3,p')
 #
-# 하한 99 — 레거시 AppProduct 가 App Store Connect 에 98 까지 올려 뒀다. 같은
-# MARKETING_VERSION(3.0.0) 안에서 번호가 겹치면 업로드가 거부되므로, UMCApp 배포는
-# 99 부터 쓴다. 브랜치명을 잘못 자르면 아카이브는 통과하고 업로드에서야 터지니
+# 하한 105 — 다음 배포 빌드 번호는 105부터다. 같은 MARKETING_VERSION 안에서 번호가
+# 겹치면 업로드가 거부되므로, 이전 배포 번호를 다시 쓰지 않는다. 브랜치명을 잘못 자르면
+# 아카이브는 통과하고 업로드에서야 터지니
 # (Xcode Cloud 면 러너 시간을 통째로 날린다) generate 시점에 먼저 막는다.
-MIN_BUILD_NUMBER := 99
+MIN_BUILD_NUMBER := 105
 ifneq ($(strip $(TUIST_BUILD_NUMBER)),)
 ifneq ($(shell [ "$(TUIST_BUILD_NUMBER)" -ge $(MIN_BUILD_NUMBER) ] 2>/dev/null && echo ok),ok)
-$(error 빌드 번호 $(TUIST_BUILD_NUMBER) 는 사용할 수 없다 — $(MIN_BUILD_NUMBER) 이상이어야 한다 (AppProduct 가 98 까지 사용). 배포 브랜치명을 확인하거나 TUIST_BUILD_NUMBER 를 직접 넘겨라)
+$(error 빌드 번호 $(TUIST_BUILD_NUMBER) 는 사용할 수 없다 — $(MIN_BUILD_NUMBER) 이상이어야 한다. 배포 브랜치명을 확인하거나 TUIST_BUILD_NUMBER 를 직접 넘겨라)
 endif
 export TUIST_BUILD_NUMBER
 endif
