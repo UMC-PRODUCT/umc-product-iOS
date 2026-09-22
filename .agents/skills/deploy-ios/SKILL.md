@@ -1,6 +1,6 @@
 ---
 name: deploy-ios
-description: Use when preparing a UMCApp TestFlight internal or App Store deployment, including release branches, build-number allocation, Xcode Cloud server routing, or archive verification.
+description: Use when preparing a UMCApp TestFlight external or App Store deployment, including release branches, build-number allocation, Xcode Cloud server routing, or archive verification.
 ---
 
 # Deploy iOS
@@ -12,7 +12,7 @@ Build a distinct archive for each backend environment. A branch is only a workfl
 
 | Target | Branch | Server | Xcode Cloud variable |
 | --- | --- | --- | --- |
-| Internal TestFlight | `testflight/internal/{version}/{build}` | dev | `USE_DEV_SERVER=1` |
+| External TestFlight | `testflight/external/{version}/{build}` | dev | `USE_DEV_SERVER=1` |
 | App Store release | `release/{version}/{build}` | prod | unset `USE_DEV_SERVER` |
 
 TestFlight and App Store uploads for the same marketing version must use different build
@@ -43,13 +43,13 @@ it is unused in App Store Connect before uploading.
 
 ## Xcode Cloud preflight
 
-`BASE_URL_DEBUG` and `BASE_URL_RELEASE` must be available to both workflows. The internal
-workflow alone must set `USE_DEV_SERVER=1`; the App Store workflow must not set it.
+`BASE_URL_DEBUG` and `BASE_URL_RELEASE` must be available to both workflows. The external
+TestFlight workflow must set `USE_DEV_SERVER=1`; the App Store workflow must not set it.
 The App Store workflow's TestFlight post-action distributes the same prod archive and is
 not a dev-server TestFlight deployment.
 
 The Makefile recognizes `release/{version}/{build}` and
-`testflight/internal/{version}/{build}`. Keep its branch parser aligned with these two
+`testflight/external/{version}/{build}`. Keep its branch parser aligned with these two
 contracts and verify it resolves the requested build number before pushing.
 
 ## Stop conditions
@@ -57,4 +57,4 @@ contracts and verify it resolves the requested build number before pushing.
 Stop and ask for direction when the target is ambiguous, the branch or build number is
 already used, the worktree is dirty, App Store Connect cannot confirm build availability,
 or the required Xcode Cloud environment variables are not configured. Never substitute a
-dev server for an App Store release or a prod archive for the internal-dev workflow.
+dev server for an App Store release or a prod archive for the external-dev workflow.

@@ -1,4 +1,4 @@
 interface:
   display_name: "iOS Deploy"
-  short_description: "Prepare TestFlight internal or App Store release branches"
-  default_prompt: "Use $deploy-ios to prepare an internal TestFlight or App Store deployment."
+  short_description: "Prepare TestFlight external or App Store release branches"
+  default_prompt: "Use $deploy-ios to prepare an external TestFlight or App Store deployment."
