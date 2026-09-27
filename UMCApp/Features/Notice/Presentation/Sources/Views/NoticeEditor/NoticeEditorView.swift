@@ -109,6 +109,7 @@ public struct NoticeEditorView: View {
                 dismiss: dismiss
             )
         }
+        .disabled(viewModel.createState.isLoading)
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.size.height
         } action: { newValue in
@@ -158,7 +159,7 @@ public struct NoticeEditorView: View {
             if viewModel.isVoteConfirmed {
                 NoticeEditorVoteSection(
                     formData: $viewModel.voteFormData,
-                    isEditMode: viewModel.isEditMode,
+                    isEditMode: viewModel.isVoteReadOnly,
                     onDelete: viewModel.deleteVote,
                     onEdit: viewModel.editVote
                 )
@@ -173,7 +174,7 @@ public struct NoticeEditorView: View {
     @ViewBuilder
     private func topSafeAreaContent() -> some View {
         if viewModel.selectedCategory.hasSubCategories
-            && !viewModel.isEditMode
+            && !viewModel.isTargetLocked
             && !viewModel.visibleSubCategories.isEmpty {
             NoticeEditorSubCategorySection(
                 subCategories: viewModel.visibleSubCategories,
@@ -193,7 +194,7 @@ public struct NoticeEditorView: View {
             HStack {
                 NoticeEditorAttachmentToolbar(
                     editorToolbarViewModel: viewModel.editorToolbarViewModel,
-                    isEditMode: viewModel.isEditMode,
+                    isEditMode: viewModel.isVoteReadOnly,
                     isAIButtonDisabled: viewModel.isAIProcessing
                         || viewModel.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                     isAISummaryButtonDisabled: viewModel.isAISummaryProcessing
@@ -218,7 +219,7 @@ public struct NoticeEditorView: View {
     /// 공지 생성/수정 화면 상단 툴바
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        if !viewModel.isEditMode {
+        if !viewModel.isTargetLocked {
             ToolBarCollection.ToolBarCenterMenu(
                 items: viewModel.availableCategories,
                 selection: categoryBinding,
@@ -253,7 +254,7 @@ public struct NoticeEditorView: View {
 
     /// 화면 타이틀
     private var navigationTitle: String {
-        if viewModel.isEditMode {
+        if viewModel.isTargetLocked {
             return "공지 수정"
         }
 
@@ -262,7 +263,7 @@ public struct NoticeEditorView: View {
 
     /// 메인 카테고리 서브타이틀
     private var navigationSubtitle: String {
-        if viewModel.isEditMode {
+        if viewModel.isTargetLocked {
             switch viewModel.selectedCategory {
             case .branch:
                 return normalizedName(from: chapterName, fallback: "지부")

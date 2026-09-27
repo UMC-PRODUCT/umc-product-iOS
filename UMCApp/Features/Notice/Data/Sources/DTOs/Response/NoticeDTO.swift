@@ -15,6 +15,7 @@ public struct NoticeDTO: Codable {
     public let id: String
     public let title: String
     public let content: String
+    public let mustRead: Bool
     public let shouldSendNotification: Bool
     public let viewCount: String
     public let createdAt: String
@@ -28,6 +29,7 @@ public struct NoticeDTO: Codable {
         case id
         case title
         case content
+        case mustRead
         case shouldSendNotification
         case viewCount
         case createdAt
@@ -44,6 +46,7 @@ public struct NoticeDTO: Codable {
         id = try container.decodeFlexibleString(forKey: .id)
         title = try container.decode(String.self, forKey: .title)
         content = try container.decode(String.self, forKey: .content)
+        mustRead = try container.decodeIfPresent(Bool.self, forKey: .mustRead) ?? false
         shouldSendNotification = try container.decodeIfPresent(Bool.self, forKey: .shouldSendNotification) ?? false
         viewCount = try container.decodeFlexibleString(forKey: .viewCount)
         createdAt = try container.decode(String.self, forKey: .createdAt)
@@ -53,6 +56,22 @@ public struct NoticeDTO: Codable {
         authorNickname = try container.decodeIfPresent(String.self, forKey: .authorNickname) ?? ""
         authorName = try container.decodeIfPresent(String.self, forKey: .authorName) ?? ""
     }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(content, forKey: .content)
+        try container.encode(mustRead, forKey: .mustRead)
+        try container.encode(shouldSendNotification, forKey: .shouldSendNotification)
+        try container.encode(viewCount, forKey: .viewCount)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(targetInfo, forKey: .targetInfo)
+        try container.encodeIfPresent(authorChallengerId, forKey: .authorChallengerId)
+        try container.encodeIfPresent(authorMemberId, forKey: .authorMemberId)
+        try container.encode(authorNickname, forKey: .authorNickname)
+        try container.encode(authorName, forKey: .authorName)
+    }
+
 }
 
 // MARK: - Mapping
@@ -72,7 +91,7 @@ extension NoticeDTO {
             generation: generation,
             scope: scope,
             category: category,
-            mustRead: false,
+            mustRead: mustRead,
             isAlert: shouldSendNotification,
             date: createdAt.toISO8601Date(),
             title: title,

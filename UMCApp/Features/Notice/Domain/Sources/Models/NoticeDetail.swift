@@ -164,7 +164,10 @@ public struct NoticeAttachmentImage: Equatable, Hashable, Identifiable {
     public let id: String
     public let url: String
     
-    public init(id: String, url: String) {
+    public let fileId: String?
+
+    public init(id: String, url: String, fileId: String? = nil) {
+        self.fileId = fileId
         self.id = id
         self.url = url
     }

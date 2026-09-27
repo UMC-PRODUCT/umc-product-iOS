@@ -121,11 +121,13 @@ public struct NoticeDetailVoteOptionDTO: Codable {
 /// 공지 첨부 이미지 단건 DTO
 public struct NoticeDetailImageDTO: Codable {
     public let id: String
+    public let fileId: String?
     public let url: String
     public let displayOrder: String
 
     private enum CodingKeys: String, CodingKey {
         case id
+        case fileId
         case url
         case displayOrder
     }
@@ -133,8 +135,16 @@ public struct NoticeDetailImageDTO: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decodeFlexibleString(forKey: .id)
+        self.fileId = try container.decodeIfPresent(String.self, forKey: .fileId)
         self.url = try container.decode(String.self, forKey: .url)
         self.displayOrder = try container.decodeFlexibleString(forKey: .displayOrder)
+    }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encodeIfPresent(fileId, forKey: .fileId)
+        try container.encode(url, forKey: .url)
+        try container.encode(displayOrder, forKey: .displayOrder)
     }
 }
 

@@ -264,7 +264,10 @@ public struct NoticeRepository: NoticeRepositoryProtocol {
     
     /// 공지사항 수정 (제목, 본문) → NoticeDetail 반환
     public func updateNotice(noticeId: String, title: String, content: String) async throws -> NoticeDetail {
-        let body = UpdateNoticeRequestDTO(title: title, content: content)
+        let current = try await getDetailNotice(noticeId: noticeId)
+        let body = UpdateNoticeRequestDTO(
+            title: title, content: content, mustRead: current.isMustRead
+        )
         let response = try await adapter.request(
             NoticeRouter.updateNotice(noticeId: noticeId, body: body)
         )

@@ -12,4 +12,5 @@ import NoticeDomain
 public struct UpdateNoticeRequestDTO: Encodable {
     public let title: String
     public let content: String
+    public let mustRead: Bool
 }

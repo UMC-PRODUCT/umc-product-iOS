@@ -58,7 +58,7 @@ public struct NoticeDetailDTO: Codable {
         case links
         case scope
         case category
-        case isMustRead
+        case isMustRead = "mustRead"
         case hasPermission
     }
 
@@ -85,14 +85,38 @@ public struct NoticeDetailDTO: Codable {
         authorProfileImageUrl = container.decodeFlexibleStringOrNil(forKey: .authorProfileImageUrl)
 
         vote = try? container.decodeIfPresent(NoticeDetailVoteDTO.self, forKey: .vote)
-        images = (try? container.decode([NoticeDetailImageDTO].self, forKey: .images)) ?? []
+        images = try container.decodeIfPresent([NoticeDetailImageDTO].self, forKey: .images) ?? []
         links = (try? container.decode([NoticeDetailLinkDTO].self, forKey: .links)) ?? []
 
         scope = container.decodeFlexibleStringOrNil(forKey: .scope)
         category = container.decodeFlexibleStringOrNil(forKey: .category)
-        isMustRead = try? container.decodeIfPresent(Bool.self, forKey: .isMustRead)
+        isMustRead = try container.decodeIfPresent(Bool.self, forKey: .isMustRead)
         hasPermission = try? container.decodeIfPresent(Bool.self, forKey: .hasPermission)
     }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(content, forKey: .content)
+        try container.encodeIfPresent(shouldSendNotification, forKey: .shouldSendNotification)
+        try container.encode(viewCount, forKey: .viewCount)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+        try container.encode(targetInfo, forKey: .targetInfo)
+        try container.encodeIfPresent(authorChallengerId, forKey: .authorChallengerId)
+        try container.encodeIfPresent(authorMemberId, forKey: .authorMemberId)
+        try container.encodeIfPresent(authorNickname, forKey: .authorNickname)
+        try container.encodeIfPresent(authorName, forKey: .authorName)
+        try container.encodeIfPresent(authorProfileImageUrl, forKey: .authorProfileImageUrl)
+        try container.encodeIfPresent(vote, forKey: .vote)
+        try container.encode(images, forKey: .images)
+        try container.encode(links, forKey: .links)
+        try container.encodeIfPresent(scope, forKey: .scope)
+        try container.encodeIfPresent(category, forKey: .category)
+        try container.encodeIfPresent(isMustRead, forKey: .isMustRead)
+        try container.encodeIfPresent(hasPermission, forKey: .hasPermission)
+    }
+
 }
 
 // MARK: - toDomain 변환
@@ -136,7 +160,7 @@ extension NoticeDetailDTO {
         let targetAudience = targetInfo.toTargetAudience(scope: noticeScope)
 
         let mappedVote = vote?.toDomain()
-        let mappedImages = images.map { NoticeAttachmentImage(id: $0.id, url: $0.url) }
+        let mappedImages = images.map { NoticeAttachmentImage(id: $0.id, url: $0.url, fileId: $0.fileId) }
         let imageURLs = mappedImages.map(\.url)
         let linkURLs = links.map(\.url)
         let resolvedAuthorName = resolvedAuthorName()
