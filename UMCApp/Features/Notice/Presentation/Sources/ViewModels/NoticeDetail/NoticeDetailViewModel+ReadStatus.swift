@@ -74,7 +74,7 @@ extension NoticeDetailViewModel {
 
         let nextReadCount = readCount + 1
         let nextUnreadCount = max(unreadCount - 1, 0)
-        let nextReadRate = Double(nextReadCount) / Double(totalCount)
+        let nextReadRate = Double(nextReadCount) / Double(totalCount) * 100
 
         readStatics = NoticeReadStatics(
             totalCount: String(totalCount),
@@ -92,17 +92,22 @@ extension NoticeDetailViewModel {
             readStatusState = .loading
         }
 
+        resetReadStatusPagination()
+        let revision = readStatusRevision
         do {
-            resetReadStatusPagination()
             if readStatics == nil {
                 isReadStaticsLoading = true
-                readStatics = try await noticeUseCase.getReadStatics(noticeId: noticeID)
+                let statistics = try await noticeUseCase.getReadStatics(noticeId: noticeID)
+                guard revision == readStatusRevision else { return }
+                readStatics = statistics
                 hasPrefetchedReadStatics = true
                 isReadStaticsLoading = false
             }
 
             let confirmedResponse = try await fetchReadStatusPage(cursorId: 0, status: .confirmed)
+            guard revision == readStatusRevision else { return }
             let unconfirmedResponse = try await fetchReadStatusPage(cursorId: 0, status: .unconfirmed)
+            guard revision == readStatusRevision else { return }
 
             let confirmedUsers = confirmedResponse.users
             let unconfirmedUsers = unconfirmedResponse.users
@@ -121,6 +126,7 @@ extension NoticeDetailViewModel {
             )
 
         } catch let error as RepositoryError {
+            guard revision == readStatusRevision else { return }
             isReadStaticsLoading = false
             readStatics = nil
             readStatusState = .failed(.repository(error))
@@ -129,6 +135,7 @@ extension NoticeDetailViewModel {
                 context: ErrorContext(feature: "Notice", action: "fetchReadStatus")
             )
         } catch let error as DomainError {
+            guard revision == readStatusRevision else { return }
             isReadStaticsLoading = false
             readStatics = nil
             readStatusState = .failed(.domain(error))
@@ -137,6 +144,7 @@ extension NoticeDetailViewModel {
                 context: ErrorContext(feature: "Notice", action: "fetchReadStatus")
             )
         } catch let error as NetworkError {
+            guard revision == readStatusRevision else { return }
             isReadStaticsLoading = false
             readStatics = nil
             readStatusState = .failed(.network(error))
@@ -145,6 +153,7 @@ extension NoticeDetailViewModel {
                 context: ErrorContext(feature: "Notice", action: "fetchReadStatus")
             )
         } catch {
+            guard revision == readStatusRevision else { return }
             isReadStaticsLoading = false
             readStatics = nil
             readStatusState = .failed(.unknown(message: error.localizedDescription))
@@ -169,16 +178,17 @@ extension NoticeDetailViewModel {
     /// 무한 스크롤 방식으로 리스트 끝 근처 아이템이 표시될 때 자동 호출됩니다.
     @MainActor
     public func loadMoreReadStatusIfNeeded(currentItem: ReadStatusUser) async {
-        guard var current = readStatusState.value else { return }
-        guard !isLoadingMoreReadStatus else { return }
-
-        let currentUsers = selectedReadTab == .confirmed
+        guard let current = readStatusState.value else { return }
+        let requestedTab = selectedReadTab
+        guard !loadingReadStatusTabs.contains(requestedTab) else { return }
+        let revision = readStatusRevision
+        let currentUsers = requestedTab == .confirmed
             ? current.confirmedUsers
             : current.unconfirmedUsers
         guard shouldLoadMore(currentItem: currentItem, in: currentUsers) else { return }
 
         // 탭별 다음 페이지 존재 여부 및 커서 유효성 확인
-        switch selectedReadTab {
+        switch requestedTab {
         case .confirmed:
             guard hasNextReadPage else { return }
             guard readNextCursor != nil else { return }
@@ -187,18 +197,22 @@ extension NoticeDetailViewModel {
             guard unreadNextCursor != nil else { return }
         }
 
-        isLoadingMoreReadStatus = true
-        defer { isLoadingMoreReadStatus = false }
+        loadingReadStatusTabs.insert(requestedTab)
+        defer {
+            if revision == readStatusRevision { loadingReadStatusTabs.remove(requestedTab) }
+        }
 
         do {
             let response = try await fetchReadStatusPage(
-                cursorId: selectedReadTab == .confirmed ? (readNextCursor ?? 0) : (unreadNextCursor ?? 0),
-                status: selectedReadTab
+                cursorId: requestedTab == .confirmed ? (readNextCursor ?? 0) : (unreadNextCursor ?? 0),
+                status: requestedTab
             )
 
+            guard revision == readStatusRevision,
+                  var current = readStatusState.value else { return }
             let appendedUsers = response.users
 
-            switch selectedReadTab {
+            switch requestedTab {
             case .confirmed:
                 let merged = current.confirmedUsers + appendedUsers
                 current = NoticeReadStatus(
@@ -221,12 +235,14 @@ extension NoticeDetailViewModel {
 
             readStatusState = .loaded(current)
         } catch let error as RepositoryError {
+            guard revision == readStatusRevision else { return }
             errorHandler.handle(
                 error,
                 context: ErrorContext(feature: "Notice", action: "loadMoreReadStatusIfNeeded")
             )
             // 페이징 실패는 기존 데이터를 유지합니다.
         } catch {
+            guard revision == readStatusRevision else { return }
             errorHandler.handle(
                 error,
                 context: ErrorContext(feature: "Notice", action: "loadMoreReadStatusIfNeeded")
@@ -258,11 +274,12 @@ extension NoticeDetailViewModel {
 
     /// 커서 페이지네이션 상태를 초기화합니다.
     public func resetReadStatusPagination() {
+        readStatusRevision += 1
         readNextCursor = nil
         unreadNextCursor = nil
         hasNextReadPage = false
         hasNextUnreadPage = false
-        isLoadingMoreReadStatus = false
+        loadingReadStatusTabs.removeAll()
     }
 
     /// 무한 스크롤 트리거 여부를 판단합니다.

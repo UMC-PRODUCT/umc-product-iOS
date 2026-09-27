@@ -46,18 +46,14 @@ public struct NoticeReadStatusPermissionEvaluator {
             return true
         }
 
-        if let targetChapterId = targetAudience.chapterId {
-            guard let userChapterId, !userChapterId.isEmpty else { return false }
-            return roleSet.contains(.chapterPresident) && userChapterId == targetChapterId
-        }
-
         if let targetSchoolId = targetAudience.schoolId {
             guard let userSchoolId, !userSchoolId.isEmpty else { return false }
             return !roleSet.isDisjoint(with: schoolAdminRoles) && userSchoolId == targetSchoolId
         }
 
-        guard !targetAudience.generation.isEmpty && targetAudience.generation != "0" else {
-            return false
+        if let targetChapterId = targetAudience.chapterId {
+            guard let userChapterId, !userChapterId.isEmpty else { return false }
+            return roleSet.contains(.chapterPresident) && userChapterId == targetChapterId
         }
 
         return !roleSet.isDisjoint(with: centralOperationRoles)

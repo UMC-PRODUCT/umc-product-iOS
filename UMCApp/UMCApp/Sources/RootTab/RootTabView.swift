@@ -21,6 +21,7 @@ import HomePresentation
 import MaintenanceDomain
 import MaintenancePresentation
 import MyPagePresentation
+import NoticeDomain
 import NoticePresentation
 import ProjectPresentation
 import UMCFoundation
@@ -41,6 +42,7 @@ struct RootTabView: View {
     // MARK: - Property
 
     @State private var pathStore = PathStore()
+    @State private var noticeLinkTask: Task<Void, Never>?
 
     /// 딥링크로 받은 명함 링크. 수신 모디파이어가 처리 후 비운다.
     @State private var pendingCardLink: CardLink?
@@ -52,6 +54,7 @@ struct RootTabView: View {
     @State private var focusedAttendanceScheduleId: String?
 
     @Environment(\.di) private var di
+    @Environment(ErrorHandler.self) private var errorHandler
     @Environment(DeepLinkStore.self) private var deepLinkStore
     @Environment(\.scenePhase) private var scenePhase
 
@@ -79,6 +82,7 @@ struct RootTabView: View {
         // 앱이 켜져 있는 동안 도착한 링크와, 로그인 화면에 머무는 사이 밀려 있던 링크를
         // 같은 함수로 받는다. 후자는 이 뷰가 처음 뜨는 시점에 한 번 꺼내면 된다.
         .task { consumePendingDeepLink() }
+        .onDisappear { noticeLinkTask?.cancel() }
         .onChange(of: deepLinkStore.pending) { _, _ in consumePendingDeepLink() }
         // 출석 Live Activity 는 포그라운드에서만 시작·갱신할 수 있다. 백그라운드로 가면
         // id 가 바뀌며 Task 가 취소되고, 그 사이 단계 전환은 위젯의 staleDate 가 맡는다.
@@ -286,10 +290,10 @@ struct RootTabView: View {
     /// 출석 링크는 push 없이 활동 탭으로 옮기고 해당 세션 카드를 펼치는 것으로 끝난다 —
     /// 출석 화면은 탭 루트라 밀어 넣을 목적지가 따로 없다.
     ///
-    /// - Note: 공지 링크(`umc://notice/{id}`)는 딥링크로 들어오지 않는다. 메시지 안의 링크
-    ///   카드로만 열리고, 그 경로는 `CommunityFeatureView` 가 맡는다.
     private func consumePendingDeepLink() {
-        switch deepLinkStore.take() {
+        guard let link = deepLinkStore.take() else { return }
+        noticeLinkTask?.cancel()
+        switch link {
         case .message(.thread(let threadId)):
             pathStore.selectedTab = .community
             pathStore.push(
@@ -307,9 +311,34 @@ struct RootTabView: View {
             pathStore.selectedTab = .activity
             focusedAttendanceScheduleId = link.scheduleId
 
-        case .message(.notice), .none:
-            return
+        case .message(.notice(let noticeId)):
+            noticeLinkTask = Task {
+                do {
+                    let useCase = di.resolve(NoticeUseCaseProtocol.self)
+                    try await Self.openNoticeLink(
+                        pathStore: pathStore,
+                        load: { try await useCase.getDetailNotice(noticeId: noticeId) }
+                    )
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    errorHandler.handle(
+                        error,
+                        context: ErrorContext(feature: "Notice", action: "openNoticeLink")
+                    )
+                }
+            }
         }
+    }
+
+    static func openNoticeLink(
+        pathStore: PathStore,
+        load: () async throws -> NoticeDetail
+    ) async throws {
+        let notice = try await load()
+        try Task.checkCancellation()
+        pathStore.selectedTab = .notice
+        pathStore[.notice] = NavigationPath()
+        pathStore.push(NavigationDestination.notice(.detail(detailItem: notice)), on: .notice)
     }
 
     /// 탭별 독립 `NavigationStack` path 바인딩을 `PathStore`에 위임한다.
