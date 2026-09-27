@@ -67,8 +67,21 @@ extension NoticeEditorViewModel {
             }
             if shouldSendVoteRequest {
                 let latest = try await noticeUseCase.getDetailNotice(noticeId: notice.id)
-                if latest.vote == nil {
+                if let vote = latest.vote {
+                    hasSavedVote = true
+                    guard vote.question == voteFormData.title.trimmingCharacters(in: .whitespacesAndNewlines),
+                          vote.options.map(\.title) == sanitizedVoteOptions(),
+                          vote.isAnonymous == voteFormData.isAnonymous,
+                          vote.allowMultipleChoices == voteFormData.allowMultipleSelection,
+                          Int(vote.startDate.timeIntervalSince1970)
+                            == Int(voteFormData.startDate.timeIntervalSince1970),
+                          Int(vote.endDate.timeIntervalSince1970)
+                            == Int(voteFormData.endDate.timeIntervalSince1970) else {
+                        throw DomainError.custom(message: "이미 게시된 투표는 수정할 수 없습니다.")
+                    }
+                } else {
                     _ = try await createVote(noticeId: notice.id)
+                    hasSavedVote = true
                 }
             } else if notice.vote != nil {
                 try await noticeUseCase.deleteVote(noticeId: notice.id)
@@ -97,7 +110,8 @@ extension NoticeEditorViewModel {
             alertPrompt = AlertPrompt(
                 title: "공지 일부 저장됨",
                 message: "공지는 생성되었지만 저장을 완료하지 못했습니다. "
-                    + "대상과 알림 설정은 변경할 수 없습니다. 다시 저장하면 같은 공지에 이어서 반영합니다.",
+                    + "대상과 알림 설정은 변경할 수 없습니다. 다시 저장하면 같은 공지에 이어서 반영합니다. "
+                    + (createState.error?.userMessage ?? ""),
                 positiveBtnTitle: "확인"
             )
         }
@@ -308,6 +322,7 @@ extension NoticeEditorViewModel {
     /// 에디터 폼 상태를 초기값으로 리셋합니다.
     public func resetForm() {
         pendingCreatedNotice = nil
+        hasSavedVote = false
         title = ""
         content = ""
         noticeImages = []

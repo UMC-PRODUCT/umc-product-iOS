@@ -57,7 +57,10 @@ private final class WriteUseCase: NoticeUseCaseProtocol {
         voteCount += 1
         if persistVoteBeforeFailure {
             storedVote = NoticeVote(
-                id: "vote", question: title, options: [], startDate: startsAt,
+                id: "vote", question: title,
+                options: options.enumerated().map {
+                    VoteOption(id: String($0.offset), title: $0.element, voteCount: "0")
+                }, startDate: startsAt,
                 endDate: endsAtExclusive, allowMultipleChoices: allowMultipleChoice,
                 isAnonymous: isAnonymous, userVotedOptionIds: []
             )
@@ -167,9 +170,11 @@ struct NoticeEditorWriteTests {
         editor.voteFormData.options = [VoteOptionItem(text: "A"), VoteOptionItem(text: "B")]
         await editor.createNewNotice()
         #expect(editor.pendingCreatedNotice?.id == "42")
+        #expect(!editor.isVoteReadOnly)
         await editor.createNewNotice()
         #expect(useCase.createCount == 1)
         #expect(useCase.voteCount == 2)
+        #expect(!editor.isEditMode)
     }
 
     @Test func imageFailureRetriesSameNotice() async {
@@ -180,7 +185,8 @@ struct NoticeEditorWriteTests {
         editor.noticeImages = [NoticeImageItem(isLoading: false, fileId: fileId)]
         await editor.createNewNotice()
         #expect(editor.pendingCreatedNotice?.id == "42")
-        #expect(editor.isEditMode)
+        #expect(editor.isTargetLocked)
+        #expect(!editor.isEditMode)
         await editor.createNewNotice()
         #expect(useCase.createCount == 1)
         #expect(useCase.imageUpdates == [[fileId], [fileId]])
@@ -198,6 +204,25 @@ struct NoticeEditorWriteTests {
         await editor.createNewNotice()
         #expect(useCase.createCount == 1)
         #expect(useCase.voteCount == 1)
+        #expect(editor.createState.value?.id == "42")
+    }
+
+    @Test func changedDraftDoesNotSilentlyReplacePublishedVote() async {
+        let useCase = WriteUseCase()
+        useCase.failVote = true
+        useCase.persistVoteBeforeFailure = true
+        let editor = makeEditor(useCase)
+        editor.isVoteConfirmed = true
+        editor.voteFormData.title = "vote"
+        editor.voteFormData.options = [VoteOptionItem(text: "A"), VoteOptionItem(text: "B")]
+        await editor.createNewNotice()
+        editor.voteFormData.title = "changed"
+        await editor.createNewNotice()
+        #expect(useCase.createCount == 1)
+        #expect(useCase.voteCount == 1)
+        #expect(editor.createState.value == nil)
+        #expect(editor.isVoteReadOnly)
+        #expect(editor.voteFormData.title == "changed")
     }
 
     @Test func repeatedPhotoSelectionStopsAtTen() async {

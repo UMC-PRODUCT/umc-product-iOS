@@ -100,6 +100,7 @@ public final class NoticeEditorViewModel {
     /// 동일 타입 extension에서도 상태 전환이 가능하도록 setter를 내부 공개합니다.
     public var createState: Loadable<NoticeDetail> = .idle
     var pendingCreatedNotice: NoticeDetail?
+    var hasSavedVote = false
     static let maximumImageCount = 10
 
     /// 선택된 메인 카테고리
@@ -240,7 +241,15 @@ public final class NoticeEditorViewModel {
     /// 수정 모드 여부
     public var isEditMode: Bool {
         if case .edit = mode { return true }
-        return pendingCreatedNotice != nil
+        return false
+    }
+
+    public var isVoteReadOnly: Bool {
+        isEditMode || hasSavedVote
+    }
+
+    public var isTargetLocked: Bool {
+        isEditMode || pendingCreatedNotice != nil
     }
 
     /// 저장 가능 여부
