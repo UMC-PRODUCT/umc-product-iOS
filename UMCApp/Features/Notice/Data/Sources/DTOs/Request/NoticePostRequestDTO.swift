@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NoticeDomain
 import UMCFoundation
 
 // MARK: - Post Notice
@@ -76,36 +77,52 @@ public struct TargetInfoDTO: Codable {
     public let targetChapterId: Int?
     public let targetSchoolId: Int?
     public let targetParts: [UMCPartType]?
+    public let targetNoticeTab: String
 
     private enum CodingKeys: String, CodingKey {
         case targetGisuId
         case targetChapterId
         case targetSchoolId
         case targetParts
+        case targetNoticeTab
     }
 
     public init(
         targetGisuId: Int,
         targetChapterId: Int?,
         targetSchoolId: Int?,
-        targetParts: UMCPartType?
+        targetParts: UMCPartType?,
+        targetNoticeTab: String
     ) {
         self.targetGisuId = targetGisuId
         self.targetChapterId = targetChapterId
         self.targetSchoolId = targetSchoolId
         self.targetParts = targetParts.map { [$0] }
+        self.targetNoticeTab = targetNoticeTab
+    }
+
+    public init(targetInfo: NoticeTargetInfo) {
+        self.init(
+            targetGisuId: Int(targetInfo.gisuId) ?? 0,
+            targetChapterId: targetInfo.chapterId.flatMap(Int.init),
+            targetSchoolId: targetInfo.schoolId.flatMap(Int.init),
+            targetParts: targetInfo.parts,
+            targetNoticeTab: targetInfo.noticeTab ?? ManagementTeam.challenger.rawValue
+        )
     }
 
     public init(
         targetGisuId: Int,
         targetChapterId: Int?,
         targetSchoolId: Int?,
-        targetParts: [UMCPartType]?
+        targetParts: [UMCPartType]?,
+        targetNoticeTab: String
     ) {
         self.targetGisuId = targetGisuId
         self.targetChapterId = targetChapterId
         self.targetSchoolId = targetSchoolId
         self.targetParts = targetParts
+        self.targetNoticeTab = targetNoticeTab
     }
 
     public init(from decoder: Decoder) throws {
@@ -114,6 +131,7 @@ public struct TargetInfoDTO: Codable {
         self.targetChapterId = try container.decodeIntFlexibleIfPresent(forKey: .targetChapterId)
         self.targetSchoolId = try container.decodeIntFlexibleIfPresent(forKey: .targetSchoolId)
         self.targetParts = try container.decodeIfPresent([UMCPartType].self, forKey: .targetParts)
+        self.targetNoticeTab = try container.decode(String.self, forKey: .targetNoticeTab)
     }
 
     /// 공지 생성/수정 요청 인코딩 시 null 규칙을 맞춥니다.
@@ -136,6 +154,6 @@ public struct TargetInfoDTO: Codable {
         } else {
             try container.encodeNil(forKey: .targetParts)
         }
+        try container.encode(targetNoticeTab, forKey: .targetNoticeTab)
     }
 }
-
