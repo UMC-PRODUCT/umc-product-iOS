@@ -22,6 +22,10 @@ public final class NoticeEditorTargetUseCase: NoticeEditorTargetUseCaseProtocol 
 
     // MARK: - NoticeEditorTargetUseCaseProtocol
 
+    public func fetchSelectableParts() async throws -> [NoticeSelectablePart] {
+        try await repository.fetchSelectableParts()
+    }
+
     public func fetchAllBranches() async throws -> [NoticeTargetOption] {
         try await repository.fetchAllBranches()
     }

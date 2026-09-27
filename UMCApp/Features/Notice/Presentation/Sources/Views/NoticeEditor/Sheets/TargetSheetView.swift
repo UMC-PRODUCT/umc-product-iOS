@@ -19,6 +19,7 @@ struct TargetSheetView: View {
     let sheetType: TargetSheetType
     @Environment(\.dismiss) private var dismiss
     @State private var isRetryingTargetOptions: Bool = false
+    @State private var isRetryingPartOptions: Bool = false
 
     // MARK: - Constants
 
@@ -60,7 +61,11 @@ struct TargetSheetView: View {
             .navigation(naviTitle: navigationTitle, displayMode: .inline)
             .navigationSubtitle(navigationSubtitle)
             .task {
-                if case .idle = viewModel.targetOptionsState {
+                if sheetType == .part {
+                    if case .idle = viewModel.partOptionsState {
+                        await viewModel.loadPartOptions()
+                    }
+                } else if case .idle = viewModel.targetOptionsState {
                     await viewModel.loadTargetOptions()
                 }
             }
@@ -72,6 +77,15 @@ struct TargetSheetView: View {
     /// 선택된 시트 타입에 맞는 필터 섹션을 반환합니다.
     @ViewBuilder
     private var statefulSheetContent: some View {
+        if sheetType == .part {
+            partStatefulContent
+        } else {
+            targetStatefulContent
+        }
+    }
+
+    @ViewBuilder
+    private var targetStatefulContent: some View {
         switch viewModel.targetOptionsState {
         case .idle, .loading:
             Progress(message: "대상 목록을 불러오고 있어요")
@@ -95,11 +109,38 @@ struct TargetSheetView: View {
     }
 
     @ViewBuilder
+    private var partStatefulContent: some View {
+        switch viewModel.partOptionsState {
+        case .idle, .loading:
+            Progress(message: "파트 목록을 불러오고 있어요")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .loaded(let parts):
+            partFilterSection(parts)
+        case .failed:
+            RetryContentUnavailableView(
+                title: "파트 목록을 불러오지 못했습니다.",
+                systemImage: "exclamationmark.triangle",
+                description: "일시적인 오류가 발생했습니다. 다시 시도해주세요.",
+                retryTitle: "다시 시도",
+                isRetrying: isRetryingPartOptions,
+                minRetryButtonWidth: Constants.retryButtonWidth,
+                minRetryButtonHeight: Constants.retryButtonHeight
+            ) {
+                guard !isRetryingPartOptions else { return }
+                isRetryingPartOptions = true
+                await viewModel.loadPartOptions()
+                isRetryingPartOptions = false
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    @ViewBuilder
     private var sheetContent: some View {
         Group {
             switch sheetType {
             case .part:
-                partFilterSection
+                EmptyView()
             case .branch:
                 branchFilterSection
             case .school:
@@ -155,15 +196,15 @@ struct TargetSheetView: View {
     }
     
     /// 파트 대상 선택 섹션
-    private var partFilterSection: some View {
+    private func partFilterSection(_ parts: [NoticeSelectablePart]) -> some View {
         selectionSection {
             FlowLayout(spacing: Constants.chipSpacing) {
-                ForEach(NoticePart.allCases) { part in
+                ForEach(parts) { option in
                     ChipButton(
-                        part.displayName,
-                        isSelected: viewModel.isPartSelected(part.umcPartType)
+                        option.displayName,
+                        isSelected: viewModel.isPartSelected(option.part.umcPartType)
                     ) {
-                        viewModel.togglePart(part.umcPartType)
+                        viewModel.togglePart(option.part.umcPartType)
                     }
                     .buttonSize(.medium)
                 }

@@ -9,6 +9,7 @@ import Foundation
 
 /// 공지 에디터 타겟(지부/학교) 조회 Repository 인터페이스
 public protocol NoticeEditorTargetRepositoryProtocol {
+    func fetchSelectableParts() async throws -> [NoticeSelectablePart]
     /// 전체 지부 목록을 조회합니다.
     func fetchAllBranches() async throws -> [NoticeTargetOption]
     /// 특정 기수에 속한 지부 목록을 조회합니다.

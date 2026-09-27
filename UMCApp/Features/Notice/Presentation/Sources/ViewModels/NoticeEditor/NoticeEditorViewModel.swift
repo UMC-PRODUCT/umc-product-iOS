@@ -124,6 +124,8 @@ public final class NoticeEditorViewModel {
     /// 학교 선택 시트 목록
     public var schoolOptions: [NoticeTargetOption] = []
 
+    public var partOptionsState: Loadable<[NoticeSelectablePart]> = .idle
+
     /// 타겟(지부/학교/파트) 시트 데이터 로딩 상태
     public var targetOptionsState: Loadable<Bool> = .idle
 

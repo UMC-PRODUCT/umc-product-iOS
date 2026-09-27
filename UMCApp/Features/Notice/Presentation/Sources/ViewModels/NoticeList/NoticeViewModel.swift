@@ -71,6 +71,7 @@ final class NoticeViewModel {
 
     /// 공지 데이터 (Loadable)
     var noticeItems: Loadable<[NoticeItemModel]> = .idle
+    var partOptionsState: Loadable<[NoticeSelectablePart]> = .idle
     /// 첫 페이지 목록/검색 조회 중복 방지 플래그
     var isFetchingFirstPage: Bool = false
 
@@ -121,6 +122,14 @@ final class NoticeViewModel {
         currentState.state(for: MainFilterKey(from: selectedMainFilter))
     }
 
+    var selectedMainFilterTitle: String {
+        guard case .part(let part) = selectedMainFilter else {
+            return selectedMainFilter.labelText
+        }
+        return partFilterItems.first(where: { $0.part == part })?.displayName
+            ?? part.displayName
+    }
+
     /// 현재 선택된 서브필터
     var selectedSubFilter: NoticeSubFilterType {
         currentMainFilterState.subFilter
@@ -158,8 +167,25 @@ final class NoticeViewModel {
     }
 
     /// 파트 Nested Menu 항목
-    var partFilterItems: [NoticePart] {
-        canSelectPartFilter ? NoticePart.allCases : []
+    var partFilterItems: [NoticeSelectablePart] {
+        guard canSelectPartFilter, case .loaded(let parts) = partOptionsState else { return [] }
+        return parts
+    }
+
+    @MainActor
+    func loadPartOptions() async {
+        partOptionsState = .loading
+        do {
+            partOptionsState = .loaded(try await noticeEditorTargetUseCase.fetchSelectableParts())
+        } catch let error as DomainError {
+            partOptionsState = .failed(.domain(error))
+        } catch let error as NetworkError {
+            partOptionsState = .failed(.network(error))
+        } catch let error as RepositoryError {
+            partOptionsState = .failed(.repository(error))
+        } catch {
+            partOptionsState = .failed(.unknown(message: error.localizedDescription))
+        }
     }
 
     /// 현재 메인필터에 따라 노출할 하단 서브필터 칩 목록을 반환합니다.
