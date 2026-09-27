@@ -117,10 +117,16 @@ public final class NoticeDetailViewModel {
     public var hasNextUnreadPage: Bool = false
 
     /// 페이지네이션 진행 상태
-    public var isLoadingMoreReadStatus: Bool = false
+    public var isLoadingMoreReadStatus: Bool {
+        loadingReadStatusTabs.contains(selectedReadTab)
+    }
+
+    var loadingReadStatusTabs: Set<ReadStatusTab> = []
 
     /// 열람 현황 재시도 진행 상태 (실패 화면의 버튼 내부 로딩 표시용)
     public var isRetryingReadStatus: Bool = false
+
+    var readStatusRevision = 0
 
     /// 선택된 탭 (확인/미확인)
     public var selectedReadTab: ReadStatusTab = .confirmed
@@ -144,10 +150,10 @@ public final class NoticeDetailViewModel {
 
     // MARK: - Permission State
 
-    /// 공지 수정 가능 여부 (WRITE/MANAGE)
+    /// 공지 수정 가능 여부 (EDIT)
     public var canEditNotice: Bool = false
 
-    /// 공지 삭제 가능 여부 (DELETE/MANAGE)
+    /// 공지 삭제 가능 여부 (DELETE)
     public var canDeleteNotice: Bool = false
 
     /// 수정 화면 진입에 필요한 상세 데이터 준비 완료 여부
@@ -429,10 +435,6 @@ private extension NoticeDetailViewModel {
     static func normalizedReadRate(from rawValue: String) -> Double {
         let parsedRate = Double(rawValue) ?? 0
 
-        if parsedRate > 1 {
-            return min(max(parsedRate / 100, 0), 1)
-        }
-
-        return min(max(parsedRate, 0), 1)
+        return min(max(parsedRate / 100, 0), 1)
     }
 }

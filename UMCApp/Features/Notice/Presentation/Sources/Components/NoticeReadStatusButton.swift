@@ -50,11 +50,11 @@ public struct NoticeReadStatusButton: View {
         return Double(confirmedCount) / Double(totalCount)
     }
     
-    private var progressText: String {
+    var progressText: String {
         if isLoading {
             return "불러오는 중..."
         }
-        let percentage = Int(progress * 100)
+        let percentage = (progress * 100).formatted(.number.precision(.fractionLength(0...2)))
         return "\(confirmedCount)/\(totalCount)명 (\(percentage)%)"
     }
 

@@ -200,40 +200,36 @@ extension NoticeDetailViewModel {
                 resourceType: .notice,
                 resourceId: noticeID
             )
-            canEditNotice = permission.hasAny([.write, .edit, .manage])
-            canDeleteNotice = permission.hasAny([.delete, .manage])
+            canEditNotice = permission.has(.edit)
+            canDeleteNotice = permission.has(.delete)
         } catch let error as RepositoryError {
             errorHandler.handle(
                 error,
                 context: ErrorContext(feature: "Notice", action: "fetchNoticePermission")
             )
-            let fallback = noticeState.value?.hasPermission ?? false
-            canEditNotice = fallback
-            canDeleteNotice = fallback
+            canEditNotice = false
+            canDeleteNotice = false
         } catch let error as DomainError {
             errorHandler.handle(
                 error,
                 context: ErrorContext(feature: "Notice", action: "fetchNoticePermission")
             )
-            let fallback = noticeState.value?.hasPermission ?? false
-            canEditNotice = fallback
-            canDeleteNotice = fallback
+            canEditNotice = false
+            canDeleteNotice = false
         } catch let error as NetworkError {
             errorHandler.handle(
                 error,
                 context: ErrorContext(feature: "Notice", action: "fetchNoticePermission")
             )
-            let fallback = noticeState.value?.hasPermission ?? false
-            canEditNotice = fallback
-            canDeleteNotice = fallback
+            canEditNotice = false
+            canDeleteNotice = false
         } catch {
             errorHandler.handle(
                 error,
                 context: ErrorContext(feature: "Notice", action: "fetchNoticePermission")
             )
-            let fallback = noticeState.value?.hasPermission ?? false
-            canEditNotice = fallback
-            canDeleteNotice = fallback
+            canEditNotice = false
+            canDeleteNotice = false
         }
     }
 
