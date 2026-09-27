@@ -30,6 +30,23 @@ public struct NoticeEditorTargetRepository: NoticeEditorTargetRepositoryProtocol
 
     // MARK: - NoticeEditorTargetRepositoryProtocol
 
+    public func fetchSelectableParts() async throws -> [NoticeSelectablePart] {
+        let response = try await adapter.request(NoticeEditorTargetRouter.getSelectableParts)
+        let apiResponse = try decoder.decode(
+            APIResponse<[NoticeSelectablePartDTO]>.self,
+            from: response.data
+        )
+        return try apiResponse.unwrap().map { item in
+            guard let part = NoticeSelectablePart(name: item.name, displayName: item.displayName) else {
+                throw DecodingError.dataCorrupted(.init(
+                    codingPath: [],
+                    debugDescription: "Unknown selectable part: \(item.name)"
+                ))
+            }
+            return part
+        }
+    }
+
     /// 전체 지부 목록 조회 API를 호출하고 지부명 배열을 반환합니다.
     public func fetchAllBranches() async throws -> [NoticeTargetOption] {
         let response = try await adapter.request(NoticeEditorTargetRouter.getAllChapters)

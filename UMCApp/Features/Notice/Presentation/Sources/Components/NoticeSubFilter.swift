@@ -19,6 +19,7 @@ public struct NoticeSubFilter: View, Equatable {
     public static func == (lhs: NoticeSubFilter, rhs: NoticeSubFilter) -> Bool {
         lhs.viewModel.selectedSubFilter == rhs.viewModel.selectedSubFilter &&
         lhs.viewModel.selectedPart == rhs.viewModel.selectedPart &&
+        lhs.viewModel.partOptionsState == rhs.viewModel.partOptionsState &&
         lhs.viewModel.selectedMainFilter == rhs.viewModel.selectedMainFilter &&
         lhs.viewModel.subFilterChips == rhs.viewModel.subFilterChips
     }
@@ -128,7 +129,8 @@ private struct PartFilterMenu: View, Equatable {
     @Bindable var viewModel: NoticeViewModel
 
     static func == (lhs: PartFilterMenu, rhs: PartFilterMenu) -> Bool {
-        lhs.viewModel.selectedPart == rhs.viewModel.selectedPart
+        lhs.viewModel.selectedPart == rhs.viewModel.selectedPart &&
+        lhs.viewModel.partOptionsState == rhs.viewModel.partOptionsState
     }
 
     private enum Constants {
@@ -147,6 +149,16 @@ private struct PartFilterMenu: View, Equatable {
     var body: some View {
         Menu {
             partPicker
+            switch viewModel.partOptionsState {
+            case .idle, .loading:
+                Text("파트 목록을 불러오는 중")
+            case .failed:
+                Button("다시 시도") {
+                    Task { await viewModel.loadPartOptions() }
+                }
+            case .loaded:
+                EmptyView()
+            }
         } label: {
             menuLabel
         }
@@ -156,9 +168,9 @@ private struct PartFilterMenu: View, Equatable {
         Picker("파트 선택", selection: partBinding) {
             Label("파트", systemImage: "person.2.fill")
                 .tag(nil as NoticePart?)
-            ForEach(NoticePart.allCases) { part in
-                Label(part.displayName, systemImage: part.iconName)
-                    .tag(Optional(part))
+            ForEach(viewModel.partFilterItems) { option in
+                Label(option.displayName, systemImage: option.part.iconName)
+                    .tag(Optional(option.part))
             }
         }
         .pickerStyle(.inline)
@@ -172,7 +184,9 @@ private struct PartFilterMenu: View, Equatable {
         HStack(spacing: Constants.hstackSpacing) {
             Image(systemName: viewModel.selectedPart?.iconName ?? "person.2.fill")
                 .appFont(.subheadline)
-            Text(viewModel.selectedPart?.displayName ?? "파트")
+            Text(viewModel.selectedPart.flatMap { selected in
+                viewModel.partFilterItems.first(where: { $0.part == selected })?.displayName
+            } ?? "파트")
                 .appFont(.subheadline, weight: .semibold)
             Image(systemName: "chevron.down")
                 .font(.system(size: Constants.chevronSize))

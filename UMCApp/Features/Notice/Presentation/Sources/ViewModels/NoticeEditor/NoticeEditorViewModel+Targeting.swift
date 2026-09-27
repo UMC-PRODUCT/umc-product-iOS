@@ -57,6 +57,22 @@ extension NoticeEditorViewModel {
         errorHandler = handler
     }
 
+    @MainActor
+    public func loadPartOptions() async {
+        partOptionsState = .loading
+        do {
+            partOptionsState = .loaded(try await targetUseCase.fetchSelectableParts())
+        } catch let error as DomainError {
+            partOptionsState = .failed(.domain(error))
+        } catch let error as NetworkError {
+            partOptionsState = .failed(.network(error))
+        } catch let error as RepositoryError {
+            partOptionsState = .failed(.repository(error))
+        } catch {
+            partOptionsState = .failed(.unknown(message: error.localizedDescription))
+        }
+    }
+
     /// 현재 메인 카테고리에 맞는 타겟 목록을 조회합니다.
     @MainActor
     public func loadTargetOptions() async {

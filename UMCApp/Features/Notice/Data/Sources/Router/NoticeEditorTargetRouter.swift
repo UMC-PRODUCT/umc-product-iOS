@@ -15,6 +15,7 @@ public enum NoticeEditorTargetRouter: BaseTargetType {
     // MARK: - Case
 
     /// 전체 지부 목록 조회
+    case getSelectableParts
     case getAllChapters
     /// 전체 학교 목록 조회
     case getAllSchools
@@ -28,6 +29,8 @@ public enum NoticeEditorTargetRouter: BaseTargetType {
     /// API 경로
     public var path: String {
         switch self {
+        case .getSelectableParts:
+            return "/api/v1/parts"
         case .getAllChapters:
             return "/api/v1/chapters"
         case .getAllSchools:
@@ -42,7 +45,7 @@ public enum NoticeEditorTargetRouter: BaseTargetType {
     /// HTTP 메서드
     public var method: Moya.Method {
         switch self {
-        case .getAllChapters, .getAllSchools, .getChaptersWithSchools, .getChapter:
+        case .getSelectableParts, .getAllChapters, .getAllSchools, .getChaptersWithSchools, .getChapter:
             return .get
         }
     }
@@ -50,7 +53,7 @@ public enum NoticeEditorTargetRouter: BaseTargetType {
     /// 요청 파라미터 구성
     public var task: Task {
         switch self {
-        case .getAllChapters, .getAllSchools:
+        case .getSelectableParts, .getAllChapters, .getAllSchools:
             return .requestPlain
         case .getChaptersWithSchools(let gisuId):
             return .requestParameters(

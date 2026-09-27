@@ -78,7 +78,7 @@ public struct NoticeView: View {
         content
             .searchable(text: $search, prompt: Constants.searchPlaceholder)
             .searchToolbarBehavior(.minimize)
-            .navigationTitle(viewModel.selectedMainFilter.labelText)
+            .navigationTitle(viewModel.selectedMainFilterTitle)
             .onChange(of: search) { _, newValue in
                 handleSearchChanged(newValue)
             }
@@ -92,6 +92,9 @@ public struct NoticeView: View {
                 applyUserContext()
                 syncSelectedGisuIdForNoticeEditor()
                 viewModel.fetchGisuList()
+                if case .idle = viewModel.partOptionsState {
+                    await viewModel.loadPartOptions()
+                }
             }
             .onChange(of: viewModel.selectedGeneration) { _, _ in
                 syncSelectedGisuIdForNoticeEditor()
@@ -314,16 +317,26 @@ public struct NoticeView: View {
 
                 if viewModel.canSelectPartFilter {
                     Menu {
-                        ForEach(viewModel.partFilterItems) { part in
+                        ForEach(viewModel.partFilterItems) { option in
                             Button {
-                                viewModel.selectMainFilter(.part(part))
+                                viewModel.selectMainFilter(.part(option.part))
                                 #if DEBUG
-                                print("[Notice][MainFilter] part tapped: \(part.displayName)")
+                                print("[Notice][MainFilter] part tapped: \(option.displayName)")
                                 #endif
                             } label: {
-                                Label(part.displayName, systemImage: part.iconName)
+                                Label(option.displayName, systemImage: option.part.iconName)
                                     .font(.subheadline)
                             }
+                        }
+                        switch viewModel.partOptionsState {
+                        case .idle, .loading:
+                            Text("파트 목록을 불러오는 중")
+                        case .failed:
+                            Button("다시 시도") {
+                                Task { await viewModel.loadPartOptions() }
+                            }
+                        case .loaded:
+                            EmptyView()
                         }
                     } label: {
                         Label("파트", systemImage: "person.3.fill")
