@@ -94,34 +94,37 @@ extension NoticeViewModel {
         page: Int,
         requestAction: (NoticeListRequest) async throws -> NoticePage
     ) async {
+        guard !Task.isCancelled else { return }
         if page == 0 {
-            guard !isFetchingFirstPage else { return }
-            isFetchingFirstPage = true
+            requestID = UUID()
+            pagingState.reset()
         }
-        defer {
-            if page == 0 {
-                isFetchingFirstPage = false
-            }
-        }
+        let currentRequestID = requestID
 
         let previousState = noticeItems
         guard let gisuId = preparePagingAndResolveGisuId(page: page) else { return }
 
         do {
-            let request = buildNoticeListRequest(gisuId: gisuId, page: page)
+            let request = try buildNoticeListRequest(gisuId: gisuId, page: page)
             let response = try await requestAction(request)
-            try await applyPagedResponse(response, page: page)
+            try await applyPagedResponse(response, page: page, requestID: currentRequestID)
         } catch is CancellationError {
+            guard currentRequestID == requestID else { return }
             handleCancelledFetch(page: page, previousState: previousState)
         } catch let error as NSError where isRequestCancellation(error) {
+            guard currentRequestID == requestID else { return }
             handleCancelledFetch(page: page, previousState: previousState)
         } catch let error as RepositoryError {
+            guard currentRequestID == requestID else { return }
             handleFetchError(.repository(error), page: page, action: "fetchNotices", failure: error)
         } catch let error as DomainError {
+            guard currentRequestID == requestID else { return }
             handleFetchError(.domain(error), page: page, action: "fetchNotices", failure: error)
         } catch let error as NetworkError {
+            guard currentRequestID == requestID else { return }
             handleFetchError(.network(error), page: page, action: "fetchNotices", failure: error)
         } catch {
+            guard currentRequestID == requestID else { return }
             handleFetchError(
                 .unknown(message: error.localizedDescription),
                 page: page,
@@ -186,7 +189,10 @@ extension NoticeViewModel {
     ///   - response: 공지 페이징 응답 DTO
     ///   - page: 조회한 페이지 인덱스
     @MainActor
-    private func applyPagedResponse(_ response: NoticePage, page: Int) async throws {
+    private func applyPagedResponse(
+        _ response: NoticePage, page: Int, requestID: UUID
+    ) async throws {
+        guard requestID == self.requestID else { return }
         #if DEBUG
         print(
             "[NoticeViewModel] applyPagedResponse " +
@@ -228,6 +234,7 @@ extension NoticeViewModel {
         let branchNames = await resolveBranchNameOverrides(from: filteredItems)
         // 지부명 조회 중 취소된 요청의 결과가 목록에 커밋되지 않도록 차단
         try Task.checkCancellation()
+        guard requestID == self.requestID else { return }
 
         let readNoticeIDs = resolvedReadNoticeIDs()
         let items = filteredItems.map { item -> NoticeItemModel in
@@ -348,11 +355,9 @@ extension NoticeViewModel {
     }
 
     /// NoticeListRequest 생성
-    private func buildNoticeListRequest(gisuId: String, page: Int) -> NoticeListRequest {
-        let myChapterId: String? = chapterId.isEmpty || chapterId == "0"
-        ? nil : chapterId
-        let mySchoolId: String? = schoolId.isEmpty || schoolId == "0"
-        ? nil : schoolId
+    private func buildNoticeListRequest(gisuId: String, page: Int) throws -> NoticeListRequest {
+        let myChapterId = selectedGenerationChapterId
+        let mySchoolId = selectedGenerationSchoolId
         
         let requestChapterId: String?
         let requestSchoolId: String?
@@ -365,12 +370,18 @@ extension NoticeViewModel {
             requestPart = nil
         case .branch:
             // iOS-03 (지부 필터): gisuId + chapterId
+            guard !myChapterId.isEmpty, myChapterId != "0" else {
+                throw DomainError.custom(message: "선택한 기수의 지부 소속 정보가 없습니다.")
+            }
             requestChapterId = myChapterId
             requestSchoolId = nil
             requestPart = nil
         case .school:
             // iOS-02 (학교 필터): gisuId + schoolId
             requestChapterId = nil
+            guard !mySchoolId.isEmpty, mySchoolId != "0" else {
+                throw DomainError.custom(message: "선택한 기수의 학교 소속 정보가 없습니다.")
+            }
             requestSchoolId = mySchoolId
             requestPart = nil
         case .part(let filterPart):

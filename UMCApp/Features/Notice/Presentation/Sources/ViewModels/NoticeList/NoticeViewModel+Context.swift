@@ -135,6 +135,9 @@ extension NoticeViewModel {
         guard gisuPairs.contains(where: {
               $0.gen == generation.value && !$0.gisuId.isEmpty && $0.gisuId != "0"
           }) else { return }
+        requestID = UUID()
+        pagingState.reset()
+        noticeItems = .loading
         selectedGeneration = generation
         Task { @MainActor in
             await refreshSelectedGenerationContext(resetFilters: true)
@@ -144,6 +147,9 @@ extension NoticeViewModel {
     /// 메인필터 선택
     /// - Parameter filter: 선택된 메인 필터
     func selectMainFilter(_ filter: NoticeMainFilterType) {
+        requestID = UUID()
+        pagingState.reset()
+        noticeItems = .loading
         var state = currentState
         state.mainFilter = filter
         currentState = state
@@ -205,7 +211,9 @@ extension NoticeViewModel {
             )
         }
 
+        let generation = selectedGeneration
         await loadTargetStateForCurrentGeneration()
+        guard selectedGeneration == generation else { return }
         await fetchNotices()
     }
 
@@ -228,6 +236,7 @@ extension NoticeViewModel {
             return
         }
 
+        let generation = selectedGeneration.value
         async let branchesTask = try? noticeEditorTargetUseCase.fetchBranches(gisuId: gisuId)
         async let schoolsTask = try? noticeEditorTargetUseCase.fetchSchools(gisuId: gisuId)
 
@@ -235,7 +244,7 @@ extension NoticeViewModel {
         let schools = await schoolsTask ?? []
 
         branches.forEach { chapterNameCache[$0.id] = $0.name }
-        generationTargetStates[selectedGeneration.value] = NoticeGenerationTargetState(
+        generationTargetStates[generation] = NoticeGenerationTargetState(
             branches: branches,
             schools: schools
         )

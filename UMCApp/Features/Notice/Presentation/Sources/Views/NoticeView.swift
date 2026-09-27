@@ -98,7 +98,9 @@ public struct NoticeView: View {
             }
             .onChange(of: viewModel.selectedGeneration) { _, _ in
                 syncSelectedGisuIdForNoticeEditor()
+                resetSearch()
             }
+            .onChange(of: viewModel.selectedMainFilter) { _, _ in resetSearch() }
             .onChange(of: userContextSignature) { _, _ in
                 applyUserContext()
             }
@@ -120,8 +122,8 @@ public struct NoticeView: View {
             progressContent
         case .loaded(let noticeItem):
             noticeContent(noticeItem)
-        case .failed:
-            failedContent()
+        case .failed(let error):
+            failedContent(error: error)
         }
     }
     
@@ -169,11 +171,11 @@ public struct NoticeView: View {
     
     
     /// Failed - 데이터 로드 실패
-    private func failedContent() -> some View {
+    private func failedContent(error: AppError) -> some View {
         RetryContentUnavailableView(
             title: Constants.failedTitle,
             systemImage: Constants.failedSystemImage,
-            description: Constants.failedDescription,
+            description: error.userMessage,
             retryTitle: Constants.retryTitle,
             isRetrying: isRetryingNotices,
             minRetryButtonWidth: Constants.retryMinimumWidth,
@@ -227,6 +229,11 @@ public struct NoticeView: View {
 
     // MARK: - Search
     /// 검색어 변경 시 1초 디바운스 후 실시간 검색합니다.
+    private func resetSearch() {
+        searchTask?.cancel()
+        search = ""
+    }
+
     private func handleSearchChanged(_ newValue: String) {
         searchTask?.cancel()
         let keyword = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
