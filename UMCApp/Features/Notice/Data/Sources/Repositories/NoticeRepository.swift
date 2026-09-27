@@ -39,12 +39,7 @@ public struct NoticeRepository: NoticeRepositoryProtocol {
             title: title,
             content: content,
             shouldNotify: shouldNotify,
-            targetInfo: TargetInfoDTO(
-            targetGisuId: Int(targetInfo.gisuId) ?? 0,
-                targetChapterId: targetInfo.chapterId.flatMap(Int.init),
-                targetSchoolId: targetInfo.schoolId.flatMap(Int.init),
-                targetParts: targetInfo.parts
-            )
+            targetInfo: TargetInfoDTO(targetInfo: targetInfo)
         )
         
         let response = try await adapter.request(NoticeRouter.postNotice(body: body))
