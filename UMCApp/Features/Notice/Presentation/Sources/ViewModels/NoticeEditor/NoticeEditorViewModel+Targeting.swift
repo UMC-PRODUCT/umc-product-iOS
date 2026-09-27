@@ -346,7 +346,7 @@ extension NoticeEditorViewModel {
                     imageURL: $0.url,
                     uploadFileName: nil,
                     isLoading: false,
-                    fileId: $0.id
+                    fileId: $0.fileId
                 )
             }
         let imagesFromURLs = notice.images.map {

@@ -109,6 +109,7 @@ public struct NoticeEditorView: View {
                 dismiss: dismiss
             )
         }
+        .disabled(viewModel.createState.isLoading)
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.size.height
         } action: { newValue in

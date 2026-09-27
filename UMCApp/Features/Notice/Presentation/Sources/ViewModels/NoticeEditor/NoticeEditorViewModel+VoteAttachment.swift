@@ -105,6 +105,7 @@ extension NoticeEditorViewModel {
                 let sourceName = originalFileName(from: item)
                 let uploadFileName = normalizedJPEGFileName(sourceName, fallbackIndex: index)
 
+                guard noticeImages.count < Self.maximumImageCount else { break }
                 noticeImages.append(
                     NoticeImageItem(
                         imageData: jpegData,
@@ -128,6 +129,7 @@ extension NoticeEditorViewModel {
     @MainActor
     public func didLoadImages(images: [UIImage]) async {
         for image in images {
+            guard noticeImages.count < Self.maximumImageCount else { break }
             guard let imageData = image.jpegData(compressionQuality: 0.8) else { continue }
             noticeImages.append(
                 NoticeImageItem(

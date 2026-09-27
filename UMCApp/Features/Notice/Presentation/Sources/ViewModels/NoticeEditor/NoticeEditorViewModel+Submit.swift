@@ -34,6 +34,7 @@ extension NoticeEditorViewModel {
     /// 이미지 업로드 -> 공지 생성 -> 투표 첨부(선택) 순서로 진행됩니다.
     @MainActor
     public func createNewNotice() async {
+        guard !createState.isLoading else { return }
         createState = .loading
 
         do {
@@ -41,20 +42,39 @@ extension NoticeEditorViewModel {
             let targetInfo = buildTargetInfo()
             let links = sanitizedLinksForRequest()
 
-            let notice = try await noticeUseCase.createNotice(
-                title: title,
-                content: content,
-                shouldNotify: allowAlert,
-                targetInfo: targetInfo,
-                links: links,
-                imageIds: imageIds
-            )
+            let notice: NoticeDetail
+            if let pending = pendingCreatedNotice {
+                notice = try await noticeUseCase.updateNotice(
+                    noticeId: pending.id, title: title, content: content
+                )
+            } else {
+                notice = try await noticeUseCase.createNotice(
+                    title: title,
+                    content: content,
+                    shouldNotify: allowAlert,
+                    targetInfo: targetInfo,
+                    links: [],
+                    imageIds: []
+                )
+                pendingCreatedNotice = notice
+            }
 
+            if !links.isEmpty || !notice.links.isEmpty {
+                _ = try await noticeUseCase.updateLinks(noticeId: notice.id, links: links)
+            }
+            if !imageIds.isEmpty || !notice.images.isEmpty {
+                _ = try await noticeUseCase.updateImages(noticeId: notice.id, imageIds: imageIds)
+            }
             if shouldSendVoteRequest {
-                  _ = try await createVote(noticeId: notice.id)
-              }
+                let latest = try await noticeUseCase.getDetailNotice(noticeId: notice.id)
+                if latest.vote == nil {
+                    _ = try await createVote(noticeId: notice.id)
+                }
+            } else if notice.vote != nil {
+                try await noticeUseCase.deleteVote(noticeId: notice.id)
+            }
 
-            createState = .loaded(notice)
+            createState = .loaded(try await noticeUseCase.getDetailNotice(noticeId: notice.id))
             resetForm()
         } catch let error as DomainError {
             createState = .failed(.domain(error))
@@ -73,6 +93,14 @@ extension NoticeEditorViewModel {
             createState = .failed(.unknown(message: error.localizedDescription))
             handleError(error, action: "createNotice")
         }
+        if pendingCreatedNotice != nil {
+            alertPrompt = AlertPrompt(
+                title: "공지 일부 저장됨",
+                message: "공지는 생성되었지만 저장을 완료하지 못했습니다. "
+                    + "대상과 알림 설정은 변경할 수 없습니다. 다시 저장하면 같은 공지에 이어서 반영합니다.",
+                positiveBtnTitle: "확인"
+            )
+        }
     }
 
     /// 기존 공지사항을 수정합니다.
@@ -80,6 +108,7 @@ extension NoticeEditorViewModel {
     /// 변경된 필드(제목/내용, 링크, 이미지, 투표)만 선별적으로 API를 호출합니다.
     @MainActor
     public func updateExistingNotice(noticeId: String) async {
+        guard !createState.isLoading else { return }
         createState = .loading
 
         do {
@@ -278,6 +307,7 @@ extension NoticeEditorViewModel {
 
     /// 에디터 폼 상태를 초기값으로 리셋합니다.
     public func resetForm() {
+        pendingCreatedNotice = nil
         title = ""
         content = ""
         noticeImages = []
@@ -314,17 +344,12 @@ extension NoticeEditorViewModel {
 
     /// 이미지 전체 교체 변경 여부
     public var hasImageChanges: Bool {
-        let hasPendingNewImages = noticeImages.contains { $0.fileId == nil && $0.imageData != nil }
+        let hasPendingNewImages = noticeImages.contains { $0.imageData != nil }
         if hasPendingNewImages { return true }
 
-        // imageId가 없는 응답 케이스는 URL 기준으로 변경 감지
-        if originalImageIds.isEmpty {
-            let currentImageURLs = noticeImages.compactMap(\.imageURL)
-            return currentImageURLs != originalImageURLs
-        }
-
+        let currentImageURLs = noticeImages.compactMap(\.imageURL)
         let currentImageIds = noticeImages.compactMap(\.fileId)
-        return currentImageIds != originalImageIds
+        return currentImageURLs != originalImageURLs || currentImageIds != originalImageIds
     }
 
     /// 투표 변경 여부
@@ -369,7 +394,7 @@ extension NoticeEditorViewModel {
 
     /// 저장 실패를 전역 ErrorHandler로 전달합니다.
     public func handleError(_ error: Error, action: String) {
-        guard let errorHandler else { return }
+        guard pendingCreatedNotice == nil, let errorHandler else { return }
         errorHandler.handle(
             error,
             context: ErrorContext(feature: "Notice", action: action)
@@ -441,6 +466,9 @@ extension NoticeEditorViewModel {
     /// 저장 시점에만 파일 업로드 플로우를 실행하고 fileId 배열을 반환합니다.
     @MainActor
     public func uploadPendingImagesIfNeeded() async throws -> [String] {
+        guard noticeImages.count <= Self.maximumImageCount else {
+            throw DomainError.custom(message: "이미지는 최대 10장까지 첨부할 수 있습니다.")
+        }
         for index in noticeImages.indices {
             guard noticeImages[index].fileId == nil,
                   let imageData = noticeImages[index].imageData else { continue }
@@ -461,10 +489,6 @@ extension NoticeEditorViewModel {
         return noticeImages.compactMap { $0.fileId }
     }
 
-    /// 수정 이미지 교체 API에 전달할 imageId 목록을 구성합니다.
-    ///
-    /// - fileId가 있는 항목은 그대로 사용
-    /// - fileId가 없는 기존 원격 이미지(URL)는 상세 재조회 후 URL→ID 매핑으로 보완
     @MainActor
     public func resolveImageIdsForUpdate(noticeId: String) async throws -> [String] {
         let hasUnresolvedRemoteImage = noticeImages.contains {
@@ -475,18 +499,21 @@ extension NoticeEditorViewModel {
         if hasUnresolvedRemoteImage {
             let latestDetail = try await noticeUseCase.getDetailNotice(noticeId: noticeId)
             urlToId = Dictionary(
-                uniqueKeysWithValues: latestDetail.imageItems.map { ($0.url, $0.id) }
+                latestDetail.imageItems.compactMap { image in
+                    image.fileId.map { (image.url, $0) }
+                },
+                uniquingKeysWith: { first, _ in first }
             )
         }
 
-        return noticeImages.compactMap { item in
-            if let fileId = item.fileId, !fileId.isEmpty {
-                return fileId
+        return try noticeImages.map { item in
+            let fileId = item.fileId ?? item.imageURL.flatMap { urlToId[$0] }
+            guard let fileId, UUID(uuidString: fileId) != nil else {
+                throw DomainError.custom(
+                    message: "기존 이미지 정보를 확인할 수 없습니다. 잠시 후 다시 시도해주세요."
+                )
             }
-            if let imageURL = item.imageURL {
-                return urlToId[imageURL]
-            }
-            return nil
+            return fileId
         }
     }
 }

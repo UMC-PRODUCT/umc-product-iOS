@@ -91,6 +91,7 @@ public final class NoticeUseCase: NoticeUseCaseProtocol {
             throw DomainError.custom(message: "내용을 입력해주세요")
         }
         
+        try validateImageIds(imageIds)
         return try await repository.createNotice(
             title: title,
             content: content,
@@ -153,6 +154,7 @@ public final class NoticeUseCase: NoticeUseCaseProtocol {
         guard !imageIds.isEmpty else {
             throw DomainError.custom(message: "추가할 이미지를 선택해주세요")
         }
+        try validateImageIds(imageIds)
         return try await repository.addImage(noticeId: noticeId, imageIds: imageIds)
     }
     
@@ -231,6 +233,7 @@ public final class NoticeUseCase: NoticeUseCaseProtocol {
         imageIds: [String]
     ) async throws -> NoticeDetail {
         // 빈 배열 허용 (이미지 전체 삭제 가능)
+        try validateImageIds(imageIds)
         return try await repository.updateImages(noticeId: noticeId, imageIds: imageIds)
     }
     
@@ -301,4 +304,13 @@ public final class NoticeUseCase: NoticeUseCaseProtocol {
     public func deleteVote(noticeId: String) async throws {
         try await repository.deleteVote(noticeId: noticeId)
     }
+    private func validateImageIds(_ imageIds: [String]) throws {
+        guard imageIds.count <= 10 else {
+            throw DomainError.custom(message: "이미지는 최대 10장까지 첨부할 수 있습니다.")
+        }
+        guard imageIds.allSatisfy({ UUID(uuidString: $0) != nil }) else {
+            throw DomainError.custom(message: "이미지 파일 정보를 확인할 수 없습니다.")
+        }
+    }
+
 }
