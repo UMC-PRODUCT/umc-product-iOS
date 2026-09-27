@@ -72,8 +72,8 @@ final class NoticeViewModel {
     /// 공지 데이터 (Loadable)
     var noticeItems: Loadable<[NoticeItemModel]> = .idle
     var partOptionsState: Loadable<[NoticeSelectablePart]> = .idle
-    /// 첫 페이지 목록/검색 조회 중복 방지 플래그
-    var isFetchingFirstPage: Bool = false
+    /// 현재 목록/검색 요청의 식별자. 이전 조건의 응답은 반영하지 않습니다.
+    var requestID = UUID()
 
     /// Error Handler
     let errorHandler: ErrorHandler

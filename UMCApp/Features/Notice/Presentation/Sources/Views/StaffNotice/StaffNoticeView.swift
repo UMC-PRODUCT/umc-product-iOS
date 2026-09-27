@@ -82,7 +82,10 @@ public struct StaffNoticeView: View {
         }
         .onChange(of: staffContextSignature) { _, _ in
             applyUserContext()
+            Task { await viewModel.fetchNotices() }
         }
+        .onChange(of: viewModel.selectedTab) { _, _ in resetSearch() }
+        .onChange(of: viewModel.selectedScope) { _, _ in resetSearch() }
         .onDisappear {
             searchTask?.cancel()
         }
@@ -95,6 +98,18 @@ public struct StaffNoticeView: View {
     private var mainContent: some View {
         VStack(spacing: 0) {
             staffTabChips
+            if viewModel.availableScopes.count > 1 {
+                Picker("공지 범위", selection: Binding(
+                    get: { viewModel.selectedScope },
+                    set: { viewModel.selectScope($0) }
+                )) {
+                    ForEach(viewModel.availableScopes) { scope in
+                        Text(scope.rawValue).tag(scope)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            }
             content
         }
         .searchable(text: $search, prompt: Constants.searchPlaceholder)
@@ -297,6 +312,11 @@ public struct StaffNoticeView: View {
     }
 
     // MARK: - Search
+
+    private func resetSearch() {
+        searchTask?.cancel()
+        search = ""
+    }
 
     private func handleSearchChanged(_ newValue: String) {
         searchTask?.cancel()

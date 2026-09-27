@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import UMCFoundation
 import CoreDI
+import CoreDomain
 import NoticeDomain
 
 // MARK: - StaffNoticeViewModel
@@ -37,6 +38,19 @@ final class StaffNoticeViewModel {
 
     private(set) var accessibleTabs: [StaffNoticeTab] = []
     var selectedTab: StaffNoticeTab?
+    private(set) var selectedScope: Scope = .central
+
+    enum Scope: String, CaseIterable, Identifiable {
+        case central = "중앙 공지"
+        case school = "교내 공지"
+        var id: Self { self }
+    }
+
+    var availableScopes: [Scope] {
+        guard selectedTab != .centralMember, memberRole != .chapterPresident,
+              !schoolId.isEmpty, schoolId != "0" else { return [.central] }
+        return [.central, .school]
+    }
 
     var noticeItems: Loadable<[NoticeItemModel]> = .idle
     var pagingState = NoticePagingState()
@@ -47,7 +61,7 @@ final class StaffNoticeViewModel {
 
     let errorHandler: ErrorHandler
 
-    private var isFetchingFirstPage: Bool = false
+    private var requestID = UUID()
     private var tabSwitchTask: Task<Void, Never>?
 
     private enum Pagination {
@@ -77,12 +91,15 @@ final class StaffNoticeViewModel {
         self.schoolId = schoolId
         self.gisuId = gisuId
         self.accessibleTabs = StaffNoticeTab.accessibleTabs(for: memberRole)
+        requestID = UUID()
+        pagingState.reset()
 
         if let selectedTab, !accessibleTabs.contains(selectedTab) {
             self.selectedTab = accessibleTabs.first
         } else if selectedTab == nil {
             self.selectedTab = accessibleTabs.first
         }
+        if !availableScopes.contains(selectedScope) { selectedScope = .central }
     }
 
     // MARK: - Tab Selection
@@ -90,19 +107,25 @@ final class StaffNoticeViewModel {
     func selectTab(_ tab: StaffNoticeTab) {
         guard accessibleTabs.contains(tab), tab != selectedTab else { return }
         selectedTab = tab
+        if !availableScopes.contains(selectedScope) { selectedScope = .central }
+        reloadSelection()
+    }
+
+    func selectScope(_ scope: Scope) {
+        guard availableScopes.contains(scope), scope != selectedScope else { return }
+        selectedScope = scope
+        reloadSelection()
+    }
+
+    private func reloadSelection() {
+        requestID = UUID()
+        pagingState.reset()
         isSearchMode = false
         searchQuery = ""
-        if hasNoAccessFromServer {
-            hasNoAccessFromServer = false
-            noticeItems = .loading
-        }
-
-        // 이전 탭 요청이 끝나기 전에 새 탭을 누르면 `isFetchingFirstPage` 가드에 막혀
-        // 새 요청이 통째로 버려지고 이전 탭 목록이 남는다. 취소 후 완료를 기다렸다가 이어간다.
-        let previousTask = tabSwitchTask
+        hasNoAccessFromServer = false
+        noticeItems = .loading
+        tabSwitchTask?.cancel()
         tabSwitchTask = Task { [weak self] in
-            previousTask?.cancel()
-            _ = await previousTask?.value
             await self?.fetchNotices()
         }
     }
@@ -182,15 +205,12 @@ final class StaffNoticeViewModel {
         tab: StaffNoticeTab,
         requestAction: (NoticeListRequest) async throws -> NoticePage
     ) async {
+        guard !Task.isCancelled else { return }
         if page == 0 {
-            guard !isFetchingFirstPage else { return }
-            isFetchingFirstPage = true
+            requestID = UUID()
+            pagingState.reset()
         }
-        defer {
-            if page == 0 {
-                isFetchingFirstPage = false
-            }
-        }
+        let currentRequestID = requestID
 
         let previousState = noticeItems
         if page == 0, noticeItems.value == nil {
@@ -203,25 +223,33 @@ final class StaffNoticeViewModel {
 
         do {
             let response = try await requestAction(request)
+            try Task.checkCancellation()
+            guard currentRequestID == requestID else { return }
             applyPagedResponse(response, page: page)
         } catch is CancellationError {
+            guard currentRequestID == requestID else { return }
             handleCancelledFetch(page: page, previousState: previousState)
         } catch let error as NSError where error.domain == NSURLErrorDomain
             && error.code == NSURLErrorCancelled {
+            guard currentRequestID == requestID else { return }
             handleCancelledFetch(page: page, previousState: previousState)
         } catch let error as RepositoryError {
+            guard currentRequestID == requestID else { return }
             handleFetchError(
                 .repository(error), page: page, action: "staffFetchNotices", failure: error
             )
         } catch let error as DomainError {
+            guard currentRequestID == requestID else { return }
             handleFetchError(
                 .domain(error), page: page, action: "staffFetchNotices", failure: error
             )
         } catch let error as NetworkError {
+            guard currentRequestID == requestID else { return }
             handleFetchError(
                 .network(error), page: page, action: "staffFetchNotices", failure: error
             )
         } catch {
+            guard currentRequestID == requestID else { return }
             handleFetchError(
                 .unknown(message: error.localizedDescription),
                 page: page,
@@ -232,10 +260,8 @@ final class StaffNoticeViewModel {
     }
 
     private func buildRequest(tab: StaffNoticeTab, page: Int) -> NoticeListRequest {
-        // 지부장은 SCHOOL_CORE viewerRole로 매핑되어 학교 단위 필터 없이 조회한다.
-        let needsSchoolId = tab.requiresSchoolId && memberRole != .chapterPresident
-        let hasValidSchoolId = (Int(schoolId) ?? 0) > 0
-        let resolvedSchoolId: String? = needsSchoolId && hasValidSchoolId ? schoolId : nil
+        let resolvedSchoolId = selectedScope == .school && availableScopes.contains(.school)
+            ? schoolId : nil
 
         return NoticeListRequest(
             gisuId: gisuId,
@@ -252,30 +278,18 @@ final class StaffNoticeViewModel {
     @MainActor
     private func applyPagedResponse(_ response: NoticePage, page: Int) {
         let readNoticeIDs = resolvedReadNoticeIDs()
+        let pairs = (try? container.resolve(ChallengerGenRepositoryProtocol.self)
+            .fetchGenGisuIdPairs()) ?? []
         let items = response.items.map { item -> NoticeItemModel in
-            guard readNoticeIDs.contains(item.noticeId) else { return item }
-            return NoticeItemModel(
-                noticeId: item.noticeId,
-                generation: item.generation,
-                scope: item.scope,
-                category: item.category,
-                mustRead: item.mustRead,
-                isAlert: item.isAlert,
-                date: item.date,
-                title: item.title,
-                content: item.content,
-                writer: item.writer,
-                authorNickname: item.authorNickname,
-                authorName: item.authorName,
-                links: item.links,
-                images: item.images,
-                vote: item.vote,
-                viewCount: item.viewCount,
-                scopeDisplayName: item.scopeDisplayName,
-                targetsAllGenerations: item.targetsAllGenerations,
-                parts: item.parts,
-                isRead: true
-            )
+            var corrected = item
+            if let targetGisuId = item.targetGisuId, !targetGisuId.isEmpty, targetGisuId != "0" {
+                corrected.targetsAllGenerations = false
+                if (Int(item.generation) ?? 0) <= 0 {
+                    corrected.generation = pairs.first { $0.gisuId == targetGisuId }?.gen ?? ""
+                }
+            }
+            corrected.isRead = item.isRead || readNoticeIDs.contains(item.noticeId)
+            return corrected
         }
         pagingState.applySuccess(page: page, hasNextPage: response.hasNext)
 
