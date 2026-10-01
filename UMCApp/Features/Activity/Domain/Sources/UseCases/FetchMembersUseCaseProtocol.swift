@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreDomain
 import UMCFoundation
 
 /// 운영진 멤버 관리 도메인 진입점
@@ -19,12 +20,12 @@ public protocol FetchMembersUseCaseProtocol {
     // MARK: - 멤버 목록
 
     /// 멤버 목록 전체 조회
-    func execute() async throws -> [MemberManagementItem]
+    func execute(mode: ActivityMode) async throws -> [MemberManagementItem]
 
     /// 멤버 목록 페이지 단위 조회 (offset 기반)
     ///
     /// - Parameter page: 0-based 페이지 인덱스
-    func executePage(page: Int) async throws -> MemberPage
+    func executePage(page: Int, mode: ActivityMode) async throws -> MemberPage
 
     // MARK: - 상벌점 부여 / 삭제
 

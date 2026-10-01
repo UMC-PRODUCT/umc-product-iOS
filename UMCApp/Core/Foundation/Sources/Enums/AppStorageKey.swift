@@ -45,6 +45,8 @@ public enum AppStorageKey {
 
     /// 서버 기수 식별 ID
     public static let gisuId: String = "gisuId"
+    /// 최신 운영 역할의 관리 기수 ID. 최신 챌린저 활동 기수와 별도로 보관합니다.
+    public static let managementGisuId: String = "managementGisuId"
     /// 멤버 고유 ID
     public static let memberId: String = "memberId"
     /// 챌린저 ID (패널티 API 파라미터)
@@ -83,6 +85,7 @@ public enum AppStorageKey {
     public nonisolated static let sessionScopedKeys: [String] = [
         canAutoLogin,
         gisuId,
+        managementGisuId,
         memberId,
         challengerId,
         schoolId,
@@ -144,6 +147,11 @@ extension AppStorageKey {
     /// 기수 ID를 `String`으로 조회합니다. 미설정 시 `nil`.
     public static func gisuIdString(in defaults: UserDefaults = .standard) -> String? {
         identifierString(forKey: gisuId, in: defaults)
+    }
+
+    /// 운영 역할에서 확정한 관리 기수 ID를 조회합니다. 활동 기수로 폴백하지 않습니다.
+    public static func managementGisuIdString(in defaults: UserDefaults = .standard) -> String? {
+        identifierString(forKey: managementGisuId, in: defaults)
     }
 
     /// 챌린저 ID를 `String`으로 조회합니다. 미설정 시 `nil`.

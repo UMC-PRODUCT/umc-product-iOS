@@ -25,6 +25,63 @@ private func makeIsolatedUserDefaults() -> UserDefaults {
 @Suite("SyncProfileStorageUseCase — 프로필 로컬 저장소 동기화")
 struct SyncProfileStorageUseCaseTests {
 
+    @Test("관리 기수는 활동 이력이 아닌 최신 운영 역할의 서버 ID를 저장한다")
+    func savesLatestManagementRoleGeneration() {
+        let defaults = makeIsolatedUserDefaults()
+        let session = UserSessionManager()
+        let useCase = SyncProfileStorageUseCase(
+            userSessionManager: session, userDefaults: defaults
+        )
+        let profile = Profile(
+            memberId: "42", name: "운영진", nickname: "닉", generations: ["10", "11", "12"],
+            latestGisuId: "1200",
+            roles: [
+                ProfileRole(
+                    gisu: "10", gisuId: "1000", roleType: .chapterPresident,
+                    organizationType: .chapter, organizationId: "5"
+                ),
+                ProfileRole(
+                    gisu: "11", gisuId: "1100", roleType: .schoolPartLeader,
+                    organizationType: .school, organizationId: "9"
+                ),
+                ProfileRole(
+                    gisu: "12", gisuId: "1200", roleType: .challenger,
+                    organizationType: .school, organizationId: "9"
+                )
+            ]
+        )
+
+        useCase.execute(profile: profile)
+
+        #expect(defaults.string(forKey: "managementGisuId") == "1100")
+        #expect(defaults.string(forKey: AppStorageKey.gisuId) == "1200")
+        #expect(session.currentRole == .chapterPresident)
+    }
+
+    @Test(
+        "관리 역할의 기수가 미확정이면 이전 관리 기수 키를 지운다",
+        arguments: ["", "0", "-1", "invalid"]
+    )
+    func clearsStaleManagementGeneration(gisuId: String) {
+        let defaults = makeIsolatedUserDefaults()
+        defaults.set("1100", forKey: "managementGisuId")
+        let useCase = SyncProfileStorageUseCase(
+            userSessionManager: UserSessionManager(), userDefaults: defaults
+        )
+        let profile = Profile(
+            memberId: "42", name: "운영진", nickname: "닉", generations: ["11"],
+            latestGisuId: "1000",
+            roles: [ProfileRole(
+                gisu: "11", gisuId: gisuId, roleType: .schoolPresident,
+                organizationType: .school, organizationId: "9"
+            )]
+        )
+
+        useCase.execute(profile: profile)
+
+        #expect(defaults.object(forKey: "managementGisuId") == nil)
+    }
+
     @Test("프로필 정보를 AppStorageKey 전 항목에 정확히 저장한다")
     func savesAllStorageKeysExactly() {
         let userDefaults = makeIsolatedUserDefaults()
@@ -109,6 +166,7 @@ struct SyncProfileStorageUseCaseTests {
     @Test("역할이 없으면 조직 정보는 chapter/빈 지부ID로, memberRole은 challenger로 폴백한다")
     func fallsBackToDefaultsWhenNoRoles() {
         let userDefaults = makeIsolatedUserDefaults()
+        userDefaults.set("1100", forKey: "managementGisuId")
         let useCase = SyncProfileStorageUseCase(
             userSessionManager: UserSessionManager(),
             userDefaults: userDefaults
@@ -127,6 +185,7 @@ struct SyncProfileStorageUseCaseTests {
         #expect(userDefaults.string(forKey: AppStorageKey.organizationId) == "300")
         #expect(userDefaults.string(forKey: AppStorageKey.memberRole) == ManagementTeam.challenger.rawValue)
         #expect(userDefaults.array(forKey: AppStorageKey.memberRoles) as? [String] == [])
+        #expect(userDefaults.object(forKey: "managementGisuId") == nil)
     }
 
     @Test(

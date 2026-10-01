@@ -95,7 +95,7 @@ struct StudyRouterMemberPointTaskTests {
     @Test("searchChallengersOffset 는 query DTO 를 queryString 으로 인코딩한다")
     func searchTaskEncodesQueryString() throws {
         let router = StudyRouter.searchChallengersOffset(
-            query: ChallengerSearchQuery(page: 2, size: 20, schoolId: "5")
+            query: ChallengerSearchQuery(page: 2, size: 20, schoolId: "5", gisuId: "1100")
         )
 
         let extracted = try #require(requestParameters(of: router.task))
@@ -103,6 +103,7 @@ struct StudyRouterMemberPointTaskTests {
         #expect(extracted.parameters["page"] as? Int == 2)
         #expect(extracted.parameters["size"] as? Int == 20)
         #expect(extracted.parameters["schoolId"] as? String == "5")
+        #expect(extracted.parameters["gisuId"] as? String == "1100")
         #expect((extracted.encoding as? URLEncoding)?.destination == .queryString)
     }
 

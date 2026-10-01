@@ -22,23 +22,29 @@ struct ChallengerSearchQuery: Sendable, Equatable {
     let page: Int
     let size: Int
     let schoolId: String
+    let gisuId: String?
 
     // MARK: - Init
 
-    init(page: Int, size: Int, schoolId: String) {
+    init(page: Int, size: Int, schoolId: String, gisuId: String? = nil) {
         self.page = page
         self.size = size
         self.schoolId = schoolId
+        self.gisuId = gisuId
     }
 
     // MARK: - Parameters
 
     /// Query Parameter Dictionary 변환.
     var toParameters: [String: Any] {
-        [
+        var parameters: [String: Any] = [
             "page": page,
             "size": size,
             "schoolId": schoolId
         ]
+        if let gisuId {
+            parameters["gisuId"] = gisuId
+        }
+        return parameters
     }
 }

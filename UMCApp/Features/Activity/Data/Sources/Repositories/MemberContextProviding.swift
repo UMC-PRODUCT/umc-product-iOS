@@ -27,6 +27,7 @@ protocol MemberContextProviding {
 
     /// 현재(우선) 기수 식별자 — 서버 응답이므로 `String`. 미설정 시 `nil`.
     var gisuId: String? { get }
+    var managementGisuId: String? { get }
 }
 
 // MARK: - UserDefaultsMemberContextProvider
@@ -60,5 +61,9 @@ struct UserDefaultsMemberContextProvider: MemberContextProviding {
 
     var gisuId: String? {
         AppStorageKey.gisuIdString(in: defaults)
+    }
+
+    var managementGisuId: String? {
+        AppStorageKey.managementGisuIdString(in: defaults)
     }
 }
