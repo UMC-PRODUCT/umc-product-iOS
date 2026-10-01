@@ -45,7 +45,8 @@ struct ChallengerMemberListView: View {
             initialValue: viewModel ?? MemberListViewModel(
                 fetchMembersUseCase: container.resolve(FetchMembersUseCaseProtocol.self),
                 errorHandler: errorHandler,
-                userSessionManager: container.resolve(UserSessionManager.self)
+                userSessionManager: container.resolve(UserSessionManager.self),
+                mode: .challenger
             )
         )
     }
@@ -177,11 +178,11 @@ struct ChallengerMemberListView: View {
 #if DEBUG
 /// 네트워크 없이 구성원 목록을 확인하기 위한 프리뷰 전용 UseCase (핵심규칙 #5)
 private struct PreviewFetchMembersUseCase: FetchMembersUseCaseProtocol {
-    func execute() async throws -> [MemberManagementItem] {
+    func execute(mode: ActivityMode = .challenger) async throws -> [MemberManagementItem] {
         previewMembers
     }
 
-    func executePage(page: Int) async throws -> MemberPage {
+    func executePage(page: Int, mode: ActivityMode = .challenger) async throws -> MemberPage {
         MemberPage(members: previewMembers, hasNext: false, currentPage: page)
     }
 

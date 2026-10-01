@@ -21,9 +21,15 @@ public struct MemberPage: Equatable {
     /// 현재 페이지 인덱스 (0-based)
     public let currentPage: Int
 
-    public init(members: [MemberManagementItem], hasNext: Bool, currentPage: Int) {
+    /// 실제 조회한 관리 기수 ID. 챌린저 모드에서는 nil입니다.
+    public let gisuId: String?
+
+    public init(
+        members: [MemberManagementItem], hasNext: Bool, currentPage: Int, gisuId: String? = nil
+    ) {
         self.members = members
         self.hasNext = hasNext
         self.currentPage = currentPage
+        self.gisuId = gisuId
     }
 }

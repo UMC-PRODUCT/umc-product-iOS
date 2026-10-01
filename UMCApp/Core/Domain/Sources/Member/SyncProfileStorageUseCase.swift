@@ -30,6 +30,9 @@ public final class SyncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol 
 
     public func execute(profile: Profile) {
         let latestRole = Self.latestHighestPriorityRole(in: profile.roles)
+        let managementRole = Self.latestHighestPriorityRole(
+            in: profile.roles.filter { $0.roleType.canAccessAdminMode && (Int($0.gisu) ?? 0) > 0 }
+        )
         let resolvedRole = ManagementTeam.highestPriority(in: profile.roles.map(\.roleType))
             ?? latestRole?.roleType
             ?? .challenger
@@ -38,6 +41,12 @@ public final class SyncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol 
         userDefaults.set(profile.schoolId, forKey: AppStorageKey.schoolId)
         userDefaults.set(profile.schoolName, forKey: AppStorageKey.schoolName)
         userDefaults.set(profile.latestGisuId ?? "", forKey: AppStorageKey.gisuId)
+        if let gisuId = managementRole?.gisuId,
+           let identifier = Int64(gisuId), identifier > 0 {
+            userDefaults.set(gisuId, forKey: AppStorageKey.managementGisuId)
+        } else {
+            userDefaults.removeObject(forKey: AppStorageKey.managementGisuId)
+        }
         userDefaults.set(profile.latestChallengerId ?? "", forKey: AppStorageKey.challengerId)
         userDefaults.set(profile.chapterId ?? "", forKey: AppStorageKey.chapterId)
         userDefaults.set(profile.chapterName, forKey: AppStorageKey.chapterName)

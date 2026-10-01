@@ -35,6 +35,8 @@ private final class StubNetworkRequesting: NetworkRequesting, @unchecked Sendabl
     private var outcomes: [Outcome]
     private(set) var requestedPaths: [String] = []
     private(set) var requestedMethods: [Moya.Method] = []
+    private(set) var requestedParameters: [[String: Any]] = []
+    var onRequest: (() -> Void)?
 
     var requestCount: Int { requestedPaths.count }
     var lastPath: String? { requestedPaths.last }
@@ -47,6 +49,10 @@ private final class StubNetworkRequesting: NetworkRequesting, @unchecked Sendabl
     func request<T: TargetType>(_ target: T) async throws -> Response {
         requestedPaths.append(target.path)
         requestedMethods.append(target.method)
+        if case let .requestParameters(parameters, _) = target.task {
+            requestedParameters.append(parameters)
+        }
+        onRequest?()
         guard !outcomes.isEmpty else {
             throw StubError.noOutcomeQueued
         }
@@ -65,19 +71,22 @@ private enum TestError: Error, Equatable {
 }
 
 /// ``MemberContextProviding`` 가짜 구현 — 학교·멤버·기수 식별자를 직접 지정합니다.
-private struct StubMemberContext: MemberContextProviding {
+private final class StubMemberContext: MemberContextProviding {
     var schoolId: String?
     var currentMemberId: String?
     var gisuId: String?
+    var managementGisuId: String?
 
     init(
         schoolId: String? = "5",
         currentMemberId: String? = "100",
-        gisuId: String? = "70"
+        gisuId: String? = "70",
+        managementGisuId: String? = "70"
     ) {
         self.schoolId = schoolId
         self.currentMemberId = currentMemberId
         self.gisuId = gisuId
+        self.managementGisuId = managementGisuId
     }
 }
 
@@ -163,6 +172,7 @@ private enum Fixture {
         memberId: String = "100",
         challengerId: String = "C100",
         gisu: Int,
+        gisuId: String = "70",
         part: String = "IOS",
         infra: Bool = false,
         points: [String]
@@ -170,7 +180,7 @@ private enum Fixture {
         """
         {
           "challengerId": "\(challengerId)", "memberId": "\(memberId)", "gisu": \(gisu),
-          "gisuId": "70", "part": "\(part)", "infra": \(infra),
+          "gisuId": "\(gisuId)", "part": "\(part)", "infra": \(infra),
           "challengerPoints": [\(points.joined(separator: ","))], "points": []
         }
         """
@@ -182,13 +192,14 @@ private enum Fixture {
         name: String = "홍길동",
         nickname: String = "닉",
         roleType: String = "SCHOOL_PART_LEADER",
+        roleChallengerId: String = "C100",
         records: [String]
     ) -> String {
         """
         {
           "id": "\(id)", "name": "\(name)", "nickname": "\(nickname)", "schoolName": "한성대",
           "profileImageLink": null,
-          "roles": [{ "challengerId": "C100", "roleType": "\(roleType)" }],
+          "roles": [{ "challengerId": "\(roleChallengerId)", "roleType": "\(roleType)" }],
           "challengerRecords": [\(records.joined(separator: ","))]
         }
         """
@@ -263,6 +274,157 @@ private func makeRepository(
 
 @Suite("MemberRepository — 멤버 목록 조회 (도메인 규칙)")
 struct MemberRepositoryListTests {
+
+    @Test(
+        "관리 목록은 대상 기수의 역할을 사용하고 챌린저 모드는 기존 역할 보강을 유지한다",
+        arguments: [
+            (ActivityMode.admin, ManagementTeam.challenger),
+            (ActivityMode.challenger, ManagementTeam.schoolPresident)
+        ]
+    )
+    func adminKeepsScopedDescriptorRole(mode: ActivityMode, expected: ManagementTeam) async throws {
+        let page = Fixture.offsetPage(items: [Fixture.offsetItem(
+            memberId: "100", challengerId: "C11", gisu: 11
+        )])
+        let profile = Fixture.memberProfile(
+            roleType: "SCHOOL_PRESIDENT", roleChallengerId: "C10",
+            records: [Fixture.record(challengerId: "C11", gisu: 11, points: [])]
+        )
+        let (sut, _) = makeRepository([
+            .success(Fixture.success(page)),
+            .success(Fixture.success(profile))
+        ])
+
+        let member = try #require(
+            try await sut.fetchMembersPage(page: 0, mode: mode).members.first
+        )
+
+        #expect(member.challengerID == "C11")
+        #expect(member.managementTeam == expected)
+    }
+
+    @Test("최초·후속 페이지에 학교와 같은 대상 기수 ID를 전달한다", arguments: [0, 1])
+    func pagesIncludeGenerationScope(page: Int) async throws {
+        let (sut, stub) = makeRepository(
+            .success(Fixture.success(Fixture.offsetPage(items: [], page: page)))
+        )
+
+        let result = try await sut.fetchMembersPage(page: page, mode: .admin)
+
+        let parameters = try #require(stub.requestedParameters.first)
+        #expect(parameters["schoolId"] as? String == "5")
+        #expect(parameters["gisuId"] as? String == "70")
+        #expect(parameters["page"] as? Int == page)
+        #expect(result.gisuId == "70")
+    }
+
+    @Test(
+        "관리 기수 정보가 없거나 유효하지 않으면 최초·전체 조회 모두 요청 없이 실패한다",
+        arguments: [nil, "", "0", "-1", "invalid", "9223372036854775808"]
+    )
+    func missingGenerationBlocksUnscopedRequests(gisuId: String?) async {
+        let emptyPage = Fixture.success(Fixture.offsetPage(items: []))
+        let (sut, stub) = makeRepository(
+            [.success(emptyPage), .success(emptyPage)],
+            context: StubMemberContext(managementGisuId: gisuId)
+        )
+
+        await #expect(throws: DomainError.self) {
+            try await sut.fetchMembersPage(page: 0, mode: .admin)
+        }
+        await #expect(throws: DomainError.self) {
+            try await sut.fetchMembers(mode: .admin)
+        }
+        #expect(stub.requestCount == 0)
+    }
+
+    @Test("관리 기수 정보 복구 후 재시도하면 해당 기수의 빈 페이지를 반환한다")
+    func retryUsesRecoveredManagementGeneration() async throws {
+        let context = StubMemberContext(managementGisuId: nil)
+        let (sut, stub) = makeRepository(
+            .success(Fixture.success(Fixture.offsetPage(items: []))), context: context
+        )
+        await #expect(throws: DomainError.self) {
+            try await sut.fetchMembersPage(page: 0, mode: .admin)
+        }
+        context.managementGisuId = "1100"
+
+        let page = try await sut.fetchMembersPage(page: 0, mode: .admin)
+
+        #expect(page.members.isEmpty)
+        #expect(stub.requestCount == 1)
+        #expect(stub.requestedParameters.first?["gisuId"] as? String == "1100")
+    }
+
+    @Test("대상 기수 기록이 없으면 다른 기수 ID와 상벌점으로 대체하지 않는다")
+    func missingTargetRecordDoesNotUseOtherGeneration() async throws {
+        let page = Fixture.offsetPage(items: [Fixture.offsetItem(memberId: "100")])
+        let otherRecord = Fixture.record(
+            challengerId: "C10",
+            gisu: 10,
+            gisuId: "1000",
+            points: [Fixture.point(
+                id: "P10", pointType: "STUDY_LATE", point: -9,
+                createdAt: "2026-06-01T09:00:00.000Z"
+            )]
+        )
+        let (sut, _) = makeRepository([
+            .success(Fixture.success(page)),
+            .success(Fixture.success(Fixture.memberProfile(records: [otherRecord])))
+        ])
+
+        let member = try #require(
+            try await sut.fetchMembersPage(page: 0, mode: .admin).members.first
+        )
+
+        #expect(member.challengerID == "C100")
+        #expect(member.penalty == 3)
+        #expect(member.penaltyHistory.isEmpty)
+    }
+
+    @Test("관리 기수와 활동 기수가 달라도 관리 기수의 ID와 포인트를 보강한다")
+    func usesManagementGenerationAndSnapshotsDuringEnrichment() async throws {
+        let context = StubMemberContext(gisuId: "1200", managementGisuId: "1100")
+        let page = Fixture.offsetPage(items: [Fixture.offsetItem(memberId: "100", gisu: 11)])
+        let oldRecord = Fixture.record(challengerId: "C10", gisu: 10, gisuId: "1000", points: [])
+        let currentRecord = Fixture.record(
+            challengerId: "C11", gisu: 11, gisuId: "1100",
+            points: [Fixture.point(
+                id: "P11", pointType: "STUDY_LATE", point: -2,
+                createdAt: "2026-06-01T09:00:00.000Z"
+            )]
+        )
+        let (sut, stub) = makeRepository([
+            .success(Fixture.success(page)),
+            .success(Fixture.success(Fixture.memberProfile(records: [oldRecord, currentRecord])))
+        ], context: context)
+        stub.onRequest = { context.managementGisuId = "1000" }
+
+        let member = try #require(
+            try await sut.fetchMembersPage(page: 0, mode: .admin).members.first
+        )
+
+        #expect(stub.requestedParameters.first?["gisuId"] as? String == "1100")
+        #expect(member.challengerID == "C11")
+        #expect(member.penalty == 2)
+        #expect(member.penaltyHistory.first?.challengerPointId == "P11")
+        #expect(member.generation == "10기, 11기")
+    }
+
+    @Test("챌린저 모드는 관리 기수가 없어도 기존 학교 범위를 유지한다")
+    func challengerModePreservesSchoolOnlyScope() async throws {
+        let (sut, stub) = makeRepository(
+            .success(Fixture.success(Fixture.offsetPage(items: []))),
+            context: StubMemberContext(managementGisuId: nil)
+        )
+
+        let page = try await sut.fetchMembersPage(page: 0, mode: .challenger)
+
+        #expect(page.members.isEmpty)
+        #expect(stub.requestedParameters.first?["schoolId"] as? String == "5")
+        #expect(stub.requestedParameters.first?["gisuId"] == nil)
+        #expect(page.gisuId == nil)
+    }
 
     @Test("fetchMembersPage — 오프셋 검색 후 프로필을 보강하고 페이지 메타를 매핑한다")
     func fetchMembersPageMapsAndEnriches() async throws {
@@ -391,17 +553,21 @@ struct MemberRepositoryListTests {
             items: [Fixture.offsetItem(memberId: "20")], page: 1, hasNext: false
         )
         let profile = Fixture.memberProfile(records: [Fixture.record(gisu: 7, points: [])])
+        let context = StubMemberContext()
         let (sut, stub) = makeRepository([
             .success(Fixture.success(page0)),
             .success(Fixture.success(page1)),
             .success(Fixture.success(profile)),
             .success(Fixture.success(profile))
-        ])
+        ], context: context)
+        stub.onRequest = { context.managementGisuId = "1000" }
 
-        let members = try await sut.fetchMembers()
+        let members = try await sut.fetchMembers(mode: .admin)
 
         #expect(members.count == 2)
         #expect(stub.requestCount == 4)        // 검색 2회 + 프로필 2회
+        #expect(stub.requestedParameters.count == 2)
+        #expect(stub.requestedParameters.map { $0["gisuId"] as? String } == ["70", "70"])
     }
 
     @Test("fetchMembers — 빈 페이지가 hasNext:true 여도 무한 루프 없이 중단한다")
@@ -524,6 +690,8 @@ struct MemberRepositoryChallengerSearchTests {
         #expect(stub.requestCount == 1)
         #expect(stub.lastPath == "/api/v1/challenger/search/cursor")
         #expect(stub.lastMethod == .get)
+        #expect(stub.requestedParameters.first?["schoolId"] == nil)
+        #expect(stub.requestedParameters.first?["gisuId"] == nil)
     }
 
     @Test("검색 항목을 ChallengerInfo 로 매핑하고 커서 정보를 보존한다")
@@ -884,11 +1052,13 @@ struct UserDefaultsMemberContextProviderTests {
         defaults.set("42", forKey: "schoolId")
         defaults.set("100", forKey: "memberId")
         defaults.set("7", forKey: "gisuId")
+        defaults.set("1100", forKey: "managementGisuId")
         let context = UserDefaultsMemberContextProvider(defaults: defaults)
 
         #expect(context.schoolId == "42")
         #expect(context.currentMemberId == "100")
         #expect(context.gisuId == "7")
+        #expect(context.managementGisuId == "1100")
     }
 
     @Test("String 값이 없으면 레거시 Int 저장값을 문자열로 변환한다")
@@ -910,6 +1080,7 @@ struct UserDefaultsMemberContextProviderTests {
         #expect(context.schoolId == nil)
         #expect(context.currentMemberId == nil)
         #expect(context.gisuId == nil)
+        #expect(context.managementGisuId == nil)
     }
 }
 

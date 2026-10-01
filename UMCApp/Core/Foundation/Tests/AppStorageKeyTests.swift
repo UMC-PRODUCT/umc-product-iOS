@@ -43,6 +43,16 @@ private let identifierHelpers: [IdentifierHelper] = [
 @Suite("AppStorageKey — 저장 식별자 해석 (도메인 규칙)")
 struct AppStorageKeyIdentifierTests {
 
+    @Test("세션 초기화는 관리 기수도 삭제한다")
+    func sessionClearsManagementGeneration() {
+        let defaults = makeDefaults("managementSession")
+        defaults.set("1100", forKey: "managementGisuId")
+
+        AppStorageKey.clearSessionScopedValues(in: defaults)
+
+        #expect(defaults.object(forKey: "managementGisuId") == nil)
+    }
+
     /// 테스트마다 고유 suite 이름으로 격리해 잔여 값/병렬 실행 간섭을 차단합니다.
     private func makeDefaults(_ name: String) -> UserDefaults {
         let suiteName = "test.foundation.appStorageKey.\(name)"

@@ -47,9 +47,10 @@ private func makeMember(
 private func makePage(
     _ members: [MemberManagementItem],
     hasNext: Bool,
-    currentPage: Int
+    currentPage: Int,
+    gisuId: String? = nil
 ) -> MemberPage {
-    MemberPage(members: members, hasNext: hasNext, currentPage: currentPage)
+    MemberPage(members: members, hasNext: hasNext, currentPage: currentPage, gisuId: gisuId)
 }
 
 /// 상벌점 히스토리 픽스처. `date` 는 결정론을 위해 epoch 0 고정입니다.
@@ -71,18 +72,43 @@ private func makeHistory(
 @MainActor
 private func makeViewModel(
     useCase: MockFetchMembersUseCase,
-    role: ManagementTeam = .schoolPresident
+    role: ManagementTeam = .schoolPresident,
+    mode: ActivityMode = .challenger
 ) -> MemberListViewModel {
     let session = UserSessionManager()
     session.updateRole(role, allRoles: [role])
     return MemberListViewModel(
         fetchMembersUseCase: useCase,
         errorHandler: ErrorHandler(),
-        userSessionManager: session
+        userSessionManager: session,
+        mode: mode
     )
 }
 
 private struct DummyError: Error {}
+
+private actor PageGate {
+    private var isPaused = false
+    private var pausedObserver: CheckedContinuation<Void, Never>?
+    private var pendingPage: CheckedContinuation<Void, Never>?
+
+    func pause() async {
+        isPaused = true
+        pausedObserver?.resume()
+        pausedObserver = nil
+        await withCheckedContinuation { pendingPage = $0 }
+    }
+
+    func waitUntilPaused() async {
+        guard !isPaused else { return }
+        await withCheckedContinuation { pausedObserver = $0 }
+    }
+
+    func resume() {
+        pendingPage?.resume()
+        pendingPage = nil
+    }
+}
 
 // MARK: - Mock
 
@@ -92,6 +118,7 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
 
     var pages: [Int: MemberPage] = [:]
     var executePageError: Error?
+    var nextPageGate: PageGate?
     var grantPointError: Error?
     var deletePointError: Error?
     var pointHistory: [OperatorMemberPenaltyHistory] = []
@@ -104,6 +131,7 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
     // MARK: 호출 기록
 
     private(set) var executePageCalls: [Int] = []
+    private(set) var executePageModes: [ActivityMode] = []
     private(set) var grantPointCalls: [(
         challengerId: String,
         pointType: ChallengerPointType,
@@ -114,14 +142,19 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
 
     // MARK: Protocol
 
-    func execute() async throws -> [MemberManagementItem] {
+    func execute(mode: ActivityMode = .challenger) async throws -> [MemberManagementItem] {
         pages.values.flatMap(\.members)
     }
 
-    func executePage(page: Int) async throws -> MemberPage {
+    func executePage(page: Int, mode: ActivityMode = .challenger) async throws -> MemberPage {
         executePageCalls.append(page)
+        executePageModes.append(mode)
         if let executePageError { throw executePageError }
-        return pages[page] ?? MemberPage(members: [], hasNext: false, currentPage: page)
+        let result = pages[page] ?? MemberPage(members: [], hasNext: false, currentPage: page)
+        if page > 0, let nextPageGate {
+            await nextPageGate.pause()
+        }
+        return result
     }
 
     func grantPoint(
@@ -170,6 +203,46 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
 @Suite("MemberListViewModel — 첫 페이지 로딩 (도메인 규칙)")
 struct MemberListViewModelFirstPageTests {
 
+    @Test("관리 모드는 최초·추가·검색 해제·재조회에도 같은 조회 모드를 유지한다")
+    func adminModePersistsThroughPaginationSearchAndRefresh() async {
+        let first = makeMember(memberID: "1", name: "홍길동")
+        let second = makeMember(memberID: "2", name: "김철수")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([first], hasNext: true, currentPage: 0)
+        useCase.pages[1] = makePage([second], hasNext: false, currentPage: 1)
+        let viewModel = makeViewModel(useCase: useCase, mode: .admin)
+
+        await viewModel.fetchMembers()
+        await viewModel.fetchNextPage()
+        viewModel.searchText = "김"
+        #expect(viewModel.groupedMembers.flatMap(\.members).map(\.memberID) == ["2"])
+        viewModel.searchText = ""
+        #expect(viewModel.membersState == .loaded([first, second]))
+        await viewModel.fetchMembers()
+
+        #expect(viewModel.membersState == .loaded([first]))
+        #expect(useCase.executePageCalls == [0, 1, 0])
+        #expect(useCase.executePageModes == [.admin, .admin, .admin])
+    }
+
+    @Test("관리 기수 실패를 인라인에 표시하고 재시도에도 관리 모드를 유지한다")
+    func adminModeRetriesAfterMissingGeneration() async {
+        let useCase = MockFetchMembersUseCase()
+        let error = DomainError.custom(message: "관리 기수 정보가 없습니다.")
+        useCase.executePageError = error
+        let viewModel = makeViewModel(useCase: useCase, mode: .admin)
+
+        await viewModel.fetchMembers()
+        #expect(viewModel.membersState == .failed(.domain(error)))
+        useCase.executePageError = nil
+        let member = makeMember(memberID: "1")
+        useCase.pages[0] = makePage([member], hasNext: false, currentPage: 0)
+        await viewModel.fetchMembers()
+
+        #expect(viewModel.membersState == .loaded([member]))
+        #expect(useCase.executePageModes == [.admin, .admin])
+    }
+
     @Test("상세 진입과 포인트 부여·삭제는 출석 API를 호출하지 않는다")
     func detailAndPointRefreshSkipAttendance() async {
         let member = makeMember(memberID: "1", challengerID: "C-1")
@@ -217,6 +290,93 @@ struct MemberListViewModelFirstPageTests {
 @MainActor
 @Suite("MemberListViewModel — 무한스크롤 페이지네이션 (도메인 규칙)")
 struct MemberListViewModelPaginationTests {
+
+    @Test(
+        "추가 응답을 기다리는 동안 첫 페이지 기수가 바뀌면 이전 목록에 합치지 않는다",
+        arguments: ["1100", "1200"]
+    )
+    func refreshDuringPaginationDoesNotMixGenerations(responseGisuId: String) async {
+        let oldMember = makeMember(memberID: "11")
+        let newFirst = makeMember(memberID: "12-first")
+        let delayedMember = makeMember(memberID: "delayed")
+        let useCase = MockFetchMembersUseCase()
+        let gate = PageGate()
+        useCase.nextPageGate = gate
+        useCase.pages[0] = makePage([oldMember], hasNext: true, currentPage: 0, gisuId: "1100")
+        useCase.pages[1] = makePage(
+            [delayedMember], hasNext: false, currentPage: 1, gisuId: responseGisuId
+        )
+        let viewModel = makeViewModel(useCase: useCase, mode: .admin)
+        await viewModel.fetchMembers()
+        let pagination = Task { await viewModel.fetchNextPage() }
+        await gate.waitUntilPaused()
+        useCase.pages[0] = makePage([newFirst], hasNext: true, currentPage: 0, gisuId: "1200")
+        await viewModel.fetchMembers()
+
+        await gate.resume()
+        await pagination.value
+
+        #expect(viewModel.membersState == .loaded([newFirst]))
+        #expect(useCase.executePageCalls == [0, 1, 0, 0])
+    }
+
+    @Test("첫 페이지 재조회가 취소돼도 기존 관리 기수의 추가 페이지를 정상 합친다")
+    func cancelledRefreshPreservesManagementGeneration() async {
+        let first = makeMember(memberID: "1")
+        let next = makeMember(memberID: "2")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([first], hasNext: true, currentPage: 0, gisuId: "1100")
+        useCase.pages[1] = makePage([next], hasNext: false, currentPage: 1, gisuId: "1100")
+        let viewModel = makeViewModel(useCase: useCase, mode: .admin)
+        await viewModel.fetchMembers()
+        useCase.executePageError = CancellationError()
+        await viewModel.fetchMembers()
+        useCase.executePageError = nil
+
+        await viewModel.fetchNextPage()
+
+        #expect(viewModel.membersState == .loaded([first, next]))
+        #expect(useCase.executePageCalls == [0, 0, 1])
+    }
+
+    @Test("추가 페이지의 관리 기수가 바뀌면 기존 기수에 합치지 않고 첫 페이지를 다시 조회한다")
+    func changedManagementGenerationReloadsFirstPage() async {
+        let oldMember = makeMember(memberID: "11")
+        let newFirst = makeMember(memberID: "12-first")
+        let newNext = makeMember(memberID: "12-next")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([oldMember], hasNext: true, currentPage: 0, gisuId: "1100")
+        useCase.pages[1] = makePage([newNext], hasNext: false, currentPage: 1, gisuId: "1200")
+        let viewModel = makeViewModel(useCase: useCase, mode: .admin)
+        await viewModel.fetchMembers()
+        useCase.pages[0] = makePage([newFirst], hasNext: true, currentPage: 0, gisuId: "1200")
+
+        await viewModel.fetchNextPage()
+
+        #expect(viewModel.membersState == .loaded([newFirst]))
+        #expect(useCase.executePageCalls == [0, 1, 0])
+        #expect(useCase.executePageModes == [.admin, .admin, .admin])
+        #expect(!viewModel.isLoadingNextPage)
+    }
+
+    @Test("추가 조회에서 관리 기수가 사라지면 인라인 실패를 표시하고 첫 페이지부터 재시도한다")
+    func missingManagementGenerationFailsAndRetriesFirstPage() async {
+        let member = makeMember(memberID: "11")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([member], hasNext: true, currentPage: 0, gisuId: "1100")
+        let viewModel = makeViewModel(useCase: useCase, mode: .admin)
+        await viewModel.fetchMembers()
+        let error = DomainError.custom(message: "관리 기수 정보가 없습니다.")
+        useCase.executePageError = error
+
+        await viewModel.fetchNextPage()
+
+        #expect(viewModel.membersState == .failed(.domain(error)))
+        useCase.executePageError = nil
+        await viewModel.fetchMembers()
+        #expect(viewModel.membersState == .loaded([member]))
+        #expect(useCase.executePageCalls == [0, 1, 0])
+    }
 
     @Test("다음 페이지 → 기존 목록에 추가 + 페이지네이션 갱신")
     func nextPageAppendsAndUpdatesPagination() async {

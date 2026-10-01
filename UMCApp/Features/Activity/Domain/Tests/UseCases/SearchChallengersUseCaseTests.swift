@@ -75,11 +75,11 @@ private final class MockSearchMemberRepository: @unchecked Sendable, MemberRepos
 
     // MARK: 본 UseCase 미사용 — 호출 시 unimplemented
 
-    func fetchMembers() async throws -> [MemberManagementItem] {
+    func fetchMembers(mode: ActivityMode = .challenger) async throws -> [MemberManagementItem] {
         throw MockError.unimplemented
     }
 
-    func fetchMembersPage(page: Int) async throws -> MemberPage {
+    func fetchMembersPage(page: Int, mode: ActivityMode = .challenger) async throws -> MemberPage {
         throw MockError.unimplemented
     }
 

@@ -24,6 +24,7 @@ final class MemberListViewModel {
     private let fetchMembersUseCase: FetchMembersUseCaseProtocol
     private let errorHandler: ErrorHandler
     private let userSessionManager: UserSessionManager
+    private let mode: ActivityMode
 
     // MARK: - Property
 
@@ -37,17 +38,20 @@ final class MemberListViewModel {
     private(set) var isLoadingNextPage: Bool = false
     private(set) var hasMorePages: Bool = true
     private var currentPage: Int = 0
+    private var currentGisuId: String?
 
     // MARK: - Init
 
     init(
         fetchMembersUseCase: FetchMembersUseCaseProtocol,
         errorHandler: ErrorHandler,
-        userSessionManager: UserSessionManager
+        userSessionManager: UserSessionManager,
+        mode: ActivityMode = .challenger
     ) {
         self.fetchMembersUseCase = fetchMembersUseCase
         self.errorHandler = errorHandler
         self.userSessionManager = userSessionManager
+        self.mode = mode
     }
 
     // MARK: - Computed Property
@@ -100,10 +104,11 @@ final class MemberListViewModel {
         currentPage = 0
         hasMorePages = true
         do {
-            let page = try await fetchMembersUseCase.executePage(page: 0)
+            let page = try await fetchMembersUseCase.executePage(page: 0, mode: mode)
             membersState = .loaded(page.members)
             hasMorePages = page.hasNext
             currentPage = page.currentPage
+            currentGisuId = page.gisuId
         } catch is CancellationError {
             membersState = previousState
         } catch let error as NSError
@@ -128,6 +133,7 @@ final class MemberListViewModel {
     func fetchNextPage() async {
         guard hasMorePages, !isLoadingNextPage else { return }
         guard case .loaded(let existing) = membersState else { return }
+        let existingGisuId = currentGisuId
 
         isLoadingNextPage = true
         defer { isLoadingNextPage = false }
@@ -135,8 +141,14 @@ final class MemberListViewModel {
         do {
             let nextPage = currentPage + 1
             let page = try await fetchMembersUseCase.executePage(
-                page: nextPage
+                page: nextPage,
+                mode: mode
             )
+            if mode == .admin,
+               page.gisuId != existingGisuId || currentGisuId != existingGisuId {
+                await fetchMembers()
+                return
+            }
             // memberID 가 둘 다 있을 때만 중복으로 판단한다. memberID 가 nil 인 멤버를
             // nil == nil 로 묶어 일괄 제거하지 않도록 non-nil 일 때만 비교한다.
             let deduplicatedMembers = page.members.filter { newMember in
@@ -146,6 +158,8 @@ final class MemberListViewModel {
             membersState = .loaded(existing + deduplicatedMembers)
             hasMorePages = page.hasNext
             currentPage = page.currentPage
+        } catch let error as DomainError where mode == .admin {
+            membersState = .failed(.domain(error))
         } catch {
             // 다음 페이지 실패 시 기존 데이터 유지
         }

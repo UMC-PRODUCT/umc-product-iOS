@@ -48,7 +48,8 @@ struct OperatorMemberManagementView: View {
             initialValue: viewModel ?? MemberListViewModel(
                 fetchMembersUseCase: container.resolve(FetchMembersUseCaseProtocol.self),
                 errorHandler: errorHandler,
-                userSessionManager: container.resolve(UserSessionManager.self)
+                userSessionManager: container.resolve(UserSessionManager.self),
+                mode: .admin
             )
         )
     }
@@ -206,11 +207,11 @@ struct OperatorMemberManagementView: View {
 #if DEBUG
 /// 네트워크 없이 멤버 관리 화면을 확인하기 위한 프리뷰 전용 UseCase (핵심규칙 #5)
 private struct PreviewOperatorMembersUseCase: FetchMembersUseCaseProtocol {
-    func execute() async throws -> [MemberManagementItem] {
+    func execute(mode: ActivityMode = .challenger) async throws -> [MemberManagementItem] {
         previewMembers
     }
 
-    func executePage(page: Int) async throws -> MemberPage {
+    func executePage(page: Int, mode: ActivityMode = .challenger) async throws -> MemberPage {
         MemberPage(members: previewMembers, hasNext: false, currentPage: page)
     }
 
@@ -287,7 +288,8 @@ private struct PreviewOperatorMembersUseCase: FetchMembersUseCaseProtocol {
     let viewModel = MemberListViewModel(
         fetchMembersUseCase: PreviewOperatorMembersUseCase(),
         errorHandler: ErrorHandler(),
-        userSessionManager: UserSessionManager()
+        userSessionManager: UserSessionManager(),
+        mode: .admin
     )
     return NavigationStack {
         OperatorMemberManagementView(

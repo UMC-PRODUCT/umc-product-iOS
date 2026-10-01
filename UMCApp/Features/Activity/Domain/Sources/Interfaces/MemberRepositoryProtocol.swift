@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreDomain
 import UMCFoundation
 
 /// 운영진 멤버 관리 데이터 접근 Repository
@@ -19,18 +20,18 @@ public protocol MemberRepositoryProtocol {
     // MARK: - 멤버 목록
 
     /// 멤버 목록 전체 조회
-    func fetchMembers() async throws -> [MemberManagementItem]
+    func fetchMembers(mode: ActivityMode) async throws -> [MemberManagementItem]
 
     /// 멤버 목록 페이지 단위 조회 (offset 기반)
     ///
     /// - Parameter page: 0-based 페이지 인덱스
-    func fetchMembersPage(page: Int) async throws -> MemberPage
+    func fetchMembersPage(page: Int, mode: ActivityMode) async throws -> MemberPage
 
     // MARK: - 챌린저 검색
 
     /// 이름/닉네임 키워드로 챌린저를 검색합니다 (cursor 기반).
     ///
-    /// 멤버 목록 조회(``fetchMembersPage(page:)``)와 달리 학교 범위로 좁히지 않습니다 —
+    /// 멤버 목록 조회(``fetchMembersPage(page:mode:)``)와 달리 학교 범위로 좁히지 않습니다 —
     /// 스터디 그룹에 초대할 인원을 찾는 용도라 타 학교 챌린저도 결과에 나와야 합니다.
     ///
     /// - Parameters:

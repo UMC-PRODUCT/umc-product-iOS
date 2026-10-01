@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreDomain
 import UMCFoundation
 
 /// `FetchMembersUseCaseProtocol` 의 기본 구현체
@@ -26,12 +27,14 @@ public final class FetchMembersUseCase: FetchMembersUseCaseProtocol {
 
     // MARK: - Function
 
-    public func execute() async throws -> [MemberManagementItem] {
-        try await repository.fetchMembers()
+    public func execute(mode: ActivityMode = .challenger) async throws -> [MemberManagementItem] {
+        try await repository.fetchMembers(mode: mode)
     }
 
-    public func executePage(page: Int) async throws -> MemberPage {
-        try await repository.fetchMembersPage(page: page)
+    public func executePage(
+        page: Int, mode: ActivityMode = .challenger
+    ) async throws -> MemberPage {
+        try await repository.fetchMembersPage(page: page, mode: mode)
     }
 
     public func grantPoint(

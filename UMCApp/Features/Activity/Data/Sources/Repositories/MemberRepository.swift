@@ -74,21 +74,29 @@ public final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendab
 
     // MARK: - 멤버 목록
 
-    public func fetchMembers() async throws -> [MemberManagementItem] {
+    public func fetchMembers(mode: ActivityMode = .challenger) async throws
+        -> [MemberManagementItem] {
         let schoolId = try requireSchoolId()
-        let descriptors = try await fetchAllDescriptors(schoolId: schoolId)
+        let gisuId = try resolveGisuId(for: mode)
+        let descriptors = try await fetchAllDescriptors(
+            schoolId: schoolId, gisuId: mode == .admin ? gisuId : nil
+        )
         guard !descriptors.isEmpty else { return [] }
-        return try await enrichDescriptors(descriptors)
+        return try await enrichDescriptors(descriptors, gisuId: gisuId, mode: mode)
     }
 
-    public func fetchMembersPage(page: Int) async throws -> MemberPage {
+    public func fetchMembersPage(
+        page: Int, mode: ActivityMode = .challenger
+    ) async throws -> MemberPage {
         let schoolId = try requireSchoolId()
+        let gisuId = try resolveGisuId(for: mode)
         let response = try await networkRequesting.request(
             StudyRouter.searchChallengersOffset(
                 query: ChallengerSearchQuery(
                     page: page,
                     size: Constants.searchPageSize,
-                    schoolId: schoolId
+                    schoolId: schoolId,
+                    gisuId: mode == .admin ? gisuId : nil
                 )
             )
         )
@@ -98,11 +106,12 @@ public final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendab
         ).unwrap()
         let pageResult = result.page
         let descriptors = makeDescriptors(from: pageResult.content)
-        let members = try await enrichDescriptors(descriptors)
+        let members = try await enrichDescriptors(descriptors, gisuId: gisuId, mode: mode)
         return MemberPage(
             members: members,
             hasNext: pageResult.hasNext,
-            currentPage: pageResult.page
+            currentPage: pageResult.page,
+            gisuId: mode == .admin ? gisuId : nil
         )
     }
 
@@ -256,8 +265,19 @@ private extension MemberRepository {
         return schoolId
     }
 
+    func resolveGisuId(for mode: ActivityMode) throws -> String? {
+        guard mode == .admin else { return context.gisuId }
+        guard let gisuId = context.managementGisuId,
+              let identifier = Int64(gisuId), identifier > 0 else {
+            throw DomainError.custom(message: "관리 기수 정보가 없어 멤버 목록을 조회할 수 없습니다.")
+        }
+        return gisuId
+    }
+
     /// 오프셋 검색을 `hasNext` 가 끝날 때까지 순회하여 멤버 디스크립터를 수집합니다.
-    func fetchAllDescriptors(schoolId: String) async throws -> [MemberDescriptor] {
+    func fetchAllDescriptors(
+        schoolId: String, gisuId: String?
+    ) async throws -> [MemberDescriptor] {
         var page = 0
         var descriptorsByMemberId: [String: MemberDescriptor] = [:]
 
@@ -267,7 +287,8 @@ private extension MemberRepository {
                     query: ChallengerSearchQuery(
                         page: page,
                         size: Constants.searchPageSize,
-                        schoolId: schoolId
+                        schoolId: schoolId,
+                        gisuId: gisuId
                     )
                 )
             )
@@ -376,9 +397,8 @@ private extension MemberRepository {
     ///   (`StudyRepository.resolveChallengerId` 와 동일 방침). 멤버별 부분 성공이 필요해지면
     ///   404 등 recoverable 상태만 선별 흡수하도록 후속 보강합니다.
     func enrichDescriptors(
-        _ descriptors: [MemberDescriptor]
+        _ descriptors: [MemberDescriptor], gisuId: String?, mode: ActivityMode
     ) async throws -> [MemberManagementItem] {
-        let preferredGisuId = context.gisuId
         let currentMemberId = context.currentMemberId
 
         var members: [MemberManagementItem] = []
@@ -389,14 +409,16 @@ private extension MemberRepository {
             let record = resolveRecord(
                 from: profile,
                 memberId: descriptor.memberId,
-                preferredGisuId: preferredGisuId
+                preferredGisuId: gisuId,
+                mode: mode
             )
             members.append(
                 makeMemberItem(
                     descriptor: descriptor,
                     profile: profile,
                     record: record,
-                    currentMemberId: currentMemberId
+                    currentMemberId: currentMemberId,
+                    mode: mode
                 )
             )
         }
@@ -413,7 +435,8 @@ private extension MemberRepository {
         descriptor: MemberDescriptor,
         profile: MemberManagementProfileDTO?,
         record: MemberManagementChallengerRecordDTO?,
-        currentMemberId: String?
+        currentMemberId: String?,
+        mode: ActivityMode
     ) -> MemberManagementItem {
         let allPoints = record?.resolvedPoints ?? []
         let penaltyPoints = allPoints.filter { !isReward(pointType: $0.pointType, signedPoint: $0.point) }
@@ -438,7 +461,7 @@ private extension MemberRepository {
             penalty: totalPenalty,
             rewardPoints: totalReward,
             badge: false,
-            managementTeam: resolvedManagementTeam(
+            managementTeam: mode == .admin ? descriptor.managementTeam : resolvedManagementTeam(
                 profile: profile,
                 record: record,
                 fallback: descriptor.managementTeam
@@ -469,7 +492,8 @@ private extension MemberRepository {
     func resolveRecord(
         from profile: MemberManagementProfileDTO,
         memberId: String,
-        preferredGisuId: String?
+        preferredGisuId: String?,
+        mode: ActivityMode
     ) -> MemberManagementChallengerRecordDTO? {
         let matchedMemberRecords = profile.challengerRecords.filter {
             $0.memberId == memberId
@@ -488,6 +512,7 @@ private extension MemberRepository {
             }
         }
 
+        guard mode == .challenger else { return nil }
         return matchedMemberRecords.first ?? profile.challengerRecords.first
     }
 

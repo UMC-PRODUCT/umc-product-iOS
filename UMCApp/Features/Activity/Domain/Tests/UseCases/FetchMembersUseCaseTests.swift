@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreDomain
 import Testing
 import UMCFoundation
 @testable import ActivityDomain
@@ -76,6 +77,7 @@ private final class MockMemberRepository: @unchecked Sendable, MemberRepositoryP
 
     private(set) var fetchMembersCallCount = 0
     private(set) var fetchMembersPageCalls: [Int] = []
+    private(set) var listModes: [ActivityMode] = []
     private(set) var grantPointCalls: [GrantCall] = []
     private(set) var deletePointCalls: [String] = []
     private(set) var fetchPointHistoryCalls: [String] = []
@@ -85,14 +87,16 @@ private final class MockMemberRepository: @unchecked Sendable, MemberRepositoryP
 
     // MARK: MemberRepositoryProtocol
 
-    func fetchMembers() async throws -> [MemberManagementItem] {
+    func fetchMembers(mode: ActivityMode = .challenger) async throws -> [MemberManagementItem] {
         fetchMembersCallCount += 1
+        listModes.append(mode)
         if let error { throw error }
         return fetchMembersResult
     }
 
-    func fetchMembersPage(page: Int) async throws -> MemberPage {
+    func fetchMembersPage(page: Int, mode: ActivityMode = .challenger) async throws -> MemberPage {
         fetchMembersPageCalls.append(page)
+        listModes.append(mode)
         if let error { throw error }
         return fetchMembersPageResult
     }
@@ -214,6 +218,18 @@ private func callMethod(
 
 @Suite("FetchMembersUseCase — 멤버 관리 위임 계약 (도메인 규칙)")
 struct FetchMembersUseCaseDelegationTests {
+
+    @Test("전체·페이지 조회는 화면 모드를 Repository에 그대로 전달한다")
+    func listRequestsPreserveActivityMode() async throws {
+        let repository = MockMemberRepository()
+        let useCase = makeUseCase(repository: repository)
+
+        _ = try await useCase.execute(mode: .admin)
+        _ = try await useCase.executePage(page: 1, mode: .admin)
+        _ = try await useCase.executePage(page: 0, mode: .challenger)
+
+        #expect(repository.listModes == [.admin, .admin, .challenger])
+    }
 
     @Test("execute — fetchMembers 결과를 그대로 반환하고 1회 호출")
     func executeReturnsRepositoryMembers() async throws {

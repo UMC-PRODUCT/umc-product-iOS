@@ -18,11 +18,11 @@ struct StubMemberRepository: MemberRepositoryProtocol {
 
     // MARK: - 멤버 목록
 
-    func fetchMembers() async throws -> [MemberManagementItem] {
+    func fetchMembers(mode: ActivityMode = .challenger) async throws -> [MemberManagementItem] {
         StubSessionFixtures.members
     }
 
-    func fetchMembersPage(page: Int) async throws -> MemberPage {
+    func fetchMembersPage(page: Int, mode: ActivityMode = .challenger) async throws -> MemberPage {
         guard page == 0 else {
             return MemberPage(members: [], hasNext: false, currentPage: page)
         }
