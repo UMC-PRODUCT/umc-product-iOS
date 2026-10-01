@@ -28,9 +28,7 @@ it is unused in App Store Connect before uploading.
 3. Start from `origin/develop` unless the user identifies a different source revision.
    Update `MARKETING_VERSION` only when it differs from the requested version; the branch
    name supplies `CURRENT_PROJECT_VERSION`.
-4. Create and push the target branch. Commit the version change when needed, without AI
-   attribution. A push is the Xcode Cloud deployment trigger; do not create a PR unless
-   requested.
+4. Create the target branch. Commit the version change when needed, without AI attribution.
 5. Verify the build number and manifest generation on the deployment branch:
 
    ```sh
@@ -39,7 +37,23 @@ it is unused in App Store Connect before uploading.
    ```
 
    Confirm the generated configuration has the requested `MARKETING_VERSION` and
-   `CURRENT_PROJECT_VERSION`. Report the branch, version, build number, and selected server.
+   `CURRENT_PROJECT_VERSION`, then push the branch to trigger Xcode Cloud. Do not create a
+   PR for the deployment branch unless requested.
+6. Sync the requested `MARKETING_VERSION` back to `develop` when develop's version is lower
+   (compare numeric version components, not strings). Follow `docs/claude/git-workflow.md`: reuse
+   or create an issue, use a `{type}/{issue}` branch from `origin/develop`, and open a PR
+   targeting `develop` with the required template, assignee, and label. This version-sync
+   PR is part of deployment; the no-PR rule above applies only to the deployment branch.
+   Copy only `MARKETING_VERSION` in `Settings+Recommended.swift`; never merge the
+   deployment branch or carry over server settings or deployment-only changes. Preserve
+   the local `CURRENT_PROJECT_VERSION` default of `1`, not the deployment build number.
+   Skip the PR if `develop` already has the same or a higher version; never downgrade it.
+7. After the PR is merged, update local `develop` without discarding local changes and run
+   `cd UMCApp && make generate` without a deployment build-number override. Verify the
+   generated settings match `develop`'s `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION=1`.
+   Report deployment push/Cloud status separately from develop sync and local generation
+   status, alongside the branch, version, build number, and selected server. A pending PR
+   is not a completed develop sync, and a push does not prove an upload succeeded.
 
 ## Xcode Cloud preflight
 
