@@ -14,6 +14,8 @@ let project = coreProject(
     dependencies: [
         .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
         .project(target: "CoreDomain", path: .relativeToRoot("Core/Domain")),
+        .external(name: "Aquila"),
+        .external(name: "AquilaMoya"),
         .external(name: "Moya"),
         .external(name: "KakaoSDKAuth"),
         .external(name: "KakaoSDKCommon"),
@@ -24,6 +26,8 @@ let project = coreProject(
     ],
     includesTests: true,
     testDependencies: [
+        .external(name: "Aquila"),
+        .external(name: "AquilaMoya"),
         .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
         .project(target: "CoreDomain", path: .relativeToRoot("Core/Domain")),
     ],

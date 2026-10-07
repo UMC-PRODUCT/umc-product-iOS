@@ -249,8 +249,10 @@ struct CommunityThreadRepositoryTests {
         #expect(network.lastMethod == .get)
         guard case .getInvitableMembers("1", let query) = network.lastTarget else {
             Issue.record(
-                "lastTarget 이 getInvitableMembers 가 아닙니다: "
-                    + String(describing: network.lastTarget)
+                """
+                lastTarget 이 getInvitableMembers 가 아닙니다: \
+                \(String(describing: network.lastTarget))
+                """
             )
             return
         }

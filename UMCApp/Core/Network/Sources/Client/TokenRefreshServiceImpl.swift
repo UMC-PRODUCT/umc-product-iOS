@@ -5,23 +5,14 @@
 //  Created by euijjang97 on 4/25/26.
 //
 
+import Aquila
 import Foundation
 import UMCFoundation
 
-/// TokenRefreshService 프로토콜의 실제 구현체입니다.
-///
-/// 서버의 `/api/v1/auth/token/renew` 엔드포인트를 호출하여 리프레시 토큰으로 새로운 토큰 쌍을 발급받습니다.
-///
-/// - Important:
-///   - **NetworkClient와 독립적**: NetworkClient를 사용하지 않음 (무한 루프 방지)
-///   - **APIResponse 사용**: 서버의 공통 응답 포맷 사용
-///   - **JSON Body 전송**: 서버 문서 스펙에 맞춰 리프레시 토큰을 Request Body에 전송
 struct TokenRefreshServiceImpl: TokenRefreshService {
     // MARK: - Property
 
-    private let baseURL: URL
-    private let session: URLSession
-    private let decoder: JSONDecoder
+    private let service: Aquila.HTTPTokenRefreshService
 
     // MARK: - Init
 
@@ -30,83 +21,61 @@ struct TokenRefreshServiceImpl: TokenRefreshService {
         session: URLSession = .shared,
         decoder: JSONDecoder = JSONDecoder()
     ) {
-        self.baseURL = baseURL
-        self.session = session
-        self.decoder = decoder
+        service = Aquila.HTTPTokenRefreshService(
+            session: session,
+            logger: NetworkClient.logger,
+            makeRequest: { refreshToken in
+                var request = URLRequest(url: baseURL.appending(path: "api/v1/auth/token/renew"))
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.httpBody = try JSONEncoder().encode(
+                    RefreshTokenRequestBody(refreshToken: refreshToken)
+                )
+                return request
+            },
+            decodeTokens: { data, _ in
+                let response = try decoder.decode(APIResponse<TokenResult>.self, from: data)
+                let result = try response.unwrap()
+                return TokenPair(
+                    accessToken: result.accessToken, refreshToken: result.refreshToken
+                )
+            }
+        )
     }
 
-    // MARK: - TokenRefreshService
+    // MARK: - Function
 
-    /// 리프레시 토큰으로 새로운 토큰 쌍을 발급받습니다.
-    ///
-    /// ## 요청 형식
-    /// ```
-    /// POST /api/v1/auth/token/renew
-    /// Content-Type: application/json
-    ///
-    /// { "refreshToken": "..." }
-    /// ```
     func refresh(_ refreshToken: String) async throws -> TokenPair {
-        // 1. URL 생성
-        let url = baseURL.appending(path: "api/v1/auth/token/renew")
-
-        // 2. URLRequest 구성
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(
-            RefreshTokenRequestBody(refreshToken: refreshToken)
-        )
-
-        // 3. 네트워크 요청 실행
-        let (data, response) = try await session.data(for: request)
-
-        // 4. HTTPURLResponse 형변환
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw TokenRefreshError.invalidResponse
-        }
-
-        // 5. 상태 코드 확인 (2xx 성공)
-        guard (200...299).contains(httpResponse.statusCode) else {
-            throw TokenRefreshError.serverError(statusCode: httpResponse.statusCode)
-        }
-
-        // 6. 응답 디코딩 (APIResponse 사용)
-        let tokenResponse = try decoder.decode(APIResponse<TokenResult>.self, from: data)
-
-        // 7. 성공 여부 확인
-        guard tokenResponse.isSuccess, let result = tokenResponse.result else {
-            throw TokenRefreshError.refreshFailed(message: tokenResponse.message)
-        }
-
-        // 8. TokenPair 생성
-        return TokenPair(
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken
-        )
+        try await service.refresh(refreshToken)
     }
 }
-
-// MARK: - RefreshTokenRequestBody
 
 private struct RefreshTokenRequestBody: Encodable {
     let refreshToken: String
 }
 
-// MARK: - TokenResult
-
-/// 토큰 갱신 API 응답의 result 필드를 파싱하는 내부 모델입니다.
 private struct TokenResult: Codable, Sendable {
     let accessToken: String
     let refreshToken: String
+
+    private enum CodingKeys: String, CodingKey {
+        case accessToken
+        case refreshToken
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        accessToken = try container.decode(String.self, forKey: .accessToken)
+        refreshToken = try container.decode(String.self, forKey: .refreshToken)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(accessToken, forKey: .accessToken)
+        try container.encode(refreshToken, forKey: .refreshToken)
+    }
 }
 
-// MARK: - TokenRefreshError
-
-/// 토큰 갱신 과정에서 발생하는 에러를 정의하는 열거형입니다.
-///
-/// - Important: 전송 계층 실패는 이 타입이 아니라 `URLError` 그대로 전파됩니다.
-///   NetworkClient는 두 경우를 구분해 각각 다른 `NetworkError`로 변환합니다.
 enum TokenRefreshError: Error, LocalizedError {
     case invalidResponse
     case serverError(statusCode: Int)
@@ -120,23 +89,6 @@ enum TokenRefreshError: Error, LocalizedError {
             return "서버 에러 (status: \(statusCode))"
         case .refreshFailed(let message):
             return message ?? "토큰 갱신 실패"
-        }
-    }
-
-    /// 서버가 리프레시 토큰을 거부한 경우에만 세션 만료(`tokenRefreshFailed`)로 변환합니다.
-    ///
-    /// 5xx 같은 일시적 서버 장애까지 세션 만료로 다루면 서버가 잠깐 흔들릴 때마다
-    /// 강제 로그아웃되므로, 일반 요청 실패로 남겨 재시도 가능하게 둡니다.
-    var asNetworkError: NetworkError {
-        switch self {
-        case .invalidResponse:
-            return .invalidResponse
-        case .serverError(let statusCode) where statusCode == 401 || statusCode == 403:
-            return .tokenRefreshFailed(reason: errorDescription)
-        case .serverError(let statusCode):
-            return .requestFailed(statusCode: statusCode, data: nil)
-        case .refreshFailed(let message):
-            return .tokenRefreshFailed(reason: message)
         }
     }
 }

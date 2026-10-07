@@ -213,8 +213,31 @@ private struct AppProductTestServerRefreshService: TokenRefreshService {
             throw NetworkError.invalidResponse
         }
 
-        let decoded = try JSONDecoder().decode(APIResponse<TokenPair>.self, from: data)
-        return try decoded.unwrap()
+        let decoded = try JSONDecoder().decode(APIResponse<TestTokenResult>.self, from: data)
+        let result = try decoded.unwrap()
+        return TokenPair(accessToken: result.accessToken, refreshToken: result.refreshToken)
+    }
+}
+
+private struct TestTokenResult: Codable, Sendable {
+    let accessToken: String
+    let refreshToken: String
+
+    private enum CodingKeys: String, CodingKey {
+        case accessToken
+        case refreshToken
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        accessToken = try container.decode(String.self, forKey: .accessToken)
+        refreshToken = try container.decode(String.self, forKey: .refreshToken)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(accessToken, forKey: .accessToken)
+        try container.encode(refreshToken, forKey: .refreshToken)
     }
 }
 

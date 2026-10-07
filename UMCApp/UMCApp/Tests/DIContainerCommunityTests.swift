@@ -23,14 +23,16 @@ import UMCFoundation
 /// 실제로 소비하는 공유 인프라(`TokenStore`·`MoyaNetworkAdapter`)만 운영과 같은 방식으로 먼저
 /// 등록한다. 등록·해석 시점에는 네트워크 왕복도 소켓 연결도 없어 실제 구현을 그대로 쓴다.
 private func makeContainer(
+    baseURL: URL? = nil,
+    tokenStore: (any TokenStore)? = nil,
     onTokenStoreFactoryCall: @escaping () -> Void = {}
 ) throws -> DIContainer {
     // 요청을 보내지 않는 테스트용 base URL.
-    let baseURL = try #require(URL(string: "https://test.invalid"))
+    let baseURL = try baseURL ?? #require(URL(string: "https://test.invalid"))
     let container = DIContainer()
     container.register(TokenStore.self) {
         onTokenStoreFactoryCall()
-        return KeychainTokenStore()
+        return tokenStore ?? KeychainTokenStore()
     }
     container.register(MoyaNetworkAdapter.self) {
         MoyaNetworkAdapter(
@@ -42,7 +44,7 @@ private func makeContainer(
     container.register(StorageRepositoryProtocol.self) {
         StorageRepository(adapter: container.resolve(MoyaNetworkAdapter.self))
     }
-    container.registerCommunityDependencies()
+    container.registerCommunityDependencies(baseURL: baseURL)
     return container
 }
 
@@ -119,8 +121,8 @@ struct DIContainerCommunityTests {
     func stompConnectionResolvesToSameInstance() throws {
         let container = try makeContainer()
 
-        let first = container.resolve(StompConnection.self)
-        let second = container.resolve(StompConnection.self)
+        let first = try container.resolve(Result<StompConnection, any Error>.self).get()
+        let second = try container.resolve(Result<StompConnection, any Error>.self).get()
 
         #expect(first === second)
     }
@@ -134,8 +136,83 @@ struct DIContainerCommunityTests {
         var tokenStoreFactoryCallCount = 0
         let container = try makeContainer { tokenStoreFactoryCallCount += 1 }
 
-        _ = container.resolve(StompConnection.self)
+        _ = try container.resolve(Result<StompConnection, any Error>.self).get()
 
         #expect(tokenStoreFactoryCallCount == 1)
     }
+
+    @Test("STOMP CONNECT 토큰이 없으면 앱의 unauthorized 에러를 보고한다",
+          .timeLimit(.minutes(1)))
+    func reportsMissingConnectTokenAsUnauthorized() async throws {
+        let container = try makeContainer(tokenStore: CommunityTokenStore())
+        let connection = try container.resolve(Result<StompConnection, any Error>.self).get()
+        var events = await connection.events().makeAsyncIterator()
+
+        await connection.connect()
+
+        guard case .disconnected(let error) = await events.next() else {
+            Issue.record("인증 실패 이벤트가 오지 않음")
+            await connection.disconnect()
+            return
+        }
+        #expect(error as? UMCFoundation.NetworkError == .unauthorized)
+        await connection.disconnect()
+    }
+
+    @Test("CONNECT 헤더는 토큰이 바뀔 때마다 저장소에서 다시 읽는다")
+    func rereadsConnectToken() async throws {
+        let tokenStore = CommunityTokenStore(accessToken: "token-before-refresh")
+        let first = try await DIContainer.communityConnectHeaders(tokenStore: tokenStore)
+        try await tokenStore.save(accessToken: "token-after-refresh", refreshToken: "refresh")
+        let second = try await DIContainer.communityConnectHeaders(tokenStore: tokenStore)
+
+        #expect(first == ["Authorization": "Bearer token-before-refresh"])
+        #expect(second == ["Authorization": "Bearer token-after-refresh"])
+    }
+
+    @Test("빈 토큰으로 CONNECT 하지 않고 unauthorized 를 던진다")
+    func rejectsEmptyConnectToken() async throws {
+        let tokenStore = CommunityTokenStore(accessToken: "")
+        await #expect(throws: UMCFoundation.NetworkError.unauthorized) {
+            try await DIContainer.communityConnectHeaders(tokenStore: tokenStore)
+        }
+    }
+
+    @Test("잘못된 WebSocket 설정은 DI 해석을 중단하지 않고 명령 실패로 전달된다",
+          .timeLimit(.minutes(1)))
+    func preservesInvalidConfigurationFailure() async throws {
+        let baseURL = try #require(URL(string: "https:/missing-host"))
+        let container = try makeContainer(baseURL: baseURL, tokenStore: CommunityTokenStore())
+        let result = container.resolve(Result<StompConnection, any Error>.self)
+        #expect(throws: StompConnectionError.invalidURL) { try result.get() }
+
+        let client = container.resolve(CommunityThreadRealtimeProtocol.self)
+        let signals = await client.signals()
+        await client.start()
+        await #expect(throws: StompConnectionError.invalidURL) {
+            try await client.deleteMessage(threadId: "12", messageId: "10")
+        }
+        await client.stop()
+        var received = signals.makeAsyncIterator()
+        #expect(await received.next() == nil)
+    }
 }
+
+#if DEBUG
+private actor CommunityTokenStore: TokenStore {
+    private var accessToken: String?
+
+    init(accessToken: String? = nil) {
+        self.accessToken = accessToken
+    }
+
+    func getAccessToken() async -> String? { accessToken }
+    func getRefreshToken() async -> String? { nil }
+
+    func save(accessToken: String, refreshToken: String) async throws {
+        self.accessToken = accessToken
+    }
+
+    func clear() async throws { accessToken = nil }
+}
+#endif

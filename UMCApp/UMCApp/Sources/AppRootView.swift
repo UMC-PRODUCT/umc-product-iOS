@@ -129,9 +129,8 @@ struct AppRootView: View {
     ///   명시적으로 `invalidateCache()`를 함께 호출한다.
     ///
     /// - Note: STOMP 연결은 `resetCache()`가 참조를 버려도 펌프 Task가 자기 클라이언트를
-    ///   강참조해 살아남는다. 그 orphan은 생성 시점에 붙잡은 구 `TokenStore`의 인메모리 캐시를
-    ///   그대로 써서 만료된 세션의 토큰으로 재연결을 계속하므로, 참조를 버리기 전에 반드시
-    ///   `stop()`을 예약한다. 아직 시작하지 않은 연결에는 no-op이고, 한 번도 만들어지지
+    ///   강참조해 살아남는다. 멈추지 않으면 재연결을 계속하거나 이후 세션의 인증 정보를
+    ///   읽을 수 있으므로 참조를 버리기 전에 `stop()`을 예약한다. 한 번도 만들어지지
     ///   않았다면 `resolveIfCached`가 nil을 반환해 새 인스턴스를 만들지 않는다.
     private func handleAuthSessionExpired() {
         let networkClient = di.resolve(NetworkClient.self)
