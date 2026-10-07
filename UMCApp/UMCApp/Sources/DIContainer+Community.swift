@@ -9,6 +9,7 @@ import CommunityData
 import CommunityDomain
 import CoreDI
 import CoreNetwork
+import Foundation
 import NoticeDomain
 import UMCFoundation
 
@@ -25,8 +26,8 @@ extension DIContainer {
     /// - Important: 등록 시점에 `start()` 를 부르지 않는다. 연결은 스레드 화면이 열릴 때 시작한다.
     /// - Note: `MoyaNetworkAdapter`/`TokenStore` 는 ``DIContainer/configured(modelContext:)`` 가
     ///   등록한 공유 인프라이므로 재등록하지 않고 `resolve` 로만 재사용한다.
-    func registerCommunityDependencies() {
-        registerCommunityRealtime()
+    func registerCommunityDependencies(baseURL: URL = NetworkConfig.baseURL) {
+        registerCommunityRealtime(baseURL: baseURL)
         registerCommunityRepositories()
         registerCommunityUseCases()
         registerCommunityOnDeviceAI()
@@ -34,16 +35,32 @@ extension DIContainer {
 
     // MARK: - Realtime
 
-    private func registerCommunityRealtime() {
-        register(StompConnection.self) {
-            StompConnection(
-                url: StompConnection.webSocketURL(base: NetworkConfig.baseURL),
-                tokenStore: self.resolve(TokenStore.self)
-            )
+    private func registerCommunityRealtime(baseURL: URL) {
+        register(Result<StompConnection, any Error>.self) {
+            let tokenStore = self.resolve(TokenStore.self)
+            return Result {
+                try StompConnection(
+                    url: StompConnection.webSocketURL(base: baseURL),
+                    connectHeaders: {
+                        try await Self.communityConnectHeaders(tokenStore: tokenStore)
+                    }
+                )
+            }
         }
         register(CommunityThreadRealtimeProtocol.self) {
-            CommunityThreadRealtimeClient(connection: self.resolve(StompConnection.self))
+            CommunityThreadRealtimeClient(
+                connectionResult: self.resolve(Result<StompConnection, any Error>.self)
+            )
         }
+    }
+
+    static func communityConnectHeaders(
+        tokenStore: any TokenStore
+    ) async throws -> [String: String] {
+        guard let accessToken = await tokenStore.getAccessToken(), !accessToken.isEmpty else {
+            throw UMCFoundation.NetworkError.unauthorized
+        }
+        return ["Authorization": "Bearer \(accessToken)"]
     }
 
     // MARK: - Repository

@@ -35,6 +35,10 @@ import PackageDescription
 let package = Package(
     name: "UMCApp",
     dependencies: [
+        .package(
+            url: "https://github.com/JEONG-J/Aquila.git",
+            revision: "c167df60acf91bd5827c67e4ec083ec902b0f65b"
+        ),
         .package(url: "https://github.com/Moya/Moya.git", from: "15.0.3"),
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.6.1"),
         .package(url: "https://github.com/kakao/kakao-ios-sdk", from: "2.27.0"),

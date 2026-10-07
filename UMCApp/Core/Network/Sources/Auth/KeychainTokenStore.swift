@@ -5,25 +5,10 @@
 //  Created by euijjang97 on 4/25/26.
 //
 
+import Aquila
 import Foundation
 import Security
 
-/// Keychain을 사용한 토큰 저장소
-///
-/// Actor로 구현하여 thread-safety를 보장합니다.
-/// 액세스 토큰과 리프레시 토큰을 iOS Keychain에 안전하게 저장하며,
-/// 메모리 캐시를 사용해 반복적인 Keychain 접근을 줄입니다.
-///
-/// - Important:
-///   - **Thread-safety**: Actor 격리로 동시 접근 안전
-///   - **Accessibility**: `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` 사용
-///     (디바이스 잠금 해제 후 접근 가능, 백업·동기화 안 됨)
-///   - **메모리 캐시**: 첫 조회 시 Keychain에서 로드 후 캐싱
-///   - **Access group**: 쿼리에 access group을 지정하지 않으므로 저장은 entitlement의
-///     첫 그룹(`$(AppIdentifierPrefix)com.umc.product.shared`)에, 조회는 앱이 가진
-///     모든 그룹을 대상으로 이뤄진다
-///   - **삭제 범위**: `clear()` 역시 access group을 지정하지 않아 앱이 가진 모든 그룹에서
-///     동일 키를 함께 제거한다
 public actor KeychainTokenStore: TokenStore {
 
     // MARK: - Property
@@ -31,10 +16,11 @@ public actor KeychainTokenStore: TokenStore {
     private let service: String
     private let accessTokenKey: String
     private let refreshTokenKey: String
-
-    private var cachedAccessToken: String?
-    private var cachedRefreshToken: String?
-    private var isCacheLoaded: Bool = false
+    private let paired: PairedTokenOperations
+    private let legacy: LegacyKeychainOperations
+    private let configurationError: (any Error)?
+    private var operationInProgress = false
+    private var waitingOperations: [CheckedContinuation<Void, Never>] = []
 
     // MARK: - Init
 
@@ -43,128 +29,180 @@ public actor KeychainTokenStore: TokenStore {
         accessTokenKey: String = "accessToken",
         refreshTokenKey: String = "refreshToken"
     ) {
+        let native = Result {
+            guard accessTokenKey != "tokenPair", refreshTokenKey != "tokenPair",
+                  accessTokenKey != refreshTokenKey else {
+                throw Aquila.KeychainTokenStoreError.invalidConfiguration(
+                    "Legacy token accounts must be distinct from each other and tokenPair"
+                )
+            }
+            return try Aquila.KeychainTokenStore(service: service, account: "tokenPair")
+        }
         self.service = service
         self.accessTokenKey = accessTokenKey
         self.refreshTokenKey = refreshTokenKey
+        self.paired = PairedTokenOperations(
+            read: { try await native.get().readTokens() },
+            save: { try await native.get().save(accessToken: $0, refreshToken: $1) },
+            clear: { try await native.get().clear() }
+        )
+        self.legacy = LegacyKeychainOperations()
+        switch native {
+        case .success: self.configurationError = nil
+        case .failure(let error): self.configurationError = error
+        }
     }
 
-    // MARK: - TokenStore
+    init(
+        service: String,
+        accessTokenKey: String = "accessToken",
+        refreshTokenKey: String = "refreshToken",
+        paired: PairedTokenOperations,
+        legacy: LegacyKeychainOperations
+    ) {
+        self.service = service
+        self.accessTokenKey = accessTokenKey
+        self.refreshTokenKey = refreshTokenKey
+        self.paired = paired
+        self.legacy = legacy
+        self.configurationError = nil
+    }
+
+    // MARK: - Function
 
     public func getAccessToken() async -> String? {
-        await loadCached()
-        return cachedAccessToken
+        try? await readTokens()?.accessToken
     }
 
     public func getRefreshToken() async -> String? {
-        await loadCached()
-        return cachedRefreshToken
+        try? await readTokens()?.refreshToken
+    }
+
+    public func readTokens() async throws -> Aquila.TokenPair? {
+        await acquireOperation()
+        defer { releaseOperation() }
+
+        if let tokens = try await paired.read() { return tokens }
+        let accessResult = legacy.read(readQuery(account: accessTokenKey))
+        let refreshResult = legacy.read(readQuery(account: refreshTokenKey))
+        let accessTokens = try legacyTokens(accessResult)
+        let refreshTokens = try legacyTokens(refreshResult)
+        for access in accessTokens {
+            guard let refresh = refreshTokens.first(where: { $0.group == access.group }) else {
+                continue
+            }
+            try await paired.save(access.token, refresh.token)
+            try deleteLegacyItems()
+            return Aquila.TokenPair(accessToken: access.token, refreshToken: refresh.token)
+        }
+        return nil
     }
 
     public func save(accessToken: String, refreshToken: String) async throws {
-        try saveToKeychain(key: accessTokenKey, value: accessToken)
-        try saveToKeychain(key: refreshTokenKey, value: refreshToken)
+        await acquireOperation()
+        defer { releaseOperation() }
 
-        cachedAccessToken = accessToken
-        cachedRefreshToken = refreshToken
-
-        #if DEBUG
-        print("토큰 저장 완료")
-        print("[Auth] saved accessToken: \(accessToken)")
-        print("[Auth] saved refreshToken: \(refreshToken)")
-        #endif
+        try await paired.save(accessToken, refreshToken)
+        try deleteLegacyItems()
     }
 
     public func clear() async throws {
-        deleteFromKeychain(key: accessTokenKey)
-        deleteFromKeychain(key: refreshTokenKey)
+        if let configurationError { throw configurationError }
+        await acquireOperation()
+        defer { releaseOperation() }
 
-        cachedAccessToken = nil
-        cachedRefreshToken = nil
-
-        #if DEBUG
-        print("토큰 삭제 완료")
-        #endif
+        try deleteLegacyItems()
+        try await paired.clear()
     }
 
-    // MARK: - Private Methods
-
-    private func loadCached() async {
-        guard !isCacheLoaded else { return }
-
-        cachedAccessToken = loadFromKeychain(key: accessTokenKey)
-        cachedRefreshToken = loadFromKeychain(key: refreshTokenKey)
-        isCacheLoaded = true
-    }
-
-    private func saveToKeychain(key: String, value: String) throws {
-        guard let data = value.data(using: .utf8) else {
-            throw KeychainError.encodingFailed
+    private func legacyTokens(
+        _ result: (OSStatus, [LegacyKeychainItem])
+    ) throws -> [(group: String, token: String)] {
+        if result.0 == errSecItemNotFound { return [] }
+        guard result.0 == errSecSuccess else {
+            throw Aquila.KeychainTokenStoreError.status(result.0)
         }
-
-        deleteFromKeychain(key: key)
-
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        ]
-
-        let status = SecItemAdd(query as CFDictionary, nil)
-
-        guard status == errSecSuccess else {
-            throw KeychainError.saveFailed(status: status)
+        guard !result.1.isEmpty else {
+            throw Aquila.KeychainTokenStoreError.invalidData
+        }
+        return try result.1.map { item in
+            guard let group = item.accessGroup, !group.isEmpty,
+                  let data = item.data,
+                  let token = String(data: data, encoding: .utf8), !token.isEmpty else {
+                throw Aquila.KeychainTokenStoreError.invalidData
+            }
+            return (group, token)
         }
     }
 
-    private func loadFromKeychain(key: String) -> String? {
-        let query: [String: Any] = [
+    private func query(account: String) -> [String: Any] {
+        // Leaving access group absent includes credentials saved under historical app groups.
+        [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: key,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne
+            kSecAttrAccount as String: account
         ]
-
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-
-        guard status == errSecSuccess,
-              let data = result as? Data,
-              let string = String(data: data, encoding: .utf8) else {
-            return nil
-        }
-
-        return string
     }
 
-    private func deleteFromKeychain(key: String) {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key
-        ]
+    private func readQuery(account: String) -> CFDictionary {
+        var query = query(account: account)
+        query[kSecReturnData as String] = true
+        query[kSecReturnAttributes as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitAll
+        return query as CFDictionary
+    }
 
-        SecItemDelete(query as CFDictionary)
+    private func deleteLegacyItems() throws {
+        for account in [accessTokenKey, refreshTokenKey] {
+            let status = legacy.delete(query(account: account) as CFDictionary)
+            guard status == errSecSuccess || status == errSecItemNotFound else {
+                throw Aquila.KeychainTokenStoreError.status(status)
+            }
+        }
+    }
+
+    private func acquireOperation() async {
+        if operationInProgress {
+            await withCheckedContinuation { waitingOperations.append($0) }
+        } else {
+            operationInProgress = true
+        }
+    }
+
+    private func releaseOperation() {
+        // Aquila actor awaits must not let a migration finish after a queued save or clear.
+        if waitingOperations.isEmpty {
+            operationInProgress = false
+        } else {
+            waitingOperations.removeFirst().resume()
+        }
     }
 }
 
-// MARK: - KeychainError
-
-public enum KeychainError: Error, LocalizedError {
-    case encodingFailed
-    case saveFailed(status: OSStatus)
-    case loadFailed(status: OSStatus)
-
-    public var errorDescription: String? {
-        switch self {
-        case .encodingFailed:
-            return "토큰 인코딩 실패"
-        case .saveFailed(let status):
-            return "Keychain 저장 실패 (status: \(status))"
-        case .loadFailed(let status):
-            return "Keychain 로드 실패 (status: \(status))"
-        }
-    }
+struct PairedTokenOperations: Sendable {
+    let read: @Sendable () async throws -> Aquila.TokenPair?
+    let save: @Sendable (String, String) async throws -> Void
+    let clear: @Sendable () async throws -> Void
 }
+
+struct LegacyKeychainOperations: Sendable {
+    var read: @Sendable (CFDictionary) -> (OSStatus, [LegacyKeychainItem]) = { query in
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query, &result)
+        let items = (result as? [[String: Any]] ?? []).map {
+            LegacyKeychainItem(
+                data: $0[kSecValueData as String] as? Data,
+                accessGroup: $0[kSecAttrAccessGroup as String] as? String
+            )
+        }
+        return (status, items)
+    }
+    var delete: @Sendable (CFDictionary) -> OSStatus = { SecItemDelete($0) }
+}
+
+struct LegacyKeychainItem: Sendable {
+    let data: Data?
+    let accessGroup: String?
+}
+
+public typealias KeychainError = Aquila.KeychainTokenStoreError

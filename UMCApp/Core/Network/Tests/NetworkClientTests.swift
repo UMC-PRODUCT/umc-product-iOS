@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Darwin
+import Moya
 import Testing
 import UMCFoundation
 @testable import CoreNetwork
@@ -157,15 +159,15 @@ struct NetworkClientTests {
         }
     }
 
-    @Test("refresh가 실패하면 NetworkError.tokenRefreshFailed를 throw한다")
-    func refreshFailureWraps() async {
+    @Test("분류되지 않은 갱신 오류는 세션 만료로 바꾸지 않는다")
+    func unclassifiedRefreshFailurePropagates() async {
         let store = MockTokenStore(accessToken: "OLD", refreshToken: "REFRESH")
         let refresh = MockTokenRefreshService(behavior: .failure(.invalidRefreshToken))
         let client = makeClient(store: store, refresh: refresh)
 
         StubURLProtocol.handler = { _ in (Data(), 401, nil) }
 
-        await #expect(throws: NetworkError.self) {
+        await #expect(throws: MockRefreshError.invalidRefreshToken) {
             _ = try await client.request(URLRequest(url: self.testURL))
         }
     }
@@ -334,6 +336,251 @@ struct NetworkClientTests {
             _ = try await client.request(URLRequest(url: self.testURL))
         }
     }
+
+    @Test("일반 요청의 전송 오류도 앱의 재시도 가능한 오류로 변환한다")
+    func requestTransportErrorIsMapped() async {
+        let store = MockTokenStore(accessToken: "A", refreshToken: "R")
+        let refresh = MockTokenRefreshService(behavior: .failure(.networkUnavailable))
+        let client = makeClient(store: store, refresh: refresh)
+        StubURLProtocol.handler = { _ in throw URLError(.timedOut) }
+
+        await #expect(throws: NetworkError.timeout) {
+            _ = try await client.request(URLRequest(url: self.testURL))
+        }
+        #expect(await client.isLoggedIn())
+    }
+
+    @Test("Moya 공개 요청은 주입한 세션을 사용하고 Bearer 토큰을 붙이지 않는다")
+    func publicMoyaRequestUsesInjectedSession() async throws {
+        let store = MockTokenStore(accessToken: "A", refreshToken: "R")
+        let refresh = MockTokenRefreshService(behavior: .failure(.invalidRefreshToken))
+        let client = makeClient(store: store, refresh: refresh)
+        let adapter = MoyaNetworkAdapter(networkClient: client, baseURL: testURL)
+        StubURLProtocol.handler = { _ in (Data("public".utf8), 200, nil) }
+
+        let response = try await adapter.requestWithoutAuth(HTTPTestTarget())
+
+        #expect(response.data == Data("public".utf8))
+        let request = try #require(StubURLProtocol.capturedRequests.first)
+        #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+        #expect(await refresh.callCount == 0)
+    }
+
+    @Test("Moya 공개 요청의 401은 갱신하지 않고 서버 응답을 보존한다")
+    func publicMoyaUnauthorizedDoesNotRefresh() async throws {
+        let store = MockTokenStore(accessToken: "A", refreshToken: "R")
+        let refresh = MockTokenRefreshService(behavior: .failure(.invalidRefreshToken))
+        let client = makeClient(store: store, refresh: refresh)
+        let adapter = MoyaNetworkAdapter(networkClient: client, baseURL: testURL)
+        let body = Data("denied".utf8)
+        StubURLProtocol.handler = { _ in (body, 401, nil) }
+
+        do {
+            _ = try await adapter.requestWithoutAuth(HTTPTestTarget())
+            Issue.record("401 응답이 성공으로 처리되었습니다")
+        } catch NetworkError.requestFailed(let statusCode, let data) {
+            #expect(statusCode == 401)
+            #expect(data == body)
+        }
+        #expect(StubURLProtocol.capturedRequests.count == 1)
+        #expect(await refresh.callCount == 0)
+        #expect(await client.isLoggedIn())
+    }
+
+    @Test("Moya는 쿼리, JSON 본문, 사용자 헤더와 Bearer 토큰을 함께 보존한다")
+    func moyaCompositeRequestPreservesWireContract() async throws {
+        let store = MockTokenStore(accessToken: "A", refreshToken: "R")
+        let refresh = MockTokenRefreshService(behavior: .failure(.invalidRefreshToken))
+        let client = makeClient(store: store, refresh: refresh)
+        let adapter = MoyaNetworkAdapter(networkClient: client, baseURL: testURL)
+        StubURLProtocol.handler = { _ in (Data(), 204, nil) }
+        let target = HTTPTestTarget(
+            method: .post,
+            task: .requestCompositeParameters(
+                bodyParameters: ["name": "회원", "enabled": true],
+                bodyEncoding: JSONEncoding.default,
+                urlParameters: ["cursor": "42", "search": "a b"]
+            )
+        )
+
+        _ = try await adapter.request(target)
+
+        let request = try #require(StubURLProtocol.capturedRequests.first)
+        let components = try #require(URLComponents(
+            url: request.url!, resolvingAgainstBaseURL: false
+        ))
+        #expect(components.path == "/api/v1/example")
+        #expect(components.queryItems?.contains(URLQueryItem(name: "cursor", value: "42")) == true)
+        #expect(components.queryItems?.contains(
+            URLQueryItem(name: "search", value: "a b")
+        ) == true)
+        #expect(request.httpMethod == "POST")
+        #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
+        #expect(request.value(forHTTPHeaderField: "X-Client") == "UMC")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer A")
+        let body = try #require(request.httpBody ?? request.httpBodyStream?.readData())
+        let json = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        #expect(json["name"] as? String == "회원")
+        #expect(json["enabled"] as? Bool == true)
+    }
+
+    @Test("JSON Encodable 요청은 JSON Content-Type을 자동으로 지정한다")
+    func moyaJSONEncodableSetsContentType() async throws {
+        let store = MockTokenStore(accessToken: "A", refreshToken: "R")
+        let refresh = MockTokenRefreshService(behavior: .failure(.invalidRefreshToken))
+        let client = makeClient(store: store, refresh: refresh)
+        let adapter = MoyaNetworkAdapter(networkClient: client, baseURL: testURL)
+        StubURLProtocol.handler = { _ in (Data(), 200, nil) }
+
+        _ = try await adapter.request(HTTPTestTarget(
+            method: .post,
+            task: .requestJSONEncodable(HTTPTestBody(name: "회원"))
+        ))
+
+        let request = try #require(StubURLProtocol.capturedRequests.first)
+        #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
+    }
+
+    @Test("토큰 갱신은 기존 JSON 요청과 APIResponse 계약을 유지한다")
+    func httpRefreshPreservesWireContract() async throws {
+        StubURLProtocol.reset()
+        let store = MockTokenStore(accessToken: "OLD", refreshToken: "R")
+        let client = AuthSystemFactory.makeNetworkClient(
+            baseURL: URL(string: "https://api.umc.test")!,
+            session: makeStubSession(),
+            tokenStore: store
+        )
+        StubURLProtocol.handler = { _ in
+            (Data("""
+            {"success":true,"code":"200","message":"성공",
+             "result":{"accessToken":"NEW","refreshToken":"NEW_R"}}
+            """.utf8), 200, nil)
+        }
+
+        let pair = try await client.forceRefreshToken()
+
+        #expect(pair == TokenPair(accessToken: "NEW", refreshToken: "NEW_R"))
+        let request = try #require(StubURLProtocol.capturedRequests.first)
+        #expect(request.url?.path == "/api/v1/auth/token/renew")
+        #expect(request.httpMethod == "POST")
+        #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+        let body = try #require(request.httpBody ?? request.httpBodyStream?.readData())
+        let json = try #require(JSONSerialization.jsonObject(with: body) as? [String: String])
+        #expect(json == ["refreshToken": "R"])
+        #expect(await store.getAccessToken() == "NEW")
+    }
+
+    @Test("갱신 응답의 JSON 디코딩 오류는 세션을 만료시키지 않는다")
+    func refreshDecodingFailureKeepsSession() async throws {
+        StubURLProtocol.reset()
+        let store = MockTokenStore(accessToken: "OLD", refreshToken: "R")
+        let client = AuthSystemFactory.makeNetworkClient(
+            baseURL: URL(string: "https://api.umc.test")!,
+            session: makeStubSession(),
+            tokenStore: store
+        )
+        StubURLProtocol.handler = { _ in (Data("invalid JSON".utf8), 200, nil) }
+
+        await #expect(throws: DecodingError.self) {
+            _ = try await client.forceRefreshToken()
+        }
+        #expect(await store.getRefreshToken() == "R")
+        #expect(await client.isLoggedIn())
+    }
+
+    @Test("갱신 토큰 저장 오류는 세션 만료로 바꾸지 않는다")
+    func refreshStorageFailurePropagates() async {
+        let client = NetworkClient(
+            session: makeStubSession(),
+            tokenStore: FailingTokenStore(),
+            refreshService: MockTokenRefreshService(
+                behavior: .success(TokenPair(accessToken: "NEW", refreshToken: "NEW_R"))
+            )
+        )
+
+        await #expect(throws: TestStoreError.saveFailed) {
+            _ = try await client.forceRefreshToken()
+        }
+    }
+
+    @Test(
+        "갱신 HTTP 오류는 401·403만 세션 만료로 처리한다", arguments: [401, 403, 503]
+    )
+    func httpRefreshErrorsPreserveSessionMeaning(statusCode: Int) async throws {
+        StubURLProtocol.reset()
+        let store = MockTokenStore(accessToken: "OLD", refreshToken: "R")
+        let client = AuthSystemFactory.makeNetworkClient(
+            baseURL: URL(string: "https://api.umc.test")!,
+            session: makeStubSession(),
+            tokenStore: store
+        )
+        let body = Data("server failure".utf8)
+        StubURLProtocol.handler = { _ in (body, statusCode, nil) }
+
+        do {
+            _ = try await client.forceRefreshToken()
+            Issue.record("오류 응답이 성공으로 처리되었습니다")
+        } catch let error as NetworkError {
+            if statusCode == 401 || statusCode == 403 {
+                guard case .tokenRefreshFailed = error else {
+                    Issue.record("갱신 거부가 세션 만료 오류로 변환되지 않았습니다")
+                    return
+                }
+            } else {
+                guard case .requestFailed(let actualStatus, let data) = error else {
+                    Issue.record("서버 장애가 일반 요청 실패로 변환되지 않았습니다")
+                    return
+                }
+                #expect(actualStatus == 503)
+                #expect(data == body)
+            }
+        }
+        #expect(await store.getRefreshToken() == "R")
+        #expect(await client.isLoggedIn())
+    }
+
+    #if DEBUG
+    @Test("앱 인증 필드는 실제 요청 본문과 curl 로그에서 가리고 전송 값은 유지한다")
+    func appCredentialLogsAreRedacted() async throws {
+        let store = MockTokenStore(accessToken: "A", refreshToken: "R")
+        let refresh = MockTokenRefreshService(behavior: .failure(.invalidRefreshToken))
+        let client = makeClient(store: store, refresh: refresh)
+        let secrets = [
+            "authorizationCode": "test-apple-authorization-secret",
+            "oAuthVerificationToken": "test-oauth-verification-secret",
+            "emailVerificationToken": "test-email-verification-secret",
+            "googleAccessToken": "test-google-access-secret",
+            "kakaoAccessToken": "test-kakao-access-secret",
+            "rawPassword": "test-raw-password-secret",
+            "currentPassword": "test-current-password-secret",
+            "newPassword": "test-new-password-secret",
+            "verificationCode": "test-email-otp-secret",
+            "code": "test-claim-code-secret"
+        ]
+        let body = try JSONSerialization.data(withJSONObject: secrets)
+        StubURLProtocol.handler = { _ in (body, 200, nil) }
+        var request = URLRequest(url: testURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+
+        let output = try await captureStandardOutput {
+            _ = try await client.request(request)
+        }
+
+        #expect(output.contains("body:"))
+        #expect(output.contains("curl:"))
+        #expect(output.contains("[REDACTED]"))
+        for (key, secret) in secrets {
+            #expect(output.contains(key))
+            #expect(!output.contains(secret))
+        }
+        let outgoing = try #require(StubURLProtocol.capturedRequests.first)
+        let sentBody = try #require(outgoing.httpBody ?? outgoing.httpBodyStream?.readData())
+        #expect(try JSONSerialization.jsonObject(with: sentBody) as? [String: String] == secrets)
+    }
+    #endif
 }
 
 // MARK: - Helpers
@@ -342,6 +589,73 @@ private struct SampleDTO: Decodable, Equatable, Sendable {
     let id: Int
     let name: String
 }
+
+private struct HTTPTestBody: Encodable {
+    let name: String
+}
+
+private struct HTTPTestTarget: TargetType {
+    var method: Moya.Method = .get
+    var task: Moya.Task = .requestPlain
+    var baseURL: URL { URL(string: "https://api.umc.test")! }
+    var path: String { "/api/v1/example" }
+    var headers: [String: String]? { ["X-Client": "UMC"] }
+}
+
+private enum TestStoreError: Error, Equatable {
+    case saveFailed
+}
+
+private struct FailingTokenStore: TokenStore {
+    func getAccessToken() async -> String? { "OLD" }
+    func getRefreshToken() async -> String? { "R" }
+    func save(accessToken: String, refreshToken: String) async throws {
+        throw TestStoreError.saveFailed
+    }
+    func clear() async throws {}
+}
+
+private extension InputStream {
+    func readData() -> Data {
+        open()
+        defer { close() }
+        var result = Data()
+        var buffer = [UInt8](repeating: 0, count: 1024)
+        while hasBytesAvailable {
+            let count = read(&buffer, maxLength: buffer.count)
+            guard count > 0 else { break }
+            result.append(contentsOf: buffer.prefix(count))
+        }
+        return result
+    }
+}
+
+#if DEBUG
+@MainActor
+private func captureStandardOutput(
+    operation: () async throws -> Void
+) async throws -> String {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    guard FileManager.default.createFile(atPath: url.path, contents: nil) else {
+        throw CocoaError(.fileWriteUnknown)
+    }
+    defer { try? FileManager.default.removeItem(at: url) }
+    let file = try FileHandle(forWritingTo: url)
+    defer { try? file.close() }
+    fflush(nil)
+    let original = dup(STDOUT_FILENO)
+    guard original >= 0 else { throw POSIXError(.EBADF) }
+    defer { close(original) }
+    guard dup2(file.fileDescriptor, STDOUT_FILENO) >= 0 else { throw POSIXError(.EBADF) }
+    defer {
+        fflush(nil)
+        _ = dup2(original, STDOUT_FILENO)
+    }
+    try await operation()
+    fflush(nil)
+    return String(decoding: try Data(contentsOf: url), as: UTF8.self)
+}
+#endif
 
 /// 동기화된 카운터 — handler 클로저가 multiple thread/queue에서 호출될 수 있으므로 락 필요
 private final class LockedCounter: @unchecked Sendable {

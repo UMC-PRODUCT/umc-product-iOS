@@ -12,6 +12,16 @@ import os.log
 
 private let logger = Logger(subsystem: "UMCApp", category: "CommunityRealtime")
 
+protocol CommunityStompConnecting: Sendable {
+    func events() async -> AsyncStream<StompEvent>
+    func connect() async
+    func disconnect() async
+    func subscribe(destination: String, headers: [String: String]) async throws
+    func send(destination: String, headers: [String: String], body: Data) async throws
+}
+
+extension StompConnection: CommunityStompConnecting {}
+
 /// 커뮤니티 STOMP 클라이언트.
 ///
 /// 구독 destination 이 유저별이라 스레드 화면마다 연결을 열 수 없다. 이 객체 하나가 앱 생명주기
@@ -23,17 +33,26 @@ public actor CommunityThreadRealtimeClient: CommunityThreadRealtimeProtocol {
 
     // MARK: - Property
 
-    private let connection: StompConnection
+    private let connection: Result<any CommunityStompConnecting, any Error>
     private let decoder = JSONDecoder()
 
     private var pumpTask: Task<Void, Never>?
+    private var shutdownTask: Task<Void, Never>?
     private var deduplicator = EventDeduplicator()
     private var continuations: [UUID: AsyncStream<CommunityRealtimeSignal>.Continuation] = [:]
 
     // MARK: - Init
 
     public init(connection: StompConnection) {
-        self.connection = connection
+        self.connection = .success(connection)
+    }
+
+    public init(connectionResult: Result<StompConnection, any Error>) {
+        self.connection = connectionResult.map { $0 }
+    }
+
+    init(connection: any CommunityStompConnecting) {
+        self.connection = .success(connection)
     }
 
     // MARK: - CommunityThreadRealtimeProtocol
@@ -42,9 +61,19 @@ public actor CommunityThreadRealtimeClient: CommunityThreadRealtimeProtocol {
         // 대입은 첫 중단점보다 **앞**이어야 한다. 사이에 await 가 하나라도 있으면 두 번째 호출이
         // 같은 가드를 통과해 `events()` 를 다시 열고, 단일 소비자용인 앞 스트림을 죽인다.
         guard pumpTask == nil else { return }
+        let pendingShutdown = shutdownTask
 
         pumpTask = Task { [weak self] in
-            guard let self else { return }
+            await pendingShutdown?.value
+            guard let self, !Task.isCancelled else { return }
+
+            let connection: any CommunityStompConnecting
+            do {
+                connection = try self.connection.get()
+            } catch {
+                logger.error("STOMP 설정 실패: \(String(describing: error), privacy: .public)")
+                return
+            }
 
             // 같은 Task 안에서 순차로 await 하므로 스트림 등록이 connect() 보다 먼저임이 확정된다.
             // 순서가 뒤집히면 CONNECTED 가 구독 없는 스트림으로 흘러 최초 SUBSCRIBE 를 놓친다.
@@ -62,14 +91,24 @@ public actor CommunityThreadRealtimeClient: CommunityThreadRealtimeProtocol {
         let pump = pumpTask
         pumpTask = nil
         pump?.cancel()
-        // 취소 직전에 펌프가 connect() 로 진입했을 수 있다. 먼저 끝내지 않으면 뒤늦은 connect() 가
-        // disconnect() 뒤에 소켓을 되살려 아무도 취소하지 않는 재연결 루프가 남는다.
-        await pump?.value
-        // 기다리는 동안 actor 가 풀려 있으므로 start() 가 끼어들어 새 연결을 열었을 수 있다.
-        // 그 소켓을 끊거나 구독자를 finish 하면 재시작한 쪽이 조용히 죽는다.
-        guard pumpTask == nil else { return }
+        let previousShutdown = shutdownTask
+        let connection = connection
 
-        await connection.disconnect()
+        let shutdown = Task {
+            await previousShutdown?.value
+            // Aquila의 연결 Task는 펌프 취소로 끝나지 않으므로 먼저 끊어 대기를 해제한다.
+            if case .success(let connection) = connection {
+                await connection.disconnect()
+            }
+            await pump?.value
+            // 첫 disconnect보다 늦게 실행된 옛 connect까지 닫은 뒤 재시작을 허용한다.
+            if case .success(let connection) = connection {
+                await connection.disconnect()
+            }
+        }
+        shutdownTask = shutdown
+        await shutdown.value
+        guard pumpTask == nil else { return }
 
         for continuation in continuations.values {
             continuation.finish()
@@ -158,9 +197,10 @@ public actor CommunityThreadRealtimeClient: CommunityThreadRealtimeProtocol {
         body: some Encodable,
         commandId: String = ThreadCommandID.generate()
     ) async throws {
+        let connection = try connection.get()
         try await connection.send(
             destination: destination,
-            headers: ["x-command-id": commandId],
+            headers: ["x-command-id": commandId, "content-type": "application/json"],
             body: try JSONEncoder().encode(body)
         )
     }
@@ -172,8 +212,18 @@ public actor CommunityThreadRealtimeClient: CommunityThreadRealtimeProtocol {
     private func handle(_ event: StompEvent) async {
         switch event {
         case .connected:
-            await connection.subscribe(destination: ThreadDestination.events)
-            await connection.subscribe(destination: ThreadDestination.errors)
+            for destination in [ThreadDestination.events, ThreadDestination.errors] {
+                do {
+                    try await connection.get().subscribe(destination: destination, headers: [:])
+                } catch {
+                    logger.error(
+                        """
+                        STOMP 구독 실패: \(destination, privacy: .public) \
+                        \(String(describing: error), privacy: .public)
+                        """
+                    )
+                }
+            }
 
         case .reconnected:
             // 구독 복구는 StompConnection 이 이 이벤트를 내보내기 전에 끝낸다.
