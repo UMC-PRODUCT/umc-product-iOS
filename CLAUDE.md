@@ -143,7 +143,7 @@ Apple 프레임워크 API — 신규 Apple API를 다룰 때:
 | 모음 | 인덱스 | 언제 읽나 |
 |------|--------|----------|
 | Apple 프레임워크 가이드(20종) | `docs/claude/apple-frameworks/INDEX.md` | `glassEffect`·`GlassEffectContainer`(Liquid Glass) · 툴바 신규 API · `AttributedString`/리치 텍스트 · FoundationModels(온디바이스 LLM) · SwiftData 상속 · `@MainActor`/actor/async 동시성 · Swift Charts 3D · WebKit·AlarmKit·MapKit·StoreKit 연동 |
-| Apple 스킬팩(9종 · reference 66종, Apple 원문) | `docs/claude/apple-frameworks/INDEX.md` §3 | **SwiftUI·App Intents 코드를 새로 쓰거나 리뷰할 때.** `@Observable`/`@State`/`@Binding` 소유권 · `@Environment`/`@Entry` 무효화 경고 · `ForEach`/`List` identity(`id: \.self` 안티패턴) · soft-deprecated API 확인(`NavigationView`, 구 `onChange`) · 조건부 `.if` 모디파이어 · 뷰 분해/init 비용 · `Animatable` · App Intents 스키마/`AppEnum` · UIKit 현대화 · Xcode 보안 빌드 설정 |
+| Apple 스킬팩(10종 · reference 85종, Apple 원문 · Xcode 27.2 beta 2 기준) | `docs/claude/apple-frameworks/INDEX.md` §3 | **SwiftUI·App Intents 코드를 새로 쓰거나 리뷰할 때.** `@Observable`/`@State`/`@Binding` 소유권 · `@Environment`/`@Entry` 무효화 경고 · `ForEach`/`List` identity(`id: \.self` 안티패턴) · soft-deprecated API 확인(`NavigationView`, 구 `onChange`) · 조건부 `.if` 모디파이어 · 뷰 분해/init 비용 · `Animatable` · App Intents 스키마/`AppEnum` · UIKit 현대화·창 크기 변경/iPhone Duo 대응 · Xcode 보안 빌드 설정(Enhanced Security·MTE·Checked Pointer Arithmetic) |
 
 기획·설계 문서 — 기존 개인 기획 레포는 삭제되었다. 별도 기획 레포를 전제로 하지 않는다.
 

@@ -4,9 +4,15 @@
 > 출처: [artemnovichkov/xcode-27-system-prompts](https://github.com/artemnovichkov/xcode-27-system-prompts)
 > (이전 출처였던 `xcode-26-system-prompts` 는 더 이상 갱신되지 않는다.)
 >
-> **동기화 기준 커밋**: [`75f3b2ae`](https://github.com/artemnovichkov/xcode-27-system-prompts/commit/75f3b2ae68d9eab87c0b1fad3dce75931e0bddcf) (2026-08-25)
+> **동기화 기준 커밋**: [`e132fcf8`](https://github.com/artemnovichkov/xcode-27-system-prompts/commit/e132fcf82b2bcd8d7e117a44af8f8323f771f8c1) (2026-09-29, "Update with Xcode 27.2 beta 2")
 > — 여기 있는 파일은 전부 이 커밋에서 무손실 복사한 것이다.
 > 다음 갱신 때 이 SHA를 기준으로 `git diff` 하면 무엇이 바뀌었는지 바로 나온다 (§5).
+>
+> **직전 동기화**: `75f3b2ae`(2026-08-25) → `e132fcf8` 반영분(2026-10-11, #1566): 스킬팩 `app-resizability` 신규(5 reference),
+> `audit-xcode-security-settings` 에 `checked-pointer-arithmetic.md` 추가 + SKILL·reference 6종 개정(Xcode 27.2 beta 2 의
+> Checked Pointer Arithmetic / `arm64e.x1` 슬라이스 / watchOS MTE), `swiftui-specialist/references/dataflow.md` 에
+> "`private` 이어야 `@State` 가 지연 초기화된다" 절 추가, `swiftui-whats-new-27/references/state-macro.md` 오타 수정.
+> 프레임워크 개별 가이드 20종은 변경 없음.
 >
 > **사용법**: Apple 프레임워크 API를 다룰 때 아래 해당 문서를 `Read` 로 열어
 > 정확한 API 시그니처/패턴/가용성을 확인한 뒤 코드를 작성한다.
@@ -24,8 +30,8 @@
 | 위치 | 내용 |
 |------|------|
 | `*.md` (이 폴더 바로 아래) | 프레임워크 개별 가이드 20종 — 업스트림 `AdditionalDocumentation/` |
-| `skills/<이름>/SKILL.md` | Apple이 작성한 스킬팩 진입 문서 9종 — 언제 어떤 reference를 읽어야 하는지 안내 |
-| `skills/<이름>/references/*.md` | 스킬팩 본문 66종 — 실제 API 설명·코드 예시 |
+| `skills/<이름>/SKILL.md` | Apple이 작성한 스킬팩 진입 문서 10종 — 언제 어떤 reference를 읽어야 하는지 안내 |
+| `skills/<이름>/references/*.md` | 스킬팩 본문 85종 — 실제 API 설명·코드 예시 |
 | `skills/audit-xcode-security-settings/scripts/` | 스킬팩에 딸린 보조 스크립트 |
 
 ---
@@ -37,7 +43,7 @@ UMC 앱은 SwiftUI + Liquid Glass + Widget + (Apple Intelligence) 기반이라 �
 | 문서 | 다룰 때 |
 |------|---------|
 | `SwiftUI-Implementing-Liquid-Glass-Design.md` | `glassEffect`, `GlassEffectContainer`, Glass variant — **디자인 시스템 핵심** |
-| `skills/swiftui-specialist/` | **버전 무관 SwiftUI 베스트 프랙티스** — `@Observable` 무효화 범위, `ForEach`/`List` identity, 뷰 구조 분리, Environment 성능 함정. 코드 리뷰·성능 튜닝 시 1순위 |
+| `skills/swiftui-specialist/` | **버전 무관 SwiftUI 베스트 프랙티스** — `@Observable` 무효화 범위, `ForEach`/`List` identity, 뷰 구조 분리, Environment 성능 함정, **`@State` 는 `private` 이어야 초기값이 지연 평가된다**(`dataflow.md`, 이 저장소의 `@State private var viewModel` 패턴 근거). 코드 리뷰·성능 튜닝 시 1순위 |
 | `WidgetKit-Implementing-Liquid-Glass-Design.md` | `UMCAppWidget` 위젯에 Liquid Glass 적용 |
 | `SwiftUI-New-Toolbar-Features.md` | 툴바 신규 API (`ToolBar/` 헬퍼 작업 시) |
 | `SwiftUI-Styled-Text-Editing.md` | `ArticleTextField` 등 리치 텍스트 입력/편집 |
@@ -80,7 +86,7 @@ UMC 앱은 SwiftUI + Liquid Glass + Widget + (Apple Intelligence) 기반이라 �
 
 ---
 
-## 3. Apple 스킬팩 (9종 · reference 66종)
+## 3. Apple 스킬팩 (10종 · reference 85종)
 
 각 스킬은 `SKILL.md`(언제 무엇을 읽을지 안내) + `references/*.md`(본문)로 구성된다.
 **먼저 `SKILL.md` 를 읽고, 필요한 reference만 골라 읽는다.**
@@ -92,7 +98,7 @@ Apple이 직접 쓴 SwiftUI 정석. 성능·구조·데이터 흐름 판단이 �
 | reference | 내용 |
 |-----------|------|
 | `structure.md` | 뷰를 별도 `View` 구조체로 쪼갤 때 vs computed property, init 비용, 단일 자식 `Group` 안티패턴 |
-| `dataflow.md` | `@State`/`@Binding`/모델 전달, `@Observable` 권장(`ObservableObject` 대신), 프로퍼티 단위 관찰 추적의 함정, `.onChange` 부수효과 격리 |
+| `dataflow.md` | `@State`/`@Binding`/모델 전달, `@Observable` 권장(`ObservableObject` 대신), 프로퍼티 단위 관찰 추적의 함정, `.onChange` 부수효과 격리, **`@State` 지연 초기화는 getter 가 `private`/`fileprivate` 일 때만**(아니면 뷰 값이 만들어질 때마다 초기식이 재실행 — 참조 타입은 매번 힙 할당) |
 | `environment.md` | `@Environment`·`@Entry` 성능 함정 — 클로저/클래스 기본값, 고빈도 갱신 경고 |
 | `modifiers.md` | 조건부 modifier는 `if`/`else` 분기보다 삼항, `AnyShapeStyle` 활용 |
 | `foreach.md` | `ForEach`/`List`/`Table` 요소 identity, `id: \.self`·인덱스·오프셋 안티패턴, row 구조가 `List` 성능에 미치는 영향 |
@@ -158,6 +164,7 @@ Apple이 직접 쓴 SwiftUI 정석. 성능·구조·데이터 흐름 판단이 �
 ### 3-5. `skills/uikit-app-modernization/` — UIKit 멀티윈도우 현대화
 
 레거시 전역 상태 API를 컨텍스트 기반 API로 교체. 이 프로젝트는 SwiftUI 중심이라 우선순위는 낮다.
+업스트림은 이 팩을 그대로 두고 상위 호환인 `app-resizability`(§3-6)를 추가했다 — 새 작업은 3-6 을 먼저 본다.
 
 | reference | 내용 |
 |-----------|------|
@@ -166,7 +173,22 @@ Apple이 직접 쓴 SwiftUI 정석. 성능·구조·데이터 흐름 판단이 �
 | `scene-lifecycle-task.md` | AppDelegate → SceneDelegate 마이그레이션 |
 | `safe-area-task.md` | 하드코딩 inset → safe area, 비대칭 safe area 대응 |
 
-### 3-6. `skills/building-document-based-swiftui-applications/` — 문서 기반 SwiftUI 앱
+### 3-6. `skills/app-resizability/` — 창 크기가 바뀌는 앱 · 폴더블 iPhone Duo 대응 (Xcode 27.2 beta 2 신규)
+
+`uikit-app-modernization` 의 상위 호환이다. 같은 4개 task 에 **`userInterfaceIdiom` 교체**(`idiom-task.md`)가 추가됐고,
+"iPhone Duo(폴더블) 대비"·"Stage Manager/분할 화면"·"창이 실행 중 크기 변경" 요청이면 Task Registry 전부를 돌리도록 돼 있다.
+SKILL.md 의 Core Principles(TODO 금지·제어 흐름 보존·범위 밖 정리 금지 등 14항)는 UIKit 현대화 작업 전반의 리뷰 기준으로도 쓸 만하다.
+이 프로젝트는 SwiftUI 중심이라 직접 적용할 UIKit 코드는 적지만, `UIScreen.main`·`safeAreaInsets` 를 쓰는 브리지 코드가 생기면 여기를 본다.
+
+| reference | 내용 |
+|-----------|------|
+| `uiscreen-task.md` | `UIScreen.main` → `traitCollection.displayScale`/윈도우·씬 기반 대체 (uikit 판보다 패턴 보강) |
+| `orientation-task.md` | 레이아웃용 orientation 체크 → size class / window bounds, deprecated 씬 geometry 콜백 이관 |
+| `scene-lifecycle-task.md` | AppDelegate → SceneDelegate (uikit 판과 동일) |
+| `safe-area-task.md` | `topLayoutGuide`/`bottomLayoutGuide`·하드코딩 inset 제거, 비대칭·실행 중 변하는 safe area 대응 (uikit 판보다 대폭 확장) |
+| `idiom-task.md` | 레이아웃 목적의 `userInterfaceIdiom` 분기 → size class, 꼭 필요한 idiom 은 로컬 trait collection 에서 읽기 |
+
+### 3-7. `skills/building-document-based-swiftui-applications/` — 문서 기반 SwiftUI 앱
 
 SDK 27 `Document` 프로토콜 기반. 현재 UMC 앱에는 해당 없음(참고용).
 
@@ -176,9 +198,12 @@ SDK 27 `Document` 프로토콜 기반. 현재 UMC 앱에는 해당 없음(참고
 | `migrating-document-apps.md` | `FileDocument`/`ReferenceFileDocument` → `Document` 마이그레이션 (before/after 예시) |
 | `uniform-type-identifiers.md` | 커스텀 `UTType` 선언·검증 — 상속 계층, export vs import, `uttype` CLI |
 
-### 3-7. `skills/audit-xcode-security-settings/` — Xcode 보안 빌드 설정 감사
+### 3-8. `skills/audit-xcode-security-settings/` — Xcode 보안 빌드 설정 감사
 
 컴파일러 경고·정적 분석·Enhanced Security를 단계적으로 켜는 워크플로. 릴리스 하드닝 검토 시 참고.
+Xcode 27.2 beta 2 반영분: **Checked Pointer Arithmetic**(Apply Step 4, `arm64e.x1` 슬라이스 +
+`…checked-allocations.enforce-checked-pointer-arithmetic-overflow` entitlement, A20 Pro/S11 이상에서 런타임 강제)이 추가됐고,
+하드웨어 메모리 태깅 지원 플랫폼에 watchOS(S11)가 들어갔다.
 
 | reference | 내용 |
 |-----------|------|
@@ -194,14 +219,15 @@ SDK 27 `Document` 프로토콜 기반. 현재 UMC 앱에는 해당 없음(참고
 | `stack-zero-init.md` | 스택 변수 런타임 zero-init |
 | `readonly-platform-memory.md` | dyld 상태 읽기 전용 보호 |
 | `runtime-restrictions.md` | dylib · Mach 메시지 플랫폼 제한 |
-| `hardware-memory-tagging.md` | MTE entitlement 및 지원 하드웨어 |
+| `hardware-memory-tagging.md` | MTE entitlement 및 지원 하드웨어 (iPhone/iPad A19+, Mac/Vision Pro M5+, Apple Watch S11+) |
+| `checked-pointer-arithmetic.md` | 포인터 연산 오버플로 검출(`FEAT_CPA2`) — `arm64e.x1` 슬라이스, `ADDPT`/`SUBPT`, 포이즌된 포인터의 `EXC_ARM_CPA_FAIL`, MTE 와의 의존 관계 |
 | `additional-settings.md` | 기본값 외 선택적 진단 설정 (오탐 가능) |
 | `adoption-strategy.md` | 검증 순서 권장안 (위험 낮은 것 → 노력 큰 것) |
 | `decision-document.md` | `xcode-security-settings.md` 결정 문서 유지 방법 |
 
 보조 스크립트: `scripts/filter_build_settings.py` — 빌드 설정 JSON을 추적 대상 매크로만 남기고 필터.
 
-### 3-8. `skills/c-bounds-safety/` · 3-9. `skills/adopt-c-bounds-safety/` — C `-fbounds-safety`
+### 3-9. `skills/c-bounds-safety/` · 3-10. `skills/adopt-c-bounds-safety/` — C `-fbounds-safety`
 
 C 코드용 경계 안전성 언어 확장. 이 프로젝트는 순수 Swift라 **현재 해당 없음**.
 두 스킬은 같은 주제이며 `references/adoption-strategies.md` 와 `SKILL.md` 만 다르다
@@ -232,8 +258,8 @@ C 코드용 경계 안전성 언어 확장. 이 프로젝트는 순수 Swift라 
 업스트림이 다시 바뀌면 아래를 실행한 뒤 이 인덱스의 표를 손본다.
 
 ```bash
-PINNED=75f3b2ae68d9eab87c0b1fad3dce75931e0bddcf   # 현재 반영된 커밋 (문서 상단과 동일하게 유지할 것)
-SRC=/tmp/x27
+PINNED=e132fcf82b2bcd8d7e117a44af8f8323f771f8c1   # 현재 반영된 커밋 (문서 상단과 동일하게 유지할 것)
+SRC=/tmp/x27                                        # 작업용 임시 경로 — 아무 데나 괜찮다
 DEST=docs/claude/apple-frameworks
 
 git clone https://github.com/artemnovichkov/xcode-27-system-prompts.git "$SRC"   # --depth 1 금지: diff 를 위해 전체 히스토리 필요
