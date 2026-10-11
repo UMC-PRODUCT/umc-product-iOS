@@ -17,23 +17,39 @@ View ←→ ViewModel(@Observable) → UseCase(Protocol) → Repository → Data
                    DIContainer가 Protocol 구현체 주입
 ```
 
-### Feature 폴더 구조
+### Feature 폴더 구조 (UMCApp · Tuist)
+
+각 Feature 는 `{Name}Domain` · `{Name}Data` · `{Name}Presentation` 세 `staticFramework` 타겟이다
+(`featureProject` 헬퍼 — `docs/claude/build-and-modules.md`). 레이어별 `Sources/` 와 `Tests/` 가 나란히 있다.
 
 ```
-Features/{Feature}/
-├── Presentation/
-│   ├── Views/           # SwiftUI View
-│   ├── ViewModels/      # @Observable ViewModel
-│   ├── Components/      # Feature 전용 컴포넌트
-│   └── Router/          # Feature Router
+UMCApp/Features/{Feature}/
+├── Project.swift            # featureProject(name:…)
 ├── Domain/
-│   ├── UseCases/        # Protocol + Implementations/
-│   ├── Models/          # Entity
-│   └── Interfaces/      # Repository Protocol
-└── Data/
-    ├── Repositories/    # Repository 구현체
-    └── DataSources/     # API, Local Storage
+│   ├── Sources/
+│   │   ├── Models/          # Entity (public)
+│   │   ├── Interfaces/      # Repository Protocol
+│   │   ├── UseCases/        # UseCase Protocol + 구현체
+│   │   ├── Enums/ Requests/ # 도메인 열거형, UseCase 입력 모델
+│   └── Tests/
+├── Data/
+│   ├── Sources/
+│   │   ├── Router/          # Moya TargetType (엔드포인트 메타데이터만)
+│   │   ├── DTOs/            # Request(Query/Body) · Response DTO + Mapping
+│   │   └── Repositories/    # Repository 구현체 (MoyaNetworkAdapter 사용)
+│   └── Tests/
+└── Presentation/
+    ├── Sources/
+    │   ├── Views/           # SwiftUI View
+    │   ├── ViewModels/      # @Observable ViewModel
+    │   ├── Components/      # Feature 전용 컴포넌트
+    │   ├── Navigation/      # {Feature}Destination enum (탭 스택 목적지, 자기 모듈 소유)
+    │   └── …                # Extensions, Tags 등
+    └── Tests/
 ```
+
+- Mock/Stub 은 해당 레이어 `Sources/Mock` 에 `#if DEBUG` 로 둔다 (핵심 규칙 #5).
+- DI 등록은 App 타겟의 `UMCApp/UMCApp/Sources/DIContainer+{Feature}.swift` 확장에서 한다.
 
 ### 계층 원칙
 
@@ -66,28 +82,40 @@ final class FetchUserUseCase {
 }
 ```
 
-### DIContainer
+### DIContainer (`CoreDI`)
 
 ```swift
-// 등록
+// 등록 — App 타겟 DIContainer+{Feature}.swift
 container.register(UserRepositoryProtocol.self) { UserRepository() }
 container.register(LoginUseCaseProtocol.self) {
     LoginUseCase(repository: container.resolve(UserRepositoryProtocol.self))
 }
 
-// 사용
+// 사용 — View 에서 Environment 로 읽는다
+@Environment(\.di) private var container
 let useCase = container.resolve(LoginUseCaseProtocol.self)
 ```
 
-- `@Observable` 기반으로 SwiftUI Environment 주입 가능
-- `resolve()` 호출 시 캐싱 (싱글톤처럼 동작)
-- `resetCache()`: 로그아웃 시 전체 초기화
+- `@Observable` 클래스. 앱 루트가 `.environment(\.di, container)` 로 주입하고 Feature 는 `import CoreDI` 후 `@Environment(\.di)` 로 읽는다.
+  Environment 기본값은 **빈 컨테이너**라 주입 누락은 `resolve` 의 `fatalError("No Factory registered")` 로 드러난다.
+- `resolve()` 호출 시 캐싱 (싱글톤처럼 동작). 내부 저장소는 `@ObservationIgnored` — resolve 가 뷰 무효화를 일으키지 않는다.
+- `resolveIfRegistered()`: 미등록이면 `nil` (fatalError 대신). 등록돼 있으면 `resolve` 와 동일하게 생성·캐싱.
+- `resetCache()` / `resetCache(for:)`: 로그아웃 시 전체 또는 타입별 초기화.
+- 등록 파일은 Feature 별로 쪼개져 있다: `DIContainer+Auth/Home/Notice/Activity/Community/MyPage/Project/BusinessCard/Maintenance/Authorization/MemberProfile/Certificate/WatchConnectivity.swift`.
 
-### Router (Hierarchical Router Pattern)
+### 화면 전환 (AppFlow + CoreRouting)
 
-- **AppRouter**: 모듈 간 전환, Deep Link 처리 (조율자)
-- **Feature Router**: 각 Feature 내부 화면 전환
-- Tab별 독립 `NavigationStack`으로 상태 보존
+| 계층 | 타입 | 위치 | 역할 |
+|------|------|------|------|
+| 앱 생명주기 | `AppFlowViewModel` / `AppFlowState` | `UMCApp/UMCApp/Sources/AppFlow/` | bootstrap → login/signUp → main 전역 상태머신. 하위 Feature 는 `AppFlow` 환경값(클로저 묶음)으로만 전환을 요청 — 구체 타입 의존 없음 |
+| 탭 경로 | `PathStore` · `NavigationTab` | `Core/Routing/Sources/` | 탭별 독립 `NavigationPath` 를 한 곳에서 보관. App 셸이 소유해 `.environment` 로 주입하고 각 탭 `NavigationStack(path:)` 바인딩 소스로 쓴다. 탭을 가로지르는 이동(`selectedTab` + push)의 진입점 |
+| Feature 목적지 | `{Feature}Destination` (`Activity`·`Project`·`MyPage`·`BusinessCard`) | `{Feature}Presentation/Sources/Navigation/` | Feature 가 **자기 목적지 타입을 자기 모듈에** 두고, 루트 화면이 `.navigationDestination(for:)` 을 자기 탭 스택에 등록. 목적지 화면을 `public` 으로 열 필요 없음 |
+| 과도기 목적지 | `NavigationDestination` (Home/Notice) | `UMCApp/UMCApp/Sources/Navigation/` | 아직 App 에 남은 Home·Notice 목적지. Notice 화면은 콜백 클로저로 의도만 올리고 push 는 `RootTabView`/`NavigationRoutingView` 가 수행(#1027). Feature 로 옮기면 사라질 타입 |
+| 딥링크 | `AppDeepLink`(`message`·`card`·`attendance`) · `DeepLinkStore` | `UMCApp/UMCApp/Sources/Navigation/` | `umc://thread|notice/…`·`https://umc.it.kr/t/…`·푸시 → 탭 선택 + 경로 push |
+
+- `NavigationPath` 는 타입 소거라 **Core → Feature, Feature → App 역방향 의존 없이** 서로 다른 Feature 목적지를 한 스택에 섞을 수 있다. 모든 목적지를 모은 전역 enum 을 Core 에 두지 않는다.
+- `PathStore`·`AppFlowViewModel`·`ErrorHandler`·`UserSessionManager` 는 핵심 규칙 #1 의 명시적 예외(앱 생명주기 전역 관리자)로 `@Observable` 전역 객체다. 액터 격리 정책을 바꾸려면 네 타입을 함께 다룬다.
+- 탭 표시 정보(제목·SF Symbol)는 App 타겟 확장 `NavigationTab+Presentation.swift` 에 둔다 — `CoreRouting` 은 라우팅 정체성만 가진다.
 
 ## Observation 패턴
 
@@ -143,6 +171,10 @@ struct ChallengerAttendanceView: View {
 - Action 기반 단방향 데이터 흐름
 
 ## 에러 처리 시스템
+
+에러 타입·`Loadable`·`ErrorHandler`·`AlertPrompt` 는 모두 `UMCFoundation`(`Core/Foundation/Sources/Error/`, `Alert/`)에 있다.
+`AppError` 하위로 `NetworkError`·`AuthError`·`DomainError`·`RepositoryError`·`ValidationError`·`LocationError` 가 있고,
+전송 계층 에러는 `CoreNetwork.NetworkClient.appError(from:)` 가 `UMCFoundation.NetworkError` 로 변환해 올린다.
 
 ### Loadable (로컬/인라인 에러)
 

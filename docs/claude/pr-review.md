@@ -26,6 +26,7 @@
 
 5. **파일 배치 일관성**
    - Color 확장 등 시각적 매핑의 배치 위치(CoreDesignSystem vs CoreUIComponents)를 팀 내 통일
+     — 현재 기준: 토큰·Typography·ButtonStyle 은 `CoreDesignSystem`, 도메인 열거형의 색/이미지 매핑(`UMCPartType+Color` 등)은 `CoreUIComponents/Extensions`
 
 6. **머지 충돌 사전 감지**
    - 동일 파일을 여러 PR이 수정할 경우 머지 순서 조율 필요 명시
@@ -59,6 +60,10 @@ PR 리뷰는 **지적 사항이 있는 파일만** 아래 형식으로 작성한
 - [ ] 동일 파일 수정하는 다른 PR과의 충돌 가능성 확인
 - [ ] 타입 불일치 없는가 (같은 필드가 한 곳은 Int, 다른 곳은 String 등)
 - [ ] Network Router에 인라인 딕셔너리 없이 DTO로 분리되어 있는가
+- [ ] `import Aquila`/`AquilaMoya` 가 `CoreNetwork` 밖(Feature Data·App)에 들어오지 않았는가 — `docs/claude/network-router.md` "전송 계층"
+- [ ] 비밀번호·토큰·인증코드 성격의 요청/응답 필드를 추가했다면 `NetworkClient.logger` 의 `redactedKeys` 에도 넣었는가
+- [ ] DTO 파일에 `private extension KeyedDecodingContainer` 를 다시 정의하지 않고 `UMCFoundation` 공용 헬퍼를 썼는가
+- [ ] `AppProduct/` 하위 파일이 diff 에 없는가 (핵심 규칙 #9 — 있으면 `git restore --source=v2.2.0`)
 - [ ] 테스트 코드가 포함된 PR은 테스트 품질도 함께 리뷰
 - [ ] **식별자에 의미 없는 숫자 접미사가 없는가** (`text1`, `value2`, `btn3Color` 등) — `docs/claude/coding-style.md` 참고
 - [ ] 약어가 도메인 표준(`id`, `URL`, `API` 등)을 제외하고 풀어 써졌는가

@@ -2,6 +2,10 @@
 
 > 레거시 `AppProduct/` 디렉터리 구조 레퍼런스. (Tuist `UMCApp/` 구조는 `docs/claude/build-and-modules.md` 참고)
 > 핵심 요약은 `CLAUDE.md` 참고.
+>
+> ⚠️ `AppProduct/` 는 **v2.2.0 릴리즈 상태로 동결**돼 있다(핵심 규칙 #9, `.github/CODEOWNERS` 보호 경로).
+> 이 문서는 레거시 구현을 **열람·대조**할 때만 쓴다. 파일을 옮길 목적지는 `docs/claude/tuist-file-mapping.md`,
+> 현재 코드 규약은 `UMCApp/` 기준 문서들을 따른다. App Store 현행 릴리즈(3.5.0)는 `UMCApp/` 빌드다.
 
 - 작성자: 제옹(euijjang97)
 

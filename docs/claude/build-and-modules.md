@@ -8,19 +8,15 @@
 ## Build & Run
 
 프로젝트는 `AppProduct/`(레거시 xcodeproj)와 `UMCApp/`(Tuist 기반) **두 축**으로 관리됩니다.
-신규 작업은 `UMCApp/`를 기본으로 사용합니다.
+**모든 작업은 `UMCApp/`에서만** 합니다. `AppProduct/`는 `v2.2.0`에 동결돼 있고(핵심 규칙 #9), CI도
+UMCApp만 돕니다 — `.github/workflows/tuist-ci.yml`(`develop` push/PR, `macos-26`, `UMCApp/Makefile` 사용).
+App Store 현행 릴리즈는 3.5.0(태그 `v3.5.0`)이며 `UMCApp/`에서 빌드했다.
 
-### AppProduct (xcodeproj)
+### AppProduct (xcodeproj) — 열람 전용
 
 ```bash
-# Xcode로 빌드 (권장)
+# 레거시 참고용으로만 연다. 빌드·수정하지 않는다.
 open AppProduct/AppProduct.xcodeproj
-
-# CLI 빌드
-xcodebuild -project AppProduct/AppProduct.xcodeproj -scheme AppProduct -configuration Debug build
-
-# 테스트 실행
-xcodebuild -project AppProduct/AppProduct.xcodeproj -scheme AppProduct test
 ```
 
 ### UMCApp (Tuist)
@@ -38,13 +34,36 @@ make install           # SPM 의존성
 # 일상 작업
 make generate          # .xcworkspace 생성
 make open              # Xcode 열기 (없으면 자동 generate)
-make test              # xcodebuild 테스트
+make build             # Debug 빌드 (SCHEME=… 으로 모듈 단위)
+make build-watch       # watchOS 앱(UMCWatchApp) 빌드
+make test              # xcodebuild 테스트 (SCHEME=… 으로 모듈 단위)
+make test-network      # CoreNetwork 단위+통합 테스트 (TEST_SERVER_URL 자동 전달)
+make pick / test-pick  # 스킴을 골라 빌드/테스트 (대화형)
+make graph             # 의존성 그래프(graph.png)
 make doctor            # 환경 진단 (mise/tuist/xcode 버전)
 make reset             # 꼬였을 때 전체 초기화
 make help              # 전체 타겟 목록
 ```
 
 자세한 사용법은 `UMCApp/MAKEFILE_GUIDE.md` 참고.
+
+#### 로컬 테스트 서버 (`AppProductTestServer/`)
+
+레포 루트의 `AppProductTestServer/`는 CoreNetwork 통합 테스트용 **Vapor 서버**다(DB 없음).
+`UMCApp/Core/Network/Tests/Integration/AppProductTestServerIntegrationTests.swift`가 `TEST_SERVER_URL`
+(기본 `http://127.0.0.1:8080`)에 1.5초 ping 으로 서버를 감지해 떠 있을 때만 실행된다.
+
+```bash
+cd AppProductTestServer && make integration   # start → UMCApp make test-network → stop 원샷
+cd AppProductTestServer && make start/stop    # 수동으로 띄워두고 반복 실행할 때
+```
+
+#### 빌드 번호 (`CURRENT_PROJECT_VERSION`)
+
+`Makefile`이 배포 브랜치명(`release/{version}/{build}` · `testflight/external/{version}/{build}`)의 끝 숫자를
+`TUIST_BUILD_NUMBER`로 넣어 `make generate` 시 `CURRENT_PROJECT_VERSION`에 반영한다. 105 미만이면 `make`가
+거부한다(`MIN_BUILD_NUMBER`). 로컬 기본값은 `1`. 직접 지정은 `TUIST_BUILD_NUMBER=42 make generate`.
+Xcode Cloud에서는 `CI_BRANCH`로 브랜치명을 받는다. 배포 절차 전체는 `.agents/skills/deploy-ios/SKILL.md`.
 
 ## Tuist 모듈 구조 (UMCApp)
 
@@ -72,16 +91,24 @@ UMCApp/
 ├── Workspace.swift                # 전체 워크스페이스 (Core/*, Features/* glob + Widget/Watch)
 ├── Tuist.swift                    # Tuist 시스템 설정
 ├── Tuist/
-│   ├── Package.swift              # SPM 외부 의존성 (Moya, Kingfisher)
+│   ├── Package.swift              # SPM 외부 의존성 (Aquila, Moya, Kingfisher, KakaoSDK, GoogleSignIn, Firebase)
 │   └── ProjectDescriptionHelpers/
-│       ├── Project+Core.swift     # Core 모듈 공통 헬퍼
-│       └── Project+Feature.swift  # Feature 모듈 공통 헬퍼
-├── Core/                          # 10개 공유 인프라 모듈
-│   ├── Foundation/                # 기반 유틸리티, Config
-│   ├── Network/                   # 네트워크 레이어 (Moya)
-│   ├── DesignSystem/              # 디자인 토큰, 색상
+│       ├── Project+Core.swift            # Core 모듈 공통 헬퍼 (coreProject)
+│       ├── Project+Feature.swift         # Feature 모듈 공통 헬퍼 (featureProject · 3타겟)
+│       ├── Project+WatchApp.swift        # watchOS 앱 헬퍼 (watchAppProject)
+│       ├── Project+WidgetExtension.swift # 위젯/Complication 익스텐션 헬퍼
+│       └── Settings+Recommended.swift    # 전역 빌드 설정 · MARKETING_VERSION · 빌드 번호 · 서명 팀
+├── Secrets/                       # Shared.xcconfig (BASE_URL 등, 팀 내부 수령)
+├── Scripts/                       # verify-secrets.sh · 워크북 계약 검사 스크립트
+├── ci_scripts/                    # Xcode Cloud ci_post_clone.sh
+├── Core/                          # 12개 공유 인프라 모듈
+│   ├── Foundation/                # UMCFoundation — Loadable/ErrorHandler/AppError, Config, 디코딩 헬퍼, LocationManager (iOS+watchOS)
+│   ├── Domain/                    # CoreDomain — 공용 도메인 모델·UserSessionManager (iOS+watchOS)
+│   ├── Network/                   # CoreNetwork — Aquila 전송 계층 + Moya Router, 소셜 로그인, KeychainTokenStore, STOMP
+│   ├── DI/                        # CoreDI — DIContainer · `\.di` Environment 키
+│   ├── Routing/                   # CoreRouting — PathStore(탭별 NavigationPath) · NavigationTab
+│   ├── DesignSystem/              # 디자인 토큰, 색상, Typography, ButtonStyle
 │   ├── UIComponents/              # 공용 UI 컴포넌트 (Kingfisher)
-│   ├── DI/                        # 의존성 주입 컨테이너
 │   ├── Photo/                     # 사진 선택·처리 공통 기능
 │   ├── NearbyExchange/            # 근거리 명함 교환 인프라
 │   ├── WatchConnectivity/         # iOS ↔ watchOS 통신
@@ -115,8 +142,12 @@ Feature Data          (Domain + CoreNetwork + UMCFoundation)
     ↓
 Core Modules          (Foundation / Network / DesignSystem / UIComponents / DI)
     ↓
-External Packages     (Moya 15.0.3 / Kingfisher 8.6.1)
+External Packages     (Aquila / Moya / Kingfisher / KakaoSDK / GoogleSignIn / Firebase)
 ```
+
+> **Aquila 경계**: `import Aquila` / `import AquilaMoya` 는 **`CoreNetwork` 소스·테스트에서만** 한다.
+> Feature Data·App 타겟은 CoreNetwork 가 감싼 `NetworkClient`·`MoyaNetworkAdapter`·`StompConnection`
+> (typealias)만 쓴다. 상세는 `docs/claude/network-router.md` "전송 계층(Aquila)".
 
 > **경계 정책 — BusinessCard**: MyPage·Home·Community·Activity·Auth 등 명함을 노출하는 Feature는 `BusinessCardPresentation`만 링크해 카드 UI(`BusinessCardFaceView` 등)를 재사용하며, 카드 화면을 자체 구현하지 않는다. 2D SwiftUI(`BusinessCardFaceView`)는 여전히 정본 카드 UI이고, 이 경계 자체는 렌더링 방식과 무관하게 유효하다.
 >
@@ -147,6 +178,7 @@ External Packages     (Moya 15.0.3 / Kingfisher 8.6.1)
 |-------------------|-----------|
 | `UMCFoundation` | `Core/Foundation/Project.swift` |
 | `CoreWatchConnectivity` | `Core/WatchConnectivity/Project.swift` |
+| `CoreWatchDesignSystem` | `Core/WatchDesignSystem/Project.swift` (watchOS 전용) |
 | `CoreDomain` | `Core/Domain/Project.swift` |
 | `NoticeDomain` | `Features/Notice/Project.swift` |
 | `HomeDomain` | `Features/Home/Project.swift` |
@@ -159,42 +191,72 @@ External Packages     (Moya 15.0.3 / Kingfisher 8.6.1)
 보일러플레이트 제거를 위해 두 개의 헬퍼 함수를 사용합니다.
 
 ```swift
-// Core 모듈 생성
+// Core 모듈 생성 (테스트 타겟은 includesTests: true 로 함께 생성)
 coreProject(
     name: "CoreNetwork",
     bundleIdSuffix: "network",
-    dependencies: [.target(name: "UMCFoundation"), .external(name: "Moya")]
+    dependencies: [
+        .project(target: "UMCFoundation", path: .relativeToRoot("Core/Foundation")),
+        .external(name: "Aquila"), .external(name: "AquilaMoya"), .external(name: "Moya"),
+    ],
+    includesTests: true,
+    testDependencies: [.external(name: "Aquila"), .external(name: "AquilaMoya")],
+    testEntitlements: "Tests/CoreNetworkTests.entitlements"
 )
 
-// Feature 모듈 생성 (3개 타겟 자동 생성)
+// Feature 모듈 생성 (Domain/Data/Presentation 3개 타겟 자동 생성)
 featureProject(
     name: "Auth",
     domainExtraDependencies: [],
     dataExtraDependencies: [],
-    presentationExtraDependencies: []
+    presentationExtraDependencies: [],
+    includesDomainTests: true, includesDataTests: true, includesPresentationTests: true
 )
 ```
 
+`coreProject` 는 `destinations`/`deploymentTargets`/`resources`/`additionalSettings`/`includesTests`/
+`testDependencies`/`testEntitlements` 를, `featureProject` 는 `domainDestinations`/`domainDeploymentTargets`
+와 레이어별 `includes*Tests`/`*TestDependencies` 를 선택적으로 받는다. 워치 앱은 `watchAppProject`,
+위젯·Complication 은 `widgetExtensionProject` 헬퍼를 쓴다.
 두 헬퍼 모두 리소스 파라미터(`dataResources`/`presentationResources`)를 선택적으로 받는다.
 `staticFramework`는 Compile Sources 산출물이 소비 타겟까지 전파되지 않으므로, 런타임에 필요한
 자산은 별도 리소스 번들로 명시해야 한다 — 예: `HomeData`의 CoreML 모델(`dataResources`).
 
 ### 외부 의존성
 
-| 패키지 | 버전 | 사용처 |
+`UMCApp/Tuist/Package.swift` 기준. 버전은 `from:` 하한이며 실제 해석값은 `Tuist/Package.resolved` 에 고정된다.
+
+| 패키지 | 버전 지정 | 사용처 |
 |--------|------|--------|
-| Moya | 15.0.3 | CoreNetwork |
-| Kingfisher | 8.6.1 | CoreUIComponents |
-| KakaoSDK (kakao-ios-sdk) | 2.27.0+ | CoreNetwork (`KakaoLoginManager`) |
+| [Aquila](https://github.com/JEONG-J/Aquila) (`Aquila` · `AquilaMoya`) | `revision` 고정 (`c167df60…`) | CoreNetwork — HTTP 전송·토큰 갱신·Keychain 저장소·STOMP·로깅 (#1562) |
+| Moya | 15.0.3+ | CoreNetwork (Router `TargetType`), Aquila 의 `AquilaMoya` 가 재사용 |
+| Kingfisher | 8.6.1+ (resolved 8.8.0) | CoreUIComponents (`RemoteImage`) |
+| KakaoSDK (kakao-ios-sdk) | 2.27.0+ | CoreNetwork (`KakaoLoginManager`·`KakaoPlusManager`) |
 | GoogleSignIn-iOS | 9.1.0+ | CoreNetwork (`GoogleLoginManager`) |
+| firebase-ios-sdk (`FirebaseCore`·`FirebaseMessaging`) | 12.7.0+ | App 타겟 — FCM 푸시. 킬스위치·강제 업데이트는 GitHub Pages 원격 설정이라 RemoteConfig 는 쓰지 않는다(#1389) |
+
+- Aquila 는 태그가 아닌 **커밋 revision 으로 고정**한다. 올릴 때는 `Package.swift` 의 `revision` 과
+  `Package.resolved` 를 함께 갱신하고 `make test-network` 로 CoreNetwork 테스트를 돌린다.
+- 외부 의존성은 전부 `.staticFramework`(`productTypes: [:]`)라 ObjC 카테고리 유실을 막기 위해
+  전역 `OTHER_LDFLAGS` 에 `-ObjC` 가 들어 있다(`Settings+Recommended.swift`). `AppAuth`·`AppCheckCore`·
+  `Firebase` 타겟은 빈 `.o` 의 `has no symbols` 경고를 `-no_warning_for_no_symbols` 로 끈다(#1394).
 
 ### 주요 설정
 
 - **Tuist 버전**: `UMCApp/mise.toml` 고정 (`4.208.0`)
 - **Deployment Target**: iOS 26.4 (`Project.swift` 기준). watchOS 개방 타겟은 watchOS 26.4 병기 ("플랫폼(destination) 정책" 참고)
+- **앱 타겟**: `destinations: [.iPhone]`(iPad 제외 — 출시본과 동일), `bundleId: com.umc.product`(변경 금지),
+  `UIUserInterfaceStyle: Light` 고정, 권한 문구는 `Project.swift` infoPlist 에 주석과 함께 관리
+- **버전**: `MARKETING_VERSION` 은 `Settings+Recommended.swift`(현재 `3.5.0`), `CURRENT_PROJECT_VERSION` 은
+  배포 브랜치명에서 유도("빌드 번호" 참고). `DEVELOPMENT_TEAM`(`8B8B4462NV`)·`CODE_SIGN_STYLE` 도 매니페스트 고정
 - **Product Type**: 모든 모듈 `.staticFramework`
 - **Bundle ID**: Core → `dev.umc.core.*` / Feature → `dev.umc.feature.*.*`
-- **Workspace**: glob(`Core/*`, `Features/*`) + `UMCAppWidget`, `UMCWatchApp` 명시 포함
+- **Workspace**: glob(`Core/*`, `Features/*`) + `UMCAppWidget`, `UMCWatchApp`, `UMCWatchComplication` 명시 포함
+- **워치 앱 임베드**: 현재 앱 타겟은 `UMCWatchApp` 을 **임베드하지 않는다**(`Project.swift` 의 주석 처리된
+  `.project(target: "UMCWatchApp")`). 워치 프로젝트·`make build-watch`·CI 빌드는 그대로 살아 있으며, 다음
+  릴리즈에 담을 때 그 줄만 되살린다.
+- **보호 경로**: `.github/CODEOWNERS` 가 `UMCApp/Tuist/`·`Project.swift`·`Makefile`·`Secrets/`·entitlements·
+  `Core/{Foundation,DesignSystem,UIComponents,Domain,DI,Network}`·`AppProduct/` 를 소유자 승인 필수로 건다
 
 ### 공유 Keychain Access Group
 
@@ -205,23 +267,29 @@ iOS 앱과 watchOS 앱은 로그인 토큰용 공유 그룹 `$(AppIdentifierPref
 
 | 타겟 | entitlements 파일 | 배선 위치 |
 |------|------------------|----------|
-| iOS 앱 | `UMCApp/UMCApp.entitlements:27-31` | `UMCApp/Project.swift:85` |
-| watchOS 앱 | `UMCApp/UMCWatchApp/UMCWatchApp.entitlements:7-11` | `UMCApp/UMCWatchApp/Project.swift:7` |
+| iOS 앱 | `UMCApp/UMCApp.entitlements:26-30` | `UMCApp/Project.swift:106` |
+| watchOS 앱 | `UMCApp/UMCWatchApp/UMCWatchApp.entitlements:7-11` | `UMCApp/UMCWatchApp/Project.swift:14` |
 
 - **배열 순서가 계약이다.** `kSecAttrAccessGroup` 을 지정하지 않은 `SecItemAdd` 는 배열 **첫 항목**에
-  저장한다. `UMCApp/Core/Network/Sources/Auth/KeychainTokenStore.swift` 는 저장(104-110행) ·
-  조회(120-126행) · 삭제(141-145행) 쿼리 어디에도 access group 을 지정하지 않으므로 이 기본값 규칙에
-  전적으로 의존한다. 그래서 공유 그룹이 첫 번째다.
+  저장한다. `UMCApp/Core/Network/Sources/Auth/KeychainTokenStore.swift` 는 #1562 이후
+  `Aquila.KeychainTokenStore(service:account: "tokenPair")` 를 **access group 없이** 생성해 토큰 쌍을 저장하므로
+  이 기본값 규칙에 전적으로 의존한다. 그래서 공유 그룹이 첫 번째다. (Aquila 쪽도 `accessGroup` 이 nil 이면
+  쿼리에 그룹을 넣지 않는다.)
 - **두 번째 항목(각 타겟 자기 App ID 그룹)은 안전장치다.** 검색·삭제는 access group 미지정 시 앱이 가진
   모든 그룹을 대상으로 하므로, 기존 배포판이 기본 그룹(`$(AppIdentifierPrefix)com.umc.product`)에 저장해 둔
   토큰이 계속 읽힌다. 이 줄을 빼면 업데이트 즉시 전 사용자 강제 로그아웃이다.
+- **레거시 항목 이전(#1562).** Aquila 전환 전에는 `accessToken`·`refreshToken` 두 account 로 따로 저장했다.
+  `KeychainTokenStore.readTokens()` 는 쌍 항목이 없으면 레거시 두 항목을 `kSecMatchLimitAll` + `kSecReturnAttributes`
+  로 전 그룹에서 읽어 **같은 access group 끼리 짝지은 뒤** 쌍 항목으로 저장하고 레거시를 지운다. 저장·삭제
+  순서는 actor 내부 대기열(`acquireOperation`)로 직렬화되므로, 이 흐름을 건드릴 때는
+  `Tests/Auth/KeychainTokenStoreTests.swift` 와 `UMCApp/Tests/AquilaKeychainIntegrationTests.swift` 를 같이 본다.
 - **워치는 배선까지 확인한다.** `watchAppProject(entitlements: .file(path: "UMCWatchApp.entitlements"))` 로
   인자를 넘겨야 실제로 적용된다. 파일만 만들고 인자를 안 넘기면 무효다 — #1147 유실이 정확히 이 형태였다.
 - **watchOS 는 keychain 을 공유하지 않는다.** Apple Watch 는 자체 keychain 을 가진 별개 기기라 access
   group 을 맞춰도 워치가 iPhone 의 항목을 읽지 못한다. access group 은 동일 기기 내 동일 팀 서명 타겟
   (앱·확장) 간 공유 메커니즘이다. 워치 토큰은 WatchConnectivity 로 iPhone→Watch 전송 후 워치 자체
-  keychain 에 저장하는 경로이며 #1210/#1211 범위다. 또한 `KeychainTokenStore` 는
-  `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`(109행)라 iCloud Keychain 동기화 대상도 아니다.
+  keychain 에 저장하는 경로이며 #1210/#1211 범위다. 또한 Aquila 저장소의 기본 accessibility 가
+  `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`(`synchronizable: false`)라 iCloud Keychain 동기화 대상도 아니다.
 - **서명 주의**: 두 App ID(`com.umc.product` · `com.umc.product.watchkitapp`)에 Keychain Sharing
   capability 가 없으면 실기기/아카이브 서명 단계에서 실패하고, 런타임 증상은 `SecItemAdd` 의
   `errSecMissingEntitlement(-34018)` 다.

@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > **구조 안내**: 이 파일은 **프로젝트 요약 + 핵심 규칙 + 레퍼런스 인덱스**만 담는 허브입니다.
 > 주제별 상세 내용은 `docs/claude/` 로 분리되어 있으며, **필요할 때 해당 파일을 `Read` 로 열어** 참고합니다.
 > (컨텍스트 절약을 위해 `@import` 로 전체를 인라인하지 않습니다.)
+> 다른 에이전트(Codex 등)는 `AGENTS.md`를 진입점으로 삼아 이 파일을 그대로 저장소 지침으로 읽는다.
 
 ## Project Overview
 
@@ -14,8 +15,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **목적**: 동아리 운영 도구 일원화 (디스코드/구글시트/노션 분산 문제 해결)
 - **주요 모듈**: 인증/온보딩, 홈 대시보드, 공지사항, 운영/학교 관리, 스터디/활동, 커뮤니티, 프로젝트 지원·심사, 명함 교환, 마이페이지, watchOS 앱, Live Activity
 - **구현 기능 예시**: The Ping, GPS 스마트 출석, STOMP 커뮤니티(사진 메시지 포함), 프로젝트 목록·운영진 관리·지원·지원자 심사, 명함 근거리 교환, Apple Intelligence 안내, 출석 Live Activity
-- **App Store 릴리즈**: 2.2.0 (레거시 `AppProduct/` 동결 기준, 태그 `v2.2.0`). 이후 개발은 `UMCApp/`에서 진행 중이며 이 버전과 구분한다.
+- **App Store 릴리즈**: 3.5.0 (태그 `v3.5.0`, 배포 브랜치 `release/3.5.0/112`) — `UMCApp/`(Tuist) 빌드.
+  `develop`의 `MARKETING_VERSION`은 `UMCApp/Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift`에서 관리한다.
+  3.x 계열은 전부 `UMCApp/`에서 나갔고, 레거시 `AppProduct/`는 마지막 릴리즈 2.2.0(태그 `v2.2.0`) 상태로 동결돼 있다.
 - **두 빌드 축**: `AppProduct/`(레거시 xcodeproj, **`v2.2.0`에 동결 — 수정 금지**) + `UMCApp/`(Tuist) — **모든 신규·유지보수·이식 작업은 `UMCApp/`에서만 수행** (핵심 규칙 #9 참조)
+- **모듈 구성(UMCApp)**: Core 12개(`Foundation`·`Domain`·`Network`·`DI`·`Routing`·`DesignSystem`·`UIComponents`·`Photo`·`NearbyExchange`·`WatchConnectivity`·`WatchDesignSystem`·`WidgetShared`) + Feature 10개(`Activity`·`Auth`·`Badge`·`BusinessCard`·`Community`·`Home`·`Maintenance`·`MyPage`·`Notice`·`Project`) + `UMCAppWidget`·`UMCWatchApp`·`UMCWatchComplication`
+- **네트워크 스택**: HTTP 전송·토큰 갱신·STOMP는 SPM 패키지 **Aquila**(`Aquila`·`AquilaMoya`)가 담당하고, 엔드포인트 정의는 Moya `TargetType` Router로 유지한다. Aquila는 `CoreNetwork`만 import한다 (상세: `docs/claude/network-router.md`)
 
 ## 아키텍처 한눈에
 
@@ -27,7 +32,7 @@ View ←→ ViewModel(@Observable) → UseCase(Protocol) → Repository → Data
 ```
 
 - **Presentation → Domain → Data** 단방향. 상위는 하위의 Protocol에만 의존 (DIP)
-- **Router**: AppRouter(모듈 간/딥링크) + Feature Router(내부 화면). Tab별 독립 `NavigationStack`
+- **Router**: `CoreRouting.PathStore`(탭별 독립 `NavigationPath`) + App의 `AppFlowViewModel`(bootstrap/login/main 상태머신)·딥링크. Feature는 자기 목적지 타입을 자기 모듈에 두고 `.navigationDestination(for:)`을 자기 탭 스택에 등록한다 — Core → Feature, Feature → App 역방향 의존 금지
 - 상세: `docs/claude/architecture.md`
 
 ## 핵심 규칙 (항상 적용)
@@ -35,7 +40,7 @@ View ←→ ViewModel(@Observable) → UseCase(Protocol) → Repository → Data
 이 항목들은 위반 시 컴파일 에러·런타임 크래시·리뷰 반려로 이어지므로 **예외 없이 지킵니다.**
 
 1. **상태 관리는 `@Observable` 매크로만** — `@StateObject`/`@ObservedObject`/`@Published` 금지.
-   예외: 앱 생명주기 전역 관리자(`AppFlowViewModel`). View는 `@State private var viewModel` 패턴.
+   예외: 앱 생명주기 전역 관리자(`AppFlowViewModel`·`PathStore`·`ErrorHandler`·`UserSessionManager`). View는 `@State private var viewModel` 패턴.
 2. **서버 응답 정수는 전 레이어 `String` 통일** — 서버가 모든 정수를 String으로 직렬화한다.
    Response DTO·Domain Model·Repository Protocol 파라미터까지 `String`. Int 변환은 연산 시점에만.
 3. **Response DTO는 synthesized Codable 금지** — custom `init(from:)` + `encode(to:)` 필수.
@@ -69,7 +74,9 @@ View ←→ ViewModel(@Observable) → UseCase(Protocol) → Repository → Data
       ⚠️ `gh pr create --body "..."`는 템플릿을 불러오지 않는다 — 템플릿을 복사해 채운 뒤
       `--body-file`로 넘길 것. (섹션 표·예시: `docs/claude/git-workflow.md` "PR 본문 형식")
     - 이미 푸시한 브랜치명을 고쳐야 하면 GitHub 브랜치 rename API는 **열려 있던 PR을 닫아버리므로**, rename 후 새 PR을 만들고 닫힌 PR에 후속 PR 번호를 코멘트로 남긴다.
-    - 배포 브랜치는 예외: `testFlight/{번호}` · `release/{번호}` (순차 번호, 이슈번호 아님).
+    - 배포 브랜치는 예외: `release/{version}/{build}`(App Store · prod 서버) · `testflight/external/{version}/{build}`(외부 TestFlight · dev 서버).
+      빌드 번호는 105 이상, 두 계열을 합쳐 중복 금지. 브랜치 푸시가 Xcode Cloud를 트리거하며 배포 브랜치는 PR을 만들지 않는다.
+      절차는 `deploy-ios` 스킬(`.agents/skills/deploy-ios/SKILL.md`)과 `docs/claude/git-workflow.md` "배포 브랜치 전략"을 따른다.
 
 ## 코딩 스타일 (요약)
 
@@ -96,12 +103,18 @@ View ←→ ViewModel(@Observable) → UseCase(Protocol) → Repository → Data
 open AppProduct/AppProduct.xcodeproj
 
 # UMCApp (Tuist) — 표준 진입점은 Makefile. 모든 작업은 여기서.
-cd UMCApp && make open      # generate + Xcode 열기
-cd UMCApp && make test      # 테스트
-cd UMCApp && make doctor    # 환경 진단
+cd UMCApp && make open          # generate + Xcode 열기
+cd UMCApp && make test          # 테스트
+cd UMCApp && make test-network  # CoreNetwork 단위+통합 테스트 (로컬 Vapor 서버가 떠 있으면 통합도 실행)
+cd UMCApp && make build-watch   # watchOS 앱 빌드
+cd UMCApp && make doctor        # 환경 진단
+
+# 로컬 Vapor 테스트 서버 (CoreNetwork 통합 테스트용) — start → test-network → stop 원샷
+cd AppProductTestServer && make integration
 ```
 
-- Tuist 버전은 `UMCApp/mise.toml`(`4.208.0`)로 고정 · Deployment Target iOS 26.4
+- Tuist 버전은 `UMCApp/mise.toml`(`4.208.0`)로 고정 · Deployment Target iOS 26.4 / watchOS 26.4
+- CI는 `.github/workflows/tuist-ci.yml` 하나(`develop` push/PR)이며 로컬과 같은 `UMCApp/Makefile`을 쓴다
 - 상세: `docs/claude/build-and-modules.md`, `UMCApp/MAKEFILE_GUIDE.md`
 
 ## 상세 레퍼런스 (필요 시 Read)
@@ -113,14 +126,15 @@ cd UMCApp && make doctor    # 환경 진단
 | 빌드 & Tuist 모듈 구조 | `docs/claude/build-and-modules.md` | 모듈 추가, 빌드 설정, 의존성 |
 | Tuist 파일별 이관 매핑 | `docs/claude/tuist-file-mapping.md` | 레거시 파일을 어느 모듈/레이어로 옮길지 확인할 때 (필수 참조) |
 | 아키텍처 / Observation / 에러 | `docs/claude/architecture.md` | ViewModel·UseCase·에러 처리 작업 |
-| Network Router (Moya) | `docs/claude/network-router.md` | API 엔드포인트/DTO 추가 |
+| Network Router (Moya) & 전송 계층(Aquila) | `docs/claude/network-router.md` | API 엔드포인트/DTO 추가, `NetworkClient`·토큰 갱신·STOMP·로그 마스킹 수정 |
 | Response DTO 디코딩 | `docs/claude/response-dto-decoding.md` | Response DTO 작성/수정 |
 | 디자인 시스템 & 성능 | `docs/claude/design-system.md` | UI/토큰/Glass/렌더링 최적화 |
 | watchOS 디자인 시스템 | `docs/claude/watch-design-system.md` | 워치 화면·컴포넌트 작업, Glass 절제 규칙 확인 |
 | watchOS Complication | `docs/claude/watch-complications.md` | 워치페이스 Complication 추가·수정, App Group 스냅샷 경로 확인 |
 | 코딩 스타일 & 네이밍 | `docs/claude/coding-style.md` | 네이밍 판단이 필요할 때 |
-| Git Workflow | `docs/claude/git-workflow.md` | 브랜치/커밋/PR/이슈(템플릿·Type·Priority)/배포 |
-| 프로젝트 구조(AppProduct) | `docs/claude/project-structure.md` | 레거시 디렉터리 탐색 |
+| Git Workflow | `docs/claude/git-workflow.md` | 브랜치/커밋/PR/이슈(템플릿·Type·Priority)/배포 브랜치 |
+| 배포 절차 (TestFlight/App Store) | `.agents/skills/deploy-ios/SKILL.md` | 배포 브랜치·빌드 번호·Xcode Cloud 서버 분기·develop 버전 동기화 |
+| 프로젝트 구조(AppProduct) | `docs/claude/project-structure.md` | 레거시 디렉터리 탐색 (열람 전용) |
 | PR 리뷰 규칙 & 체크리스트 | `docs/claude/pr-review.md` | PR 리뷰 작성 시 |
 | 근거리 교환 실기기 검증 | `docs/claude/nearby-exchange-device-verification.md` | 근거리 명함 교환을 실기기 2대로 검증할 때, 조직 팀 App ID capability·서명 문제를 풀 때 |
 
