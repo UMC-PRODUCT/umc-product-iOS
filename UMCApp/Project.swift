@@ -189,5 +189,22 @@ let project = Project(
             ],
             dependencies: [.target(name: "UMCApp")]
         ),
+    ],
+    schemes: [
+        .scheme(
+            name: "UMCApp-Stub",
+            shared: true,
+            buildAction: .buildAction(targets: ["UMCApp"]),
+            runAction: .runAction(
+                configuration: .debug,
+                executable: .executable("UMCApp"),
+                arguments: .arguments(
+                    launchArguments: [
+                        .launchArgument(name: "-stubSession", isEnabled: true),
+                    ]
+                )
+            ),
+            archiveAction: .archiveAction(configuration: .release)
+        ),
     ]
 )
