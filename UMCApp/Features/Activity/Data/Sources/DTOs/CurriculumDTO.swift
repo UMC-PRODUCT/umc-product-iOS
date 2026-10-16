@@ -59,7 +59,7 @@ struct WeeklyCurriculumDTO: Codable, Sendable, Equatable {
     // MARK: - Property
 
     let weeklyCurriculumId: String
-    let weekNo: Int
+    let weekNo: String
     let title: String
     let startsAt: String
     let endsAt: String
@@ -82,7 +82,7 @@ struct WeeklyCurriculumDTO: Codable, Sendable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         weeklyCurriculumId =
             container.decodeFlexibleStringOrNil(forKey: .weeklyCurriculumId) ?? ""
-        weekNo = try container.decodeIntFlexibleIfPresent(forKey: .weekNo) ?? 0
+        weekNo = container.decodeFlexibleStringOrNil(forKey: .weekNo) ?? "0"
         title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
         startsAt = try container.decodeIfPresent(String.self, forKey: .startsAt) ?? ""
         endsAt = try container.decodeIfPresent(String.self, forKey: .endsAt) ?? ""
@@ -106,51 +106,19 @@ struct WeeklyCurriculumDTO: Codable, Sendable, Equatable {
 
 extension CurriculumDTO {
 
-    /// 커리큘럼 진행률 도메인 모델 ``CurriculumProgressModel`` 로 변환한다.
-    ///
-    /// `part` 는 DTO 본문에 없는 값으로, 조회 요청 시 사용한 파트 문자열을 호출자가 전달한다.
-    /// 종료된 주차 수(`completedCount`)는 각 주차 `endsAt` 와 `now` 비교로 계산한다.
-    ///
-    /// - Parameters:
-    ///   - part: 조회 파트의 서버 문자열 (예: `"IOS"`)
-    ///   - now: 진행률 계산 기준 시각 (테스트 결정론을 위해 주입 가능)
-    func toCurriculumProgress(part: String, now: Date = .now) -> CurriculumProgressModel {
+    func toCurriculumHeader(part: String) -> CurriculumHeaderModel {
         let partType = UMCPartType(apiValue: part)
-        let partName = "\(partType?.name ?? part) PART CURRICULUM"
-
-        let completedCount = weeks.filter { week in
-            guard let endDate = week.parsedEndsAt else { return false }
-            return now > endDate
-        }.count
-        let totalCount = weeks.count
-
-        let currentWeekTitle: String = {
-            let inProgress = weeks.first { week in
-                guard let start = week.parsedStartsAt,
-                      let end = week.parsedEndsAt else { return false }
-                return start <= now && now <= end
-            }
-            return inProgress?.title ?? title
-        }()
-
-        return CurriculumProgressModel(
+        return CurriculumHeaderModel(
             partType: partType,
-            partName: partName,
-            curriculumTitle: currentWeekTitle,
-            completedCount: completedCount,
-            totalCount: totalCount
+            partName: "\(partType?.name ?? part) PART CURRICULUM",
+            curriculumTitle: title
         )
     }
 
-    /// 미션 카드 도메인 모델 목록 ``MissionCardModel`` 로 변환한다 (주차 오름차순 정렬).
-    ///
-    /// - Parameters:
-    ///   - platform: 카드에 표기할 플랫폼/파트 문자열
-    ///   - now: 미션 상태 계산 기준 시각 (테스트 결정론을 위해 주입 가능)
-    func toMissionCards(platform: String, now: Date = .now) -> [MissionCardModel] {
+    func toMissionCards(platform: String) -> [MissionCardModel] {
         weeks
-            .map { $0.toMissionCard(platform: platform, now: now) }
-            .sorted { $0.week < $1.week }
+            .map { $0.toMissionCard(platform: platform) }
+            .sorted { (Int($0.week) ?? 0) < (Int($1.week) ?? 0) }
     }
 }
 
@@ -158,38 +126,13 @@ extension CurriculumDTO {
 
 extension WeeklyCurriculumDTO {
 
-    /// 주차 DTO 를 미션 카드 도메인 모델 ``MissionCardModel`` 로 변환한다.
-    func toMissionCard(platform: String, now: Date) -> MissionCardModel {
+    func toMissionCard(platform: String) -> MissionCardModel {
         MissionCardModel(
             week: weekNo,
             platform: platform,
             title: title,
             missionTitle: title,
-            missionType: .link,
-            status: missionStatus(now: now),
             isExtra: isExtra
         )
-    }
-
-    /// `startsAt` / `endsAt` 와 `now` 를 비교해 미션 상태를 결정한다.
-    func missionStatus(now: Date) -> MissionStatus {
-        guard let start = parsedStartsAt, let end = parsedEndsAt else {
-            return .notStarted
-        }
-        if now < start {
-            return .notStarted
-        } else if now <= end {
-            return .inProgress
-        } else {
-            return .completed
-        }
-    }
-
-    var parsedStartsAt: Date? {
-        StudyGroupDateParser.parse(startsAt)
-    }
-
-    var parsedEndsAt: Date? {
-        StudyGroupDateParser.parse(endsAt)
     }
 }

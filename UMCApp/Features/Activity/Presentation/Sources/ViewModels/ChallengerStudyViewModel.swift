@@ -11,9 +11,9 @@ import UMCFoundation
 
 /// 챌린저(일반 참여자) 모드의 스터디/활동 섹션 ViewModel
 ///
-/// 진행률과 미션은 서버의 커리큘럼 개요 응답 하나에서 함께 내려오므로 조회는 단일
+/// 제목과 주차별 커리큘럼은 서버의 커리큘럼 개요 응답 하나에서 함께 내려오므로 조회는 단일
 /// `FetchCurriculumOverviewUseCaseProtocol` 로 수행하고, 그 결과를 두 상태에 나눠 담습니다.
-/// - `curriculumState`: 진행률(`CurriculumProgressModel`)
+/// - `curriculumState`: 제목(`CurriculumHeaderModel`)
 /// - `missionsState`: 주차별 미션(`[MissionCardModel]`)
 ///
 @MainActor
@@ -26,7 +26,7 @@ final class ChallengerStudyViewModel {
 
     // MARK: - State
 
-    private(set) var curriculumState: Loadable<CurriculumProgressModel> = .idle
+    private(set) var curriculumState: Loadable<CurriculumHeaderModel> = .idle
     private(set) var missionsState: Loadable<[MissionCardModel]> = .idle
 
     // MARK: - Computed Property
@@ -46,7 +46,7 @@ final class ChallengerStudyViewModel {
 
     // MARK: - Action
 
-    /// 커리큘럼 개요를 조회해 진행률과 미션 상태를 함께 채웁니다. (초기 로드/재시도 공용 경로)
+    /// 커리큘럼 개요를 조회해 제목과 주차별 커리큘럼 상태를 함께 채웁니다. (초기 로드/재시도 공용 경로)
     ///
     /// 이미 로딩 중이면 중복 호출을 무시합니다. `.task` 가 취소되면 던져지는 에러는
     /// 실패가 아니므로 이전 상태로 복원해 허위 에러 카드가 뜨지 않게 합니다. 에러 분기:
@@ -64,7 +64,7 @@ final class ChallengerStudyViewModel {
 
         do {
             let overview = try await fetchCurriculumOverviewUseCase.execute()
-            curriculumState = .loaded(overview.progress)
+            curriculumState = .loaded(overview.header)
             missionsState = .loaded(overview.missions)
         } catch is CancellationError {
             curriculumState = previousCurriculum

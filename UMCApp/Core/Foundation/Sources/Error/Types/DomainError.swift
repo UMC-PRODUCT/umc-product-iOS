@@ -88,12 +88,6 @@ public enum DomainError: Error, LocalizedError, Equatable {
 
     // MARK: - 워크북/과제
 
-    /// 제출 기한 초과
-    case workbookDeadlinePassed
-
-    /// 이미 제출됨
-    case workbookAlreadySubmitted
-
     /// 미션을 찾을 수 없음
     case missionNotFound
 
@@ -147,10 +141,6 @@ public enum DomainError: Error, LocalizedError, Equatable {
             return "출석 사유를 입력해주세요."
         case .scheduleHasAttendanceRecords:
             return "출석 기록이 있는 일정은 삭제할 수 없습니다. 최고 관리자에게 강제 삭제를 요청하세요."
-        case .workbookDeadlinePassed:
-            return "제출 기한이 지났습니다."
-        case .workbookAlreadySubmitted:
-            return "이미 제출한 워크북입니다."
         case .missionNotFound:
             return "미션을 찾을 수 없습니다."
         case .missionLinkRequired:

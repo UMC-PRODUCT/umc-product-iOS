@@ -151,12 +151,16 @@ private struct StubStudyContext: StudyContextProviding {
 
 private enum Fixture {
 
-    /// 주차 2개(역순)로 구성된 커리큘럼. 종료일이 모두 과거라 진행률이 결정론적.
     static let curriculumObject = """
     {
       "curriculumId": "1",
       "title": "iOS 커리큘럼",
       "weeks": [
+        {
+          "weeklyCurriculumId": "w10", "weekNo": "10", "title": "10주차",
+          "startsAt": "2099-01-01T00:00:00.000Z",
+          "endsAt": "2099-01-07T00:00:00.000Z", "isExtra": false
+        },
         {
           "weeklyCurriculumId": "w2", "weekNo": 2, "title": "2주차",
           "startsAt": "2000-01-08T00:00:00.000Z",
@@ -336,16 +340,14 @@ private func makeRepository(
 @Suite("StudyRepository — 커리큘럼 조회 매핑 (도메인 규칙)")
 struct StudyRepositoryCurriculumTests {
 
-    @Test("fetchCurriculumOverview — 커리큘럼 엔드포인트를 호출하고 진행률로 매핑한다")
-    func fetchCurriculumOverviewMapsProgress() async throws {
+    @Test("fetchCurriculumOverview — 커리큘럼 엔드포인트를 호출하고 커리큘럼 제목로 매핑한다")
+    func fetchCurriculumOverviewMapsHeader() async throws {
         let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.curriculumObject)))
 
-        let progress = try await sut.fetchCurriculumOverview().progress
+        let header = try await sut.fetchCurriculumOverview().header
 
-        #expect(progress.partName == "iOS PART CURRICULUM")
-        #expect(progress.totalCount == 2)
-        #expect(progress.completedCount == 2)        // 모든 주차 종료 → 결정론적
-        #expect(progress.curriculumTitle == "iOS 커리큘럼")
+        #expect(header.partName == "iOS PART CURRICULUM")
+        #expect(header.curriculumTitle == "iOS 커리큘럼")
         #expect(stub.lastPath == "/api/v2/curriculums/overview")
         #expect(stub.lastMethod == .get)
     }
@@ -356,21 +358,21 @@ struct StudyRepositoryCurriculumTests {
 
         let missions = try await sut.fetchCurriculumOverview().missions
 
-        #expect(missions.map(\.week) == [1, 2])
+        #expect(missions.map(\.week) == ["1", "2", "10"])
         #expect(missions.allSatisfy { $0.platform == "iOS" })
     }
 
-    /// 진행률과 미션을 각각 조회하던 구조에서는 같은 개요 엔드포인트가 2회 호출됐다.
+    /// 커리큘럼 제목과 미션을 각각 조회하던 구조에서는 같은 개요 엔드포인트가 2회 호출됐다.
     /// 단일 조회로 통합된 구조가 회귀하지 않도록 요청 횟수를 박제한다.
-    @Test("fetchCurriculumOverview — 진행률·미션을 함께 얻어도 네트워크 요청은 1회뿐이다")
+    @Test("fetchCurriculumOverview — 커리큘럼 제목·미션을 함께 얻어도 네트워크 요청은 1회뿐이다")
     func fetchCurriculumOverviewRequestsNetworkOnlyOnce() async throws {
         let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.curriculumObject)))
 
         let overview = try await sut.fetchCurriculumOverview()
 
         #expect(stub.requestCount == 1)
-        #expect(overview.progress.totalCount == 2)
-        #expect(overview.missions.count == 2)
+        #expect(overview.header.curriculumTitle == "iOS 커리큘럼")
+        #expect(overview.missions.count == 3)
     }
 
     @Test("fetchCurriculumOverview — gisuId 가 없으면 네트워크 호출 없이 도메인 에러를 던진다")
@@ -389,8 +391,8 @@ struct StudyRepositoryCurriculumTests {
 
         let options = try await sut.fetchWeeklyCurriculumOptions(gisuId: "17", part: "PLAN")
 
-        #expect(options.map(\.weeklyCurriculumId) == ["w1", "w2"])
-        #expect(options.map(\.weekNo) == ["1", "2"])     // 도메인 모델은 weekNo: String
+        #expect(options.map(\.weeklyCurriculumId) == ["w1", "w2", "w10"])
+        #expect(options.map(\.weekNo) == ["1", "2", "10"])     // 도메인 모델은 weekNo: String
     }
 
     @Test("fetchCurriculumOverview — isSuccess:false 면 RepositoryError.serverError 를 던진다")
@@ -863,219 +865,4 @@ struct StudyRepositoryCRUDTests {
         #expect(stub.requestCount == 0)
     }
 }
-
-// MARK: - Suite: 제출 현황 조회 계약
-
-@Suite("StudyRepository — 스터디원 제출 현황 조회 (도메인 규칙)")
-struct StudyRepositorySubmissionTests {
-
-    // MARK: - 엔드포인트 / 필터
-
-    @Test("제출 현황은 v2 워크북 엔드포인트를 GET 으로 호출한다")
-    func submissionsCallsWorkbookEndpoint() async throws {
-        let (sut, stub) = makeRepository(
-            .success(Fixture.success(SubmissionFixture.page))
-        )
-
-        _ = try await sut.fetchStudyMemberSubmissions(
-            studyGroupId: nil,
-            weekNos: [],
-            cursor: nil,
-            size: 20
-        )
-
-        #expect(stub.lastPrimaryPath == "/api/v2/curriculums/workbook-submissions")
-        #expect(stub.lastPrimaryMethod == .get)
-    }
-
-    @Test("커서는 서버가 준 값을 그대로 다음 요청에 실어 보낸다")
-    func submissionsForwardsCursorVerbatim() async throws {
-        let (sut, stub) = makeRepository(
-            .success(Fixture.success(SubmissionFixture.page))
-        )
-
-        _ = try await sut.fetchStudyMemberSubmissions(
-            studyGroupId: nil,
-            weekNos: [],
-            cursor: "SGM-77",
-            size: 20
-        )
-
-        #expect(stub.primaryCursors == ["SGM-77"])
-    }
-
-    // MARK: - 페이지 매핑
-
-    @Test("커서 응답의 nextCursor/hasNext 가 도메인 페이지로 매핑된다")
-    func submissionsMapsCursorMetadata() async throws {
-        let (sut, _) = makeRepository(
-            .success(Fixture.success(SubmissionFixture.page))
-        )
-
-        let page = try await sut.fetchStudyMemberSubmissions(
-            studyGroupId: nil,
-            weekNos: [],
-            cursor: nil,
-            size: 20
-        )
-
-        #expect(page.hasNext)
-        #expect(page.nextCursor == "12")
-        #expect(page.content.count == 2)
-    }
-
-    @Test("행은 스터디원 단위이고 주차는 각 행의 weeks 로 매핑된다")
-    func submissionsMapsRowsAndWeeks() async throws {
-        let (sut, _) = makeRepository(
-            .success(Fixture.success(SubmissionFixture.page))
-        )
-
-        let page = try await sut.fetchStudyMemberSubmissions(
-            studyGroupId: nil,
-            weekNos: [],
-            cursor: nil,
-            size: 20
-        )
-
-        let first = try #require(page.content.first)
-        #expect(first.studyGroupMemberId == "11")
-        #expect(first.memberName == "박철수")
-        #expect(first.weeks.count == 2)
-    }
-
-    @Test("워크북 미배포 인원도 행으로 오고 상세 진입이 막힌다")
-    func submissionsIncludesNotDistributedMember() async throws {
-        let (sut, _) = makeRepository(
-            .success(Fixture.success(SubmissionFixture.page))
-        )
-
-        let page = try await sut.fetchStudyMemberSubmissions(
-            studyGroupId: nil,
-            weekNos: [],
-            cursor: nil,
-            size: 20
-        )
-
-        let second = try #require(page.content.last)
-        let week = try #require(second.weeks.first)
-        #expect(week.challengerWorkbookId == nil)
-        #expect(week.status == .notSubmitted)
-        #expect(second.managementItems.allSatisfy { !$0.canOpenDetail })
-    }
-
-    // MARK: - 그룹 이름 목록
-
-    @Test("그룹 이름 목록은 names 엔드포인트를 호출하고 식별자를 String 으로 매핑한다")
-    func groupNamesMapsIdentifiers() async throws {
-        let (sut, stub) = makeRepository(
-            .success(Fixture.success(SubmissionFixture.groupNames))
-        )
-
-        let names = try await sut.fetchStudyGroupNames()
-
-        #expect(stub.lastPrimaryPath == "/api/v1/study-groups/names")
-        #expect(names.map(\.groupId) == ["3", "4"])
-        #expect(names.map(\.name) == ["iOS A팀", "iOS B팀"])
-    }
-
-    // MARK: - 실패 전파
-
-    @Test(
-        "서버 실패 응답은 RepositoryError 로 전파된다 (형제 대칭)",
-        arguments: [SubmissionEndpoint.submissions, .groupNames]
-    )
-    private func propagatesServerFailure(endpoint: SubmissionEndpoint) async {
-        let (sut, _) = makeRepository(
-            .success(Fixture.failureBody(code: "403", message: "권한 없음"))
-        )
-
-        await #expect(throws: RepositoryError.self) {
-            try await endpoint.invoke(sut)
-        }
-    }
-}
-
-/// 제출 현황 계열 엔드포인트를 파라미터화해 실패 전파를 형제 대칭으로 검증하기 위한 디스패처.
-private enum SubmissionEndpoint {
-    case submissions
-    case groupNames
-
-    func invoke(_ repository: StudyRepository) async throws {
-        switch self {
-        case .submissions:
-            _ = try await repository.fetchStudyMemberSubmissions(
-                studyGroupId: "3",
-                weekNos: ["1"],
-                cursor: nil,
-                size: 20
-            )
-        case .groupNames:
-            _ = try await repository.fetchStudyGroupNames()
-        }
-    }
-}
-
-// MARK: - 제출 현황 Fixture
-
-private enum SubmissionFixture {
-
-    /// 스터디원 2명. 첫 행은 정수 ID + 워크북 배포, 둘째 행은 문자열 ID + **미배포**(null).
-    /// 두 표기를 섞어 서버의 숫자/문자열 혼용을 한 응답에서 함께 검증한다.
-    static let page = """
-    {
-      "content": [
-        {
-          "studyGroupMemberId": 11,
-          "memberId": 101,
-          "memberName": "박철수",
-          "nickname": "철수",
-          "schoolName": "한성대학교",
-          "profileImageUrl": "https://cdn.umc/1.png",
-          "studyGroupId": 3,
-          "studyGroupName": "iOS A팀",
-          "part": "IOS",
-          "weeks": [
-            {
-              "weekNo": 1, "weeklyCurriculumId": 21,
-              "challengerWorkbookId": 31, "status": "PASS", "isBest": true
-            },
-            {
-              "weekNo": 2, "weeklyCurriculumId": 22,
-              "challengerWorkbookId": 32, "status": "IN_PROGRESS", "isBest": false
-            }
-          ]
-        },
-        {
-          "studyGroupMemberId": "12",
-          "memberId": "102",
-          "memberName": "이영희",
-          "nickname": null,
-          "schoolName": null,
-          "profileImageUrl": null,
-          "studyGroupId": "3",
-          "studyGroupName": "iOS A팀",
-          "part": "IOS",
-          "weeks": [
-            {
-              "weekNo": "1", "weeklyCurriculumId": "21",
-              "challengerWorkbookId": null, "status": "NOT_SUBMITTED", "isBest": false
-            }
-          ]
-        }
-      ],
-      "nextCursor": 12,
-      "hasNext": true
-    }
-    """
-
-    static let groupNames = """
-    {
-      "studyGroups": [
-        { "groupId": 3, "name": "iOS A팀" },
-        { "groupId": "4", "name": "iOS B팀" }
-      ]
-    }
-    """
-}
-
 #endif
