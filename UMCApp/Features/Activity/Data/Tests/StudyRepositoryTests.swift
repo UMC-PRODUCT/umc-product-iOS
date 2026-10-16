@@ -151,12 +151,16 @@ private struct StubStudyContext: StudyContextProviding {
 
 private enum Fixture {
 
-    /// 주차 2개(역순)로 구성된 커리큘럼. 종료일이 모두 과거라 진행률이 결정론적.
     static let curriculumObject = """
     {
       "curriculumId": "1",
       "title": "iOS 커리큘럼",
       "weeks": [
+        {
+          "weeklyCurriculumId": "w10", "weekNo": "10", "title": "10주차",
+          "startsAt": "2099-01-01T00:00:00.000Z",
+          "endsAt": "2099-01-07T00:00:00.000Z", "isExtra": false
+        },
         {
           "weeklyCurriculumId": "w2", "weekNo": 2, "title": "2주차",
           "startsAt": "2000-01-08T00:00:00.000Z",
@@ -336,16 +340,14 @@ private func makeRepository(
 @Suite("StudyRepository — 커리큘럼 조회 매핑 (도메인 규칙)")
 struct StudyRepositoryCurriculumTests {
 
-    @Test("fetchCurriculumOverview — 커리큘럼 엔드포인트를 호출하고 진행률로 매핑한다")
-    func fetchCurriculumOverviewMapsProgress() async throws {
+    @Test("fetchCurriculumOverview — 커리큘럼 엔드포인트를 호출하고 커리큘럼 제목로 매핑한다")
+    func fetchCurriculumOverviewMapsHeader() async throws {
         let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.curriculumObject)))
 
-        let progress = try await sut.fetchCurriculumOverview().progress
+        let header = try await sut.fetchCurriculumOverview().header
 
-        #expect(progress.partName == "iOS PART CURRICULUM")
-        #expect(progress.totalCount == 2)
-        #expect(progress.completedCount == 2)        // 모든 주차 종료 → 결정론적
-        #expect(progress.curriculumTitle == "iOS 커리큘럼")
+        #expect(header.partName == "iOS PART CURRICULUM")
+        #expect(header.curriculumTitle == "iOS 커리큘럼")
         #expect(stub.lastPath == "/api/v2/curriculums/overview")
         #expect(stub.lastMethod == .get)
     }
@@ -356,21 +358,21 @@ struct StudyRepositoryCurriculumTests {
 
         let missions = try await sut.fetchCurriculumOverview().missions
 
-        #expect(missions.map(\.week) == [1, 2])
+        #expect(missions.map(\.week) == ["1", "2", "10"])
         #expect(missions.allSatisfy { $0.platform == "iOS" })
     }
 
-    /// 진행률과 미션을 각각 조회하던 구조에서는 같은 개요 엔드포인트가 2회 호출됐다.
+    /// 커리큘럼 제목과 미션을 각각 조회하던 구조에서는 같은 개요 엔드포인트가 2회 호출됐다.
     /// 단일 조회로 통합된 구조가 회귀하지 않도록 요청 횟수를 박제한다.
-    @Test("fetchCurriculumOverview — 진행률·미션을 함께 얻어도 네트워크 요청은 1회뿐이다")
+    @Test("fetchCurriculumOverview — 커리큘럼 제목·미션을 함께 얻어도 네트워크 요청은 1회뿐이다")
     func fetchCurriculumOverviewRequestsNetworkOnlyOnce() async throws {
         let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.curriculumObject)))
 
         let overview = try await sut.fetchCurriculumOverview()
 
         #expect(stub.requestCount == 1)
-        #expect(overview.progress.totalCount == 2)
-        #expect(overview.missions.count == 2)
+        #expect(overview.header.curriculumTitle == "iOS 커리큘럼")
+        #expect(overview.missions.count == 3)
     }
 
     @Test("fetchCurriculumOverview — gisuId 가 없으면 네트워크 호출 없이 도메인 에러를 던진다")
@@ -389,8 +391,8 @@ struct StudyRepositoryCurriculumTests {
 
         let options = try await sut.fetchWeeklyCurriculumOptions(gisuId: "17", part: "PLAN")
 
-        #expect(options.map(\.weeklyCurriculumId) == ["w1", "w2"])
-        #expect(options.map(\.weekNo) == ["1", "2"])     // 도메인 모델은 weekNo: String
+        #expect(options.map(\.weeklyCurriculumId) == ["w1", "w2", "w10"])
+        #expect(options.map(\.weekNo) == ["1", "2", "10"])     // 도메인 모델은 weekNo: String
     }
 
     @Test("fetchCurriculumOverview — isSuccess:false 면 RepositoryError.serverError 를 던진다")

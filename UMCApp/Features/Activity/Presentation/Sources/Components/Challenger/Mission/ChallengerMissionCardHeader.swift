@@ -17,105 +17,58 @@ fileprivate enum Constants {
 
 // MARK: - ChallengerMissionCardHeader
 
-/// 미션 카드 헤더 뷰
-///
-/// 주차 숫자 배지, 제목, 상태 텍스트, 펼치기/접기 버튼을 표시합니다.
 struct ChallengerMissionCardHeader: View, Equatable {
 
     // MARK: - Property
 
-    private let model: MissionCardModel
-    private let isExpanded: Bool
-    private let onToggle: () -> Void
-
-    // MARK: - Initializer
-
-    init(
-        model: MissionCardModel,
-        isExpanded: Bool,
-        onToggle: @escaping () -> Void
-    ) {
-        self.model = model
-        self.isExpanded = isExpanded
-        self.onToggle = onToggle
-    }
+    let model: MissionCardModel
+    let isExpanded: Bool
+    let onToggle: () -> Void
 
     // MARK: - Equatable
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.model == rhs.model
-        && lhs.isExpanded == rhs.isExpanded
+        lhs.model == rhs.model && lhs.isExpanded == rhs.isExpanded
     }
 
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: DefaultSpacing.spacing16) {
-            WeekNumberBadge(week: model.week, status: model.status)
-                .equatable()
+        Button(action: onToggle) {
+            HStack(spacing: DefaultSpacing.spacing16) {
+                WeekNumberBadge(week: model.week)
 
-            contentSection
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+                    Text(wrappedTitle)
+                        .appFont(.callout, weight: .semibold)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
 
-            Spacer()
+                    if !isExpanded {
+                        Text(model.missionTitle)
+                            .appFont(.footnote, color: .grey500)
+                            .lineLimit(1)
+                    }
+                }
 
-            chevronIcon
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if case .locked = model.status { return }
-            onToggle()
-        }
-    }
+                Spacer()
 
-    // MARK: - View Components
-
-    private var contentSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            titleText
-            statusText
-        }
-    }
-
-    private var titleText: some View {
-        Text(wrappedTitle)
-            .appFont(.callout, weight: .semibold)
-            .multilineTextAlignment(.leading)
-            .lineLimit(3)
-            .fixedSize(horizontal: false, vertical: true)
-    }
-
-    @ViewBuilder
-    private var statusText: some View {
-        switch model.status {
-        case .pendingApproval, .pass, .fail:
-            Text(model.status.displayText)
-                .appFont(.footnote, color: model.status.foregroundColor)
-        case .notStarted where isExpanded, .inProgress where isExpanded:
-            // 펼치면 본문(ChallengerMissionCardContent)이 설명 전체를 보여 주므로 요약을 숨긴다
-            EmptyView()
-        default:
-            Text(model.missionTitle)
-                .appFont(.footnote, color: .grey500)
-                .lineLimit(1)
-        }
-    }
-
-    private var chevronIcon: some View {
-        Group {
-            if case .locked = model.status {
-                Image(systemName: "lock.fill")
-            } else {
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                    .font(.system(size: Constants.chevronIconSize))
+                    .foregroundStyle(Color.grey400)
             }
+            .frame(minHeight: DefaultConstant.minimumTouchTarget)
+            .contentShape(Rectangle())
         }
-        .font(.system(size: Constants.chevronIconSize))
-        .foregroundStyle(Color.grey400)
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(model.week)주차, \(model.title)")
+        .accessibilityValue(isExpanded ? "펼쳐짐" : "접힘")
+        .accessibilityHint(isExpanded ? "학습 내용 접기" : "학습 내용 펼치기")
     }
 
-    /// `-` 뒤에 zero-width space를 넣어 제목이 더 자연스럽게 줄바꿈되도록 조정합니다.
-    ///
-    /// 예: `1주차 - Spring Boot 시작하기`는 `-` 뒤에서 먼저 줄바꿈될 수 있어
-    /// `Spring`과 `Boot`가 불필요하게 분리되는 경우를 줄입니다.
+    // MARK: - Function
+
     private var wrappedTitle: String {
         model.title
             .replacingOccurrences(of: " - ", with: " - \u{200B}")
@@ -123,68 +76,31 @@ struct ChallengerMissionCardHeader: View, Equatable {
     }
 }
 
-// MARK: - WeekNumberBadge
-
-/// 주차 숫자 배지 (둥근 사각형 배경)
-fileprivate struct WeekNumberBadge: View, Equatable {
+fileprivate struct WeekNumberBadge: View {
 
     // MARK: - Property
 
-    let week: Int
-    let status: MissionStatus
+    let week: String
 
     // MARK: - Body
 
     var body: some View {
-        Text("\(week)")
-            .appFont(.title3, weight: .semibold, color: status.foregroundColor)
+        Text(week)
+            .appFont(.title3, weight: .semibold, color: .grey600)
             .frame(width: DefaultConstant.iconSize, height: DefaultConstant.iconSize)
             .padding(DefaultConstant.iconPadding)
-            .background(status.backgroundColor)
+            .background(Color.grey100)
             .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
-            .glassEffect(
-                .clear,
-                in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius))
     }
 }
-
-// MARK: - Preview
 
 #if DEBUG
-#Preview("ChallengerMissionCardHeader - All Status") {
-    ScrollView {
-        VStack(spacing: 16) {
-            ForEach(
-                Array(MissionPreviewData.allStatusMissions.enumerated()),
-                id: \.element.id
-            ) { index, mission in
-                ChallengerMissionCardHeader(
-                    model: mission,
-                    isExpanded: index == 1
-                ) { }
-                .padding(DefaultConstant.defaultListPadding)
-                .background(.white, in: .rect(cornerRadius: 24))
-            }
-        }
-        .padding()
-    }
-    .background(Color.grey100)
-}
-
-#Preview("ChallengerMissionCardHeader - iOS Missions") {
-    ScrollView {
-        VStack(spacing: 12) {
-            ForEach(MissionPreviewData.iosMissions) { mission in
-                ChallengerMissionCardHeader(
-                    model: mission,
-                    isExpanded: false
-                ) { }
-                .padding(DefaultConstant.defaultListPadding)
-                .background(.white, in: .rect(cornerRadius: 24))
-            }
-        }
-        .padding()
-    }
-    .background(Color.grey100)
+#Preview {
+    ChallengerMissionCardHeader(
+        model: MissionPreviewData.singleMission,
+        isExpanded: false,
+        onToggle: {}
+    )
+    .padding(DefaultConstant.defaultListPadding)
 }
 #endif

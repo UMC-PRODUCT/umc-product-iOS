@@ -15,32 +15,24 @@ import UMCFoundation
 
 // MARK: - Helpers
 
-private func makeProgress(
+private func makeHeader(
     partName: String = "iOS",
-    curriculumTitle: String = "1주차 OT",
-    completedCount: Int = 2,
-    totalCount: Int = 8
-) -> CurriculumProgressModel {
-    CurriculumProgressModel(
+    curriculumTitle: String = "1주차 OT"
+) -> CurriculumHeaderModel {
+    CurriculumHeaderModel(
         partName: partName,
-        curriculumTitle: curriculumTitle,
-        completedCount: completedCount,
-        totalCount: totalCount
+        curriculumTitle: curriculumTitle
     )
 }
 
-/// 검증 대상은 `week`/`status` 뿐이며, `platform`/`title`/`missionTitle` 은
-/// 상태 검증과 무관한 고정 filler 값이다.
 private func makeMission(
-    week: Int = 1,
-    status: MissionStatus = .inProgress
+    week: String = "1"
 ) -> MissionCardModel {
     MissionCardModel(
         week: week,
         platform: "iOS",
         title: "\(week)주차 OT",
-        missionTitle: "링크를 제출하세요",
-        status: status
+        missionTitle: "학습 내용을 확인하세요"
     )
 }
 
@@ -65,7 +57,7 @@ private final class MockStudyRepository: @unchecked Sendable, StudyRepositoryPro
     // MARK: 커리큘럼 개요 stub 제어
 
     var fetchCurriculumOverviewResult = CurriculumOverview(
-        progress: makeProgress(),
+        header: makeHeader(),
         missions: [makeMission()]
     )
     var fetchCurriculumOverviewError: Error?
@@ -160,17 +152,15 @@ struct FetchCurriculumOverviewUseCaseTests {
     @Test("정상 — Repository.fetchCurriculumOverview 위임 + 결과 그대로 반환 + 1회 호출")
     func executeDelegatesToRepository() async throws {
         let repository = MockStudyRepository()
-        let expectedProgress = makeProgress(
+        let expectedHeader = makeHeader(
             partName: "Spring",
-            curriculumTitle: "3주차 세션",
-            completedCount: 5,
-            totalCount: 10
+            curriculumTitle: "3주차 세션"
         )
         repository.fetchCurriculumOverviewResult = CurriculumOverview(
-            progress: expectedProgress,
+            header: expectedHeader,
             missions: [
-                makeMission(week: 1, status: .pass),
-                makeMission(week: 2, status: .inProgress)
+                makeMission(week: "1"),
+                makeMission(week: "2")
             ]
         )
         let useCase = makeUseCase(repository: repository)
@@ -178,11 +168,11 @@ struct FetchCurriculumOverviewUseCaseTests {
         let result = try await useCase.execute()
 
         #expect(repository.fetchCurriculumOverviewCallCount == 1)
-        #expect(result.progress == expectedProgress)
+        #expect(result.header == expectedHeader)
         // 변환 없는 패스스루 검증 — 도메인 의미 필드 단위 비교.
         // (`id` 는 로컬 생성 UUID 라 검증 대상에서 제외)
-        #expect(result.missions.map(\.week) == [1, 2])
-        #expect(result.missions.map(\.status) == [.pass, .inProgress])
+        #expect(result.missions.map(\.week) == ["1", "2"])
+        #expect(result.missions.map(\.title) == ["1주차 OT", "2주차 OT"])
     }
 
     @Test("Repository 에러 → 변환 없이 그대로 전파")

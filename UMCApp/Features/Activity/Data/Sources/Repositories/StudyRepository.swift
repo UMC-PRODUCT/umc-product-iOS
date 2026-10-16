@@ -83,7 +83,7 @@ public final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable
 
     // MARK: - 커리큘럼 / 미션
 
-    /// 커리큘럼 개요를 한 번 조회해 진행률과 주차별 미션을 함께 매핑한다.
+    /// 커리큘럼 개요를 한 번 조회해 제목과 주차별 커리큘럼을 함께 매핑한다.
     ///
     /// 두 결과 모두 같은 `CurriculumDTO` 에서 파생되므로 네트워크 요청은 1회만 발생한다.
     public func fetchCurriculumOverview() async throws -> CurriculumOverview {
@@ -91,7 +91,7 @@ public final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable
         let platform = UMCPartType(apiValue: curriculum.part)?.name ?? curriculum.part
 
         return CurriculumOverview(
-            progress: curriculum.dto.toCurriculumProgress(part: curriculum.part),
+            header: curriculum.dto.toCurriculumHeader(part: curriculum.part),
             missions: curriculum.dto.toMissionCards(platform: platform)
         )
     }
@@ -99,7 +99,6 @@ public final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable
     /// 주차 커리큘럼 옵션을 조회한다.
     ///
     /// 전용 엔드포인트가 아직 없어 커리큘럼 개요(`getCurriculum`)의 주차 목록에서 파생한다.
-    /// 주차 번호(`weekNo`)는 도메인 모델이 `String` 이므로 변환해 담는다.
     public func fetchWeeklyCurriculumOptions(
         gisuId: String, part: String
     ) async throws -> [WeeklyCurriculumOption] {
@@ -109,11 +108,11 @@ public final class StudyRepository: StudyRepositoryProtocol, @unchecked Sendable
         }
         let curriculum = try await fetchCurriculum(gisuId: gisuId, part: part)
         return curriculum.dto.weeks
-            .sorted { $0.weekNo < $1.weekNo }
+            .sorted { (Int($0.weekNo) ?? 0) < (Int($1.weekNo) ?? 0) }
             .map {
                 WeeklyCurriculumOption(
                     weeklyCurriculumId: $0.weeklyCurriculumId,
-                    weekNo: String($0.weekNo),
+                    weekNo: $0.weekNo,
                     title: $0.title
                 )
             }

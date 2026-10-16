@@ -180,50 +180,42 @@ enum StubSessionFixtures {
     /// stub 프로필의 기수·파트가 실제 서버 데이터와 일치하지 않아도 활동 탭을 확인할 수
     /// 있도록 결과를 고정한다.
     static let curriculumOverview = CurriculumOverview(
-        progress: CurriculumProgressModel(
+        header: CurriculumHeaderModel(
             partType: .front(type: .ios),
             partName: "iOS PART CURRICULUM",
-            curriculumTitle: "iOS 챌린저 커리큘럼",
-            completedCount: 3,
-            totalCount: 8
+            curriculumTitle: "iOS 챌린저 커리큘럼"
         ),
         missions: [
             MissionCardModel(
-                week: 1,
+                week: "1",
                 platform: "iOS",
                 title: "SwiftUI 기본 개념",
                 missionTitle:
-                    "SwiftUI 기본 개념을 학습하고 정리한 글 링크를 " +
-                    "제출하세요",
-                status: .pass
+                    "SwiftUI 기본 개념을 학습하고 핵심 내용을 정리하세요"
             ),
             MissionCardModel(
-                week: 2,
+                week: "2",
                 platform: "iOS",
                 title: "상태 관리와 데이터 흐름",
-                missionTitle: "@State와 @Binding을 활용한 화면을 구현하세요",
-                status: .pass
+                missionTitle: "@State와 @Binding을 활용한 화면을 구현하세요"
             ),
             MissionCardModel(
-                week: 3,
+                week: "3",
                 platform: "iOS",
                 title: "Swift Concurrency",
-                missionTitle: "async/await를 적용한 비동기 작업을 제출하세요",
-                status: .pass
+                missionTitle: "async/await를 적용한 비동기 처리 방법을 학습하세요"
             ),
             MissionCardModel(
-                week: 4,
+                week: "4",
                 platform: "iOS",
                 title: "네트워크 레이어 설계",
-                missionTitle: "Moya를 활용한 API 호출 예제를 제출하세요",
-                status: .inProgress
+                missionTitle: "Moya를 활용한 API 호출 예제를 학습하세요"
             ),
             MissionCardModel(
-                week: 5,
+                week: "5",
                 platform: "iOS",
                 title: "재사용 가능한 컴포넌트",
-                missionTitle: "공통 UI 컴포넌트를 설계하고 적용하세요",
-                status: .notStarted
+                missionTitle: "공통 UI 컴포넌트를 설계하고 적용하세요"
             )
         ]
     )

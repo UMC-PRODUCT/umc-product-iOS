@@ -97,10 +97,10 @@ fileprivate struct ChallengerMissionCardPresenter: View, Equatable {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("ChallengerMissionCard - All Status") {
+#Preview("ChallengerMissionCard - Curriculum") {
     ScrollView {
         VStack(spacing: 20) {
-            ForEach(MissionPreviewData.allStatusMissions) { mission in
+            ForEach(MissionPreviewData.sampleMissions) { mission in
                 ChallengerMissionCard(model: mission)
             }
         }
