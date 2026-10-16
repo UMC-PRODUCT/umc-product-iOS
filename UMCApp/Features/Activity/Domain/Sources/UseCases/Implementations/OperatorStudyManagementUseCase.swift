@@ -47,30 +47,6 @@ public final class OperatorStudyManagementUseCase: OperatorStudyManagementUseCas
         )
     }
 
-    // MARK: - 제출 현황
-
-    public func fetchStudyGroupNames() async throws -> [StudyGroupName] {
-        try await repository.fetchStudyGroupNames()
-    }
-
-    public func fetchStudySubmissionWeeks(studyGroupId: String?) async throws -> [String] {
-        try await repository.fetchStudySubmissionWeeks(studyGroupId: studyGroupId)
-    }
-
-    public func fetchStudyMemberSubmissions(
-        studyGroupId: String?,
-        weekNos: [String],
-        cursor: String?,
-        size: Int
-    ) async throws -> StudyMemberSubmissionPage {
-        try await repository.fetchStudyMemberSubmissions(
-            studyGroupId: studyGroupId,
-            weekNos: weekNos,
-            cursor: cursor,
-            size: size
-        )
-    }
-
     // MARK: - 그룹 CRUD
 
     public func createStudyGroup(

@@ -10,7 +10,7 @@ import SwiftUI
 /// Activity Presentation 전역에서 공유하는 레이아웃 상수 모음.
 enum ActivityConstants {
 
-    /// 미션 제출 결과 상태 카드 내부 패딩
+    /// 미션 상태 카드 내부 패딩
     static let statusCardPadding: EdgeInsets = .init(
         top: 16, leading: 12, bottom: 16, trailing: 12)
 

@@ -23,7 +23,7 @@ enum BusinessCardRouter {
     /// **관리 가능한** 스터디 목록 (`GET /api/v1/study-groups/managed`) — 항목 수만 쓴다.
     ///
     /// - Important: `managed` 는 「내가 참여한」이 아니라 「내가 관리할 수 있는」이다
-    ///   (서버 `StudyGroupController`·`StudyRouter.getStudyGroupNames` 와 같은 의미).
+    ///   (서버 `StudyGroupController` 기준).
     ///   그래서 운영진이 아닌 챌린저에게 이 카운트는 항상 0이다. 참여 기준 목록 API가
     ///   서버에 없어 클라이언트에서 메울 수 없다 (#1222).
     case getMyStudyGroups(query: StudyCountQueryDTO)

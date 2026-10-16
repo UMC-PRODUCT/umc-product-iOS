@@ -9,7 +9,7 @@ import Foundation
 import Testing
 @testable import ActivityDomain
 
-@Suite("MissionType — 서버 contract 및 제출 방식 분기 (도메인 규칙)")
+@Suite("MissionType — 서버 contract (도메인 규칙)")
 struct MissionTypeTests {
 
     // MARK: - init(rawValue:) (서버 contract)
@@ -36,40 +36,5 @@ struct MissionTypeTests {
     )
     func initFromUnknownStringFallsBackToUnknown(rawValue: String) {
         #expect(MissionType(rawValue: rawValue) == .unknown)
-    }
-
-    // MARK: - availableSubmissionTypes 분기
-
-    @Test(".link 는 [.link] 제출만 허용한다")
-    func linkAllowsOnlyLink() {
-        #expect(MissionType.link.availableSubmissionTypes == [.link])
-    }
-
-    @Test(
-        ".memo 와 .plain 은 [.completeOnly] 만 허용한다",
-        arguments: [MissionType.memo, MissionType.plain]
-    )
-    func memoAndPlainAllowOnlyCompleteOnly(type: MissionType) {
-        #expect(type.availableSubmissionTypes == [.completeOnly])
-    }
-
-    @Test(".unknown 은 모든 제출 방식을 허용한다 (fail-safe)")
-    func unknownAllowsAll() {
-        #expect(MissionType.unknown.availableSubmissionTypes == MissionSubmissionType.allCases)
-    }
-
-    // MARK: - defaultSubmissionType (availableSubmissionTypes 위임)
-
-    @Test(
-        "defaultSubmissionType 은 availableSubmissionTypes 의 첫 항목을 따른다",
-        arguments: [
-            (MissionType.link, MissionSubmissionType.link),
-            (MissionType.memo, MissionSubmissionType.completeOnly),
-            (MissionType.plain, MissionSubmissionType.completeOnly),
-            (MissionType.unknown, MissionSubmissionType.link) // allCases.first
-        ]
-    )
-    func defaultIsFirstOfAvailable(type: MissionType, expected: MissionSubmissionType) {
-        #expect(type.defaultSubmissionType == expected)
     }
 }

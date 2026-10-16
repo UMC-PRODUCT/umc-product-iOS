@@ -66,9 +66,6 @@ extension DIContainer {
         register(OperatorAttendanceRepositoryProtocol.self) {
             self.resolve(AttendanceRepository.self)
         }
-        register(WorkbookRepositoryProtocol.self) {
-            WorkbookRepository(adapter: self.resolve(MoyaNetworkAdapter.self))
-        }
         register(StudyRepositoryProtocol.self) {
             StudyRepository(adapter: self.resolve(MoyaNetworkAdapter.self))
         }
@@ -94,9 +91,6 @@ extension DIContainer {
         }
         register(OperatorStudyManagementUseCaseProtocol.self) {
             OperatorStudyManagementUseCase(repository: self.resolve(StudyRepositoryProtocol.self))
-        }
-        register(WorkbookUseCaseProtocol.self) {
-            WorkbookUseCase(repository: self.resolve(WorkbookRepositoryProtocol.self))
         }
         register(FetchCurriculumOverviewUseCaseProtocol.self) {
             FetchCurriculumOverviewUseCase(repository: self.resolve(StudyRepositoryProtocol.self))

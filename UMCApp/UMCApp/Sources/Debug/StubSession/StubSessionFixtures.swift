@@ -331,93 +331,6 @@ enum StubSessionFixtures {
         ),
     ]
 
-    /// 스터디원 제출 현황 픽스처. `weeklyCurriculumOptions` 와 같은 주차 식별자를 공유한다.
-    ///
-    /// `partLabel` 은 실제 DTO 매핑처럼 `UMCPartType.name` 과 같게 둔다. 신규 파트 표시명이
-    /// 길어 배지가 이름 칸을 누르는지도 이 데이터로 확인한다.
-    static let studyMemberSubmissions: [StudyMemberSubmission] = [
-        StudyMemberSubmission(
-            studyGroupMemberId: "211",
-            memberId: "211",
-            memberName: "김스위",
-            nickname: "옵셔널",
-            schoolName: "한성대학교",
-            studyGroupId: "601",
-            studyGroupName: "모바일 PE 심화 스터디",
-            part: .mobileProductEngineer,
-            partLabel: "Mobile PE",
-            weeks: [
-                WeeklySubmission(
-                    weekNo: "1",
-                    weeklyCurriculumId: "1001",
-                    challengerWorkbookId: "5001",
-                    status: .pass,
-                    isBest: true
-                ),
-                WeeklySubmission(
-                    weekNo: "2",
-                    weeklyCurriculumId: "1002",
-                    challengerWorkbookId: "5002",
-                    status: .pass
-                ),
-                WeeklySubmission(
-                    weekNo: "3",
-                    weeklyCurriculumId: "1003",
-                    status: .notSubmitted
-                ),
-            ]
-        ),
-        StudyMemberSubmission(
-            studyGroupMemberId: "212",
-            memberId: "212",
-            memberName: "윤클로",
-            nickname: "클로저",
-            schoolName: "한성대학교",
-            studyGroupId: "601",
-            studyGroupName: "모바일 PE 심화 스터디",
-            part: .mobileProductEngineer,
-            partLabel: "Mobile PE",
-            weeks: [
-                WeeklySubmission(
-                    weekNo: "1",
-                    weeklyCurriculumId: "1001",
-                    challengerWorkbookId: "5003",
-                    status: .pass
-                ),
-                WeeklySubmission(
-                    weekNo: "2",
-                    weeklyCurriculumId: "1002",
-                    challengerWorkbookId: "5004",
-                    status: .inProgress
-                ),
-            ]
-        ),
-        StudyMemberSubmission(
-            studyGroupMemberId: "221",
-            memberId: "221",
-            memberName: "오코루",
-            nickname: "코루틴",
-            schoolName: "한성대학교",
-            studyGroupId: "602",
-            studyGroupName: "Android 기초 스터디",
-            part: .front(type: .android),
-            partLabel: "Android",
-            weeks: [
-                WeeklySubmission(
-                    weekNo: "1",
-                    weeklyCurriculumId: "1001",
-                    challengerWorkbookId: "5005",
-                    status: .fail
-                ),
-                WeeklySubmission(
-                    weekNo: "2",
-                    weeklyCurriculumId: "1002",
-                    status: .notSubmitted
-                ),
-            ]
-        ),
-    ]
-
     // MARK: - Notice
 
     /// 최근 공지 목록 픽스처 (홈 최근 공지 5건 + 상세 화면 공용).
@@ -485,11 +398,11 @@ enum StubSessionFixtures {
             mustRead: true,
             isAlert: false,
             date: Date(timeIntervalSinceNow: -86_400),
-            title: "모바일 PE 파트 주차별 워크북 제출 안내",
+            title: "모바일 PE 파트 주차별 커리큘럼 안내",
             content: """
-            모바일 PE 파트 챌린저 여러분, 이번 주 워크북 제출 마감은 일요일 23시 59분입니다.
+            모바일 PE 파트 챌린저 여러분, 이번 주 커리큘럼이 업데이트되었습니다.
 
-            제출이 늦어지면 벌점이 부과되니 기한을 꼭 지켜주세요.
+            활동 탭에서 주차별 학습 내용을 확인하고 스터디 일정에 맞춰 준비해주세요.
             """,
             writer: "파트장",
             authorNickname: "스위프트",

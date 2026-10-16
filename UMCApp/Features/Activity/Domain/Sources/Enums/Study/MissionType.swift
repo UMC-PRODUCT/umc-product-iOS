@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// 워크북 미션 제출 타입
+/// 커리큘럼 미션 타입
 ///
 /// 서버 `missionType` 문자열과 매핑됩니다.
 public enum MissionType: String, Codable, Equatable {
@@ -27,21 +27,5 @@ public enum MissionType: String, Codable, Equatable {
         default:
             self = .unknown
         }
-    }
-
-    /// UI에서 허용할 제출 방식 목록
-    public var availableSubmissionTypes: [MissionSubmissionType] {
-        switch self {
-        case .link:
-            return [.link]
-        case .memo, .plain:
-            return [.completeOnly]
-        case .unknown:
-            return MissionSubmissionType.allCases
-        }
-    }
-
-    public var defaultSubmissionType: MissionSubmissionType {
-        availableSubmissionTypes.first ?? .link
     }
 }

@@ -30,18 +30,10 @@ struct ChallengerStudyView: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
-            VStack {
-                NavigationLink("내 워크북 · 미션 제출") {
-                    WorkbookRoute(onChanged: { await viewModel.load() })
-                }
-                .buttonStyle(.glass)
-                contentView(viewModel: viewModel)
+        contentView(viewModel: viewModel)
+            .task {
+                await viewModel.load()
             }
-        }
-        .task {
-            await viewModel.load()
-        }
     }
 
     // MARK: - View Components

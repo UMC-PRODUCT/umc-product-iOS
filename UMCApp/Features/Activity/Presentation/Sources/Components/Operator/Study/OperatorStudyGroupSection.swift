@@ -14,9 +14,6 @@ import UMCFoundation
 // MARK: - OperatorStudyGroupSection
 
 /// 운영진 스터디 관리의 그룹 관리 섹션
-///
-/// 제출 현황 섹션과 상태를 공유하지 않고 ViewModel 하나만 함께 보기 때문에, 목록·빈 상태·권한
-/// 안내·에러까지 그룹 관리에만 필요한 표현을 이 파일로 모았습니다.
 struct OperatorStudyGroupSection: View {
 
     // MARK: - Property
