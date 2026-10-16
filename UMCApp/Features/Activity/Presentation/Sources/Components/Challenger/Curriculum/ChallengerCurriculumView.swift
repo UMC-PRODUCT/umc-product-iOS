@@ -9,6 +9,10 @@ import SwiftUI
 import ActivityDomain
 import CoreDesignSystem
 
+fileprivate enum Constants {
+    static let rowStackSpacing: CGFloat = 0
+}
+
 struct ChallengerCurriculumView: View {
 
     // MARK: - Property
@@ -24,9 +28,7 @@ struct ChallengerCurriculumView: View {
                 ChallengerCurriculumHeaderCard(model: curriculumModel)
                     .equatable()
 
-                ForEach(missions) { mission in
-                    ChallengerMissionCard(model: mission)
-                }
+                ChallengerCurriculumWeekList(missions: missions)
             }
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
@@ -36,8 +38,30 @@ struct ChallengerCurriculumView: View {
             DefaultConstant.defaultContentBottomMargins,
             for: .scrollContent
         )
-        .background(.white)
+        .background(Color.grey100)
         .scrollDismissesKeyboard(.immediately)
+    }
+}
+
+fileprivate struct ChallengerCurriculumWeekList: View {
+
+    // MARK: - Property
+
+    let missions: [MissionCardModel]
+
+    // MARK: - Body
+
+    var body: some View {
+        VStack(spacing: Constants.rowStackSpacing) {
+            ForEach(missions) { mission in
+                ChallengerMissionCard(
+                    model: mission,
+                    isFirst: mission.id == missions.first?.id,
+                    isLast: mission.id == missions.last?.id
+                )
+                .equatable()
+            }
+        }
     }
 }
 

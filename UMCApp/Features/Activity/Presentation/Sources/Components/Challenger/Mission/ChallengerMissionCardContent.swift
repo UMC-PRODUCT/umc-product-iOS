@@ -6,20 +6,19 @@
 //
 
 import SwiftUI
-import ActivityDomain
 import CoreDesignSystem
 
 struct ChallengerMissionCardContent: View, Equatable {
 
     // MARK: - Property
 
-    let model: MissionCardModel
+    let description: String
 
     // MARK: - Body
 
     var body: some View {
-        Text(model.missionTitle)
-            .appFont(.subheadline, color: .grey600)
+        Text(description)
+            .appFont(.subheadline, color: .grey700)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -27,7 +26,9 @@ struct ChallengerMissionCardContent: View, Equatable {
 
 #if DEBUG
 #Preview {
-    ChallengerMissionCardContent(model: MissionPreviewData.singleMission)
-        .padding()
+    ChallengerMissionCardContent(
+        description: MissionPreviewData.singleMission.missionTitle
+    )
+    .padding()
 }
 #endif
