@@ -16,40 +16,32 @@ import UMCFoundation
 
 // MARK: - Helpers
 
-private func makeProgress(
+private func makeHeader(
     partName: String = "iOS",
-    curriculumTitle: String = "1주차 OT",
-    completedCount: Int = 2,
-    totalCount: Int = 8
-) -> CurriculumProgressModel {
-    CurriculumProgressModel(
+    curriculumTitle: String = "1주차 OT"
+) -> CurriculumHeaderModel {
+    CurriculumHeaderModel(
         partName: partName,
-        curriculumTitle: curriculumTitle,
-        completedCount: completedCount,
-        totalCount: totalCount
+        curriculumTitle: curriculumTitle
     )
 }
 
-/// 검증 대상은 `week`/`status` 뿐이며, `platform`/`title`/`missionTitle` 은
-/// 상태 검증과 무관한 고정 filler 값이다.
 private func makeMission(
-    week: Int = 1,
-    status: MissionStatus = .inProgress
+    week: String = "1"
 ) -> MissionCardModel {
     MissionCardModel(
         week: week,
         platform: "iOS",
         title: "\(week)주차 OT",
-        missionTitle: "링크를 제출하세요",
-        status: status
+        missionTitle: "학습 내용을 확인하세요"
     )
 }
 
 private func makeOverview(
-    progress: CurriculumProgressModel = makeProgress(),
+    header: CurriculumHeaderModel = makeHeader(),
     missions: [MissionCardModel] = [makeMission()]
 ) -> CurriculumOverview {
-    CurriculumOverview(progress: progress, missions: missions)
+    CurriculumOverview(header: header, missions: missions)
 }
 
 @MainActor
@@ -178,28 +170,26 @@ private enum CancellationCase: CaseIterable {
 @Suite("ChallengerStudyViewModel — 커리큘럼 개요 조회 (도메인 규칙)")
 struct ChallengerStudyViewModelTests {
 
-    @Test("정상 — 단일 조회 결과가 진행률·미션 두 상태에 함께 .loaded 로 담긴다")
+    @Test("정상 — 단일 조회 결과가 커리큘럼 제목·미션 두 상태에 함께 .loaded 로 담긴다")
     func loadFillsBothStatesFromSingleFetch() async {
-        let expectedProgress = makeProgress(
+        let expectedHeader = makeHeader(
             partName: "Spring",
-            curriculumTitle: "3주차 세션",
-            completedCount: 5,
-            totalCount: 10
+            curriculumTitle: "3주차 세션"
         )
-        let expectedMissions = [makeMission(week: 1, status: .pass), makeMission(week: 2)]
+        let expectedMissions = [makeMission(week: "1"), makeMission(week: "2")]
         let useCase = MockFetchCurriculumOverviewUseCase()
         useCase.result = .success(
-            makeOverview(progress: expectedProgress, missions: expectedMissions)
+            makeOverview(header: expectedHeader, missions: expectedMissions)
         )
         let viewModel = makeViewModel(useCase: useCase)
 
         await viewModel.load()
 
-        #expect(viewModel.curriculumState == .loaded(expectedProgress))
+        #expect(viewModel.curriculumState == .loaded(expectedHeader))
         #expect(viewModel.missionsState == .loaded(expectedMissions))
     }
 
-    /// 진행률과 미션을 각각 조회하던 구조에서는 화면 1회 로드에 동일 엔드포인트가 2회
+    /// 커리큘럼 제목과 미션을 각각 조회하던 구조에서는 화면 1회 로드에 동일 엔드포인트가 2회
     /// 호출됐다. 단일 조회로 통합된 구조가 회귀하지 않도록 호출 횟수를 박제한다.
     @Test("load() 1회는 UseCase 를 1회만 호출한다 (중복 조회 회귀 방지)")
     func loadQueriesUseCaseOnlyOnce() async {
@@ -237,24 +227,24 @@ struct ChallengerStudyViewModelTests {
     fileprivate func cancellationRollsBackBothStates(
         cancellationCase: CancellationCase
     ) async {
-        let previousProgress = makeProgress(curriculumTitle: "이전 주차")
-        let previousMissions = [makeMission(week: 9, status: .locked)]
+        let previousHeader = makeHeader(curriculumTitle: "이전 주차")
+        let previousMissions = [makeMission(week: "9")]
         let useCase = MockFetchCurriculumOverviewUseCase()
         useCase.result = .success(
-            makeOverview(progress: previousProgress, missions: previousMissions)
+            makeOverview(header: previousHeader, missions: previousMissions)
         )
         let viewModel = makeViewModel(useCase: useCase)
 
         // 1차 로드로 직전 상태를 .loaded 로 만든다.
         await viewModel.load()
-        #expect(viewModel.curriculumState == .loaded(previousProgress))
+        #expect(viewModel.curriculumState == .loaded(previousHeader))
         #expect(viewModel.missionsState == .loaded(previousMissions))
 
         // 2차 요청이 취소되면 .failed 가 아니라 직전 .loaded 로 복원돼야 한다.
         useCase.result = .failure(cancellationCase.thrown)
         await viewModel.load()
 
-        #expect(viewModel.curriculumState == .loaded(previousProgress))
+        #expect(viewModel.curriculumState == .loaded(previousHeader))
         #expect(viewModel.missionsState == .loaded(previousMissions))
     }
 
@@ -276,7 +266,7 @@ struct ChallengerStudyViewModelTests {
         await first.value
 
         #expect(useCase.executeCallCount == 1)
-        #expect(viewModel.curriculumState == .loaded(expected.progress))
+        #expect(viewModel.curriculumState == .loaded(expected.header))
         #expect(viewModel.missionsState == .loaded(expected.missions))
     }
 

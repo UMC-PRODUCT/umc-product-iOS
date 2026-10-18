@@ -9,38 +9,26 @@ import SwiftUI
 import ActivityDomain
 import CoreDesignSystem
 
-// MARK: - ChallengerCurriculumView
+fileprivate enum Constants {
+    static let rowStackSpacing: CGFloat = 0
+}
 
-/// 커리큘럼 상세 뷰 (진행률 카드 + 미션 리스트)
-///
-/// 상단에 진행률 카드, 하단에 타임라인 형태의 미션 리스트를 표시합니다.
-/// 미션 간 연결선은 카드 높이에 맞게 동적으로 확장됩니다.
 struct ChallengerCurriculumView: View {
 
     // MARK: - Property
 
-    /// 커리큘럼 진행률 정보 (파트명, 완료 수, 전체 수)
-    let curriculumModel: CurriculumProgressModel
-    /// 미션 카드 목록 (주차별 미션 정보)
+    let curriculumModel: CurriculumHeaderModel
     let missions: [MissionCardModel]
-
-    // MARK: - Constants
-
-    private enum Constants {
-        static let connectorWidth: CGFloat = 2
-        static let bottomPadding: CGFloat = 12
-    }
 
     // MARK: - Body
 
     var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing24) {
-                // Header
-                ChallengerCurriculumProgressCard(model: curriculumModel)
+                ChallengerCurriculumHeaderCard(model: curriculumModel)
                     .equatable()
-                // Mission List
-                missionListSection
+
+                ChallengerCurriculumWeekList(missions: missions)
             }
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
@@ -50,86 +38,38 @@ struct ChallengerCurriculumView: View {
             DefaultConstant.defaultContentBottomMargins,
             for: .scrollContent
         )
-        .background(.white)
+        .background(Color.grey100)
         .scrollDismissesKeyboard(.immediately)
     }
+}
 
-    // MARK: - View Components
+fileprivate struct ChallengerCurriculumWeekList: View {
 
-    /// 미션 리스트 섹션 (타임라인 형태)
-    private var missionListSection: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(missions.enumerated()), id: \.element.id) { index, mission in
-                let isLast = index == missions.count - 1
+    // MARK: - Property
 
-                HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
-                    // Left: Status Icon
-                    ChallengerMissionStatusIcon(
-                        status: mission.status,
-                        weekNumber: mission.week
-                    )
-                    .equatable()
+    let missions: [MissionCardModel]
 
-                    // Right: MissionCard
-                    ChallengerMissionCard(model: mission)
-                        .padding(.bottom, isLast ? 0 : Constants.bottomPadding)
-                }
-                .overlay(alignment: .topLeading) {
-                    // 연결선: overlay로 HStack 높이에 맞게 자동 확장.
-                    // 시작 위치·수평 중심은 좌측 아이콘이 실제로 쓰는 상수를 그대로 기준 삼는다.
-                    if !isLast {
-                        Rectangle()
-                            .fill(Color.grey200)
-                            .frame(width: Constants.connectorWidth)
-                            .frame(maxHeight: .infinity)
-                            .padding(.top, ActivityConstants.statusIconSize.height)
-                            .padding(
-                                .leading,
-                                (ActivityConstants.statusIconSize.width
-                                    - Constants.connectorWidth) / 2)
-                    }
-                }
+    // MARK: - Body
+
+    var body: some View {
+        VStack(spacing: Constants.rowStackSpacing) {
+            ForEach(missions) { mission in
+                ChallengerMissionCard(
+                    model: mission,
+                    isFirst: mission.id == missions.first?.id,
+                    isLast: mission.id == missions.last?.id
+                )
+                .equatable()
             }
         }
     }
 }
 
-// MARK: - Preview
-
 #if DEBUG
-#Preview("ChallengerCurriculumView - iOS") {
+#Preview {
     ChallengerCurriculumView(
-        curriculumModel: CurriculumProgressModel(
-            partName: "iOS PART CURRICULUM",
-            curriculumTitle: "Swift 기초 문법",
-            completedCount: 2,
-            totalCount: 8
-        ),
+        curriculumModel: MissionPreviewData.sampleHeader,
         missions: MissionPreviewData.iosMissions
-    )
-}
-
-#Preview("ChallengerCurriculumView - Web") {
-    ChallengerCurriculumView(
-        curriculumModel: CurriculumProgressModel(
-            partName: "WEB PART CURRICULUM",
-            curriculumTitle: "웹 프론트엔드 기초",
-            completedCount: 5,
-            totalCount: 10
-        ),
-        missions: MissionPreviewData.webMissions
-    )
-}
-
-#Preview("ChallengerCurriculumView - All Status") {
-    ChallengerCurriculumView(
-        curriculumModel: CurriculumProgressModel(
-            partName: "SERVER PART CURRICULUM",
-            curriculumTitle: "SpringBoot 실습",
-            completedCount: 3,
-            totalCount: 6
-        ),
-        missions: MissionPreviewData.allStatusMissions
     )
 }
 #endif

@@ -13,7 +13,7 @@ import UMCFoundation
 
 /// Challenger 모드의 스터디/활동 섹션
 ///
-/// 진행률(`curriculumState`)과 주차별 미션(`missionsState`) 두 Loadable 을 조립해
+/// 제목(`curriculumState`)과 주차별 미션(`missionsState`) 두 Loadable 을 조립해
 /// 커리큘럼 화면을 구성합니다. ViewModel 은 조립부(탭 라우터, #996)에서 주입받습니다.
 struct ChallengerStudyView: View {
 
@@ -30,26 +30,18 @@ struct ChallengerStudyView: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
-            VStack {
-                NavigationLink("내 워크북 · 미션 제출") {
-                    WorkbookRoute(onChanged: { await viewModel.load() })
-                }
-                .buttonStyle(.glass)
-                contentView(viewModel: viewModel)
+        contentView(viewModel: viewModel)
+            .task {
+                await viewModel.load()
             }
-        }
-        .task {
-            await viewModel.load()
-        }
     }
 
     // MARK: - View Components
 
-    /// 진행률/미션 두 상태를 조합해 화면을 결정합니다.
+    /// 제목/주차별 커리큘럼 두 상태를 조합해 화면을 결정합니다.
     ///
     /// - 조회가 실패하면 에러 뷰
-    /// - 둘 다 로드되면 미션 유무에 따라 커리큘럼 뷰 또는 안내 가이드
+    /// - 둘 다 로드되면 주차 유무에 따라 커리큘럼 뷰 또는 안내 가이드
     /// - 그 외(로딩/대기)는 로딩 뷰
     ///
     /// 두 상태는 단일 조회(`load()`)에서 함께 전이되므로 실패 여부는 한쪽만 확인해도
@@ -58,15 +50,13 @@ struct ChallengerStudyView: View {
     private func contentView(viewModel: ChallengerStudyViewModel) -> some View {
         if case .failed(let error) = viewModel.curriculumState {
             errorView(error: error, viewModel: viewModel)
-        } else if case .loaded(let progress) = viewModel.curriculumState,
+        } else if case .loaded(let header) = viewModel.curriculumState,
                   case .loaded(let missions) = viewModel.missionsState {
-            // 커리큘럼은 조회됐지만 등록된 주차가 없어 표시할 미션이 없는 경우,
-            // 게이지만 0/0으로 덩그러니 남지 않도록 안내 가이드를 노출합니다.
             if missions.isEmpty {
                 emptyCurriculumGuide
             } else {
                 ChallengerCurriculumView(
-                    curriculumModel: progress,
+                    curriculumModel: header,
                     missions: missions
                 )
             }

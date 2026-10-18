@@ -180,50 +180,42 @@ enum StubSessionFixtures {
     /// stub 프로필의 기수·파트가 실제 서버 데이터와 일치하지 않아도 활동 탭을 확인할 수
     /// 있도록 결과를 고정한다.
     static let curriculumOverview = CurriculumOverview(
-        progress: CurriculumProgressModel(
+        header: CurriculumHeaderModel(
             partType: .front(type: .ios),
             partName: "iOS PART CURRICULUM",
-            curriculumTitle: "iOS 챌린저 커리큘럼",
-            completedCount: 3,
-            totalCount: 8
+            curriculumTitle: "iOS 챌린저 커리큘럼"
         ),
         missions: [
             MissionCardModel(
-                week: 1,
+                week: "1",
                 platform: "iOS",
                 title: "SwiftUI 기본 개념",
                 missionTitle:
-                    "SwiftUI 기본 개념을 학습하고 정리한 글 링크를 " +
-                    "제출하세요",
-                status: .pass
+                    "SwiftUI 기본 개념을 학습하고 핵심 내용을 정리하세요"
             ),
             MissionCardModel(
-                week: 2,
+                week: "2",
                 platform: "iOS",
                 title: "상태 관리와 데이터 흐름",
-                missionTitle: "@State와 @Binding을 활용한 화면을 구현하세요",
-                status: .pass
+                missionTitle: "@State와 @Binding을 활용한 화면을 구현하세요"
             ),
             MissionCardModel(
-                week: 3,
+                week: "3",
                 platform: "iOS",
                 title: "Swift Concurrency",
-                missionTitle: "async/await를 적용한 비동기 작업을 제출하세요",
-                status: .pass
+                missionTitle: "async/await를 적용한 비동기 처리 방법을 학습하세요"
             ),
             MissionCardModel(
-                week: 4,
+                week: "4",
                 platform: "iOS",
                 title: "네트워크 레이어 설계",
-                missionTitle: "Moya를 활용한 API 호출 예제를 제출하세요",
-                status: .inProgress
+                missionTitle: "Moya를 활용한 API 호출 예제를 학습하세요"
             ),
             MissionCardModel(
-                week: 5,
+                week: "5",
                 platform: "iOS",
                 title: "재사용 가능한 컴포넌트",
-                missionTitle: "공통 UI 컴포넌트를 설계하고 적용하세요",
-                status: .notStarted
+                missionTitle: "공통 UI 컴포넌트를 설계하고 적용하세요"
             )
         ]
     )
@@ -331,93 +323,6 @@ enum StubSessionFixtures {
         ),
     ]
 
-    /// 스터디원 제출 현황 픽스처. `weeklyCurriculumOptions` 와 같은 주차 식별자를 공유한다.
-    ///
-    /// `partLabel` 은 실제 DTO 매핑처럼 `UMCPartType.name` 과 같게 둔다. 신규 파트 표시명이
-    /// 길어 배지가 이름 칸을 누르는지도 이 데이터로 확인한다.
-    static let studyMemberSubmissions: [StudyMemberSubmission] = [
-        StudyMemberSubmission(
-            studyGroupMemberId: "211",
-            memberId: "211",
-            memberName: "김스위",
-            nickname: "옵셔널",
-            schoolName: "한성대학교",
-            studyGroupId: "601",
-            studyGroupName: "모바일 PE 심화 스터디",
-            part: .mobileProductEngineer,
-            partLabel: "Mobile PE",
-            weeks: [
-                WeeklySubmission(
-                    weekNo: "1",
-                    weeklyCurriculumId: "1001",
-                    challengerWorkbookId: "5001",
-                    status: .pass,
-                    isBest: true
-                ),
-                WeeklySubmission(
-                    weekNo: "2",
-                    weeklyCurriculumId: "1002",
-                    challengerWorkbookId: "5002",
-                    status: .pass
-                ),
-                WeeklySubmission(
-                    weekNo: "3",
-                    weeklyCurriculumId: "1003",
-                    status: .notSubmitted
-                ),
-            ]
-        ),
-        StudyMemberSubmission(
-            studyGroupMemberId: "212",
-            memberId: "212",
-            memberName: "윤클로",
-            nickname: "클로저",
-            schoolName: "한성대학교",
-            studyGroupId: "601",
-            studyGroupName: "모바일 PE 심화 스터디",
-            part: .mobileProductEngineer,
-            partLabel: "Mobile PE",
-            weeks: [
-                WeeklySubmission(
-                    weekNo: "1",
-                    weeklyCurriculumId: "1001",
-                    challengerWorkbookId: "5003",
-                    status: .pass
-                ),
-                WeeklySubmission(
-                    weekNo: "2",
-                    weeklyCurriculumId: "1002",
-                    challengerWorkbookId: "5004",
-                    status: .inProgress
-                ),
-            ]
-        ),
-        StudyMemberSubmission(
-            studyGroupMemberId: "221",
-            memberId: "221",
-            memberName: "오코루",
-            nickname: "코루틴",
-            schoolName: "한성대학교",
-            studyGroupId: "602",
-            studyGroupName: "Android 기초 스터디",
-            part: .front(type: .android),
-            partLabel: "Android",
-            weeks: [
-                WeeklySubmission(
-                    weekNo: "1",
-                    weeklyCurriculumId: "1001",
-                    challengerWorkbookId: "5005",
-                    status: .fail
-                ),
-                WeeklySubmission(
-                    weekNo: "2",
-                    weeklyCurriculumId: "1002",
-                    status: .notSubmitted
-                ),
-            ]
-        ),
-    ]
-
     // MARK: - Notice
 
     /// 최근 공지 목록 픽스처 (홈 최근 공지 5건 + 상세 화면 공용).
@@ -485,11 +390,11 @@ enum StubSessionFixtures {
             mustRead: true,
             isAlert: false,
             date: Date(timeIntervalSinceNow: -86_400),
-            title: "모바일 PE 파트 주차별 워크북 제출 안내",
+            title: "모바일 PE 파트 주차별 커리큘럼 안내",
             content: """
-            모바일 PE 파트 챌린저 여러분, 이번 주 워크북 제출 마감은 일요일 23시 59분입니다.
+            모바일 PE 파트 챌린저 여러분, 이번 주 커리큘럼이 업데이트되었습니다.
 
-            제출이 늦어지면 벌점이 부과되니 기한을 꼭 지켜주세요.
+            활동 탭에서 주차별 학습 내용을 확인하고 스터디 일정에 맞춰 준비해주세요.
             """,
             writer: "파트장",
             authorNickname: "스위프트",

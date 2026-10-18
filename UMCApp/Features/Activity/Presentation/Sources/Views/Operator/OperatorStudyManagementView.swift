@@ -6,7 +6,6 @@
 //
 
 import ActivityDomain
-import CoreDesignSystem
 import CoreDomain
 import CoreUIComponents
 import SwiftUI
@@ -16,9 +15,6 @@ import UMCFoundation
 ///
 /// 운영진이 스터디와 활동을 관리하는 화면입니다.
 /// ViewModel 과 세션은 상위(라우터/루트 화면)에서 주입받습니다.
-///
-/// 본문은 성격이 다른 두 섹션(``OperatorStudyGroupSection`` / ``OperatorStudySubmissionSection``)이
-/// 맡고, 이 화면은 섹션 전환과 두 섹션에 걸친 툴바·시트·알럿만 관리합니다.
 struct OperatorStudyManagementView: View {
 
     // MARK: - Property
@@ -36,22 +32,6 @@ struct OperatorStudyManagementView: View {
     /// 탭 루트가 정한다. 그래야 이 화면이 라우팅 세부를 몰라도 되고 프리뷰에서도 그대로 뜬다.
     private let onRegisterSchedule: (StudyGroupInfo) -> Void
 
-    /// 현재 보고 있는 섹션 (그룹 관리 / 제출 현황)
-    @State private var selectedSection: ManagementSection = .groups
-
-    @State private var selectedWorkbook: StudyManagementItem?
-    @State private var showWorkbookDetailUnavailable = false
-
-    // MARK: - Section
-
-    /// 운영진 스터디 관리 화면의 섹션
-    private enum ManagementSection: String, CaseIterable, Identifiable {
-        case groups = "그룹 관리"
-        case submissions = "제출 현황"
-
-        var id: String { rawValue }
-    }
-
     // MARK: - Initializer
 
     /// - Parameters:
@@ -68,43 +48,19 @@ struct OperatorStudyManagementView: View {
         self.onRegisterSchedule = onRegisterSchedule
     }
 
-    // MARK: - Constants
-
-    private enum Constants {
-        static let sectionPickerTitle: String = "스터디 관리 섹션"
-        static let workbookUnavailableTitle: String = "워크북 미배포"
-        static let workbookUnavailableMessage: String = "선택한 주차의 개인 워크북이 아직 배포되지 않았습니다."
-        static let confirmTitle: String = "확인"
-    }
-
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: DefaultSpacing.spacing12) {
-            sectionPicker
-
-            switch selectedSection {
-            case .groups:
-                OperatorStudyGroupSection(
-                    viewModel: viewModel,
-                    canCreateStudyGroup: canCreateStudyGroup,
-                    onRegisterSchedule: onRegisterSchedule
-                )
-            case .submissions:
-                OperatorStudySubmissionSection(viewModel: viewModel) { item in
-                    if let id = item.challengerWorkbookId, !id.isEmpty {
-                        selectedWorkbook = item
-                    } else {
-                        showWorkbookDetailUnavailable = true
-                    }
-                }
-            }
-        }
+        OperatorStudyGroupSection(
+            viewModel: viewModel,
+            canCreateStudyGroup: canCreateStudyGroup,
+            onRegisterSchedule: onRegisterSchedule
+        )
             .task {
                 await viewModel.fetchGroupManagementData()
             }
             .toolbar {
-                if canCreateStudyGroup && selectedSection == .groups {
+                if canCreateStudyGroup {
                     ToolBarCollection.AddBtn(action: {
                         showsGroupCreate = true
                     })
@@ -145,35 +101,7 @@ struct OperatorStudyManagementView: View {
                     challenger: $viewModel.selectedMentors
                 )
             }
-            .sheet(item: $selectedWorkbook) { item in
-                NavigationStack {
-                    WorkbookRoute(workbookId: item.challengerWorkbookId) {
-                        await viewModel.retrySubmissions()
-                    }
-                }
-            }
             .alertPrompt(item: $viewModel.alertPrompt)
-            .alert(
-                Constants.workbookUnavailableTitle,
-                isPresented: $showWorkbookDetailUnavailable
-            ) {
-                Button(Constants.confirmTitle, role: .cancel) {}
-            } message: {
-                Text(Constants.workbookUnavailableMessage)
-            }
-    }
-
-    // MARK: - Section Picker
-
-    private var sectionPicker: some View {
-        Picker(Constants.sectionPickerTitle, selection: $selectedSection) {
-            ForEach(ManagementSection.allCases) { section in
-                Text(section.rawValue).tag(section)
-            }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }
 
     // MARK: - Function
@@ -216,28 +144,6 @@ struct OperatorStudyManagementView: View {
                 outcome: .page(OperatorStudyPreviewData.emptyPage)
             ),
             userSession: previewChallengerSession(),
-            onRegisterSchedule: { _ in }
-        )
-    }
-}
-
-#Preview("스터디 관리 · 제출 현황") {
-    NavigationStack {
-        OperatorStudyManagementView(
-            viewModel: previewOperatorStudyManagementViewModel(),
-            userSession: previewCreateCapableSession(),
-            onRegisterSchedule: { _ in }
-        )
-    }
-}
-
-#Preview("스터디 관리 · 제출 현황 빈 목록") {
-    NavigationStack {
-        OperatorStudyManagementView(
-            viewModel: previewOperatorStudyManagementViewModel(
-                submissionOutcome: .page(OperatorStudyPreviewData.emptySubmissionPage)
-            ),
-            userSession: previewCreateCapableSession(),
             onRegisterSchedule: { _ in }
         )
     }

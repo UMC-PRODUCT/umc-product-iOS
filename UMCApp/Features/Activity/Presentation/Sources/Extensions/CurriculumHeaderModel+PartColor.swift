@@ -1,5 +1,5 @@
 //
-//  CurriculumProgressModel+PartColor.swift
+//  CurriculumHeaderModel+PartColor.swift
 //  ActivityPresentation
 //
 //  Created by jaewon Lee on 7/15/26.
@@ -11,12 +11,12 @@ import CoreDesignSystem
 import CoreUIComponents
 import UMCFoundation
 
-/// `CurriculumProgressModel` 의 파트 색상 매핑.
+/// `CurriculumHeaderModel` 의 파트 색상 매핑.
 ///
 /// 도메인 모델은 SwiftUI 의존을 갖지 않으므로 파트 컬러 계산은 Presentation 레이어에서
 /// 제공합니다. `partType` 이 있으면 그대로 쓰고, 없으면 `partName` 을 파싱해 추론하며,
 /// 그마저 실패하면 브랜드 기본색(`indigo500`)으로 폴백합니다.
-extension CurriculumProgressModel {
+extension CurriculumHeaderModel {
 
     /// 파트 메인 컬러
     var partColor: Color {
