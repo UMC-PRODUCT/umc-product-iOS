@@ -8,6 +8,7 @@
 import BusinessCardData
 import CoreDesignSystem
 import CoreDI
+import CoreRouting
 import FirebaseCore
 import GoogleSignIn
 import HomeData
@@ -33,6 +34,7 @@ struct UMCAppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var container: DIContainer
     @State private var errorHandler: ErrorHandler = .init()
+    @State private var foregroundThreadStore = ForegroundThreadStore()
     @State private var deepLinkStore: DeepLinkStore = .init()
     @State private var maintenanceViewModel: MaintenanceViewModel
     private let sharedModelContainer: ModelContainer
@@ -88,6 +90,7 @@ struct UMCAppApp: App {
             AppRootView()
                 .environment(errorHandler)
                 .environment(deepLinkStore)
+                .environment(\.foregroundThreadStore, foregroundThreadStore)
                 .environment(\.di, container)
                 .modelContainer(sharedModelContainer)
                 .alertPrompt(item: errorAlertBinding)
@@ -105,9 +108,13 @@ struct UMCAppApp: App {
                     appDelegate.configure(
                         container: container,
                         modelContext: sharedModelContainer.mainContext,
-                        deepLinkStore: deepLinkStore
+                        deepLinkStore: deepLinkStore,
+                        foregroundThreadStore: foregroundThreadStore
                     )
                     await maintenanceViewModel.check()
+                }
+                .onChange(of: isThreadObscured, initial: true) { _, isObscured in
+                    foregroundThreadStore.isObscured = isObscured
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     guard newPhase == .active else { return }
@@ -120,6 +127,11 @@ struct UMCAppApp: App {
 // MARK: - Private Helpers
 
 extension UMCAppApp {
+
+    private var isThreadObscured: Bool {
+        maintenanceViewModel.overlayKind != nil || maintenanceViewModel.infoNotice != nil
+            || errorHandler.currentError != nil
+    }
 
     /// ErrorHandler의 currentError를 AlertPrompt 바인딩으로 변환합니다.
     private var errorAlertBinding: Binding<AlertPrompt?> {

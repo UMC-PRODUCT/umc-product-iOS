@@ -112,3 +112,31 @@ struct PathStoreTabIsolationTests {
         #expect(unexpectedlyCleared.isEmpty)
     }
 }
+
+
+@Suite("ForegroundThreadStore — 표시 소유권")
+@MainActor
+struct ForegroundThreadStoreTests {
+    @Test("이전 화면의 늦은 종료가 현재 방을 지우지 않는다")
+    func preservesNewOwner() {
+        let store = ForegroundThreadStore()
+        let first = UUID()
+        let second = UUID()
+        store.show(threadId: "1", owner: first)
+        store.show(threadId: "2", owner: second)
+        store.hide(owner: first)
+        #expect(store.visibleThreadId == "2")
+        store.hide(owner: second)
+        #expect(store.visibleThreadId == nil)
+    }
+
+    @Test("전역 화면이 덮이면 억제를 중지하고 닫으면 현재 방을 복원한다")
+    func obscuredThread() {
+        let store = ForegroundThreadStore()
+        store.show(threadId: "1", owner: UUID())
+        store.isObscured = true
+        #expect(store.visibleThreadId == nil)
+        store.isObscured = false
+        #expect(store.visibleThreadId == "1")
+    }
+}

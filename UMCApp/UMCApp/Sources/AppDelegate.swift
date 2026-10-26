@@ -6,6 +6,7 @@
 //
 
 import CoreDI
+import CoreRouting
 import FirebaseMessaging
 import HomeDomain
 import SwiftData
@@ -25,6 +26,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     private var container: DIContainer?
     private var modelContext: ModelContext?
     private var deepLinkStore: DeepLinkStore?
+    private var foregroundThreadStore: ForegroundThreadStore?
     /// 직전 업로드 실패 조합. 같은 (멤버, 토큰)으로 매번 재시도하지 않도록 기억한다.
     private var lastFailedFCMUpload: (memberId: Int, token: String)?
     private let logger = Logger(
@@ -48,11 +50,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     func configure(
         container: DIContainer,
         modelContext: ModelContext,
-        deepLinkStore: DeepLinkStore
+        deepLinkStore: DeepLinkStore,
+        foregroundThreadStore: ForegroundThreadStore
     ) {
         self.container = container
         self.modelContext = modelContext
         self.deepLinkStore = deepLinkStore
+        self.foregroundThreadStore = foregroundThreadStore
         Task { @MainActor in
             await syncFCMTokenIfPossible(trigger: "configure")
         }
@@ -104,7 +108,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) {
         saveNoticeHistory(from: notification.request.content)
         handlePush(userInfo: notification.request.content.userInfo, isTap: false)
-        completionHandler([.banner, .sound, .badge])
+        let payload = PushPayload(userInfo: notification.request.content.userInfo)
+        completionHandler(payload.foregroundPresentationOptions(
+            isApplicationActive: UIApplication.shared.applicationState == .active,
+            visibleThreadId: hasUnobscuredActiveWindow
+                ? foregroundThreadStore?.visibleThreadId : nil
+        ))
     }
 
     func userNotificationCenter(
@@ -167,6 +176,19 @@ extension Notification.Name {
 // MARK: - Private Function
 
 private extension AppDelegate {
+
+    /// PhotosPicker·ShareLink처럼 Feature가 표시 상태를 소유하지 않는 시스템 시트도 확인한다.
+    var hasUnobscuredActiveWindow: Bool {
+        let windows = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .filter { $0.activationState == .foregroundActive }
+            .flatMap(\.windows)
+            .filter(\.isKeyWindow)
+        guard windows.count == 1, let root = windows.first?.rootViewController else {
+            return false
+        }
+        return root.presentedViewController == nil
+    }
 
     /// 수신한 푸시를 타입별로 분기한다.
     ///

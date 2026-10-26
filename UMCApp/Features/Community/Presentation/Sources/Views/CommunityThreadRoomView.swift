@@ -54,6 +54,10 @@ struct CommunityThreadRoomView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(PathStore.self) private var pathStore
 
+    @Environment(\.foregroundThreadStore) private var foregroundThreadStore
+    @State private var visibilityOwner = UUID()
+    @State private var isRoomAppeared = false
+    @State private var roomDepth: Int?
     @State private var isInviteSheetPresented = false
 
     /// 액션 오버레이가 겨냥한 메시지. 메시지 값을 통째로 들고 있으면 삭제·갱신된 뒤 stale 해지므로
@@ -219,6 +223,16 @@ struct CommunityThreadRoomView: View {
                 ToolbarItem(placement: .topBarTrailing) { threadMenu }
             }
         }
+        .onAppear {
+            roomDepth = pathStore.depth(of: .community)
+            isRoomAppeared = true
+            updateForegroundThread()
+        }
+        .onDisappear {
+            isRoomAppeared = false
+            foregroundThreadStore?.hide(owner: visibilityOwner)
+        }
+        .onChange(of: isThreadVisible) { _, _ in updateForegroundThread() }
         .task { await viewModel.load() }
         .task { await viewModel.observeRealtime() }
         .alertPrompt(item: $viewModel.alertPrompt)
@@ -578,6 +592,29 @@ struct CommunityThreadRoomView: View {
 
     // MARK: - Computed Property
 
+    private var isThreadVisible: Bool {
+        Self.isThreadVisible(
+            isAppeared: isRoomAppeared,
+            scenePhase: scenePhase,
+            selectedTab: pathStore.selectedTab,
+            roomDepth: roomDepth,
+            currentDepth: pathStore.depth(of: .community),
+            isRoomAvailable: viewModel.header.value != nil && viewModel.ejectionNotice == nil
+                && !viewModel.didLeave && !viewModel.shouldDismiss,
+            isObscured: isInviteSheetPresented || viewModel.isSummarySheetPresented
+                || viewModel.reportTarget != nil || emojiPickerTarget != nil
+                || viewModel.alertPrompt != nil || inviteViewModel.alertPrompt != nil
+        )
+    }
+
+    private func updateForegroundThread() {
+        if isThreadVisible {
+            foregroundThreadStore?.show(threadId: viewModel.threadId, owner: visibilityOwner)
+        } else {
+            foregroundThreadStore?.hide(owner: visibilityOwner)
+        }
+    }
+
     private var readableMessageId: String? {
         Self.readableMessageId(
             scenePhase: scenePhase,
@@ -638,6 +675,20 @@ struct CommunityThreadRoomView: View {
         // 기다리면 그동안 배지가 남아 눌리지 않은 것처럼 보인다.
         viewModel.updateNearBottom(true)
         withAnimation { proxy.scrollTo(lastMessageId, anchor: .bottom) }
+    }
+
+    /// 스택에 보존된 방과 실제 표시 중인 방을 구분한다.
+    static func isThreadVisible(
+        isAppeared: Bool,
+        scenePhase: ScenePhase,
+        selectedTab: NavigationTab,
+        roomDepth: Int?,
+        currentDepth: Int,
+        isRoomAvailable: Bool,
+        isObscured: Bool
+    ) -> Bool {
+        isAppeared && scenePhase == .active && selectedTab == .community
+            && roomDepth == currentDepth && isRoomAvailable && !isObscured
     }
 
     /// 읽음 워터마크로 올릴 메시지. 게이팅 조건 세 가지(포그라운드·최하단·표시할 메시지 존재)를

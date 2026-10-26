@@ -8,6 +8,8 @@
 import Foundation
 
 import ActivityDomain
+import CommunityDomain
+import UserNotifications
 
 /// 수신한 푸시의 `userInfo` 에서 앱이 분기에 쓰는 값만 뽑아낸 것.
 ///
@@ -56,5 +58,22 @@ struct PushPayload: Equatable {
     var attendanceScheduleId: String? {
         guard kind == .attendanceStatusChanged else { return nil }
         return scheduleId
+    }
+}
+
+extension PushPayload {
+    /// 서버는 메시지·초대 모두 `deepLink`만 보낸다. 종류나 별도 threadId를 추측하지 않는다.
+    func foregroundPresentationOptions(
+        isApplicationActive: Bool,
+        visibleThreadId: String?
+    ) -> UNNotificationPresentationOptions {
+        guard isApplicationActive,
+              let visibleThreadId,
+              let deepLink,
+              case .thread(let threadId) = MessageLink.parse(deepLink),
+              threadId == visibleThreadId else {
+            return [.banner, .sound, .badge]
+        }
+        return [.badge]
     }
 }
