@@ -7,6 +7,7 @@
 
 import Foundation
 import Testing
+import UserNotifications
 @testable import UMCApp
 
 @Suite("PushPayload — APNs userInfo 해석")
@@ -81,5 +82,37 @@ struct PushPayloadTests {
         #expect(payload.scheduleId == nil)
         #expect(payload.deepLink == nil)
         #expect(payload.attendanceScheduleId == nil)
+    }
+}
+
+
+extension PushPayloadTests {
+    @Test("현재 활성 스레드의 메시지·초대는 배너와 소리만 숨긴다")
+    func silencesVisibleThread() {
+        let payload = PushPayload(userInfo: ["deepLink": "umc://thread/1234"])
+        #expect(payload.foregroundPresentationOptions(
+            isApplicationActive: true, visibleThreadId: "1234"
+        ) == [.badge])
+    }
+
+    @Test("다른 방·숨은 방·비활성 앱은 기존 표시를 유지한다")
+    func preservesOtherPresentation() {
+        let payload = PushPayload(userInfo: ["deepLink": "umc://thread/1234"])
+        for (active, visible) in [(true, "999"), (true, nil), (false, "1234")] {
+            #expect(payload.foregroundPresentationOptions(
+                isApplicationActive: active, visibleThreadId: visible
+            ) == [.banner, .sound, .badge])
+        }
+    }
+
+    @Test("공지·출석·잘못된 링크·누락 payload는 억제하지 않는다", arguments: [
+        "umc://notice/1234", "umc://attendance/1234", "unc://thread/1234",
+        "umc://thread/abc", "https://example.com/t/1234", ""
+    ])
+    func preservesUnrelatedPushes(_ link: String) {
+        let payload = PushPayload(userInfo: ["deepLink": link])
+        #expect(payload.foregroundPresentationOptions(
+            isApplicationActive: true, visibleThreadId: "1234"
+        ) == [.banner, .sound, .badge])
     }
 }

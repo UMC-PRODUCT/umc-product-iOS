@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import Testing
 import CommunityDomain
+import CoreRouting
 @testable import CommunityPresentation
 
 // MARK: - Fixture
@@ -222,5 +223,34 @@ struct CommunityThreadRoomWatermarkTests {
         #expect(CommunityThreadRoomView.readableMessageId(
             scenePhase: .active, isNearBottom: true, messages: []
         ) == nil)
+    }
+}
+
+
+@Suite("스레드 포그라운드 표시 판정")
+struct ThreadForegroundVisibilityTests {
+    @Test("활성 방만 표시로 판정하며 이탈·탭·push·시트를 모두 제외한다")
+    func visibilityTransitions() {
+        func visible(
+            appeared: Bool = true, phase: ScenePhase = .active,
+            tab: NavigationTab = .community, depth: Int? = 1, currentDepth: Int = 1,
+            available: Bool = true, obscured: Bool = false
+        ) -> Bool {
+            CommunityThreadRoomView.isThreadVisible(
+                isAppeared: appeared, scenePhase: phase, selectedTab: tab,
+                roomDepth: depth, currentDepth: currentDepth,
+                isRoomAvailable: available, isObscured: obscured
+            )
+        }
+        #expect(visible())
+        #expect(!visible(appeared: false))
+        #expect(!visible(phase: .inactive))
+        #expect(!visible(phase: .background))
+        #expect(!visible(tab: .home))
+        #expect(!visible(depth: nil))
+        #expect(!visible(currentDepth: 2))
+        #expect(!visible(currentDepth: 0))
+        #expect(!visible(available: false))
+        #expect(!visible(obscured: true))
     }
 }
