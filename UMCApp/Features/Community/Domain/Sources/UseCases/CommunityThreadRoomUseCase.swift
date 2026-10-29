@@ -85,6 +85,7 @@ public struct CommunityThreadRoomUseCase: CommunityThreadRoomUseCaseProtocol {
 
     /// 서버 TEXT 검증을 선반영한다. 왕복 한 번을 아끼고 실패 UX 를 즉시 준다.
     public static func validateText(_ content: String) throws {
+        try ProhibitedTextValidator.validate(content, field: "메시지")
         guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw AppError.validation(.empty(field: "메시지"))
         }

@@ -507,6 +507,38 @@ struct CommunityThreadRoomViewModelTests {
         }
     }
 
+    @Test("금지어 메시지는 전송·낙관적 버블 없이 초안을 보존한다")
+    func prohibitedDraftIsPreserved() async {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.draft = "씨 발"
+        await viewModel.send()
+        #expect(useCase.sentContents.isEmpty)
+        #expect(viewModel.messages.isEmpty)
+        #expect(viewModel.draft == "씨 발")
+        #expect(viewModel.composerValidationMessage != nil)
+        viewModel.draft = "안녕하세요"
+        #expect(viewModel.composerValidationMessage == nil)
+        await viewModel.send()
+        #expect(useCase.sentContents == ["안녕하세요"])
+    }
+
+    @Test("금지어 수정은 원문·수정 모드·초안을 보존한다")
+    func prohibitedEditIsPreserved() async {
+        let useCase = StubRoomUseCase()
+        let original = makeMessage(id: "10", content: "원래 내용")
+        let viewModel = await makeLoadedViewModel(useCase, with: original)
+        viewModel.requestEdit(original)
+        viewModel.draft = "개인정보 뿌리겠다"
+        await viewModel.send()
+        #expect(useCase.editCalls.isEmpty)
+        #expect(viewModel.messages.first?.content == "원래 내용")
+        #expect(viewModel.editTarget?.id == "10")
+        #expect(viewModel.draft == "개인정보 뿌리겠다")
+        #expect(viewModel.composerValidationMessage != nil)
+    }
+
     // MARK: - Load
 
     @Test("서버가 최신순으로 주므로 화면에는 뒤집어 담는다")

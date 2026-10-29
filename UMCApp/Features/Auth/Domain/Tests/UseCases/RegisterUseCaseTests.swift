@@ -81,4 +81,22 @@ struct RegisterUseCaseTests {
             )
         }
     }
+    @Test("이름과 닉네임의 금지어는 가입 요청 전에 차단한다", arguments: [true, false])
+    func rejectsProhibitedProfile(useName: Bool) async {
+        let repository = MockAuthRegistrationRepository()
+        let useCase = RegisterUseCase(repository: repository)
+        await #expect(throws: (any Error).self) {
+            _ = try await useCase.execute(
+                oAuthVerificationToken: "oauth-token",
+                name: useName ? "씨발" : "홍길동",
+                nickname: useName ? "정상닉네임" : "씨발",
+                emailVerificationToken: "email-token",
+                schoolId: "7",
+                profileImageId: nil,
+                termsAgreements: []
+            )
+        }
+        #expect(repository.registerCallCount == 0)
+    }
+
 }

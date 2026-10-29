@@ -147,6 +147,21 @@ struct CommunityThreadListUseCaseTests {
 @Suite("커뮤니티 스레드 생성 UseCase")
 struct CommunityThreadCreateUseCaseTests {
 
+    @Test("제목과 설명의 금지어는 저장 전에 거절한다", arguments: [true, false])
+    func rejectsProhibitedText(useTitle: Bool) async {
+        let repository = FakeThreadRepository()
+        let useCase = CommunityThreadCreateUseCase(repository: repository)
+        await #expect(throws: (any Error).self) {
+            _ = try await useCase.create(
+                title: useTitle ? "씨발" : "스터디",
+                description: useTitle ? "소개" : "칼로 찌르겠다",
+                category: .study, icon: "📚"
+            )
+        }
+        #expect(await repository.createThreadCalls.isEmpty)
+    }
+
+
     @Test("제목·특징은 앞뒤 공백을 털고 카테고리는 rawValue 로 내려간다")
     func trimsAndSendsCategoryRawValue() async throws {
         let repository = FakeThreadRepository()
@@ -275,6 +290,43 @@ struct CommunityThreadCreateUseCaseTests {
 
 @Suite("커뮤니티 스레드 채팅방 UseCase")
 struct CommunityThreadRoomUseCaseTests {
+
+    @Test("신고 사유는 공개 입력 필터를 거치지 않고 접수한다")
+    func forwardsReportUnfiltered() async throws {
+        let repository = FakeThreadRepository()
+        let useCase = makeUseCase(repository: repository)
+        try await useCase.reportMessage(messageId: "2", reason: .abuse)
+        let call = try #require(await repository.reportCalls.first)
+        #expect(call.messageId == "2")
+        #expect(call.reason == "ABUSE")
+    }
+
+
+    @Test("새 메시지와 답글의 금지어는 STOMP 전송 전에 차단한다", arguments: [true, false])
+    func rejectsProhibitedSend(isReply: Bool) async {
+        let realtime = FakeThreadRealtime()
+        let useCase = makeUseCase(realtime: realtime)
+        await #expect(throws: (any Error).self) {
+            try await useCase.send(
+                threadId: "1", clientMessageId: "client", content: "씨 발",
+                replyToId: isReply ? "original" : nil, mentionedMemberIds: []
+            )
+        }
+        #expect(await realtime.sendCalls.isEmpty)
+    }
+
+    @Test("메시지 수정의 금지어도 전송 전에 차단한다")
+    func rejectsProhibitedEdit() async {
+        let realtime = FakeThreadRealtime()
+        let useCase = makeUseCase(realtime: realtime)
+        await #expect(throws: (any Error).self) {
+            try await useCase.editMessage(
+                threadId: "1", messageId: "2", commandId: "command", content: "자살해라"
+            )
+        }
+        #expect(await realtime.editCalls.isEmpty)
+    }
+
 
     // MARK: - Read
 
@@ -760,6 +812,22 @@ struct CommunityThreadInviteUseCaseTests {
 
 @Suite("커뮤니티 스레드 편집 UseCase")
 struct CommunityThreadEditUseCaseTests {
+
+    @Test("제목과 설명의 금지어는 저장 전에 거절한다", arguments: [true, false])
+    func rejectsProhibitedText(useTitle: Bool) async {
+        let repository = FakeThreadRepository()
+        let useCase = CommunityThreadEditUseCase(repository: repository)
+        await #expect(throws: (any Error).self) {
+            _ = try await useCase.update(
+                threadId: "1",
+                title: useTitle ? "씨발" : nil,
+                description: useTitle ? nil : "칼로 찌르겠다",
+                category: nil, icon: nil
+            )
+        }
+        #expect(await repository.updateThreadCalls.isEmpty)
+    }
+
 
     /// 부분 수정의 전부다 — 안 건드린 필드가 `nil` 로 남아야 서버 값이 유지된다.
     @Test("넘기지 않은 필드는 nil 그대로 내려가 서버 값을 건드리지 않는다")

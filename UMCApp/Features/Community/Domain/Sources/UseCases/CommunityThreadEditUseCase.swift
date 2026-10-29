@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UMCFoundation
 
 /// 스레드 수정·삭제 계약.
 ///
@@ -54,6 +55,11 @@ public struct CommunityThreadEditUseCase: CommunityThreadEditUseCaseProtocol {
         category: CommunityThreadCategory?,
         icon: String?
     ) async throws -> CommunityThread {
+        if let title { try ProhibitedTextValidator.validate(title, field: "제목") }
+        if let description {
+            try ProhibitedTextValidator.validate(description, field: "설명")
+        }
+
         let normalizedIcon = icon.map(CommunityThreadCreateRule.normalizedIcon)
 
         return try await repository.updateThread(

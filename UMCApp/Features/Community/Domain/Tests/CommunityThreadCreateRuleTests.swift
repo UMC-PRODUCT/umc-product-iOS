@@ -16,6 +16,13 @@ import Testing
 @Suite("스레드 아이콘 정규화")
 struct CommunityThreadCreateRuleTests {
 
+    @Test("금지어 메시지는 전송 검증에서 거절된다")
+    func rejectsProhibitedMessage() {
+        #expect(throws: (any Error).self) {
+            try CommunityThreadRoomUseCase.validateText("씨발")
+        }
+    }
+
     // MARK: - 거르는 입력
 
     @Test("빈 문자열은 그대로 빈 값이다")
