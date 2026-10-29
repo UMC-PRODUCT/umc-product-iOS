@@ -305,6 +305,7 @@ public final class MyPageViewModel {
         let userSessionManager = container.resolve(UserSessionManager.self)
 
         try await networkClient.logout()
+        container.resolveIfCached(MemberBlockStore.self)?.reset()
         userSessionManager.reset()
         await memberProfileRepository?.invalidateCache()
         await communityRealtime?.stop()

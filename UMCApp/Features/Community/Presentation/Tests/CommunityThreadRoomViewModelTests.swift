@@ -461,6 +461,30 @@ private func makeMember(
 @Suite("CommunityThreadRoomViewModel")
 @MainActor
 struct CommunityThreadRoomViewModelTests {
+    @Test("차단 메시지는 각각 독립적으로 펼치고 다시 숨긴다")
+    func blockedMessagesRevealIndependently() {
+        let viewModel = makeViewModel(StubRoomUseCase())
+        var first = makeMessage(id: "blocked1", senderId: "other")
+        first.isSenderBlocked = true
+        var second = makeMessage(id: "blocked2", senderId: "other")
+        second.isSenderBlocked = true
+        #expect(viewModel.isMessageHidden(first))
+        #expect(viewModel.isMessageHidden(second))
+        viewModel.toggleBlockedMessage(first)
+        #expect(!viewModel.isMessageHidden(first))
+        #expect(viewModel.isMessageHidden(second))
+        viewModel.toggleBlockedMessage(first)
+        #expect(viewModel.isMessageHidden(first))
+    }
+
+    @Test("본인 메시지는 잘못된 차단 플래그가 있어도 숨기지 않는다")
+    func ownMessageIsNotHidden() {
+        let viewModel = makeViewModel(StubRoomUseCase())
+        var message = makeMessage(id: "mine")
+        message.isSenderBlocked = true
+        #expect(!viewModel.isMessageHidden(message))
+    }
+
 
     /// `currentMemberId` 는 항상 주입한다 — 기본값은 실제 `UserDefaults` 를 읽어 테스트가
     /// 로컬 로그인 상태에 끌려간다.
@@ -2028,6 +2052,18 @@ struct CommunityThreadRoomViewModelTests {
         #expect(viewModel.messages.count == 1)
         #expect(viewModel.messages.first?.id == "77")
         #expect(viewModel.messages.first?.deliveryState == .sent)
+    }
+
+    @Test("요약을 닫은 후 도착한 이전 결과는 다시 노출하지 않는다")
+    func dismissInvalidatesInFlightSummary() async {
+        let summarizer = GatedSummarizer()
+        let viewModel = makeViewModel(StubRoomUseCase(), summarizer: summarizer)
+        let request = Task { await viewModel.requestSummary() }
+        await summarizer.waitUntilSummarizing()
+        viewModel.dismissSummary()
+        await summarizer.release()
+        await request.value
+        #expect(viewModel.summary == .idle)
     }
 
     // MARK: - Summary

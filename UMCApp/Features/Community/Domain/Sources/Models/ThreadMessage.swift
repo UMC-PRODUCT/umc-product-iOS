@@ -92,7 +92,7 @@ public struct ThreadMessage: Identifiable, Hashable, Sendable {
     public let type: ThreadMessageType
     public let files: [ThreadMessageFile]
     public let mentions: [ThreadMessageMention]
-    public let replyTo: ThreadMessageReply?
+    public var replyTo: ThreadMessageReply?
     public let clientMessageId: String?
     public let createdAt: Date
     /// 아래 4개는 `message.updated`/`message.deleted`/`reaction.changed` 와 낙관적 전송이
@@ -101,6 +101,7 @@ public struct ThreadMessage: Identifiable, Hashable, Sendable {
     public var reactions: [ThreadMessageReaction]
     public var editedAt: Date?
     public var deletedAt: Date?
+    public var isSenderBlocked: Bool
     public var deliveryState: ThreadMessageDeliveryState
 
     // MARK: - Init
@@ -120,7 +121,8 @@ public struct ThreadMessage: Identifiable, Hashable, Sendable {
         createdAt: Date,
         editedAt: Date? = nil,
         deletedAt: Date? = nil,
-        deliveryState: ThreadMessageDeliveryState = .sent
+        deliveryState: ThreadMessageDeliveryState = .sent,
+        isSenderBlocked: Bool = false
     ) {
         self.id = id
         self.threadId = threadId
@@ -137,6 +139,7 @@ public struct ThreadMessage: Identifiable, Hashable, Sendable {
         self.editedAt = editedAt
         self.deletedAt = deletedAt
         self.deliveryState = deliveryState
+        self.isSenderBlocked = isSenderBlocked
     }
 
     // MARK: - Computed Property

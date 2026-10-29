@@ -671,6 +671,21 @@ struct CommunityThreadMemberUseCaseTests {
         #expect(call.memberId == "9")
     }
 
+    @Test("관리자 지정과 해제는 ADMIN과 MEMBER 역할을 저장소에 전달한다", arguments: [true, false])
+    func changesAdministratorRole(isAdministrator: Bool) async throws {
+        let repository = FakeThreadRepository()
+        let useCase = CommunityThreadMemberUseCase(repository: repository)
+
+        try await useCase.setAdministrator(
+            threadId: "1", memberId: "9", isAdministrator: isAdministrator
+        )
+
+        let call = try #require(await repository.roleCalls.first)
+        #expect(call.threadId == "1")
+        #expect(call.memberId == "9")
+        #expect(call.role == (isAdministrator ? "ADMIN" : "MEMBER"))
+    }
+
     @Test("위임은 대상 멤버의 역할을 OWNER 로 올린다")
     func transfersOwnershipWithOwnerRole() async throws {
         let repository = FakeThreadRepository()

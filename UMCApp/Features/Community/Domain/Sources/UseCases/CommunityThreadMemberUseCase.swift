@@ -15,6 +15,8 @@ import Foundation
 public protocol CommunityThreadMemberUseCaseProtocol: Sendable {
     func loadMembers(threadId: String) async throws -> [ThreadMember]
     func kick(threadId: String, memberId: String) async throws
+    /// 개설자가 참여자를 관리자로 지정하거나 일반 참여자로 되돌린다.
+    func setAdministrator(threadId: String, memberId: String, isAdministrator: Bool) async throws
 
     /// 개설자 위임. 서버가 소유권을 원자적으로 스왑하므로 호출 뒤에는 목록을 다시 읽어야
     /// 두 행(새 개설자·나)의 역할이 함께 맞는다.
@@ -51,6 +53,18 @@ public struct CommunityThreadMemberUseCase: CommunityThreadMemberUseCaseProtocol
 
     public func kick(threadId: String, memberId: String) async throws {
         try await repository.kickMember(threadId: threadId, memberId: memberId)
+    }
+
+    public func setAdministrator(
+        threadId: String,
+        memberId: String,
+        isAdministrator: Bool
+    ) async throws {
+        try await repository.changeMemberRole(
+            threadId: threadId,
+            memberId: memberId,
+            role: (isAdministrator ? ThreadMemberRole.admin : .member).rawValue
+        )
     }
 
     public func transferOwnership(threadId: String, to memberId: String) async throws {
