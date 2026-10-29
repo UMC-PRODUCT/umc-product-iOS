@@ -170,6 +170,9 @@ struct CommunityThreadRoomView: View {
         // 가리지 않고, 바 뒤로는 스크롤 가장자리 효과가 깔린다.
         .safeAreaBar(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
+                if let notice = viewModel.composerValidationMessage {
+                    noticeCapsule(notice)
+                }
                 if let notice = viewModel.sendCooldownNotice {
                     noticeCapsule(notice)
                 }

@@ -5,6 +5,8 @@
 //  Created by euijjang97 on 7/9/26.
 //
 
+import UMCFoundation
+
 /// 소셜 회원가입 UseCase 구현체
 public final class RegisterUseCase: RegisterUseCaseProtocol {
 
@@ -29,7 +31,9 @@ public final class RegisterUseCase: RegisterUseCaseProtocol {
         profileImageId: String?,
         termsAgreements: [TermsAgreement]
     ) async throws -> RegisterResult {
-        try await repository.register(
+        try ProhibitedTextValidator.validate(name, field: "이름")
+        try ProhibitedTextValidator.validate(nickname, field: "닉네임")
+        return try await repository.register(
             oAuthVerificationToken: oAuthVerificationToken,
             name: name,
             nickname: nickname,

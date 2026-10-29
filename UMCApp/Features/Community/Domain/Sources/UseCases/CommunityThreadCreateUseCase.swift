@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UMCFoundation
 
 // MARK: - Rule
 
@@ -112,6 +113,9 @@ public struct CommunityThreadCreateUseCase: CommunityThreadCreateUseCaseProtocol
         icon: String,
         memberIds: [String] = []
     ) async throws -> CommunityThread {
+        try ProhibitedTextValidator.validate(title, field: "제목")
+        try ProhibitedTextValidator.validate(description, field: "설명")
+
         let normalizedIcon = CommunityThreadCreateRule.normalizedIcon(icon)
 
         return try await repository.createThread(

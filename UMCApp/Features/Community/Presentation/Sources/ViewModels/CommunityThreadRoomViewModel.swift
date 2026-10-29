@@ -42,7 +42,11 @@ public final class CommunityThreadRoomViewModel {
     /// 쓰이고 어떤 레이어로도 나가지 않는다.
     public private(set) var newMessageCount = 0
 
-    public var draft: String = ""
+    public var draft: String = "" {
+        didSet { composerValidationMessage = nil }
+    }
+    /// 전송 전 검증 실패. 초안을 보존하고 입력창 위에 안내한다.
+    public private(set) var composerValidationMessage: String?
     public var alertPrompt: AlertPrompt?
     /// 스레드 삭제·강퇴로 더 볼 것이 없어진 상태와 그 사유.
     ///
@@ -186,12 +190,14 @@ public final class CommunityThreadRoomViewModel {
         header.value?.isJoined == true
     }
 
-    /// 전송 버튼 활성 조건 = 참여 중 + `validateText` 통과 + 쿨다운 아님. 상한을 넘긴 입력은 서버까지
+    /// 전송 버튼 활성 조건 = 참여 중 + 공백·길이 검증 통과 + 쿨다운 아님. 상한을 넘긴 입력은 서버까지
     /// 보내지 않고 버튼을 잠가 실패 왕복을 없앤다 (스펙 3.3 클라이언트 선반영).
+    /// 금지어는 전송 시 안내한다. 버튼만 비활성화하면 사용자가 거절 이유를 알 수 없다.
     public var canSend: Bool {
         canWrite
             && sendCooldownNotice == nil
-            && (try? CommunityThreadRoomUseCase.validateText(trimmedDraft)) != nil
+            && !trimmedDraft.isEmpty
+            && trimmedDraft.unicodeScalars.count <= CommunityThreadRoomUseCase.messageMaxLength
     }
 
     /// 검증과 전송이 같은 문자열을 봐야 한다 — 원문으로 검증하면 상한 뒤에 붙은 개행 하나로
@@ -317,6 +323,7 @@ public final class CommunityThreadRoomViewModel {
         guard canSend else { return }
 
         let content = trimmedDraft
+        guard validateComposer(content) else { return }
         // 인용·멘션은 초안에 딸린 값이라 초안을 비우기 전에 확정한다.
         let reply = replyTarget
         let mentions = mentionedMembers(in: content)
@@ -339,6 +346,17 @@ public final class CommunityThreadRoomViewModel {
             replyToId: reply?.messageId,
             mentionedMemberIds: mentions.map(\.memberId)
         )
+    }
+
+    /// 낙관적 전송/수정 전에 검사하여 사용자가 고칠 원문을 입력창에 남긴다.
+    func validateComposer(_ content: String) -> Bool {
+        do {
+            try CommunityThreadRoomUseCase.validateText(content)
+            return true
+        } catch {
+            composerValidationMessage = AppError.from(error).userMessage
+            return false
+        }
     }
 
     /// 실패한 메시지 재전송. 같은 `clientMessageId` 를 다시 쓰면 서버가 중복을 걸러 준다.
