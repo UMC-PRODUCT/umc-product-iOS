@@ -9,6 +9,7 @@ import Foundation
 import Observation
 import UIKit
 import CommunityDomain
+import CoreDomain
 import UMCFoundation
 
 /// 채팅방 상태 기계.
@@ -66,6 +67,7 @@ public final class CommunityThreadRoomViewModel {
     ///
     /// 갱신은 `CommunityThreadRoomViewModel+Summary` 가 맡아 setter 를 모듈 내부로 연다.
     public internal(set) var summary: Loadable<ThreadSummary> = .idle
+    var summaryRequestRevision = UUID()
     public var isSummarySheetPresented = false
     /// 방에 들어온 순간의 미읽음 수.
     ///
@@ -135,6 +137,8 @@ public final class CommunityThreadRoomViewModel {
     /// `useCase` 와 같은 이유로 모듈 내부에 연다 — `+ThreadMenu` 확장이 명령 실패를 올린다.
     let errorHandler: ErrorHandler
     let currentMemberId: String?
+    let blockStore: MemberBlockStore?
+    var revealedBlockedMessageIds: Set<String> = []
     private let sendTimeout: Duration
 
     /// 최하단 근처를 보고 있는지. 화면만 알 수 있는 값이라 `updateNearBottom(_:)` 로 받아 둔다.
@@ -165,7 +169,8 @@ public final class CommunityThreadRoomViewModel {
         errorHandler: ErrorHandler,
         summarizer: ThreadSummarizing,
         currentMemberId: String? = AppStorageKey.memberIdString(),
-        sendTimeout: Duration = .seconds(15)
+        sendTimeout: Duration = .seconds(15),
+        blockStore: MemberBlockStore? = nil
     ) {
         self.threadId = threadId
         self.useCase = useCase
@@ -174,6 +179,7 @@ public final class CommunityThreadRoomViewModel {
         self.summarizer = summarizer
         self.currentMemberId = currentMemberId
         self.sendTimeout = sendTimeout
+        self.blockStore = blockStore
     }
 
     // MARK: - Computed Property

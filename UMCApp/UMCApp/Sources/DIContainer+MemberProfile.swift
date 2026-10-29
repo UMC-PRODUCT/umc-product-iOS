@@ -8,6 +8,7 @@
 import CoreDI
 import CoreDomain
 import CoreNetwork
+import UMCFoundation
 
 extension DIContainer {
     /// 정본 프로필 조회 파이프라인을 등록한다.
@@ -16,6 +17,15 @@ extension DIContainer {
     /// 등록된다 — `resolve()`가 인스턴스를 캐싱하므로(싱글턴 동작), 캐시 수명도 자연히 세션(로그인~로그아웃)
     /// 단위가 된다. 소비부(Auth/Home/MyPage)는 프로토콜만 바라보므로 캐싱 도입이 계약에 영향을 주지 않는다.
     func registerMemberProfileDependencies() {
+        register(MemberBlockRepositoryProtocol.self) {
+            MemberBlockRepository(adapter: self.resolve(MoyaNetworkAdapter.self))
+        }
+        register(MemberBlockStore.self) {
+            MemberBlockStore(
+                repository: self.resolve(MemberBlockRepositoryProtocol.self),
+                currentMemberId: AppStorageKey.memberIdString()
+            )
+        }
         register(MemberProfileRepositoryProtocol.self) {
             CachedMemberProfileRepository(
                 remote: MemberProfileRepository(adapter: self.resolve(MoyaNetworkAdapter.self))

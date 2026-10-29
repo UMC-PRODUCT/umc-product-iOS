@@ -28,6 +28,7 @@ extension DIContainer {
         register(AuthRepositoryProtocol.self) {
             StubAuthRepository()
         }
+        register(MemberBlockRepositoryProtocol.self) { StubMemberBlockRepository() }
         register(MemberProfileRepositoryProtocol.self) {
             StubMemberProfileRepository()
         }
@@ -65,6 +66,15 @@ extension DIContainer {
                 Stub 세션 모드 활성화 — 인증·홈·공지·스터디·멤버·출석·커뮤니티 데이터가 픽스처로 \
                 대체됩니다. 커뮤니티 실시간(STOMP)만 실서버라 메시지 전송은 15초 뒤 실패합니다.
                 """)
+    }
+}
+/// 미리보기 세션에서 실제 계정의 차단 관계를 변경하지 않는다.
+private actor StubMemberBlockRepository: MemberBlockRepositoryProtocol {
+    private var memberIds: Set<String> = []
+    func fetchBlockedMemberIds() async throws -> Set<String> { memberIds }
+    func setBlocked(_ blocked: Bool, memberId: String) async throws -> Bool {
+        if blocked { memberIds.insert(memberId) } else { memberIds.remove(memberId) }
+        return blocked
     }
 }
 #endif
