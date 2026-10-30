@@ -103,7 +103,7 @@ struct MyPageListRow: View {
         }
     }
 
-    /// 「나의 활동 ・프로젝트, 3건」. 아이콘 타일과 chevron은 옆 글자를 그림으로 옮긴
+    /// 「활동 이력, 3건」. 아이콘 타일과 chevron은 옆 글자를 그림으로 옮긴
     /// 장식이라 따로 읽히면 줄 하나를 네 번 스와이프하게 된다.
     private var accessibilityLabel: String {
         [title, value].compactMap { $0 }.joined(separator: ", ")

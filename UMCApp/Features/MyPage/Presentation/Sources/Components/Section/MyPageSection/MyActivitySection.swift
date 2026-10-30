@@ -9,12 +9,10 @@ import CoreDesignSystem
 import CoreUIComponents
 import SwiftUI
 
-/// v3 루트의 「나의 활동」 섹션 — 나의 스터디 / 나의 활동・프로젝트 / 내 프로젝트 / 수료증.
+/// v3 루트의 「나의 활동」 섹션 — 활동 이력 / 나의 스터디 / 내 프로젝트 / 수료증.
 ///
-/// - 나의 스터디(MP-F10): 스터디 화면의 정본 소유자가 Activity 피처라 그 탭으로 옮긴다.
-///   스터디 상세 목적지는 아직 없어 탭 전환까지만 하고 push 는 하지 않는다.
-/// - 나의 활동・프로젝트(MP-F11): MyPage 안의 활동 이력(프로필 activityLogs) 목록으로 push 한다.
-///   행 제목은 시안대로 두지만 매칭 프로젝트는 담지 않는다.
+/// - 활동 이력: MyPage 안의 프로필 활동 이력 목록으로 push 한다.
+/// - 나의 스터디: App 셸이 기존 커리큘럼 화면을 MyPage 스택에 push 한다.
 /// - 내 프로젝트(#1476): 매칭 프로젝트(`/api/v1/projects`)는 Project 피처가 소유한다.
 ///   MyPage 는 콜백만 올리고 App 셸이 Project 화면을 push 한다.
 ///
@@ -73,22 +71,22 @@ public struct MyActivitySection: View {
 
             MyPageListCard {
                 MyPageListRow(
-                    systemIcon: "books.vertical",
-                    iconColor: MyPageListIconColor.orange,
-                    title: "나의 스터디",
-                    value: studyCount.map { "\($0)건" } ?? "-",
-                    action: onStudyTap
+                    systemIcon: "folder",
+                    iconColor: MyPageListIconColor.teal,
+                    title: "활동 이력",
+                    value: activityCount.map { "\($0)건" } ?? "-",
+                    action: onActivityTap,
+                    isPending: isActivityPending
                 )
 
                 MyPageListDivider()
 
                 MyPageListRow(
-                    systemIcon: "folder",
-                    iconColor: MyPageListIconColor.teal,
-                    title: "나의 활동 ・프로젝트",
-                    value: activityCount.map { "\($0)건" } ?? "-",
-                    action: onActivityTap,
-                    isPending: isActivityPending
+                    systemIcon: "books.vertical",
+                    iconColor: MyPageListIconColor.orange,
+                    title: "나의 스터디",
+                    value: studyCount.map { "\($0)건" } ?? "-",
+                    action: onStudyTap
                 )
 
                 MyPageListDivider()
