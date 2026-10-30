@@ -49,7 +49,7 @@ struct VoteAttachmentCard: View {
         .padding(DefaultConstant.defaultSafeHorizon)
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .fill(Color.indigo100)
+                .fill(Color.teal100)
                 .opacity(Constants.bgOpacity)
                 .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
         }

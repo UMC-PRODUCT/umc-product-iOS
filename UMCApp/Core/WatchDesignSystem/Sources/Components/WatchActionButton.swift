@@ -11,7 +11,7 @@ import SwiftUI
 
 /// 워치 액션 버튼 역할. Glass 는 **컨트롤에만** 허용되므로 세 역할 모두 Glass 배리언트를 쓴다.
 public enum WatchButtonRole: Sendable, CaseIterable {
-    /// 화면당 1개. `.glassProminent` + 인디고 tint.
+    /// 화면당 1개. `.glassProminent` + 틸 tint.
     case primary
     /// 보조 액션. `.glass` 중립(tint 없음).
     case secondary

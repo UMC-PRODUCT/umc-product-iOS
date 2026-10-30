@@ -146,7 +146,7 @@ struct StudyGroupLeaderRow: View, Equatable {
                 profileImageURL: nil,
                 role: .leader
             ),
-            partTintColor: .indigo500
+            partTintColor: .teal500
         )
 
         StudyGroupLeaderRow(

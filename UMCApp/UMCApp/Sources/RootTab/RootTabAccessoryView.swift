@@ -90,7 +90,7 @@ fileprivate struct AccessoryActionButton: View {
                 Spacer()
 
                 Image(systemName: systemImageName)
-                    .foregroundStyle(Color.indigo500)
+                    .foregroundStyle(Color.teal500)
 
                 Text(title)
                     .appFont(.body, weight: .semibold)
@@ -177,7 +177,7 @@ fileprivate struct AdminModeToggle: View {
         } label: {
             HStack(spacing: DefaultSpacing.spacing8) {
                 Image(systemName: userSession.isAdminModeEnabled ? "gearshape.fill" : "gearshape")
-                    .foregroundStyle(userSession.isAdminModeEnabled ? Color.indigo500 : .grey600)
+                    .foregroundStyle(userSession.isAdminModeEnabled ? Color.teal500 : .grey600)
 
                 Text(userSession.isAdminModeEnabled ? "운영진 모드" : "챌린저 모드")
                     .appFont(.subheadline)
@@ -187,7 +187,7 @@ fileprivate struct AdminModeToggle: View {
                     Spacer()
 
                     Text(userSession.currentRole.displayName)
-                        .appFont(.subheadline, color: .indigo500)
+                        .appFont(.subheadline, color: .teal500)
                 }
             }
             .padding(.horizontal, placement == .expanded ? DefaultConstant.defaultSafeHorizon : 0)

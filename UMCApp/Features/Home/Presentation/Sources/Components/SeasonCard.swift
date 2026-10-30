@@ -50,7 +50,7 @@ struct SeasonCard: View, Equatable {
     private var icon: some View {
         Image(systemName: iconName)
             .font(.system(size: Constants.iconSize))
-            .foregroundStyle(Color.indigo600)
+            .foregroundStyle(Color.teal600)
     }
 
     private var title: some View {

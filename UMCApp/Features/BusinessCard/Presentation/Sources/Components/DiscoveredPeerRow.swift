@@ -183,7 +183,7 @@ struct DiscoveredPeerRow: View {
         }
         // 아래 ``signal`` 막대와 같은 자리·같은 파랑이어야 한다. 시안 raw hex 대신
         // 코어 토큰을 쓴다 — 토큰은 다크 모드 값을 스스로 들고 있다 (#1237).
-        .foregroundStyle(Color.indigo500)
+        .foregroundStyle(Color.teal500)
     }
 
     /// 거리는 UWB(NearbyInteraction)가 잰다. 미탑재 기기이거나 아직 못 쟀으면 `nil` 이라
@@ -195,11 +195,11 @@ struct DiscoveredPeerRow: View {
         VStack(alignment: .trailing, spacing: Metrics.textSpacing) {
             Image(systemName: Constants.signalImage, variableValue: signalFill)
                 .font(.system(size: Metrics.signalSize))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(Color.teal500)
 
             if let meters = peer.distanceMeters {
                 Text(String(format: "%.1fm", meters))
-                    .appFont(.footnote, color: .indigo500)
+                    .appFont(.footnote, color: .teal500)
                     .monospacedDigit()
             }
         }

@@ -117,8 +117,8 @@ final class WatchAttendanceSessionViewModel {
         }
     }
 
-    /// 상태 배너 색. 지각 창의 앰버는 **상태색**이고 CTA 인디고는 **액션색**이라 서로 분리된
-    /// 축이다 — 지각이어도 CTA 는 인디고 `.primary` 로 둔다.
+    /// 상태 배너 색. 지각 창의 앰버는 **상태색**이고 CTA 틸는 **액션색**이라 서로 분리된
+    /// 축이다 — 지각이어도 CTA 는 틸 `.primary` 로 둔다.
     var bannerStatus: WatchStatus { timeWindow().watchStatus }
 
     var bannerText: String {

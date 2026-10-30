@@ -65,7 +65,7 @@ struct ToolbarTextFormatButton: View {
                 .font(.system(size: ToolbarButtonConstants.iconSize, weight: weight).italic(isItalic))
                 .underline(isUnderline)
                 .strikethrough(isStrikethrough)
-                .foregroundStyle(isActive ? Color.indigo500 : .black)
+                .foregroundStyle(isActive ? Color.teal500 : .black)
                 .frame(
                     width: ToolbarButtonConstants.frame.width,
                     height: ToolbarButtonConstants.frame.height

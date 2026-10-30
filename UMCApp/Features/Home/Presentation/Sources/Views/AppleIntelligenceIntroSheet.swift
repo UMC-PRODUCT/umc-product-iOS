@@ -151,7 +151,7 @@ struct AppleIntelligenceIntroSheet: View {
         HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
             Image(systemName: feature.image)
                 .font(.system(size: Constants.featureIconSize))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(Color.teal500)
                 .frame(width: Constants.featureIconFrame)
                 .accessibilityHidden(true)
 

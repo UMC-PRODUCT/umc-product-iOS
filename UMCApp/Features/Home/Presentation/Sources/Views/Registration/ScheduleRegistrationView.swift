@@ -146,7 +146,7 @@ public struct ScheduleRegistrationView: View {
             Text("하루 종일")
                 .appFont(.body, color: Color.grey900)
         }
-        .tint(.indigo500)
+        .tint(.teal500)
     }
 
     /// 대면/비대면 토글 + 장소 선택 섹션
@@ -183,7 +183,7 @@ public struct ScheduleRegistrationView: View {
                     Text("출석 필수")
                         .appFont(.body, color: Color.grey900)
                 }
-                .tint(.indigo500)
+                .tint(.teal500)
 
                 if viewModel.isAttendanceRequired {
                     AttendancePolicyTimeSection(
@@ -447,7 +447,7 @@ private struct TitleField: View, Equatable {
         )
         .appFont(.body, color: Color.grey900)
         .submitLabel(.return)
-        .tint(.indigo500)
+        .tint(.teal500)
     }
 }
 
@@ -699,7 +699,7 @@ private struct AIAutofillSheet: View {
             if viewModel.aiAutofillState.isLoading {
                 ProgressView()
                     .controlSize(.regular)
-                    .tint(.indigo500)
+                    .tint(.teal500)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DefaultSpacing.spacing8)
             } else {
@@ -710,7 +710,7 @@ private struct AIAutofillSheet: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)
-                .tint(.indigo500)
+                .tint(.teal500)
                 .controlSize(.large)
                 .disabled(isInputEmpty)
             }

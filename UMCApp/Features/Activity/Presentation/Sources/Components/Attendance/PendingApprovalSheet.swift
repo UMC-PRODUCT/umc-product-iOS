@@ -155,7 +155,7 @@ struct PendingApprovalSheet: View {
             Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                 .contentTransition(.symbolEffect(.replace))
                 .font(.app(.title2))
-                .foregroundStyle(isSelected ? Color.indigo500 : Color.grey400)
+                .foregroundStyle(isSelected ? Color.teal500 : Color.grey400)
                 .frame(
                     minWidth: DefaultConstant.minimumTouchTarget,
                     minHeight: DefaultConstant.minimumTouchTarget

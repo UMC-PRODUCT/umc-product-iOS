@@ -232,7 +232,7 @@ public struct NoticeEditorView: View {
                 } label: {
                     Image(systemName: viewModel.allowAlert ? "bell.fill" : "bell.slash.fill")
                 }
-                .tint(viewModel.allowAlert ? .indigo500 : .secondary)
+                .tint(viewModel.allowAlert ? .teal500 : .secondary)
             }
             ToolBarCollection.AddBtn(
                 action: saveNotice,

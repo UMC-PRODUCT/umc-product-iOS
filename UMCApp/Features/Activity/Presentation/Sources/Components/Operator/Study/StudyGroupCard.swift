@@ -284,7 +284,7 @@ struct StudyGroupCard: View, Equatable {
             HStack(spacing: isExpanded ? DefaultSpacing.spacing4 : 0) {
                 Image(systemName: "calendar.badge.plus")
                     .font(.app(.title3))
-                    .foregroundStyle(isExpanded ? Color.white : Color.indigo600)
+                    .foregroundStyle(isExpanded ? Color.white : Color.teal600)
 
                 if isExpanded {
                     Text("일정 등록")
@@ -301,10 +301,10 @@ struct StudyGroupCard: View, Equatable {
             .contentShape(.capsule)
             // 배경을 항상 `.capsule`로 두면 collapsed(44×44)는 원, expanded는 알약으로 같은
             // shape 프리미티브 안에서 너비만 변해 shape swap 잔상이 없다. tint opacity는
-            // collapsed에서 0(plain glass) → expanded에서 1(indigo)로 연속 전환된다.
+            // collapsed에서 0(plain glass) → expanded에서 1(teal)로 연속 전환된다.
             .glassEffect(
                 .regular
-                    .tint(.indigo600.opacity(isExpanded ? 1 : 0))
+                    .tint(.teal600.opacity(isExpanded ? 1 : 0))
                     .interactive(),
                 in: .capsule
             )

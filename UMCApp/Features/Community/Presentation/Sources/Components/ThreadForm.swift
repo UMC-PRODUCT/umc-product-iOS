@@ -299,7 +299,7 @@ struct ThreadForm<ViewModel: ThreadFormPresenting, Trailing: View>: View {
                 Text(isRefining ? Constants.refiningTitle : Constants.refineTitle)
                     .appFont(
                         .body,
-                        color: viewModel.canRefineDescription ? Color.indigo500 : Color.grey500
+                        color: viewModel.canRefineDescription ? Color.teal500 : Color.grey500
                     )
 
                 Spacer(minLength: 0)
@@ -357,7 +357,7 @@ struct ThreadForm<ViewModel: ThreadFormPresenting, Trailing: View>: View {
                     viewModel.applyRefinedDescription()
                 } label: {
                     Text(Constants.applyTitle)
-                        .appFont(.callout, weight: .semibold, color: Color.indigo500)
+                        .appFont(.callout, weight: .semibold, color: Color.teal500)
                 }
                 .accessibilityHint(Constants.applyHint)
             }
@@ -491,7 +491,7 @@ struct ThreadForm<ViewModel: ThreadFormPresenting, Trailing: View>: View {
             .overlay {
                 Circle()
                     .strokeBorder(
-                        isHighlighted ? Color.indigo500 : .clear,
+                        isHighlighted ? Color.teal500 : .clear,
                         lineWidth: Constants.selectionBorderWidth
                     )
             }

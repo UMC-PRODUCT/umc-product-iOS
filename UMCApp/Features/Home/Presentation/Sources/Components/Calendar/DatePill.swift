@@ -55,7 +55,7 @@ struct DatePill: View {
             .overlay {
                 if isToday && !isSelected {
                     Capsule()
-                        .strokeBorder(Color.indigo500, lineWidth: Constants.todayBorderWidth)
+                        .strokeBorder(Color.teal500, lineWidth: Constants.todayBorderWidth)
                 }
             }
         }
@@ -65,7 +65,7 @@ struct DatePill: View {
     // MARK: - Component
 
     private var pillBackground: some View {
-        (isSelected ? Color.indigo500 : Color.grey000)
+        (isSelected ? Color.teal500 : Color.grey000)
             .glassEffect(.regular.interactive(), in: .capsule)
     }
 

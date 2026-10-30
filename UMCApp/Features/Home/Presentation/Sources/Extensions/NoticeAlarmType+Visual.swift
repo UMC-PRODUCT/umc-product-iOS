@@ -29,7 +29,7 @@ extension NoticeAlarmType {
     var color: Color {
         switch self {
         case .success: return .green500
-        case .info:    return .indigo500
+        case .info:    return .teal500
         case .warning: return .yellow500
         case .error:   return .red500
         }

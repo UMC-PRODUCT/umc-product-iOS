@@ -30,7 +30,7 @@
 
 | 이유 | 내용 |
 |------|------|
-| **토큰 값이 다르다 (핵심 함정)** | iOS `Colors.xcassets` 의 colorset 은 light/dark 를 함께 갖는데 **watchOS 는 항상 dark 로 해석**한다. 같은 카탈로그를 워치 타겟에 링크하면 브랜드 인디고가 스펙값 `#4869F0` 이 아니라 dark 값 `#4264F0` 으로 나온다 (`orange500` → `#FF6C0F`, `grey400` → `#7C8792` 도 동일). 자산 카탈로그를 공유할 수 없는 실제 이유다. |
+| **토큰 값이 다르다 (핵심 함정)** | iOS `Colors.xcassets` 의 colorset 은 light/dark 를 함께 갖는데 **watchOS 는 항상 dark 로 해석**한다. 같은 카탈로그를 워치 타겟에 링크하면 브랜드 틸이 스펙값 `#008A80` 이 아니라 dark 값 `#00998E` 으로 나온다 (`orange500` → `#FF6C0F`, `grey400` → `#606262` 도 동일). 자산 카탈로그를 공유할 수 없는 실제 이유다. |
 | **타이포가 다르다** | 워치 스펙은 시스템 폰트(SF) 기반 — Pretendard `.otf` 3종이 필요 없다. `CoreDesignSystem` 을 링크하면 안 쓰는 폰트 리소스가 워치 번들에 실린다. |
 | **컴포넌트 규칙이 반대다** | iOS 는 Glass 를 카드 배경까지 쓰지만 워치는 컨트롤에만 쓴다 (§4). iOS `PrimaryButtonStyle` 의 `height: 44` 고정 같은 폰 전제 API 가 워치 자동완성에 뜨는 것도 막는다. |
 
@@ -51,19 +51,19 @@ asset catalog 없이 `WatchColorHex`(internal, `WatchColor.swift:75-93`)의 `0xR
 |------|------|-----|------|
 | 배경 | `screen` | `#000000` | 화면 전체 배경. OLED 픽셀 소등(배터리·번인) |
 | | `cardBackground` / `cardBorder` | `#16181C` / `#2A2D34` | 일반 카드 — 불투명 solid |
-| | `heroBackground` / `heroBorder` | `#1B2140` / 인디고 45% | Hero(대표 지표) 카드 |
+| | `heroBackground` / `heroBorder` | `#1B2140` / 틸 45% | Hero(대표 지표) 카드 |
 | | `dangerBackground` / `dangerBorder` | `#241416` / 에러 레드 40% | 위험·파괴적 맥락 카드 |
-| 브랜드 | `brandPrimary` | `#4869F0` | CTA tint·active·Hero 보더 (iOS `indigo500`) |
-| | `brandPrimaryHighlight` | `#6683FF` | 다크 카드 위 브랜드색 텍스트·아이콘 (iOS `indigo400`) |
-| | `brandPrimarySoft` | `#99ABFF` | pending 링·저강조 (iOS `indigo300`) |
+| 브랜드 | `brandPrimary` | `#008A80` | CTA tint·active·Hero 보더 (iOS `teal500`) |
+| | `brandPrimaryHighlight` | `#39A9A1` | 다크 카드 위 브랜드색 텍스트·아이콘 (iOS `teal400`) |
+| | `brandPrimarySoft` | `#7AC7C1` | pending 링·저강조 (iOS `teal300`) |
 | | `brandAccent` | `#FF731A` | **The Ping 배지·브랜드 강조 전용** (iOS `orange500`) |
-| 상태 | `statusActive` / `statusPending` | `#4869F0` / `#B2B8BF` | 진행 중 / 승인 대기 |
+| 상태 | `statusActive` / `statusPending` | `#008A80` / `#ADADAD` | 진행 중 / 승인 대기 |
 | | `statusSuccess` / `statusWarning` / `statusError` | `#30D158` / `#FFB340` / `#FF453A` | 완료 / 주의 / 실패 |
-| 텍스트 | `textPrimary` / `textSecondary` / `textDisabled` | `#FFFFFF` / `#B2B8BF` / grey 50% | 본문 / 보조 / 비활성 라벨 |
+| 텍스트 | `textPrimary` / `textSecondary` / `textDisabled` | `#FFFFFF` / `#ADADAD` / grey 50% | 본문 / 보조 / 비활성 라벨 |
 
 - `brandAccent` 는 상태(성공/경고/실패) 표현에 **절대 쓰지 않는다** — 상태는 `status*` 축 (`WatchColor.swift:39-41`).
 - `statusActive` 는 `brandPrimary` 와 같은 값이지만 의미가 다르므로 별도 이름으로 참조한다 (`WatchColor.swift:45-46`).
-- 색 이름은 역할 기반이다 — iOS 팔레트 번호(`indigo500`)를 워치 API 에 노출하지 않는다 (핵심 규칙 #7).
+- 색 이름은 역할 기반이다 — iOS 팔레트 번호(`teal500`)를 워치 API 에 노출하지 않는다 (핵심 규칙 #7).
 
 ### 2-2) iOS 와의 정합은 테스트가 잠근다
 
@@ -71,9 +71,9 @@ iOS 와 값을 공유하는 것은 **브랜드 4종 + 중립 회색 1종**뿐이
 
 | 워치 토큰 | iOS colorset (universal) |
 |-----------|--------------------------|
-| `brandPrimary` | `Primary/indigo500` |
-| `brandPrimaryHighlight` | `Primary/indigo400` |
-| `brandPrimarySoft` | `Primary/indigo300` |
+| `brandPrimary` | `Primary/teal500` |
+| `brandPrimaryHighlight` | `Primary/teal400` |
+| `brandPrimarySoft` | `Primary/teal300` |
 | `brandAccent` | `Accent/orange500` |
 | `neutralGrey` (→ `textSecondary`·`statusPending`) | `Grey/grey400` |
 
@@ -133,7 +133,7 @@ iOS 상수는 탭바·44pt 터치 타깃 등 폰 전제 값이다 (`WatchLayout.
 | 선택된 `List` 행 | ❌ | Hero 표면 + 좌측 색바 (§5-3) | solid tint (#1207) |
 | 결과 풀스크린 배경 (#1207) | ❌ | `watchScreenBackground()` + `watchCard(.hero/.danger)` | 금지 구역 |
 | Complication (#1215) | ❌ | 토큰 색만 사용 — accessory family 는 시스템이 렌더 | 금지 구역 |
-| Primary CTA | ✅ | `.buttonStyle(.glassProminent)` + 인디고 tint | 컨트롤 = 허용 구역 |
+| Primary CTA | ✅ | `.buttonStyle(.glassProminent)` + 틸 tint | 컨트롤 = 허용 구역 |
 | Secondary 버튼 | ✅ | `.buttonStyle(.glass)` (tint 없음) | 컨트롤 |
 | Destructive-safe 버튼 | ✅ | `.buttonStyle(.glass)` + 에러 레드 tint (채우지 않음) | 컨트롤 |
 | Disabled 버튼 | ✅(무tint) | `.buttonStyle(.glass)` + `textDisabled` + `.disabled(true)` | 컨트롤 |
@@ -177,7 +177,7 @@ NoticeRow(notice: notice)
 | `WatchCardStyle` | fill / border | 용도 |
 |------------------|---------------|------|
 | `.standard` (기본) | `#16181C` / `#2A2D34` | 일반 카드 |
-| `.hero` | `#1B2140` / 인디고 45% | 대표 지표·다음 일정 |
+| `.hero` | `#1B2140` / 틸 45% | 대표 지표·다음 일정 |
 | `.danger` | `#241416` / 에러 레드 40% | 위험·실패·파괴적 맥락 |
 
 구현 결정 두 가지 (`WatchSurface.swift:95-102`):
@@ -196,7 +196,7 @@ ScrollView { /* … */ }
 
 ### 5-3) `watchListRowBackground(isSelected:)`
 
-기본 시스템 행 배경(반투명)을 불투명 solid 로 교체한다 (`WatchSurface.swift:125-142`). `isSelected: true` 면 Hero 표면 + **좌측 인디고 색바**로 선택을 표현한다 — Hero fill 단독은 standard 대비 명암비 1.13:1 에 그쳐 저시력·야외에서 식별되지 않으므로, 색과 분리된 위치 신호를 함께 준다 (#1207 선택행).
+기본 시스템 행 배경(반투명)을 불투명 solid 로 교체한다 (`WatchSurface.swift:125-142`). `isSelected: true` 면 Hero 표면 + **좌측 틸 색바**로 선택을 표현한다 — Hero fill 단독은 standard 대비 명암비 1.13:1 에 그쳐 저시력·야외에서 식별되지 않으므로, 색과 분리된 위치 신호를 함께 준다 (#1207 선택행).
 
 ```swift
 List(schedules) { schedule in
@@ -223,7 +223,7 @@ public init(
 
 | `WatchButtonRole` | 스타일 | 규칙 |
 |-------------------|--------|------|
-| `.primary` | `.glassProminent` + 인디고 tint | 화면당 1개 — 기본값이 아니라 대표 CTA 에만 명시 |
+| `.primary` | `.glassProminent` + 틸 tint | 화면당 1개 — 기본값이 아니라 대표 CTA 에만 명시 |
 | `.secondary` | `.glass` 중립 | 보조 액션 |
 | `.destructive` | `.glass` + 에러 레드 tint | **채우지 않는** 안전형 — 빨간 채움 버튼은 좁은 화면에서 오탭 유도 |
 
@@ -259,7 +259,7 @@ WatchActionButton(
 | `.warning` | `exclamationmark.triangle.fill` (삼각형) | `statusWarning` | 주의 |
 | `.error` | `xmark.octagon.fill` (팔각형) | `statusError` | 실패 |
 
-- `pending` 링이 `brandPrimary` 가 아니라 한 단계 밝은 `brandPrimarySoft` 인 이유: `active` 원판과 같은 인디고를 쓰면 라벨 없는 경로에서 둘이 섞인다 (`WatchStatusBadge.swift:31-35`).
+- `pending` 링이 `brandPrimary` 가 아니라 한 단계 밝은 `brandPrimarySoft` 인 이유: `active` 원판과 같은 틸를 쓰면 라벨 없는 경로에서 둘이 섞인다 (`WatchStatusBadge.swift:31-35`).
 - 심볼 오타·SF Symbols 버전 변경은 `WatchStatusSymbolTests` 가 잡는다 (`Tests/WatchColorTokenTests.swift:139-145`).
 
 ```swift
@@ -413,10 +413,10 @@ static func state(measuredAt: Date, now: Date) -> WatchOfflineQueueState {
 - 증상: `.extraLargeTitle` 사용 시 watchOS 타겟에서 unavailable 컴파일 에러
   - 원인: §8-2 — visionOS 전용 케이스.
   - 해결: `.font(.watch(.metric))` 사용.
-- 증상: 워치에서 브랜드 인디고가 `#4264F0` 등 어두운 값으로 보인다
+- 증상: 워치에서 브랜드 틸이 `#00998E` 등 dark 값으로 보인다
   - 원인: iOS `Colors.xcassets` 를 워치 타겟에 링크했다 — watchOS 는 dark 엔트리를 집는다 (§1).
   - 해결: 워치 코드는 `WatchColor` 만 쓴다. iOS 카탈로그를 워치 타겟에 링크하지 않는다.
-- 증상: pending 배지가 회색 점 + 인디고 링이 아니라 뒤집혀/단색으로 보인다
+- 증상: pending 배지가 회색 점 + 틸 링이 아니라 뒤집혀/단색으로 보인다
   - 원인: 팔레트 렌더링 레이어 순서 — `foregroundStyle(status.tint, status.ringTint)` 의 인자 순서가 레이어 0(점)·레이어 1(링)에 대응한다 (`WatchStatusBadge.swift:111-116`).
   - 해결: 인자 순서를 유지하고, SF Symbols 버전 변경이 의심되면 `WatchStatusSymbolTests` 를 돌려 심볼 존재부터 확인한다.
 - 증상: 새 `WatchFallbackReason` 케이스를 추가했더니 빌드가 깨진다

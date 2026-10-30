@@ -193,7 +193,7 @@ struct MessageComposer: View {
     /// 색이 빠진 것만으로 누를 수 없다는 게 드러난다. `.buttonStyle(.glassProminent)` 는 44pt
     /// 터치 영역 전체를 원으로 칠해서 32pt 원판을 만들 수 없어 glass 를 직접 입힌다.
     private var sendButtonGlass: Glass {
-        canSend ? .regular.tint(Color.indigo500).interactive() : .regular
+        canSend ? .regular.tint(Color.teal500).interactive() : .regular
     }
 
     /// 아래로 미는 `move` 는 반투명 입력 카드 밑으로 칩이 비쳐 보여서 제자리 확대로 띄운다.
@@ -216,12 +216,12 @@ struct MessageComposer: View {
             // 막대는 글 높이만큼만 선다. 44pt 행 높이를 채우면 둥근 배경 곡선에 끝이 닿는다.
             HStack(spacing: DefaultSpacing.spacing8) {
                 Capsule()
-                    .fill(Color.indigo500)
+                    .fill(Color.teal500)
                     .frame(width: Constants.quoteBarWidth)
 
                 VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                     Text(title)
-                        .appFont(.caption1, weight: .semibold, color: .indigo600)
+                        .appFont(.caption1, weight: .semibold, color: .teal600)
 
                     Text(snippet)
                         .appFont(.caption1, color: .grey600)

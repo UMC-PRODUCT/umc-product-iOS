@@ -28,7 +28,7 @@ public struct PrimaryButtonStyle: ButtonStyle {
             .frame(height: ButtonConstants.height)
             .background(
                 isEnabled
-                    ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
+                    ? (configuration.isPressed ? Color.teal600 : Color.teal500)
                     : Color.grey400,
                 in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius)
             )
@@ -52,7 +52,7 @@ public struct SecondaryButtonStyle: ButtonStyle {
             .appFont(.body, weight: .semibold)
             .foregroundStyle(
                 isEnabled
-                    ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
+                    ? (configuration.isPressed ? Color.teal600 : Color.teal500)
                     : Color.grey400
             )
             .frame(maxWidth: .infinity)
@@ -62,7 +62,7 @@ public struct SecondaryButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: ButtonConstants.cornerRadius)
                     .stroke(
                         isEnabled
-                            ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
+                            ? (configuration.isPressed ? Color.teal600 : Color.teal500)
                             : Color.grey400,
                         lineWidth: 1.5
                     )
@@ -113,7 +113,7 @@ public struct TextButtonStyle: ButtonStyle {
             .font(.app(.body))
             .foregroundStyle(
                 isEnabled
-                    ? (configuration.isPressed ? Color.indigo600 : Color.indigo500)
+                    ? (configuration.isPressed ? Color.teal600 : Color.teal500)
                     : Color.grey400
             )
             .opacity(configuration.isPressed ? 0.7 : 1.0)

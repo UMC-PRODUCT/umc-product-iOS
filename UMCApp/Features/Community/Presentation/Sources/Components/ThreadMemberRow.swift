@@ -69,8 +69,8 @@ struct ThreadMemberRow: View {
     private var roleBadge: some View {
         InfoBadge(
             member.role.displayName,
-            textColor: member.role == .owner ? .indigo500 : .grey600,
-            tintColor: member.role == .owner ? .indigo500 : nil
+            textColor: member.role == .owner ? .teal500 : .grey600,
+            tintColor: member.role == .owner ? .teal500 : nil
         )
     }
 

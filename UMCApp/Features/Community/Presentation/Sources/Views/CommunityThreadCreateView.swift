@@ -130,7 +130,7 @@ struct CommunityThreadCreateView: View {
         ToolbarItem(placement: .confirmationAction) {
             // 전송 중에는 `canSubmit` 이 false 라 버튼이 잠긴다 — 중복 제출은 여기서 막힌다.
             Button(role: .confirm, action: submit)
-                .tint(.indigo500)
+                .tint(.teal500)
                 .disabled(!viewModel.canSubmit)
                 .accessibilityLabel(Constants.navigationTitle)
         }

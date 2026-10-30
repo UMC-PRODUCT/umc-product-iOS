@@ -192,7 +192,7 @@ public struct StaffNoticeView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .tint(.indigo500)
+        .tint(.teal500)
         .refreshable {
             await reloadWithMinimumDuration()
         }

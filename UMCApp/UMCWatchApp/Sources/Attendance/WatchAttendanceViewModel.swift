@@ -93,7 +93,7 @@ final class WatchAttendanceViewModel {
     }
 
     /// 행 강조 판정. 지금 출석을 진행할 수 있는 창(정시·지각)에 들어와 있는 일정만 강조한다.
-    /// 목록에서 `watchListRowBackground(isSelected:)` 인자로 쓴다 — 진행 중은 Hero + 인디고
+    /// 목록에서 `watchListRowBackground(isSelected:)` 인자로 쓴다 — 진행 중은 Hero + 틸
     /// 색바, 예정/마감은 중립 표면이다.
     func isInProgress(_ schedule: ScheduleDetailData, now: Date = Date()) -> Bool {
         switch timeWindow(for: schedule, now: now) {

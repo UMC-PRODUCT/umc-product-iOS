@@ -126,7 +126,7 @@ struct PenaltyCard: View, Equatable {
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.indigo400, .indigo600],
+                            colors: [.teal400, .teal600],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -140,7 +140,7 @@ struct PenaltyCard: View, Equatable {
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.indigo100, .indigo300],
+                            colors: [.teal100, .teal300],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -187,8 +187,8 @@ struct PenaltyCard: View, Equatable {
             }
 
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-                legendLabel(color: .indigo500, label: "상점", value: generation.rewardPoint)
-                legendLabel(color: .indigo200, label: "벌점", value: generation.penaltyPoint)
+                legendLabel(color: .teal500, label: "상점", value: generation.rewardPoint)
+                legendLabel(color: .teal200, label: "벌점", value: generation.penaltyPoint)
             }
             .frame(maxWidth: .infinity)
         }
@@ -282,7 +282,7 @@ fileprivate struct PointLogPopover: View {
             ForEach(logs) { log in
                 HStack(spacing: DefaultSpacing.spacing8) {
                     Circle()
-                        .fill(log.isReward ? Color.indigo500 : Color.indigo200)
+                        .fill(log.isReward ? Color.teal500 : Color.teal200)
                         .frame(
                             width: Constants.circleDiameter,
                             height: Constants.circleDiameter
@@ -294,7 +294,7 @@ fileprivate struct PointLogPopover: View {
                     Spacer()
 
                     Text((log.isReward ? "+" : "-") + pointText(abs(log.point)))
-                        .appFont(.subheadline, color: log.isReward ? .indigo500 : .indigo300)
+                        .appFont(.subheadline, color: log.isReward ? .teal500 : .teal300)
 
                     Text(log.date)
                         .appFont(.footnote, color: .grey500)
@@ -336,16 +336,16 @@ fileprivate struct GenTabBar: View {
 
         HStack(spacing: DefaultSpacing.spacing16) {
             Text(titleText)
-                .appFont(.footnote, weight: .semibold, color: .indigo600)
+                .appFont(.footnote, weight: .semibold, color: .teal600)
                 .padding(Constants.textPadding)
-                .background(Color.indigo100, in: .capsule)
+                .background(Color.teal100, in: .capsule)
 
             Spacer()
 
             HStack(spacing: Constants.indicatorSpacing) {
                 ForEach(generations.indices, id: \.self) { index in
                     Circle()
-                        .fill(currentIndex == index ? Color.indigo500 : Color.indigo200)
+                        .fill(currentIndex == index ? Color.teal500 : Color.teal200)
                         .frame(width: Constants.indicatorDiameter, height: Constants.indicatorDiameter)
                         .onTapGesture {
                             withAnimation {

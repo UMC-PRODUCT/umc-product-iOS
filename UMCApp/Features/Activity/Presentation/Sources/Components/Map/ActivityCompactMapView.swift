@@ -165,7 +165,7 @@ private struct LocationVerificationLabel: View {
             Text(isUserInsideGeofence
                  ? LocationStatusText.verified
                  : LocationStatusText.unverified)
-                .appFont(.caption1, color: isUserInsideGeofence ? Color.indigo500 : Color.red500)
+                .appFont(.caption1, color: isUserInsideGeofence ? Color.teal500 : Color.red500)
         }
     }
 

@@ -164,7 +164,7 @@ public struct SignUpByIdPwView: View {
                 Button(Constants.emailAvailabilityRetryTitle) {
                     viewModel.retryEmailAvailabilityCheck()
                 }
-                .appFont(.footnote, weight: .semibold, color: .indigo500)
+                .appFont(.footnote, weight: .semibold, color: .teal500)
             }
         }
     }
@@ -186,7 +186,7 @@ public struct SignUpByIdPwView: View {
             .padding(.vertical, DefaultConstant.defaultBtnPadding)
         }
         .buttonStyle(.glassProminent)
-        .tint(.indigo500)
+        .tint(.teal500)
         .disabled(!viewModel.canSubmit || viewModel.registerState.isLoading)
         .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }

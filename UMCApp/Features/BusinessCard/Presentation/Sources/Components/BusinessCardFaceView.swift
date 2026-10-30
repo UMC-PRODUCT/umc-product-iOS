@@ -16,7 +16,7 @@ import UIKit
 ///
 /// #1347 에서 「라이선스 카드」 어법으로 갈아탔다. 레퍼런스(RIFE LICENSE)에서 가져온 것은
 /// **레이아웃과 타이포뿐**이다 — 타이틀 · 이름 아래 파트 · 하단 발급 행 ·
-/// 라틴 모노스페이스. 배경은 기존 브랜드 그라디언트(`indigo400 → indigo500`)를 그대로
+/// 라틴 모노스페이스. 배경은 기존 브랜드 그라디언트(`teal400 → teal500`)를 그대로
 /// 둔다. 다크 단색으로 갈아엎으면 라이트/다크(#1234)·대비(#1235) 기준을 처음부터 다시 잡아야
 /// 하는데, 카드가 얻는 건 톤 하나뿐이라 값이 맞지 않는다.
 ///
@@ -171,13 +171,13 @@ public struct BusinessCardFaceView: View {
     ///
     /// 시안 실측은 `linear-gradient(112.185deg, rgba(114,142,253,0.8), #5468FC)` ·
     /// 테두리 `#E5E8ED` 였고 그동안 `BusinessCardPalette` 가 그 raw 값을 들고 있었다.
-    /// 같은 화면의 버튼이 `Color.indigo500`(#4869F0)을 쓰는 바람에 파랑이 둘로
+    /// 같은 화면의 버튼이 코어 브랜드 토큰(당시 `indigo500`)을 쓰는 바람에 파랑이 둘로
     /// 갈렸고, raw 값에는 다크 모드 대응이 없었다. 토큰은 Asset Catalog 라 모드별
     /// 값을 스스로 들고 있으므로 명함도 토큰으로 수렴한다.
-    /// (실측과의 차: 시작색 #728EFD→#6683FF · 끝색 #5468FC→#4869F0 · 테두리 #E5E8ED→#E7E8EA)
+    /// 브랜드 팔레트가 indigo → teal 로 바뀌면서(#1585) 그라디언트도 `teal400 → teal500` 을 따른다.
     private enum Palette {
-        static let gradientStart = Color.indigo400
-        static let gradientEnd = Color.indigo500
+        static let gradientStart = Color.teal400
+        static let gradientEnd = Color.teal500
         static let qrBorder = Color.grey200
         /// 회전 그림자. 토큰(`grey900`)이 아니라 검정인 이유는 같은 피처의 `CardQRView`
         /// 와 맞추기 위해서다 — 바탕을 눌러 카드를 띄우는 역할만 한다.
@@ -515,9 +515,9 @@ public struct BusinessCardFaceView: View {
                 Text(title)
                     .appFont(.subheadline, weight: .semibold)
             }
-            // 시안 변수 main-color/indigo500 = 코어 토큰. 카드 그라디언트도 같은
+            // 시안 변수 main-color/teal500 = 코어 토큰. 카드 그라디언트도 같은
             // 토큰으로 수렴해(#1237) 이제 한 화면에 파랑이 하나뿐이다.
-            .foregroundStyle(Color.indigo500)
+            .foregroundStyle(Color.teal500)
             .frame(maxWidth: .infinity)
             .frame(minHeight: Metrics.buttonMinHeight)
             .background(Color.white, in: RoundedRectangle(cornerRadius: Metrics.buttonRadius))

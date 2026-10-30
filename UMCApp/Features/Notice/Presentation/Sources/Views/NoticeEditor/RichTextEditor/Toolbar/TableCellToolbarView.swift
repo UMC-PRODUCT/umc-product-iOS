@@ -25,7 +25,7 @@ public struct TableCellToolbarView: View {
         static let iconSize: CGFloat = 16
         static let horizontalPadding: CGFloat = 8
         static let labelSpacing: CGFloat = 6
-        static let activeColor: Color = .indigo500
+        static let activeColor: Color = .teal500
         static let inactiveColor: Color = .grey700
     }
 

@@ -152,7 +152,7 @@ struct AIConfirmationOverlay: View {
         } else if progress >= 0.80 {
             return .orange
         } else {
-            return .indigo500
+            return .teal500
         }
     }
 }

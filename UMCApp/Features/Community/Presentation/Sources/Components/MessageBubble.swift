@@ -281,14 +281,14 @@ struct MessageBubble: View {
             Text(reaction.emoji)
                 .appFont(.caption1)
             Text(reaction.count)
-                .appFont(.caption2, color: reaction.reactedByMe ? .indigo600 : .grey600)
+                .appFont(.caption2, color: reaction.reactedByMe ? .teal600 : .grey600)
         }
         .padding(.horizontal, DefaultSpacing.spacing8)
         .padding(.vertical, DefaultSpacing.spacing4)
-        .background(reaction.reactedByMe ? Color.indigo100 : Color.grey100, in: .capsule)
+        .background(reaction.reactedByMe ? Color.teal100 : Color.grey100, in: .capsule)
         .overlay {
             Capsule()
-                .strokeBorder(reaction.reactedByMe ? Color.indigo500 : Color.clear)
+                .strokeBorder(reaction.reactedByMe ? Color.teal500 : Color.clear)
         }
         // 칩 자체는 캡슐 크기로 두고 탭 영역만 44pt 로 넓힌다. 시각적으로 키우면 말풍선보다
         // 반응이 더 커 보인다.
@@ -341,7 +341,7 @@ struct MessageBubble: View {
 
     private var bubbleBackground: Color {
         if message.isDeleted { return .grey100 }
-        return isMine ? .indigo500 : .grey100
+        return isMine ? .teal500 : .grey100
     }
 
     private var bubbleForeground: Color {
@@ -349,15 +349,15 @@ struct MessageBubble: View {
         return isMine ? .white : .grey900
     }
 
-    /// 링크 색. 발신 버블은 배경이 인디고라 인디고 링크가 묻힌다 — 밑줄과 함께 흰색으로 뺀다.
+    /// 링크 색. 발신 버블은 배경이 틸라 틸 링크가 묻힌다 — 밑줄과 함께 흰색으로 뺀다.
     /// 멘션도 같은 이유로 같은 색을 쓴다.
     private var linkTint: Color {
-        isMine ? .white : .indigo600
+        isMine ? .white : .teal600
     }
 
-    /// 인용 블록 3색. 발신 버블은 배경이 인디고라 수신 버블과 같은 색을 쓰면 통째로 묻힌다.
+    /// 인용 블록 3색. 발신 버블은 배경이 틸라 수신 버블과 같은 색을 쓰면 통째로 묻힌다.
     private var quoteAccent: Color {
-        isMine ? .indigo100 : .indigo500
+        isMine ? .teal100 : .teal500
     }
 
     private var quoteForeground: Color {
@@ -365,7 +365,7 @@ struct MessageBubble: View {
     }
 
     private var quoteBackground: Color {
-        isMine ? .indigo600 : .grey200
+        isMine ? .teal600 : .grey200
     }
 
     private var timeText: String {
