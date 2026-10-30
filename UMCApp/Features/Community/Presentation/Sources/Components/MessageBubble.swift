@@ -67,7 +67,7 @@ struct MessageBubble: View {
     // MARK: - Body
 
     var body: some View {
-        if message.type == .system {
+        if message.type == .system && !message.isSenderBlocked {
             systemMessage
         } else {
             HStack(alignment: .bottom, spacing: DefaultSpacing.spacing8) {
@@ -394,7 +394,7 @@ struct MessageBubble: View {
 
     /// 카드로 그릴 내부 링크. 같은 링크를 여러 번 붙여 보낸 메시지에 카드를 겹쳐 세우지 않는다.
     private var cardLinks: [MessageLink] {
-        guard !message.isDeleted else { return [] }
+        guard !message.isDeleted, !message.isSenderBlocked else { return [] }
 
         var seen: Set<MessageLink> = []
         return MessageLink.segments(in: message.content).compactMap { segment in

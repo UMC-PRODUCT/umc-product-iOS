@@ -849,6 +849,9 @@ struct CommunityThreadEditUseCaseTests {
 private struct FakeFailure: Error, Equatable {}
 
 private actor FakeThreadRepository: CommunityThreadRepositoryProtocol {
+    func fetchBlockedMemberIds() async throws -> Set<String> { [] }
+    func setMemberBlocked(memberId: String, isBlocked: Bool) async throws -> Bool { isBlocked }
+
 
     struct FetchThreadsCall: Equatable {
         let filter: String

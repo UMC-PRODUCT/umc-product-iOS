@@ -74,6 +74,7 @@ extension DIContainer {
     // MARK: - UseCase
 
     private func registerCommunityUseCases() {
+        register(CommunityMemberBlockState.self) { CommunityMemberBlockState() }
         register(CommunityThreadListUseCaseProtocol.self) {
             CommunityThreadListUseCase(
                 repository: self.resolve(CommunityThreadRepositoryProtocol.self)

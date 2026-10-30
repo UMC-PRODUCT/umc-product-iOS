@@ -33,6 +33,7 @@ struct ThreadListRow: View {
     // MARK: - Property
 
     let thread: CommunityThread
+    var hidesPreview = false
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -156,7 +157,7 @@ struct ThreadListRow: View {
     }
 
     private var previewText: String {
-        thread.lastMessage?.preview ?? Constants.emptyPreview
+        hidesPreview ? "메시지 미리보기를 숨겼어요" : (thread.lastMessage?.preview ?? Constants.emptyPreview)
     }
 }
 

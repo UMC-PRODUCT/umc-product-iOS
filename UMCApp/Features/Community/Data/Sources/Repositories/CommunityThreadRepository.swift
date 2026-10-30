@@ -38,6 +38,17 @@ public struct CommunityThreadRepository: CommunityThreadRepositoryProtocol, @unc
 
     // MARK: - Function
 
+    public func fetchBlockedMemberIds() async throws -> Set<String> {
+        Set(try await payload(BlockedMemberListDTO.self, from: .getBlockedMembers).members.map(\.memberId))
+    }
+
+    public func setMemberBlocked(memberId: String, isBlocked: Bool) async throws -> Bool {
+        try await payload(
+            MemberBlockResultDTO.self,
+            from: .setMemberBlocked(memberId: memberId, isBlocked: isBlocked)
+        ).isBlocked
+    }
+
     public func fetchThreads(
         filter: String,
         query: String?,

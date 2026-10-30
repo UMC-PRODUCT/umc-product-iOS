@@ -31,6 +31,7 @@ public final class CommunityThreadListViewModel {
     public private(set) var recentSearches: [String] = []
 
     public var alertPrompt: AlertPrompt?
+    public let blockState: CommunityMemberBlockState
 
     public var filter: CommunityThreadFilter = .all {
         didSet {
@@ -73,8 +74,10 @@ public final class CommunityThreadListViewModel {
         roomUseCase: CommunityThreadRoomUseCaseProtocol?,
         errorHandler: ErrorHandler,
         currentMemberId: String? = AppStorageKey.memberIdString(),
-        recentSearchStore: RecentThreadSearchStore = RecentThreadSearchStore()
+        recentSearchStore: RecentThreadSearchStore = RecentThreadSearchStore(),
+        blockState: CommunityMemberBlockState = CommunityMemberBlockState()
     ) {
+        self.blockState = blockState
         self.listUseCase = listUseCase
         self.roomUseCase = roomUseCase
         self.errorHandler = errorHandler
@@ -103,6 +106,11 @@ public final class CommunityThreadListViewModel {
         let requestedQuery = trimmedQuery
 
         do {
+            if let roomUseCase {
+                let revision = blockState.revision
+                let blocks = try await roomUseCase.fetchBlockedMemberIds()
+                blockState.replace(blocks, ifRevision: revision)
+            }
             let page = try await listUseCase.loadThreads(
                 filter: requestedFilter,
                 query: requestedQuery,
@@ -129,6 +137,11 @@ public final class CommunityThreadListViewModel {
         let requestedQuery = trimmedQuery
 
         do {
+            if let roomUseCase {
+                let revision = blockState.revision
+                let blocks = try await roomUseCase.fetchBlockedMemberIds()
+                blockState.replace(blocks, ifRevision: revision)
+            }
             let page = try await listUseCase.loadThreads(
                 filter: requestedFilter,
                 query: requestedQuery,
@@ -213,6 +226,11 @@ public final class CommunityThreadListViewModel {
         defer { isLoadingNextPage = false }
 
         do {
+            if let roomUseCase {
+                let revision = blockState.revision
+                let blocks = try await roomUseCase.fetchBlockedMemberIds()
+                blockState.replace(blocks, ifRevision: revision)
+            }
             let page = try await listUseCase.loadThreads(
                 filter: requestedFilter,
                 query: requestedQuery,

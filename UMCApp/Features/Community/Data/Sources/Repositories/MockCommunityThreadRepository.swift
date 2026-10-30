@@ -13,6 +13,9 @@ import CommunityDomain
 ///
 /// 릴리스 빌드에는 포함되지 않는다(핵심 규칙 #5).
 public struct MockCommunityThreadRepository: CommunityThreadRepositoryProtocol {
+    public func fetchBlockedMemberIds() async throws -> Set<String> { [] }
+    public func setMemberBlocked(memberId: String, isBlocked: Bool) async throws -> Bool { isBlocked }
+
 
     // MARK: - Init
 

@@ -90,13 +90,14 @@ public struct ThreadMessage: Identifiable, Hashable, Sendable {
     public let senderId: String
     public let senderName: String
     public let type: ThreadMessageType
-    public let files: [ThreadMessageFile]
-    public let mentions: [ThreadMessageMention]
-    public let replyTo: ThreadMessageReply?
+    public var files: [ThreadMessageFile]
+    public var mentions: [ThreadMessageMention]
+    public var replyTo: ThreadMessageReply?
     public let clientMessageId: String?
     public let createdAt: Date
     /// 아래 4개는 `message.updated`/`message.deleted`/`reaction.changed` 와 낙관적 전송이
     /// 제자리에서 갱신하므로 `var` 다.
+    public var isSenderBlocked: Bool
     public var content: String
     public var reactions: [ThreadMessageReaction]
     public var editedAt: Date?
@@ -120,8 +121,10 @@ public struct ThreadMessage: Identifiable, Hashable, Sendable {
         createdAt: Date,
         editedAt: Date? = nil,
         deletedAt: Date? = nil,
-        deliveryState: ThreadMessageDeliveryState = .sent
+        deliveryState: ThreadMessageDeliveryState = .sent,
+        isSenderBlocked: Bool = false
     ) {
+        self.isSenderBlocked = isSenderBlocked
         self.id = id
         self.threadId = threadId
         self.senderId = senderId
@@ -147,6 +150,22 @@ public struct ThreadMessage: Identifiable, Hashable, Sendable {
     public var isEdited: Bool { editedAt != nil }
 
     // MARK: - Function
+
+    /// 차단 메시지 원문·첨부·링크·반응이 화면 및 요약으로 흘러가지 않게 제거한다.
+    public func redactedForBlocking(hideReply: Bool = false) -> ThreadMessage {
+        var copy = self
+        if isSenderBlocked {
+            copy.content = "차단한 사용자의 메시지예요."
+            copy.files = []
+            copy.mentions = []
+            copy.reactions = []
+            copy.replyTo = nil
+        } else if hideReply {
+            // 서버 인용에는 작성자 ID가 없어 페이지 밖 원본의 차단 여부를 검증할 수 없다.
+            copy.replyTo = nil
+        }
+        return copy
+    }
 
     /// 낙관적 전송의 상태 전이용 복사본 (Task 16 `insertOrReplace`).
     public func with(deliveryState: ThreadMessageDeliveryState) -> ThreadMessage {

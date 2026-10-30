@@ -33,7 +33,12 @@ public final class CommunityThreadRoomViewModel {
     public private(set) var header: Loadable<CommunityThread> = .idle
     /// 표시 순서(오래된 것 → 최신). 서버는 최신순으로 주므로 담을 때 뒤집는다.
     /// `+Edit`·`+Image` 가 낙관적 수정·버블을 찍으므로 setter 를 모듈 내부로 연다.
-    public internal(set) var messages: [ThreadMessage] = []
+    private var storedMessages: [ThreadMessage] = []
+    public internal(set) var messages: [ThreadMessage] {
+        get { storedMessages.map(blockState.displayMessage) }
+        set { storedMessages = newValue }
+    }
+    public let blockState: CommunityMemberBlockState
     public private(set) var isLoadingOlder = false
 
     /// 최하단을 벗어나 있는 동안 도착한 타인 메시지 수 (스펙 #35).
@@ -65,7 +70,12 @@ public final class CommunityThreadRoomViewModel {
     /// 요약 시트의 상태. 로딩·결과·실패를 한 값으로 모아 시트가 분기 하나만 보게 한다.
     ///
     /// 갱신은 `CommunityThreadRoomViewModel+Summary` 가 맡아 setter 를 모듈 내부로 연다.
-    public internal(set) var summary: Loadable<ThreadSummary> = .idle
+    private var storedSummary: Loadable<ThreadSummary> = .idle
+    private var summaryRevision = 0
+    public internal(set) var summary: Loadable<ThreadSummary> {
+        get { summaryRevision == blockState.revision ? storedSummary : .idle }
+        set { storedSummary = newValue; summaryRevision = blockState.revision }
+    }
     public var isSummarySheetPresented = false
     /// 방에 들어온 순간의 미읽음 수.
     ///
@@ -87,7 +97,12 @@ public final class CommunityThreadRoomViewModel {
     /// 그리는 코드를 한 벌로 유지할 수 있다.
     ///
     /// 갱신은 `CommunityThreadRoomViewModel+Mention` 이 맡는다.
-    public internal(set) var replyTarget: ThreadMessageReply?
+    private var storedReplyTarget: ThreadMessageReply?
+    private var replyTargetRevision = 0
+    public internal(set) var replyTarget: ThreadMessageReply? {
+        get { replyTargetRevision == blockState.revision ? storedReplyTarget : nil }
+        set { storedReplyTarget = newValue; replyTargetRevision = blockState.revision }
+    }
     /// `@` 자동완성 후보. 비어 있으면 오버레이가 뜨지 않는다.
     public internal(set) var mentionCandidates: [ThreadMember] = []
     /// 인용 블록 탭으로 이동할 원본 messageId. View 가 스크롤한 뒤 `nil` 로 비운다.
@@ -106,7 +121,12 @@ public final class CommunityThreadRoomViewModel {
     /// 신고 사유 시트의 대상. `nil` 이면 시트가 닫힌 상태다.
     ///
     /// 갱신은 `CommunityThreadRoomViewModel+Report` 가 맡는다.
-    public internal(set) var reportTarget: ThreadMessage?
+    private var storedReportTarget: ThreadMessage?
+    private var reportTargetRevision = 0
+    public internal(set) var reportTarget: ThreadMessage? {
+        get { reportTargetRevision == blockState.revision ? storedReportTarget : nil }
+        set { storedReportTarget = newValue; reportTargetRevision = blockState.revision }
+    }
     /// 접수 요청 상태. 실패는 시트 안 인라인으로 보여 주므로 `Loadable` 이다.
     public internal(set) var reportState: Loadable<ThreadMessageReportReason> = .idle
     /// 접수 완료·중복 안내를 띄우는 잠깐짜리 문구. 쿨다운 안내와 같은 자리에 그린다.
@@ -165,8 +185,10 @@ public final class CommunityThreadRoomViewModel {
         errorHandler: ErrorHandler,
         summarizer: ThreadSummarizing,
         currentMemberId: String? = AppStorageKey.memberIdString(),
-        sendTimeout: Duration = .seconds(15)
+        sendTimeout: Duration = .seconds(15),
+        blockState: CommunityMemberBlockState = CommunityMemberBlockState()
     ) {
+        self.blockState = blockState
         self.threadId = threadId
         self.useCase = useCase
         self.listUseCase = listUseCase
@@ -251,10 +273,13 @@ public final class CommunityThreadRoomViewModel {
         let priorIds = Set(messages.map(\.id))
 
         async let threadRequest = useCase.loadThread(threadId: threadId)
+        let blockRevision = blockState.revision
+        async let blocksRequest = useCase.fetchBlockedMemberIds()
         async let pageRequest = useCase.loadMessages(threadId: threadId, before: nil)
 
         do {
-            let (thread, page) = try await (threadRequest, pageRequest)
+            let (thread, page, blocks) = try await (threadRequest, pageRequest, blocksRequest)
+            blockState.replace(blocks, ifRevision: blockRevision)
             // 비참여자(`isJoined == false`)도 막지 않는다 — 서버가 열람을 전체 공개로 바꿨다
             // (#1432). 리스트 탭·링크 카드·`umc://thread/{id}` 모두 이 화면으로 모이고, 쓰기는
             // `canWrite` 가 한곳에서 잠근다.
@@ -372,7 +397,8 @@ public final class CommunityThreadRoomViewModel {
         guard canWrite,
               let index = messages.firstIndex(where: { $0.id == message.id }),
               messages[index].deliveryState == .sent,
-              !messages[index].isDeleted else { return }
+              !messages[index].isDeleted,
+              !messages[index].isSenderBlocked else { return }
 
         let messageId = messages[index].id
         let snapshot = messages[index].reactions
@@ -422,9 +448,55 @@ public final class CommunityThreadRoomViewModel {
         )
     }
 
+    public func canBlock(_ message: ThreadMessage) -> Bool {
+        !isMine(message) && !message.senderId.isEmpty && message.deliveryState == .sent
+    }
+
+    public func requestBlock(_ message: ThreadMessage) {
+        guard canBlock(message), !blockState.isUpdating else { return }
+        let isBlocked = !blockState.displayMessage(message).isSenderBlocked
+        alertPrompt = AlertPrompt(
+            title: isBlocked ? "사용자 차단" : "차단 해제",
+            message: isBlocked
+                ? "이 사용자의 메시지를 숨길까요? 차단은 상대방에게 알려지지 않아요."
+                : "이 사용자의 메시지를 다시 표시할까요?",
+            positiveBtnTitle: isBlocked ? "차단" : "차단 해제",
+            positiveBtnAction: { [weak self] in
+                Task { await self?.setMemberBlocked(message, isBlocked: isBlocked) }
+            },
+            negativeBtnTitle: "취소",
+            isPositiveBtnDestructive: isBlocked
+        )
+    }
+
+    func setMemberBlocked(_ message: ThreadMessage, isBlocked: Bool) async {
+        guard canBlock(message), !blockState.isUpdating else { return }
+        blockState.isUpdating = true
+        defer { blockState.isUpdating = false }
+        do {
+            let result = try await useCase.setMemberBlocked(
+                memberId: message.senderId, isBlocked: isBlocked
+            )
+            blockState.set(memberId: message.senderId, isBlocked: result)
+            // 이미 열린 인용·신고·요약도 원문을 보유하므로 함께 폐기한다.
+            replyTarget = nil
+            reportTarget = nil
+            summary = .idle
+            isSummarySheetPresented = false
+            storedMessages = storedMessages.map(blockState.displayMessage)
+            // 해제 후에는 보관한 원문을 복원하지 않고 서버에서 다시 읽는다.
+            if !result { await load() }
+        } catch {
+            errorHandler.handle(error, context: ErrorContext(
+                feature: "Community", action: "setMemberBlocked"
+            ))
+        }
+    }
+
     /// 본문 복사. 클립보드에 닿는 지점을 하나로 묶어 둔다 — View 마다 흩어지면 톰스톤 문구가
     /// 복사되는 것 같은 차이가 생긴다.
     public func copyContent(_ message: ThreadMessage) {
+        guard !blockState.displayMessage(message).isSenderBlocked else { return }
         UIPasteboard.general.string = message.content
     }
 
@@ -643,6 +715,10 @@ public final class CommunityThreadRoomViewModel {
     public func backfill() async {
         // 강퇴·스레드 삭제는 종료성 이벤트라 브로커가 재생하지 않는다. 끊긴 사이에 일어났다면
         // 여기서 확정하지 않는 한 영원히 모른 채 이미 쫓겨난 방에 남는다 (스펙 §6.5).
+        let blockRevision = blockState.revision
+        if let blocks = try? await useCase.fetchBlockedMemberIds() {
+            blockState.replace(blocks, ifRevision: blockRevision)
+        }
         await confirmMembership()
         guard ejectionNotice == nil else { return }
 

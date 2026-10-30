@@ -111,7 +111,10 @@ struct CommunityThreadRoomView: View {
                             deliveryState: message.deliveryState,
                             canReport: viewModel.canReport(message),
                             canDelete: viewModel.canDelete(message),
-                            canEdit: viewModel.canEdit(message)
+                            canEdit: viewModel.canEdit(message),
+                            canBlock: viewModel.canBlock(message),
+                            isBlocked: message.isSenderBlocked,
+                            canInteract: viewModel.canWrite
                         ),
                         onReact: { emoji in
                             dismissActions()
@@ -233,7 +236,7 @@ struct CommunityThreadRoomView: View {
             foregroundThreadStore?.hide(owner: visibilityOwner)
         }
         .onChange(of: isThreadVisible) { _, _ in updateForegroundThread() }
-        .task { await viewModel.load() }
+        .task(id: viewModel.blockState.revision) { await viewModel.load() }
         .task { await viewModel.observeRealtime() }
         .alertPrompt(item: $viewModel.alertPrompt)
         .sheet(isPresented: $viewModel.isSummarySheetPresented) {
@@ -639,7 +642,7 @@ struct CommunityThreadRoomView: View {
 
     /// 오버레이의 반응 바·답장·신고·삭제는 모두 쓰기라 비참여자에게는 띄우지 않는다 (#1432).
     private func showActions(for message: ThreadMessage) {
-        guard viewModel.canWrite else { return }
+        guard viewModel.canWrite || viewModel.canBlock(message) else { return }
         withAnimation(reduceMotion ? nil : .snappy) { actionTargetID = message.id }
     }
 
@@ -663,6 +666,8 @@ struct CommunityThreadRoomView: View {
             viewModel.requestReport(message)
         case .delete:
             viewModel.requestDelete(message)
+        case .block, .unblock:
+            viewModel.requestBlock(message)
         }
     }
 

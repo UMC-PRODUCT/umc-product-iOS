@@ -23,7 +23,7 @@ extension CommunityThreadRoomViewModel {
     /// 답장 메뉴를 띄울지. 아직 서버가 모르는 메시지(`.sending`/`.failed`)의 id 는 내가 만든
     /// UUID 라 `replyToId` 로 보내면 서버가 거절한다 — `canDelete`·`canReport` 와 같은 이유다.
     public func canReply(_ message: ThreadMessage) -> Bool {
-        !message.isDeleted && message.deliveryState == .sent && message.type != .system
+        !message.isDeleted && !blockState.displayMessage(message).isSenderBlocked && message.deliveryState == .sent && message.type != .system
     }
 
     /// 컨텍스트 메뉴의 "답장" 진입점 (#1139 롱프레스 메뉴 → 시안 #22 인용 칩).

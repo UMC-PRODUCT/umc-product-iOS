@@ -9,6 +9,9 @@ import Foundation
 import UMCFoundation
 
 public protocol CommunityThreadRoomUseCaseProtocol: Sendable {
+    func fetchBlockedMemberIds() async throws -> Set<String>
+    func setMemberBlocked(memberId: String, isBlocked: Bool) async throws -> Bool
+
     func loadThread(threadId: String) async throws -> CommunityThread
     func loadMessages(threadId: String, before: String?) async throws -> ThreadMessagePage
 
@@ -114,6 +117,14 @@ public struct CommunityThreadRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     }
 
     // MARK: - Function
+
+    public func fetchBlockedMemberIds() async throws -> Set<String> {
+        try await repository.fetchBlockedMemberIds()
+    }
+
+    public func setMemberBlocked(memberId: String, isBlocked: Bool) async throws -> Bool {
+        try await repository.setMemberBlocked(memberId: memberId, isBlocked: isBlocked)
+    }
 
     public func loadThread(threadId: String) async throws -> CommunityThread {
         try await repository.fetchThread(threadId: threadId)
