@@ -7,14 +7,47 @@
 
 import SwiftUI
 import ActivityDomain
+import CoreDI
 import CoreDesignSystem
 import CoreUIComponents
 import UMCFoundation
 
-/// Challenger 모드의 스터디/활동 섹션
+/// 마이페이지가 여는 개인 커리큘럼 목적지.
+public enum StudyDestination: Hashable, Sendable {
+    case curriculum
+}
+
+/// 기존 커리큘럼 화면을 상위 탭의 내비게이션 스택에서 재사용하는 진입점.
+public struct MyStudyFeatureView: View {
+
+    // MARK: - Property
+
+    @Environment(\.di) private var di
+
+    // MARK: - Init
+
+    public init() {}
+
+    // MARK: - Body
+
+    public var body: some View {
+        ChallengerStudyView(
+            viewModel: ChallengerStudyViewModel(
+                fetchCurriculumOverviewUseCase: di.resolve(
+                    FetchCurriculumOverviewUseCaseProtocol.self
+                )
+            )
+        )
+        .navigationTitle("나의 스터디")
+        .navigationBarTitleDisplayMode(.inline)
+        .umcDefaultBackground()
+    }
+}
+
+/// 개인 커리큘럼 화면
 ///
 /// 제목(`curriculumState`)과 주차별 미션(`missionsState`) 두 Loadable 을 조립해
-/// 커리큘럼 화면을 구성합니다. ViewModel 은 조립부(탭 라우터, #996)에서 주입받습니다.
+/// 커리큘럼 화면을 구성합니다. ViewModel은 ``MyStudyFeatureView``에서 주입받습니다.
 struct ChallengerStudyView: View {
 
     // MARK: - Property

@@ -9,7 +9,7 @@ import CoreDomain
 import CoreUIComponents
 import SwiftUI
 
-/// 「나의 활동 ・프로젝트」가 여는 활동 이력 목록 (MP-F11).
+/// 「활동 이력」가 여는 활동 이력 목록 (MP-F11).
 ///
 /// 읽기 전용이다 — 기록 추가는 「내 정보 편집」(``MyPageProfileView``)이 소유한다. ``ActiveLogs``는
 /// `onAddTap`이 `nil`이면 추가 버튼을 그리지 않으므로 그대로 재사용한다.

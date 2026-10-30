@@ -10,8 +10,8 @@ import Foundation
 
 /// Activity 탭 루트가 노출하는 섹션
 ///
-/// 챌린저/운영진 두 모드가 각각 3개 섹션을 갖고, 같은 자리(출석·스터디·구성원)의 섹션이
-/// 서로 대응한다. 모드가 바뀌면 ``mapped(to:)`` 로 보고 있던 자리를 유지한다.
+/// 챌린저는 출석·구성원, 운영진은 출석·스터디·멤버 관리 섹션을 제공한다.
+/// 개인 커리큘럼은 마이페이지에서 열며, 관리 모드를 벗어나면 출석으로 돌아간다.
 ///
 /// - Note: 표시 문자열은 ``title`` 로 노출한다. 레거시는 한글 문자열을 `rawValue` 로 썼지만,
 ///   `rawValue` 는 식별자(저장·비교)의 자리이지 화면 문구의 자리가 아니라 분리했다.
@@ -20,7 +20,6 @@ enum ActivitySection: String, Identifiable, Hashable, CaseIterable {
     // MARK: - Challenger
 
     case attendanceCheck
-    case studyActivity
     case members
 
     // MARK: - Admin
@@ -37,7 +36,6 @@ enum ActivitySection: String, Identifiable, Hashable, CaseIterable {
     var title: String {
         switch self {
         case .attendanceCheck: "출석 체크"
-        case .studyActivity: "스터디/활동"
         case .members: "구성원"
         case .attendanceManage: "출석 관리"
         case .studyManage: "스터디 관리"
@@ -49,7 +47,7 @@ enum ActivitySection: String, Identifiable, Hashable, CaseIterable {
     var icon: String {
         switch self {
         case .attendanceCheck, .attendanceManage: "checkmark.circle"
-        case .studyActivity, .studyManage: "book.pages"
+        case .studyManage: "book.pages"
         case .members, .memberManage: "person.3"
         }
     }
@@ -59,7 +57,7 @@ enum ActivitySection: String, Identifiable, Hashable, CaseIterable {
     /// 모드별 사용 가능한 섹션 목록 (메뉴 노출 순서)
     static func sections(for mode: ActivityMode) -> [ActivitySection] {
         switch mode {
-        case .challenger: [.attendanceCheck, .studyActivity, .members]
+        case .challenger: [.attendanceCheck, .members]
         case .admin: [.attendanceManage, .studyManage, .memberManage]
         }
     }
@@ -81,13 +79,13 @@ enum ActivitySection: String, Identifiable, Hashable, CaseIterable {
         case .challenger:
             switch self {
             case .attendanceCheck, .attendanceManage: .attendanceCheck
-            case .studyActivity, .studyManage: .studyActivity
+            case .studyManage: .attendanceCheck
             case .members, .memberManage: .members
             }
         case .admin:
             switch self {
             case .attendanceCheck, .attendanceManage: .attendanceManage
-            case .studyActivity, .studyManage: .studyManage
+            case .studyManage: .studyManage
             case .members, .memberManage: .memberManage
             }
         }
