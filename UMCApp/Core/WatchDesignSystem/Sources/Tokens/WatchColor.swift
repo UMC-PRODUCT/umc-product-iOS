@@ -51,7 +51,7 @@ public enum WatchColor {
 
     /// 진행 중/활성. 브랜드 인디고와 같은 값이지만 **의미가 다르므로 별도 이름**으로 참조한다.
     public static let statusActive  = brandPrimary
-    /// 승인 대기 — 회색 점 + 인디고 링(`WatchStatusBadge` 가 palette 렌더링으로 합성). (#B2B8BF)
+    /// 승인 대기 — 회색 점 + 인디고 링(`WatchStatusBadge` 가 palette 렌더링으로 합성). (#ADADAD)
     public static let statusPending = neutralGrey
     /// 완료. (#30D158)
     public static let statusSuccess = Color(sRGBHex: WatchColorHex.statusSuccess)
@@ -64,14 +64,14 @@ public enum WatchColor {
 
     /// 본문·강조 텍스트. (#FFFFFF)
     public static let textPrimary   = Color(sRGBHex: WatchColorHex.textPrimary)
-    /// 보조 텍스트·캡션. (#B2B8BF)
+    /// 보조 텍스트·캡션. (#ADADAD)
     public static let textSecondary = neutralGrey
     /// 비활성 컨트롤 라벨. 새 리터럴을 만들지 않고 보조 텍스트를 감쇠시킨다.
     public static let textDisabled  = neutralGrey.opacity(0.5)
 
     // MARK: - Private
 
-    /// `textSecondary` 와 `statusPending` 이 공유하는 단일 회색 리터럴. (iOS grey400 · #B2B8BF)
+    /// `textSecondary` 와 `statusPending` 이 공유하는 단일 회색 리터럴. (iOS grey400 · #ADADAD)
     private static let neutralGrey = Color(sRGBHex: WatchColorHex.neutralGrey)
 }
 
@@ -96,7 +96,7 @@ enum WatchColorHex {
     static let statusError: UInt32           = 0xFF453A
 
     static let textPrimary: UInt32           = 0xFFFFFF
-    static let neutralGrey: UInt32           = 0xB2B8BF
+    static let neutralGrey: UInt32           = 0xADADAD
 }
 
 // MARK: - Color + sRGBHex
