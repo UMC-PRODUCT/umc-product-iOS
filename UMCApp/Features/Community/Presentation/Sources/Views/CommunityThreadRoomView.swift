@@ -112,7 +112,10 @@ struct CommunityThreadRoomView: View {
                             deliveryState: message.deliveryState,
                             canReport: viewModel.canReport(message),
                             canDelete: viewModel.canDelete(message),
-                            canEdit: viewModel.canEdit(message)
+                            canEdit: viewModel.canEdit(message),
+                            canBlock: viewModel.canBlock(message),
+                            isBlocked: message.isSenderBlocked,
+                            canInteract: viewModel.canWrite
                         ),
                         onReact: { emoji in
                             dismissActions()
@@ -238,12 +241,11 @@ struct CommunityThreadRoomView: View {
         }
         .onChange(of: isThreadVisible) { _, _ in updateForegroundThread() }
         .task { await viewModel.load() }
-        .task { try? await viewModel.blockStore?.refresh() }
-        .onChange(of: viewModel.blockStore?.blockedMemberIds) { _, _ in
-            viewModel.revealedBlockedMessageIds = []
+        .onChange(of: viewModel.blockState.revision) { _, _ in
             viewModel.cancelReply()
             viewModel.dismissSummary()
             dismissActions()
+            Task { await viewModel.load() }
         }
         .sheet(item: $profileTarget) { message in
             if let store = viewModel.blockStore {
@@ -558,7 +560,7 @@ struct CommunityThreadRoomView: View {
                             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                                 Text("차단한 회원의 메시지입니다.")
                                     .appFont(.subheadline, color: .grey600)
-                                Button("메시지 보기") { viewModel.toggleBlockedMessage(message) }
+                                Button("차단 해제") { viewModel.requestBlock(message) }
                                     .frame(minHeight: Constants.minimumTapTarget)
                             }
                             .padding(DefaultSpacing.spacing12)
@@ -579,10 +581,6 @@ struct CommunityThreadRoomView: View {
                                     profileTarget = message
                                 }
                             )
-                            if viewModel.isSenderBlocked(message) {
-                                Button("메시지 숨기기") { viewModel.toggleBlockedMessage(message) }
-                                    .frame(minHeight: Constants.minimumTapTarget)
-                            }
                         }
                     }
                     .id(message.id)
@@ -680,7 +678,7 @@ struct CommunityThreadRoomView: View {
 
     /// 오버레이의 반응 바·답장·신고·삭제는 모두 쓰기라 비참여자에게는 띄우지 않는다 (#1432).
     private func showActions(for message: ThreadMessage) {
-        guard viewModel.canWrite else { return }
+        guard viewModel.canWrite || viewModel.canBlock(message) else { return }
         withAnimation(reduceMotion ? nil : .snappy) { actionTargetID = message.id }
     }
 
@@ -704,6 +702,8 @@ struct CommunityThreadRoomView: View {
             viewModel.requestReport(message)
         case .delete:
             viewModel.requestDelete(message)
+        case .block, .unblock:
+            viewModel.requestBlock(message)
         }
     }
 

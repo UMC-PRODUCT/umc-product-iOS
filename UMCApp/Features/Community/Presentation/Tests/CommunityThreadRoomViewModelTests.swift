@@ -9,6 +9,7 @@ import Foundation
 import Testing
 import UIKit
 import CommunityDomain
+import CoreDomain
 import UMCFoundation
 @testable import CommunityPresentation
 
@@ -21,6 +22,15 @@ import UMCFoundation
 /// 그건 아래 `GatedRoomUseCase` 가 맡는다.
 @MainActor
 private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
+    var blockedIds: Set<String> = []
+    var blockError: Error?
+    func fetchBlockedMemberIds() async throws -> Set<String> { blockedIds }
+    func setMemberBlocked(memberId: String, isBlocked: Bool) async throws -> Bool {
+        if let blockError { throw blockError }
+        if isBlocked { blockedIds.insert(memberId) } else { blockedIds.remove(memberId) }
+        return isBlocked
+    }
+
 
     struct ReactionCall: Equatable {
         let messageId: String
@@ -176,6 +186,9 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
 /// `@MainActor` 대역은 VM 과 같은 격리라 `await` 에서 hop 이 없어 전송 도중 다른 코드가 끼어드는
 /// 순서를 만들 수 없다. 경합 계약을 잠그려면 실제로 격리를 넘어야 한다 (Data 레이어 선례와 동일).
 private actor GatedRoomUseCase: CommunityThreadRoomUseCaseProtocol {
+    func fetchBlockedMemberIds() async throws -> Set<String> { [] }
+    func setMemberBlocked(memberId: String, isBlocked: Bool) async throws -> Bool { isBlocked }
+
 
     private var sendGate: CheckedContinuation<Void, Never>?
     private var arrivalWaiter: CheckedContinuation<Void, Never>?
@@ -186,19 +199,23 @@ private actor GatedRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     private var loadWaiter: CheckedContinuation<Void, Never>?
     private var hasEnteredLoad = false
     private var gatesLoad = false
+    private(set) var loadCount = 0
+    private var loadedMessages: [ThreadMessage] = []
 
     func loadThread(threadId: String) async throws -> CommunityThread { makeThread() }
 
     func loadMessages(threadId: String, before: String?) async throws -> ThreadMessagePage {
+        loadCount += 1
+        let snapshot = loadedMessages
         guard gatesLoad else {
-            return ThreadMessagePage(messages: [], hasMore: false, nextBefore: nil)
+            return ThreadMessagePage(messages: snapshot, hasMore: false, nextBefore: nil)
         }
         hasEnteredLoad = true
         loadWaiter?.resume()
         loadWaiter = nil
 
         await withCheckedContinuation { loadGate = $0 }
-        return ThreadMessagePage(messages: [], hasMore: false, nextBefore: nil)
+        return ThreadMessagePage(messages: snapshot, hasMore: false, nextBefore: nil)
     }
 
     func loadMembers(threadId: String) async throws -> [ThreadMember] { [] }
@@ -271,7 +288,10 @@ private actor GatedRoomUseCase: CommunityThreadRoomUseCaseProtocol {
         await withCheckedContinuation { loadWaiter = $0 }
     }
 
+    func setLoadedMessages(_ messages: [ThreadMessage]) { loadedMessages = messages }
+
     func releaseLoad() {
+        gatesLoad = false
         loadGate?.resume()
         loadGate = nil
     }
@@ -461,8 +481,8 @@ private func makeMember(
 @Suite("CommunityThreadRoomViewModel")
 @MainActor
 struct CommunityThreadRoomViewModelTests {
-    @Test("차단 메시지는 각각 독립적으로 펼치고 다시 숨긴다")
-    func blockedMessagesRevealIndependently() {
+    @Test("차단 메시지는 해제 전까지 숨긴다")
+    func blockedMessagesStayHidden() {
         let viewModel = makeViewModel(StubRoomUseCase())
         var first = makeMessage(id: "blocked1", senderId: "other")
         first.isSenderBlocked = true
@@ -470,11 +490,40 @@ struct CommunityThreadRoomViewModelTests {
         second.isSenderBlocked = true
         #expect(viewModel.isMessageHidden(first))
         #expect(viewModel.isMessageHidden(second))
-        viewModel.toggleBlockedMessage(first)
-        #expect(!viewModel.isMessageHidden(first))
-        #expect(viewModel.isMessageHidden(second))
-        viewModel.toggleBlockedMessage(first)
-        #expect(viewModel.isMessageHidden(first))
+    }
+
+    @Test("프로필과 메시지 메뉴는 같은 차단 상태로 원문과 보유 요약을 보호한다")
+    func profileAndMessageMenuShareBlockingState() async throws {
+        let store = MemberBlockStore(
+            repository: SharedBlockRepositoryStub(), currentMemberId: "9"
+        )
+        let state = CommunityMemberBlockState(store: store)
+        let useCase = StubRoomUseCase()
+        let message = makeMessage(id: "10", content: "숨길 본문", senderId: "8")
+        useCase.pages[nil] = ThreadMessagePage(
+            messages: [message], hasMore: false, nextBefore: nil
+        )
+        let viewModel = CommunityThreadRoomViewModel(
+            threadId: "1", useCase: useCase, listUseCase: StubThreadListUseCase(),
+            errorHandler: ErrorHandler(), summarizer: StubSummarizer(),
+            currentMemberId: "9", blockState: state
+        )
+        await viewModel.load()
+        viewModel.requestReply(message)
+        viewModel.requestReport(message)
+        viewModel.summary = .loaded(ThreadSummary(bullets: ["숨길 요약"], actionItems: []))
+        try await store.setBlocked(true, memberId: "8")
+        #expect(state.memberIds == ["8"])
+        #expect(state.hidesUnverifiedPreviews)
+        #expect(viewModel.messages.first?.content == "차단한 사용자의 메시지예요.")
+        #expect(viewModel.replyTarget == nil)
+        #expect(viewModel.reportTarget == nil)
+        #expect(viewModel.summary.isIdle)
+        #expect(!viewModel.canReply(message))
+        await viewModel.setMemberBlocked(message, isBlocked: false)
+        #expect(!store.isBlocked("8"))
+        #expect(!state.hidesUnverifiedPreviews)
+        #expect(viewModel.messages.first?.content == "숨길 본문")
     }
 
     @Test("본인 메시지는 잘못된 차단 플래그가 있어도 숨기지 않는다")
@@ -561,6 +610,73 @@ struct CommunityThreadRoomViewModelTests {
         #expect(viewModel.editTarget?.id == "10")
         #expect(viewModel.draft == "개인정보 뿌리겠다")
         #expect(viewModel.composerValidationMessage != nil)
+    }
+
+    @Test("차단 성공은 기존 메시지와 늦은 실시간 원문을 숨기고 인용을 비운다")
+    func blockingRedactsHistoryAndRealtime() async {
+        let useCase = StubRoomUseCase()
+        let message = makeMessage(id: "10", content: "숨길 본문", senderId: "8")
+        let viewModel = await makeLoadedViewModel(useCase, with: message)
+        viewModel.requestReply(message)
+        await viewModel.setMemberBlocked(message, isBlocked: true)
+        #expect(viewModel.messages.first?.isSenderBlocked == true)
+        #expect(viewModel.messages.first?.content == "차단한 사용자의 메시지예요.")
+        #expect(viewModel.replyTarget == nil)
+        viewModel.apply(.messageCreated(
+            threadId: "1", message: message, clientMessageId: nil
+        ))
+        #expect(viewModel.messages.first?.content == "차단한 사용자의 메시지예요.")
+        #expect(!viewModel.canReply(message))
+        #expect(!viewModel.canReport(message))
+        await viewModel.setMemberBlocked(message, isBlocked: false)
+        #expect(viewModel.messages.first?.content == "숨길 본문")
+    }
+
+    @Test("다른 방에서 차단이 바뀌어도 기존 인용 신고 요약은 즉시 숨긴다")
+    func sharedBlockChangeInvalidatesRetainedContent() async {
+        let useCase = StubRoomUseCase()
+        let message = makeMessage(id: "10", content: "숨길 본문", senderId: "8")
+        let viewModel = await makeLoadedViewModel(useCase, with: message)
+        viewModel.requestReply(message)
+        viewModel.requestReport(message)
+        viewModel.summary = .loaded(ThreadSummary(bullets: ["숨길 요약"], actionItems: []))
+        let revision = viewModel.blockState.revision
+        viewModel.blockState.set(memberId: "8", isBlocked: true)
+        // 먼저 시작했던 다른 목록 조회가 차단 결정을 되돌리지 않는다.
+        viewModel.blockState.replace([], ifRevision: revision)
+        #expect(viewModel.blockState.memberIds.contains("8"))
+        #expect(viewModel.replyTarget == nil)
+        #expect(viewModel.reportTarget == nil)
+        #expect(viewModel.summary.isIdle)
+        #expect(viewModel.messages.first?.isSenderBlocked == true)
+    }
+
+    @Test("차단 실패는 현재 메시지와 차단 상태를 보존한다")
+    func failedBlockPreservesMessages() async {
+        let useCase = StubRoomUseCase()
+        useCase.blockError = URLError(.notConnectedToInternet)
+        let message = makeMessage(id: "10", content: "기존 본문", senderId: "8")
+        let viewModel = await makeLoadedViewModel(useCase, with: message)
+        await viewModel.setMemberBlocked(message, isBlocked: true)
+        #expect(viewModel.messages.first?.content == "기존 본문")
+        #expect(!viewModel.blockState.memberIds.contains("8"))
+        #expect(!viewModel.blockState.isUpdating)
+    }
+
+    @Test("차단 후 완료된 이전 요약 결과는 폐기한다")
+    func blockingInvalidatesInflightSummary() async {
+        let useCase = StubRoomUseCase()
+        let summarizer = GatedSummarizer()
+        let message = makeMessage(id: "10", senderId: "8")
+        useCase.pages[nil] = ThreadMessagePage(messages: [message], hasMore: false, nextBefore: nil)
+        let viewModel = makeViewModel(useCase, summarizer: summarizer)
+        await viewModel.load()
+        let task = Task { await viewModel.requestSummary() }
+        await summarizer.waitUntilSummarizing()
+        await viewModel.setMemberBlocked(message, isBlocked: true)
+        await summarizer.release()
+        await task.value
+        #expect(viewModel.summary.isIdle)
     }
 
     // MARK: - Load
@@ -2052,6 +2168,35 @@ struct CommunityThreadRoomViewModelTests {
         #expect(viewModel.messages.map(\.id) == ["77"])
     }
 
+    @Test("차단 해제 중 이전 조회가 끝나면 최신 메시지를 다시 읽는다")
+    func unblockQueuesReloadBehindInflightHistory() async throws {
+        let useCase = GatedRoomUseCase()
+        let message = makeMessage(id: "10", content: "복원할 본문", senderId: "8")
+        var blocked = message
+        blocked.isSenderBlocked = true
+        await useCase.setLoadedMessages([blocked.redactedForBlocking()])
+        await useCase.enableLoadGate()
+        let store = MemberBlockStore(
+            repository: SharedBlockRepositoryStub(), currentMemberId: "9"
+        )
+        try await store.refresh()
+        try await store.setBlocked(true, memberId: "8")
+        let viewModel = CommunityThreadRoomViewModel(
+            threadId: "1", useCase: useCase, listUseCase: StubThreadListUseCase(),
+            errorHandler: ErrorHandler(), summarizer: StubSummarizer(),
+            currentMemberId: "9", blockState: CommunityMemberBlockState(store: store)
+        )
+        let loading = Task { await viewModel.load() }
+        await useCase.waitUntilLoading()
+        await viewModel.setMemberBlocked(message, isBlocked: false)
+        await useCase.setLoadedMessages([message])
+        await useCase.releaseLoad()
+        await loading.value
+        #expect(await useCase.loadCount == 2)
+        #expect(viewModel.messages.first?.content == "복원할 본문")
+        #expect(viewModel.messages.first?.isSenderBlocked == false)
+    }
+
     @Test("전송이 끝나기 전에 에코가 오면, 뒤늦은 전송 실패가 sent 를 되돌리지 않는다",
           .timeLimit(.minutes(1)))
     func lateSendFailureDoesNotDowngradeAckedMessage() async throws {
@@ -2463,5 +2608,16 @@ struct CommunityThreadRoomViewModelTests {
         let viewModel = makeViewModel(StubRoomUseCase())
 
         #expect(viewModel.sharePreviewTitle == "UMC 스레드")
+    }
+}
+
+private actor SharedBlockRepositoryStub: MemberBlockRepositoryProtocol {
+    private var memberIds: Set<String> = []
+
+    func fetchBlockedMemberIds() async throws -> Set<String> { memberIds }
+
+    func setBlocked(_ blocked: Bool, memberId: String) async throws -> Bool {
+        if blocked { memberIds.insert(memberId) } else { memberIds.remove(memberId) }
+        return blocked
     }
 }

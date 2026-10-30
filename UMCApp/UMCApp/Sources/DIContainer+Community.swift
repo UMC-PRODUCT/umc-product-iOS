@@ -8,6 +8,7 @@
 import CommunityData
 import CommunityDomain
 import CoreDI
+import CoreDomain
 import CoreNetwork
 import Foundation
 import NoticeDomain
@@ -74,6 +75,9 @@ extension DIContainer {
     // MARK: - UseCase
 
     private func registerCommunityUseCases() {
+        register(CommunityMemberBlockState.self) {
+            CommunityMemberBlockState(store: self.resolve(MemberBlockStore.self))
+        }
         register(CommunityThreadListUseCaseProtocol.self) {
             CommunityThreadListUseCase(
                 repository: self.resolve(CommunityThreadRepositoryProtocol.self)

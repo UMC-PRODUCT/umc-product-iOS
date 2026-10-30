@@ -57,7 +57,8 @@ struct CommunityRoutingView: View {
                     listUseCase: container.resolve(CommunityThreadListUseCaseProtocol.self),
                     errorHandler: errorHandler,
                     summarizer: container.resolve(ThreadSummarizing.self),
-                    blockStore: container.resolve(MemberBlockStore.self)
+                    blockStore: container.resolve(MemberBlockStore.self),
+                    blockState: container.resolve(CommunityMemberBlockState.self)
                 ),
                 inviteViewModel: makeInviteViewModel(threadId: threadId),
                 onThreadToggled: onThreadToggled,

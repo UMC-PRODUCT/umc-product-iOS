@@ -10,19 +10,11 @@ import CommunityDomain
 extension CommunityThreadRoomViewModel {
     func isSenderBlocked(_ message: ThreadMessage) -> Bool {
         guard !isMine(message), message.type != .system else { return false }
-        return blockStore?.isBlocked(message.senderId, serverValue: message.isSenderBlocked)
-            ?? message.isSenderBlocked
+        return blockState.displayMessage(message).isSenderBlocked
     }
 
     func isMessageHidden(_ message: ThreadMessage) -> Bool {
-        isSenderBlocked(message) && !revealedBlockedMessageIds.contains(message.id)
-    }
-
-    func toggleBlockedMessage(_ message: ThreadMessage) {
-        guard isSenderBlocked(message) else { return }
-        if !revealedBlockedMessageIds.insert(message.id).inserted {
-            revealedBlockedMessageIds.remove(message.id)
-        }
+        isSenderBlocked(message)
     }
 
     /// 다른 사용자의 답장으로 차단한 메시지 본문이 다시 노출되는 것을 막는다.

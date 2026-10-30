@@ -25,6 +25,9 @@ public protocol CommunityThreadRepositoryProtocol: Sendable {
         limit: Int
     ) async throws -> CommunityThreadPage
 
+    func fetchBlockedMemberIds() async throws -> Set<String>
+    func setMemberBlocked(memberId: String, isBlocked: Bool) async throws -> Bool
+
     func fetchThread(threadId: String) async throws -> CommunityThread
 
     /// `POST /threads`. 개설자는 서버가 자동으로 `OWNER` 로 넣는다.
