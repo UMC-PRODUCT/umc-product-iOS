@@ -55,7 +55,7 @@ public extension ScheduleIconCategory {
         case .celebration:  return .accentColor
         case .orientation:  return .orange
         case .testing:      return .gray
-        case .general:      return .indigo500
+        case .general:      return .teal500
         }
     }
 }

@@ -76,7 +76,7 @@ struct ThreadCategorySheet: View {
 
             Text(category.displayName)
                 .appFont(.body, weight: isSelected ? .semibold : .regular)
-                .foregroundStyle(isSelected ? Color.indigo500 : Color.grey900)
+                .foregroundStyle(isSelected ? Color.teal500 : Color.grey900)
 
             if category == recommended {
                 recommendationBadge
@@ -86,7 +86,7 @@ struct ThreadCategorySheet: View {
 
             if isSelected {
                 Image(systemName: "checkmark")
-                    .foregroundStyle(Color.indigo500)
+                    .foregroundStyle(Color.teal500)
             }
         }
         .frame(minHeight: Constants.rowMinHeight)

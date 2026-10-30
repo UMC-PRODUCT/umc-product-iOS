@@ -583,7 +583,7 @@ struct CommunityThreadRoomView: View {
             .padding(.horizontal, DefaultSpacing.spacing16)
             // 캡슐 자체는 문구 크기로 두고 탭 영역만 44pt 로 넓힌다.
             .frame(minHeight: Constants.minimumTapTarget)
-            .background(Color.indigo500, in: .capsule)
+            .background(Color.teal500, in: .capsule)
             .contentShape(.capsule)
         }
         .buttonStyle(.plain)

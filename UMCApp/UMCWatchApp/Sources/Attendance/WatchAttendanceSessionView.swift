@@ -56,7 +56,7 @@ struct WatchAttendanceSessionView: View {
         .navigationTitle(viewModel.schedule.name)
         .watchScreenBackground()
         .safeAreaInset(edge: .bottom) {
-            // 지각이어도 role 은 `.primary`(인디고)다. 상태색(앰버)과 액션색(인디고)은
+            // 지각이어도 role 은 `.primary`(틸)다. 상태색(앰버)과 액션색(틸)은
             // 분리된 축이라 상태가 액션 버튼의 색을 바꾸지 않는다.
             WatchActionButton(
                 "출석 요청",

@@ -62,7 +62,7 @@ public struct MainButton: View {
                 title: title, size: size, isLoading: isLoading)
             .equatable()
         }
-        .tint(.indigo500)
+        .tint(.teal500)
         .disabled(isLoading)
     }
 }

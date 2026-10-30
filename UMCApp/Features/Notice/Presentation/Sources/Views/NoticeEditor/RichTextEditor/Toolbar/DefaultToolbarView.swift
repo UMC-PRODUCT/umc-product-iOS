@@ -39,7 +39,7 @@ public struct DefaultToolbarView: View {
     private var formatButton: some View {
         toolbarButton(
             icon: Constants.formatIcon,
-            tint: viewModel.isFormatPanelVisible ? Color.indigo500 : Constants.inactiveColor,
+            tint: viewModel.isFormatPanelVisible ? Color.teal500 : Constants.inactiveColor,
             action: viewModel.toggleFormatPanel
         )
     }
@@ -135,7 +135,7 @@ public struct DefaultToolbarView: View {
                     maxHeight: Constants.toolbarHeight
                 )
                 .contentShape(Rectangle())
-                .foregroundStyle(isActive ? Color.indigo500 : Constants.inactiveColor)
+                .foregroundStyle(isActive ? Color.teal500 : Constants.inactiveColor)
         }
         .buttonStyle(.plain)
     }

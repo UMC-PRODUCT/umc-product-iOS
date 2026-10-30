@@ -85,7 +85,7 @@ struct RecentNoticeCard: View {
 
     private var scopeColor: Color {
         switch notice.scope {
-        case .central: .indigo500
+        case .central: .teal500
         case .branch: .orange500
         case .campus: .green500
         }

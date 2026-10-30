@@ -40,7 +40,7 @@ struct LinkAttachmentCard: View, Equatable {
         .padding(Constants.mainPadding)
         .background {
             RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                .fill(Color.indigo100)
+                .fill(Color.teal100)
                 .opacity(Constants.bgOpacity)
                 .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
         }

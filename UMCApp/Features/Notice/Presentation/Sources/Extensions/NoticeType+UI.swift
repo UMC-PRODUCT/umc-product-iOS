@@ -14,7 +14,7 @@ extension NoticeType {
     public var textColor: Color {
         switch self {
         case .essential:
-            return .indigo500
+            return .teal500
         default:
             return .white
         }
@@ -23,9 +23,9 @@ extension NoticeType {
     public var backgroundColor: Color {
         switch self {
         case .essential:
-            return .indigo100
+            return .teal100
         default:
-            return .indigo500
+            return .teal500
         }
     }
 }

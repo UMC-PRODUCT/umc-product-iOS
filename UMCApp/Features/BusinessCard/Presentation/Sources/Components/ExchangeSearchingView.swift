@@ -57,7 +57,7 @@ struct ExchangeSearchingView: View {
         static let captionSpacing: CGFloat = 5
     }
 
-    /// 시안 레이더 원 4개 (바깥→안). 색은 코어 `indigo500`(#4869F0) — 시안 SVG 원값과 같다.
+    /// 시안 레이더 원 4개 (바깥→안). 색은 코어 브랜드 토큰 `teal500`.
     /// 두 번째 원만 면(fill), 나머지는 1pt 선(stroke)이다.
     private static let rings: [(size: CGFloat, opacity: Double, isFilled: Bool)] = [
         (364, 0.10, false),
@@ -84,7 +84,7 @@ struct ExchangeSearchingView: View {
         HStack(spacing: Metrics.badgeSpacing) {
             Image(systemName: Constants.badgeIcon)
                 .font(.system(size: Metrics.badgeIconGlyph))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(Color.teal500)
                 .frame(minWidth: Metrics.badgeIconBox, minHeight: Metrics.badgeIconBox)
                 // 옆 문구가 같은 뜻을 말한다 — 「wifi」까지 읽히면 겹친다.
                 .accessibilityHidden(true)
@@ -141,11 +141,11 @@ struct ExchangeSearchingView: View {
 
         if ring.isFilled {
             Circle()
-                .fill(Color.indigo500.opacity(ring.opacity))
+                .fill(Color.teal500.opacity(ring.opacity))
                 .frame(width: diameter, height: diameter)
         } else {
             Circle()
-                .stroke(Color.indigo500.opacity(ring.opacity), lineWidth: 1)
+                .stroke(Color.teal500.opacity(ring.opacity), lineWidth: 1)
                 .frame(width: diameter, height: diameter)
         }
     }

@@ -89,7 +89,7 @@ struct NoticeEditorAttachmentToolbar: View {
         HStack(spacing: Constants.itemSpacing) {
             ToolbarIconButton(
                 icon: "textformat.size",
-                tint: editorToolbarViewModel.isFormatPanelVisible ? .indigo500 : .black
+                tint: editorToolbarViewModel.isFormatPanelVisible ? .teal500 : .black
             ) {
                 editorToolbarViewModel.toggleFormatPanel()
             }
@@ -141,7 +141,7 @@ struct NoticeEditorAttachmentToolbar: View {
 
             ToolbarIconButton(
                 icon: "text.quote",
-                tint: editorToolbarViewModel.isBlockquote ? .indigo500 : .black
+                tint: editorToolbarViewModel.isBlockquote ? .teal500 : .black
             ) {
                 editorToolbarViewModel.toggleBlockquote()
             }

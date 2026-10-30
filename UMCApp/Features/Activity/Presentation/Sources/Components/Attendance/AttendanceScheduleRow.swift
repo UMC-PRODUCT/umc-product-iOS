@@ -31,12 +31,12 @@ struct AttendanceScheduleRow: View {
         OperatorSessionStatus.from(startTime: info.startsAt, endTime: info.endsAt)
     }
 
-    /// 진행중 카드만 은은한 indigo 틴트로 강조.
+    /// 진행중 카드만 은은한 teal 틴트로 강조.
     private var cardGlass: Glass {
         switch status {
         case .inProgress:
             return .regular
-                .tint(.indigo500.opacity(Constants.inProgressTintOpacity))
+                .tint(.teal500.opacity(Constants.inProgressTintOpacity))
                 .interactive()
         default:
             return .regular.interactive()

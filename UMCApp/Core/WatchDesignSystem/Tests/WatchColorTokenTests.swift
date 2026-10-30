@@ -108,17 +108,17 @@ struct BrandToken: Sendable, CustomStringConvertible {
 
     static let all: [BrandToken] = [
         BrandToken(
-            colorsetPath: "Primary/indigo500",
+            colorsetPath: "Primary/teal500",
             watchName: "brandPrimary",
             watchHex: WatchColorHex.brandPrimary
         ),
         BrandToken(
-            colorsetPath: "Primary/indigo400",
+            colorsetPath: "Primary/teal400",
             watchName: "brandPrimaryHighlight",
             watchHex: WatchColorHex.brandPrimaryHighlight
         ),
         BrandToken(
-            colorsetPath: "Primary/indigo300",
+            colorsetPath: "Primary/teal300",
             watchName: "brandPrimarySoft",
             watchHex: WatchColorHex.brandPrimarySoft
         ),

@@ -17,7 +17,7 @@ public struct Progress: View {
     public var size: ProgressSize
     
     // MARK: - Initializer
-    public init(progressColor: Color = .indigo500,
+    public init(progressColor: Color = .teal500,
          message: String? = nil,
          messageColor: Color = .grey900,
          size: ProgressSize = .large) {

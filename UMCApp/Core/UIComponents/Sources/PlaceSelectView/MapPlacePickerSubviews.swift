@@ -31,7 +31,7 @@ struct MapPickerCurrentLocationIcon: View {
 
     var body: some View {
         Image(systemName: "location.fill")
-            .foregroundStyle(Color.indigo500)
+            .foregroundStyle(Color.teal500)
     }
 }
 

@@ -12,7 +12,7 @@ import ProjectDescriptionHelpers
 //
 // 1) 토큰 값이 다르다. CoreDesignSystem 의 Colors.xcassets 는 colorset 마다 light/dark 를
 //    따로 갖는데 watchOS 는 항상 dark 로 해석한다. 같은 카탈로그를 워치에 링크하면
-//    indigo500 이 스펙값 #4869F0 이 아니라 dark 값 #4264F0 으로 나온다(orange500 → #FF6C0F,
+//    teal500 이 스펙값 #008A80 이 아니라 dark 값 #00998E 으로 나온다(orange500 → #FF6C0F,
 //    grey400 → #606262 도 마찬가지). 그래서 이 모듈은 asset catalog 없이 sRGB 리터럴을 쓴다.
 // 2) 타이포가 다르다. 워치 스펙은 시스템 폰트(SF) 기반이라 Pretendard(.otf 3종)가 필요 없다.
 //    CoreDesignSystem 을 링크하면 쓰지도 않는 폰트 리소스가 워치 앱 번들에 실린다.

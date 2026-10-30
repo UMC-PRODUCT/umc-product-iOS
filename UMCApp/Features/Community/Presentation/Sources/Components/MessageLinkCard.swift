@@ -74,7 +74,7 @@ struct MessageLinkCard: View {
                     Image(systemName: iconName)
                     Text(kindLabel)
                 }
-                .appFont(.caption2, weight: .semibold, color: .indigo600)
+                .appFont(.caption2, weight: .semibold, color: .teal600)
 
                 Text(preview.title)
                     .appFont(.subheadline, weight: .semibold, color: .grey900)

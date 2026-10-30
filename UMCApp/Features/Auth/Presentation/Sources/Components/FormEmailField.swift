@@ -130,7 +130,7 @@ struct FormEmailField: View {
         HStack {
             TextField("", text: $text, prompt: placeholderView)
                 .foregroundStyle(Color.grey900)
-                .tint(showError ? .red500 : .indigo500)
+                .tint(showError ? .red500 : .teal500)
                 .padding(DefaultConstant.defaultTextFieldPadding)
                 .submitLabel(submitLabel)
                 .glassEffect(.regular, in: .capsule)
@@ -158,7 +158,7 @@ struct FormEmailField: View {
                     .padding(DefaultConstant.defaultBtnPadding)
             }
             .buttonStyle(.glassProminent)
-            .tint(isVerified ? .green500 : .indigo500)
+            .tint(isVerified ? .green500 : .teal500)
             .disabled(text.isEmpty || phase == .verifying || isVerified)
         }
     }
@@ -185,7 +185,7 @@ struct FormEmailField: View {
                         ? "재전송 (\(resendCooldownSeconds)초)"
                         : "인증번호 재전송"
                 )
-                .appFont(.footnote, color: resendCooldownSeconds > 0 ? .grey500 : .indigo500)
+                .appFont(.footnote, color: resendCooldownSeconds > 0 ? .grey500 : .teal500)
             }
             .buttonStyle(.plain)
             .disabled(resendCooldownSeconds > 0 || phase == .verifying)

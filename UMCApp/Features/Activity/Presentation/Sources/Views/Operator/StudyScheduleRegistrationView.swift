@@ -131,7 +131,7 @@ struct StudyScheduleRegistrationView: View {
         )
         .appFont(.body, color: Color.grey900)
         .submitLabel(.next)
-        .tint(.indigo500)
+        .tint(.teal500)
     }
 
     /// 주차 커리큘럼 선택 Picker
@@ -154,7 +154,7 @@ struct StudyScheduleRegistrationView: View {
                 Button("재시도") {
                     Task { await viewModel.loadWeeklyOptions() }
                 }
-                .appFont(.footnote, color: Color.indigo500)
+                .appFont(.footnote, color: Color.teal500)
             }
 
         case .loaded(let options) where options.isEmpty:
@@ -169,7 +169,7 @@ struct StudyScheduleRegistrationView: View {
                 }
             }
             .pickerStyle(.menu)
-            .tint(.indigo500)
+            .tint(.teal500)
         }
     }
 

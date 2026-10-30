@@ -28,7 +28,7 @@ public enum WatchColor {
     public static let cardBorder       = Color(sRGBHex: WatchColorHex.cardBorder)
     /// Hero(대표 지표) 카드 배경. (#1B2140)
     public static let heroBackground   = Color(sRGBHex: WatchColorHex.heroBackground)
-    /// Hero 카드 보더 = 브랜드 인디고 45% (rgba(72,105,240,.45)).
+    /// Hero 카드 보더 = 브랜드 틸 45% (rgba(0,138,128,.45)).
     public static let heroBorder       = brandPrimary.opacity(0.45)
     /// 위험/파괴적 맥락 카드 배경. (#241416)
     public static let dangerBackground = Color(sRGBHex: WatchColorHex.dangerBackground)
@@ -37,11 +37,11 @@ public enum WatchColor {
 
     // MARK: - Brand
 
-    /// Primary Indigo. CTA tint·active 상태·Hero 보더. (iOS indigo500 · #4869F0)
+    /// Primary Teal. CTA tint·active 상태·Hero 보더. (iOS teal500 · #008A80)
     public static let brandPrimary = Color(sRGBHex: WatchColorHex.brandPrimary)
-    /// 검정/다크 카드 위에 얹는 브랜드색 텍스트·아이콘용 밝은 단계. (iOS indigo400 · #6683FF)
+    /// 검정/다크 카드 위에 얹는 브랜드색 텍스트·아이콘용 밝은 단계. (iOS teal400 · #39A9A1)
     public static let brandPrimaryHighlight = Color(sRGBHex: WatchColorHex.brandPrimaryHighlight)
-    /// 가장 밝은 단계 — pending 링, 저강조 보조 강조. (iOS indigo300 · #99ABFF)
+    /// 가장 밝은 단계 — pending 링, 저강조 보조 강조. (iOS teal300 · #7AC7C1)
     public static let brandPrimarySoft = Color(sRGBHex: WatchColorHex.brandPrimarySoft)
     /// Accent Orange — **The Ping 배지·브랜드 강조 전용**. (iOS orange500 · #FF731A)
     /// 상태(성공/경고/실패)를 표현하는 데 절대 쓰지 않는다. 상태는 `status*` 를 쓴다.
@@ -49,9 +49,9 @@ public enum WatchColor {
 
     // MARK: - Status (브랜드색과 분리된 시맨틱 축)
 
-    /// 진행 중/활성. 브랜드 인디고와 같은 값이지만 **의미가 다르므로 별도 이름**으로 참조한다.
+    /// 진행 중/활성. 브랜드 틸와 같은 값이지만 **의미가 다르므로 별도 이름**으로 참조한다.
     public static let statusActive  = brandPrimary
-    /// 승인 대기 — 회색 점 + 인디고 링(`WatchStatusBadge` 가 palette 렌더링으로 합성). (#ADADAD)
+    /// 승인 대기 — 회색 점 + 틸 링(`WatchStatusBadge` 가 palette 렌더링으로 합성). (#ADADAD)
     public static let statusPending = neutralGrey
     /// 완료. (#30D158)
     public static let statusSuccess = Color(sRGBHex: WatchColorHex.statusSuccess)
@@ -86,9 +86,9 @@ enum WatchColorHex {
     static let heroBackground: UInt32        = 0x1B2140
     static let dangerBackground: UInt32      = 0x241416
 
-    static let brandPrimary: UInt32          = 0x4869F0
-    static let brandPrimaryHighlight: UInt32 = 0x6683FF
-    static let brandPrimarySoft: UInt32      = 0x99ABFF
+    static let brandPrimary: UInt32          = 0x008A80
+    static let brandPrimaryHighlight: UInt32 = 0x39A9A1
+    static let brandPrimarySoft: UInt32      = 0x7AC7C1
     static let brandAccent: UInt32           = 0xFF731A
 
     static let statusSuccess: UInt32         = 0x30D158

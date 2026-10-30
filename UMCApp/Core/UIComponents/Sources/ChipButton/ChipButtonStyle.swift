@@ -35,9 +35,9 @@ public enum ChipButtonStyle {
     public func bgColor(isSelected: Bool) -> Color {
         switch self {
         case .filter:
-            return isSelected ? .indigo500 : .grey200
+            return isSelected ? .teal500 : .grey200
         case .board:
-            return isSelected ? .indigo500 : .grey300
+            return isSelected ? .teal500 : .grey300
         case .fame:
             return isSelected ? .yellow500 : .white
         }

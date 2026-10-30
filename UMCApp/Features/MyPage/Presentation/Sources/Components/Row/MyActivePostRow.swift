@@ -50,7 +50,7 @@ struct MyActivePostRow: View {
     private var header: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             Text(item.category.text)
-                .appFont(.caption1, weight: .semibold, color: .indigo500)
+                .appFont(.caption1, weight: .semibold, color: .teal500)
             Text(item.displayUserName)
                 .appFont(.caption1, color: .grey500)
             Spacer()

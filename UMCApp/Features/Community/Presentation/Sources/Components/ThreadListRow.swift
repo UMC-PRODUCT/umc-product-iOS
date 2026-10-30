@@ -134,14 +134,14 @@ struct ThreadListRow: View {
             Spacer(minLength: DefaultSpacing.spacing4)
 
             if let badge = thread.unreadBadge {
-                // indigo500 은 다크 모드에서도 채도가 유지돼 대비색은 항상 흰색이다.
+                // teal500 은 다크 모드에서도 채도가 유지돼 대비색은 항상 흰색이다.
                 Text(badge)
                     .appFont(.caption2)
                     .foregroundStyle(.white)
                     .padding(.horizontal, DefaultSpacing.spacing8)
                     .padding(.vertical, Constants.capsuleVerticalPadding)
                     .frame(minWidth: Constants.badgeMinWidth)
-                    .background(Color.indigo500, in: .capsule)
+                    .background(Color.teal500, in: .capsule)
                     .accessibilityLabel("안읽음 \(badge)개")
             }
         }

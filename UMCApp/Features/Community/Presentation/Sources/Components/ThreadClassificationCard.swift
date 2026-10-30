@@ -167,7 +167,7 @@ struct ThreadClassificationCard: View {
 
             ProgressView()
                 .progressViewStyle(.linear)
-                .tint(Color.indigo500)
+                .tint(Color.teal500)
 
             ForEach(Constants.shimmerBarInsets, id: \.self) { inset in
                 ShimmerBar(trailingInset: inset)

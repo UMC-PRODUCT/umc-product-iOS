@@ -92,7 +92,7 @@ private struct TagRow: View, Equatable {
 
                 Image(systemName: isSelected ? Constants.checkMark : Constants.circle)
                     .font(.title2)
-                    .foregroundStyle(isSelected ? Color.indigo500 : Color.grey300)
+                    .foregroundStyle(isSelected ? Color.teal500 : Color.grey300)
             }
             .contentShape(Rectangle())
         }

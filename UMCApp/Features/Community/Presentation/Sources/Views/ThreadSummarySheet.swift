@@ -134,7 +134,7 @@ struct ThreadSummarySheet: View {
 
             ProgressView()
                 .progressViewStyle(.linear)
-                .tint(Color.indigo500)
+                .tint(Color.teal500)
 
             ForEach(Constants.shimmerBarInsets, id: \.self) { inset in
                 ShimmerBar(trailingInset: inset)
@@ -202,10 +202,10 @@ struct ThreadSummarySheet: View {
             HStack(spacing: DefaultSpacing.spacing4) {
                 Image(systemName: Constants.actionItemImage)
                     .font(.system(size: Constants.actionItemIconSize, weight: .semibold))
-                    .foregroundStyle(Color.indigo500)
+                    .foregroundStyle(Color.teal500)
 
                 Text(Constants.actionItemsTitle)
-                    .appFont(.footnote, weight: .semibold, color: .indigo600)
+                    .appFont(.footnote, weight: .semibold, color: .teal600)
             }
 
             if actionItems.isEmpty {
@@ -216,7 +216,7 @@ struct ThreadSummarySheet: View {
                     HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
                         Image(systemName: Constants.bulletImage)
                             .font(.system(size: Constants.bulletIconSize))
-                            .foregroundStyle(Color.indigo400)
+                            .foregroundStyle(Color.teal400)
 
                         Text(item)
                             .appFont(.subheadline, weight: .medium, color: .grey900)
@@ -234,7 +234,7 @@ struct ThreadSummarySheet: View {
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true
             )
-            .fill(Color.indigo100)
+            .fill(Color.teal100)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Constants.actionItemsTitle)

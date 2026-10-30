@@ -33,7 +33,7 @@ struct CardActionButton: View {
             case .primary:
                 // 시안 실측은 #5468FC 였지만 코어 토큰으로 수렴했다(#1237).
                 // 토큰은 Asset Catalog 라 다크 모드 값을 스스로 들고 있다.
-                return .indigo500
+                return .teal500
             case .secondary:
                 // iOS Fills/Secondary = rgba(120,120,128,0.16).
                 return Color(uiColor: .secondarySystemFill)
