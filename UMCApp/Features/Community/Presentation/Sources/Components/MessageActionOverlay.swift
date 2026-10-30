@@ -73,6 +73,8 @@ enum MessageAction: Hashable, Identifiable {
     case edit
     case report
     case delete
+    case block
+    case unblock
 
     var id: Self { self }
 
@@ -83,6 +85,8 @@ enum MessageAction: Hashable, Identifiable {
         case .edit: "수정"
         case .report: "신고"
         case .delete: "삭제"
+        case .block: "사용자 차단"
+        case .unblock: "차단 해제"
         }
     }
 
@@ -93,6 +97,8 @@ enum MessageAction: Hashable, Identifiable {
         case .edit: "pencil"
         case .report: "flag"
         case .delete: "trash"
+        case .block: "person.crop.circle.badge.minus"
+        case .unblock: "person.crop.circle.badge.checkmark"
         }
     }
 
@@ -104,8 +110,13 @@ enum MessageAction: Hashable, Identifiable {
         deliveryState: ThreadMessageDeliveryState,
         canReport: Bool,
         canDelete: Bool,
-        canEdit: Bool = false
+        canEdit: Bool = false,
+        canBlock: Bool = false,
+        isBlocked: Bool = false,
+        canInteract: Bool = true
     ) -> [MessageAction] {
+        if isBlocked { return canBlock ? [.unblock] : [] }
+        if !canInteract { return canBlock ? [.block] : [] }
         var actions: [MessageAction] = []
 
         // 아직 서버가 모르는 메시지는 답장 대상이 될 수 없다 — 보낼 id 가 내가 만든 UUID 다.
@@ -114,6 +125,7 @@ enum MessageAction: Hashable, Identifiable {
         if canEdit { actions.append(.edit) }
         if canReport { actions.append(.report) }
         if canDelete { actions.append(.delete) }
+        if canBlock { actions.append(.block) }
 
         return actions
     }
@@ -224,8 +236,10 @@ struct MessageActionOverlay: View {
 
             GlassEffectContainer {
                 ZStack(alignment: .topLeading) {
-                    reactionBar
-                        .offset(x: reactionBarOrigin.x, y: reactionBarOrigin.y)
+                    if actions.contains(.reply) {
+                        reactionBar
+                            .offset(x: reactionBarOrigin.x, y: reactionBarOrigin.y)
+                    }
 
                     menuCard
                         .offset(x: menuOrigin.x, y: menuOrigin.y)

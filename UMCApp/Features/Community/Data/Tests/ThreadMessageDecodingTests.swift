@@ -17,6 +17,33 @@ struct ThreadMessageDecodingTests {
         try JSONDecoder().decode(type, from: Data(json.utf8))
     }
 
+    @Test("차단 플래그가 있으면 본문과 첨부를 도메인에 노출하지 않는다")
+    func redactsBlockedMessage() throws {
+        let json = """
+        {"messageId":"1","senderId":"2","content":"비공개 원문",
+         "type":"IMAGE","isSenderBlocked":true,
+         "files":[{"fileId":"3","fileUrl":"https://example.com/private.jpg"}],
+         "replyTo":{"messageId":"4","senderName":"작성자","snippet":"인용 원문"}}
+        """
+        let message = try decode(ThreadMessageDTO.self, json).toDomain
+        #expect(message.content == "차단한 사용자의 메시지예요.")
+        #expect(message.files.isEmpty)
+        #expect(message.replyTo == nil)
+    }
+
+    @Test("차단 목록은 숫자 ID를 문자열로 읽고 손상된 회원은 조용히 누락하지 않는다")
+    func decodesBlockContractsStrictly() throws {
+        let list = try decode(BlockedMemberListDTO.self, "{\"members\":[{\"memberId\":12}]}")
+        #expect(list.members.map(\.memberId) == ["12"])
+        #expect(throws: (any Error).self) {
+            try decode(BlockedMemberListDTO.self, "{\"members\":[{}]}")
+        }
+        #expect(try decode(MemberBlockResultDTO.self, "{\"isBlocked\":false}").isBlocked == false)
+        #expect(CommunityThreadRouter.getBlockedMembers.path == "/api/v1/member/blocks")
+        #expect(CommunityThreadRouter.setMemberBlocked(memberId: "12", isBlocked: true).method == .post)
+        #expect(CommunityThreadRouter.setMemberBlocked(memberId: "12", isBlocked: false).method == .delete)
+    }
+
     @Test("REST 메시지(String ID)를 디코딩한다")
     func decodesRestMessage() throws {
         let json = """

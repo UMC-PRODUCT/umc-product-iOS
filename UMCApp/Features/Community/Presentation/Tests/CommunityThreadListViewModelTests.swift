@@ -66,6 +66,9 @@ private final class StubListUseCase: CommunityThreadListUseCaseProtocol {
 /// 실시간 결선만 확인하기 위한 최소 대역 — 미리 심어 둔 신호를 흘리고 스트림을 닫는다.
 @MainActor
 private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
+    func fetchBlockedMemberIds() async throws -> Set<String> { [] }
+    func setMemberBlocked(memberId: String, isBlocked: Bool) async throws -> Bool { isBlocked }
+
 
     var pendingSignals: [CommunityRealtimeSignal] = []
 

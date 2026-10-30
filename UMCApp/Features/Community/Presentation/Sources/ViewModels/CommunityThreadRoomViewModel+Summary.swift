@@ -58,17 +58,19 @@ extension CommunityThreadRoomViewModel {
     public func requestSummary() async {
         guard !summary.isLoading else { return }
         summary = .loading
+        let blockRevision = blockState.revision
 
         do {
             let result = try await summarizer.summarize(
                 messages: unreadMessages(),
                 currentMemberName: currentMemberName
             )
+            guard blockRevision == blockState.revision else { return }
             summary = .loaded(result)
         } catch {
             // 취소는 시트를 닫은 정상 흐름이다. 실패 화면으로 바꾸면 다시 열었을 때 에러부터
             // 보인다 (`load()` 와 같은 정책).
-            guard !(error is CancellationError) else { return }
+            guard !(error is CancellationError), blockRevision == blockState.revision else { return }
             summary = .failed(AppError.from(error))
         }
     }
@@ -89,7 +91,7 @@ extension CommunityThreadRoomViewModel {
     /// 뒤에서 세는 이유는 미읽음이 항상 최신 쪽에 몰려 있기 때문이다. 화면에 아직 그만큼 안
     /// 쌓였으면 `suffix` 가 가진 만큼만 준다.
     private func unreadMessages() -> [ThreadMessage] {
-        Array(messages.suffix(entryUnreadCount))
+        Array(messages.suffix(entryUnreadCount)).filter { !$0.isSenderBlocked }
     }
 }
 

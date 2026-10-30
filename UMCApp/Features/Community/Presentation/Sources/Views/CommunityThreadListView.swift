@@ -198,7 +198,10 @@ struct CommunityThreadListView: View {
             viewModel.recordCurrentSearch()
             onThreadSelected(thread)
         } label: {
-            ThreadListRow(thread: thread)
+            ThreadListRow(
+                thread: thread,
+                hidesPreview: viewModel.blockState.hidesUnverifiedPreviews
+            )
         }
         .buttonStyle(.plain)
         .threadCardRow()

@@ -179,6 +179,7 @@ public struct ThreadMessageDTO: Codable {
     public let mentions: [ThreadMessageMentionDTO]
     public let replyTo: ThreadMessageReplyDTO?
     public let reactions: [ThreadMessageReactionDTO]
+    public let isSenderBlocked: Bool
     public let clientMessageId: String?
     public let createdAt: String
     public let editedAt: String?
@@ -188,7 +189,7 @@ public struct ThreadMessageDTO: Codable {
 
     enum CodingKeys: String, CodingKey {
         case messageId, threadId, senderId, senderName, content, type
-        case files, mentions, replyTo, reactions, clientMessageId
+        case files, mentions, replyTo, reactions, clientMessageId, isSenderBlocked
         case createdAt, editedAt, deletedAt
     }
 
@@ -215,6 +216,7 @@ public struct ThreadMessageDTO: Codable {
             ThreadMessageReactionDTO.self,
             forKey: .reactions
         )
+        self.isSenderBlocked = try container.decodeBoolFlexibleIfPresent(forKey: .isSenderBlocked) ?? false
         self.clientMessageId = container.decodeFlexibleStringOrNil(forKey: .clientMessageId)
         self.createdAt = container.decodeFlexibleStringOrEmpty(forKey: .createdAt)
         self.editedAt = container.decodeFlexibleStringOrNil(forKey: .editedAt)
@@ -233,6 +235,7 @@ public struct ThreadMessageDTO: Codable {
         try container.encode(mentions, forKey: .mentions)
         try container.encodeIfPresent(replyTo, forKey: .replyTo)
         try container.encode(reactions, forKey: .reactions)
+        try container.encode(isSenderBlocked, forKey: .isSenderBlocked)
         try container.encodeIfPresent(clientMessageId, forKey: .clientMessageId)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(editedAt, forKey: .editedAt)
@@ -258,8 +261,9 @@ public struct ThreadMessageDTO: Codable {
             createdAt: ServerDateTimeConverter.parseUTCDateTime(createdAt) ?? .distantPast,
             editedAt: editedAt.flatMap(ServerDateTimeConverter.parseUTCDateTime),
             deletedAt: deletedAt.flatMap(ServerDateTimeConverter.parseUTCDateTime),
-            deliveryState: .sent
-        )
+            deliveryState: .sent,
+            isSenderBlocked: isSenderBlocked
+        ).redactedForBlocking()
     }
 }
 

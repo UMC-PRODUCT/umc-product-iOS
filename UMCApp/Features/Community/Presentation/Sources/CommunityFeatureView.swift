@@ -43,7 +43,8 @@ public struct CommunityFeatureView: View {
             viewModel: CommunityThreadListViewModel(
                 listUseCase: di.resolve(CommunityThreadListUseCaseProtocol.self),
                 roomUseCase: di.resolve(CommunityThreadRoomUseCaseProtocol.self),
-                errorHandler: errorHandler
+                errorHandler: errorHandler,
+                blockState: di.resolve(CommunityMemberBlockState.self)
             ),
             onThreadSelected: { thread in
                 pathStore.push(
