@@ -34,7 +34,7 @@ public enum NoticePart: String, CaseIterable, Identifiable, Equatable, Hashable 
         case .design:
             return "Design"
         case .plan:
-            return "Plan"
+            return "PM"
         case .nodejs:
             return "Node.js"
         case .springboot:

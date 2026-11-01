@@ -205,15 +205,20 @@ public struct NoticeDetailView: View {
         }
     }
 
+    @ViewBuilder
     private func detailTag(_ tag: NoticeItemTag) -> some View {
-        Text(tag.text)
-            .appFont(.caption1, weight: .semibold, color: .grey000)
-            .padding(Constants.tagPadding)
-            .background {
-                RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                    .fill(tag.backColor)
-            }
-            .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        if let part = tag.part {
+            MemberTag(part: part)
+        } else {
+            Text(tag.text)
+                .appFont(.caption1, weight: .semibold, color: .grey000)
+                .padding(Constants.tagPadding)
+                .background {
+                    RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
+                        .fill(tag.backColor)
+                }
+                .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        }
     }
 
     // MARK: - Bottom Section

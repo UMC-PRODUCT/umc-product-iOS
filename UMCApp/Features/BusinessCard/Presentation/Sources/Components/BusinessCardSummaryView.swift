@@ -126,7 +126,11 @@ struct BusinessCardSummaryView: View {
 
     private var chipRow: some View {
         HStack(spacing: Metrics.chipSpacing) {
-            PartChip(text: card.partDisplayName, size: .cardMedium)
+            if card.partRaw == nil {
+                MemberTag(part: card.part)
+            } else {
+                PartChip(text: card.partDisplayName, size: .cardMedium)
+            }
             PartChip(text: "\(card.generation)기", size: .cardMedium)
         }
     }

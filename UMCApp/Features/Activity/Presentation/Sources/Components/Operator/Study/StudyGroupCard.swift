@@ -201,11 +201,7 @@ struct StudyGroupCard: View, Equatable {
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
-                InfoBadge(
-                    detail.part.name,
-                    textColor: detail.part.color,
-                    tintColor: detail.part.color
-                )
+                MemberTag(part: detail.part)
 
                 // "오늘 미팅" active 상태 뱃지 — UI hook만 준비, 산정 로직은 별도 이슈
                 // .tint(part.color)는 prominence 신호 보존을 위해 이 active 뱃지에만 한정한다.

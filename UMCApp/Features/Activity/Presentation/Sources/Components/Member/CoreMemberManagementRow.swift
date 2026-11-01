@@ -81,25 +81,8 @@ struct CoreMemberTextPresenter: View {
         }
     }
 
-    /// 디자인이 토큰 쌍을 확정한 파트는 그 쌍을, 나머지는 파트 시스템 색 톤을 쓴다.
-    @ViewBuilder
     private var partChip: some View {
-        if let colors = part.chipTokenColors {
-            tokenChip(part.name, colors: colors)
-        } else {
-            Text(part.name)
-                .appFont(.footnote, color: part.color)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background {
-                    Capsule()
-                        .fill(part.color.opacity(0.16))
-                }
-                .overlay {
-                    Capsule()
-                        .stroke(part.color.opacity(0.4), lineWidth: 1)
-                }
-        }
+        MemberTag(part: part)
     }
 
     /// 면·잉크 토큰 쌍 칩. 라이트 대비가 AA 미달이라 디자인팀 재조율 대기다 (#1359).
@@ -119,7 +102,7 @@ struct CoreMemberTextPresenter: View {
 
 /// 운영진 직책 배지입니다. 일반 챌린저(`.challenger`)는 아무것도 표시하지 않습니다.
 ///
-/// 렌더링은 ``InfoBadge`` 에 위임해 앱 전역 배지 스타일(Glass Effect)을 따릅니다.
+/// 렌더링은 공용 ``MemberTag`` 에 위임합니다.
 /// 이 타입은 `.challenger` 를 걸러내는 도메인 규칙만 담당합니다.
 struct ManagementTeamBadgePresenter: View {
 
@@ -128,11 +111,7 @@ struct ManagementTeamBadgePresenter: View {
 
     var body: some View {
         if managementTeam != .challenger {
-            InfoBadge(
-                managementTeam.korean,
-                textColor: managementTeam.textColor,
-                tintColor: managementTeam.backgroundColor
-            )
+            MemberTag(role: managementTeam)
         }
     }
 }

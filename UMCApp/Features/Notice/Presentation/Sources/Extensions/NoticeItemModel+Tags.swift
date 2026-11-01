@@ -87,8 +87,9 @@ extension NoticeItemModel {
         
         return resolvedParts.prefix(3).map { part in
             NoticeItemTag(
-                text: NoticePart(umcPartType: part)?.displayName ?? "파트",
-                backColor: part.color
+                text: part.name,
+                backColor: part.color,
+                part: part
             )
         }
     }

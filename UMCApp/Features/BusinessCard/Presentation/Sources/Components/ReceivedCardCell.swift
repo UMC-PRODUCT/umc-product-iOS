@@ -132,7 +132,11 @@ struct ReceivedCardCell: View {
             Spacer(minLength: .zero)
 
             HStack(spacing: Metrics.chipSpacing) {
-                chip(card.profile.partDisplayName)
+                if card.profile.partRaw == nil {
+                    MemberTag(part: card.profile.part)
+                } else {
+                    chip(card.profile.partDisplayName)
+                }
                 chip("\(card.profile.generation)기")
             }
         }

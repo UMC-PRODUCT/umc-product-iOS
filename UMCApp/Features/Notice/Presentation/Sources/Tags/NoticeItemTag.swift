@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UMCFoundation
 
 /// UI 표시용 공지 태그
 public struct NoticeItemTag: Equatable {
@@ -14,8 +15,11 @@ public struct NoticeItemTag: Equatable {
     public let text: String
     public let backColor: Color
     
-    public init(text: String, backColor: Color) {
+    public let part: UMCPartType?
+
+    public init(text: String, backColor: Color, part: UMCPartType? = nil) {
         self.text = text
         self.backColor = backColor
+        self.part = part
     }
 }

@@ -67,6 +67,33 @@ public extension Color {
     static let yellow700 = Color("yellow700", bundle: .module)
     static let yellow900 = Color("yellow900", bundle: .module)
 
+    // MARK: - Member Tags (Figma Tag/Part · Tag/Role)
+
+    static let tagText = Color("tagText", bundle: .module)
+    static let tagShadow = Color("tagShadow", bundle: .module)
+    static let tagPartPMBackground = Color("tagPartPMBackground", bundle: .module)
+    static let tagPartPMOutlinedBackground = Color("tagPartPMOutlinedBackground", bundle: .module)
+    static let tagPartPMText = Color("tagPartPMText", bundle: .module)
+    static let tagPartDesignBackground = Color("tagPartDesignBackground", bundle: .module)
+    static let tagPartDesignOutlinedBackground = Color("tagPartDesignOutlinedBackground", bundle: .module)
+    static let tagPartDesignText = Color("tagPartDesignText", bundle: .module)
+    static let tagPartWebPEBackground = Color("tagPartWebPEBackground", bundle: .module)
+    static let tagPartWebPEOutlinedBackground = Color("tagPartWebPEOutlinedBackground", bundle: .module)
+    static let tagPartWebPEText = Color("tagPartWebPEText", bundle: .module)
+    static let tagPartMobilePEBackground = Color("tagPartMobilePEBackground", bundle: .module)
+    static let tagPartMobilePEOutlinedBackground = Color("tagPartMobilePEOutlinedBackground", bundle: .module)
+    static let tagPartMobilePEText = Color("tagPartMobilePEText", bundle: .module)
+    static let tagRoleAdminBackground = Color("tagRoleAdminBackground", bundle: .module)
+    static let tagRoleAdminText = Color("tagRoleAdminText", bundle: .module)
+    static let tagRoleCentralBackground = Color("tagRoleCentralBackground", bundle: .module)
+    static let tagRoleCentralText = Color("tagRoleCentralText", bundle: .module)
+    static let tagRoleChapterBackground = Color("tagRoleChapterBackground", bundle: .module)
+    static let tagRoleChapterText = Color("tagRoleChapterText", bundle: .module)
+    static let tagRoleCampusBackground = Color("tagRoleCampusBackground", bundle: .module)
+    static let tagRoleCampusText = Color("tagRoleCampusText", bundle: .module)
+    static let tagRoleProductBackground = Color("tagRoleProductBackground", bundle: .module)
+    static let tagRoleProductText = Color("tagRoleProductText", bundle: .module)
+
     // MARK: - ETC
 
     static let kakao = Color("kakao", bundle: .module)
