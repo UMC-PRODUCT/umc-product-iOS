@@ -14,7 +14,6 @@ import CoreUIComponents
 
 fileprivate enum Constants {
     static let avatarSize = CGSize(width: 40, height: 40)
-    static let meSuffix = " (나)"
 }
 
 /// 참여자 목록 한 행 — 아바타 · 이름 · 파트 · 역할 배지.
@@ -30,30 +29,25 @@ struct ThreadMemberRow: View {
     let canKick: Bool
     let onTransferOwnership: () -> Void
     let onKick: () -> Void
+    var onOpenProfile: (() -> Void)? = nil
 
     // MARK: - Body
 
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
-            RemoteImage(
-                urlString: member.profileImageURL ?? "",
-                size: Constants.avatarSize
-            )
-
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                Text(isMe ? member.name + Constants.meSuffix : member.name)
-                    .appFont(.subheadline, weight: .semibold, color: .grey900)
-                    .lineLimit(1)
-
-                if let part = member.part, !part.isEmpty {
-                    Text(part)
-                        .appFont(.caption1, color: .grey600)
-                        .lineLimit(1)
+            if let onOpenProfile {
+                Button(action: onOpenProfile) {
+                    identityContent
                 }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("\(member.name) 프로필")
+            } else {
+                identityContent
             }
 
             Spacer(minLength: DefaultSpacing.spacing8)
 
+            if isMe { InfoBadge("나", textColor: .grey600) }
             roleBadge
 
             if canTransferOwnership || canKick {
@@ -64,6 +58,30 @@ struct ThreadMemberRow: View {
     }
 
     // MARK: - View Component
+
+    private var identityContent: some View {
+        HStack(spacing: DefaultSpacing.spacing12) {
+            RemoteImage(
+                urlString: member.profileImageURL ?? "",
+                size: Constants.avatarSize
+            )
+
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                Text(member.name)
+                    .appFont(.subheadline, weight: .semibold, color: .grey900)
+                    .lineLimit(1)
+
+                if let part = member.part, !part.isEmpty {
+                    Text(part)
+                        .appFont(.caption1, color: .grey600)
+                        .lineLimit(1)
+                }
+            }
+
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(.rect)
+    }
 
     /// 개설자만 강조색을 쓴다. 관리자는 문구로만 구분한다.
     private var roleBadge: some View {

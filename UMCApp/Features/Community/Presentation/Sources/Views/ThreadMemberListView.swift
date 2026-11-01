@@ -8,6 +8,8 @@
 import SwiftUI
 import ActivityPresentation
 import CommunityDomain
+import CoreDI
+import CoreDomain
 import CoreDesignSystem
 import CoreRouting
 import CoreUIComponents
@@ -35,6 +37,8 @@ struct ThreadMemberListView: View {
     private let onRemoved: () -> Void
 
     @Environment(PathStore.self) private var pathStore
+    @Environment(\.di) private var container
+    @State private var profileMember: ThreadMember?
 
     @State private var isInviteSheetPresented = false
 
@@ -57,8 +61,18 @@ struct ThreadMemberListView: View {
             .navigationTitle("참여자")
             .navigationBarTitleDisplayMode(.inline)
             .umcDefaultBackground()
+            .searchable(text: $viewModel.searchText, prompt: "이름 검색")
+            .safeAreaInset(edge: .bottom) {
+                if viewModel.isSelecting { selectionBar }
+            }
             .toolbar {
                 if viewModel.canInvite {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(viewModel.isSelecting ? "선택 해제" : "선택") {
+                            viewModel.toggleSelectionMode()
+                        }
+                        .disabled(viewModel.isManaging)
+                    }
                     ToolbarItem(placement: .topBarTrailing) { inviteButton }
                 }
                 ToolbarItem(placement: .topBarTrailing) { leaveButton }
@@ -74,6 +88,14 @@ struct ThreadMemberListView: View {
                 .presentationDragIndicator(.visible)
                 .task { await inviteViewModel.loadInvitableMembers() }
             }
+            .sheet(item: $profileMember) { member in
+                MemberSafetyProfileView(
+                    memberId: member.id,
+                    name: member.name,
+                    currentMemberId: viewModel.currentMemberId,
+                    store: container.resolve(MemberBlockStore.self)
+                )
+            }
             .task { await viewModel.load() }
             .onChange(of: viewModel.didLeave) { _, didLeave in
                 guard didLeave else { return }
@@ -88,6 +110,7 @@ struct ThreadMemberListView: View {
     /// 초대 진입점. 개설자·관리자에게 열린다 (#1136 완료 조건 1 · 시안 #36 상단 "초대").
     private var inviteButton: some View {
         Button("초대") { isInviteSheetPresented = true }
+            .disabled(viewModel.isManaging || viewModel.isSelecting)
     }
 
     /// 나가기. 개설자는 위임 전까지 잠기고, 그 사유는 참여자 섹션 footer 로 붙인다 (#1131 결정 2).
@@ -99,7 +122,7 @@ struct ThreadMemberListView: View {
             Label("스레드 나가기", systemImage: "door.left.hand.open")
         }
         .tint(.red)
-        .disabled(!viewModel.canLeave)
+        .disabled(!viewModel.canLeave || viewModel.isManaging)
     }
 
     @ViewBuilder
@@ -109,8 +132,8 @@ struct ThreadMemberListView: View {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-        case .loaded(let members):
-            memberList(members)
+        case .loaded:
+            memberList(viewModel.filteredMembers)
 
         case .failed(let error):
             RetryContentUnavailableView(
@@ -129,19 +152,42 @@ struct ThreadMemberListView: View {
         List {
             Section {
                 ForEach(members) { member in
-                    ThreadMemberRow(
-                        member: member,
-                        isMe: viewModel.isMe(member),
-                        canTransferOwnership: viewModel.canTransferOwnership(to: member),
-                        canKick: viewModel.canKick(member),
-                        onTransferOwnership: {
-                            viewModel.confirmTransferOwnership(to: member)
-                        },
-                        onKick: { viewModel.confirmKick(member) }
-                    )
+                    HStack {
+                        if viewModel.isSelecting {
+                            Button {
+                                viewModel.toggleSelection(member)
+                            } label: {
+                                Image(systemName: viewModel.selectedMemberIds.contains(member.id)
+                                      ? "checkmark.circle.fill" : "circle")
+                                    .frame(
+                                        width: DefaultConstant.minimumTouchTarget,
+                                        height: DefaultConstant.minimumTouchTarget
+                                    )
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(!viewModel.canKick(member) || viewModel.isManaging)
+                            .accessibilityLabel("\(member.name) 선택")
+                            .accessibilityValue(
+                                viewModel.selectedMemberIds.contains(member.id) ? "선택됨" : "선택 안 됨"
+                            )
+                        }
+                        ThreadMemberRow(
+                            member: member,
+                            isMe: viewModel.isMe(member),
+                            canTransferOwnership: !viewModel.isSelecting
+                                && viewModel.canTransferOwnership(to: member),
+                            canKick: !viewModel.isSelecting && viewModel.canKick(member),
+                            onTransferOwnership: {
+                                viewModel.confirmTransferOwnership(to: member)
+                            },
+                            onKick: { viewModel.confirmKick(member) },
+                            onOpenProfile: viewModel.isSelecting ? nil : { profileMember = member }
+                        )
+                        .disabled(viewModel.isManaging)
+                    }
                 }
             } header: {
-                Text("참여자 \(members.count)명")
+                Text("참여자 \(viewModel.members.count)명")
             } footer: {
                 if let reason = viewModel.leaveBlockReason {
                     Text(reason)
@@ -149,12 +195,54 @@ struct ThreadMemberListView: View {
                 }
             }
 
-            if viewModel.canDeleteThread {
+            if members.isEmpty {
+                ContentUnavailableView.search(text: viewModel.searchText)
+            }
+            if let message = viewModel.operationMessage {
+                Section {
+                    Text(message)
+                        .appFont(.footnote, color: .grey600)
+                        .accessibilityAddTraits(.updatesFrequently)
+                }
+            }
+            if viewModel.canDeleteThread && !viewModel.isSelecting {
                 deleteSection
             }
         }
         .listStyle(.insetGrouped)
         .refreshable { await viewModel.load() }
+    }
+
+    private var selectionBar: some View {
+        HStack {
+            Text("\(viewModel.selectedMemberIds.count)명 선택")
+                .appFont(.subheadline, weight: .semibold)
+            Spacer()
+            if viewModel.isManaging {
+                ProgressView()
+                    .accessibilityLabel("참여자 관리 중")
+            } else {
+                Menu("관리", systemImage: "person.badge.key") {
+                    if viewModel.canPromoteSelection {
+                        Button("관리자 지정", systemImage: "person.badge.key") {
+                            viewModel.confirmSelection(.promote)
+                        }
+                    }
+                    if viewModel.canDemoteSelection {
+                        Button("관리자 해제", systemImage: "person") {
+                            viewModel.confirmSelection(.demote)
+                        }
+                    }
+                    Button("내보내기", systemImage: "person.fill.xmark", role: .destructive) {
+                        viewModel.confirmSelection(.kick)
+                    }
+                }
+                .disabled(!viewModel.canManageSelection)
+                .buttonStyle(.glass)
+            }
+        }
+        .padding(DefaultSpacing.spacing16)
+        .background(.bar)
     }
 
     /// 위임할 상대조차 없는 개설자의 출구 — 안내만 남기면 막다른 길이 된다 (#1134).

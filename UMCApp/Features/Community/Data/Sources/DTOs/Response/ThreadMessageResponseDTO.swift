@@ -183,13 +183,14 @@ public struct ThreadMessageDTO: Codable {
     public let createdAt: String
     public let editedAt: String?
     public let deletedAt: String?
+    public let isSenderBlocked: Bool
 
     // MARK: - CodingKeys
 
     enum CodingKeys: String, CodingKey {
         case messageId, threadId, senderId, senderName, content, type
         case files, mentions, replyTo, reactions, clientMessageId
-        case createdAt, editedAt, deletedAt
+        case createdAt, editedAt, deletedAt, isSenderBlocked
     }
 
     // MARK: - Codable
@@ -219,6 +220,7 @@ public struct ThreadMessageDTO: Codable {
         self.createdAt = container.decodeFlexibleStringOrEmpty(forKey: .createdAt)
         self.editedAt = container.decodeFlexibleStringOrNil(forKey: .editedAt)
         self.deletedAt = container.decodeFlexibleStringOrNil(forKey: .deletedAt)
+        self.isSenderBlocked = try container.decodeBoolFlexibleIfPresent(forKey: .isSenderBlocked) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -237,6 +239,7 @@ public struct ThreadMessageDTO: Codable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(editedAt, forKey: .editedAt)
         try container.encodeIfPresent(deletedAt, forKey: .deletedAt)
+        try container.encode(isSenderBlocked, forKey: .isSenderBlocked)
     }
 
     // MARK: - Computed Property
@@ -258,7 +261,8 @@ public struct ThreadMessageDTO: Codable {
             createdAt: ServerDateTimeConverter.parseUTCDateTime(createdAt) ?? .distantPast,
             editedAt: editedAt.flatMap(ServerDateTimeConverter.parseUTCDateTime),
             deletedAt: deletedAt.flatMap(ServerDateTimeConverter.parseUTCDateTime),
-            deliveryState: .sent
+            deliveryState: .sent,
+            isSenderBlocked: isSenderBlocked
         )
     }
 }

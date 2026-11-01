@@ -57,6 +57,9 @@ extension CommunityThreadRoomViewModel {
     /// 미읽음 구간을 요약한다. 시트가 열릴 때와 재시도 버튼이 호출한다.
     public func requestSummary() async {
         guard !summary.isLoading else { return }
+        summaryRequestRevision = UUID()
+        let requestRevision = summaryRequestRevision
+        let blockedIds = blockStore?.blockedMemberIds
         summary = .loading
 
         do {
@@ -64,11 +67,14 @@ extension CommunityThreadRoomViewModel {
                 messages: unreadMessages(),
                 currentMemberName: currentMemberName
             )
+            guard summaryRequestRevision == requestRevision,
+                  blockStore?.blockedMemberIds == blockedIds else { return }
             summary = .loaded(result)
         } catch {
             // 취소는 시트를 닫은 정상 흐름이다. 실패 화면으로 바꾸면 다시 열었을 때 에러부터
             // 보인다 (`load()` 와 같은 정책).
-            guard !(error is CancellationError) else { return }
+            guard !(error is CancellationError),
+                  summaryRequestRevision == requestRevision else { return }
             summary = .failed(AppError.from(error))
         }
     }
@@ -79,6 +85,7 @@ extension CommunityThreadRoomViewModel {
 
     /// 시트를 닫을 때 결과를 버린다. 다시 열면 그 사이 쌓인 메시지까지 포함해 새로 요약한다.
     public func dismissSummary() {
+        summaryRequestRevision = UUID()
         summary = .idle
     }
 
@@ -89,7 +96,7 @@ extension CommunityThreadRoomViewModel {
     /// 뒤에서 세는 이유는 미읽음이 항상 최신 쪽에 몰려 있기 때문이다. 화면에 아직 그만큼 안
     /// 쌓였으면 `suffix` 가 가진 만큼만 준다.
     private func unreadMessages() -> [ThreadMessage] {
-        Array(messages.suffix(entryUnreadCount))
+        Array(messages.suffix(entryUnreadCount)).filter { !isSenderBlocked($0) }
     }
 }
 

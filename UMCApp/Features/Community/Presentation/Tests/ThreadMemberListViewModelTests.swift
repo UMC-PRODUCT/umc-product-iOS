@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Synchronization
 import Testing
 import CommunityDomain
 import UMCFoundation
@@ -23,8 +24,13 @@ private final class StubMemberUseCase: CommunityThreadMemberUseCaseProtocol {
     var members: [ThreadMember] = []
     var shouldFailLoad = false
     var shouldFailCommand = false
+    var failingMemberIds = Set<String>()
+    private(set) var roleCalls: [(String, ThreadMemberRole)] = []
     /// 위임 성공 후 다시 읽을 목록. 서버가 이전 개설자를 어떤 역할로 내리는지 재현한다.
     var membersAfterTransfer: [ThreadMember]?
+    var transferContinuation: CheckedContinuation<Void, Never>?
+    var suspendsTransfer = false
+    var commandError: AppError?
 
     private(set) var kickCalls: [String] = []
     private(set) var transferCalls: [String] = []
@@ -38,11 +44,25 @@ private final class StubMemberUseCase: CommunityThreadMemberUseCaseProtocol {
 
     func kick(threadId: String, memberId: String) async throws {
         kickCalls.append(memberId)
+        if let commandError { throw commandError }
         if shouldFailCommand { throw AppError.unknown(message: "실패") }
+        if failingMemberIds.contains(memberId) {
+            throw RepositoryError.serverError(code: "COMMUNITY-0035", message: "멤버 없음")
+        }
+    }
+
+    func setAdministrator(threadId: String, memberId: String, isAdministrator: Bool) async throws {
+        if failingMemberIds.contains(memberId) {
+            throw RepositoryError.serverError(code: "COMMUNITY-0043", message: "역할 변경 불가")
+        }
+        roleCalls.append((memberId, isAdministrator ? .admin : .member))
     }
 
     func transferOwnership(threadId: String, to memberId: String) async throws {
         transferCalls.append(memberId)
+        if suspendsTransfer {
+            await withCheckedContinuation { transferContinuation = $0 }
+        }
         if shouldFailCommand { throw AppError.unknown(message: "실패") }
         if let membersAfterTransfer { members = membersAfterTransfer }
     }
@@ -366,6 +386,211 @@ struct ThreadMemberListViewModelTests {
         await waitUntil { errorHandler.currentError != nil }
 
         #expect(viewModel.didLeave == false)
+    }
+
+    @Test("나를 한 번만 맨 위에 놓고 역할과 한글 이름순으로 정렬한다")
+    func sortsAndDeduplicatesMembers() async {
+        let useCase = StubMemberUseCase()
+        useCase.members = [
+            makeMember(id: "9", name: "하나", role: .owner),
+            makeMember(id: "2", name: "나래", role: .admin),
+            makeMember(id: "3", name: "가람", role: .admin),
+            makeMember(id: "4", name: "가나"),
+            makeMember(id: "5", name: "하늘"),
+            makeMember(id: "5", name: "하늘")
+        ]
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        #expect(viewModel.members.map(\.id) == ["5", "9", "3", "2", "4"])
+    }
+
+    @Test("검색해도 선택은 유지되고 선택 해제하면 선택 모드가 끝난다")
+    func preservesSelectionAcrossSearch() async {
+        let useCase = StubMemberUseCase()
+        let viewModel = await makeOwnerViewModel(useCase)
+        viewModel.toggleSelectionMode()
+        viewModel.toggleSelection(viewModel.members[1])
+        viewModel.searchText = "없는 이름"
+        #expect(viewModel.filteredMembers.isEmpty)
+        #expect(viewModel.selectedMemberIds == ["9"])
+        viewModel.toggleSelectionMode()
+        #expect(!viewModel.isSelecting)
+        #expect(viewModel.selectedMemberIds.isEmpty)
+    }
+
+    @Test("본인과 개설자는 선택할 수 없고 관리자는 역할 변경할 수 없다")
+    func restrictsSelectionAndRoleActions() async {
+        let useCase = StubMemberUseCase()
+        useCase.members = [makeMember(id: "5", role: .admin),
+                           makeMember(id: "9", role: .owner),
+                           makeMember(id: "3", role: .admin), makeMember(id: "4")]
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.toggleSelectionMode()
+        for member in viewModel.members { viewModel.toggleSelection(member) }
+        #expect(viewModel.selectedMemberIds == ["3", "4"])
+        #expect(viewModel.canManageSelection)
+        #expect(!viewModel.canPromoteSelection)
+        #expect(!viewModel.canDemoteSelection)
+    }
+
+    @Test("개설자는 일반만 선택 시 지정, 관리자만 선택 시 해제, 혼합 시 내보내기만 가능하다")
+    func computesHomogeneousRoleActions() async {
+        let useCase = StubMemberUseCase()
+        useCase.members = [makeMember(id: "5", role: .owner),
+                           makeMember(id: "3", role: .admin), makeMember(id: "4")]
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.toggleSelectionMode()
+        let admin = viewModel.members.first { $0.id == "3" }!
+        let member = viewModel.members.first { $0.id == "4" }!
+        viewModel.toggleSelection(member)
+        #expect(viewModel.canPromoteSelection)
+        #expect(!viewModel.canDemoteSelection)
+        viewModel.toggleSelection(admin)
+        #expect(!viewModel.canPromoteSelection)
+        #expect(!viewModel.canDemoteSelection)
+        viewModel.toggleSelection(member)
+        #expect(viewModel.canDemoteSelection)
+    }
+
+    @Test("일부 내보내기 실패 시 실제 성공한 사람만 제거하고 실패한 선택을 보존한다")
+    func preservesFailedKickTargets() async {
+        let useCase = StubMemberUseCase()
+        useCase.members = [makeMember(id: "5", role: .owner),
+                           makeMember(id: "3"), makeMember(id: "4")]
+        useCase.failingMemberIds = ["4"]
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.toggleSelectionMode()
+        for member in viewModel.members { viewModel.toggleSelection(member) }
+        await viewModel.manageSelection(.kick)
+        #expect(viewModel.members.map(\.id) == ["5", "4"])
+        #expect(viewModel.selectedMemberIds == ["4"])
+        #expect(viewModel.operationMessage?.contains("1명") == true)
+    }
+
+    @Test("관리자 지정 성공은 해당 역할과 목록 순서에 반영된다")
+    func reflectsSuccessfulPromotion() async {
+        let useCase = StubMemberUseCase()
+        useCase.members = [makeMember(id: "5", role: .owner),
+                           makeMember(id: "3", name: "가람"),
+                           makeMember(id: "4", name: "하늘")]
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.toggleSelectionMode()
+        viewModel.toggleSelection(viewModel.members.first { $0.id == "4" }!)
+        await viewModel.manageSelection(.promote)
+        #expect(viewModel.members.map(\.id) == ["5", "4", "3"])
+        #expect(viewModel.members[1].role == .admin)
+        #expect(viewModel.selectedMemberIds.isEmpty)
+        #expect(!viewModel.isSelecting)
+    }
+
+    @Test("관리자 지정 일부 실패 시 성공자만 역할을 바꾸고 실패자는 재시도할 수 있다")
+    func preservesFailedRoleTargets() async {
+        let useCase = StubMemberUseCase()
+        useCase.members = [makeMember(id: "5", role: .owner),
+                           makeMember(id: "3"), makeMember(id: "4")]
+        useCase.failingMemberIds = ["4"]
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.toggleSelectionMode()
+        for member in viewModel.members { viewModel.toggleSelection(member) }
+        await viewModel.manageSelection(.promote)
+        #expect(viewModel.members.first { $0.id == "3" }?.role == .admin)
+        #expect(viewModel.members.first { $0.id == "4" }?.role == .member)
+        #expect(viewModel.selectedMemberIds == ["4"])
+        #expect(viewModel.canPromoteSelection)
+    }
+
+    @Test("확인 창 이후 권한을 잃으면 관리자 지정과 내보내기를 실행하지 않는다")
+    func revalidatesPermissionAfterConfirmation() async throws {
+        let useCase = StubMemberUseCase()
+        let viewModel = await makeOwnerViewModel(useCase)
+        viewModel.toggleSelectionMode()
+        viewModel.toggleSelection(viewModel.members[1])
+        viewModel.confirmSelection(.promote)
+        let action = try #require(viewModel.alertPrompt?.positiveBtnAction)
+        useCase.members = [makeMember(id: "5"), makeMember(id: "9")]
+        await viewModel.load()
+        action()
+        await Task.yield()
+        #expect(useCase.roleCalls.isEmpty)
+        #expect(useCase.kickCalls.isEmpty)
+        #expect(!viewModel.isSelecting)
+    }
+
+    @Test("확인 창 이후 선택을 바꾸면 예전 대상에게 작업을 실행하지 않는다")
+    func doesNotApplyStaleConfirmation() async throws {
+        let useCase = StubMemberUseCase()
+        let viewModel = await makeOwnerViewModel(useCase)
+        viewModel.toggleSelectionMode()
+        viewModel.toggleSelection(viewModel.members[1])
+        viewModel.confirmSelection(.kick)
+        let action = try #require(viewModel.alertPrompt?.positiveBtnAction)
+        viewModel.toggleSelectionMode()
+        action()
+        await Task.yield()
+        #expect(useCase.kickCalls.isEmpty)
+        #expect(viewModel.members.count == 2)
+    }
+
+    @Test("위임 요청 중에는 추가 위임과 일괄 선택을 잠근다")
+    func locksManagementDuringTransfer() async throws {
+        let useCase = StubMemberUseCase()
+        let viewModel = await makeOwnerViewModel(useCase)
+        useCase.suspendsTransfer = true
+        viewModel.confirmTransferOwnership(to: viewModel.members[1])
+        let action = try #require(viewModel.alertPrompt?.positiveBtnAction)
+        action()
+        await waitUntil { useCase.transferContinuation != nil }
+        viewModel.toggleSelectionMode()
+        #expect(viewModel.isManaging)
+        #expect(!viewModel.isSelecting)
+        action()
+        await Task.yield()
+        #expect(useCase.transferCalls.count == 1)
+        useCase.transferContinuation?.resume()
+        await waitUntil { !viewModel.isManaging }
+    }
+
+    @Test("세션 만료는 전역 오류로 전달하고 남은 대상 요청을 중단한다")
+    func stopsBatchOnSessionExpiration() async {
+        let useCase = StubMemberUseCase()
+        useCase.members = [makeMember(id: "5", role: .owner),
+                           makeMember(id: "3"), makeMember(id: "4")]
+        useCase.commandError = .auth(.sessionExpired)
+        let didExpire = Mutex(false)
+        let observer = NotificationCenter.default.addObserver(
+            forName: .authSessionExpired, object: nil, queue: nil
+        ) { _ in didExpire.withLock { $0 = true } }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        let handler = ErrorHandler()
+        let viewModel = makeViewModel(useCase, errorHandler: handler)
+        await viewModel.load()
+        viewModel.toggleSelectionMode()
+        for member in viewModel.members { viewModel.toggleSelection(member) }
+        await viewModel.manageSelection(.kick)
+        #expect(useCase.kickCalls.count == 1)
+        #expect(didExpire.withLock { $0 })
+        #expect(viewModel.members.count == 3)
+    }
+
+    @Test("첫 대상의 도메인 실패는 다음 대상의 내보내기를 막지 않는다")
+    func continuesAfterTargetFailure() async {
+        let useCase = StubMemberUseCase()
+        useCase.members = [makeMember(id: "5", role: .owner),
+                           makeMember(id: "3"), makeMember(id: "4")]
+        useCase.failingMemberIds = ["3"]
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.toggleSelectionMode()
+        for member in viewModel.members { viewModel.toggleSelection(member) }
+        await viewModel.manageSelection(.kick)
+        #expect(viewModel.members.map(\.id) == ["5", "3"])
+        #expect(viewModel.selectedMemberIds == ["3"])
+        #expect(useCase.kickCalls == ["3", "4"])
     }
 
     // MARK: - Helper

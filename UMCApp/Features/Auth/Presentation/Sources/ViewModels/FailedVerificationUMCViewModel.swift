@@ -232,6 +232,7 @@ final class FailedVerificationUMCViewModel {
 
         do {
             try await networkClient.logout()
+            container.resolveIfCached(MemberBlockStore.self)?.reset()
             userSessionManager.reset()
             await container.resolveIfRegistered(MemberProfileRepositoryProtocol.self)?
                 .invalidateCache()
@@ -256,6 +257,7 @@ final class FailedVerificationUMCViewModel {
             try await deleteMemberUseCase.execute(googleAccessToken: nil, kakaoAccessToken: nil)
             UserDefaults.standard.set(false, forKey: AppStorageKey.canAutoLogin)
             try await networkClient.logout()
+            container.resolveIfCached(MemberBlockStore.self)?.reset()
             userSessionManager.reset()
             await container.resolveIfRegistered(MemberProfileRepositoryProtocol.self)?
                 .invalidateCache()

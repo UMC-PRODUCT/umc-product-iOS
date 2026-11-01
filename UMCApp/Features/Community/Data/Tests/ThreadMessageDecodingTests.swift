@@ -13,6 +13,15 @@ import CommunityDomain
 @Suite("메시지 Response DTO 디코딩 — REST/STOMP 공용")
 struct ThreadMessageDecodingTests {
 
+    @Test("차단 플래그는 REST·실시간 메시지 도메인에 전달된다")
+    func decodesSenderBlockedFlag() throws {
+        let json = #"{"messageId":"10","senderId":"20","isSenderBlocked":true}"#
+        let message = try decode(ThreadMessageDTO.self, json).toDomain
+        #expect(message.isSenderBlocked)
+        let legacy = try decode(ThreadMessageDTO.self, #"{"messageId":"10"}"#).toDomain
+        #expect(!legacy.isSenderBlocked)
+    }
+
     private func decode<T: Decodable>(_ type: T.Type, _ json: String) throws -> T {
         try JSONDecoder().decode(type, from: Data(json.utf8))
     }

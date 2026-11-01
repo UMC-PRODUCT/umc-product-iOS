@@ -63,6 +63,7 @@ struct CommunityThreadRoomView: View {
     /// 액션 오버레이가 겨냥한 메시지. 메시지 값을 통째로 들고 있으면 삭제·갱신된 뒤 stale 해지므로
     /// id 만 두고 매번 목록에서 되찾는다.
     @State private var actionTargetID: String?
+    @State private var profileTarget: ThreadMessage?
 
     /// `+` 로 연 전체 이모지 피커의 대상. 반응은 id 로 목록에서 다시 찾으므로 값이 stale 해도 된다.
     @State private var emojiPickerTarget: ThreadMessage?
@@ -234,6 +235,23 @@ struct CommunityThreadRoomView: View {
         }
         .onChange(of: isThreadVisible) { _, _ in updateForegroundThread() }
         .task { await viewModel.load() }
+        .task { try? await viewModel.blockStore?.refresh() }
+        .onChange(of: viewModel.blockStore?.blockedMemberIds) { _, _ in
+            viewModel.revealedBlockedMessageIds = []
+            viewModel.cancelReply()
+            viewModel.dismissSummary()
+            dismissActions()
+        }
+        .sheet(item: $profileTarget) { message in
+            if let store = viewModel.blockStore {
+                MemberSafetyProfileView(
+                    memberId: message.senderId,
+                    name: message.senderName,
+                    currentMemberId: viewModel.currentMemberId,
+                    store: store
+                )
+            }
+        }
         .task { await viewModel.observeRealtime() }
         .alertPrompt(item: $viewModel.alertPrompt)
         .sheet(isPresented: $viewModel.isSummarySheetPresented) {
@@ -532,19 +550,39 @@ struct CommunityThreadRoomView: View {
                         DateDivider(date: dividerDate)
                     }
 
-                    MessageBubble(
-                        message: message,
-                        isMine: viewModel.isMine(message),
-                        showsTime: Self.showsTime(at: index, in: viewModel.messages),
-                        onRetry: { Task { await viewModel.retry(message) } },
-                        onReact: { emoji in
-                            Task { await viewModel.toggleReaction(message, emoji: emoji) }
-                        },
-                        onQuoteTap: { viewModel.scrollToQuoted($0) },
-                        isActionTargeted: actionTargetID == message.id,
-                        onRequestActions: { showActions(for: message) },
-                        isReadOnly: !viewModel.canWrite
-                    )
+                    VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                        if viewModel.isMessageHidden(message) {
+                            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                                Text("차단한 회원의 메시지입니다.")
+                                    .appFont(.subheadline, color: .grey600)
+                                Button("메시지 보기") { viewModel.toggleBlockedMessage(message) }
+                                    .frame(minHeight: Constants.minimumTapTarget)
+                            }
+                            .padding(DefaultSpacing.spacing12)
+                        } else {
+                            MessageBubble(
+                                message: viewModel.displayedMessage(message),
+                                isMine: viewModel.isMine(message),
+                                showsTime: Self.showsTime(at: index, in: viewModel.messages),
+                                onRetry: { Task { await viewModel.retry(message) } },
+                                onReact: { emoji in
+                                    Task { await viewModel.toggleReaction(message, emoji: emoji) }
+                                },
+                                onQuoteTap: { viewModel.scrollToQuoted($0) },
+                                isActionTargeted: actionTargetID == message.id,
+                                onRequestActions: { showActions(for: message) },
+                                isReadOnly: !viewModel.canWrite,
+                                onOpenProfile: viewModel.blockStore == nil ? nil : {
+                                    profileTarget = message
+                                }
+                            )
+                            if viewModel.isSenderBlocked(message) {
+                                Button("메시지 숨기기") { viewModel.toggleBlockedMessage(message) }
+                                    .frame(minHeight: Constants.minimumTapTarget)
+                            }
+                        }
+                    }
+                    .id(message.id)
                     .accessibilityFocused($focusedMessageID, equals: message.id)
                     .task { await viewModel.loadOlderIfNeeded(currentItem: message) }
                 }
@@ -602,7 +640,7 @@ struct CommunityThreadRoomView: View {
             isRoomAvailable: viewModel.header.value != nil && viewModel.ejectionNotice == nil
                 && !viewModel.didLeave && !viewModel.shouldDismiss,
             isObscured: isInviteSheetPresented || viewModel.isSummarySheetPresented
-                || viewModel.reportTarget != nil || emojiPickerTarget != nil
+                || viewModel.reportTarget != nil || emojiPickerTarget != nil || profileTarget != nil
                 || viewModel.alertPrompt != nil || inviteViewModel.alertPrompt != nil
         )
     }

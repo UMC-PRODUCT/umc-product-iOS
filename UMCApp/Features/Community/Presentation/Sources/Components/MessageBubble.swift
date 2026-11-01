@@ -63,6 +63,7 @@ struct MessageBubble: View {
     let onRequestActions: () -> Void
     /// 비참여자 열람 (#1432). 반응 칩은 보여 주되 누를 수 없고, 어피던스 아이콘도 뺀다.
     let isReadOnly: Bool
+    var onOpenProfile: (() -> Void)? = nil
 
     // MARK: - Body
 
@@ -87,8 +88,17 @@ struct MessageBubble: View {
                         spacing: DefaultSpacing.spacing4
                     ) {
                         if !isMine {
-                            Text(message.senderName)
-                                .appFont(.caption2, color: .grey600)
+                            if let onOpenProfile {
+                                Button(action: onOpenProfile) {
+                                    Text(message.senderName)
+                                        .appFont(.caption2, color: .grey600)
+                                        .frame(minHeight: Constants.minimumTapTarget)
+                                }
+                                .accessibilityLabel("\(message.senderName) 프로필 보기")
+                            } else {
+                                Text(message.senderName)
+                                    .appFont(.caption2, color: .grey600)
+                            }
                         }
 
                         // 시간은 반응 칩이 아니라 말풍선 하단에 맞춘다.

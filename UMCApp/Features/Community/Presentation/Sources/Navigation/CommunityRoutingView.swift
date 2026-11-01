@@ -9,6 +9,7 @@ import SwiftUI
 
 import CommunityDomain
 import CoreDI
+import CoreDomain
 import UMCFoundation
 
 /// `CommunityDestination` → 실제 화면.
@@ -55,7 +56,8 @@ struct CommunityRoutingView: View {
                     useCase: container.resolve(CommunityThreadRoomUseCaseProtocol.self),
                     listUseCase: container.resolve(CommunityThreadListUseCaseProtocol.self),
                     errorHandler: errorHandler,
-                    summarizer: container.resolve(ThreadSummarizing.self)
+                    summarizer: container.resolve(ThreadSummarizing.self),
+                    blockStore: container.resolve(MemberBlockStore.self)
                 ),
                 inviteViewModel: makeInviteViewModel(threadId: threadId),
                 onThreadToggled: onThreadToggled,
