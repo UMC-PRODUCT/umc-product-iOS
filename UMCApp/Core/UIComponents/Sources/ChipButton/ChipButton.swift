@@ -154,7 +154,7 @@ private struct ChipButtonContent: View, Equatable {
     let isSelected: Bool
     let leadingIcon: String?
     let trailingIcon: Bool?
-    
+
     // MARK: - Constant
 
     fileprivate enum Constants {

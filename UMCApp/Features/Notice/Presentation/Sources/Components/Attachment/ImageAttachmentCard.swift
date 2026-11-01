@@ -59,7 +59,7 @@ struct ImageAttachmentCard: View, Equatable {
             .frame(width: Constants.imageSize.width, height: Constants.imageSize.height)
             .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
-    
+
     @ViewBuilder
     private var imageContent: some View {
         if isLoading {
@@ -100,11 +100,11 @@ struct ImageAttachmentCard: View, Equatable {
     private func resolveImageURL(from rawURL: String) -> URL? {
         let trimmed = rawURL.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        
+
         if let absoluteURL = URL(string: trimmed), absoluteURL.scheme != nil {
             return absoluteURL
         }
-        
+
         return NetworkConfig.baseURL.appendingPathComponent("api/v1/storage/\(trimmed)")
     }
 }
@@ -114,7 +114,7 @@ struct ImageAttachmentCard: View, Equatable {
 #Preview("기본 이미지 카드") {
     @Previewable @State var noticeImageItems: [NoticeImageItem] = []
     @Previewable @State var selectedItems: [PhotosPickerItem] = []
-    
+
     VStack {
         ScrollView(.horizontal) {
             HStack(spacing: 12) {
@@ -154,7 +154,7 @@ struct ImageAttachmentCard: View, Equatable {
             isLoading: true,
             onDismiss: {}
         )
-        
+
         // 로딩 중인 카드 2개
         ImageAttachmentCard(
             id: UUID(),
@@ -163,7 +163,7 @@ struct ImageAttachmentCard: View, Equatable {
             isLoading: true,
             onDismiss: {}
         )
-        
+
         // 로드된 카드 (예시용 더미 데이터)
         ImageAttachmentCard(
             id: UUID(),
