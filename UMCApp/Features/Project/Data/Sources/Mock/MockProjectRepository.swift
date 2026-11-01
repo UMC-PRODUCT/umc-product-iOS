@@ -145,11 +145,23 @@ public struct MockProjectRepository:
     // MARK: - Statistics
 
     public func fetchStatistics(projectIds: [String]) async throws -> ProjectChapterStatistics {
-        ProjectChapterStatistics(chapterId: nil, projects: [], summary: nil)
+        ProjectChapterStatistics(
+            chapterId: "5", matchingRound: nil,
+            summary: .init(
+                roundApplicationStatistics: [], schoolApplicationStatistics: [],
+                projectRoundStatistics: []
+            )
+        )
     }
 
     public func fetchStatistics(chapterId: String) async throws -> ProjectChapterStatistics {
-        ProjectChapterStatistics(chapterId: chapterId, projects: [], summary: nil)
+        ProjectChapterStatistics(
+            chapterId: chapterId, matchingRound: nil,
+            summary: .init(
+                roundApplicationStatistics: [], schoolApplicationStatistics: [],
+                projectRoundStatistics: []
+            )
+        )
     }
 
     public func fetchMatchingStatistics(chapterId: String) async throws
@@ -158,7 +170,7 @@ public struct MockProjectRepository:
             chapterId: chapterId,
             roundMatchingStatistics: [],
             schoolMatchingStatistics: [],
-            unclassifiedMatchingStatistics: nil
+            projectMatchingStatistics: []
         )
     }
 

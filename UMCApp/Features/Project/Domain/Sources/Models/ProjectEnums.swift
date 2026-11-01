@@ -37,8 +37,7 @@ public enum ProjectMatchingType: String, Sendable, Equatable, Hashable, CaseIter
 
 /// 매칭 차수 (서버 `MatchingPhase` + `MatchingRoundPhaseView`).
 ///
-/// `randomMatching` 은 `GET /me/applications` 응답의 `MatchingRoundPhaseView` 에만 온다.
-/// 차수 생성·수정 요청에 넣으면 서버가 거절한다.
+/// `randomMatching` 은 지원 결과와 차수별 매칭 통계에도 사용한다.
 public enum ProjectMatchingPhase: String, Sendable, Equatable, Hashable, CaseIterable {
     case first = "FIRST"
     case second = "SECOND"

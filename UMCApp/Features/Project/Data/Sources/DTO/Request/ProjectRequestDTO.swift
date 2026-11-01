@@ -246,6 +246,7 @@ public struct CreateProjectMatchingRoundRequestDTO: Encodable, Equatable {
     public let startsAt: String
     public let endsAt: String
     public let decisionDeadline: String
+    public let resultPublishAt: String
 
     public init(draft: ProjectMatchingRoundDraft) throws {
         self.name = draft.name
@@ -256,6 +257,7 @@ public struct CreateProjectMatchingRoundRequestDTO: Encodable, Equatable {
         self.startsAt = ServerDateTimeConverter.toUTCDateTimeString(draft.startsAt)
         self.endsAt = ServerDateTimeConverter.toUTCDateTimeString(draft.endsAt)
         self.decisionDeadline = ServerDateTimeConverter.toUTCDateTimeString(draft.decisionDeadline)
+        self.resultPublishAt = ServerDateTimeConverter.toUTCDateTimeString(draft.resultPublishAt)
     }
 }
 
@@ -268,6 +270,7 @@ public struct UpdateProjectMatchingRoundRequestDTO: Encodable, Equatable {
     public let startsAt: String?
     public let endsAt: String?
     public let decisionDeadline: String?
+    public let resultPublishAt: String?
 
     public init(update: ProjectMatchingRoundUpdate) {
         self.name = update.name
@@ -277,6 +280,9 @@ public struct UpdateProjectMatchingRoundRequestDTO: Encodable, Equatable {
         self.startsAt = update.startsAt.map(ServerDateTimeConverter.toUTCDateTimeString)
         self.endsAt = update.endsAt.map(ServerDateTimeConverter.toUTCDateTimeString)
         self.decisionDeadline = update.decisionDeadline.map(
+            ServerDateTimeConverter.toUTCDateTimeString
+        )
+        self.resultPublishAt = update.resultPublishAt.map(
             ServerDateTimeConverter.toUTCDateTimeString
         )
     }

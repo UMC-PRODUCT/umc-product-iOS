@@ -235,7 +235,8 @@ final class ProjectAdminViewModel {
                         phase: form.phase,
                         startsAt: form.startsAt,
                         endsAt: form.endsAt,
-                        decisionDeadline: form.decisionDeadline
+                        decisionDeadline: form.decisionDeadline,
+                        resultPublishAt: form.resultPublishAtForUpdate
                     )
                 )
             } else {
@@ -248,7 +249,8 @@ final class ProjectAdminViewModel {
                         chapterId: chapterId,
                         startsAt: form.startsAt,
                         endsAt: form.endsAt,
-                        decisionDeadline: form.decisionDeadline
+                        decisionDeadline: form.decisionDeadline,
+                        resultPublishAt: form.resultPublishAt
                     )
                 )
             }

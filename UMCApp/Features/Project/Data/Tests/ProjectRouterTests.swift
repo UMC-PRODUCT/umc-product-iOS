@@ -144,7 +144,7 @@ struct ProjectRouterTests {
         )
         check(
             .getStatistics(query: .init(chapterId: "5")),
-            "\(base)/statistics", .get, .query
+            "\(base)/statistics/applications", .get, .query
         )
         check(
             .getMatchingStatistics(query: .init(chapterId: "5")),
@@ -165,8 +165,25 @@ struct ProjectRouterTests {
             chapterId: "5",
             startsAt: Date(timeIntervalSince1970: 0),
             endsAt: Date(timeIntervalSince1970: 3600),
-            decisionDeadline: Date(timeIntervalSince1970: 7200)
+            decisionDeadline: Date(timeIntervalSince1970: 7200),
+            resultPublishAt: Date(timeIntervalSince1970: 7500)
         )
+        let createBody = try CreateProjectMatchingRoundRequestDTO(draft: draft)
+        let createObject = try #require(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(createBody)) as? [String: Any]
+        )
+        #expect(createObject["resultPublishAt"] as? String == "1970-01-01T02:05:00.000Z")
+
+        let updateBody = UpdateProjectMatchingRoundRequestDTO(
+            update: .init(resultPublishAt: draft.resultPublishAt)
+        )
+        #expect(updateBody.resultPublishAt == createBody.resultPublishAt)
+        let emptyUpdate = UpdateProjectMatchingRoundRequestDTO(update: .init())
+        let emptyObject = try #require(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(emptyUpdate)) as? [String: Any]
+        )
+        #expect(emptyObject["resultPublishAt"] == nil)
+
         var checkedCount = 0
         func check(
             _ router: ProjectMatchingRoundRouter,

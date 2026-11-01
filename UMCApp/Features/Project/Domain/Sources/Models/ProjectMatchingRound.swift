@@ -20,6 +20,7 @@ public struct ProjectMatchingRound: Sendable, Equatable {
     public let startsAt: Date?
     public let endsAt: Date?
     public let decisionDeadline: Date?
+    public let resultPublishAt: Date?
     /// 자동 결정이 아직 돌지 않았으면 `nil`.
     public let autoDecisionExecutedAt: Date?
     public let autoDecisionExecutedMemberId: String?
@@ -36,6 +37,7 @@ public struct ProjectMatchingRound: Sendable, Equatable {
         startsAt: Date?,
         endsAt: Date?,
         decisionDeadline: Date?,
+        resultPublishAt: Date? = nil,
         autoDecisionExecutedAt: Date?,
         autoDecisionExecutedMemberId: String?,
         createdAt: Date?,
@@ -50,6 +52,7 @@ public struct ProjectMatchingRound: Sendable, Equatable {
         self.startsAt = startsAt
         self.endsAt = endsAt
         self.decisionDeadline = decisionDeadline
+        self.resultPublishAt = resultPublishAt
         self.autoDecisionExecutedAt = autoDecisionExecutedAt
         self.autoDecisionExecutedMemberId = autoDecisionExecutedMemberId
         self.createdAt = createdAt
@@ -69,6 +72,7 @@ public struct ProjectMatchingRoundDraft: Sendable, Equatable {
     public let startsAt: Date
     public let endsAt: Date
     public let decisionDeadline: Date
+    public let resultPublishAt: Date
 
     public init(
         name: String,
@@ -78,7 +82,8 @@ public struct ProjectMatchingRoundDraft: Sendable, Equatable {
         chapterId: String,
         startsAt: Date,
         endsAt: Date,
-        decisionDeadline: Date
+        decisionDeadline: Date,
+        resultPublishAt: Date
     ) {
         self.name = name
         self.description = description
@@ -88,6 +93,7 @@ public struct ProjectMatchingRoundDraft: Sendable, Equatable {
         self.startsAt = startsAt
         self.endsAt = endsAt
         self.decisionDeadline = decisionDeadline
+        self.resultPublishAt = resultPublishAt
     }
 }
 
@@ -102,6 +108,7 @@ public struct ProjectMatchingRoundUpdate: Sendable, Equatable {
     public let startsAt: Date?
     public let endsAt: Date?
     public let decisionDeadline: Date?
+    public let resultPublishAt: Date?
 
     public init(
         name: String? = nil,
@@ -110,7 +117,8 @@ public struct ProjectMatchingRoundUpdate: Sendable, Equatable {
         phase: ProjectMatchingPhase? = nil,
         startsAt: Date? = nil,
         endsAt: Date? = nil,
-        decisionDeadline: Date? = nil
+        decisionDeadline: Date? = nil,
+        resultPublishAt: Date? = nil
     ) {
         self.name = name
         self.description = description
@@ -119,5 +127,6 @@ public struct ProjectMatchingRoundUpdate: Sendable, Equatable {
         self.startsAt = startsAt
         self.endsAt = endsAt
         self.decisionDeadline = decisionDeadline
+        self.resultPublishAt = resultPublishAt
     }
 }

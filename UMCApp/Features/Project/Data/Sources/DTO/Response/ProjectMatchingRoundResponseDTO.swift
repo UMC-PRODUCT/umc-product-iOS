@@ -20,6 +20,7 @@ public struct ProjectMatchingRoundResponseDTO: Codable {
     let startsAt: String?
     let endsAt: String?
     let decisionDeadline: String?
+    let resultPublishAt: String?
     let autoDecisionExecutedAt: String?
     let autoDecisionExecutedMemberId: String?
     let createdAt: String?
@@ -27,7 +28,7 @@ public struct ProjectMatchingRoundResponseDTO: Codable {
 
     private enum CodingKeys: String, CodingKey {
         case id, name, description, type, phase, chapterId, startsAt, endsAt, decisionDeadline
-        case autoDecisionExecutedAt, autoDecisionExecutedMemberId, createdAt, updatedAt
+        case resultPublishAt, autoDecisionExecutedAt, autoDecisionExecutedMemberId, createdAt, updatedAt
     }
 
     public init(from decoder: Decoder) throws {
@@ -41,6 +42,7 @@ public struct ProjectMatchingRoundResponseDTO: Codable {
         startsAt = try container.decodeIfPresent(String.self, forKey: .startsAt)
         endsAt = try container.decodeIfPresent(String.self, forKey: .endsAt)
         decisionDeadline = try container.decodeIfPresent(String.self, forKey: .decisionDeadline)
+        resultPublishAt = try container.decodeIfPresent(String.self, forKey: .resultPublishAt)
         autoDecisionExecutedAt = try container.decodeIfPresent(
             String.self,
             forKey: .autoDecisionExecutedAt
@@ -63,6 +65,7 @@ public struct ProjectMatchingRoundResponseDTO: Codable {
         try container.encodeIfPresent(startsAt, forKey: .startsAt)
         try container.encodeIfPresent(endsAt, forKey: .endsAt)
         try container.encodeIfPresent(decisionDeadline, forKey: .decisionDeadline)
+        try container.encodeIfPresent(resultPublishAt, forKey: .resultPublishAt)
         try container.encodeIfPresent(autoDecisionExecutedAt, forKey: .autoDecisionExecutedAt)
         try container.encodeIfPresent(
             autoDecisionExecutedMemberId,
@@ -84,6 +87,7 @@ public struct ProjectMatchingRoundResponseDTO: Codable {
             startsAt: startsAt.flatMap(parse),
             endsAt: endsAt.flatMap(parse),
             decisionDeadline: decisionDeadline.flatMap(parse),
+            resultPublishAt: resultPublishAt.flatMap(parse),
             autoDecisionExecutedAt: autoDecisionExecutedAt.flatMap(parse),
             autoDecisionExecutedMemberId: autoDecisionExecutedMemberId,
             createdAt: createdAt.flatMap(parse),

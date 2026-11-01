@@ -171,7 +171,7 @@ extension ProjectRouter: BaseTargetType {
         case .getPermissions:
             return "\(base)/permissions"
         case .getStatistics:
-            return "\(base)/statistics"
+            return "\(base)/statistics/applications"
         case .getMatchingStatistics:
             return "\(base)/statistics/matchings"
         }

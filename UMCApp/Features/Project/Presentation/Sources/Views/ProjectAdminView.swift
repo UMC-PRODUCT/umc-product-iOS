@@ -208,8 +208,8 @@ struct ProjectAdminView: View {
     ) -> some View {
         if let statistics {
             Section(Constants.applicationStatisticsHeader) {
-                if let summary = statistics.summary,
-                   !summary.roundApplicationStatistics.isEmpty {
+                let summary = statistics.summary
+                if !summary.roundApplicationStatistics.isEmpty {
                     ForEach(
                         Array(summary.roundApplicationStatistics.enumerated()),
                         id: \.offset
@@ -221,7 +221,8 @@ struct ProjectAdminView: View {
                         )
                     }
                 } else {
-                    LabeledContent("조회 프로젝트", value: "\(statistics.projects.count)개")
+                    Text("집계할 지원 통계가 없습니다.")
+                        .foregroundStyle(Color.grey500)
                 }
             }
         }
@@ -295,13 +296,10 @@ struct ProjectAdminView: View {
                     id: \.offset
                 ) { _, item in
                     LabeledContent(
-                        item.matchingRound?.phase?.title ?? "차수 미분류",
+                        item.phase.title,
                         value: "매칭 \(item.matchedMemberCount)명 · "
                             + "가능 \(item.availableMemberCount)명"
                     )
-                }
-                if let unclassified = statistics.unclassifiedMatchingStatistics {
-                    LabeledContent("랜덤 매칭", value: "\(unclassified.matchedMemberCount)명")
                 }
             }
 
@@ -452,10 +450,20 @@ private struct ProjectMatchingRoundEditorView: View {
                         }
                     }
                 }
-                Section("일정") {
+                Section {
                     DatePicker("시작", selection: $form.startsAt)
                     DatePicker("종료", selection: $form.endsAt)
                     DatePicker("결정 마감", selection: $form.decisionDeadline)
+                    DatePicker("결과 발표", selection: $form.resultPublishAt)
+                } header: {
+                    Text("일정")
+                } footer: {
+                    VStack(alignment: .leading) {
+                        Text("시작, 종료, 결정 마감 순서로 설정하고 결과 발표는 결정 마감 5분 이후로 설정해 주세요.")
+                        if form.resultPublishAtForUpdate == nil {
+                            Text("이 차수의 발표일은 미설정입니다. 표시된 날짜는 제안값이며, 날짜를 변경해야 저장됩니다.")
+                        }
+                    }
                 }
             }
             .navigationTitle(
