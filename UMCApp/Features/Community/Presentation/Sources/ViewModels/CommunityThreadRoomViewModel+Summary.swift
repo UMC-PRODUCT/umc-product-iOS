@@ -61,6 +61,7 @@ extension CommunityThreadRoomViewModel {
         let requestRevision = summaryRequestRevision
         let blockedIds = blockStore?.blockedMemberIds
         summary = .loading
+        analytics("community_summary_attempted", [:])
         let blockRevision = blockState.revision
 
         do {
@@ -72,6 +73,7 @@ extension CommunityThreadRoomViewModel {
                   blockStore?.blockedMemberIds == blockedIds,
                   blockRevision == blockState.revision else { return }
             summary = .loaded(result)
+            analytics("community_summary_completed", [:])
         } catch {
             // 취소는 시트를 닫은 정상 흐름이다. 실패 화면으로 바꾸면 다시 열었을 때 에러부터
             // 보인다 (`load()` 와 같은 정책).
@@ -79,6 +81,7 @@ extension CommunityThreadRoomViewModel {
                   summaryRequestRevision == requestRevision,
                   blockRevision == blockState.revision else { return }
             summary = .failed(AppError.from(error))
+            analytics("community_summary_failed", [:])
         }
     }
 

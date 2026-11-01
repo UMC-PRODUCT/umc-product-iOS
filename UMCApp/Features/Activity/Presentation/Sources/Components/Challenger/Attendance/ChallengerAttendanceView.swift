@@ -96,7 +96,14 @@ struct ChallengerAttendanceView: View, Equatable {
             reduceMotion ? nil : .easeInOut(duration: Constants.mapReadyAnimationDuration),
             value: isMapReady
         )
+        .onAppear {
+            AppAnalytics.track("screen_view", parameters: [
+                "screen_name": "attendance_detail",
+                "screen_class": "ChallengerAttendanceView"
+            ])
+        }
         .task {
+            attendanceViewModel.attendanceFlowStarted(for: session)
             // 카드 펼침 애니메이션과 지도 초기화가 겹치면 프레임이 튀어 한 틱 뒤로 미룬다.
             try? await Task.sleep(for: Constants.mapLoadDelay)
             isMapReady = true
@@ -319,6 +326,7 @@ struct ChallengerAttendanceView: View, Equatable {
     private var lateReasonPrimaryButton: some View {
         MainButton("지각 사유 제출하기") {
             triggerImpactHaptic()
+            attendanceViewModel.attendanceReasonOpened(for: session)
             showReasonSheet = true
         }
         .buttonStyle(.glassProminent)
@@ -328,6 +336,7 @@ struct ChallengerAttendanceView: View, Equatable {
     /// 사유 제출 보조 링크 (정시/시작 전 시간대 전용)
     private var lateReasonButton: some View {
         Button {
+            attendanceViewModel.attendanceReasonOpened(for: session)
             showReasonSheet = true
         } label: {
             Text("위치 인증이 안 되나요? 사유 제출하기")

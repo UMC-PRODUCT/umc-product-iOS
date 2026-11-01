@@ -256,13 +256,24 @@ extension NoticeDetailViewModel {
     /// 공지 상세 진입 시 1회 읽음 처리
     @MainActor
     public func markAsReadIfNeeded() async -> Bool {
-        guard !hasMarkedAsRead else { return false }
+        guard !hasMarkedAsRead, !isMarkingAsRead else { return false }
         guard !noticeID.isEmpty && noticeID != "0" else { return false }
+
+        isMarkingAsRead = true
+        defer { isMarkingAsRead = false }
+        // 로컬 기록은 재진입 중복만 줄인다. 서버의 최초 열람 여부를 뜻하지 않는다.
+        let memberId = currentMemberId
+        let readIDs = memberId > 0
+            ? try? noticeReadRepository.fetchReadNoticeIDs(memberId: String(memberId))
+            : nil
 
         do {
             try await noticeUseCase.readNotice(noticeId: noticeID)
             persistReadStateIfPossible()
             hasMarkedAsRead = true
+            if let readIDs, !readIDs.contains(noticeID), currentMemberId == memberId {
+                trackAnalytics("notice_read_confirmed", [:])
+            }
             return true
         } catch let error as RepositoryError {
             errorHandler.handle(

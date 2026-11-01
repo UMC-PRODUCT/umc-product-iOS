@@ -40,6 +40,8 @@ let project = Project(
                     // 시안에도 다크 프레임이 없어서, 검증 안 된 다크를 내보내지 않는다.
                     // (다크를 정식 지원하려면 시안·시맨틱 별칭 토큰부터 있어야 한다)
                     "UIUserInterfaceStyle": "Light",
+                    // SwiftUI 화면은 명시적으로 기록하며 명함 화면 자동 수집을 제외한다.
+                    "FirebaseAutomaticScreenReportingEnabled": false,
                     // NearbyInteraction 은 UWB 로 상대 기기와의 거리·방향만 재고
                     // CoreLocation 을 전혀 쓰지 않는다. 아래 NSLocationWhenInUseUsageDescription
                     // (GPS 출석)과 별개 권한이라, 문구에 "위치"를 쓰면 사용자·심사가 오독한다.
@@ -162,6 +164,7 @@ let project = Project(
                 ),
                 .external(name: "FirebaseCore"),
                 .external(name: "FirebaseMessaging"),
+                .external(name: "FirebaseAnalyticsCore"),
                 .project(target: "UMCAppWidget", path: "UMCAppWidget"),
                 // Live Activity 를 시작·갱신하려면 위젯과 같은 ActivityAttributes 타입이 필요하다.
                 .project(target: "CoreWidgetShared", path: .relativeToRoot("Core/WidgetShared")),

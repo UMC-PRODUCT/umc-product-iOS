@@ -36,6 +36,9 @@ public final class CommunityThreadListViewModel {
     public var filter: CommunityThreadFilter = .all {
         didSet {
             guard filter != oldValue else { return }
+            AppAnalytics.track("community_filter_selected", parameters: [
+                "filter": filter.queryValue.lowercased()
+            ])
             reloadTask?.cancel()
             reloadTask = Task { [weak self] in await self?.load() }
         }
@@ -45,6 +48,7 @@ public final class CommunityThreadListViewModel {
     public var searchText: String = "" {
         didSet {
             guard searchText != oldValue else { return }
+            lastRecordedSearch = nil
             reloadTask?.cancel()
             reloadTask = Task { [weak self] in
                 try? await Task.sleep(for: .milliseconds(300))
@@ -61,6 +65,7 @@ public final class CommunityThreadListViewModel {
 
     @ObservationIgnored private let recentSearchStore: RecentThreadSearchStore
     @ObservationIgnored private var nextOffset: Int?
+    @ObservationIgnored private var lastRecordedSearch: String?
     @ObservationIgnored private var reloadTask: Task<Void, Never>?
 
     // MARK: - Init
@@ -168,6 +173,11 @@ public final class CommunityThreadListViewModel {
     public func recordCurrentSearch() {
         guard let query = trimmedQuery else { return }
         recentSearches = recentSearchStore.add(query)
+        guard lastRecordedSearch != query else { return }
+        lastRecordedSearch = query
+        AppAnalytics.track("community_search_submitted", parameters: [
+            "filter": filter.queryValue.lowercased()
+        ])
     }
 
     public func removeRecentSearch(_ term: String) {
@@ -253,6 +263,9 @@ public final class CommunityThreadListViewModel {
 
         do {
             try await listUseCase.togglePin(threadId: thread.id, isPinned: target)
+            AppAnalytics.track("community_thread_pin_changed", parameters: [
+                "is_pinned": String(target)
+            ])
         } catch {
             // 반대 방향 이동으로 되돌리면 원래 인덱스를 잃어 20번째 행이 최상단에 박힌다.
             state = snapshotState
@@ -267,6 +280,9 @@ public final class CommunityThreadListViewModel {
 
         do {
             try await listUseCase.toggleMute(threadId: thread.id, isMuted: target)
+            AppAnalytics.track("community_thread_mute_changed", parameters: [
+                "is_muted": String(target)
+            ])
         } catch {
             updateRow(threadId: thread.id) { $0.with(isMuted: !target) }
             errorHandler.handle(error, context: errorContext("toggleMute"))
@@ -468,6 +484,7 @@ public final class CommunityThreadListViewModel {
 
         do {
             try await listUseCase.leave(threadId: thread.id)
+            AppAnalytics.track("community_thread_left")
         } catch {
             state = snapshotState
             pinned = snapshotPinned

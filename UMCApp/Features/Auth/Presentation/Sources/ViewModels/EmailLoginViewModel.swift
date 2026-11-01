@@ -40,6 +40,7 @@ final class EmailLoginViewModel {
     private let loginByEmailUseCase: LoginByEmailUseCaseProtocol
     private let fetchMemberProfileUseCase: FetchMemberProfileUseCaseProtocol
     private let syncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol
+    private let trackAnalytics: @MainActor (String, [String: String]) -> Void
     private let errorHandler: ErrorHandler
 
     /// 이메일 입력값
@@ -62,11 +63,18 @@ final class EmailLoginViewModel {
 
     // MARK: - Init
 
-    init(container: DIContainer, errorHandler: ErrorHandler) {
+    init(
+        container: DIContainer,
+        errorHandler: ErrorHandler,
+        trackAnalytics: @escaping @MainActor (String, [String: String]) -> Void = {
+            AppAnalytics.track($0, parameters: $1)
+        }
+    ) {
         self.loginByEmailUseCase = container.resolve(LoginByEmailUseCaseProtocol.self)
         self.fetchMemberProfileUseCase = container.resolve(FetchMemberProfileUseCaseProtocol.self)
         self.syncProfileStorageUseCase = container.resolve(SyncProfileStorageUseCaseProtocol.self)
         self.errorHandler = errorHandler
+        self.trackAnalytics = trackAnalytics
     }
 
     // MARK: - Computed Property
@@ -105,6 +113,7 @@ final class EmailLoginViewModel {
         guard !email.isEmpty, !password.isEmpty else { return }
 
         loginState = .loading
+        trackAnalytics("login_attempt", ["method": "email"])
         loginErrorMessage = nil
 
         do {
@@ -135,17 +144,25 @@ final class EmailLoginViewModel {
         do {
             let profile = try await fetchMemberProfileUseCase.execute()
             guard profile.isApproved else {
+                trackAnalytics("login_failed", ["method": "email", "reason": "pending_approval"])
                 loginState = .failed(.auth(.pendingApproval))
                 return
             }
             syncProfileStorageUseCase.execute(profile: profile)
             loginState = .loaded(profile)
+            trackAnalytics("login", ["method": "email"])
         } catch {
+            trackAnalytics("login_failed", ["method": "email", "reason": "profile_error"])
             loginState = .idle
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Auth",
                 action: Constants.action,
-                retryAction: { [weak self] in await self?.resolveApprovalStatus() }
+                retryAction: { [weak self] in
+                    guard let self, !self.loginState.isLoading else { return }
+                    self.loginState = .loading
+                    self.trackAnalytics("login_attempt", ["method": "email"])
+                    await self.resolveApprovalStatus()
+                }
             ))
         }
     }
@@ -153,6 +170,7 @@ final class EmailLoginViewModel {
     /// 서버 인증 실패를 인라인 메시지로 변환한다.
     @MainActor
     private func handleLoginError(_ error: RepositoryError) {
+        trackAnalytics("login_failed", ["method": "email", "reason": "auth_error"])
         if case .serverError(let code, let message) = error {
             switch code {
             case Constants.invalidEmailFormatCode:
@@ -174,6 +192,7 @@ final class EmailLoginViewModel {
 
     @MainActor
     private func handleUnexpectedFailure(_ error: Error) {
+        trackAnalytics("login_failed", ["method": "email", "reason": "auth_error"])
         loginState = .idle
         errorHandler.handle(error, context: ErrorContext(
             feature: "Auth",

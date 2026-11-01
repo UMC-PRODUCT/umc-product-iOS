@@ -72,13 +72,18 @@ public final class ThreadInviteViewModel {
         // 같은 사람이 두 번 실리면 서버가 한 사람을 두 번 넣으려 한다.
         let memberIds = Array(Set(invitees.map(\.memberId)))
 
+        AppAnalytics.track("community_invite_attempted")
         do {
             try await useCase.invite(threadId: threadId, memberIds: memberIds)
+            AppAnalytics.track("community_invite_completed", parameters: [
+                "invitee_count": String(memberIds.count)
+            ])
             invitees = []
             // 다음에 열 때 후보를 다시 읽기 전까지 방금 들어온 멤버가 후보로 남지 않게 한다.
             invitableMemberIds?.subtract(memberIds)
             return memberIds.count
         } catch {
+            AppAnalytics.track("community_invite_failed")
             alertPrompt = AlertPrompt(
                 title: "초대하지 못했어요",
                 message: (error as? ThreadInviteError)?.errorDescription

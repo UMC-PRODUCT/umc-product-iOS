@@ -13,6 +13,11 @@ import Testing
 import UMCFoundation
 @testable import NoticePresentation
 
+private struct DetailReads: NoticeReadRepositoryProtocol {
+    func fetchReadNoticeIDs(memberId: String) throws -> Set<String> { ["1"] }
+    func markAsRead(noticeId: String, memberId: String) throws {}
+}
+
 private struct DetailGenerationRepository: ChallengerGenRepositoryProtocol {
     func replaceMappings(_ pairs: [(gen: String, gisuId: String)]) throws {}
     func fetchGenGisuIdPairs() throws -> [(gen: String, gisuId: String)] { [] }
@@ -40,6 +45,7 @@ struct NoticeDetailContractTests {
         useCase: NoticeUseCaseProtocol? = nil
     ) -> NoticeDetailViewModel {
         let container = DIContainer()
+        container.register(NoticeReadRepositoryProtocol.self) { DetailReads() }
         container.register(ChallengerGenRepositoryProtocol.self) { DetailGenerationRepository() }
         container.register(AuthorizationUseCaseProtocol.self) {
             DetailAuthorization(permissions: permissions, fails: authorizationFails)
@@ -56,6 +62,37 @@ struct NoticeDetailContractTests {
                 ), hasPermission: true, images: [], links: [], vote: nil
             )
         )
+    }
+
+    @Test
+    func readAcknowledgementDoesNotDuplicateConcurrentOrRepeatedRequests() async {
+        let useCase = DelayedDetailUseCase()
+        let model = makeViewModel(useCase: useCase)
+        var events: [String] = []
+        model.trackAnalytics = { event, _ in events.append(event) }
+        let first = Task { await model.markAsReadIfNeeded() }
+        while useCase.readContinuation == nil { await Task.yield() }
+        #expect(await model.markAsReadIfNeeded() == false)
+        useCase.readContinuation?.resume()
+        #expect(await first.value)
+        #expect(await model.markAsReadIfNeeded() == false)
+        #expect(useCase.readCallCount == 1)
+        // 이미 로컬에 기록된 공지의 재진입은 이벤트를 보내지 않는다.
+        #expect(events.isEmpty)
+    }
+
+    @Test
+    func failedReadAcknowledgementCanRetryWithoutEmittingSuccess() async {
+        let useCase = DelayedDetailUseCase()
+        useCase.readFails = true
+        let model = makeViewModel(useCase: useCase)
+        var events: [String] = []
+        model.trackAnalytics = { event, _ in events.append(event) }
+        #expect(await model.markAsReadIfNeeded() == false)
+        #expect(await model.markAsReadIfNeeded() == false)
+        #expect(!model.hasMarkedAsRead)
+        #expect(useCase.readCallCount == 2)
+        #expect(events.isEmpty)
     }
 
     @Test(arguments: [0.0, 0.5, 1, 50, 100])
@@ -172,6 +209,9 @@ struct NoticeDetailContractTests {
 }
 
 private final class DelayedDetailUseCase: NoticeUseCaseProtocol {
+    var readContinuation: CheckedContinuation<Void, Never>?
+    var readCallCount = 0
+    var readFails = false
     var continuations: [String: CheckedContinuation<NoticeReadStatusPage, Never>] = [:]
     var continuation: CheckedContinuation<NoticeReadStatusPage, Never>? {
         continuations.values.first
@@ -212,7 +252,9 @@ private final class DelayedDetailUseCase: NoticeUseCaseProtocol {
     }
 
     func readNotice(noticeId: String) async throws {
-        fatalError("Unexpected call")
+        readCallCount += 1
+        if readFails { throw URLError(.notConnectedToInternet) }
+        await withCheckedContinuation { readContinuation = $0 }
     }
 
     func submitVoteResponse(noticeId: String, optionIds: [String]) async throws {

@@ -79,6 +79,10 @@ public final class NoticeDetailViewModel {
 
     /// 읽음 처리 완료 여부(중복 호출 방지)
     public var hasMarkedAsRead: Bool = false
+    var isMarkingAsRead = false
+    var trackAnalytics: @MainActor (String, [String: String]) -> Void = {
+        AppAnalytics.track($0, parameters: $1)
+    }
 
     /// Error Handler
     public var errorHandler: ErrorHandler

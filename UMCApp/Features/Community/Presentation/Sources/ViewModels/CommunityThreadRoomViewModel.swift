@@ -163,6 +163,10 @@ public final class CommunityThreadRoomViewModel {
     let currentMemberId: String?
     let blockStore: MemberBlockStore?
     private let sendTimeout: Duration
+    let analytics: AppAnalytics.Handler
+    @ObservationIgnored private var hasRecordedEntry = false
+    /// 로컬 발신만 추적한다. 타임아웃 뒤 늦게 온 서버 확정도 한 번만 집계한다.
+    @ObservationIgnored private var pendingAnalytics: [String: [String: String]] = [:]
 
     /// 최하단 근처를 보고 있는지. 화면만 알 수 있는 값이라 `updateNearBottom(_:)` 로 받아 둔다.
     /// 진입 직후는 `defaultScrollAnchor(.bottom)` 때문에 항상 최하단이라 초기값이 곧 실제 상태다.
@@ -195,9 +199,11 @@ public final class CommunityThreadRoomViewModel {
         currentMemberId: String? = AppStorageKey.memberIdString(),
         sendTimeout: Duration = .seconds(15),
         blockStore: MemberBlockStore? = nil,
-        blockState: CommunityMemberBlockState = CommunityMemberBlockState()
+        blockState: CommunityMemberBlockState = CommunityMemberBlockState(),
+        analytics: @escaping AppAnalytics.Handler = AppAnalytics.track
     ) {
         self.blockState = blockStore.map { CommunityMemberBlockState(store: $0) } ?? blockState
+        self.analytics = analytics
         self.threadId = threadId
         self.useCase = useCase
         self.listUseCase = listUseCase
@@ -320,6 +326,13 @@ public final class CommunityThreadRoomViewModel {
             hasMore = page.hasMore
             nextBefore = page.nextBefore
             header = .loaded(thread)
+            if !hasRecordedEntry {
+                hasRecordedEntry = true
+                analytics("community_thread_viewed", [
+                    "category": thread.category.rawValue.lowercased(),
+                    "is_joined": String(thread.isJoined)
+                ])
+            }
             // 바로 아래 `markRead` 가 미읽음을 지우기 시작한다. 요약 배너가 볼 수치는 그 전에
             // 확정해야 한다 — 순서가 뒤집히면 배너 조건이 영영 성립하지 않는다.
             captureEntryUnreadCount(from: thread)
@@ -872,6 +885,7 @@ public final class CommunityThreadRoomViewModel {
         replyToId: String?,
         mentionedMemberIds: [String]
     ) async {
+        recordSendAttempt(clientMessageId: clientMessageId)
         startTimeout(for: clientMessageId)
 
         do {
@@ -890,8 +904,21 @@ public final class CommunityThreadRoomViewModel {
         }
     }
 
-    /// 응답이 오지 않는 경우를 닫는다. STOMP 는 SEND 에 대한 성공 응답이 없어 이 감시가 없으면
-    /// `.sending` 스피너가 영원히 남는다.
+    /// 파일 업로드를 포함한 전송 시도. 타임아웃 시작과 분리해 업로드 실패도 집계한다.
+    func recordSendAttempt(clientMessageId: String) {
+        let key = clientMessageId.lowercased()
+        if let message = messages.first(where: { $0.clientMessageId?.lowercased() == key }) {
+            let parameters = [
+                "message_type": message.type.rawValue.lowercased(),
+                "has_reply": String(message.replyTo != nil),
+                "has_mention": String(!message.mentions.isEmpty)
+            ]
+            pendingAnalytics[key] = parameters
+            analytics("community_message_send_attempted", parameters)
+        }
+    }
+
+    /// 응답이 오지 않는 경우를 닫는다. 업로드 완료 뒤부터 서버 확정을 기다린다.
     func startTimeout(for clientMessageId: String) {
         pendingTimeouts[clientMessageId]?.cancel()
         pendingTimeouts[clientMessageId] = Task { [weak self, sendTimeout] in
@@ -909,6 +936,9 @@ public final class CommunityThreadRoomViewModel {
         guard let index = messages.firstIndex(where: { $0.clientMessageId?.lowercased() == key }),
               messages[index].deliveryState == .sending else { return }
         messages[index].deliveryState = .failed
+        analytics("community_message_send_unconfirmed", [
+            "message_type": messages[index].type.rawValue.lowercased()
+        ])
     }
 
     /// 서버 메시지를 목록에 반영한다.
@@ -919,6 +949,9 @@ public final class CommunityThreadRoomViewModel {
         // 보낼 때만 정규화하면 서버가 대문자로 되돌려 줄 때 열쇠가 어긋나 중복 버블이 남는다.
         if let key = (clientMessageId ?? message.clientMessageId)?.lowercased() {
             pendingTimeouts.removeValue(forKey: key)?.cancel()
+            if let parameters = pendingAnalytics.removeValue(forKey: key) {
+                analytics("community_message_sent", parameters)
+            }
 
             let match = messages.firstIndex { $0.clientMessageId?.lowercased() == key }
             if let index = match {

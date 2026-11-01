@@ -159,6 +159,12 @@ struct RootTabView: View {
     private func tabRootView(_ tab: NavigationTab) -> some View {
         NavigationStack(path: pathBinding(for: tab)) {
             tabContent(tab)
+                .onAppear {
+                    AppAnalytics.track("screen_view", parameters: [
+                        "screen_name": String(describing: tab),
+                        "screen_class": "RootTabView"
+                    ])
+                }
                 .navigationDestination(for: NavigationDestination.self) { destination in
                     NavigationRoutingView(
                         destination: destination,

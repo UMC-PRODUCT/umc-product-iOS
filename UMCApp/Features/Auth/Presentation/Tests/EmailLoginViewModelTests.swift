@@ -17,6 +17,42 @@ import UMCFoundation
 @Suite("EmailLoginViewModel — 이메일 로그인 상태 전이")
 struct EmailLoginViewModelTests {
 
+    @Test("승인 완료만 login 이벤트이며 입력값은 전송하지 않는다")
+    func analyticsRequiresApprovedProfile() async {
+        var events: [(String, [String: String])] = []
+        let login = MockLoginByEmailUseCase()
+        login.result = .success(LoginByIdPwResult(memberId: "1"))
+        let profile = MockFetchMemberProfileUseCase()
+        profile.result = .success(makeProfile(generations: ["11"]))
+        let model = makeViewModel(
+            loginByEmailUseCase: login, fetchMemberProfileUseCase: profile,
+            trackAnalytics: { events.append(($0, $1)) }
+        )
+        await model.loginWithEmail()
+        #expect(events.isEmpty)
+        model.emailInput = "member@umc.dev"
+        model.passwordInput = "secret"
+        await model.loginWithEmail()
+        #expect(events.map(\.0) == ["login_attempt", "login"])
+        #expect(events.allSatisfy { $0.1 == ["method": "email"] })
+    }
+
+    @Test("실패는 분류만 기록하고 로그인 성공으로 집계하지 않는다")
+    func analyticsFailureExcludesServerMessage() async {
+        var events: [(String, [String: String])] = []
+        let model = makeViewModel(
+            loginByEmailUseCase: stubbedUseCase(failure: RepositoryError.serverError(
+                code: "PRIVATE-CODE", message: "sensitive response"
+            )),
+            trackAnalytics: { events.append(($0, $1)) }
+        )
+        model.emailInput = "member@umc.dev"
+        model.passwordInput = "secret"
+        await model.loginWithEmail()
+        #expect(events.map(\.0) == ["login_attempt", "login_failed"])
+        #expect(events.last?.1 == ["method": "email", "reason": "auth_error"])
+    }
+
     @Test("초기 상태는 .idle이고 메시지가 모두 비어 있다")
     func initialStateIsIdle() {
         let viewModel = makeViewModel()
@@ -235,7 +271,8 @@ private func makeViewModel(
     loginByEmailUseCase: LoginByEmailUseCaseProtocol? = nil,
     fetchMemberProfileUseCase: FetchMemberProfileUseCaseProtocol? = nil,
     syncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol? = nil,
-    errorHandler: ErrorHandler? = nil
+    errorHandler: ErrorHandler? = nil,
+    trackAnalytics: @escaping @MainActor (String, [String: String]) -> Void = { _, _ in }
 ) -> EmailLoginViewModel {
     let loginByEmailUseCase = loginByEmailUseCase ?? MockLoginByEmailUseCase()
     let fetchMemberProfileUseCase = fetchMemberProfileUseCase ?? MockFetchMemberProfileUseCase()
@@ -246,7 +283,9 @@ private func makeViewModel(
     container.register(LoginByEmailUseCaseProtocol.self) { loginByEmailUseCase }
     container.register(FetchMemberProfileUseCaseProtocol.self) { fetchMemberProfileUseCase }
     container.register(SyncProfileStorageUseCaseProtocol.self) { syncProfileStorageUseCase }
-    return EmailLoginViewModel(container: container, errorHandler: errorHandler)
+    return EmailLoginViewModel(
+        container: container, errorHandler: errorHandler, trackAnalytics: trackAnalytics
+    )
 }
 
 private func stubbedUseCase(failure: Error) -> MockLoginByEmailUseCase {

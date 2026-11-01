@@ -99,18 +99,22 @@ struct LoginViewModelKakaoTests {
 
     @Test("사용자 취소(SocialLoginError.cancelled) → .idle 복귀, ErrorHandler Alert 없음")
     func cancelledSetsIdleWithoutErrorAlert() async {
+        var events: [(String, [String: String])] = []
         let kakaoLoginManager = MockKakaoLoginManager()
         kakaoLoginManager.error = SocialLoginError.cancelled
         let errorHandler = ErrorHandler()
         let viewModel = makeViewModel(
             errorHandler: errorHandler,
-            kakaoLoginManager: kakaoLoginManager
+            kakaoLoginManager: kakaoLoginManager,
+            trackAnalytics: { events.append(($0, $1)) }
         )
 
         await viewModel.loginWithKakao()
 
         #expect(viewModel.loginState == .idle)
         #expect(errorHandler.currentError == nil)
+        #expect(events.map(\.0) == ["login_attempt", "login_failed"])
+        #expect(events.last?.1 == ["method": "kakao", "reason": "cancelled"])
     }
 
     @Test("일반 에러 → .idle 복귀 + ErrorHandler Alert 노출")
@@ -290,7 +294,8 @@ private func makeViewModel(
     kakaoLoginManager: KakaoLoginManaging? = nil,
     appleLoginManager: AppleLoginManaging? = nil,
     googleLoginManager: GoogleLoginManaging? = nil,
-    syncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol? = nil
+    syncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol? = nil,
+    trackAnalytics: @escaping @MainActor (String, [String: String]) -> Void = { _, _ in }
 ) -> LoginViewModel {
     // 기본값 초기화 자체가 MainActor 격리(예: GoogleLoginManaging)를 요구하므로
     // 파라미터 기본값이 아닌 함수 본문(@MainActor 컨텍스트)에서 생성한다.
@@ -311,7 +316,8 @@ private func makeViewModel(
         errorHandler: errorHandler,
         kakaoLoginManager: kakaoLoginManager,
         appleLoginManager: appleLoginManager,
-        googleLoginManager: googleLoginManager
+        googleLoginManager: googleLoginManager,
+        trackAnalytics: trackAnalytics
     )
 }
 
