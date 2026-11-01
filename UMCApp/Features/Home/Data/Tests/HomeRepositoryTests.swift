@@ -375,6 +375,80 @@ struct HomeRepositoryTests {
         }
     }
 
+    @Test("기수 조회 실패는 상벌점을 보존하고 확인할 수 없는 활동일만 생략한다")
+    func seasonFailurePreservesPoints() async throws {
+        let failures: [Error] = [
+            NetworkError.timeout,
+            NetworkError.noNetwork,
+            NetworkError.requestFailed(statusCode: 503, data: nil),
+            NetworkError.requestFailed(statusCode: 404, data: nil),
+            RepositoryError.decodingError(detail: "missing startAt")
+        ]
+        for error in failures {
+            let repository = makeSeasonFailureRepository(error: error)
+            let result = try await repository.fetchMyProfile(forceRefresh: true)
+            #expect(result.seasonTypes == [.gens(["12"])])
+            #expect(result.generations.count == 1)
+            #expect(result.generations.first?.penaltyPoint == 0.5)
+        }
+    }
+
+    @Test("일부 기수 조회 실패 시 나머지 기수로 활동일을 계산하지 않는다")
+    func partialSeasonFailureOmitsActivityDays() async throws {
+        let remote = MockMemberProfileRepository()
+        remote.result = .success(Profile(
+            memberId: "1", name: "홍길동", nickname: "길동", generations: ["11", "12"],
+            challengerRecords: [
+                Fixture.record(gisuId: "1001", points: []),
+                Fixture.record(gisuId: "1002", points: [])
+            ]
+        ))
+        let repository = HomeRepository(
+            networkRequesting: PartialSeasonNetwork(), memberProfileRepository: remote
+        )
+
+        let result = try await repository.fetchMyProfile(forceRefresh: true)
+
+        #expect(result.seasonTypes == [.gens(["11", "12"])])
+        #expect(result.generations.count == 2)
+    }
+
+    @Test("기수 조회 취소·인증·권한 실패는 숨기지 않는다")
+    func seasonCriticalFailuresPropagate() async {
+        let failures: [Error] = [
+            CancellationError(), URLError(.cancelled),
+            NetworkError.unauthorized, NetworkError.noRefreshToken,
+            NetworkError.tokenRefreshFailed(reason: "expired"),
+            NetworkError.maxRetryExceeded,
+            NetworkError.requestFailed(statusCode: 401, data: nil),
+            NetworkError.requestFailed(statusCode: 403, data: nil)
+        ]
+        for error in failures {
+            let repository = makeSeasonFailureRepository(error: error)
+            await #expect(throws: (any Error).self) {
+                try await repository.fetchMyProfile(forceRefresh: true)
+            }
+        }
+    }
+
+    private func makeSeasonFailureRepository(error: Error) -> HomeRepository {
+        let profile = Profile(
+            memberId: "1", name: "홍길동", nickname: "길동", generations: ["12"],
+            challengerRecords: [Fixture.record(gisuId: "1002", points: [
+                ProfileChallengerPoint(
+                    id: "1", pointType: "LATE", point: 0.5,
+                    description: "지각", createdAt: "2026-10-01T00:00:00Z"
+                )
+            ])]
+        )
+        let remote = MockMemberProfileRepository()
+        remote.result = .success(profile)
+        return HomeRepository(
+            networkRequesting: StubHomeNetwork(.failure(error)),
+            memberProfileRepository: remote
+        )
+    }
+
     @Test("대상 기수가 없으면 네트워크 호출 없이 활동일을 0으로 반환한다")
     func fetchMyProfileWithNoTargetGisuSkipsNetworkCall() async throws {
         let profile = Profile(
@@ -464,5 +538,18 @@ struct HomeRepositoryTests {
         remoteCallCount = await remote.callCount
         #expect(afterRefresh.memberId == "2", "이후 일반 조회도 갱신된 스냅샷을 반환")
         #expect(remoteCallCount == 2, "갱신된 캐시에 히트 — 추가 원격 호출 없음")
+    }
+}
+
+/// 한 기수만 정상 응답하여 부가 조회의 부분 실패를 재현한다.
+private struct PartialSeasonNetwork: HomeNetworkRequesting {
+    func request<T: TargetType>(_ target: T) async throws -> Response {
+        if target.path == "/api/v1/gisu/1001" {
+            throw NetworkError.timeout
+        }
+        return Response(
+            statusCode: 200,
+            data: Fixture.gisuDetailBody(gisuId: "1002", startAt: "2026-10-01T00:00:00Z")
+        )
     }
 }
