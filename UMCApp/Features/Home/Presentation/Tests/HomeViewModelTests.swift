@@ -80,6 +80,65 @@ struct HomeViewModelTests {
         #expect(viewModel.generationState == loadedGenerationState)
     }
 
+    @Test("URLSession 취소는 새로고침 전 프로필과 공지를 보존한다")
+    func urlCancellationPreservesLoadedProfile() async {
+        let useCase = MockFetchHomeProfileUseCase()
+        useCase.result = .success(makeProfile(generationNumbers: ["12"]))
+        let viewModel = makeViewModel(useCase: useCase)
+        await viewModel.fetchProfile()
+        let season = viewModel.seasonState
+        let generations = viewModel.generationState
+        let notices = viewModel.recentNoticeState
+
+        useCase.result = .failure(URLError(.cancelled))
+        await viewModel.fetchProfile(forceRefresh: true)
+
+        #expect(viewModel.seasonState == season)
+        #expect(viewModel.generationState == generations)
+        #expect(viewModel.recentNoticeState == notices)
+    }
+
+    @Test("최근 공지 요청 취소는 기존 공지를 보존한다")
+    func noticeCancellationPreservesLoadedState() async {
+        let useCase = MockFetchHomeProfileUseCase()
+        useCase.result = .success(makeProfile(generationNumbers: ["12"]))
+        let notices = MockFetchRecentNoticesUseCase()
+        let viewModel = makeViewModel(useCase: useCase, recentNoticesUseCase: notices)
+        await viewModel.fetchProfile()
+        let previous = viewModel.recentNoticeState
+
+        notices.result = .failure(URLError(.cancelled))
+        await viewModel.fetchProfile(forceRefresh: true)
+        #expect(viewModel.recentNoticeState == previous)
+
+        notices.result = .failure(CancellationError())
+        await viewModel.fetchProfile(forceRefresh: true)
+        #expect(viewModel.recentNoticeState == previous)
+    }
+
+    @Test("중첩 공지 요청에서 이전 응답은 무시하고 최신 취소는 확정 상태를 복원한다")
+    func overlappingNoticeCancellationRestoresSettledState() async {
+        let profile = MockFetchHomeProfileUseCase()
+        profile.result = .success(makeProfile(generationNumbers: ["12"]))
+        let notices = ControlledRecentNoticesUseCase()
+        let viewModel = makeViewModel(useCase: profile, recentNoticesUseCase: notices)
+        await viewModel.fetchProfile()
+        let settledState = viewModel.recentNoticeState
+        notices.suspendsRequests = true
+
+        let first = Task { await viewModel.retryRecentNotices() }
+        while notices.pending.count < 1 { await Task.yield() }
+        let second = Task { await viewModel.retryRecentNotices() }
+        while notices.pending.count < 2 { await Task.yield() }
+
+        notices.pending[0].resume(throwing: DummyError())
+        await first.value
+        #expect(viewModel.recentNoticeState == .loading)
+        notices.pending[1].resume(throwing: URLError(.cancelled))
+        await second.value
+        #expect(viewModel.recentNoticeState == settledState)
+    }
+
     @Test("fetchProfileIfNeeded()는 idle일 때만 로드한다")
     func fetchIfNeededLoadsOnlyWhenIdle() async {
         let useCase = MockFetchHomeProfileUseCase()
@@ -417,5 +476,16 @@ private final class MockClassifyScheduleUseCase: ClassifyScheduleUseCaseProtocol
     func execute(title: String) async -> ScheduleIconCategory {
         lock.withLock { recordedTitles.append(title) }
         return resultsByTitle[title] ?? .general
+    }
+}
+
+@MainActor
+private final class ControlledRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol {
+    var suspendsRequests = false
+    var pending: [CheckedContinuation<[NoticeItemModel], Error>] = []
+
+    func execute(gisuId: String) async throws -> [NoticeItemModel] {
+        guard suspendsRequests else { return [] }
+        return try await withCheckedThrowingContinuation { pending.append($0) }
     }
 }

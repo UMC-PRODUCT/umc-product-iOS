@@ -48,6 +48,12 @@ public final class HomeViewModel {
     @ObservationIgnored
     private var scheduleRequestGeneration = 0
 
+    /// 중첩된 공지 조회의 오래된 결과를 무시하고 취소 시 확정 상태로 복원한다.
+    @ObservationIgnored
+    private var recentNoticeRequestGeneration = 0
+    @ObservationIgnored
+    private var settledRecentNoticeState: Loadable<[NoticeItemModel]> = .idle
+
     private let fetchMyProfileUseCase: FetchHomeProfileUseCaseProtocol
     private let fetchRecentNoticesUseCase: FetchRecentNoticesUseCaseProtocol
     private let fetchMySchedulesUseCase: FetchSchedulesUseCaseProtocol
@@ -101,6 +107,9 @@ public final class HomeViewModel {
             await syncProfileStorage()
             await fetchRecentNotices(latestGisuId: sortedGenerations.first?.gisuId)
         } catch is CancellationError {
+            seasonState = previousSeasonState
+            generationState = previousGenerationState
+        } catch let error as URLError where error.code == .cancelled {
             seasonState = previousSeasonState
             generationState = previousGenerationState
         } catch let error as RepositoryError {
@@ -292,35 +301,45 @@ public final class HomeViewModel {
     /// 프로필 응답에 기수가 비어 있어도 직전 세션에서 저장된 기수가 남아 있으면 공지를 보여줄 수
     /// 있으므로, 로컬 저장값을 폴백으로 쓴다.
     private func fetchRecentNotices(latestGisuId: String?) async {
+        recentNoticeRequestGeneration += 1
+        let generation = recentNoticeRequestGeneration
         let resolvedGisuId = latestGisuId.flatMap { $0.isEmpty ? nil : $0 }
             ?? AppStorageKey.gisuIdString()
         guard let gisuId = resolvedGisuId else {
             recentNoticeState = .loaded([])
+            settledRecentNoticeState = recentNoticeState
             return
         }
 
         recentNoticeState = .loading
-
+        let result: Loadable<[NoticeItemModel]>
         do {
             let notices = try await fetchRecentNoticesUseCase.execute(gisuId: gisuId)
-            recentNoticeState = .loaded(notices)
+            result = .loaded(notices)
         } catch is CancellationError {
-            recentNoticeState = .idle
+            result = settledRecentNoticeState
+        } catch let error as URLError where error.code == .cancelled {
+            result = settledRecentNoticeState
         } catch let error as RepositoryError {
-            recentNoticeState = .failed(.repository(error))
+            result = .failed(.repository(error))
         } catch let error as NetworkError {
-            recentNoticeState = .failed(.network(error))
+            result = .failed(.network(error))
         } catch let error as AppError {
-            recentNoticeState = .failed(error)
+            result = .failed(error)
         } catch {
-            recentNoticeState = .failed(.unknown(message: error.localizedDescription))
+            result = .failed(.unknown(message: error.localizedDescription))
         }
+        guard generation == recentNoticeRequestGeneration else { return }
+        recentNoticeState = result
+        settledRecentNoticeState = result
     }
 
     private func setFailed(_ error: AppError) {
         seasonState = .failed(error)
         generationState = .failed(error)
+        recentNoticeRequestGeneration += 1
         recentNoticeState = .failed(error)
+        settledRecentNoticeState = recentNoticeState
     }
 
     /// 기수(`gen`)는 서버 정수를 `String`으로 보존하므로 정렬 시점에만 `Int`로 환원한다.

@@ -89,18 +89,27 @@ public final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
         if !generationNumbers.isEmpty {
             seasonTypes.append(.gens(generationNumbers))
         }
-        seasonTypes.append(.days(activityDays))
+        if let activityDays {
+            seasonTypes.append(.days(activityDays))
+        }
         return seasonTypes
     }
 
     /// 대상 기수들의 시작일 중 가장 이른 날짜부터 오늘(KST)까지의 일수를 계산한다.
-    private func calculateActivityDays(targetGisuIds: [String]) async throws -> Int {
+    /// 일부 기수라도 조회하지 못하면 부정확한 활동일 대신 해당 항목을 생략한다.
+    private func calculateActivityDays(targetGisuIds: [String]) async throws -> Int? {
         guard !targetGisuIds.isEmpty else { return 0 }
 
         let startDates = try await withThrowingTaskGroup(of: Date?.self) { group in
             for gisuId in targetGisuIds {
                 group.addTask {
-                    try await self.fetchSeasonStartDate(gisuId: gisuId)
+                    do {
+                        return try await self.fetchSeasonStartDate(gisuId: gisuId)
+                    } catch {
+                        try Task.checkCancellation()
+                        guard Self.canOmitActivityDays(for: error) else { throw error }
+                        return nil
+                    }
                 }
             }
 
@@ -113,8 +122,28 @@ public final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
             return dates
         }
 
-        guard let earliestStartDate = startDates.min() else { return 0 }
+        guard startDates.count == targetGisuIds.count,
+              let earliestStartDate = startDates.min() else { return nil }
         return calculateDayCount(from: earliestStartDate, to: Date())
+    }
+
+    /// 부가 정보의 일시적 장애만 허용한다. 취소·인증·권한 및 미분류 오류는 전파한다.
+    private static func canOmitActivityDays(for error: Error) -> Bool {
+        switch error {
+        case let error as NetworkError:
+            switch error {
+            case .noNetwork, .timeout, .invalidResponse:
+                return true
+            case .requestFailed(let statusCode, _):
+                return statusCode == 404 || (500...599).contains(statusCode)
+            default:
+                return false
+            }
+        case RepositoryError.decodingError, RepositoryError.invalidResponse:
+            return true
+        default:
+            return false
+        }
     }
 
     private func fetchSeasonStartDate(gisuId: String) async throws -> Date? {
