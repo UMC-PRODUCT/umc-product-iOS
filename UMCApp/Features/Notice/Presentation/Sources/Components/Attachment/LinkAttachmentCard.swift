@@ -10,13 +10,13 @@ import CoreDesignSystem
 import NoticeDomain
 
 struct LinkAttachmentCard: View, Equatable {
-    
+
     // MARK: - Property
     @Binding var link: String
     var shouldAutoFocus: Bool = false
     var onDismiss: () -> Void
     @FocusState private var isLinkFieldFocused: Bool
-    
+
     // MARK: - Constant
     fileprivate enum Constants {
         static let mainPadding: CGFloat = 12
@@ -26,11 +26,11 @@ struct LinkAttachmentCard: View, Equatable {
         static let topSectionHPadding: CGFloat = 12
         static let textfieldPadding: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
     }
-    
+
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.link == rhs.link && lhs.shouldAutoFocus == rhs.shouldAutoFocus
     }
-    
+
     // MARK: - Body
     var body: some View {
         VStack {
@@ -45,7 +45,7 @@ struct LinkAttachmentCard: View, Equatable {
 
         }
     }
-    
+
     /// 링크 카드 타이틀, 카드 삭제 버튼
     private var topSection: some View {
         HStack {
@@ -63,7 +63,7 @@ struct LinkAttachmentCard: View, Equatable {
         }
         .padding(.horizontal, Constants.topSectionHPadding)
     }
-    
+
     /// 링크 TextField
     private var textfieldSection: some View {
         TextField("",
@@ -98,14 +98,14 @@ struct LinkAttachmentCard: View, Equatable {
 #if DEBUG
 #Preview {
     @Previewable @State var noticeLinkItems: [NoticeLinkItem] = []
-    
+
     VStack(spacing: 12) {
         ForEach($noticeLinkItems) { $item in
             LinkAttachmentCard(link: $item.link) {
                 noticeLinkItems.removeAll { $0.id == item.id }
             }
         }
-        
+
         Button("링크 카드 추가") {
             noticeLinkItems.append(NoticeLinkItem(link: "www.umc.com"))
         }

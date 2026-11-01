@@ -93,7 +93,7 @@ struct ChallengerMemberDetailSheetView: View {
         .padding(.bottom, DefaultSpacing.spacing32)
         .presentationDetents([.height(Constants.detentHeight)])
         .presentationDragIndicator(.visible)
-        .presentationBackground(.regularMaterial)
+        .presentationBackground(Color.Surface.canvas)
     }
 
     // MARK: - SubView

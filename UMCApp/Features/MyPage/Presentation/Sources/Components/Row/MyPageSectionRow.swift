@@ -27,7 +27,7 @@ import CoreUIComponents
 /// ```
 public struct MyPageSectionRow: View {
     // MARK: - Property
-    
+
     /// 왼쪽에 표시할 아이콘 타입(ImageResource 또는 SF Symbol)
     private let icon: RowIconType
     /// 중앙에 표시할 타이틀 텍스트
@@ -38,9 +38,9 @@ public struct MyPageSectionRow: View {
     private let iconBackgroundColor: Color?
     /// 타이틀 텍스트 색상(기본값:  .black)
     private let titleColor: Color
-    
+
     // MARK: - Function
-    
+
     /// ImageResource 아이콘과 오른쪽 이미지를 사용하는 Row 생성자
     /// - Parameters:
     ///   - icon: 왼쪽에 표시할 이미지 리소스
@@ -54,7 +54,7 @@ public struct MyPageSectionRow: View {
         self.iconBackgroundColor = nil
         self.titleColor = titleColor
     }
-    
+
     /// SF Symbol 아이콘과 오른쪽 이미지를 사용하는 Row 생성자
     /// - Parameters:
     ///   - systemIcon: 왼쪽에 표시할 SF Symbol 이름
@@ -100,7 +100,7 @@ public struct MyPageSectionRow: View {
         self.iconBackgroundColor = nil
         self.titleColor = titleColor
     }
-    
+
     /// ImageResource 아이콘과 오른쪽 텍스트를 사용하는 Row 생성자
     /// - Parameters:
     ///   - icon: 왼쪽에 표시할 이미지 리소스
@@ -114,7 +114,7 @@ public struct MyPageSectionRow: View {
         self.iconBackgroundColor = nil
         self.titleColor = titleColor
     }
-    
+
     /// SF Symbol 아이콘과 오른쪽 텍스트를 사용하는 Row 생성자
     /// - Parameters:
     ///   - systemIcon: 왼쪽에 표시할 SF Symbol 이름
@@ -129,7 +129,7 @@ public struct MyPageSectionRow: View {
         self.iconBackgroundColor = iconBackgroundColor
         self.titleColor = titleColor
     }
-    
+
     /// SF Symbol 아이콘만 두고 오른쪽을 비우는 Row 생성자
     ///
     /// 오른쪽 컨트롤을 바깥에서 얹는 행(`Toggle` 레이블 등)이 쓴다.
@@ -150,7 +150,7 @@ public struct MyPageSectionRow: View {
         self.iconBackgroundColor = iconBackgroundColor
         self.titleColor = titleColor
     }
-    
+
     /// MyPageSectionRow 내부에서 사용하는 상수
     private enum Constants {
         static let linkIcon: CGFloat = 30
@@ -162,9 +162,9 @@ public struct MyPageSectionRow: View {
         static let brandIconSize: CGFloat = 32
         static let brandIconRadius: CGFloat = 8
     }
-    
+
     // MARK: - Body
-    
+
     public var body: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
             // 세 아이콘 종류(브랜드 32 · SF Symbol 타일 30 · 리소스 30)가 한 `Form` 안에
@@ -180,7 +180,7 @@ public struct MyPageSectionRow: View {
             rightContentView
         }
     }
-    
+
     /// 아이콘 타입에 따라 적절한 스타일이 적용된 아이콘 뷰를 반환
     @ViewBuilder
     private var iconView: some View {
@@ -206,7 +206,7 @@ public struct MyPageSectionRow: View {
                     .fill(iconBackgroundColor ?? .grey200)
                     .frame(width: Constants.rectangleSize, height: Constants.rectangleSize)
 
-                
+
                 Image(systemName: systemName)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -215,7 +215,7 @@ public struct MyPageSectionRow: View {
             }
         }
     }
-    
+
     /// 오른쪽 컨텐츠 타입에 따라 적절한 뷰를 반환하는 computed property
     @ViewBuilder
     private var rightContentView: some View {

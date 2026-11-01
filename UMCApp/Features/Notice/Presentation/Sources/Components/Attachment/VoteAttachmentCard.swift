@@ -116,10 +116,10 @@ struct VoteAttachmentCard: View {
 #if DEBUG
 #Preview(traits: .sizeThatFitsLayout) {
     @Previewable @State var formData = VoteFormData()
-    
+
     VStack {
         VoteAttachmentCard(formData: $formData, mode: .editable)
-        
+
         VoteAttachmentCard(
             formData: $formData,
             mode: .readonly,

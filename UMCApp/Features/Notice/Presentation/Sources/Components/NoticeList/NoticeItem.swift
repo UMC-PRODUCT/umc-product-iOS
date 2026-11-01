@@ -95,7 +95,7 @@ private struct TopSection: View, Equatable {
             }
         }
     }
-    
+
     private func tag(_ text: String, color: Color) -> some View {
         Text(text)
             .appFont(.caption1, weight: .semibold, color: .grey000)
