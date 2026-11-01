@@ -306,6 +306,7 @@ public final class MyPageViewModel {
 
         try await networkClient.logout()
         container.resolveIfCached(MemberBlockStore.self)?.reset()
+        container.resolveIfCached(ReportMemberUseCase.self)?.reset()
         userSessionManager.reset()
         await memberProfileRepository?.invalidateCache()
         await communityRealtime?.stop()

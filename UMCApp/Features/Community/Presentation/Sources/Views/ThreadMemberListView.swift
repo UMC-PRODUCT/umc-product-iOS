@@ -93,7 +93,8 @@ struct ThreadMemberListView: View {
                     memberId: member.id,
                     name: member.name,
                     currentMemberId: viewModel.currentMemberId,
-                    store: container.resolve(MemberBlockStore.self)
+                    store: container.resolve(MemberBlockStore.self),
+                    reportUseCase: container.resolve(ReportMemberUseCaseProtocol.self)
                 )
             }
             .task { await viewModel.load() }

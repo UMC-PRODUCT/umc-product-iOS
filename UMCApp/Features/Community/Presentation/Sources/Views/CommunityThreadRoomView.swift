@@ -9,6 +9,8 @@ import SwiftUI
 import ActivityPresentation
 import CommunityDomain
 import CoreDesignSystem
+import CoreDI
+import CoreDomain
 import CoreRouting
 import CoreUIComponents
 import UMCFoundation
@@ -49,6 +51,7 @@ struct CommunityThreadRoomView: View {
     /// 나가기·삭제로 스레드가 목록에서 빠졌음을 알린다.
     private let onThreadRemoved: (String) -> Void
 
+    @Environment(\.di) private var container
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -253,7 +256,8 @@ struct CommunityThreadRoomView: View {
                     memberId: message.senderId,
                     name: message.senderName,
                     currentMemberId: viewModel.currentMemberId,
-                    store: store
+                    store: store,
+                    reportUseCase: container.resolve(ReportMemberUseCaseProtocol.self)
                 )
             }
         }
