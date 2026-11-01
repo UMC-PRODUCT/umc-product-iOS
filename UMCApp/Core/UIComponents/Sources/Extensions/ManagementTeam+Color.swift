@@ -2,59 +2,45 @@
 //  ManagementTeam+Color.swift
 //  CoreUIComponents
 //
-//  Created by 이예지 on 5/27/26.
+//  Created by euijjang97 on 11/1/26.
 //
 
-import Foundation
-import UMCFoundation
+import CoreDesignSystem
 import SwiftUI
+import UMCFoundation
 
 extension ManagementTeam {
-    public var textColor: Color {
+    /// 태그 전용 표기. 권한과 상세 직책 이름은 원본 도메인에 보존한다.
+    public var tagName: String {
         switch self {
-        case .superAdmin:
-            return .red100
-        case .centralPresident, .centralVicePresident,
-             .centralOperatingTeamMember, .centralEducationTeamMember:
-            return .teal100
-        case .chapterPresident, .schoolPresident, .schoolVicePresident:
-            return .orange500
-        case .schoolPartLeader, .schoolEtcAdmin:
-            return .green500
-        case .challenger:
-            return .clear
-        }
-    }
-    
-    public var backgroundColor: Color {
-        switch self {
-        case .superAdmin:
-            return .red300
-        case .centralPresident, .centralVicePresident,
-             .centralOperatingTeamMember, .centralEducationTeamMember:
-            return .teal400
-        case .chapterPresident, .schoolPresident, .schoolVicePresident:
-            return .orange100
-        case .schoolPartLeader, .schoolEtcAdmin:
-            return .green100
-        case .challenger:
-            return .clear
+        case .superAdmin: "Admin"
+        case .centralOperatingTeamMember, .centralEducationTeamMember: "중앙 운영진"
+        case .schoolPartLeader, .schoolEtcAdmin: "교내 운영진"
+        default: korean
         }
     }
 
-    public var borderColor: Color {
+    public var textColor: Color {
         switch self {
-        case .superAdmin:
-            return .red500
+        case .superAdmin, .challenger: .tagRoleAdminText
         case .centralPresident, .centralVicePresident,
-             .centralOperatingTeamMember, .centralEducationTeamMember:
-            return .teal700
-        case .chapterPresident, .schoolPresident, .schoolVicePresident:
-            return .orange300
-        case .schoolPartLeader, .schoolEtcAdmin:
-            return .green300
-        case .challenger:
-            return .clear
+             .centralOperatingTeamMember, .centralEducationTeamMember: .tagRoleCentralText
+        case .chapterPresident: .tagRoleChapterText
+        case .schoolPresident, .schoolVicePresident,
+             .schoolPartLeader, .schoolEtcAdmin: .tagRoleCampusText
         }
     }
+
+    public var backgroundColor: Color {
+        switch self {
+        case .superAdmin, .challenger: .tagRoleAdminBackground
+        case .centralPresident, .centralVicePresident,
+             .centralOperatingTeamMember, .centralEducationTeamMember: .tagRoleCentralBackground
+        case .chapterPresident: .tagRoleChapterBackground
+        case .schoolPresident, .schoolVicePresident,
+             .schoolPartLeader, .schoolEtcAdmin: .tagRoleCampusBackground
+        }
+    }
+
+    public var borderColor: Color { backgroundColor }
 }

@@ -98,11 +98,17 @@ private struct UserInfoSection: View, Equatable {
             HStack(spacing: Constant.userInfoHSpacing) {
                 Text(model.identityText)
                     .appFont(.subheadline, weight: .semibold, color: .grey900)
-                Text(model.part)
-                    .appFont(.caption2, color: .gray)
-                    .padding(Constant.partTagPadding)
-                    .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
-                    .overlay(RoundedRectangle(cornerRadius: Constant.partTagRadius).strokeBorder(Color.grey200))
+                if let part = NoticePart.allCases.first(where: {
+                    $0.displayName == model.part || $0.umcPartType.name == model.part
+                }) {
+                    MemberTag(part: part.umcPartType)
+                } else {
+                    Text(model.part)
+                        .appFont(.caption2, color: .gray)
+                        .padding(Constant.partTagPadding)
+                        .background(.white, in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
+                        .overlay(RoundedRectangle(cornerRadius: Constant.partTagRadius).strokeBorder(Color.grey200))
+                }
             }
 
             // 지역 + 대학

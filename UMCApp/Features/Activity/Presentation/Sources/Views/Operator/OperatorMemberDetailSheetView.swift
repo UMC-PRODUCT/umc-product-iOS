@@ -220,7 +220,7 @@ private struct MemberInfoSectionPresenter: View, Equatable {
                     .appFont(.body, weight: .semibold)
 
                 HStack(spacing: DefaultSpacing.spacing8) {
-                    accentChip(title: member.part.name, tint: member.part.color)
+                    MemberTag(part: member.part)
                     schoolChip(title: member.school)
 
                     if member.managementTeam != .challenger {

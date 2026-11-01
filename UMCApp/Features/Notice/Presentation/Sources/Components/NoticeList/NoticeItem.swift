@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreDesignSystem
+import CoreUIComponents
 import NoticeDomain
 
 // MARK: - Constant
@@ -86,7 +87,11 @@ private struct TopSection: View, Equatable {
     var body: some View {
         HStack(spacing: Constant.topHSpacing) {
             ForEach(Array(model.tags.enumerated()), id: \.offset) { _, tagItem in
-                tag(tagItem.text, color: tagItem.backColor)
+                if let part = tagItem.part {
+                    MemberTag(part: part)
+                } else {
+                    tag(tagItem.text, color: tagItem.backColor)
+                }
             }
 
             Spacer()

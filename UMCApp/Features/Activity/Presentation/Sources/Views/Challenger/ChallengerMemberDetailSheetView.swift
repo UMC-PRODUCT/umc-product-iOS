@@ -27,9 +27,6 @@ struct ChallengerMemberDetailSheetView: View {
     private enum Constants {
         static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
         static let profileSize: CGSize = .init(width: 60, height: 60)
-        static let partTagOpacity: Double = 0.14
-        static let partStrokeOpacity: Double = 0.4
-        static let partStrokeWidth: CGFloat = 1
         static let pointIconSize: CGFloat = 14
         static let dividerHeight: CGFloat = 44
 
@@ -123,20 +120,7 @@ struct ChallengerMemberDetailSheetView: View {
     }
 
     private var partTag: some View {
-        Text(member.part.name)
-            .appFont(.callout, color: member.part.color)
-            .padding(Constants.tagPadding)
-            .background(
-                member.part.color.opacity(Constants.partTagOpacity),
-                in: Capsule()
-            )
-            .overlay {
-                Capsule()
-                    .stroke(
-                        member.part.color.opacity(Constants.partStrokeOpacity),
-                        lineWidth: Constants.partStrokeWidth
-                    )
-            }
+        MemberTag(part: member.part)
     }
 
     private var schoolTag: some View {

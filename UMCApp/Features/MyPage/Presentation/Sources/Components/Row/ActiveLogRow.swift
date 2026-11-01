@@ -43,7 +43,7 @@ struct ActiveLogRow: View, Equatable {
 
     /// 「11기, iOS, 파트장」. 기수·파트·역할이 따로 읽히면 한 줄을 세 번 스와이프해야 한다.
     private var accessibilityLabel: String {
-        (["\(row.generation)기", partName] + displayRoles.map(\.displayName))
+        (["\(row.generation)기", partName] + displayRoles.map(\.tagName))
             .filter { !$0.isEmpty }
             .joined(separator: ", ")
     }
@@ -77,8 +77,7 @@ struct ActiveLogRow: View, Equatable {
     @ViewBuilder
     private var part: some View {
         if !partName.isEmpty {
-            Text(partName)
-                .appFont(.subheadline, color: .black)
+            MemberTag(part: row.part)
         }
     }
 
@@ -87,13 +86,7 @@ struct ActiveLogRow: View, Equatable {
         if !displayRoles.isEmpty {
             HStack(spacing: DefaultSpacing.spacing4) {
                 ForEach(displayRoles, id: \.self) { role in
-                    Text(role.displayName)
-                        .appFont(.footnote, weight: .medium, color: role.textColor)
-                        .padding(Constants.badgePadding)
-                        .glassEffect(
-                            .clear.tint(role.backgroundColor),
-                            in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius)
-                        )
+                    MemberTag(role: role)
                 }
             }
         }
