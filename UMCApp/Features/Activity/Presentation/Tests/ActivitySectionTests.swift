@@ -20,9 +20,9 @@ struct ActivitySectionTests {
     // MARK: - sections(for:)
 
     @Test(
-        "모드별 섹션 목록은 그 모드 전용 3개로 고정된다",
+        "개인 커리큘럼은 Activity 메뉴에서 제외하고 운영진 관리는 유지한다",
         arguments: [
-            (Mode.challenger, [Section.attendanceCheck, .studyActivity, .members]),
+            (Mode.challenger, [Section.attendanceCheck, .members]),
             (Mode.admin, [Section.attendanceManage, .studyManage, .memberManage]),
         ]
     )
@@ -64,10 +64,9 @@ struct ActivitySectionTests {
         "모드를 바꿔도 같은 성격의 자리를 유지한다",
         arguments: [
             (Section.attendanceCheck, Mode.admin, Section.attendanceManage),
-            (Section.studyActivity, Mode.admin, Section.studyManage),
             (Section.members, Mode.admin, Section.memberManage),
             (Section.attendanceManage, Mode.challenger, Section.attendanceCheck),
-            (Section.studyManage, Mode.challenger, Section.studyActivity),
+            (Section.studyManage, Mode.challenger, Section.attendanceCheck),
             (Section.memberManage, Mode.challenger, Section.members),
         ]
     )
@@ -96,16 +95,4 @@ struct ActivitySectionTests {
         }
     }
 
-    @Test("모드를 두 번 거쳐도 최종 모드로 직접 매핑한 것과 같다")
-    func mappedIsPathIndependent() {
-        for section in ActivitySection.allCases {
-            for first in ActivityMode.allCases {
-                for second in ActivityMode.allCases {
-                    #expect(
-                        section.mapped(to: first).mapped(to: second) == section.mapped(to: second)
-                    )
-                }
-            }
-        }
-    }
 }

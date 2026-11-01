@@ -118,7 +118,7 @@ public final class MyPageViewModel {
     ///
     /// 이미 로드된 프로필이 있으면 그대로 둔 채 재조회합니다(stale-while-revalidate,
     /// ``loadBusinessCard``와 같은 정책) — pop 복귀 재조회마다 `.loading`으로 밀면
-    /// ``isCardEditPending``이 다시 켜져 「내 정보 편집」·「나의 활동 ・프로젝트」 행이 함께
+    /// ``isCardEditPending``이 다시 켜져 「내 정보 편집」·「활동 이력」 행이 함께
     /// 스피너를 돌린다. 처음 진입·실패 후 재시도만 로딩 상태를 그립니다.
     ///
     /// 이미 조회가 진행 중이면 중복 호출을 무시합니다. 에러 분기:

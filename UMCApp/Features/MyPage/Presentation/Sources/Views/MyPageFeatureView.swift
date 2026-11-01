@@ -48,8 +48,7 @@ public struct MyPageFeatureView: View {
     ///   - onOpenBusinessCard: 명함 카드·「받은 명함」 행 탭 시 App 셸에 명함 진입을 요청한다.
     ///     App 셸이 ``BusinessCardEntry``를 `BusinessCardDestination`으로 번역해 push한다.
     ///   - onOpenStudy: 「나의 스터디」 행 탭 시 App 셸에 스터디 화면 진입을 요청한다. 스터디의
-    ///     정본 소유자는 Activity 탭이므로 MyPage는 그 탭도, 그 안의 섹션도 알지 않는다 —
-    ///     명함과 같은 규약으로 요청만 올리고 번역은 App 셸이 한다.
+    ///     Activity 피처의 커리큘럼을 MyPage 스택에 표시하는 조립은 App 셸이 맡는다.
     ///   - onOpenProjects: 「내 프로젝트」 행 탭 시 App 셸에 Project 화면 진입을 요청한다 (#1476).
     public init(
         onOpenBusinessCard: @escaping (BusinessCardEntry) -> Void,

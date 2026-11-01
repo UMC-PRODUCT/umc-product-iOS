@@ -28,7 +28,7 @@ enum MyPageDestination: Hashable {
     ///   어긋난 상태로 편집이 시작될 수 있다.
     case cardEdit(profileData: ProfileData)
 
-    /// 「나의 활동 ・프로젝트」가 여는 활동 이력 목록 (MP-F11, #1228).
+    /// 「활동 이력」가 여는 활동 이력 목록 (MP-F11, #1228).
     ///
     /// - Parameter activityLogs: 탭 루트가 이미 조회해 둔 `Profile.activityLogs()`. 행 우측
     ///   카운트(`ActivityStat.activityCount`)도 같은 파생을 세므로 목적지가 그 값을 그대로

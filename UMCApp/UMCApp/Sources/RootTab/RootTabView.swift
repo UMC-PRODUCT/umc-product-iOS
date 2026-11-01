@@ -47,9 +47,6 @@ struct RootTabView: View {
     /// 딥링크로 받은 명함 링크. 수신 모디파이어가 처리 후 비운다.
     @State private var pendingCardLink: CardLink?
 
-    /// 다른 탭이 요청한 Activity 진입 지점. Activity 탭 루트가 처리 후 비운다.
-    @State private var pendingActivityEntry: ActivityEntry?
-
     /// 출석 푸시가 지목한 일정 식별자. 활동 탭 말단이 해당 세션을 펼친 뒤 비운다.
     @State private var focusedAttendanceScheduleId: String?
 
@@ -170,6 +167,9 @@ struct RootTabView: View {
                 .navigationDestination(for: BusinessCardDestination.self) { destination in
                     BusinessCardRoutingView(destination: destination, container: di)
                 }
+                .navigationDestination(for: StudyDestination.self) { _ in
+                    MyStudyFeatureView()
+                }
                 .navigationDestination(for: ProjectDestination.self) { destination in
                     ProjectRoutingView(destination: destination, container: di)
                 }
@@ -223,7 +223,6 @@ struct RootTabView: View {
             )
         case .activity:
             ActivityFeatureView(
-                pendingEntry: $pendingActivityEntry,
                 focusedScheduleId: $focusedAttendanceScheduleId
             )
         case .community:
@@ -241,7 +240,7 @@ struct RootTabView: View {
                     pathStore.push(businessCardDestination(for: entry), on: .mypage)
                 },
                 onOpenStudy: {
-                    pendingActivityEntry = Self.enterActivityStudy(pathStore: pathStore)
+                    Self.enterMyStudy(pathStore: pathStore)
                 },
                 onOpenProjects: {
                     pathStore.push(ProjectDestination.myProjects, on: .mypage)
@@ -250,25 +249,9 @@ struct RootTabView: View {
         }
     }
 
-    /// 마이페이지 「나의 스터디」 → Activity 탭의 스터디 섹션(MP-F10).
-    ///
-    /// 탭만 바꾸면 두 군데가 어긋난다.
-    /// 1. `PathStore` 는 탭별 스택을 보존하므로 Activity 에 남아 있던 상세 화면이 복원된다.
-    ///    → 그 탭의 경로를 루트로 되돌린다(선례: 커뮤니티 스레드 이탈 시 `pathStore[.community]`).
-    /// 2. Activity 루트가 마지막에 고른 섹션을 들고 있어 기본값인 출석 화면이 뜬다.
-    ///    → 섹션은 ``ActivityEntry`` 요청으로 넘긴다.
-    ///
-    /// 어느 섹션이 「스터디」인지(모드별 `.studyActivity`/`.studyManage`)는 Activity 모듈이
-    /// 정한다 — App 은 "스터디로 가고 싶다"만 말한다. Feature 끼리 직접 목적지를 넘기지 않고
-    /// App 셸이 중개하는 규약은 ``businessCardDestination(for:)`` 과 같다.
-    ///
-    /// 뷰 렌더링 없이 전이를 검증하려고 `static` 으로 뽑았다
-    /// (선례: `RootTabAccessoryView.shouldShow`, `MyPageView.retryCardAndProfile`).
-    static func enterActivityStudy(pathStore: PathStore) -> ActivityEntry {
-        pathStore[.activity] = NavigationPath()
-        pathStore.selectedTab = .activity
-
-        return .study
+    /// 개인 커리큘럼을 마이페이지 스택에 쌓아 뒤로 가기로 원래 화면에 돌아오게 한다.
+    static func enterMyStudy(pathStore: PathStore) {
+        pathStore.push(StudyDestination.curriculum, on: .mypage)
     }
 
     /// 마이페이지의 중립 진입 요청을 명함 목적지로 번역한다.
