@@ -117,7 +117,7 @@ public struct ResetPasswordView: View {
             .padding(.vertical, DefaultConstant.defaultBtnPadding)
         }
         .buttonStyle(.glassProminent)
-        .tint(.indigo500)
+        .tint(.teal500)
         .disabled(!viewModel.canSubmit || viewModel.resetPasswordState.isLoading)
         .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }

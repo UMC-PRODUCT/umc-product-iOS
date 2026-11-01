@@ -14,10 +14,10 @@ public enum AppColor {
     case grey000, grey100, grey200, grey300, grey400
     case grey500, grey600, grey700, grey800, grey900
 
-    // MARK: - Primary (Indigo)
+    // MARK: - Primary (Teal)
 
-    case indigo100, indigo200, indigo300, indigo400, indigo500
-    case indigo600, indigo700, indigo800, indigo900
+    case teal100, teal200, teal300, teal400, teal500
+    case teal600, teal700, teal800, teal900
 
     // MARK: - Accent (Orange)
 
@@ -48,15 +48,15 @@ public enum AppColor {
         case .grey800:   return .grey800
         case .grey900:   return .grey900
 
-        case .indigo100: return .indigo100
-        case .indigo200: return .indigo200
-        case .indigo300: return .indigo300
-        case .indigo400: return .indigo400
-        case .indigo500: return .indigo500
-        case .indigo600: return .indigo600
-        case .indigo700: return .indigo700
-        case .indigo800: return .indigo800
-        case .indigo900: return .indigo900
+        case .teal100: return .teal100
+        case .teal200: return .teal200
+        case .teal300: return .teal300
+        case .teal400: return .teal400
+        case .teal500: return .teal500
+        case .teal600: return .teal600
+        case .teal700: return .teal700
+        case .teal800: return .teal800
+        case .teal900: return .teal900
 
         case .orange100: return .orange100
         case .orange200: return .orange200

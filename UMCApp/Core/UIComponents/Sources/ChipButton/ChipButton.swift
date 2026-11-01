@@ -52,8 +52,8 @@ import CoreDesignSystem
 ///
 /// | Style | 선택 시 | 미선택 시 | 용도 |
 /// |-------|--------|----------|------|
-/// | `.filter` | indigo500/grey000 | grey200/grey600 | 공지 리스트 필터 |
-/// | `.board` | indigo500/grey000 | grey300/grey000 | 게시판 분류 선택 |
+/// | `.filter` | teal500/grey000 | grey200/grey600 | 공지 리스트 필터 |
+/// | `.board` | teal500/grey000 | grey300/grey000 | 게시판 분류 선택 |
 /// | `.fame` | yellow500/white | white/grey600 | 명예의전당 주차 선택 |
 ///
 /// - Important: `buttonSize()`와 `buttonStyle()`은 반드시 ChipButton에 직접 적용해야 합니다.

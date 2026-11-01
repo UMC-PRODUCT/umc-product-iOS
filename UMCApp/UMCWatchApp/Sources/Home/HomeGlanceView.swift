@@ -114,7 +114,7 @@ struct HomeGlanceView: View {
     @ViewBuilder
     private var pendingApprovalBadge: some View {
         if let pendingApprovalLabel = viewModel.pendingApprovalLabel {
-            // 승인 대기는 앰버(#FFB340)가 아니라 중립 회색 점 + 인디고 링(`.pending`)이다.
+            // 승인 대기는 앰버(#FFB340)가 아니라 중립 회색 점 + 틸 링(`.pending`)이다.
             // 앰버는 2026-08-26 개정 이후 지각(`.warning`) 전용이라 여기서 쓰지 않는다.
             WatchStatusBadge(.pending, label: pendingApprovalLabel)
         }

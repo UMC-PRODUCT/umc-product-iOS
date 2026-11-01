@@ -22,17 +22,17 @@ public extension Color {
     static let grey800 = Color("grey800", bundle: .module)
     static let grey900 = Color("grey900", bundle: .module)
 
-    // MARK: - Primary (Indigo)
+    // MARK: - Primary (Teal)
 
-    static let indigo100 = Color("indigo100", bundle: .module)
-    static let indigo200 = Color("indigo200", bundle: .module)
-    static let indigo300 = Color("indigo300", bundle: .module)
-    static let indigo400 = Color("indigo400", bundle: .module)
-    static let indigo500 = Color("indigo500", bundle: .module)
-    static let indigo600 = Color("indigo600", bundle: .module)
-    static let indigo700 = Color("indigo700", bundle: .module)
-    static let indigo800 = Color("indigo800", bundle: .module)
-    static let indigo900 = Color("indigo900", bundle: .module)
+    static let teal100 = Color("teal100", bundle: .module)
+    static let teal200 = Color("teal200", bundle: .module)
+    static let teal300 = Color("teal300", bundle: .module)
+    static let teal400 = Color("teal400", bundle: .module)
+    static let teal500 = Color("teal500", bundle: .module)
+    static let teal600 = Color("teal600", bundle: .module)
+    static let teal700 = Color("teal700", bundle: .module)
+    static let teal800 = Color("teal800", bundle: .module)
+    static let teal900 = Color("teal900", bundle: .module)
 
     // MARK: - Accent (Orange)
 

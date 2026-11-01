@@ -85,7 +85,7 @@ struct AILoadingOverlay: View {
         case .completed:
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: DefaultConstant.iconSize, weight: .medium))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(Color.teal500)
                 .symbolDrawOn(isActive: true)
         }
     }

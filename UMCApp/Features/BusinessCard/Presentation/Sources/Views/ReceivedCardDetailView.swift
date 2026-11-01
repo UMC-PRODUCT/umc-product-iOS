@@ -144,7 +144,7 @@ public struct ReceivedCardDetailView: View {
                 } icon: {
                     Image(systemName: viewModel.card.exchangeMethod.iconName)
                         .font(.system(size: methodIconSize))
-                        .foregroundStyle(Color.indigo500)
+                        .foregroundStyle(Color.teal500)
                 }
             }
             // 「받은 경로」와 값이 따로 읽히면 무엇에 대한 값인지 조립해야 알 수 있다.
@@ -235,7 +235,7 @@ public struct ReceivedCardDetailView: View {
                 openURL(url)
             } label: {
                 valueRow(label: label, value: value)
-                    .foregroundStyle(Color.indigo500)
+                    .foregroundStyle(Color.teal500)
             }
             .buttonStyle(.plain)
         } else {

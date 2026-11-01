@@ -234,7 +234,7 @@ struct OperatorAttendanceView: View {
                     }
                     Task { await viewModel.fetchList() }
                 }
-                .tint(.indigo500)
+                .tint(.teal500)
 
                 DatePicker(
                     "종료일",
@@ -245,7 +245,7 @@ struct OperatorAttendanceView: View {
                 .onChange(of: viewModel.toDate) {
                     Task { await viewModel.fetchList() }
                 }
-                .tint(.indigo500)
+                .tint(.teal500)
             }
             .navigation(
                 naviTitle: NavigationTitle.Activity.attendancePeriod,

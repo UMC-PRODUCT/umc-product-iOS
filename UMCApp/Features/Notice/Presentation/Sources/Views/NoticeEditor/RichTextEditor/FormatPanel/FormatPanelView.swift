@@ -30,7 +30,7 @@ fileprivate enum Constants {
     static let paletteSpacing: CGFloat = 8
     static let paletteTopPadding: CGFloat = 8
     static let paletteCircleSize: CGFloat = 24
-    static let activeColor: Color = .indigo500
+    static let activeColor: Color = .teal500
     static let inactiveBackgroundColor: Color = .secondary.opacity(0.14)
     static let inactiveForegroundColor: Color = .secondary
     static let activeForegroundColor: Color = .white

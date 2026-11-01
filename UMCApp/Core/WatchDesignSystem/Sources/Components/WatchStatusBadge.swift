@@ -16,9 +16,9 @@ import SwiftUI
 /// `Equatable` 은 #1209 `WatchFallbackPresentation` 이 이 타입을 담고도 구조체 전체를
 /// `Equatable` 로 합성하기 위해 필요하다 — 연관값 없는 enum 이라 비교 로직은 자동 합성된다.
 public enum WatchStatus: Sendable, CaseIterable, Equatable {
-    /// 진행 중 — 인디고 원판.
+    /// 진행 중 — 틸 원판.
     case active
-    /// 승인 대기 — 회색 점 + 인디고 링(팔레트 렌더링).
+    /// 승인 대기 — 회색 점 + 틸 링(팔레트 렌더링).
     case pending
     /// 완료 — 체크.
     case success
@@ -38,8 +38,8 @@ public enum WatchStatus: Sendable, CaseIterable, Equatable {
         }
     }
 
-    /// 2차 색 — `pending` 의 인디고 링에만 쓰인다. 그 외에는 `tint` 와 같다.
-    /// `active` 원판(`brandPrimary`)과 같은 인디고를 쓰면 라벨 없는 경로에서 둘이 섞이므로
+    /// 2차 색 — `pending` 의 틸 링에만 쓰인다. 그 외에는 `tint` 와 같다.
+    /// `active` 원판(`brandPrimary`)과 같은 틸를 쓰면 라벨 없는 경로에서 둘이 섞이므로
     /// 한 단계 밝은 `brandPrimarySoft` 를 쓴다.
     public var ringTint: Color {
         self == .pending ? WatchColor.brandPrimarySoft : tint

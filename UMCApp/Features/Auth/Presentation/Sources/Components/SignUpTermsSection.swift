@@ -71,7 +71,7 @@ struct SignUpTermsSection: View {
             HStack(spacing: DefaultSpacing.spacing8) {
                 Image(systemName: isAllTermsAgreed ? "checkmark.circle.fill" : "circle")
                     .contentTransition(.symbolEffect(.replace))
-                    .foregroundStyle(isAllTermsAgreed ? Color.indigo500 : Color.grey400)
+                    .foregroundStyle(isAllTermsAgreed ? Color.teal500 : Color.grey400)
                 Text(Constants.allAgreeTitle)
                     .appFont(.callout, weight: .semibold)
             }
@@ -106,7 +106,7 @@ struct SignUpTermsSection: View {
                 HStack(spacing: DefaultSpacing.spacing8) {
                     Image(systemName: row.isAgreed ? "checkmark.circle.fill" : "circle")
                         .contentTransition(.symbolEffect(.replace))
-                        .foregroundStyle(row.isAgreed ? Color.indigo500 : Color.grey400)
+                        .foregroundStyle(row.isAgreed ? Color.teal500 : Color.grey400)
                     Text(row.title)
                         .appFont(.subheadline)
                     Text(row.isMandatory ? "(필수)" : "(선택)")
@@ -118,7 +118,7 @@ struct SignUpTermsSection: View {
             Spacer(minLength: 0)
 
             Button("보기") { openTerms(row.link) }
-                .appFont(.footnote, color: .indigo500)
+                .appFont(.footnote, color: .teal500)
                 .buttonStyle(.plain)
         }
     }

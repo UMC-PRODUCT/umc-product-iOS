@@ -216,7 +216,7 @@ public struct NoticeReadStatusSheet: View {
             .padding(Constants.alarmPadding)
             .background {
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
-                    .fill(Color.indigo400)
+                    .fill(Color.teal400)
             }
         }
         .padding(.horizontal, DefaultConstant.defaultSafeHorizon)

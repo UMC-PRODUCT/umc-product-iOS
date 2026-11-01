@@ -13,9 +13,9 @@ import SwiftUI
 /// radius 24 · Liquid Glass Clear/Light · 흰 라벨. 명함_l 과 명함_m 이 같은 칩을
 /// 높이 1pt·글자 1pt 차이로 쓴다 (`Figma I12639:33234;12639:33210` / `12639:33288`).
 ///
-/// 라벨이 흰색 고정인 이유는 카드가 인디고 그라디언트라서다. `UMCPartType.color` 는
+/// 라벨이 흰색 고정인 이유는 카드가 틸 그라디언트라서다. `UMCPartType.color` 는
 /// 시스템 컬러를 돌려주는데 이 톤 위에서는 읽히지 않아 쓰지 않는다.
-/// 카드는 라이트·다크 어느 쪽에서도 인디고라 이 흰색은 모드와 무관하다.
+/// 카드는 라이트·다크 어느 쪽에서도 틸라 이 흰색은 모드와 무관하다.
 struct PartChip: View {
 
     // MARK: - Size
@@ -84,6 +84,6 @@ struct PartChip: View {
         PartChip(text: "PM")
     }
     .padding()
-    .background(Color.indigo500)
+    .background(Color.teal500)
 }
 #endif

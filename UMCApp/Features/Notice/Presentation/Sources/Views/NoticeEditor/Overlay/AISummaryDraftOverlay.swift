@@ -55,7 +55,7 @@ struct AISummaryDraftOverlay: View {
         VStack(spacing: DefaultSpacing.spacing8) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: DefaultConstant.iconSize, weight: .medium))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(Color.teal500)
                 .symbolDrawOn(isActive: true)
 
             Text("초안이 완성됐어요")

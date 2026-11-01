@@ -35,14 +35,14 @@ struct DateCell: View {
                 .frame(height: Constants.cellSize)
                 .background {
                     if isSelected {
-                        Color.indigo500.glassEffect(.regular.interactive(), in: .circle)
+                        Color.teal500.glassEffect(.regular.interactive(), in: .circle)
                     }
                 }
                 .clipShape(.circle)
                 .overlay {
                     if isToday && !isSelected {
                         Circle()
-                            .strokeBorder(Color.indigo500, lineWidth: Constants.todayBorderWidth)
+                            .strokeBorder(Color.teal500, lineWidth: Constants.todayBorderWidth)
                     }
                 }
 

@@ -14,7 +14,7 @@ import SwiftUI
 public enum WatchCardStyle: Sendable, CaseIterable {
     /// 일반 카드 — #16181C / border #2A2D34
     case standard
-    /// 대표 지표·다음 일정 등 Hero — #1B2140 / border 인디고 45%
+    /// 대표 지표·다음 일정 등 Hero — #1B2140 / border 틸 45%
     case hero
     /// 위험·실패·파괴적 맥락 — #241416 / border 에러 레드 40%
     case danger
@@ -133,7 +133,7 @@ public extension View {
     /// 리스트 행은 Glass 금지 구역이다.
     ///
     /// - Parameters:
-    ///   - isSelected: `true`면 Hero 표면(인디고 tint) + 좌측 색바로 선택을 표현한다.
+    ///   - isSelected: `true`면 Hero 표면(틸 tint) + 좌측 색바로 선택을 표현한다.
     ///     Hero fill 단독은 standard 대비 명암비가 1.13:1 에 그쳐 저시력·야외에서 식별되지
     ///     않으므로, 색과 분리된 위치 신호를 함께 준다 (#1207 선택행).
     ///   - leadingAccent: 선택과 무관한 좌측 색바 색. 긴급 공지처럼 **행 자체의 성질**을

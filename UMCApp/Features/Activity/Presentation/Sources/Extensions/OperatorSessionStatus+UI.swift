@@ -19,7 +19,7 @@ extension OperatorSessionStatus {
     /// 진행중=브랜드 강조, 예정=액센트, 마감=디엠퍼사이즈.
     var listAccentColor: Color {
         switch self {
-        case .inProgress:  return .indigo500
+        case .inProgress:  return .teal500
         case .beforeStart: return .orange500
         case .ended:       return .grey400
         }

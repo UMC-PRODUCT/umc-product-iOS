@@ -196,7 +196,7 @@ struct OperatorAttendanceDetailView: View {
                         locationChangeTarget = LocationChangeTarget(info: info)
                     } label: {
                         Label("위치 변경", systemImage: "map.fill")
-                            .appFont(.caption1, color: .indigo500)
+                            .appFont(.caption1, color: .teal500)
                             // 라벨을 프레임 상단에 고정해 제목과의 정렬을 유지한 채
                             // 히트 영역만 아래로 넓힌다.
                             .frame(
@@ -280,7 +280,7 @@ struct OperatorAttendanceDetailView: View {
         HStack(spacing: DefaultSpacing.spacing12) {
             statBlock(
                 icon: "person.fill.checkmark",
-                tint: .indigo500,
+                tint: .teal500,
                 label: "출석",
                 value: "\(info.presentCount) / \(info.totalCount)",
                 valueColor: .grey700
@@ -294,13 +294,13 @@ struct OperatorAttendanceDetailView: View {
             )
             statBlock(
                 icon: "chart.pie.fill",
-                tint: .indigo500,
+                tint: .teal500,
                 label: "출석률",
                 value: AttendanceScheduleFormatter.attendanceRateText(
                     rate: info.attendanceRate,
                     totalCount: info.totalCount
                 ),
-                valueColor: .indigo600
+                valueColor: .teal600
             )
         }
     }

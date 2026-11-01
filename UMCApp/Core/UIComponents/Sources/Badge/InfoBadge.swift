@@ -89,7 +89,7 @@ public struct InfoBadge: View, Equatable {
     HStack(spacing: DefaultSpacing.spacing8) {
         InfoBadge("중앙대")
         InfoBadge("Leader", tintColor: .gray)
-        InfoBadge("iOS", textColor: .indigo500, tintColor: .indigo)
+        InfoBadge("iOS", textColor: .teal500, tintColor: .indigo)
         InfoBadge("미디어 위", glassVariant: .clear)
     }
     .padding()

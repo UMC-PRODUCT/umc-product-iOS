@@ -89,7 +89,7 @@ struct CommunityThreadEditView: View {
         ToolbarItem(placement: .confirmationAction) {
             // 바뀐 게 없거나(#10) 재분류가 도는 동안(#12) `canSubmit` 이 false 라 잠긴다.
             Button(role: .confirm, action: submit)
-                .tint(.indigo500)
+                .tint(.teal500)
                 .disabled(!viewModel.canSubmit)
                 .accessibilityLabel(Constants.submitTitle)
         }

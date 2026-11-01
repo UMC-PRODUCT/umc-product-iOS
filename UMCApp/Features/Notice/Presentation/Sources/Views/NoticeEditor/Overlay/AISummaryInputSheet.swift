@@ -170,6 +170,6 @@ struct AISummaryInputSheet: View {
     private func gaugeTintColor(for progress: Double) -> Color {
         if progress >= 0.90 { return .red }
         if progress >= 0.80 { return .orange }
-        return .indigo500
+        return .teal500
     }
 }

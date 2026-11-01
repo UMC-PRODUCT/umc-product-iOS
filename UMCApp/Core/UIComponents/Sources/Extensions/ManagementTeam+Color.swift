@@ -16,7 +16,7 @@ extension ManagementTeam {
             return .red100
         case .centralPresident, .centralVicePresident,
              .centralOperatingTeamMember, .centralEducationTeamMember:
-            return .indigo100
+            return .teal100
         case .chapterPresident, .schoolPresident, .schoolVicePresident:
             return .orange500
         case .schoolPartLeader, .schoolEtcAdmin:
@@ -32,7 +32,7 @@ extension ManagementTeam {
             return .red300
         case .centralPresident, .centralVicePresident,
              .centralOperatingTeamMember, .centralEducationTeamMember:
-            return .indigo400
+            return .teal400
         case .chapterPresident, .schoolPresident, .schoolVicePresident:
             return .orange100
         case .schoolPartLeader, .schoolEtcAdmin:
@@ -48,7 +48,7 @@ extension ManagementTeam {
             return .red500
         case .centralPresident, .centralVicePresident,
              .centralOperatingTeamMember, .centralEducationTeamMember:
-            return .indigo700
+            return .teal700
         case .chapterPresident, .schoolPresident, .schoolVicePresident:
             return .orange300
         case .schoolPartLeader, .schoolEtcAdmin:

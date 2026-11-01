@@ -74,7 +74,7 @@ struct BaseMapComponent: View, Equatable {
     @MapContentBuilder
     private var geofenceOverlay: some MapContent {
         if let geofenceCenter = viewModel.geofenceCenter {
-            let accentColor: Color = viewModel.isUserInsideGeofence ? .indigo300 : .red300
+            let accentColor: Color = viewModel.isUserInsideGeofence ? .teal300 : .red300
 
             MapCircle(
                 center: geofenceCenter,

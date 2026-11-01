@@ -231,7 +231,7 @@ struct VotingFormSheetView: View, Equatable {
             
             Toggle("", isOn: isOn)
                 .labelsHidden()
-                .tint(.indigo500)
+                .tint(.teal500)
         }
     }
     

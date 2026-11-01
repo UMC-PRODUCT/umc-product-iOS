@@ -196,7 +196,7 @@ private struct PartFilterMenu: View, Equatable {
         .clipShape(Capsule())
         .background {
             Capsule()
-                .fill(isPartSelected ? Color.indigo500 : Color.grey200)
+                .fill(isPartSelected ? Color.teal500 : Color.grey200)
         }
         .glassEffect(.clear.interactive(), in: Capsule())
     }

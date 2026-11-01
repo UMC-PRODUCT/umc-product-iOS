@@ -166,9 +166,9 @@ struct MapCategoryTests {
         #expect(category.backgroundColor == Color.gray)
     }
 
-    @Test("숙박 카테고리는 indigo500 배경색을 반환한다")
+    @Test("숙박 카테고리는 teal500 배경색을 반환한다")
     func backgroundColorHotelIsIndigo() {
-        #expect(MKPointOfInterestCategory.hotel.backgroundColor == Color.indigo500)
+        #expect(MKPointOfInterestCategory.hotel.backgroundColor == Color.teal500)
     }
 
     @Test("매핑되지 않은 카테고리는 secondary 배경색을 반환한다")

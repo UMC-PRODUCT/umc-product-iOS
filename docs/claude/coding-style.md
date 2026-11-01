@@ -33,7 +33,7 @@ fileprivate enum Constants {
     static let title1: String = "로그인"
     static let title2: String = "회원가입"
 
-    static let btn1Color: Color = .indigo500
+    static let btn1Color: Color = .teal500
     static let btn2Color: Color = .grey400
 }
 ```
@@ -50,7 +50,7 @@ fileprivate enum Constants {
     static let loginScreenTitle: String = "로그인"
     static let signUpScreenTitle: String = "회원가입"
 
-    static let primaryActionColor: Color = .indigo500
+    static let primaryActionColor: Color = .teal500
     static let disabledActionColor: Color = .grey400
 }
 ```

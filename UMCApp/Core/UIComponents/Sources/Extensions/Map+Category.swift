@@ -81,7 +81,7 @@ public extension MKPointOfInterestCategory {
 
         // 숙박
         case .hotel:
-            return .indigo500
+            return .teal500
 
         // 기타
         default:

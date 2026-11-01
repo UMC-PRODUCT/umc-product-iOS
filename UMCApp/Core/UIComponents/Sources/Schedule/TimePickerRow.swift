@@ -50,7 +50,7 @@ public struct TimePickerRow: View, Equatable {
         }
         .datePickerStyle(.wheel)
         .labelsHidden()
-        .tint(.indigo500)
+        .tint(.teal500)
     }
 }
 

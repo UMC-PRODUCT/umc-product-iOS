@@ -80,7 +80,7 @@ struct MessageReportSheet: View {
         HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
             Image(systemName: Constants.noticeImage)
                 .font(.system(size: Constants.noticeIconSize))
-                .foregroundStyle(Color.indigo500)
+                .foregroundStyle(Color.teal500)
 
             Text(Constants.privacyNotice)
                 .appFont(.footnote, color: .grey600)
@@ -98,13 +98,13 @@ struct MessageReportSheet: View {
             HStack {
                 Text(reason.displayName)
                     .appFont(.body, weight: isSelected ? .semibold : .regular)
-                    .foregroundStyle(isSelected ? Color.indigo500 : Color.grey900)
+                    .foregroundStyle(isSelected ? Color.teal500 : Color.grey900)
 
                 Spacer()
 
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .foregroundStyle(Color.indigo500)
+                        .foregroundStyle(Color.teal500)
                 }
             }
             .frame(minHeight: Constants.rowMinHeight)

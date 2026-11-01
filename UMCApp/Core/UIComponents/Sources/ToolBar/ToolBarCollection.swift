@@ -69,7 +69,7 @@ public struct ToolBarCollection {
             disable: Bool = false,
             isLoading: Bool = false,
             dismissOnTap: Bool = true,
-            tintColor: Color = .indigo500
+            tintColor: Color = .teal500
         ) {
             self.action = action
             self.disable = disable
@@ -149,7 +149,7 @@ public struct ToolBarCollection {
             disable: Bool = false,
             isLoading: Bool = false,
             dismissOnTap: Bool = false,
-            tintColor: Color = .indigo500
+            tintColor: Color = .teal500
         ) {
             self.title = title
             self.imageSystemName = imageSystemName
@@ -186,7 +186,7 @@ public struct ToolBarCollection {
                     if isLoading {
                         ProgressView()
                             .controlSize(.small)
-                            .tint(.indigo500)
+                            .tint(.teal500)
                     }
                 }
             })

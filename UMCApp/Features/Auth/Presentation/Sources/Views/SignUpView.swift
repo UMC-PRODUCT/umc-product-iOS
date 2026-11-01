@@ -140,7 +140,7 @@ public struct SignUpView: View {
             .padding(.vertical, DefaultConstant.defaultBtnPadding)
         }
         .buttonStyle(.glassProminent)
-        .tint(.indigo500)
+        .tint(.teal500)
         .disabled(!viewModel.isFormValid || viewModel.registerState.isLoading)
         .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
     }

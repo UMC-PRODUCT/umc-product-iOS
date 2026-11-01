@@ -218,7 +218,7 @@ struct ChallengerAttendanceSessionView: View {
     private var emptyHistoryView: some View {
         emptyStateCard(
             systemImage: "clock.badge.checkmark",
-            tint: .indigo400,
+            tint: .teal400,
             title: "아직 출석 기록이 없어요",
             description: "출석 가능한 세션에서 출석을 완료하면\n이곳에 나의 출석 현황이 표시됩니다."
         )

@@ -42,15 +42,15 @@ struct BusinessCardSummaryView: View {
     private enum Palette {
         /// 시안 `linear-gradient(126.738deg, rgba(114,142,253,0.9) 7.53%, #5468FC 95.75%)`.
         /// 명함_l 은 각도 112.185°, 시작 알파 0.8 로 **다르다** — 옮겨 쓰지 말 것.
-        /// (실측 대비: #728EFD→indigo400 · #5468FC→indigo500 · #444CE7→indigo600)
-        static let gradientStart = Color.indigo400.opacity(0.9)
-        static let gradientEnd = Color.indigo500
+        /// 실측값은 당시 indigo 토큰으로 수렴했고, #1585 에서 teal 토큰으로 교체됐다.
+        static let gradientStart = Color.teal400.opacity(0.9)
+        static let gradientEnd = Color.teal500
 
         static let gradientStartLocation: Double = 0.0753
         static let gradientEndLocation: Double = 0.9575
 
         /// 중앙 방사형 오버레이. 시안은 세로로 눌린 타원이라 축 비율만 옮긴다.
-        static let overlayEnd = Color.indigo600.opacity(0.7)
+        static let overlayEnd = Color.teal600.opacity(0.7)
     }
 
     /// 126.738° 선형 그라데이션을 370×112 상자의 UnitPoint 로 옮긴 값.

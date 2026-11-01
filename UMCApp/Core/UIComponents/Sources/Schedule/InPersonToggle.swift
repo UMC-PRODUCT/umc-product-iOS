@@ -31,7 +31,7 @@ public struct InPersonToggle: View {
             Text("대면 일정")
                 .appFont(.body, color: Color.grey900)
         }
-        .tint(.indigo500)
+        .tint(.teal500)
     }
 }
 

@@ -214,7 +214,7 @@ public struct NoticeVoteCard: View {
                             .padding(.vertical, Constants.voteBtnVPadding)
                     }
                     .buttonStyle(.glassProminent)
-                    .tint(.indigo500)
+                    .tint(.teal500)
                 } else if !vote.hasUserVoted && isVotingMode {
                     // 투표 선택 모드: 투표 완료 버튼
                     voteSubmitButton(
@@ -240,12 +240,12 @@ public struct NoticeVoteCard: View {
                         }
                     }) {
                         Text("투표 수정")
-                            .appFont(.subheadline, weight: .semibold, color: .indigo500)
+                            .appFont(.subheadline, weight: .semibold, color: .teal500)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, Constants.voteBtnVPadding)
                     }
                     .buttonStyle(.glass)
-                    .tint(.indigo500)
+                    .tint(.teal500)
                 }
             }
 
@@ -256,7 +256,7 @@ public struct NoticeVoteCard: View {
                             .font(.system(size: 11))
                         Text("총 \(vote.totalParticipants)명 참여")
                     }
-                    .appFont(.footnote, color: .indigo500)
+                    .appFont(.footnote, color: .teal500)
                 }
             } else {
                 Text("총 \(vote.totalParticipants)명 참여")
@@ -274,7 +274,7 @@ public struct NoticeVoteCard: View {
             Group {
                 if isSubmitting {
                     ProgressView()
-                        .tint(.indigo500)
+                        .tint(.teal500)
                 } else {
                     Text(title)
                         .appFont(.subheadline, weight: .semibold, color: .white)
@@ -284,7 +284,7 @@ public struct NoticeVoteCard: View {
             .padding(.vertical, Constants.voteBtnVPadding)
         }
         .buttonStyle(.glassProminent)
-        .tint(.indigo500)
+        .tint(.teal500)
         .disabled((!allowEmpty && selectedOptionIds.isEmpty) || isSubmitting)
     }
 
@@ -336,7 +336,7 @@ public struct VoteOptionRow: View {
     public var body: some View {
         HStack(spacing: DefaultSpacing.spacing12) {
             Image(systemName: isSelected ? "circle.circle.fill" : "circle")
-                .foregroundStyle(isSelected ? Color.indigo500 : Color.grey400)
+                .foregroundStyle(isSelected ? Color.teal500 : Color.grey400)
                 .appFont(.title3)
                 .glassEffect(.clear)
 
@@ -348,7 +348,7 @@ public struct VoteOptionRow: View {
         .padding(Constants.mainPadding)
         .background(
             isSelected
-                ? Color.indigo200.opacity(Constants.bgOpacity)
+                ? Color.teal200.opacity(Constants.bgOpacity)
                 : Color(.systemBackground).opacity(Constants.bgOpacity)
         )
         .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
@@ -388,7 +388,7 @@ public struct VoteSelectableResultRow: View {
         .padding(Constants.innerPadding)
         .background(
             isSelected
-                ? Color.indigo200.opacity(Constants.bgOpacity)
+                ? Color.teal200.opacity(Constants.bgOpacity)
                 : Color(.systemBackground).opacity(Constants.bgOpacity)
         )
         .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
@@ -397,7 +397,7 @@ public struct VoteSelectableResultRow: View {
     private var topSection: some View {
         HStack {
             Image(systemName: isSelected ? "circle.circle.fill" : "circle")
-                .foregroundStyle(isSelected ? Color.indigo500 : Color.grey400)
+                .foregroundStyle(isSelected ? Color.teal500 : Color.grey400)
                 .appFont(.title3)
 
             Text(option.title)
@@ -406,7 +406,7 @@ public struct VoteSelectableResultRow: View {
             Spacer()
 
             Text(String(format: "%.1f%%", option.percentage(totalVotes: totalVotes)))
-                .appFont(.callout, weight: .semibold, color: isSelected ? .indigo700 : .grey700)
+                .appFont(.callout, weight: .semibold, color: isSelected ? .teal700 : .grey700)
         }
     }
 
@@ -417,7 +417,7 @@ public struct VoteSelectableResultRow: View {
             EmptyView()
         }
         .gaugeStyle(.linearCapacity)
-        .tint(isSelected ? Color.indigo500 : Color.grey400)
+        .tint(isSelected ? Color.teal500 : Color.grey400)
         .frame(height: Constants.progressHeight)
     }
 
@@ -426,7 +426,7 @@ public struct VoteSelectableResultRow: View {
             if !isAnonymous && (Int(option.voteCount) ?? 0) > 0 {
                 Button(action: { onVotersTapped?() }) {
                     Text("\(option.voteCount)명")
-                        .appFont(.footnote, color: .indigo500)
+                        .appFont(.footnote, color: .teal500)
                         .underline()
                 }
             } else {
@@ -470,7 +470,7 @@ public struct VoteResultRow: View {
         .padding(Constants.innerPadding)
         .background(
             isUserSelected
-                ? Color.indigo200.opacity(Constants.bgOpacity)
+                ? Color.teal200.opacity(Constants.bgOpacity)
                 : Color(.systemBackground).opacity(Constants.bgOpacity)
         )
         .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
@@ -485,12 +485,12 @@ public struct VoteResultRow: View {
 
             if isUserSelected {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(Color.indigo500)
+                    .foregroundStyle(Color.teal500)
                     .appFont(.callout)
             }
 
             Text(String(format: "%.1f%%", option.percentage(totalVotes: totalVotes)))
-                .appFont(.callout, weight: .semibold, color: isUserSelected ? .indigo700 : .grey700)
+                .appFont(.callout, weight: .semibold, color: isUserSelected ? .teal700 : .grey700)
         }
     }
 
@@ -501,7 +501,7 @@ public struct VoteResultRow: View {
             EmptyView()
         }
         .gaugeStyle(.linearCapacity)
-        .tint(isUserSelected ? Color.indigo500 : Color.grey400)
+        .tint(isUserSelected ? Color.teal500 : Color.grey400)
         .frame(height: Constants.progressHeight)
     }
 
@@ -510,7 +510,7 @@ public struct VoteResultRow: View {
             if !isAnonymous && (Int(option.voteCount) ?? 0) > 0 {
                 Button(action: { onVotersTapped?() }) {
                     Text("\(option.voteCount)명")
-                        .appFont(.footnote, color: .indigo500)
+                        .appFont(.footnote, color: .teal500)
                         .underline()
                 }
             } else {

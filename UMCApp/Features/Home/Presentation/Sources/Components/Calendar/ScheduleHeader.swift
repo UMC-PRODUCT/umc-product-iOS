@@ -150,7 +150,7 @@ fileprivate struct DateSheetPicker: View {
                 dismiss()
             }
             .buttonStyle(.borderedProminent)
-            .tint(.indigo500)
+            .tint(.teal500)
         }
     }
 

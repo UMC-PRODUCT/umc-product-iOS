@@ -75,7 +75,7 @@ public struct TextSelectedToolbarView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background {
                     RoundedRectangle(cornerRadius: Constants.buttonCornerRadius)
-                        .fill(isActive ? Color.indigo500 : Color.clear)
+                        .fill(isActive ? Color.teal500 : Color.clear)
                 }
                 .contentShape(RoundedRectangle(cornerRadius: Constants.buttonCornerRadius))
         }

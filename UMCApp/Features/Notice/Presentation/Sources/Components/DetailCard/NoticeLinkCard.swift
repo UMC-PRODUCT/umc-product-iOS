@@ -239,8 +239,8 @@ public struct LinkIconPresenter: View {
     fileprivate enum Constants {
         static let linkIconSize: CGSize = .init(width: 20, height: 20)
         static let iconPadding: CGFloat = 10
-        static let iconTintColor: Color = .indigo500
-        static let iconBackgroundColor: Color = .indigo100
+        static let iconTintColor: Color = .teal500
+        static let iconBackgroundColor: Color = .teal100
     }
 
     // MARK: - Body

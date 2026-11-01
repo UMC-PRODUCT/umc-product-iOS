@@ -76,7 +76,7 @@ public enum WatchAttendanceOutcome: String, Sendable, Equatable, CaseIterable {
     public var symbolTint: Color { status.tint }
 
     /// 팔레트 렌더링의 2차 색. 공결은 **링 없는 중립 솔리드**라 1차 색과 같은 값을 준다 —
-    /// `status.ringTint` 를 그대로 쓰면 대기와 똑같은 인디고 링이 붙어 둘이 섞인다.
+    /// `status.ringTint` 를 그대로 쓰면 대기와 똑같은 틸 링이 붙어 둘이 섞인다.
     public var ringTint: Color {
         self == .excused ? symbolTint : status.ringTint
     }

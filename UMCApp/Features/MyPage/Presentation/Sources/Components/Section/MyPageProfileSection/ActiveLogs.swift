@@ -91,7 +91,7 @@ struct ActiveLogs: View {
         )
         .labelStyle(.titleAndIcon)
         .labelIconToTitleSpacing(DefaultSpacing.spacing8)
-        .appFont(.footnote, color: didRecentlyAdd ? .green : .indigo500)
+        .appFont(.footnote, color: didRecentlyAdd ? .green : .teal500)
         .contentTransition(.symbolEffect(.replace))
         .animation(
             .easeInOut(duration: Constants.feedbackAnimationDuration),
