@@ -98,7 +98,7 @@ public protocol ProjectRepositoryProtocol: Sendable {
 
     // MARK: - Statistics
 
-    /// 지원 통계 (`GET /statistics`). 서버가 `projectIds`·`chapterId` 중 **정확히 하나**만 받는다.
+    /// 지원 통계 (`GET /statistics/applications`). 서버가 `projectIds`·`chapterId` 중 **정확히 하나**만 받는다.
     func fetchStatistics(projectIds: [String]) async throws -> ProjectChapterStatistics
     func fetchStatistics(chapterId: String) async throws -> ProjectChapterStatistics
 

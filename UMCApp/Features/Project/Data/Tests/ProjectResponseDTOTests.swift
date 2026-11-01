@@ -273,6 +273,21 @@ struct ProjectResponseDTOTests {
 
     // MARK: - Matching Round
 
+    @Test("결과 발표 시각은 UTC로 매핑되고 다시 인코딩된다")
+    func matchingRoundResultPublicationDecodesAndEncodes() throws {
+        let json = """
+        {
+          "id": "11", "name": "1차", "type": "PLAN_DEVELOPER", "phase": "FIRST",
+          "chapterId": "5", "resultPublishAt": "2026-09-01T00:05:00Z"
+        }
+        """
+        let response = try decode(ProjectMatchingRoundResponseDTO.self, json)
+        #expect(response.toDomain().resultPublishAt == Date(timeIntervalSince1970: 1_788_221_100))
+        let encoded = try JSONEncoder().encode(response)
+        let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        #expect(object["resultPublishAt"] as? String == "2026-09-01T00:05:00Z")
+    }
+
     @Test("매칭 차수 — 숫자 id 와 UTC 시각을 받는다")
     func matchingRoundDecodes() throws {
         let json = """
@@ -291,6 +306,7 @@ struct ProjectResponseDTOTests {
         #expect(round.phase == .first)
         #expect(round.startsAt == Date(timeIntervalSince1970: 1_788_220_800))
         #expect(round.autoDecisionExecutedAt == nil)
+        #expect(round.resultPublishAt == nil)
     }
 }
 
@@ -298,4 +314,71 @@ struct ProjectResponseDTOTests {
 
 private func decode<T: Decodable>(_ type: T.Type, _ json: String) throws -> T {
     try JSONDecoder().decode(type, from: Data(json.utf8))
+}
+
+@Suite("서버 develop 프로젝트 통계 계약")
+struct ProjectStatisticsContractTests {
+    @Test("새 지원 통계 응답의 프로젝트·학교 차수 집계를 보존한다")
+    func applicationStatisticsPreservesSummary() throws {
+        let json = """
+        {
+          "chapterId": "5", "matchingRound": null,
+          "summary": {
+            "roundApplicationStatistics": [],
+            "schoolApplicationStatistics": [{
+              "schoolId": 9, "schoolName": "UMC", "totalMemberCount": "20",
+              "rounds": [{"phase": "FIRST", "applicantCount": 3}]
+            }],
+            "projectRoundStatistics": [{
+              "projectId": "10", "projectName": "앱",
+              "rounds": [{"phase": "FIRST", "applicantCount": "3"}]
+            }]
+          }
+        }
+        """
+        let dto = try JSONDecoder().decode(
+            ProjectChapterStatisticsResponseDTO.self, from: Data(json.utf8)
+        )
+        let encoded = try JSONSerialization.jsonObject(with: JSONEncoder().encode(dto))
+            as? [String: Any]
+        let summary = encoded?["summary"] as? [String: Any]
+        #expect((summary?["schoolApplicationStatistics"] as? [[String: Any]])?.count == 1)
+        let projects = summary?["projectRoundStatistics"] as? [[String: Any]]
+        #expect((projects?.first?["rounds"] as? [[String: Any]])?.count == 1)
+        let summaryModel = dto.toDomain().summary
+        #expect(summaryModel.schoolApplicationStatistics.first?.schoolId == "9")
+        #expect(summaryModel.schoolApplicationStatistics.first?.totalMemberCount == "20")
+        #expect(summaryModel.projectRoundStatistics.first?.rounds.first?.applicantCount == "3")
+    }
+
+    @Test("매칭 통계의 phase와 랜덤 차수를 보존한다")
+    func matchingStatisticsPreservesPhase() throws {
+        let json = """
+        {
+          "chapterId": 5,
+          "roundMatchingStatistics": [{
+            "phase": "RANDOM_MATCHING", "matchedMemberCount": "7", "availableMemberCount": 12
+          }],
+          "schoolMatchingStatistics": [],
+          "projectMatchingStatistics": [{
+            "projectId": 10, "projectName": "앱", "matchedMemberCount": "7", "quota": 8,
+            "rounds": [{"phase": "RANDOM_MATCHING", "matchedMemberCount": 7}],
+            "parts": [{"part": "IOS", "matchedMemberCount": "2", "quota": 3}]
+          }]
+        }
+        """
+        let dto = try JSONDecoder().decode(
+            ProjectChapterMatchingStatisticsResponseDTO.self, from: Data(json.utf8)
+        )
+        let encoded = try JSONSerialization.jsonObject(with: JSONEncoder().encode(dto))
+            as? [String: Any]
+        let rounds = encoded?["roundMatchingStatistics"] as? [[String: Any]]
+        #expect(rounds?.first?["phase"] as? String == "RANDOM_MATCHING")
+        let statistics = dto.toDomain()
+        #expect(statistics.roundMatchingStatistics.first?.phase == .randomMatching)
+        #expect(statistics.roundMatchingStatistics.first?.matchedMemberCount == "7")
+        #expect(statistics.projectMatchingStatistics.first?.quota == "8")
+        #expect(statistics.projectMatchingStatistics.first?.parts.first?.matchedMemberCount == "2")
+        #expect(statistics.projectMatchingStatistics.first?.rounds.first?.phase == .randomMatching)
+    }
 }

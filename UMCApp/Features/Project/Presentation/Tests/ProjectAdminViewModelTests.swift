@@ -5,6 +5,7 @@
 //  Created by euijjang97 on 9/20/26.
 //
 
+import Foundation
 import ProjectData
 import ProjectDomain
 import Testing
@@ -59,6 +60,52 @@ struct ProjectAdminViewModelTests {
         #expect(form.isValid == false)
     }
 
+    @Test("결과 발표는 결정 마감에서 정확히 5분 이후부터 허용한다")
+    func validatesResultPublicationInterval() {
+        var form = ProjectMatchingRoundForm()
+        form.name = "1차 매칭"
+        form.resultPublishAt = form.decisionDeadline.addingTimeInterval(299)
+        #expect(!form.isValid)
+
+        form.resultPublishAt = form.decisionDeadline.addingTimeInterval(300)
+        #expect(form.isValid)
+
+        form.resultPublishAt = form.decisionDeadline.addingTimeInterval(301)
+        #expect(form.isValid)
+    }
+
+    @Test("기존 차수의 미설정 발표일은 메타데이터 수정 시 생략한다")
+    func preservesLegacyMissingResultPublication() throws {
+        let round = ProjectMatchingRound(
+            id: "11", name: "1차", description: nil, type: .planDeveloper,
+            phase: .first, chapterId: "5",
+            startsAt: .init(timeIntervalSince1970: 0),
+            endsAt: .init(timeIntervalSince1970: 3600),
+            decisionDeadline: .init(timeIntervalSince1970: 7200),
+            autoDecisionExecutedAt: nil, autoDecisionExecutedMemberId: nil,
+            createdAt: nil, updatedAt: nil
+        )
+        var form = ProjectMatchingRoundForm(round: round)
+        form.name = "수정한 이름"
+        form.description = "수정한 설명"
+        #expect(form.isValid)
+        #expect(form.resultPublishAtForUpdate == nil)
+        let request = UpdateProjectMatchingRoundRequestDTO(
+            update: .init(name: form.name, resultPublishAt: form.resultPublishAtForUpdate)
+        )
+        let object = try #require(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any]
+        )
+        #expect(object["name"] as? String == "수정한 이름")
+        #expect(object["resultPublishAt"] == nil)
+
+        form.resultPublishAt = form.decisionDeadline.addingTimeInterval(299)
+        #expect(!form.isValid)
+        form.resultPublishAt = form.decisionDeadline.addingTimeInterval(600)
+        #expect(form.isValid)
+        #expect(form.resultPublishAtForUpdate == form.resultPublishAt)
+    }
+
     @Test("관리 프로젝트가 100개를 넘으면 마지막 페이지까지 합친다")
     func loadsEveryManagedProjectPage() async throws {
         let firstItems = (0..<100).map { makeProject(id: String($0)) }
@@ -100,7 +147,10 @@ struct ProjectAdminViewModelTests {
     private func makeViewModel(role: ManagementTeam) -> ProjectAdminViewModel {
         let repository = MockProjectRepository()
         return ProjectAdminViewModel(
-            projectUseCase: ProjectUseCase(repository: repository),
+            projectUseCase: ProjectUseCase(
+                repository: repository,
+                storageRepository: UnusedProjectStorageRepository()
+            ),
             matchingRoundUseCase: ProjectMatchingRoundUseCase(repository: repository),
             role: role,
             gisuId: "9",
@@ -120,5 +170,38 @@ private func makeProject(id: String) -> ProjectSummary {
         partQuotas: [],
         partQuotaStatus: nil
     )
+}
+/// 운영진 통계·일정 테스트에서는 파일 업로드를 호출하지 않는다.
+private struct UnusedProjectStorageRepository: StorageRepositoryProtocol {
+    private enum Failure: Error {
+        case unexpectedStorageCall
+    }
+
+    func prepareUpload(
+        fileName: String,
+        contentType: String,
+        fileSize: Int,
+        category: StorageFileCategory
+    ) async throws -> StoragePrepareUploadResponseDTO {
+        throw Failure.unexpectedStorageCall
+    }
+
+    func uploadFile(
+        to url: String,
+        data: Data,
+        method: String,
+        headers: [String: String]?,
+        contentType: String?
+    ) async throws {
+        throw Failure.unexpectedStorageCall
+    }
+
+    func confirmUpload(fileId: String) async throws {
+        throw Failure.unexpectedStorageCall
+    }
+
+    func deleteFile(fileId: String) async throws {
+        throw Failure.unexpectedStorageCall
+    }
 }
 #endif

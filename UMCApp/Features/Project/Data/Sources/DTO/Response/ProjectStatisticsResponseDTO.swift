@@ -2,248 +2,112 @@
 //  ProjectStatisticsResponseDTO.swift
 //  ProjectData
 //
-//  Created by euijjang97 on 9/19/26.
-//
-//  `GET /statistics`, `GET /statistics/matchings` 응답 DTO. 차수 정보는 `matchingRoundId`
-//  키로 오며 ``ProjectMatchingRoundBriefDTO`` 가 받는다.
+//  Created by euijjang97 on 11/1/26.
 //
 
 import Foundation
 import UMCFoundation
 import ProjectDomain
 
-// MARK: - 지원 통계
-
-/// 서버 `ChapterProjectStatisticsResponse`.
+/// 프로젝트 지원 통계.
 public struct ProjectChapterStatisticsResponseDTO: Codable {
-    let chapterId: String?
-    let projects: [ProjectStatisticsDTO]
-    let summary: SummaryDTO?
+    let chapterId: String
+    let matchingRound: ProjectMatchingRoundBriefDTO?
+    let summary: ProjectApplicationStatisticsSummaryDTO
 
     private enum CodingKeys: String, CodingKey {
-        case chapterId, projects, summary
+        case chapterId
+        case matchingRound
+        case summary
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        chapterId = try container.decodeFlexibleStringIfPresent(forKey: .chapterId)
-        projects = try container.decodeIfPresent(
-            [ProjectStatisticsDTO].self,
-            forKey: .projects
-        ) ?? []
-        summary = try container.decodeIfPresent(SummaryDTO.self, forKey: .summary)
+        chapterId = try container.decodeFlexibleString(forKey: .chapterId)
+        matchingRound = try container.decodeIfPresent(
+            ProjectMatchingRoundBriefDTO.self, forKey: .matchingRound
+        )
+        summary = try container.decode(
+            ProjectApplicationStatisticsSummaryDTO.self, forKey: .summary
+        )
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(chapterId, forKey: .chapterId)
-        try container.encode(projects, forKey: .projects)
-        try container.encodeIfPresent(summary, forKey: .summary)
+        try container.encode(chapterId, forKey: .chapterId)
+        try container.encodeIfPresent(matchingRound, forKey: .matchingRound)
+        try container.encode(summary, forKey: .summary)
     }
 
     public func toDomain() -> ProjectChapterStatistics {
         ProjectChapterStatistics(
             chapterId: chapterId,
-            projects: projects.map { $0.toDomain() },
-            summary: summary?.toDomain()
+            matchingRound: matchingRound?.toDomain(),
+            summary: summary.toDomain()
         )
-    }
-
-    /// 서버 `ChapterProjectStatisticsSummaryResponse`.
-    public struct SummaryDTO: Codable {
-        let roundApplicationStatistics: [ProjectRoundApplicationStatisticsDTO]
-        let roundSchoolRankings: [ProjectRoundSchoolStatisticsDTO]
-        let schoolMatchingStatistics: [ProjectSchoolMatchingStatisticsDTO]
-        let projectRoundStatistics: [ProjectRoundMemberStatisticsDTO]
-
-        private enum CodingKeys: String, CodingKey {
-            case roundApplicationStatistics, roundSchoolRankings
-            case schoolMatchingStatistics, projectRoundStatistics
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            roundApplicationStatistics = try container.decodeIfPresent(
-                [ProjectRoundApplicationStatisticsDTO].self,
-                forKey: .roundApplicationStatistics
-            ) ?? []
-            roundSchoolRankings = try container.decodeIfPresent(
-                [ProjectRoundSchoolStatisticsDTO].self,
-                forKey: .roundSchoolRankings
-            ) ?? []
-            schoolMatchingStatistics = try container.decodeIfPresent(
-                [ProjectSchoolMatchingStatisticsDTO].self,
-                forKey: .schoolMatchingStatistics
-            ) ?? []
-            projectRoundStatistics = try container.decodeIfPresent(
-                [ProjectRoundMemberStatisticsDTO].self,
-                forKey: .projectRoundStatistics
-            ) ?? []
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(roundApplicationStatistics, forKey: .roundApplicationStatistics)
-            try container.encode(roundSchoolRankings, forKey: .roundSchoolRankings)
-            try container.encode(schoolMatchingStatistics, forKey: .schoolMatchingStatistics)
-            try container.encode(projectRoundStatistics, forKey: .projectRoundStatistics)
-        }
-
-        func toDomain() -> ProjectStatisticsSummary {
-            ProjectStatisticsSummary(
-                roundApplicationStatistics: roundApplicationStatistics.map { $0.toDomain() },
-                roundSchoolRankings: roundSchoolRankings.map { $0.toDomain() },
-                schoolMatchingStatistics: schoolMatchingStatistics.map { $0.toDomain() },
-                projectRoundStatistics: projectRoundStatistics.map { $0.toDomain() }
-            )
-        }
     }
 }
 
-/// 서버 `ProjectStatisticsResponse`.
-public struct ProjectStatisticsDTO: Codable {
-    let projectId: String
-    let projectMembers: [MemberDTO]
+/// 차수·학교·프로젝트별 지원 현황.
+public struct ProjectApplicationStatisticsSummaryDTO: Codable {
     let roundApplicationStatistics: [ProjectRoundApplicationStatisticsDTO]
-    let schoolApplicationStatistics: [ProjectRoundSchoolStatisticsDTO]
+    let schoolApplicationStatistics: [ProjectSchoolApplicationStatisticsDTO]
+    let projectRoundStatistics: [ProjectApplicationProjectStatisticsDTO]
 
     private enum CodingKeys: String, CodingKey {
-        case projectId, projectMembers, roundApplicationStatistics, schoolApplicationStatistics
+        case roundApplicationStatistics
+        case schoolApplicationStatistics
+        case projectRoundStatistics
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        projectId = try container.decodeFlexibleString(forKey: .projectId)
-        projectMembers = try container.decodeIfPresent(
-            [MemberDTO].self,
-            forKey: .projectMembers
-        ) ?? []
-        roundApplicationStatistics = try container.decodeIfPresent(
-            [ProjectRoundApplicationStatisticsDTO].self,
-            forKey: .roundApplicationStatistics
-        ) ?? []
-        schoolApplicationStatistics = try container.decodeIfPresent(
-            [ProjectRoundSchoolStatisticsDTO].self,
-            forKey: .schoolApplicationStatistics
-        ) ?? []
+        roundApplicationStatistics = try container.decode(
+            [ProjectRoundApplicationStatisticsDTO].self, forKey: .roundApplicationStatistics
+        )
+        schoolApplicationStatistics = try container.decode(
+            [ProjectSchoolApplicationStatisticsDTO].self, forKey: .schoolApplicationStatistics
+        )
+        projectRoundStatistics = try container.decode(
+            [ProjectApplicationProjectStatisticsDTO].self, forKey: .projectRoundStatistics
+        )
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(projectId, forKey: .projectId)
-        try container.encode(projectMembers, forKey: .projectMembers)
         try container.encode(roundApplicationStatistics, forKey: .roundApplicationStatistics)
         try container.encode(schoolApplicationStatistics, forKey: .schoolApplicationStatistics)
+        try container.encode(projectRoundStatistics, forKey: .projectRoundStatistics)
     }
 
-    func toDomain() -> ProjectStatistics {
-        ProjectStatistics(
-            projectId: projectId,
-            projectMembers: projectMembers.map { $0.toDomain() },
+    public func toDomain() -> ProjectStatisticsSummary {
+        ProjectStatisticsSummary(
             roundApplicationStatistics: roundApplicationStatistics.map { $0.toDomain() },
-            schoolApplicationStatistics: schoolApplicationStatistics.map { $0.toDomain() }
+            schoolApplicationStatistics: schoolApplicationStatistics.map { $0.toDomain() },
+            projectRoundStatistics: projectRoundStatistics.map { $0.toDomain() }
         )
-    }
-
-    /// 팀원별 지원 이력. 강제 배정된 팀원은 `applications` 가 비어 있다.
-    public struct MemberDTO: Codable {
-        let projectMemberId: String
-        let memberId: String
-        let part: String?
-        let status: String?
-        let applications: [ApplicationDTO]
-
-        private enum CodingKeys: String, CodingKey {
-            case projectMemberId, memberId, part, status, applications
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            projectMemberId = try container.decodeFlexibleString(forKey: .projectMemberId)
-            memberId = try container.decodeFlexibleString(forKey: .memberId)
-            part = try container.decodeIfPresent(String.self, forKey: .part)
-            status = try container.decodeIfPresent(String.self, forKey: .status)
-            applications = try container.decodeIfPresent(
-                [ApplicationDTO].self,
-                forKey: .applications
-            ) ?? []
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(projectMemberId, forKey: .projectMemberId)
-            try container.encode(memberId, forKey: .memberId)
-            try container.encodeIfPresent(part, forKey: .part)
-            try container.encodeIfPresent(status, forKey: .status)
-            try container.encode(applications, forKey: .applications)
-        }
-
-        func toDomain() -> ProjectMemberStatistics {
-            ProjectMemberStatistics(
-                projectMemberId: projectMemberId,
-                memberId: memberId,
-                part: part.flatMap(UMCPartType.init(apiValue:)),
-                status: status.flatMap(ProjectMemberStatus.init(rawValue:)) ?? .unknown,
-                applications: applications.map { $0.toDomain() }
-            )
-        }
-    }
-
-    /// 팀원 한 명의 지원서 한 건.
-    public struct ApplicationDTO: Codable {
-        let applicationId: String
-        let status: String?
-        let matchingRound: ProjectMatchingRoundBriefDTO?
-
-        private enum CodingKeys: String, CodingKey {
-            case applicationId, status, matchingRound
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            applicationId = try container.decodeFlexibleString(forKey: .applicationId)
-            status = try container.decodeIfPresent(String.self, forKey: .status)
-            matchingRound = try container.decodeIfPresent(
-                ProjectMatchingRoundBriefDTO.self,
-                forKey: .matchingRound
-            )
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(applicationId, forKey: .applicationId)
-            try container.encodeIfPresent(status, forKey: .status)
-            try container.encodeIfPresent(matchingRound, forKey: .matchingRound)
-        }
-
-        func toDomain() -> ProjectMemberApplicationStatistics {
-            ProjectMemberApplicationStatistics(
-                applicationId: applicationId,
-                status: status.flatMap(ProjectApplicationStatus.init(rawValue:)) ?? .unknown,
-                matchingRound: matchingRound?.toDomain()
-            )
-        }
     }
 }
 
-/// 차수별 지원 인원 (서버 `RoundApplicationStatisticsResponse`).
+/// 차수별 지원 인원.
 public struct ProjectRoundApplicationStatisticsDTO: Codable {
     let matchingRound: ProjectMatchingRoundBriefDTO?
     let appliedMemberCount: String
     let availableMemberCount: String
 
     private enum CodingKeys: String, CodingKey {
-        case matchingRound, appliedMemberCount, availableMemberCount
+        case matchingRound
+        case appliedMemberCount
+        case availableMemberCount
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         matchingRound = try container.decodeIfPresent(
-            ProjectMatchingRoundBriefDTO.self,
-            forKey: .matchingRound
+            ProjectMatchingRoundBriefDTO.self, forKey: .matchingRound
         )
-        appliedMemberCount = try container.decodeProjectCount(forKey: .appliedMemberCount)
-        availableMemberCount = try container.decodeProjectCount(forKey: .availableMemberCount)
+        appliedMemberCount = try container.decodeFlexibleString(forKey: .appliedMemberCount)
+        availableMemberCount = try container.decodeFlexibleString(forKey: .availableMemberCount)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -253,7 +117,7 @@ public struct ProjectRoundApplicationStatisticsDTO: Codable {
         try container.encode(availableMemberCount, forKey: .availableMemberCount)
     }
 
-    func toDomain() -> ProjectRoundApplicationStatistics {
+    public func toDomain() -> ProjectRoundApplicationStatistics {
         ProjectRoundApplicationStatistics(
             matchingRound: matchingRound?.toDomain(),
             appliedMemberCount: appliedMemberCount,
@@ -262,199 +126,136 @@ public struct ProjectRoundApplicationStatisticsDTO: Codable {
     }
 }
 
-/// 차수별 학교 지원자 수 (서버 `RoundSchoolApplicationStatisticsResponse`).
-public struct ProjectRoundSchoolStatisticsDTO: Codable {
-    let matchingRound: ProjectMatchingRoundBriefDTO?
-    let schools: [SchoolDTO]
-
-    private enum CodingKeys: String, CodingKey {
-        case matchingRound, schools
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        matchingRound = try container.decodeIfPresent(
-            ProjectMatchingRoundBriefDTO.self,
-            forKey: .matchingRound
-        )
-        schools = try container.decodeIfPresent([SchoolDTO].self, forKey: .schools) ?? []
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(matchingRound, forKey: .matchingRound)
-        try container.encode(schools, forKey: .schools)
-    }
-
-    func toDomain() -> ProjectRoundSchoolStatistics {
-        ProjectRoundSchoolStatistics(
-            matchingRound: matchingRound?.toDomain(),
-            schools: schools.map { $0.toDomain() }
-        )
-    }
-
-    /// 학교 하나의 지원자 수.
-    public struct SchoolDTO: Codable {
-        let schoolId: String
-        let applicantCount: String
-
-        private enum CodingKeys: String, CodingKey {
-            case schoolId, applicantCount
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            schoolId = try container.decodeFlexibleString(forKey: .schoolId)
-            applicantCount = try container.decodeProjectCount(forKey: .applicantCount)
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(schoolId, forKey: .schoolId)
-            try container.encode(applicantCount, forKey: .applicantCount)
-        }
-
-        func toDomain() -> ProjectSchoolApplicantCount {
-            ProjectSchoolApplicantCount(schoolId: schoolId, applicantCount: applicantCount)
-        }
-    }
-}
-
-/// 학교별 매칭 인원. 지원 통계 요약에는 `appliedMemberCount` 가 더 붙는다.
-public struct ProjectSchoolMatchingStatisticsDTO: Codable {
+/// 학교별 지원 가능 총원과 차수별 지원 인원.
+public struct ProjectSchoolApplicationStatisticsDTO: Codable {
     let schoolId: String
-    let matchedMemberCount: String
+    let schoolName: String
     let totalMemberCount: String
-    let appliedMemberCount: String?
+    let rounds: [ProjectApplicationPhaseCountDTO]
 
     private enum CodingKeys: String, CodingKey {
-        case schoolId, matchedMemberCount, totalMemberCount, appliedMemberCount
+        case schoolId
+        case schoolName
+        case totalMemberCount
+        case rounds
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         schoolId = try container.decodeFlexibleString(forKey: .schoolId)
-        matchedMemberCount = try container.decodeProjectCount(forKey: .matchedMemberCount)
-        totalMemberCount = try container.decodeProjectCount(forKey: .totalMemberCount)
-        appliedMemberCount = try container.decodeFlexibleStringIfPresent(
-            forKey: .appliedMemberCount
-        )
+        schoolName = try container.decode(String.self, forKey: .schoolName)
+        totalMemberCount = try container.decodeFlexibleString(forKey: .totalMemberCount)
+        rounds = try container.decode([ProjectApplicationPhaseCountDTO].self, forKey: .rounds)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(schoolId, forKey: .schoolId)
-        try container.encode(matchedMemberCount, forKey: .matchedMemberCount)
+        try container.encode(schoolName, forKey: .schoolName)
         try container.encode(totalMemberCount, forKey: .totalMemberCount)
-        try container.encodeIfPresent(appliedMemberCount, forKey: .appliedMemberCount)
+        try container.encode(rounds, forKey: .rounds)
     }
 
-    func toDomain() -> ProjectSchoolMatchingStatistics {
-        ProjectSchoolMatchingStatistics(
+    public func toDomain() -> ProjectSchoolApplicationStatistics {
+        ProjectSchoolApplicationStatistics(
             schoolId: schoolId,
-            matchedMemberCount: matchedMemberCount,
+            schoolName: schoolName,
             totalMemberCount: totalMemberCount,
-            appliedMemberCount: appliedMemberCount
+            rounds: rounds.map { $0.toDomain() }
         )
     }
 }
 
-/// 프로젝트별 차수 인원 (서버 `ProjectRoundMemberStatisticsResponse`).
-public struct ProjectRoundMemberStatisticsDTO: Codable {
+/// 프로젝트별 차수별 지원 인원.
+public struct ProjectApplicationProjectStatisticsDTO: Codable {
     let projectId: String
-    let matchingRounds: [RoundDTO]
+    let projectName: String
+    let rounds: [ProjectApplicationPhaseCountDTO]
 
     private enum CodingKeys: String, CodingKey {
-        case projectId, matchingRounds
+        case projectId
+        case projectName
+        case rounds
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         projectId = try container.decodeFlexibleString(forKey: .projectId)
-        matchingRounds = try container.decodeIfPresent(
-            [RoundDTO].self,
-            forKey: .matchingRounds
-        ) ?? []
+        projectName = try container.decode(String.self, forKey: .projectName)
+        rounds = try container.decode([ProjectApplicationPhaseCountDTO].self, forKey: .rounds)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(projectId, forKey: .projectId)
-        try container.encode(matchingRounds, forKey: .matchingRounds)
+        try container.encode(projectName, forKey: .projectName)
+        try container.encode(rounds, forKey: .rounds)
     }
 
-    func toDomain() -> ProjectRoundMemberStatistics {
-        ProjectRoundMemberStatistics(
+    public func toDomain() -> ProjectApplicationProjectStatistics {
+        ProjectApplicationProjectStatistics(
             projectId: projectId,
-            matchingRounds: matchingRounds.map { $0.toDomain() }
+            projectName: projectName,
+            rounds: rounds.map { $0.toDomain() }
         )
-    }
-
-    /// 차수 하나의 지원·매칭 인원.
-    public struct RoundDTO: Codable {
-        let matchingRound: ProjectMatchingRoundBriefDTO?
-        let appliedMemberCount: String
-        let matchedMemberCount: String
-
-        private enum CodingKeys: String, CodingKey {
-            case matchingRound, appliedMemberCount, matchedMemberCount
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            matchingRound = try container.decodeIfPresent(
-                ProjectMatchingRoundBriefDTO.self,
-                forKey: .matchingRound
-            )
-            appliedMemberCount = try container.decodeProjectCount(forKey: .appliedMemberCount)
-            matchedMemberCount = try container.decodeProjectCount(forKey: .matchedMemberCount)
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encodeIfPresent(matchingRound, forKey: .matchingRound)
-            try container.encode(appliedMemberCount, forKey: .appliedMemberCount)
-            try container.encode(matchedMemberCount, forKey: .matchedMemberCount)
-        }
-
-        func toDomain() -> ProjectRoundMemberCount {
-            ProjectRoundMemberCount(
-                matchingRound: matchingRound?.toDomain(),
-                appliedMemberCount: appliedMemberCount,
-                matchedMemberCount: matchedMemberCount
-            )
-        }
     }
 }
 
-// MARK: - 매칭 통계
-
-/// 서버 `ChapterProjectMatchingStatisticsResponse`.
-public struct ProjectChapterMatchingStatisticsResponseDTO: Codable {
-    let chapterId: String
-    let roundMatchingStatistics: [RoundDTO]
-    let schoolMatchingStatistics: [ProjectSchoolMatchingStatisticsDTO]
-    let unclassifiedMatchingStatistics: UnclassifiedDTO?
+/// 차수별 지원 인원.
+public struct ProjectApplicationPhaseCountDTO: Codable {
+    let phase: String
+    let applicantCount: String
 
     private enum CodingKeys: String, CodingKey {
-        case chapterId, roundMatchingStatistics, schoolMatchingStatistics
-        case unclassifiedMatchingStatistics
+        case phase
+        case applicantCount
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        phase = try container.decode(String.self, forKey: .phase)
+        applicantCount = try container.decodeFlexibleString(forKey: .applicantCount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(phase, forKey: .phase)
+        try container.encode(applicantCount, forKey: .applicantCount)
+    }
+
+    public func toDomain() -> ProjectApplicationPhaseCount {
+        ProjectApplicationPhaseCount(
+            phase: ProjectMatchingPhase(rawValue: phase) ?? .unknown,
+            applicantCount: applicantCount
+        )
+    }
+}
+
+/// 공개된 매칭 결과 집계.
+public struct ProjectChapterMatchingStatisticsResponseDTO: Codable {
+    let chapterId: String
+    let roundMatchingStatistics: [ProjectRoundMatchingStatisticsDTO]
+    let schoolMatchingStatistics: [ProjectSchoolMatchingStatisticsDTO]
+    let projectMatchingStatistics: [ProjectMatchingProjectStatisticsDTO]
+
+    private enum CodingKeys: String, CodingKey {
+        case chapterId
+        case roundMatchingStatistics
+        case schoolMatchingStatistics
+        case projectMatchingStatistics
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         chapterId = try container.decodeFlexibleString(forKey: .chapterId)
-        roundMatchingStatistics = try container.decodeIfPresent(
-            [RoundDTO].self,
-            forKey: .roundMatchingStatistics
-        ) ?? []
-        schoolMatchingStatistics = try container.decodeIfPresent(
-            [ProjectSchoolMatchingStatisticsDTO].self,
-            forKey: .schoolMatchingStatistics
-        ) ?? []
-        unclassifiedMatchingStatistics = try container.decodeIfPresent(
-            UnclassifiedDTO.self,
-            forKey: .unclassifiedMatchingStatistics
+        roundMatchingStatistics = try container.decode(
+            [ProjectRoundMatchingStatisticsDTO].self, forKey: .roundMatchingStatistics
+        )
+        schoolMatchingStatistics = try container.decode(
+            [ProjectSchoolMatchingStatisticsDTO].self, forKey: .schoolMatchingStatistics
+        )
+        projectMatchingStatistics = try container.decode(
+            [ProjectMatchingProjectStatisticsDTO].self, forKey: .projectMatchingStatistics
         )
     }
 
@@ -463,10 +264,7 @@ public struct ProjectChapterMatchingStatisticsResponseDTO: Codable {
         try container.encode(chapterId, forKey: .chapterId)
         try container.encode(roundMatchingStatistics, forKey: .roundMatchingStatistics)
         try container.encode(schoolMatchingStatistics, forKey: .schoolMatchingStatistics)
-        try container.encodeIfPresent(
-            unclassifiedMatchingStatistics,
-            forKey: .unclassifiedMatchingStatistics
-        )
+        try container.encode(projectMatchingStatistics, forKey: .projectMatchingStatistics)
     }
 
     public func toDomain() -> ProjectChapterMatchingStatistics {
@@ -474,108 +272,197 @@ public struct ProjectChapterMatchingStatisticsResponseDTO: Codable {
             chapterId: chapterId,
             roundMatchingStatistics: roundMatchingStatistics.map { $0.toDomain() },
             schoolMatchingStatistics: schoolMatchingStatistics.map { $0.toDomain() },
-            unclassifiedMatchingStatistics: unclassifiedMatchingStatistics?.toDomain()
+            projectMatchingStatistics: projectMatchingStatistics.map { $0.toDomain() }
         )
-    }
-
-    /// 차수별 매칭 인원.
-    public struct RoundDTO: Codable {
-        let matchingRound: ProjectMatchingRoundBriefDTO?
-        let matchedMemberCount: String
-        let availableMemberCount: String
-        let projects: [ProjectMatchingCountDTO]
-
-        private enum CodingKeys: String, CodingKey {
-            case matchingRound, matchedMemberCount, availableMemberCount, projects
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            matchingRound = try container.decodeIfPresent(
-                ProjectMatchingRoundBriefDTO.self,
-                forKey: .matchingRound
-            )
-            matchedMemberCount = try container.decodeProjectCount(forKey: .matchedMemberCount)
-            availableMemberCount = try container.decodeProjectCount(forKey: .availableMemberCount)
-            projects = try container.decodeIfPresent(
-                [ProjectMatchingCountDTO].self,
-                forKey: .projects
-            ) ?? []
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encodeIfPresent(matchingRound, forKey: .matchingRound)
-            try container.encode(matchedMemberCount, forKey: .matchedMemberCount)
-            try container.encode(availableMemberCount, forKey: .availableMemberCount)
-            try container.encode(projects, forKey: .projects)
-        }
-
-        func toDomain() -> ProjectRoundMatchingStatistics {
-            ProjectRoundMatchingStatistics(
-                matchingRound: matchingRound?.toDomain(),
-                matchedMemberCount: matchedMemberCount,
-                availableMemberCount: availableMemberCount,
-                projects: projects.map { $0.toDomain() }
-            )
-        }
-    }
-
-    /// 차수 미분류 인원.
-    public struct UnclassifiedDTO: Codable {
-        let matchedMemberCount: String
-        let projects: [ProjectMatchingCountDTO]
-
-        private enum CodingKeys: String, CodingKey {
-            case matchedMemberCount, projects
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            matchedMemberCount = try container.decodeProjectCount(forKey: .matchedMemberCount)
-            projects = try container.decodeIfPresent(
-                [ProjectMatchingCountDTO].self,
-                forKey: .projects
-            ) ?? []
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(matchedMemberCount, forKey: .matchedMemberCount)
-            try container.encode(projects, forKey: .projects)
-        }
-
-        func toDomain() -> ProjectUnclassifiedMatchingStatistics {
-            ProjectUnclassifiedMatchingStatistics(
-                matchedMemberCount: matchedMemberCount,
-                projects: projects.map { $0.toDomain() }
-            )
-        }
     }
 }
 
-/// 프로젝트 하나의 매칭 인원.
-public struct ProjectMatchingCountDTO: Codable {
-    let projectId: String
+/// 차수별 매칭 인원. 랜덤 매칭도 phase로 구분한다.
+public struct ProjectRoundMatchingStatisticsDTO: Codable {
+    let phase: String
     let matchedMemberCount: String
+    let availableMemberCount: String
 
     private enum CodingKeys: String, CodingKey {
-        case projectId, matchedMemberCount
+        case phase
+        case matchedMemberCount
+        case availableMemberCount
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        phase = try container.decode(String.self, forKey: .phase)
+        matchedMemberCount = try container.decodeFlexibleString(forKey: .matchedMemberCount)
+        availableMemberCount = try container.decodeFlexibleString(forKey: .availableMemberCount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(phase, forKey: .phase)
+        try container.encode(matchedMemberCount, forKey: .matchedMemberCount)
+        try container.encode(availableMemberCount, forKey: .availableMemberCount)
+    }
+
+    public func toDomain() -> ProjectRoundMatchingStatistics {
+        ProjectRoundMatchingStatistics(
+            phase: ProjectMatchingPhase(rawValue: phase) ?? .unknown,
+            matchedMemberCount: matchedMemberCount,
+            availableMemberCount: availableMemberCount
+        )
+    }
+}
+
+/// 학교별 누적 매칭 인원과 대상 총원.
+public struct ProjectSchoolMatchingStatisticsDTO: Codable {
+    let schoolId: String
+    let schoolName: String
+    let matchedMemberCount: String
+    let totalMemberCount: String
+
+    private enum CodingKeys: String, CodingKey {
+        case schoolId
+        case schoolName
+        case matchedMemberCount
+        case totalMemberCount
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schoolId = try container.decodeFlexibleString(forKey: .schoolId)
+        schoolName = try container.decode(String.self, forKey: .schoolName)
+        matchedMemberCount = try container.decodeFlexibleString(forKey: .matchedMemberCount)
+        totalMemberCount = try container.decodeFlexibleString(forKey: .totalMemberCount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(schoolId, forKey: .schoolId)
+        try container.encode(schoolName, forKey: .schoolName)
+        try container.encode(matchedMemberCount, forKey: .matchedMemberCount)
+        try container.encode(totalMemberCount, forKey: .totalMemberCount)
+    }
+
+    public func toDomain() -> ProjectSchoolMatchingStatistics {
+        ProjectSchoolMatchingStatistics(
+            schoolId: schoolId,
+            schoolName: schoolName,
+            matchedMemberCount: matchedMemberCount,
+            totalMemberCount: totalMemberCount
+        )
+    }
+}
+
+/// 프로젝트별 누적 매칭 인원 및 정원.
+public struct ProjectMatchingProjectStatisticsDTO: Codable {
+    let projectId: String
+    let projectName: String
+    let matchedMemberCount: String
+    let quota: String
+    let rounds: [ProjectMatchingPhaseCountDTO]
+    let parts: [ProjectMatchingPartStatisticsDTO]
+
+    private enum CodingKeys: String, CodingKey {
+        case projectId
+        case projectName
+        case matchedMemberCount
+        case quota
+        case rounds
+        case parts
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         projectId = try container.decodeFlexibleString(forKey: .projectId)
-        matchedMemberCount = try container.decodeProjectCount(forKey: .matchedMemberCount)
+        projectName = try container.decode(String.self, forKey: .projectName)
+        matchedMemberCount = try container.decodeFlexibleString(forKey: .matchedMemberCount)
+        quota = try container.decodeFlexibleString(forKey: .quota)
+        rounds = try container.decode([ProjectMatchingPhaseCountDTO].self, forKey: .rounds)
+        parts = try container.decode([ProjectMatchingPartStatisticsDTO].self, forKey: .parts)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(projectId, forKey: .projectId)
+        try container.encode(projectName, forKey: .projectName)
+        try container.encode(matchedMemberCount, forKey: .matchedMemberCount)
+        try container.encode(quota, forKey: .quota)
+        try container.encode(rounds, forKey: .rounds)
+        try container.encode(parts, forKey: .parts)
+    }
+
+    public func toDomain() -> ProjectMatchingProjectStatistics {
+        ProjectMatchingProjectStatistics(
+            projectId: projectId,
+            projectName: projectName,
+            matchedMemberCount: matchedMemberCount,
+            quota: quota,
+            rounds: rounds.map { $0.toDomain() },
+            parts: parts.map { $0.toDomain() }
+        )
+    }
+}
+
+/// 차수별 매칭 완료 인원.
+public struct ProjectMatchingPhaseCountDTO: Codable {
+    let phase: String
+    let matchedMemberCount: String
+
+    private enum CodingKeys: String, CodingKey {
+        case phase
+        case matchedMemberCount
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        phase = try container.decode(String.self, forKey: .phase)
+        matchedMemberCount = try container.decodeFlexibleString(forKey: .matchedMemberCount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(phase, forKey: .phase)
         try container.encode(matchedMemberCount, forKey: .matchedMemberCount)
     }
 
-    func toDomain() -> ProjectMatchingCount {
-        ProjectMatchingCount(projectId: projectId, matchedMemberCount: matchedMemberCount)
+    public func toDomain() -> ProjectMatchingPhaseCount {
+        ProjectMatchingPhaseCount(
+            phase: ProjectMatchingPhase(rawValue: phase) ?? .unknown,
+            matchedMemberCount: matchedMemberCount
+        )
+    }
+}
+
+/// 파트별 매칭 완료 인원과 정원.
+public struct ProjectMatchingPartStatisticsDTO: Codable {
+    let part: String?
+    let matchedMemberCount: String
+    let quota: String
+
+    private enum CodingKeys: String, CodingKey {
+        case part
+        case matchedMemberCount
+        case quota
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        part = try container.decodeIfPresent(String.self, forKey: .part)
+        matchedMemberCount = try container.decodeFlexibleString(forKey: .matchedMemberCount)
+        quota = try container.decodeFlexibleString(forKey: .quota)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(part, forKey: .part)
+        try container.encode(matchedMemberCount, forKey: .matchedMemberCount)
+        try container.encode(quota, forKey: .quota)
+    }
+
+    public func toDomain() -> ProjectMatchingPartStatistics {
+        ProjectMatchingPartStatistics(
+            part: part.flatMap(UMCPartType.init(apiValue:)),
+            matchedMemberCount: matchedMemberCount,
+            quota: quota
+        )
     }
 }

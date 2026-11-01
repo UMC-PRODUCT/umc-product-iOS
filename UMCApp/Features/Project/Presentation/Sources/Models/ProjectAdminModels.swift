@@ -75,8 +75,11 @@ struct ProjectMatchingRoundForm: Equatable {
     var startsAt = Date()
     var endsAt = Date().addingTimeInterval(3 * 24 * 60 * 60)
     var decisionDeadline = Date().addingTimeInterval(5 * 24 * 60 * 60)
+    var resultPublishAt: Date
+    private var legacyResultPublishAtPlaceholder: Date?
 
     init(round: ProjectMatchingRound? = nil) {
+        resultPublishAt = decisionDeadline.addingTimeInterval(5 * 60)
         guard let round else { return }
         name = round.name
         description = round.description ?? ""
@@ -86,6 +89,16 @@ struct ProjectMatchingRoundForm: Equatable {
         endsAt = round.endsAt ?? startsAt.addingTimeInterval(3 * 24 * 60 * 60)
         decisionDeadline = round.decisionDeadline
             ?? endsAt.addingTimeInterval(2 * 24 * 60 * 60)
+        resultPublishAt = round.resultPublishAt
+            ?? decisionDeadline.addingTimeInterval(5 * 60)
+        if round.resultPublishAt == nil {
+            legacyResultPublishAtPlaceholder = resultPublishAt
+        }
+    }
+
+    /// 기존 차수의 미설정 발표일은 사용자가 변경했을 때만 서버에 반영한다.
+    var resultPublishAtForUpdate: Date? {
+        resultPublishAt == legacyResultPublishAtPlaceholder ? nil : resultPublishAt
     }
 
     var isValid: Bool {
@@ -95,6 +108,8 @@ struct ProjectMatchingRoundForm: Equatable {
             && type != .unknown
             && startsAt < endsAt
             && endsAt < decisionDeadline
+            && (resultPublishAtForUpdate == nil
+                || resultPublishAt >= decisionDeadline.addingTimeInterval(5 * 60))
     }
 }
 

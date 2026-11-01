@@ -161,7 +161,7 @@ public struct ProjectApplicationsQueryDTO: Encodable, Equatable {
     }
 }
 
-/// 지원 통계 (`GET /statistics`). 서버는 둘 중 **하나만** 받는다.
+/// 지원 통계 (`GET /statistics/applications`). 서버는 둘 중 **하나만** 받는다.
 public struct ProjectStatisticsQueryDTO: Encodable, Equatable {
     public let projectIds: [String]
     public let chapterId: String?
