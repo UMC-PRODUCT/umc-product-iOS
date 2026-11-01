@@ -11,6 +11,7 @@ import ProjectDescriptionHelpers
 let project = featureProject(
     name: "Community",
     domainExtraDependencies: [
+        .project(target: "CoreDomain", path: .relativeToRoot("Core/Domain")),
         // 공지 링크 카드(#1142)의 메타를 NoticeDomain 의 공지 상세 조회에서 가져온다.
         .project(target: "NoticeDomain", path: .relativeToRoot("Features/Notice")),
     ],

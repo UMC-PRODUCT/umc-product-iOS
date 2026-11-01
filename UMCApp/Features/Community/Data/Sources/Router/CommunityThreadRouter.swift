@@ -14,6 +14,8 @@ import CoreNetwork
 /// 메시지 생성·수정·삭제·리액션·읽음은 STOMP 전용이라 여기 없다. 신고는 예외로 REST 다 —
 /// 다른 참여자에게 방송되지 않는 접수 요청이라 실시간 채널을 탈 이유가 없다.
 public enum CommunityThreadRouter {
+    case getBlockedMembers
+    case setMemberBlocked(memberId: String, isBlocked: Bool)
     case getThreads(query: ThreadListQuery)
     case getThread(threadId: String)
     case createThread(body: CreateThreadBody)
@@ -44,6 +46,10 @@ extension CommunityThreadRouter: BaseTargetType {
 
     public var path: String {
         switch self {
+        case .getBlockedMembers:
+            return "/api/v1/member/blocks"
+        case .setMemberBlocked(let memberId, _):
+            return "/api/v1/member/blocks/\(memberId)"
         case .getThreads, .createThread:
             return threadsPath
         case .getThread(let threadId),
@@ -75,8 +81,10 @@ extension CommunityThreadRouter: BaseTargetType {
 
     public var method: Moya.Method {
         switch self {
-        case .getThreads, .getThread, .getMessages, .getMembers, .getInvitableMembers:
+        case .getBlockedMembers, .getThreads, .getThread, .getMessages, .getMembers, .getInvitableMembers:
             return .get
+        case .setMemberBlocked(_, let isBlocked):
+            return isBlocked ? .post : .delete
         case .setPin(_, let isPinned):
             return isPinned ? .post : .delete
         case .setMute(_, let isMuted):
@@ -117,7 +125,7 @@ extension CommunityThreadRouter: BaseTargetType {
             return .requestJSONEncodable(body)
         case .reportMessage(_, let body):
             return .requestJSONEncodable(body)
-        case .getThread, .deleteThread, .setPin, .setMute, .kickMember, .leave:
+        case .getBlockedMembers, .setMemberBlocked, .getThread, .deleteThread, .setPin, .setMute, .kickMember, .leave:
             return .requestPlain
         }
     }

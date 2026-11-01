@@ -16,6 +16,18 @@ import CommunityDomain
 /// 맞춰 놓기 전에는 재현되지 않는다 — 순수 함수로 떼어 네 조합을 그대로 잠근다.
 @Suite("MessageAction.items")
 struct MessageActionItemsTests {
+    @Test("공개 읽기 전용 방에는 개인 차단만 표시한다")
+    func readOnlyAllowsBlocking() {
+        #expect(MessageAction.items(
+            deliveryState: .sent, canReport: false, canDelete: false,
+            canBlock: true, canInteract: false
+        ) == [.block])
+        #expect(MessageAction.items(
+            deliveryState: .sent, canReport: true, canDelete: true,
+            canBlock: true, isBlocked: true
+        ) == [.unblock])
+    }
+
 
     @Test("권한이 모두 있으면 답장·복사·신고·삭제 순으로 낸다")
     func listsAllActionsInOrder() {

@@ -34,6 +34,8 @@ public final class MemberBlockStore {
     public private(set) var blockedMemberIds: Set<String> = []
     public private(set) var isUpdating = false
     public private(set) var hasLoaded = false
+    /// 확정된 차단 상태가 바뀔 때 보유 중인 인용·요약을 무효화한다.
+    public private(set) var stateRevision = 0
     @ObservationIgnored private let repository: MemberBlockRepositoryProtocol
     private var isActive = true
     @ObservationIgnored private var revision = UUID()
@@ -54,6 +56,7 @@ public final class MemberBlockStore {
         let requestRevision = revision
         let ids = try await repository.fetchBlockedMemberIds()
         guard isActive, revision == requestRevision else { return }
+        if blockedMemberIds != ids || !hasLoaded { stateRevision += 1 }
         blockedMemberIds = ids
         hasLoaded = true
     }
@@ -70,6 +73,7 @@ public final class MemberBlockStore {
         defer { if revision == requestRevision { isUpdating = false } }
         let result = try await repository.setBlocked(blocked, memberId: memberId)
         guard isActive, revision == requestRevision else { return }
+        stateRevision += 1
         if result { blockedMemberIds.insert(memberId) } else { blockedMemberIds.remove(memberId) }
         // 프로필에서는 목록 조회 성공 후에만 변경을 허용한다.
     }
@@ -77,6 +81,7 @@ public final class MemberBlockStore {
     public func reset() {
         revision = UUID()
         isActive = false
+        stateRevision += 1
         blockedMemberIds = []
         hasLoaded = false
         isUpdating = false
