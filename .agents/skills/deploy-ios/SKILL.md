@@ -16,8 +16,14 @@ Build a distinct archive for each backend environment. A branch is only a workfl
 | App Store release | `release/{version}/{build}` | prod | unset `USE_DEV_SERVER` |
 
 TestFlight and App Store uploads for the same marketing version must use different build
-numbers. Start at 105. Use the next unused number across both branch families and confirm
-it is unused in App Store Connect before uploading.
+numbers. Start at 105. Use the next unused number across both branch families and check
+remote branches for reuse before pushing.
+
+For the next deployment (user-designated on 2026-11-01), start at build **113**:
+version **4.0.0** uses external TestFlight **113** and App Store **114**. These allocations
+are user-designated; App Store Connect availability and Xcode Cloud settings remain
+unverified unless independently available. For later
+deployments, use the next unused number across both families; do not reuse 113 or 114.
 
 ## Deploy
 
@@ -55,6 +61,14 @@ it is unused in App Store Connect before uploading.
    status, alongside the branch, version, build number, and selected server. A pending PR
    is not a completed develop sync, and a push does not prove an upload succeeded.
 
+## App Store Connect access
+
+The user handles App Store Connect login on a separate website. Do not request an in-app
+login or block an explicitly requested deployment on unavailable App Store Connect access.
+When the user specifies the version and build numbers, check remote branch uniqueness,
+validate generation, and push. Report unavailable build-availability or workflow-environment
+verification separately; a push does not prove an upload or distribution succeeded.
+
 ## Xcode Cloud preflight
 
 `BASE_URL_DEBUG` and `BASE_URL_RELEASE` must be available to both workflows. The external
@@ -69,6 +83,6 @@ contracts and verify it resolves the requested build number before pushing.
 ## Stop conditions
 
 Stop and ask for direction when the target is ambiguous, the branch or build number is
-already used, the worktree is dirty, App Store Connect cannot confirm build availability,
-or the required Xcode Cloud environment variables are not configured. Never substitute a
+already used, the deployment worktree is dirty, or required Xcode Cloud environment
+variables are known to be misconfigured. Never substitute a
 dev server for an App Store release or a prod archive for the external-dev workflow.
