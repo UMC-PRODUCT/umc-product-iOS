@@ -30,6 +30,11 @@ public final class UserSessionManager {
     /// 사용자가 보유한 전체 역할 목록
     public private(set) var allRoles: [ManagementTeam] = []
 
+    /// v2 권한 응답에서 확인한 시스템 관리자 여부(역할과 별도).
+    public private(set) var isSystemAdministrator = false
+    /// 로그아웃 전 시작한 권한 요청이 새 세션에 적용되지 않도록 하는 세대입니다.
+    public private(set) var sessionRevision: UInt = 0
+
     /// Admin 모드 활성화 여부
     public private(set) var isAdminModeEnabled: Bool = false
 
@@ -37,7 +42,7 @@ public final class UserSessionManager {
 
     /// Admin 모드 토글 가능 여부
     public var canToggleAdminMode: Bool {
-        currentRole.canAccessAdminMode
+        isSystemAdministrator || currentRole.canAccessAdminMode
     }
 
     /// 현재 활성화된 Activity 모드
@@ -62,9 +67,15 @@ public final class UserSessionManager {
         currentRole = role
         self.allRoles = allRoles.isEmpty ? [role] : allRoles
         // Admin 모드 접근 불가 역할로 변경되면 Admin 모드 비활성화
-        if !role.canAccessAdminMode {
+        if !canToggleAdminMode {
             isAdminModeEnabled = false
         }
+    }
+
+    public func updateSystemAdministrator(_ enabled: Bool, expectedRevision: UInt? = nil) {
+        if let expectedRevision, expectedRevision != sessionRevision { return }
+        isSystemAdministrator = enabled
+        if !canToggleAdminMode { isAdminModeEnabled = false }
     }
 
     /// 보유 역할 중 특정 권한이 있는지 확인
@@ -74,8 +85,10 @@ public final class UserSessionManager {
 
     /// 세션 초기화 (로그아웃/탈퇴 시 호출)
     public func reset() {
+        sessionRevision &+= 1
         currentRole = .challenger
         allRoles = []
+        isSystemAdministrator = false
         isAdminModeEnabled = false
     }
 }

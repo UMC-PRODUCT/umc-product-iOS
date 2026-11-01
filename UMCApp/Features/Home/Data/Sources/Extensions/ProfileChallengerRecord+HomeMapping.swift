@@ -13,19 +13,6 @@ import UMCFoundation
 // MARK: - ProfileChallengerRecord → HomeGeneration
 
 extension ProfileChallengerRecord {
-    /// 상점(보상) 유형 여부 판정에 사용하는 허용 목록.
-    ///
-    /// `ChallengerPointType.isReward`는 레거시 호환을 위해 `.warning`/`.out`도 양수 배점으로
-    /// 유지되어 있어(``ChallengerPointType`` 참고) 그대로 재사용할 수 없다. 대신 실제 상점으로
-    /// 취급하는 유형만 명시적으로 나열한다.
-    private static let rewardPointTypes: Set<String> = [
-        ChallengerPointType.bestWorkbook.rawValue,
-        ChallengerPointType.bestWorkbookV2.rawValue,
-        ChallengerPointType.blogChallenge.rawValue,
-        ChallengerPointType.umcEventReview.rawValue,
-        ChallengerPointType.peerReviewSubmission.rawValue,
-    ]
-
     private static let displayDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM.dd"
@@ -46,7 +33,7 @@ extension ProfileChallengerRecord {
         var penaltyTotal: Double = 0
 
         let pointLogs = sortedPoints.map { point -> PointLog in
-            let isReward = Self.rewardPointTypes.contains(point.pointType)
+            let isReward = point.point > 0
 
             if isReward {
                 rewardTotal += abs(point.point)

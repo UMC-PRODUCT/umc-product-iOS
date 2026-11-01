@@ -72,11 +72,19 @@ extension DIContainer {
         register(MemberRepositoryProtocol.self) {
             MemberRepository(adapter: self.resolve(MoyaNetworkAdapter.self))
         }
+        register(MemberAdministrationRepositoryProtocol.self) {
+            MemberAdministrationRepository(adapter: self.resolve(MoyaNetworkAdapter.self))
+        }
     }
 
     // MARK: - UseCase
 
     private func registerActivityUseCases() {
+        register(MemberAdministrationUseCaseProtocol.self) {
+            MemberAdministrationUseCase(
+                repository: self.resolve(MemberAdministrationRepositoryProtocol.self)
+            )
+        }
         register(ChallengerAttendanceUseCaseProtocol.self) {
             ChallengerAttendanceUseCase(
                 repository: self.resolve(ChallengerAttendanceRepositoryProtocol.self),

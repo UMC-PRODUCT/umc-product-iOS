@@ -22,8 +22,8 @@ struct ChallengerPointCreateRequestDTO: Encodable, Sendable, Equatable {
     /// 포인트 유형
     let pointType: ChallengerPointType
 
-    /// 배점 (`ChallengerPointType/isCustom` 이면 호출자가 직접 입력)
-    let pointValue: Int
+    /// CUSTOM의 정수 배점. 고정 유형은 생략하여 서버 기본 배점을 적용합니다.
+    let pointValue: Int?
 
     /// 부여 사유
     let description: String
@@ -32,7 +32,8 @@ struct ChallengerPointCreateRequestDTO: Encodable, Sendable, Equatable {
 
     init(pointType: ChallengerPointType, pointValue: Int, description: String) {
         self.pointType = pointType
-        self.pointValue = pointValue
+        // 고정 유형은 서버 기본 배점을 사용합니다. 레거시 -0.5도 손실 없이 처리됩니다.
+        self.pointValue = pointType.isCustom ? pointValue : nil
         self.description = description
     }
 }

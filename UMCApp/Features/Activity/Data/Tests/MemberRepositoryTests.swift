@@ -911,8 +911,8 @@ struct MemberRepositoryHistoryTests {
         #expect(history.map(\.isReward) == [true, false])
     }
 
-    @Test("fetchPointHistory — WARNING 을 제외하고 최신순으로 매핑한다")
-    func fetchPointHistoryExcludesWarningAndSorts() async throws {
+    @Test("fetchPointHistory — WARNING 을 포함한 모든 서버 기록을 최신순으로 매핑한다")
+    func fetchPointHistoryPreservesAllPointsAndSorts() async throws {
         let profile = Fixture.challengerProfile(points: [
             Fixture.point(id: "1", pointType: "WARNING", point: 1,
                           createdAt: "2026-06-01T09:00:00.000Z"),
@@ -925,8 +925,9 @@ struct MemberRepositoryHistoryTests {
 
         let history = try await sut.fetchPointHistory(challengerId: "7")
 
-        #expect(history.count == 2)                       // WARNING 제외
-        #expect(history.map(\.challengerPointId) == ["2", "3"])   // 최신순
+        #expect(history.count == 3)
+        #expect(history.map(\.challengerPointId) == ["2", "3", "1"])
+        #expect(history.reduce(0) { $0 + $1.signedPoint } == 5)
         #expect(history.first?.pointType == .out)
         #expect(history.first?.penaltyScore == 1)
         #expect(stub.lastPath == "/api/v1/challenger/7")

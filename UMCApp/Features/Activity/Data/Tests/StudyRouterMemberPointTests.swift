@@ -195,7 +195,7 @@ struct ChallengerSearchAndPointDTOEncodingTests {
         #expect(parameters["keyword"] == nil)
     }
 
-    @Test("ChallengerPointCreateRequestDTO — pointType 은 서버 rawValue, 배점은 정수로 직렬화한다")
+    @Test("ChallengerPointCreateRequestDTO — pointType 은 서버 rawValue, 고정 배점은 요청에서 생략한다")
     func pointCreateDTOEncoding() throws {
         let dto = ChallengerPointCreateRequestDTO(
             pointType: .blogChallenge, pointValue: 3, description: "완료"
@@ -206,8 +206,26 @@ struct ChallengerSearchAndPointDTOEncodingTests {
         )
 
         #expect(json["pointType"] as? String == "BLOG_CHALLENGE")
-        #expect(json["pointValue"] as? Int == 3)
+        #expect(json["pointValue"] == nil)
         #expect(json["description"] as? String == "완료")
-        #expect(json.keys.count == 3)
+        #expect(json.keys.count == 2)
     }
+    @Test("CUSTOM 배점만 정수로 전송하여 고정 유형 override를 막는다")
+    func customPointValueIsEncoded() throws {
+        let dto = ChallengerPointCreateRequestDTO(
+            pointType: .custom, pointValue: -3, description: "사유"
+        )
+        let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(dto)) as? [String: Any])
+        #expect(json["pointValue"] as? Int == -3)
+    }
+
+    @Test("레거시 소수 배점은 요청에서 생략하여 서버 -0.5를 보존한다")
+    func legacyFractionalPointOmitsOverride() throws {
+        let dto = ChallengerPointCreateRequestDTO(
+            pointType: .bestWorkbook, pointValue: 2, description: "사유"
+        )
+        let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(dto)) as? [String: Any])
+        #expect(json["pointValue"] == nil)
+    }
+
 }

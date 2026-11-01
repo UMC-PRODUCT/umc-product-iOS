@@ -40,14 +40,14 @@ struct ChallengerPointTypeTests {
     @Test(
         "유형별 기본 배점이 정확하다",
         arguments: [
-            (ChallengerPointType.bestWorkbook, 2),
+            (ChallengerPointType.bestWorkbook, -0.5),
             (.blogChallenge, 3),
             (.custom, 0),
             (.studyAbsent, -4),
             (.eventNoShow, -10)
         ]
     )
-    func defaultPointValueMapping(type: ChallengerPointType, expected: Int) {
+    func defaultPointValueMapping(type: ChallengerPointType, expected: Double) {
         #expect(type.defaultPointValue == expected)
     }
 
@@ -56,7 +56,7 @@ struct ChallengerPointTypeTests {
     @Test(
         "기본 배점이 양수인 유형은 상점(isReward=true)",
         arguments: [
-            ChallengerPointType.bestWorkbook,
+            ChallengerPointType.bestWorkbookV2,
             .blogChallenge,
             .umcEventReview
         ]
@@ -152,14 +152,14 @@ struct ChallengerPointTypeTests {
     // MARK: - 레거시 예외 동작 (warning / out)
 
     @Test(
-        "warning/out 은 벌점 개념이지만 레거시 호환으로 양수 배점 → isReward=true (의도적 보존)",
+        "레거시 배점도 서버 정의를 보존한다",
         arguments: [
             ChallengerPointType.warning,
             ChallengerPointType.out
         ]
     )
     func warningAndOutHavePositiveDefaultForLegacy(type: ChallengerPointType) {
-        #expect(type.defaultPointValue > 0)
-        #expect(type.isReward == true)
+        #expect(type.defaultPointValue == (type == .warning ? 0 : 1))
+        #expect(type.isReward == (type == .out))
     }
 }

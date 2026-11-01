@@ -107,4 +107,31 @@ struct StubMemberRepository: MemberRepositoryProtocol {
         StubSessionFixtures.members.first { $0.challengerID == challengerId }
     }
 }
+/// 새 운영 화면도 stub 세션에서는 실제 서버에 접근하지 않습니다.
+struct StubMemberAdministrationRepository: MemberAdministrationRepositoryProtocol {
+    func search(filter: MemberSearchFilter, page: Int) async throws -> AdminMemberPage {
+        let members = StubSessionFixtures.members.filter {
+            (filter.keyword.isEmpty || $0.name.localizedCaseInsensitiveContains(filter.keyword)
+             || $0.nickname.localizedCaseInsensitiveContains(filter.keyword))
+                && (filter.part == nil || $0.part.apiValue == filter.part)
+        }.map {
+            AdminMember(id: $0.challengerID ?? "", member: $0, gisuId: "10",
+                        schoolId: "3", generation: "12")
+        }
+        return .init(members: page == 0 ? members : [], hasNext: false)
+    }
+    func fetchGenerations() async throws -> [MemberFilterOption] {
+        [.init(id: "10", name: "12기", isActive: true)]
+    }
+    func fetchOrganizations(gisuId: String) async throws -> MemberOrganizationOptions {
+        .init(chapters: [.init(id: "2", name: "GACI")],
+              schools: [.init(id: "3", name: "한성대학교", parentId: "2")])
+    }
+    func fetchAuthority() async throws -> MemberAdministrationAuthority {
+        .init(roles: StubSessionFixtures.profile.roles)
+    }
+    func updatePointDescription(pointId: String, description: String) async throws {
+        throw StubSessionError.unsupported(action: "상벌점 사유 수정")
+    }
+}
 #endif
