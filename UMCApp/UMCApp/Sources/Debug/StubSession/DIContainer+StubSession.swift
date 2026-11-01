@@ -28,6 +28,7 @@ extension DIContainer {
         register(AuthRepositoryProtocol.self) {
             StubAuthRepository()
         }
+        register(MemberReportRepositoryProtocol.self) { StubMemberReportRepository() }
         register(MemberBlockRepositoryProtocol.self) { StubMemberBlockRepository() }
         register(MemberProfileRepositoryProtocol.self) {
             StubMemberProfileRepository()
@@ -77,4 +78,12 @@ private actor StubMemberBlockRepository: MemberBlockRepositoryProtocol {
         return blocked
     }
 }
+
+/// 더미 세션에서는 실제 사용자에게 신고를 전송하지 않는다.
+private struct StubMemberReportRepository: MemberReportRepositoryProtocol {
+    func report(memberId: String, draft: MemberReportDraft) async throws {
+        throw MemberReportError.unavailableSession
+    }
+}
+
 #endif

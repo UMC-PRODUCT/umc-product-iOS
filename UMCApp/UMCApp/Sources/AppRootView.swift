@@ -138,6 +138,7 @@ struct AppRootView: View {
         let communityRealtime = di.resolveIfCached(CommunityThreadRealtimeProtocol.self)
         di.resolve(UserSessionManager.self).reset()
         di.resolveIfCached(MemberBlockStore.self)?.reset()
+        di.resolveIfCached(ReportMemberUseCase.self)?.reset()
         di.resetCache()
         viewModel.logout()
         Task {

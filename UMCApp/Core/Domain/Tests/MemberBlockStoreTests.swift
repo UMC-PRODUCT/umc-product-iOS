@@ -67,6 +67,14 @@ struct MemberBlockStoreTests {
         }
     }
 
+    @Test("사용자 신고 상세는 서버와 같은 UTF-16 기준 500자까지만 허용한다")
+    func limitsReportDetail() {
+        #expect(MemberReportDraft(reasons: [.other], detail: String(repeating: "가", count: 500)).isValid)
+        #expect(!MemberReportDraft(reasons: [.other], detail: String(repeating: "가", count: 501)).isValid)
+        #expect(MemberReportDraft(reasons: [.other], detail: String(repeating: "😀", count: 250)).isValid)
+        #expect(!MemberReportDraft(reasons: [.other], detail: String(repeating: "😀", count: 251)).isValid)
+    }
+
     @Test("사용자 신고는 복수 사유를 허용하고 공백 상세를 거절한다")
     func validatesReportDraft() {
         #expect(!MemberReportDraft(reasons: [], detail: "내용").isValid)

@@ -30,7 +30,13 @@ public struct MemberReportDraft: Equatable, Sendable {
         self.detail = detail
     }
 
+    /// 서버 Jakarta @Size는 Java String.length(UTF-16 코드 단위)를 사용한다.
+    public static let maximumDetailLength = 500
+    public var detailLength: Int { detail.utf16.count }
+
     public var isValid: Bool {
-        !reasons.isEmpty && !detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !reasons.isEmpty
+            && !detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && detailLength <= Self.maximumDetailLength
     }
 }

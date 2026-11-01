@@ -16,17 +16,22 @@ public struct MemberSafetyProfileView: View {
     private let name: String
     private let currentMemberId: String?
     private let store: MemberBlockStore
+    private let reportUseCase: ReportMemberUseCaseProtocol
     @State private var alertPrompt: AlertPrompt?
     @State private var failure: String?
     @State private var isLoading = false
     @State private var showsReport = false
     @Environment(\.dismiss) private var dismiss
 
-    public init(memberId: String, name: String, currentMemberId: String?, store: MemberBlockStore) {
+    public init(
+        memberId: String, name: String, currentMemberId: String?, store: MemberBlockStore,
+        reportUseCase: ReportMemberUseCaseProtocol
+    ) {
         self.memberId = memberId
         self.name = name
         self.currentMemberId = currentMemberId
         self.store = store
+        self.reportUseCase = reportUseCase
     }
 
     public var body: some View {
@@ -75,7 +80,9 @@ public struct MemberSafetyProfileView: View {
             }
             .task { await load() }
             .alertPrompt(item: $alertPrompt)
-            .sheet(isPresented: $showsReport) { MemberReportFormView(name: name) }
+            .sheet(isPresented: $showsReport) {
+                MemberReportFormView(memberId: memberId, name: name, useCase: reportUseCase)
+            }
         }
     }
 
@@ -115,10 +122,17 @@ public struct MemberSafetyProfileView: View {
     }
 }
 
-/// 회원 신고 접수 계약이 제공되기 전까지 제출을 막는다. 메시지 신고로 우회하지 않는다.
+/// 사용자 신고 전용 접수 폼. 실패하면 입력을 유지하고 성공 확인 후 닫는다.
 private struct MemberReportFormView: View {
     let name: String
-    @State private var draft = MemberReportDraft()
+    @State private var viewModel: MemberReportFormViewModel
+
+    init(memberId: String, name: String, useCase: ReportMemberUseCaseProtocol) {
+        self.name = name
+        _viewModel = State(initialValue: MemberReportFormViewModel(
+            memberId: memberId, useCase: useCase
+        ))
+    }
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -128,10 +142,10 @@ private struct MemberReportFormView: View {
                 Section {
                     ForEach(MemberReportReason.allCases) { reason in
                         Toggle(reason.title, isOn: Binding(
-                            get: { draft.reasons.contains(reason) },
+                            get: { viewModel.draft.reasons.contains(reason) },
                             set: { selected in
-                                if selected { draft.reasons.insert(reason) }
-                                else { draft.reasons.remove(reason) }
+                                if selected { viewModel.draft.reasons.insert(reason) }
+                                else { viewModel.draft.reasons.remove(reason) }
                             }
                         ))
                     }
@@ -140,27 +154,48 @@ private struct MemberReportFormView: View {
                 } footer: {
                     Text("하나 이상의 사유를 선택해 주세요.")
                 }
-                Section("상세 내용 (필수)") {
+                Section {
                     TextField("신고할 내용을 구체적으로 작성해 주세요.",
-                              text: $draft.detail, axis: .vertical)
+                              text: $viewModel.draft.detail, axis: .vertical)
                         .lineLimit(5...10)
+                        .accessibilityLabel("상세 내용, 필수")
+                } header: {
+                    Text("상세 내용 (필수)")
+                } footer: {
+                    VStack(alignment: .leading) {
+                        Text("\(viewModel.draft.detailLength) / 500자")
+                        if viewModel.draft.detailLength > MemberReportDraft.maximumDetailLength {
+                            Text("500자를 초과했습니다. 내용을 줄여 주세요.")
+                        } else {
+                            Text("이모지 등 일부 문자는 여러 글자로 계산됩니다.")
+                        }
+                    }
                 }
                 Section {
-                    Label("사용자 신고 접수는 준비 중입니다.", systemImage: "info.circle")
-                    Text("현재 신고를 전송할 수 없습니다. 입력한 내용은 접수되거나 저장되지 않습니다.")
-                        .foregroundStyle(.secondary)
-                    Button("신고하기") {}
-                        .disabled(true)
-                        .accessibilityHint(draft.isValid
-                            ? "사용자 신고 접수가 준비되면 이용할 수 있습니다."
-                            : "신고 사유와 상세 내용이 필요합니다.")
+                    if let failure = viewModel.failure {
+                        Text(failure).foregroundStyle(.secondary)
+                    }
+                    if viewModel.isSubmitting {
+                        ProgressView("신고 접수 중")
+                    }
+                    Button("신고하기") { Task { await viewModel.submit() } }
+                        .disabled(!viewModel.canSubmit)
+                        .accessibilityHint("신고 사유와 500자 이내의 상세 내용이 필요합니다.")
                 }
+            }
+            .disabled(viewModel.isSubmitting || viewModel.didSubmit)
+            .interactiveDismissDisabled(viewModel.isSubmitting)
+            .alert("신고를 접수했어요", isPresented: $viewModel.didSubmit) {
+                Button("확인") { dismiss() }
+            } message: {
+                Text("운영진이 접수된 신고를 확인할게요.")
             }
             .navigationTitle("사용자 신고")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("닫기") { dismiss() }
+                        .disabled(viewModel.isSubmitting)
                 }
             }
         }
