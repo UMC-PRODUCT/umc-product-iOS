@@ -67,6 +67,7 @@ struct RootTabView: View {
                 }
             }
         }
+        .tint(.teal500)
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory(isEnabled: shouldShowAccessory) {
             RootTabAccessoryView(pathStore: pathStore)
