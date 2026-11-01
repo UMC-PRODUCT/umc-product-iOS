@@ -205,7 +205,7 @@ public struct MyPageSectionRow: View {
                 RoundedRectangle(cornerRadius: Constants.cornerRadius)
                     .fill(iconBackgroundColor ?? .grey200)
                     .frame(width: Constants.rectangleSize, height: Constants.rectangleSize)
-                    .glassEffect(.clear, in: RoundedRectangle(cornerRadius: Constants.cornerRadius))
+
                 
                 Image(systemName: systemName)
                     .resizable()

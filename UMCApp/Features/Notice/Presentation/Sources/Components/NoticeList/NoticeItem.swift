@@ -70,11 +70,11 @@ private struct NoticeItemPresenter: View, Equatable {
             ContentSection(model: model)
             BottomSection(model: model)
         }
-        .frame(height: Constant.mainBoxHeight)
+        .frame(minHeight: Constant.mainBoxHeight)
         .padding(Constant.mainPadding)
         .background {
             ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
-                .fill(.white)
+                .fill(Color.Surface.content)
                 .cardShadow()
         }
     }
@@ -85,7 +85,7 @@ private struct TopSection: View, Equatable {
     let model: NoticeItemModel
 
     var body: some View {
-        HStack(spacing: Constant.topHSpacing) {
+        FlowLayout(spacing: Constant.topHSpacing) {
             ForEach(Array(model.tags.enumerated()), id: \.offset) { _, tagItem in
                 if let part = tagItem.part {
                     MemberTag(part: part)
@@ -93,8 +93,6 @@ private struct TopSection: View, Equatable {
                     tag(tagItem.text, color: tagItem.backColor)
                 }
             }
-
-            Spacer()
         }
     }
     
@@ -106,37 +104,47 @@ private struct TopSection: View, Equatable {
                 RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                     .fill(color)
             }
-            .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+
     }
 }
 
 /// 제목 + 내용
-private struct ContentSection: View, Equatable {
+private struct ContentSection: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let model: NoticeItemModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             Text(model.title)
                 .appFont(.body, weight: .semibold, color: .grey900)
-                .lineLimit(1)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
 
             Text(MarkdownSerializer.plainText(from: model.content))
                 .appFont(.subheadline, color: .grey600)
-                .lineLimit(2)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                 .multilineTextAlignment(.leading)
         }
     }
 }
 
 /// 작성자 + 링크/투표 여부 + 조회수
-private struct BottomSection: View, Equatable {
+private struct BottomSection: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let model: NoticeItemModel
 
     var body: some View {
-        HStack(spacing: 8) {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: DefaultSpacing.spacing8))
+            : AnyLayout(HStackLayout(spacing: DefaultSpacing.spacing8))
+
+        layout {
             Text(model.displayWriter)
 
-            Spacer()
+            if !dynamicTypeSize.isAccessibilitySize {
+                Spacer()
+            }
 
             if model.hasLink {
                 Image(systemName: "link")
@@ -156,7 +164,6 @@ private struct BottomSection: View, Equatable {
             if !model.isRead {
                 Circle()
                     .fill(.red)
-                    .glassEffect(.clear.tint(.red), in: .circle)
                     .frame(width: Constant.unreadDotSize, height: Constant.unreadDotSize)
             }
 

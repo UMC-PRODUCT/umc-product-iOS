@@ -20,6 +20,9 @@ struct StudyGroupCard: View, Equatable {
 
     // MARK: - Property
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     @State private var deleteAlertPrompt: AlertPrompt?
     /// 멘토/스터디원 섹션 펼침 상태
     ///
@@ -85,11 +88,6 @@ struct StudyGroupCard: View, Equatable {
     // MARK: - Constants
 
     fileprivate enum Constants {
-        /// 카드 외곽 라운드 — Apple 가이드 권장 `.glassEffect(_:in:)` 패턴에서 사용
-        ///
-        /// `ConcentricRectangle`은 superview corner 상속에 의존하는데,
-        /// `GlassEffectContainer` 내부에서는 그 상속이 끊겨 의도와 다른 거대 round로
-        /// morphing되는 문제가 있어 명시 corner radius로 고정한다.
         static let cardCornerRadius: CGFloat = 24
         /// 좌측 파트 컬러 strip 너비
         static let accentStripWidth: CGFloat = 4
@@ -97,7 +95,7 @@ struct StudyGroupCard: View, Equatable {
         static let accentStripCornerRadius: CGFloat = 2
         /// sub-section(멘토/멤버) 내부 패딩
         static let subSectionPadding: CGFloat = 12
-        /// sub-section Material 배경 라운드
+        /// sub-section 배경 라운드
         static let subSectionCornerRadius: CGFloat = 14
         /// HIG 권장 최소 터치 타겟
         static let minTouchTarget: CGFloat = 44
@@ -129,14 +127,13 @@ struct StudyGroupCard: View, Equatable {
                         alignment: .top
                     )
                     .opacity(isExpanded ? 1 : 0)
+                    .accessibilityHidden(!isExpanded)
                     .clipped()
             }
             .padding(DefaultConstant.defaultCardPadding)
         }
-        // Apple 가이드 권장 패턴: View 자체에 `.glassEffect(_:in:)` 적용
-        // → GlassEffectContainer 내부 morphing/blending이 정상 동작
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(cornerRadius: Constants.cardCornerRadius)
         )
         // 카드 외곽 라운드로 콘텐츠를 한 번 더 clip — 내부 섹션 clip과 더불어 어떤 자식도
@@ -152,7 +149,7 @@ struct StudyGroupCard: View, Equatable {
 
     /// 펼침/접힘 토글 — `metadataRow`의 chevron과 카드 전체 탭이 공유하는 단일 진입점.
     private func toggleExpansion() {
-        withAnimation(.smooth(duration: 0.3)) {
+        withAnimation(reduceMotion ? nil : .smooth(duration: 0.3)) {
             isExpanded.toggle()
         }
     }
@@ -190,7 +187,6 @@ struct StudyGroupCard: View, Equatable {
     /// Row 1 (Identity): 그룹명·파트 뱃지·오늘 미팅 — primary attention.
     /// Row 2 (Meta + Actions): 멤버 수·생성일·펼침 토글 + 일정 등록·설정 — secondary.
     ///
-    /// 그룹명에 `lineLimit(2) + fixedSize(vertical)`를 부여해 긴 이름이 truncate 되는 대신 줄바꿈된다.
     @ViewBuilder
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
@@ -198,7 +194,7 @@ struct StudyGroupCard: View, Equatable {
             HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
                 Text(detail.name)
                     .appFont(.callout, weight: .semibold)
-                    .lineLimit(2)
+                    .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
 
                 MemberTag(part: detail.part)
@@ -213,14 +209,26 @@ struct StudyGroupCard: View, Equatable {
             }
 
             // Row 2: 메타/펼침 토글 + 액션 버튼
-            HStack(spacing: DefaultSpacing.spacing8) {
+            metadataLayout {
                 metadataRow
 
                 Spacer(minLength: DefaultSpacing.spacing8)
 
-                scheduleActionButton
-                settingsMenu
+                GlassEffectContainer(spacing: DefaultSpacing.spacing8) {
+                    HStack(spacing: DefaultSpacing.spacing8) {
+                        scheduleActionButton
+                        settingsMenu
+                    }
+                }
             }
+        }
+    }
+
+    private var metadataLayout: AnyLayout {
+        if dynamicTypeSize.isAccessibilitySize {
+            AnyLayout(VStackLayout(alignment: .leading, spacing: DefaultSpacing.spacing8))
+        } else {
+            AnyLayout(HStackLayout(spacing: DefaultSpacing.spacing8))
         }
     }
 
@@ -314,8 +322,7 @@ struct StudyGroupCard: View, Equatable {
         InfoBadge(
             "오늘 미팅",
             textColor: detail.part.color,
-            tintColor: detail.part.color,
-            glassVariant: .regular
+            tintColor: detail.part.color
         )
         .tint(detail.part.color)
     }
@@ -327,7 +334,7 @@ struct StudyGroupCard: View, Equatable {
     ///
     /// 멘토/멤버 수만 표시해 좁은 디바이스에서도 절대 잘리지 않도록 한다.
     /// 생성일은 부가정보로 prominence가 낮아 collapsed에서는 생략, 필요 시 expanded 내부
-    /// 메타 카드에서 노출 가능하다(향후 도입). 배경에 thinMaterial을 깔아 탭 가능 영역을
+    /// 메타 카드에서 노출 가능하다(향후 도입). 불투명 배경으로 탭 가능 영역을
     /// 시각화하고, 우측 chevron 회전으로 상태를 표현한다. `minHeight: 44`로 HIG 터치 타겟 보장.
     private var metadataRow: some View {
         Button {
@@ -336,7 +343,7 @@ struct StudyGroupCard: View, Equatable {
             HStack(spacing: DefaultSpacing.spacing4) {
                 Text("멘토 \(detail.mentors.count)명 · 멤버 \(detail.members.count)명")
                     .appFont(.caption1, weight: .semibold, color: .grey600)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Image(systemName: "chevron.down")
                     .font(.app(.caption1))
@@ -346,7 +353,7 @@ struct StudyGroupCard: View, Equatable {
             .padding(.horizontal, DefaultSpacing.spacing8)
             .frame(minHeight: Constants.minTouchTarget)
             .background(
-                .thinMaterial,
+                Color.Surface.inset,
                 in: .rect(cornerRadius: Constants.metadataRowCornerRadius)
             )
             .contentShape(Rectangle())
@@ -382,7 +389,7 @@ struct StudyGroupCard: View, Equatable {
         }
         .padding(Constants.subSectionPadding)
         .background(
-            .regularMaterial,
+            Color.Surface.inset,
             in: .rect(cornerRadius: Constants.subSectionCornerRadius)
         )
     }
@@ -416,7 +423,7 @@ struct StudyGroupCard: View, Equatable {
         }
         .padding(Constants.subSectionPadding)
         .background(
-            .regularMaterial,
+            Color.Surface.inset,
             in: .rect(cornerRadius: Constants.subSectionCornerRadius)
         )
     }

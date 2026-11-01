@@ -19,6 +19,7 @@ struct CalendarGridCard: View, Equatable {
     @Binding var selectedDate: Date
     @Binding var month: Date
     let scheduledDates: Set<Date>
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     fileprivate enum Constants {
         static let padding: CGFloat = 24
@@ -41,8 +42,8 @@ struct CalendarGridCard: View, Equatable {
             dateGrid
         }
         .padding(Constants.padding)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true
@@ -75,17 +76,21 @@ struct CalendarGridCard: View, Equatable {
         LazyVGrid(columns: columns, spacing: DefaultSpacing.spacing8) {
             ForEach(adjustedDates, id: \.self) { date in
                 if Calendar.kstGregorian.isDate(date, equalTo: month, toGranularity: .month) {
-                    DateCell(
-                        date: date,
-                        isSelected: date.isSameDay(selectedDate),
-                        hasSchedule: hasSchedule(date),
-                        isToday: date.isSameDay(.now)
-                    )
-                    .onTapGesture {
-                        withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
+                    Button {
+                        withAnimation(
+                            reduceMotion ? nil : .easeInOut(duration: DefaultConstant.animationTime)
+                        ) {
                             selectedDate = date
                         }
+                    } label: {
+                        DateCell(
+                            date: date,
+                            isSelected: date.isSameDay(selectedDate),
+                            hasSchedule: hasSchedule(date),
+                            isToday: date.isSameDay(.now)
+                        )
                     }
+                    .buttonStyle(.plain)
                 } else {
                     Color.clear
                 }

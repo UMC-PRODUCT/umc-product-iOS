@@ -89,7 +89,8 @@ public struct EmailLoginView: View {
             )
             .foregroundStyle(Color.grey900)
             .padding(DefaultConstant.defaultTextFieldPadding)
-            .glassEffect(.regular, in: .capsule)
+            .background(
+                Color.Surface.content, in: .capsule)
             .keyboardType(.emailAddress)
             .textContentType(.emailAddress)
             .textInputAutocapitalization(.never)
@@ -119,7 +120,8 @@ public struct EmailLoginView: View {
             )
             .foregroundStyle(Color.grey900)
             .padding(DefaultConstant.defaultTextFieldPadding)
-            .glassEffect(.regular, in: .capsule)
+            .background(
+                Color.Surface.content, in: .capsule)
             .textContentType(.password)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled(true)

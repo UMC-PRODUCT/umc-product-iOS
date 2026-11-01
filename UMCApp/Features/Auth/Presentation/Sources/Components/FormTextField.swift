@@ -38,7 +38,8 @@ struct FormTextField: View {
         TextField("", text: $text, prompt: placeholderView)
             .foregroundStyle(Color.grey900)
             .padding(DefaultConstant.defaultTextFieldPadding)
-            .glassEffect(.regular, in: .capsule)
+            .background(
+                Color.Surface.content, in: .capsule)
             .submitLabel(submitLabel)
             .onSubmit { onSubmit?() }
     }

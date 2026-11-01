@@ -59,8 +59,7 @@ import CoreDesignSystem
 /// - Important: `buttonSize()`와 `buttonStyle()`은 반드시 ChipButton에 직접 적용해야 합니다.
 ///   다른 컨테이너 뷰에 적용하면 Environment 전파가 되지 않습니다.
 ///
-/// - Note: Liquid Glass 효과가 자동 적용됩니다.
-///   인터랙티브 버튼은 `.interactive()`, 읽기 전용은 `.identity` 사용.
+
 public struct ChipButton: View {
 
     // MARK: - Properties
@@ -114,8 +113,7 @@ public struct ChipButton: View {
                     style: style,
                     isSelected: isSelected,
                     leadingIcon: leadingIcon,
-                    trailingIcon: trailingIcon,
-                    isInteractive: true
+                    trailingIcon: trailingIcon
                 )
                 .equatable()
             }
@@ -126,8 +124,7 @@ public struct ChipButton: View {
                 style: style,
                 isSelected: isSelected,
                 leadingIcon: leadingIcon,
-                trailingIcon: trailingIcon,
-                isInteractive: false
+                trailingIcon: trailingIcon
             )
             .equatable()
         }
@@ -157,7 +154,6 @@ private struct ChipButtonContent: View, Equatable {
     let isSelected: Bool
     let leadingIcon: String?
     let trailingIcon: Bool?
-    let isInteractive: Bool
     
     // MARK: - Constant
 
@@ -180,8 +176,7 @@ private struct ChipButtonContent: View, Equatable {
         lhs.style == rhs.style &&
         lhs.isSelected == rhs.isSelected &&
         lhs.leadingIcon == rhs.leadingIcon &&
-        lhs.trailingIcon == rhs.trailingIcon &&
-        lhs.isInteractive == rhs.isInteractive
+        lhs.trailingIcon == rhs.trailingIcon
     }
 
     // MARK: - Body
@@ -201,10 +196,6 @@ private struct ChipButtonContent: View, Equatable {
         .background(
             Capsule()
                 .fill(style.bgColor(isSelected: isSelected))
-        )
-        .glassEffect(
-            isInteractive ? .clear.interactive() : .identity,
-            in: Capsule()
         )
     }
 }

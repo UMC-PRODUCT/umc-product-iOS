@@ -75,7 +75,7 @@ struct StudyGroupPermissionGuideView: View {
                 }
                 .padding(DefaultSpacing.spacing16)
                 .background(
-                    .regularMaterial,
+                    Color.Surface.inset,
                     in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius)
                 )
             }

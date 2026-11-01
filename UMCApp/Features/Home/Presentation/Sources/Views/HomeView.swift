@@ -180,8 +180,8 @@ struct HomeView: View {
                 systemImage: "chart.pie",
                 description: Text("아직 기수별 상벌점 내역이 없습니다.")
             )
-            .glassEffect(
-                .regular,
+            .background(
+                Color.Surface.content,
                 in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
             )
         } else {
@@ -244,8 +244,8 @@ struct HomeView: View {
                 systemImage: "calendar.badge.exclamationmark",
                 description: Text("선택한 날짜에 등록된 일정이 없습니다.")
             )
-            .glassEffect(
-                .regular,
+            .background(
+                Color.Surface.content,
                 in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
             )
         } else if !viewModel.areCategoriesReady(for: schedules) {
@@ -275,8 +275,8 @@ struct HomeView: View {
                 systemImage: "bell.slash",
                 description: Text("아직 등록된 공지사항이 없습니다.")
             )
-            .glassEffect(
-                .regular,
+            .background(
+                Color.Surface.content,
                 in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
             )
         } else {
@@ -298,8 +298,8 @@ struct HomeView: View {
     private func loadingPlaceholder(height: CGFloat) -> some View {
         ProgressView()
             .frame(maxWidth: .infinity, minHeight: height)
-            .glassEffect(
-                .regular,
+            .background(
+                Color.Surface.content,
                 in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
             )
     }

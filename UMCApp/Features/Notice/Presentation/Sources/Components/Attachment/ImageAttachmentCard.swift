@@ -58,7 +58,6 @@ struct ImageAttachmentCard: View, Equatable {
         imageContent
             .frame(width: Constants.imageSize.width, height: Constants.imageSize.height)
             .clipShape(RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius))
-            .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
     
     @ViewBuilder

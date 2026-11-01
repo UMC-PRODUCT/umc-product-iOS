@@ -217,7 +217,6 @@ public struct NoticeDetailView: View {
                     RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
                         .fill(tag.backColor)
                 }
-                .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
         }
     }
 

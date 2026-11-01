@@ -54,7 +54,7 @@ public struct UMCChannelSection: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: Constants.iconSize, height: Constants.iconSize)
                 .clipShape(.circle)
-                .glassEffect(.clear.interactive(), in: .circle)
+
         })
         .buttonStyle(.borderless)
         .accessibilityLabel(channel.accessibilityLabel)

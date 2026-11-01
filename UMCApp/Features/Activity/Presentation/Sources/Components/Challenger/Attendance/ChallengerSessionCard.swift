@@ -120,7 +120,6 @@ struct ChallengerSessionCard: View, Equatable {
             )
             .padding(DefaultConstant.badgePadding)
             .background(session.attendanceStatus.backgroundColor, in: Capsule())
-            .glassEffect(.clear, in: Capsule())
     }
 }
 

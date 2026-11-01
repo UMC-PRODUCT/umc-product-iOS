@@ -72,7 +72,7 @@ public struct ConnectionSocial: View {
             .appFont(.caption1, weight: .semibold, color: social.fontColor)
             .padding(.vertical, DefaultSpacing.spacing4)
             .padding(.horizontal, DefaultSpacing.spacing8)
-            .glassEffect(.clear.tint(social.color), in: .capsule)
+            .background(social.color, in: .capsule)
         })
         .buttonStyle(.plain)
         .disabled(disconnectingSocialType != nil)

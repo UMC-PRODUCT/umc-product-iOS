@@ -56,7 +56,8 @@ struct SignUpTermsSection: View {
                 termsContent
             }
             .padding()
-            .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
+            .background(
+                Color.Surface.content, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
         }
     }
 

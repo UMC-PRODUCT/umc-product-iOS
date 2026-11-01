@@ -9,6 +9,12 @@ import SwiftUI
 
 public extension Color {
 
+    enum Surface {
+        public static let canvas = Color(uiColor: .systemGroupedBackground)
+        public static let content = Color(uiColor: .secondarySystemGroupedBackground)
+        public static let inset = Color(uiColor: .tertiarySystemGroupedBackground)
+    }
+
     // MARK: - Grey
 
     static let grey000 = Color("grey000", bundle: .module)

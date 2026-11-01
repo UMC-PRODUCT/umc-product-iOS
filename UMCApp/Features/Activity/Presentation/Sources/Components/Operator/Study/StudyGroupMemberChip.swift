@@ -20,14 +20,10 @@ struct StudyGroupMemberChip: View, Equatable {
         static let avatarCornerRadius: CGFloat = 0
         static let bestBorderWidth: CGFloat = 1
         static let bestPointThreshold: Int = 0
-        /// 칩 corner radius — Nested Material/Glass 환경에서 ConcentricRectangle inheritance가
-        /// 끊기는 문제가 있어 명시 cornerRadius로 곡률을 직접 보장한다.
         static let chipCornerRadius: CGFloat = 16
         static let chipHeight: CGFloat = 68
         static let chipHorizontalPadding: CGFloat = 6
         static let chipVerticalPadding: CGFloat = 6
-        static let nameLineLimit: Int = 1
-        static let nameMinimumScaleFactor: CGFloat = 0.8
         static let bestIconSize: CGFloat = 12
         static let bestIconContainerSize: CGFloat = 22
         static let bestIconOverlapOffset: CGFloat = 7
@@ -36,16 +32,11 @@ struct StudyGroupMemberChip: View, Equatable {
         static let defaultBorderOpacity: CGFloat = 0.06
         static let bestIconBackgroundOpacity: CGFloat = 0.12
         static let chipWidth: CGFloat = 68
-        /// 표면 그라데이션(Glass 대체) — highlight → mid → low 3-stop + 그림자.
-        static let surfaceHighlightOpacity: CGFloat = 0.85
-        static let surfaceMidOpacity: CGFloat = 0.15
-        static let surfaceLowOpacity: CGFloat = 0.06
-        static let surfaceShadowOpacity: CGFloat = 0.06
-        static let surfaceShadowRadius: CGFloat = 6
-        static let surfaceShadowYOffset: CGFloat = 3
     }
 
     // MARK: - Property
+    @ScaledMetric(relativeTo: .caption) private var chipWidth = Constants.chipWidth
+
     /// 표시할 멤버 정보
     let member: StudyGroupMember
     /// 베스트 워크북 배지 노출 여부
@@ -81,12 +72,12 @@ struct StudyGroupMemberChip: View, Equatable {
             // 좁은 폭의 칩에서는 한 글자라도 더 보여야 가독성이 높다는 디자인 결정.
             Text(member.nickname ?? member.name)
                 .appFont(.caption1)
-                .lineLimit(Constants.nameLineLimit)
-                .minimumScaleFactor(Constants.nameMinimumScaleFactor)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, Constants.chipHorizontalPadding)
         .padding(.vertical, Constants.chipVerticalPadding)
-        .frame(width: Constants.chipWidth, height: Constants.chipHeight)
+        .frame(width: chipWidth)
+        .frame(minHeight: Constants.chipHeight)
         .background(surfaceBackground)
         .overlay {
             RoundedRectangle(cornerRadius: Constants.chipCornerRadius)
@@ -122,33 +113,9 @@ struct StudyGroupMemberChip: View, Equatable {
         .clipShape(Circle())
     }
 
-    /// 칩 표면 — 중립 그라데이션 + 미묘한 그림자 (Glass 미사용).
-    ///
-    /// 칩은 카드의 `.glassEffect(.regular)`와 상위 `.regularMaterial` 위에 놓인다. 여기에
-    /// Glass를 또 얹으면 삼중 블러(Glass-on-Glass-on-Material)로 가독성·성능이 나빠진다.
-    /// `StudyGroupLeaderRow`처럼 `LinearGradient` + shadow만 쓴다.
-    ///
-    /// 곡률은 `RoundedRectangle(cornerRadius:)`로 직접 보장한다. `ConcentricRectangle`은
-    /// nested Material에서 corner inheritance가 끊겨 곡률이 무너진다.
     private var surfaceBackground: some View {
         RoundedRectangle(cornerRadius: Constants.chipCornerRadius)
-            .fill(
-                LinearGradient(
-                    colors: [
-                        .white.opacity(Constants.surfaceHighlightOpacity),
-                        .gray.opacity(Constants.surfaceMidOpacity),
-                        .gray.opacity(Constants.surfaceLowOpacity)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .shadow(
-                color: .black.opacity(Constants.surfaceShadowOpacity),
-                radius: Constants.surfaceShadowRadius,
-                x: 0,
-                y: Constants.surfaceShadowYOffset
-            )
+            .fill(Color.Surface.content)
     }
 
     private var bestWorkbookIcon: some View {

@@ -31,18 +31,6 @@ struct AttendanceScheduleRow: View {
         OperatorSessionStatus.from(startTime: info.startsAt, endTime: info.endsAt)
     }
 
-    /// 진행중 카드만 은은한 teal 틴트로 강조.
-    private var cardGlass: Glass {
-        switch status {
-        case .inProgress:
-            return .regular
-                .tint(.teal500.opacity(Constants.inProgressTintOpacity))
-                .interactive()
-        default:
-            return .regular.interactive()
-        }
-    }
-
     // MARK: - Body
 
     var body: some View {
@@ -60,8 +48,8 @@ struct AttendanceScheduleRow: View {
         }
         .padding(DefaultSpacing.spacing16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(
-            cardGlass,
+        .background(
+            Color.Surface.content,
             in: ConcentricRectangle(
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true
@@ -80,7 +68,7 @@ struct AttendanceScheduleRow: View {
                     weight: .semibold,
                     color: status == .ended ? .grey500 : .grey700
                 )
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer()
 
@@ -93,8 +81,8 @@ struct AttendanceScheduleRow: View {
             .appFont(.caption2, weight: .semibold, color: status.listAccentColor)
             .padding(.horizontal, DefaultSpacing.spacing8)
             .padding(.vertical, DefaultSpacing.spacing4)
-            .glassEffect(
-                .clear.tint(status.listAccentColor.opacity(Constants.badgeTintOpacity)),
+            .background(
+                Color.Surface.inset,
                 in: Capsule()
             )
             .accessibilityLabel("상태 \(status.listBadgeText)")
@@ -119,7 +107,7 @@ struct AttendanceScheduleRow: View {
             AttendanceMetaLabel(systemImage: "mappin.and.ellipse") {
                 Text(location.locationName)
                     .appFont(.footnote, color: .grey500)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         } else if info.isOnline {
             AttendanceMetaLabel(systemImage: "video") {
@@ -146,8 +134,7 @@ struct AttendanceScheduleRow: View {
                 InfoBadge(
                     "대기 \(info.pendingCount)",
                     textColor: .orange500,
-                    tintColor: .orange300,
-                    glassVariant: .clear
+                    tintColor: .orange300
                 )
             }
         }
@@ -159,6 +146,4 @@ struct AttendanceScheduleRow: View {
 private enum Constants {
     static let accentBarWidth: CGFloat = 4
     static let endedOpacity: Double = 0.85
-    static let badgeTintOpacity: Double = 0.18
-    static let inProgressTintOpacity: Double = 0.10
 }

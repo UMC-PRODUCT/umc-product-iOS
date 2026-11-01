@@ -9,8 +9,6 @@ import CoreDesignSystem
 import SwiftUI
 
 /// 승인 대기 상태를 표시하는 전용 뷰
-///
-/// Glass Morphing 애니메이션과 함께 출석 버튼에서 전환됩니다.
 struct ChallengerPendingApprovalView: View {
 
     // MARK: - Constants
@@ -18,7 +16,6 @@ struct ChallengerPendingApprovalView: View {
     fileprivate enum Constants {
         static let horizontalPadding: CGFloat = 24
         static let verticalPadding: CGFloat = 28
-        static let backgroundOpacity: CGFloat = 0.1
         static let rotationDuration: TimeInterval = 1.5
     }
 
@@ -40,7 +37,7 @@ struct ChallengerPendingApprovalView: View {
         .padding(.vertical, Constants.verticalPadding)
         .frame(maxWidth: .infinity)
         .background(
-            Color.yellow500.opacity(Constants.backgroundOpacity),
+            Color.Surface.content,
             in: .rect(
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true

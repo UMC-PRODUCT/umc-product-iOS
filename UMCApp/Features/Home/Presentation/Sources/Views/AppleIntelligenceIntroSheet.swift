@@ -141,8 +141,8 @@ struct AppleIntelligenceIntroSheet: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Constants.cardPadding)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
     }
@@ -181,8 +181,8 @@ struct AppleIntelligenceIntroSheet: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Constants.cardPadding)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
     }

@@ -98,8 +98,8 @@ struct OperatorLocationChangeSheet: View {
         }
         .padding(Constants.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
     }
@@ -113,8 +113,8 @@ struct OperatorLocationChangeSheet: View {
         }
         .padding(Constants.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
     }

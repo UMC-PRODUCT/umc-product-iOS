@@ -83,7 +83,7 @@ private struct TagRow: View, Equatable {
                     .frame(width: Constants.iconSize, height: Constants.iconSize)
                     .foregroundStyle(.white)
                     .clipShape(.circle)
-                    .glassEffect(.clear.tint(category.color), in: .circle)
+                    .background(category.color, in: .circle)
 
                 Text(category.korean)
                     .appFont(.body, color: Color.grey900)

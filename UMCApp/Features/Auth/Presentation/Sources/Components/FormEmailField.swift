@@ -133,7 +133,8 @@ struct FormEmailField: View {
                 .tint(showError ? .red500 : .teal500)
                 .padding(DefaultConstant.defaultTextFieldPadding)
                 .submitLabel(submitLabel)
-                .glassEffect(.regular, in: .capsule)
+                .background(
+                    Color.Surface.content, in: .capsule)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
@@ -197,7 +198,8 @@ struct FormEmailField: View {
         TextField("", text: $verificationCode, prompt: Text("인증번호 6자리").font(.app(.callout)))
             .foregroundStyle(Color.grey900)
             .padding(DefaultConstant.defaultTextFieldPadding)
-            .glassEffect(.regular, in: .capsule)
+            .background(
+                Color.Surface.content, in: .capsule)
             .keyboardType(.numberPad)
             .textContentType(.oneTimeCode)
             .onChange(of: verificationCode) { _, newValue in

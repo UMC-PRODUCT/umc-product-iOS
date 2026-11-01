@@ -198,6 +198,6 @@ private struct PartFilterMenu: View, Equatable {
             Capsule()
                 .fill(isPartSelected ? Color.teal500 : Color.grey200)
         }
-        .glassEffect(.clear.interactive(), in: Capsule())
+
     }
 }

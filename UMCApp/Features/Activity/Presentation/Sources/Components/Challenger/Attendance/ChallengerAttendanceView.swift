@@ -24,7 +24,7 @@ struct ChallengerAttendanceView: View, Equatable {
     private let userId: UserID
     private let session: Session
 
-    @Namespace private var attendanceNamespace
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showReasonSheet: Bool = false
     @State private var showPolicyPopover: Bool = false
     @State private var isMapReady: Bool = false
@@ -61,7 +61,6 @@ struct ChallengerAttendanceView: View, Equatable {
         static let mapCornerRadius: Edge.Corner.Style = 24
         static let mapLoadDelay: Duration = .milliseconds(100)
         static let mapPlaceholderHeight: CGFloat = 200
-        static let attendanceActionId = "attendance-action"
         static let statusAnimationResponse: Double = 0.4
         static let statusAnimationDamping: Double = 0.75
         static let mapReadyAnimationDuration: Double = 0.2
@@ -87,13 +86,16 @@ struct ChallengerAttendanceView: View, Equatable {
             }
         }
         .animation(
-            .spring(
+            reduceMotion ? nil : .spring(
                 response: Constants.statusAnimationResponse,
                 dampingFraction: Constants.statusAnimationDamping
             ),
             value: session.attendanceStatus
         )
-        .animation(.easeInOut(duration: Constants.mapReadyAnimationDuration), value: isMapReady)
+        .animation(
+            reduceMotion ? nil : .easeInOut(duration: Constants.mapReadyAnimationDuration),
+            value: isMapReady
+        )
         .task {
             // 카드 펼침 애니메이션과 지도 초기화가 겹치면 프레임이 튀어 한 틱 뒤로 미룬다.
             try? await Task.sleep(for: Constants.mapLoadDelay)
@@ -259,19 +261,10 @@ struct ChallengerAttendanceView: View, Equatable {
     /// 출석 상태에 따른 액션 뷰 (버튼 또는 승인 대기 카드)
     @ViewBuilder
     private var attendanceActionView: some View {
-        GlassEffectContainer {
+        Group {
             switch session.attendanceStatus {
             case .pendingApproval:
-                // 승인 대기 카드 (버튼에서 모핑 전환)
                 ChallengerPendingApprovalView()
-                    .glassEffect(
-                        .regular,
-                        in: .rect(
-                            corners: .concentric(minimum: DefaultConstant.concentricRadius),
-                            isUniform: true
-                        )
-                    )
-                    .glassEffectID(Constants.attendanceActionId, in: attendanceNamespace)
                     .transition(actionTransition)
 
             case .beforeAttendance:
@@ -283,7 +276,6 @@ struct ChallengerAttendanceView: View, Equatable {
                         attendanceButton
                     }
                 }
-                .glassEffectID(Constants.attendanceActionId, in: attendanceNamespace)
                 .transition(actionTransition)
 
             case .present, .late, .absent:
@@ -295,7 +287,8 @@ struct ChallengerAttendanceView: View, Equatable {
     }
 
     private var actionTransition: AnyTransition {
-        .asymmetric(
+        if reduceMotion { return .opacity }
+        return .asymmetric(
             insertion: .scale(scale: Constants.actionTransitionScale).combined(with: .opacity),
             removal: .scale(scale: Constants.actionTransitionScale).combined(with: .opacity)
         )

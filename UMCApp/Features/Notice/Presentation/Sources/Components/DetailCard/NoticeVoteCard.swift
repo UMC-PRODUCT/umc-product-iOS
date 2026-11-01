@@ -137,13 +137,7 @@ public struct NoticeVoteCard: View {
                     .padding(Constants.capsulePadding)
                     .background(Color.green.opacity(Constants.capsuleOpacity))
                     .clipShape(Capsule())
-                    .glassEffect(
-                        .clear,
-                        in: .rect(
-                            corners: .concentric(minimum: DefaultConstant.concentricRadius),
-                            isUniform: true
-                        )
-                    )
+
             case .ended:
                 Text("마감")
                     .appFont(.footnote, weight: .semibold, color: .red)
@@ -338,7 +332,7 @@ public struct VoteOptionRow: View {
             Image(systemName: isSelected ? "circle.circle.fill" : "circle")
                 .foregroundStyle(isSelected ? Color.teal500 : Color.grey400)
                 .appFont(.title3)
-                .glassEffect(.clear)
+
 
             Text(option.title)
                 .appFont(.callout, color: .black)

@@ -70,15 +70,14 @@ public struct NoticeLinkCard: View {
                 }
             }
             .padding(Constants.innerPadding)
-            .glassEffect(
-                .clear.interactive().tint(Color(.systemGroupedBackground)),
+            .background(
+                Color.Surface.content,
                 in: .rect(
                     corners: .concentric(minimum: DefaultConstant.concentricRadius),
                     isUniform: true
                 )
             )
         }
-       
         .task {
             await fetchMetadata()
         }

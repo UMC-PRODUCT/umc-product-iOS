@@ -21,6 +21,9 @@ struct ScheduleHeader: View {
     @Binding var scheduleMode: ScheduleMode
 
     @State private var showDatePicker = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .body) private var segmentWidth = Constants.segmentWidth
 
     fileprivate enum Constants {
         static let segmentWidth: CGFloat = 80
@@ -30,21 +33,36 @@ struct ScheduleHeader: View {
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
-            previousMonthButton
-            title
-            nextMonthButton
-            Spacer(minLength: DefaultSpacing.spacing8)
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: DefaultSpacing.spacing12))
+            : AnyLayout(HStackLayout(spacing: DefaultSpacing.spacing12))
+
+        layout {
+            monthNavigation
+            if !dynamicTypeSize.isAccessibilitySize {
+                Spacer(minLength: DefaultSpacing.spacing8)
+            }
             modePicker
         }
         .sheet(isPresented: $showDatePicker) {
             DateSheetPicker(month: $month, selectedDate: $selectedDate)
-                .presentationDetents([.height(Constants.sheetHeight)])
+                .presentationDetents(
+                    dynamicTypeSize.isAccessibilitySize
+                        ? [.large] : [.height(Constants.sheetHeight)]
+                )
                 .presentationDragIndicator(.visible)
         }
     }
 
     // MARK: - Component
+
+    private var monthNavigation: some View {
+        HStack(spacing: DefaultSpacing.spacing12) {
+            previousMonthButton
+            title
+            nextMonthButton
+        }
+    }
 
     private var title: some View {
         Button {
@@ -59,7 +77,8 @@ struct ScheduleHeader: View {
             }
             .monospacedDigit()
             .appFont(.body, weight: .semibold, color: .grey900)
-            .fixedSize()
+            .fixedSize(horizontal: !dynamicTypeSize.isAccessibilitySize, vertical: true)
+            .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil)
         }
     }
 
@@ -74,7 +93,7 @@ struct ScheduleHeader: View {
         }
         .pickerStyle(.segmented)
         .labelsHidden()
-        .frame(width: Constants.segmentWidth)
+        .frame(width: segmentWidth)
     }
 
     private var previousMonthButton: some View {
@@ -111,7 +130,7 @@ struct ScheduleHeader: View {
             let newMonth = Calendar.kstGregorian.date(byAdding: .month, value: offset, to: month)
         else { return }
 
-        withAnimation(.smooth(duration: DefaultConstant.animationTime)) {
+        withAnimation(reduceMotion ? nil : .smooth(duration: DefaultConstant.animationTime)) {
             month = newMonth
         }
     }

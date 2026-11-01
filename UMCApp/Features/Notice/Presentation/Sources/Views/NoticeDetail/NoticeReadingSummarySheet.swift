@@ -124,7 +124,8 @@ struct NoticeReadingSummarySheet: View {
         }
         .padding(Constants.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
+        .background(
+            Color.Surface.content, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
     }
 
     private var completedContent: some View {
@@ -132,7 +133,8 @@ struct NoticeReadingSummarySheet: View {
             .appFont(.body)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Constants.cardPadding)
-            .glassEffect(.regular, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
+            .background(
+                Color.Surface.content, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
     }
 
     /// 요약 마크다운(굵게 · 불릿)을 네이티브 `AttributedString` 으로 변환합니다.
@@ -176,7 +178,8 @@ struct NoticeReadingSummarySheet: View {
         }
         .frame(maxWidth: .infinity)
         .padding(Constants.cardPadding)
-        .glassEffect(.regular, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
+        .background(
+            Color.Surface.content, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
     }
 
     // MARK: - Toolbar
