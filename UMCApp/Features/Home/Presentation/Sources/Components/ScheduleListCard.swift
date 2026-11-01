@@ -44,8 +44,8 @@ struct ScheduleListCard: View, Equatable {
             chevron
         }
         .padding(Constants.padding)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
         )
     }
@@ -56,7 +56,7 @@ struct ScheduleListCard: View, Equatable {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
             Text(data.name)
                 .appFont(.callout, weight: .semibold, color: .grey900)
-                .lineLimit(Constants.lineLimit)
+                .fixedSize(horizontal: false, vertical: true)
             Text(statusText)
                 .appFont(.subheadline, color: .grey600)
         }

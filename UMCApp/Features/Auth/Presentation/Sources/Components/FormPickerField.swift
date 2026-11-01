@@ -55,7 +55,7 @@ struct FormPickerField<T>: View {
                 .foregroundStyle(Color.grey900)
         }
         .padding(DefaultConstant.defaultTextFieldPadding)
-        .glassEffect(.regular.interactive())
+        .background(Color.Surface.content, in: .capsule)
     }
 }
 

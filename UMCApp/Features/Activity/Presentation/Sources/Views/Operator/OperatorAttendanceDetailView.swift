@@ -21,6 +21,8 @@ import UMCFoundation
 /// 결정 결과가 목록 배지에도 즉시 반영됩니다.
 struct OperatorAttendanceDetailView: View {
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     // MARK: - Property
 
     @Environment(\.dismiss) private var dismiss
@@ -160,10 +162,6 @@ struct OperatorAttendanceDetailView: View {
 
     private func content(info: ScheduleAttendanceInfo) -> some View {
         ScrollView {
-            // 주의: GlassEffectContainer 로 감싸지 않는다. 헤더/스탯/참여자 카드가
-            // `ConcentricRectangle`(적응형 코너)을 쓰는데, 컨테이너 내부에서는 코너 상속이
-            // 끊겨 `.interactive()` 글래스(승인 대기 배너)의 눌림 효과가 카드와 다른 크기로
-            // morphing 된다.
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
                 headerCard(info: info)
                 statsRow(info: info)
@@ -239,8 +237,8 @@ struct OperatorAttendanceDetailView: View {
         }
         .padding(DefaultSpacing.spacing16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: ConcentricRectangle(
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true
@@ -268,8 +266,8 @@ struct OperatorAttendanceDetailView: View {
             }
             .padding(DefaultSpacing.spacing12)
             .frame(maxWidth: .infinity)
-            .glassEffect(
-                .regular.tint(Color.orange500.opacity(Constants.bannerTintOpacity)).interactive(),
+            .background(
+                Color.Surface.inset,
                 in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
             )
         }
@@ -277,7 +275,7 @@ struct OperatorAttendanceDetailView: View {
     }
 
     private func statsRow(info: ScheduleAttendanceInfo) -> some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
+        statsLayout {
             statBlock(
                 icon: "person.fill.checkmark",
                 tint: .teal500,
@@ -305,6 +303,14 @@ struct OperatorAttendanceDetailView: View {
         }
     }
 
+    private var statsLayout: AnyLayout {
+        if dynamicTypeSize.isAccessibilitySize {
+            AnyLayout(VStackLayout(alignment: .leading, spacing: DefaultSpacing.spacing12))
+        } else {
+            AnyLayout(HStackLayout(spacing: DefaultSpacing.spacing12))
+        }
+    }
+
     private func statBlock(
         icon: String,
         tint: Color,
@@ -328,8 +334,8 @@ struct OperatorAttendanceDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DefaultSpacing.spacing12)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: ConcentricRectangle(
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true
@@ -370,8 +376,7 @@ struct OperatorAttendanceDetailView: View {
             emptyParticipantView
         } else {
             // List 대신 LazyVStack 을 쓰는 이유:
-            // (1) 행이 glassEffect 를 쓰는데 List 는 GlassEffectContainer 와 호환되지 않는다.
-            // (2) ScrollView 안에 List 를 중첩하면 높이가 0으로 접혀 레이아웃이 깨진다.
+            // ScrollView 안에 List 를 중첩하면 높이가 0으로 접혀 레이아웃이 깨진다.
             // LazyVStack 행의 swipeActions 는 셀별로 제스처 상태를 관리해 List 와 동일하게 동작한다.
             LazyVStack(spacing: DefaultSpacing.spacing8) {
                 ForEach(participants) { participant in
@@ -515,6 +520,5 @@ private struct LocationChangeTarget: Identifiable {
 // MARK: - Constants
 
 private enum Constants {
-    static let bannerTintOpacity: Double = 0.16
     static let statValueMinimumScale: CGFloat = 0.8
 }

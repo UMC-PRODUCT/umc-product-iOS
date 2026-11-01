@@ -88,9 +88,7 @@ private struct LocationStatusBarView: View {
             address
         }
         .padding(DefaultConstant.defaultBtnPadding)
-        // 지도(미디어) 위에 얹히므로 `.regular` 가 아니라 `.clear` 를 쓴다 (디자인 시스템 규칙).
-        // 레거시는 기본값(`.regular`)이었으나 미디어 위 `.regular` 는 금지 항목이라 교정한다.
-        .glassEffect(.clear)
+        .glassEffect(.regular)
         .safeAreaPadding(DefaultConstant.defaultSafeHorizon)
         .contentShape(Rectangle())
         .contextMenu {

@@ -72,7 +72,7 @@ struct PartChip: View {
             .padding(.horizontal, Constants.horizontalPadding)
             .padding(.vertical, Constants.verticalPadding)
             .frame(minWidth: minWidth, minHeight: size.minHeight)
-            .glassEffect(.clear, in: Capsule())
+
     }
 }
 

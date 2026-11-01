@@ -82,7 +82,7 @@ struct AISummaryInputSheet: View {
 
             ZStack(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: Constants.textEditorCornerRadius)
-                    .fill(.thinMaterial)
+                    .fill(Color.Surface.inset)
 
                 if sourceText.isEmpty {
                     Text("디스코드 메시지, 이메일, 메모 등을 붙여넣으세요")

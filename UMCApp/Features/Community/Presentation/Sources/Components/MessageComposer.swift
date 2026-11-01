@@ -72,8 +72,7 @@ struct MessageComposer: View {
                 mentionList
             }
 
-            // 칩·카드·버튼의 glass 를 한 번에 그린다. 따로 그리면 glass 마다 오프스크린 패스가 돈다.
-            GlassEffectContainer {
+            Group {
                 VStack(spacing: 0) {
                     if let editingSnippet {
                         quoteChip(
@@ -95,12 +94,18 @@ struct MessageComposer: View {
 
                     inputRow
                 }
+                .glassEffect(
+                    .regular,
+                    in: .rect(cornerRadius: DefaultConstant.cornerRadius)
+                )
+                .padding(.horizontal, DefaultSpacing.spacing16)
+                .padding(.vertical, DefaultSpacing.spacing8)
             }
         }
         // 화면 VStack 이 아니라 여기에 건다. 전송하면 인용 해제와 메시지 추가가 한 번에 일어나서,
         // 위에 걸면 메시지 배열까지 애니메이션 대상이 된다.
-        .animation(.snappy, value: replyTarget)
-        .animation(.snappy, value: editingSnippet)
+        .animation(reduceMotion ? nil : .snappy, value: replyTarget)
+        .animation(reduceMotion ? nil : .snappy, value: editingSnippet)
     }
 
     // MARK: - View Component
@@ -126,8 +131,6 @@ struct MessageComposer: View {
                     Image(systemName: "mic")
                         .foregroundStyle(Color.grey500)
                         .frame(width: actionButtonSize, height: actionButtonSize)
-                        // 아직 누를 수 없어 `.interactive()` 는 뺀다 — 눌림 반응이 오면 되는 줄 안다.
-                        .glassEffect(.regular, in: .circle)
                         .frame(
                             minWidth: DefaultConstant.minimumTouchTarget,
                             minHeight: DefaultConstant.minimumTouchTarget
@@ -141,7 +144,7 @@ struct MessageComposer: View {
                     Image(systemName: "arrow.up")
                         .foregroundStyle(canSend ? Color.white : Color.grey400)
                         .frame(width: actionButtonSize, height: actionButtonSize)
-                        .glassEffect(sendButtonGlass, in: .circle)
+                        .background(canSend ? Color.teal500 : Color.grey200, in: .circle)
                         // 원판이 44pt 보다 작아도 누르는 영역은 44pt 를 채운다.
                         .frame(
                             minWidth: DefaultConstant.minimumTouchTarget,
@@ -156,11 +159,7 @@ struct MessageComposer: View {
             .padding(.horizontal, DefaultSpacing.spacing4)
             .padding(.bottom, DefaultSpacing.spacing4)
         }
-        // concentric 은 화면 하단 모서리 곡률을 따라 40pt 이상으로 커져서 두세 줄 높이 카드가
-        // 캡슐처럼 보였다. 고정 반경으로 줄여 각을 살린다 (#1391).
-        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
-        .padding(.horizontal, DefaultSpacing.spacing16)
-        .padding(.vertical, DefaultSpacing.spacing8)
+
     }
 
     /// 고르는 즉시 올려 보낸다. 선택을 비워 둬야 같은 사진을 다시 골라도 `onChange` 가 돈다.
@@ -173,13 +172,13 @@ struct MessageComposer: View {
             Image(systemName: "photo")
                 .foregroundStyle(canAttachImage ? Color.grey700 : Color.grey400)
                 .frame(width: actionButtonSize, height: actionButtonSize)
-                .glassEffect(canAttachImage ? .regular.interactive() : .regular, in: .circle)
                 .frame(
                     minWidth: DefaultConstant.minimumTouchTarget,
                     minHeight: DefaultConstant.minimumTouchTarget
                 )
                 .contentShape(.rect)
         }
+        .buttonStyle(.plain)
         .disabled(!canAttachImage)
         .accessibilityLabel("사진 보내기")
         .onChange(of: pickedImages) { _, items in
@@ -187,13 +186,6 @@ struct MessageComposer: View {
             onPickImages(items)
             pickedImages = []
         }
-    }
-
-    /// 보낼 수 있을 때만 강조색을 채우고 눌림에 반응한다. 비활성은 마이크와 같은 무채색 glass 라
-    /// 색이 빠진 것만으로 누를 수 없다는 게 드러난다. `.buttonStyle(.glassProminent)` 는 44pt
-    /// 터치 영역 전체를 원으로 칠해서 32pt 원판을 만들 수 없어 glass 를 직접 입힌다.
-    private var sendButtonGlass: Glass {
-        canSend ? .regular.tint(Color.teal500).interactive() : .regular
     }
 
     /// 아래로 미는 `move` 는 반투명 입력 카드 밑으로 칩이 비쳐 보여서 제자리 확대로 띄운다.
@@ -252,11 +244,7 @@ struct MessageComposer: View {
         // 글자가 커져 칩이 높아져도 곡선 깊이는 그대로다.
         .padding(.leading, DefaultSpacing.spacing16)
         .padding(.vertical, DefaultSpacing.spacing4)
-        // 입력 카드와 같은 glass·반경. 둘이 세로로 쌓여 한 덩어리로 읽힌다.
-        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
-        // 배경 바깥 인셋. 이게 없으면 glass 가 화면 좌우 끝까지 흘러 잘려 나간 띠처럼 보인다.
-        // 요약 배너·입력줄과 같은 값으로 맞춰 세로로 한 줄에 선다.
-        .padding(.horizontal, DefaultSpacing.spacing16)
+
     }
 
     /// `@` 자동완성. 후보가 많아도 입력창을 화면 밖으로 밀지 않게 높이를 묶어 스크롤한다.
@@ -274,7 +262,7 @@ struct MessageComposer: View {
             }
         }
         .frame(maxHeight: Constants.mentionListMaxHeight)
-        .background(Color.grey000)
+        .background(Color.Surface.content)
         .overlay(alignment: .top) {
             Divider()
         }

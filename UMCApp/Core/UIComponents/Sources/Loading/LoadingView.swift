@@ -13,7 +13,7 @@ import CoreDesignSystem
 /// 데이터 로딩 중 표시되는 공용 로딩 뷰입니다.
 ///
 /// 각 Feature별로 컨텍스트에 맞는 로딩 메시지를 표시하며,
-/// Liquid Glass 효과가 적용된 디자인 시스템을 따릅니다.
+/// 콘텐츠 카드와 같은 불투명 표면을 사용합니다.
 ///
 /// - Important: `Loadable<T>` 의 `.loading` 상태에서 사용합니다.
 ///
@@ -92,8 +92,8 @@ public struct LoadingView: View {
                 .frame(maxWidth: .infinity)
         })
         .padding(Constants.contentPadding)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true

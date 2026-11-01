@@ -38,9 +38,9 @@ struct SeasonCard: View, Equatable {
         }
         .padding(Constants.mainPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: Constants.cardHeight)
-        .glassEffect(
-            .regular,
+        .frame(minHeight: Constants.cardHeight)
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
         )
     }

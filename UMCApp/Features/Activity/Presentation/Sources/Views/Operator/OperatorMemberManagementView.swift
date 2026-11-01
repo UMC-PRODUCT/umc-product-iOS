@@ -85,7 +85,7 @@ struct OperatorMemberManagementView: View {
                     .controlSize(.regular)
                     .padding()
                     .background(
-                        .ultraThinMaterial,
+                        Color.Surface.content,
                         in: RoundedRectangle(cornerRadius: Constants.loadingOverlayRadius)
                     )
             }

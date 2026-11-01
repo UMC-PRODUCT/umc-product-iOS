@@ -257,8 +257,8 @@ public struct ScheduleDetailView: View {
                     .appFont(.callout, weight: .semibold, color: .grey900)
             }
             .padding(DefaultSpacing.spacing16)
-            .glassEffect(
-                .regular,
+            .background(
+                Color.Surface.content,
                 in: .rect(
                     corners: .concentric(minimum: DefaultConstant.concentricRadius),
                     isUniform: true
@@ -312,8 +312,8 @@ private struct SchedulePlaceDateInfo: View, Equatable {
             Divider()
             locationSection
         }
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true
@@ -374,7 +374,7 @@ private struct SchedulePlaceDateInfo: View, Equatable {
             .font(.system(size: Constants.iconSize))
             .padding()
             .background(tintColor.opacity(Constants.iconBackgroundOpacity), in: .circle)
-            .glassEffect(.clear, in: .circle)
+
     }
 
     // MARK: - Function

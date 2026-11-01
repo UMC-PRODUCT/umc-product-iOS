@@ -47,10 +47,13 @@ public struct AttendanceStatusBadge: View, Equatable {
         .appFont(.caption1, color: status.foregroundColor)
         .padding(.horizontal, DefaultSpacing.spacing8)
         .padding(.vertical, DefaultSpacing.spacing4)
-        .glassEffect(
-            .clear.tint(status.backgroundColor),
-            in: Capsule()
-        )
+        .background {
+            Capsule()
+                .fill(Color.Surface.content)
+                .overlay {
+                    Capsule().fill(status.backgroundColor)
+                }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(status.accessibilityText)
     }

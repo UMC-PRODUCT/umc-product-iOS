@@ -251,7 +251,7 @@ private struct MemberInfoSectionPresenter: View, Equatable {
         Text(title)
             .appFont(.callout, color: .grey700)
             .padding(Constants.tagPadding)
-            .background(.regularMaterial, in: Capsule())
+            .background(Color.Surface.inset, in: Capsule())
     }
 }
 
@@ -341,7 +341,7 @@ private struct PenaltyHistoryRowPresenter: View, Equatable {
 
             Text(history.reason)
                 .appFont(.subheadline)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer()
 
@@ -350,9 +350,9 @@ private struct PenaltyHistoryRowPresenter: View, Equatable {
         }
         .padding(.horizontal, Constants.horizontalPadding)
         .frame(maxWidth: .infinity)
-        .frame(height: Constants.rowHeight)
+        .frame(minHeight: Constants.rowHeight)
         .background(
-            .ultraThinMaterial,
+            Color.Surface.content,
             in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
         )
     }
@@ -385,9 +385,9 @@ private struct EmptyHistoryPresenter: View, Equatable {
                 .appFont(.subheadline, color: .grey500)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: Constants.height)
+        .frame(minHeight: Constants.height)
         .background(
-            .ultraThinMaterial,
+            Color.Surface.content,
             in: RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
         )
     }

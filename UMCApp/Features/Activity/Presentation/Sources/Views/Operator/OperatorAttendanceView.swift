@@ -311,8 +311,8 @@ struct OperatorAttendanceView: View {
             }
             .padding(DefaultSpacing.spacing16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassEffect(
-                .regular,
+            .background(
+                Color.Surface.content,
                 in: ConcentricRectangle(
                     corners: .concentric(minimum: DefaultConstant.concentricRadius),
                     isUniform: true
@@ -366,7 +366,7 @@ struct OperatorAttendanceView: View {
                 }
                 .padding(DefaultSpacing.spacing16)
                 .background(
-                    .regularMaterial,
+                    Color.Surface.content,
                     in: ConcentricRectangle(
                         corners: .concentric(minimum: DefaultConstant.concentricRadius),
                         isUniform: true
@@ -406,10 +406,6 @@ struct OperatorAttendanceView: View {
 
     private func listContent(infos: [ScheduleAttendanceInfo]) -> some View {
         ScrollView {
-            // 주의: GlassEffectContainer 로 감싸지 않는다. 카드 배경이 `ConcentricRectangle`
-            // (적응형 코너)을 쓰는데, 컨테이너 내부에서는 코너 상속이 끊겨 `.interactive()`
-            // 글래스의 눌림(liquid) 효과가 카드와 다른 크기로 morphing 된다.
-            // → 카드별 glassEffect 를 독립적으로 둔다.
             LazyVStack(spacing: DefaultSpacing.spacing12) {
                 ForEach(infos) { info in
                     Button {

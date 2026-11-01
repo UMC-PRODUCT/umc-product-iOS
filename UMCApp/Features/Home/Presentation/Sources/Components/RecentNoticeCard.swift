@@ -36,8 +36,8 @@ struct RecentNoticeCard: View {
             relativeDate
         }
         .padding(Constants.rowPadding)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
         )
     }
@@ -54,7 +54,7 @@ struct RecentNoticeCard: View {
                 RoundedRectangle(cornerRadius: Constants.iconCornerRadius)
                     .fill(scopeColor.opacity(0.4))
             }
-            .glassEffect(.clear, in: .rect(cornerRadius: Constants.iconCornerRadius))
+
     }
 
     private var info: some View {
@@ -63,7 +63,7 @@ struct RecentNoticeCard: View {
                 .appFont(.caption1, weight: .semibold, color: .grey500)
             Text(notice.title)
                 .appFont(.subheadline, weight: .semibold, color: .grey900)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

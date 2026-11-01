@@ -56,8 +56,8 @@ struct ParticipantAttendanceRow: View, Equatable {
         }
         .padding(DefaultSpacing.spacing12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: ConcentricRectangle(
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true

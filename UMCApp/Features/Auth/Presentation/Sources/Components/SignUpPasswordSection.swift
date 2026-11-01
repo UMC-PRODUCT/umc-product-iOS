@@ -67,7 +67,8 @@ struct SignUpPasswordSection: View {
             .autocorrectionDisabled(true)
             .foregroundStyle(Color.grey900)
             .padding(DefaultConstant.defaultTextFieldPadding)
-            .glassEffect(.regular, in: .capsule)
+            .background(
+                Color.Surface.content, in: .capsule)
             .submitLabel(.next)
             .focused(focusBinding, equals: .password)
             .onSubmit { focusBinding.wrappedValue = .passwordConfirm }
@@ -92,7 +93,8 @@ struct SignUpPasswordSection: View {
             .autocorrectionDisabled(true)
             .foregroundStyle(Color.grey900)
             .padding(DefaultConstant.defaultTextFieldPadding)
-            .glassEffect(.regular, in: .capsule)
+            .background(
+                Color.Surface.content, in: .capsule)
             .submitLabel(.next)
             .focused(focusBinding, equals: .passwordConfirm)
             .onSubmit(onConfirmSubmit)

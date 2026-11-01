@@ -25,20 +25,23 @@ struct DateCell: View {
         static let todayBorderWidth: CGFloat = 2
     }
 
+    @ScaledMetric(relativeTo: .callout) private var cellHeight = Constants.cellSize
+
     // MARK: - Body
 
     var body: some View {
         VStack(spacing: DefaultSpacing.spacing4) {
             Text(dayText)
                 .appFont(.callout, color: isSelected ? .grey000 : .grey900)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
                 .frame(maxWidth: .infinity)
-                .frame(height: Constants.cellSize)
+                .frame(minHeight: cellHeight)
                 .background {
                     if isSelected {
-                        Color.teal500.glassEffect(.regular.interactive(), in: .circle)
+                        Circle().fill(Color.teal500)
                     }
                 }
-                .clipShape(.circle)
                 .overlay {
                     if isToday && !isSelected {
                         Circle()
@@ -50,6 +53,11 @@ struct DateCell: View {
                 .fill(hasSchedule ? dotColor : .clear)
                 .frame(width: Constants.dotSize, height: Constants.dotSize)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(date.toYearMonthDayWithWeekday())
+        .accessibilityValue([isToday ? "오늘" : nil, hasSchedule ? "일정 있음" : nil]
+            .compactMap { $0 }.joined(separator: ", "))
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
     // MARK: - Function
@@ -59,7 +67,7 @@ struct DateCell: View {
     }
 
     private var dotColor: Color {
-        isSelected ? .grey000 : .red500
+        .red500
     }
 }
 

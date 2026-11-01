@@ -30,6 +30,9 @@ struct DatePill: View {
         static let weekdaySymbols = Date.weekDaySymbols()
     }
 
+    @ScaledMetric(relativeTo: .body) private var pillWidth = Constants.pillSize.width
+    @ScaledMetric(relativeTo: .body) private var pillHeight = Constants.pillSize.height
+
     // MARK: - Body
 
     var body: some View {
@@ -47,7 +50,8 @@ struct DatePill: View {
                         .frame(width: Constants.dotSize, height: Constants.dotSize)
                 }
             }
-            .frame(width: Constants.pillSize.width, height: Constants.pillSize.height)
+            .frame(width: pillWidth)
+            .frame(minHeight: pillHeight)
             .background {
                 pillBackground
             }
@@ -60,13 +64,18 @@ struct DatePill: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(date.toYearMonthDayWithWeekday())
+        .accessibilityValue([isToday ? "오늘" : nil, hasSchedule ? "일정 있음" : nil]
+            .compactMap { $0 }.joined(separator: ", "))
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
     // MARK: - Component
 
     private var pillBackground: some View {
         (isSelected ? Color.teal500 : Color.grey000)
-            .glassEffect(.regular.interactive(), in: .capsule)
+            .clipShape(.capsule)
     }
 
     // MARK: - Function

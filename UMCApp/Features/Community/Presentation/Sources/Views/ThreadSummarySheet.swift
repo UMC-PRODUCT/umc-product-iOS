@@ -142,8 +142,8 @@ struct ThreadSummarySheet: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Constants.cardPadding)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
         // 처리 중임을 색으로도 알린다. 진행바 하나만으로는 일반 로딩과 구분되지 않는다.
@@ -191,8 +191,8 @@ struct ThreadSummarySheet: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Constants.cardPadding)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
     }
@@ -272,8 +272,8 @@ struct ThreadSummarySheet: View {
         }
         .frame(maxWidth: .infinity)
         .padding(Constants.cardPadding)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
     }

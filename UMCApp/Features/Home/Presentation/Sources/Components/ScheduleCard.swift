@@ -12,7 +12,7 @@ import UMCFoundation
 /// 홈 화면 일정 캘린더 카드.
 ///
 /// 헤더의 세그먼트로 월별 그리드(``CalendarGridCard``)와 가로 스크롤(``CalendarHorizonCard``)
-/// 모드를 전환한다. 헤더는 두 모드가 공유하므로 유리 카드 바깥에 둔다.
+/// 모드를 전환한다. 헤더는 두 모드가 공유하므로 콘텐츠 카드 바깥에 둔다.
 struct ScheduleCard: View, Equatable {
 
     // MARK: - Property
@@ -22,6 +22,7 @@ struct ScheduleCard: View, Equatable {
     let scheduledDates: Set<Date>
 
     @State private var scheduleMode: ScheduleMode = .grid
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Equatable
 
@@ -57,7 +58,7 @@ struct ScheduleCard: View, Equatable {
                     scheduledDates: scheduledDates
                 )
                 .equatable()
-                .transition(.asymmetric(
+                .transition(reduceMotion ? .opacity : .asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
@@ -69,14 +70,17 @@ struct ScheduleCard: View, Equatable {
                     scheduledDates: scheduledDates
                 )
                 .equatable()
-                .transition(.asymmetric(
+                .transition(reduceMotion ? .opacity : .asymmetric(
                     insertion: .move(edge: .leading).combined(with: .opacity),
                     removal: .move(edge: .trailing).combined(with: .opacity)
                 ))
                 .id("grid")
             }
         }
-        .animation(.smooth(duration: DefaultConstant.animationTime), value: scheduleMode)
+        .animation(
+            reduceMotion ? nil : .smooth(duration: DefaultConstant.animationTime),
+            value: scheduleMode
+        )
     }
 }
 

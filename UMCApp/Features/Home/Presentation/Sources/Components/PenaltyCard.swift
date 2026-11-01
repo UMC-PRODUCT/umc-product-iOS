@@ -81,8 +81,8 @@ struct PenaltyCard: View, Equatable {
         }
         .padding(Constants.padding)
         .clipShape(.rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true))
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
         )
         .task {
@@ -302,7 +302,7 @@ fileprivate struct PointLogPopover: View {
             }
         }
         .padding(Constants.popoverPadding)
-        .glassEffect(.clear, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .background(Color.Surface.content, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
 }
 

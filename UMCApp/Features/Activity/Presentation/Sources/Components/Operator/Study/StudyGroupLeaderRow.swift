@@ -22,11 +22,6 @@ struct StudyGroupLeaderRow: View, Equatable {
     fileprivate enum Constants {
         static let avatarSize: CGFloat = 48
         static let rowPadding: CGFloat = 12
-        static let surfaceShadowRadius: CGFloat = 10
-        static let surfaceHighlightRadius: CGFloat = 4
-        static let surfaceShadowYOffset: CGFloat = 6
-        /// 표면 라운드 — Nested Material/Glass 환경에서 ConcentricRectangle inheritance가
-        /// 끊기는 문제가 있어 명시 cornerRadius로 곡률을 직접 보장한다.
         static let surfaceCornerRadius: CGFloat = 16
     }
 
@@ -96,39 +91,9 @@ struct StudyGroupLeaderRow: View, Equatable {
         .clipShape(Circle())
     }
 
-    /// 표면 배경 — 파트 컬러 그라데이션 + 미묘한 highlight/shadow.
-    ///
-    /// 카드 외부가 이미 `.glassEffect(.regular)`이고 상위 `mentorSection`은 `.regularMaterial`이다.
-    /// 추가 Glass를 중첩하면 Glass-on-Glass-on-Material 삼중 블러가 발생해 가독성·성능 모두 손해다.
-    /// 따라서 Glass 없이 LinearGradient + shadow만 사용한다.
-    ///
-    /// 곡률은 `RoundedRectangle(cornerRadius:)`로 직접 보장한다. `ConcentricRectangle`은 nested
-    /// Material 컨테이너에서 corner inheritance가 끊겨 곡률이 무너지는 문제가 있다.
     private var surfaceBackground: some View {
         RoundedRectangle(cornerRadius: Constants.surfaceCornerRadius)
-            .fill(
-                LinearGradient(
-                    colors: [
-                        .white.opacity(0.85),
-                        partTintColor.opacity(0.20),
-                        partTintColor.opacity(0.08)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .shadow(
-                color: .black.opacity(0.08),
-                radius: Constants.surfaceShadowRadius,
-                x: 0,
-                y: Constants.surfaceShadowYOffset
-            )
-            .shadow(
-                color: .white.opacity(0.7),
-                radius: Constants.surfaceHighlightRadius,
-                x: -2,
-                y: -2
-            )
+            .fill(Color.Surface.content)
     }
 }
 

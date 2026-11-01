@@ -166,7 +166,6 @@ private struct MyAttendanceItemPresenter: View, Equatable {
             .appFont(.caption1, weight: .semibold, color: model.status.fontColor)
             .padding(DefaultConstant.badgePadding)
             .background(model.status.backgroundColor, in: Capsule())
-            .glassEffect(.clear, in: Capsule())
     }
 
     // MARK: - Expanded Section

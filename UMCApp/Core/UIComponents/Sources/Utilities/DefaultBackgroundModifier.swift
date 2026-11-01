@@ -10,7 +10,7 @@ import CoreDesignSystem
 
 public struct DefaultBackgroundModifier: ViewModifier {
     public func body(content: Content) -> some View {
-        content.background(Color.grey100.opacity(0.55))
+        content.background(Color.Surface.canvas)
     }
 }
 

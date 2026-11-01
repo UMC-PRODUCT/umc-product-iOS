@@ -11,7 +11,7 @@ import UMCFoundation
 
 /// 표시 월의 날짜를 가로로 나열해 보여주는 캘린더 카드.
 ///
-/// 각 날짜 캡슐이 개별 유리 배경을 가지므로 그리드 모드와 달리 바깥 유리 컨테이너를 두지 않는다.
+/// 날짜 캡슐은 각각 선택 상태를 나타내는 불투명 배경을 사용한다.
 struct CalendarHorizonCard: View, Equatable {
 
     // MARK: - Property
@@ -21,6 +21,8 @@ struct CalendarHorizonCard: View, Equatable {
     let scheduledDates: Set<Date>
 
     @State private var scrolledDate: Date?
+    @ScaledMetric(relativeTo: .body) private var contentHeight = Constants.contentHeight
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     fileprivate enum Constants {
         static let contentHeight: CGFloat = 200
@@ -44,7 +46,7 @@ struct CalendarHorizonCard: View, Equatable {
                 }
             }
             .scrollTargetLayout()
-            .frame(height: Constants.contentHeight)
+            .frame(height: contentHeight)
         }
         .scrollIndicators(.hidden)
         .scrollTargetBehavior(.viewAligned)
@@ -66,7 +68,7 @@ struct CalendarHorizonCard: View, Equatable {
             hasSchedule: hasSchedule(date),
             isToday: date.isSameDay(.now)
         ) {
-            withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: DefaultConstant.animationTime)) {
                 selectedDate = date
                 if !Calendar.kstGregorian.isDate(date, equalTo: month, toGranularity: .month) {
                     month = date

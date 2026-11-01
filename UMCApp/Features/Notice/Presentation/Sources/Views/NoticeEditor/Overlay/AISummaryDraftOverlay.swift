@@ -93,7 +93,7 @@ struct AISummaryDraftOverlay: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DefaultSpacing.spacing12)
-        .glassEffect(.regular, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
+        .background(Color.Surface.inset, in: .rect(cornerRadius: DefaultConstant.defaultCornerRadius))
     }
 
     private var draftNoticeLabel: some View {

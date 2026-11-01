@@ -73,17 +73,39 @@ weight 는 `AppFontWeight`(`.regular` 기본, `Font.app(size:weight:)` 는 `.med
 .containerShape(.rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
 ```
 
-## Glass Effect 선택
+## 콘텐츠 표면과 Liquid Glass
 
-| Variant | 용도 |
-|---------|------|
-| `.regular` | 일반 카드, 폼 |
-| `.regular.interactive()` | 탭 가능 요소 |
-| `.clear` | 미디어/색상 배경 위 |
-| `.glassProminent` (ButtonStyle) | Primary 버튼 |
-| `.glass` (ButtonStyle) | Secondary 버튼 |
+콘텐츠는 불투명한 의미색 표면에 표시하고, Liquid Glass는 콘텐츠 위의 탐색·조작에 사용한다.
+카드가 탭 가능하다는 이유만으로 Glass를 적용하지 않는다. 브랜드 teal, Pretendard, 간격과 반경은 유지한다.
 
-> Liquid Glass API 전체 사용법은 `docs/claude/apple-frameworks/SwiftUI-Implementing-Liquid-Glass-Design.md` 참고.
+| 토큰 | 시스템 색상 | 용도 |
+|------|-------------|------|
+| `Color.Surface.canvas` | `systemGroupedBackground` | 화면 바탕 |
+| `Color.Surface.content` | `secondarySystemGroupedBackground` | 카드·폼·요약·상태 콘텐츠 |
+| `Color.Surface.inset` | `tertiarySystemGroupedBackground` | 카드 내부 보조 영역 |
+
+`Surface`는 `CoreDesignSystem/Sources/Colors/Color+Tokens.swift`에 정의한다.
+앱의 기존 라이트 모드 정책은 그대로 유지하며, 의미색 도입이 다크 모드 지원 확대를 뜻하지 않는다.
+
+| 역할 | 적용 |
+|------|------|
+| 탭 바·툴바·시트 외곽 | 시스템 기본 효과 유지, 별도 Glass 중첩 금지 |
+| 지도·콘텐츠 위 부유 조작 | `.regular` 또는 `.regular.interactive()` |
+| 사진 위 독립 조작 | 대비가 확보된 경우 `.clear.interactive()` |
+| Primary / Secondary CTA | `MainButton`의 `.glassProminent` / `.glass` |
+| 목록·정보 배지·콘텐츠 필터·입력 필드 | 불투명 표면·기존 브랜드 색상, Glass 없음 |
+| 메시지 작성 영역 | 답장·수정을 포함한 외곽 Glass 하나, 내부 전송 버튼은 불투명 강조색 |
+
+`InfoBadge`와 `AttendanceStatusBadge`는 정보를 표시하는 불투명 배지다.
+`ChipButton`은 콘텐츠 필터·선택·읽기 전용 태그이며, 부유 조작에는 시스템 버튼 또는 `MainButton`을 사용한다.
+카드 안의 AI 요약·통계·첨부 내용도 콘텐츠 표면을 사용한다.
+
+여러 **독립적인 조작 Glass**가 인접할 때만 `GlassEffectContainer`를 사용한다.
+콘텐츠 카드 전체를 감싸거나 이미 시스템 Glass가 있는 요소에 덧씌우지 않는다.
+시스템 Glass의 투명도 줄이기·대비 대응을 유지하고, 사용자 정의 이동·확대 애니메이션은
+`accessibilityReduceMotion`을 따른다. 텍스트 카드의 고정 높이 대신 최소 높이를 사용해 큰 글자를 수용한다.
+
+> Liquid Glass API 사용법은 `docs/claude/apple-frameworks/SwiftUI-Implementing-Liquid-Glass-Design.md` 참고.
 
 ## 공용 UI 컴포넌트 (`UMCApp/Core/UIComponents/Sources/`)
 
@@ -125,9 +147,9 @@ ArticleTextField(
 
 ### Liquid Glass (iOS 26)
 
-- `GlassEffectContainer`로 그룹화 필수 (오프스크린 렌더링 66% 감소)
+- 인접한 독립 조작의 Glass는 `GlassEffectContainer`로 그룹화한다. 수치로 성능 개선을 보장하지 않는다.
 - `glassEffectID`는 모핑 애니메이션 필요 시만 사용 (CPU 부하)
-- 적용 불가: List, Table, 미디어 콘텐츠
+- List·Table의 콘텐츠 행과 미디어 자체에는 Glass를 적용하지 않는다. 시스템 탐색·조작은 유지한다.
 
 ### View 렌더링
 

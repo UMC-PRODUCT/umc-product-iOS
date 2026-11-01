@@ -70,8 +70,8 @@ struct ThreadSummaryBanner: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .glassEffect(
-            .regular.interactive(),
+        .background(
+            Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
         )
         .padding(.horizontal, DefaultSpacing.spacing16)

@@ -80,54 +80,50 @@ struct OperatorStudyGroupSection: View {
 
     private func listView(groups: [StudyGroupInfo]) -> some View {
         ScrollView {
-            // Apple iOS 26 가이드: 같은 화면에 Liquid Glass가 여러 개 있을 때
-            // GlassEffectContainer 로 묶어 카드 사이 morphing/blending + 렌더링 성능 ↑
-            GlassEffectContainer(spacing: DefaultSpacing.spacing16) {
-                LazyVStack(spacing: DefaultSpacing.spacing16) {
-                    ForEach(groups) { group in
-                        StudyGroupCard(
-                            detail: group,
-                            onEdit: {
-                                viewModel.showEditSheet(for: group)
-                            },
-                            onDelete: {
-                                Task { await viewModel.deleteGroup(group) }
-                            },
-                            onAddMember: {
-                                viewModel.showAddMemberSheet(for: group)
-                            },
-                            onAddMentor: {
-                                viewModel.showAddMentorSheet(for: group)
-                            },
-                            onSchedule: {
-                                guard viewModel.canRegisterSchedule(for: group) else {
-                                    viewModel.presentScheduleRegistrationDenied()
-                                    return
-                                }
-                                onRegisterSchedule(group)
-                            },
-                            onRemoveMember: { member in
-                                Task {
-                                    await viewModel.removeMember(member, from: group)
-                                }
-                            },
-                            onRemoveMentor: { mentor in
-                                Task {
-                                    await viewModel.removeMentor(mentor, from: group)
-                                }
+            LazyVStack(spacing: DefaultSpacing.spacing16) {
+                ForEach(groups) { group in
+                    StudyGroupCard(
+                        detail: group,
+                        onEdit: {
+                            viewModel.showEditSheet(for: group)
+                        },
+                        onDelete: {
+                            Task { await viewModel.deleteGroup(group) }
+                        },
+                        onAddMember: {
+                            viewModel.showAddMemberSheet(for: group)
+                        },
+                        onAddMentor: {
+                            viewModel.showAddMentorSheet(for: group)
+                        },
+                        onSchedule: {
+                            guard viewModel.canRegisterSchedule(for: group) else {
+                                viewModel.presentScheduleRegistrationDenied()
+                                return
                             }
-                        )
-                        .equatable()
-                        .task {
-                            await viewModel.loadMoreGroupManagementDataIfNeeded(
-                                currentGroupID: group.id
-                            )
+                            onRegisterSchedule(group)
+                        },
+                        onRemoveMember: { member in
+                            Task {
+                                await viewModel.removeMember(member, from: group)
+                            }
+                        },
+                        onRemoveMentor: { mentor in
+                            Task {
+                                await viewModel.removeMentor(mentor, from: group)
+                            }
                         }
+                    )
+                    .equatable()
+                    .task {
+                        await viewModel.loadMoreGroupManagementDataIfNeeded(
+                            currentGroupID: group.id
+                        )
                     }
+                }
 
-                    if viewModel.isLoadingMoreStudyGroupDetails {
-                        StudyManagementLoadMoreIndicator()
-                    }
+                if viewModel.isLoadingMoreStudyGroupDetails {
+                    StudyManagementLoadMoreIndicator()
                 }
             }
             .safeAreaPadding(

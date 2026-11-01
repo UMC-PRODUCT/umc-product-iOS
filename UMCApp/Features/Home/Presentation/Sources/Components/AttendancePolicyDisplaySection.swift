@@ -63,8 +63,8 @@ struct AttendancePolicyDisplaySection: View, Equatable {
             policyColumn(role: .late, date: policy.lateEndAt)
         }
         .frame(maxWidth: .infinity)
-        .glassEffect(
-            .regular,
+        .background(
+            Color.Surface.content,
             in: .rect(
                 corners: .concentric(minimum: DefaultConstant.concentricRadius),
                 isUniform: true

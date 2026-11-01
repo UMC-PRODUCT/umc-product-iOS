@@ -127,7 +127,7 @@ struct ChallengerMemberDetailSheetView: View {
         Text(member.school)
             .appFont(.callout, color: .grey700)
             .padding(Constants.tagPadding)
-            .background(.regularMaterial, in: Capsule())
+            .background(Color.Surface.inset, in: Capsule())
     }
 
     private var summaryCardView: some View {
@@ -175,7 +175,7 @@ struct ChallengerMemberDetailSheetView: View {
         }
         .padding(DefaultSpacing.spacing16)
         .background(
-            .ultraThinMaterial,
+            Color.Surface.content,
             in: RoundedRectangle(cornerRadius: DefaultConstant.defaultCornerRadius)
         )
         .animation(.smooth(duration: 0.3), value: selectedGisu)
