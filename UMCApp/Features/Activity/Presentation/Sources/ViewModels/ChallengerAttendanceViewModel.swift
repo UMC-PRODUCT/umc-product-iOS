@@ -23,6 +23,9 @@ final class ChallengerAttendanceViewModel {
 
     // MARK: - Property
 
+    private let analytics: @MainActor (String, [String: String]) -> Void
+    private var startedFlows: Set<SessionID> = []
+
     private let errorHandler: ErrorHandler
     private let challengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
 
@@ -35,8 +38,10 @@ final class ChallengerAttendanceViewModel {
 
     init(
         errorHandler: ErrorHandler,
-        challengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol
+        challengerAttendanceUseCase: ChallengerAttendanceUseCaseProtocol,
+        analytics: @escaping @MainActor (String, [String: String]) -> Void = AppAnalytics.track
     ) {
+        self.analytics = analytics
         self.errorHandler = errorHandler
         self.challengerAttendanceUseCase = challengerAttendanceUseCase
     }
@@ -68,10 +73,19 @@ final class ChallengerAttendanceViewModel {
         session: Session,
         scheduleId: String
     ) async {
+        guard !session.isLoading, !session.hasSubmitted,
+              session.attendanceStatus == .beforeAttendance else { return }
         let info = session.info
+        let context = analyticsContext(for: session, method: "gps")
+        analytics("attendance_attempted", context)
 
         // .onTime = 정시 출석 가능 시간대
-        guard currentTimeWindow(for: session) == .onTime else { return }
+        guard currentTimeWindow(for: session) == .onTime else {
+            analytics("attendance_failed", context.merging(["failure_reason": "time_window"]) {
+                _, new in new
+            })
+            return
+        }
 
         // 복구용 이전 출석 — .loading 으로 덮어쓰기 전에 캡처해야 함
         let previousAttendance = session.attendance
@@ -83,13 +97,18 @@ final class ChallengerAttendanceViewModel {
                 userId: userId,
                 scheduleId: scheduleId
             )
+            analytics("attendance_completed", context.merging([
+                "attendance_status": analyticsStatus(result.status)
+            ]) { _, new in new })
             session.updateState(.loaded(result))
             session.markSubmitted()
             postAttendanceSubmitted(scheduleId: scheduleId)
 
         } catch let error as DomainError {
+            trackFailure(error, context: context)
             session.updateState(.failed(.domain(error)))
         } catch {
+            trackFailure(error, context: context)
             // 기타 에러 (네트워크 등) — 상태 복구 후 Alert
             if let prev = previousAttendance {
                 session.updateState(.loaded(prev))
@@ -125,8 +144,12 @@ final class ChallengerAttendanceViewModel {
         reason: String,
         scheduleId: String
     ) async {
+        guard session.canSubmitReason() else { return }
         let info = session.info
         let timeWindow = currentTimeWindow(for: session)
+        let method = timeWindow == .expired ? "absent_reason" : "late_reason"
+        let context = analyticsContext(for: session, method: method)
+        analytics("attendance_attempted", context)
 
         // 복구용 이전 출석 — .loading 으로 덮어쓰기 전에 캡처해야 함
         let previousAttendance = session.attendance
@@ -140,13 +163,18 @@ final class ChallengerAttendanceViewModel {
                 reason: reason,
                 scheduleId: scheduleId
             )
+            analytics("attendance_completed", context.merging([
+                "attendance_status": analyticsStatus(result.status)
+            ]) { _, new in new })
             session.updateState(.loaded(result))
             session.markSubmitted()
             postAttendanceSubmitted(scheduleId: scheduleId)
 
         } catch let error as DomainError {
+            trackFailure(error, context: context)
             session.updateState(.failed(.domain(error)))
         } catch {
+            trackFailure(error, context: context)
             // 기타 에러 (네트워크 등) — 상태 복구 후 Alert
             if let prev = previousAttendance {
                 session.updateState(.loaded(prev))
@@ -246,6 +274,61 @@ final class ChallengerAttendanceViewModel {
     /// 어긋나지 않습니다. 정책 팝오버·출석 이력 카드가 표시용으로 사용합니다.
     func attendancePolicy(for sessionId: SessionID) -> ScheduleAttendancePolicy? {
         schedule(for: sessionId)?.attendancePolicy
+    }
+
+    /// 세션 카드를 처음 펼쳤을 때만 기록합니다. 폴링과 재렌더링은 새 흐름이 아닙니다.
+    func attendanceFlowStarted(for session: Session) {
+        guard startedFlows.insert(session.id).inserted else { return }
+        analytics("attendance_flow_started", analyticsContext(for: session, method: "none"))
+    }
+
+    /// 사유 입력 화면 진입은 제출 시도와 구분합니다.
+    func attendanceReasonOpened(for session: Session) {
+        analytics("attendance_reason_opened", analyticsContext(for: session, method: "reason"))
+    }
+
+    /// 값은 제한된 분류만 사용하며 일정/회원 ID, 좌표, 사유, 오류 원문을 전송하지 않습니다.
+    private func analyticsContext(for session: Session, method: String) -> [String: String] {
+        let window: String
+        switch currentTimeWindow(for: session) {
+        case .tooEarly: window = "too_early"
+        case .onTime: window = "on_time"
+        case .lateWindow: window = "late_window"
+        case .expired: window = "expired"
+        }
+        return [
+            "method": method,
+            "time_window": window,
+            "location_authorized": challengerAttendanceUseCase.isLocationAuthorized ? "true" : "false",
+            "inside_geofence": challengerAttendanceUseCase.isInsideGeofence ? "true" : "false"
+        ]
+    }
+
+    private func analyticsStatus(_ status: AttendanceStatus) -> String {
+        switch status {
+        case .beforeAttendance: "pending"
+        case .pendingApproval: "pending_approval"
+        case .present: "present"
+        case .late: "late"
+        case .absent: "absent"
+        }
+    }
+
+    private func trackFailure(_ error: Error, context: [String: String]) {
+        let reason: String
+        switch error {
+        case DomainError.attendanceOutOfRange: reason = "out_of_range"
+        case DomainError.attendanceAlreadySubmitted: reason = "already_submitted"
+        case DomainError.attendanceTimeExpired: reason = "time_expired"
+        case DomainError.attendanceReasonRequired: reason = "reason_required"
+        case LocationError.notAuthorized: reason = "location_permission"
+        case LocationError.timeout: reason = "location_timeout"
+        case is LocationError: reason = "location"
+        case is DomainError: reason = "domain"
+        case is NetworkError: reason = "network"
+        default: reason = error.isCancellation ? "cancelled" : "unknown"
+        }
+        analytics("attendance_failed", context.merging(["failure_reason": reason]) { _, new in new })
     }
 
     // MARK: - Helper Methods

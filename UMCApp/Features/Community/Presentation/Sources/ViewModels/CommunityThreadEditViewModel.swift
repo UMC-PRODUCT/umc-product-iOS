@@ -182,6 +182,9 @@ public final class CommunityThreadEditViewModel {
                 icon: changedIcon
             )
             state = .loaded(updated)
+            AppAnalytics.track("community_thread_updated", parameters: [
+                "category": updated.category.rawValue.lowercased()
+            ])
             return updated
         } catch {
             state = .failed(AppError.from(error))
@@ -254,6 +257,7 @@ public final class CommunityThreadEditViewModel {
     private func delete() async {
         do {
             try await useCase.delete(threadId: original.id)
+            AppAnalytics.track("community_thread_deleted")
             didDelete = true
         } catch {
             errorHandler.handle(

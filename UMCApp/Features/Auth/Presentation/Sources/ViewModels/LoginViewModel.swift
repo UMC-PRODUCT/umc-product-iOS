@@ -36,6 +36,8 @@ final class LoginViewModel {
     private let loginUseCase: LoginUseCaseProtocol
     private let fetchMemberProfileUseCase: FetchMemberProfileUseCaseProtocol
     private let syncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol
+    private let trackAnalytics: @MainActor (String, [String: String]) -> Void
+    private var appleAuthorizationAttempt: UUID?
     private let errorHandler: ErrorHandler
 
     private let kakaoLoginManager: KakaoLoginManaging
@@ -54,12 +56,16 @@ final class LoginViewModel {
         errorHandler: ErrorHandler,
         kakaoLoginManager: KakaoLoginManaging = KakaoLoginManager(),
         appleLoginManager: AppleLoginManaging = AppleLoginManager(),
-        googleLoginManager: GoogleLoginManaging = GoogleLoginManager()
+        googleLoginManager: GoogleLoginManaging = GoogleLoginManager(),
+        trackAnalytics: @escaping @MainActor (String, [String: String]) -> Void = {
+            AppAnalytics.track($0, parameters: $1)
+        }
     ) {
         self.loginUseCase = container.resolve(LoginUseCaseProtocol.self)
         self.fetchMemberProfileUseCase = container.resolve(FetchMemberProfileUseCaseProtocol.self)
         self.syncProfileStorageUseCase = container.resolve(SyncProfileStorageUseCaseProtocol.self)
         self.errorHandler = errorHandler
+        self.trackAnalytics = trackAnalytics
         self.kakaoLoginManager = kakaoLoginManager
         self.appleLoginManager = appleLoginManager
         self.googleLoginManager = googleLoginManager
@@ -71,6 +77,7 @@ final class LoginViewModel {
     func loginWithKakao() async {
         guard !loginState.isLoading else { return }
         loginState = .loading
+        trackAnalytics("login_attempt", ["method": "kakao"])
 
         do {
             let (accessToken, email) = try await kakaoLoginManager.login()
@@ -100,10 +107,15 @@ final class LoginViewModel {
     func loginWithApple() {
         guard !loginState.isLoading else { return }
         loginState = .loading
+        trackAnalytics("login_attempt", ["method": "apple"])
 
+        let authorizationAttempt = UUID()
+        appleAuthorizationAttempt = authorizationAttempt
         appleLoginManager.onAuthorizationFailed = { [weak self] error in
             Task { @MainActor in
-                self?.handleFailure(error, action: "loginWithApple") { [weak self] in
+                guard let self, self.appleAuthorizationAttempt == authorizationAttempt else { return }
+                self.appleAuthorizationAttempt = nil
+                self.handleFailure(error, action: "loginWithApple") { [weak self] in
                     self?.loginWithApple()
                 }
             }
@@ -111,7 +123,9 @@ final class LoginViewModel {
 
         appleLoginManager.onAuthorizationCompleted = { [weak self] code, email, fullName in
             Task { @MainActor in
-                await self?.completeAppleLogin(
+                guard let self, self.appleAuthorizationAttempt == authorizationAttempt else { return }
+                self.appleAuthorizationAttempt = nil
+                await self.completeAppleLogin(
                     authorizationCode: code,
                     email: email,
                     fullName: fullName
@@ -126,6 +140,7 @@ final class LoginViewModel {
     func loginWithGoogle() async {
         guard !loginState.isLoading else { return }
         loginState = .loading
+        trackAnalytics("login_attempt", ["method": "google"])
 
         do {
             let (accessToken, email) = try await googleLoginManager.login()
@@ -188,6 +203,7 @@ final class LoginViewModel {
     ) async {
         switch result {
         case .newMember(let verificationToken):
+            trackFailure(action: action, reason: "registration_required")
             presentSignUpDestination(
                 verificationToken: verificationToken,
                 email: prefillEmail,
@@ -204,18 +220,24 @@ final class LoginViewModel {
         do {
             let profile = try await fetchMemberProfileUseCase.execute()
             guard profile.isApproved else {
+                trackFailure(action: action, reason: "pending_approval")
                 loginState = .failed(.auth(.pendingApproval))
                 return
             }
             syncProfileStorageUseCase.execute(profile: profile)
             loginState = .loaded(profile)
+            trackAnalytics("login", ["method": analyticsMethod(for: action)])
         } catch {
+            trackFailure(action: action, reason: "profile_error")
             loginState = .idle
             errorHandler.handle(error, context: ErrorContext(
                 feature: "Auth",
                 action: action,
                 retryAction: { [weak self] in
-                    await self?.resolveApprovalStatus(action: action)
+                    guard let self, !self.loginState.isLoading else { return }
+                    self.loginState = .loading
+                    self.trackAnalytics("login_attempt", ["method": self.analyticsMethod(for: action)])
+                    await self.resolveApprovalStatus(action: action)
                 }
             ))
         }
@@ -246,6 +268,10 @@ final class LoginViewModel {
         action: String,
         retryAction: (() async -> Void)?
     ) {
+        trackFailure(
+            action: action,
+            reason: (error as? SocialLoginError) == .cancelled ? "cancelled" : "auth_error"
+        )
         loginState = .idle
         // 사용자가 로그인 시트를 취소한 경우는 에러가 아니므로 알럿을 띄우지 않는다.
         guard (error as? SocialLoginError) != .cancelled else { return }
@@ -254,5 +280,19 @@ final class LoginViewModel {
             action: action,
             retryAction: retryAction
         ))
+    }
+
+    @MainActor
+    private func trackFailure(action: String, reason: String) {
+        trackAnalytics("login_failed", ["method": analyticsMethod(for: action), "reason": reason])
+    }
+
+    private func analyticsMethod(for action: String) -> String {
+        switch action {
+        case "loginWithKakao": "kakao"
+        case "loginWithApple": "apple"
+        case "loginWithGoogle": "google"
+        default: "unknown"
+        }
     }
 }

@@ -107,6 +107,7 @@ public final class CommunityThreadCreateViewModel {
         guard canSubmit else { return nil }
 
         state = .loading
+        AppAnalytics.track("community_thread_create_attempted")
 
         do {
             let thread = try await useCase.create(
@@ -117,8 +118,13 @@ public final class CommunityThreadCreateViewModel {
                 memberIds: invitees.map(\.memberId)
             )
             state = .loaded(thread)
+            AppAnalytics.track("community_thread_created", parameters: [
+                "category": thread.category.rawValue.lowercased(),
+                "has_invitees": String(!invitees.isEmpty)
+            ])
             return thread
         } catch {
+            AppAnalytics.track("community_thread_create_failed")
             state = .failed(AppError.from(error))
             return nil
         }

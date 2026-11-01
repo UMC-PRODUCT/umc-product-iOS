@@ -79,6 +79,7 @@ extension CommunityThreadRoomViewModel {
     /// ponytail: 재전송은 업로드부터 다시 한다 — 앞선 시도가 올린 파일은 서버에 남는다.
     /// 재전송이 잦아지면 clientMessageId 별로 fileId 를 들고 있다가 전송만 다시 한다.
     func dispatchImages(clientMessageId: String, files: [ThreadMessageFile]) async {
+        recordSendAttempt(clientMessageId: clientMessageId)
         do {
             var fileIds: [String] = []
             for file in files {

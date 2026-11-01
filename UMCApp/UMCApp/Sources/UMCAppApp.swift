@@ -10,6 +10,7 @@ import CoreDesignSystem
 import CoreDI
 import CoreRouting
 import FirebaseCore
+import FirebaseAnalytics
 import GoogleSignIn
 import HomeData
 import HomeDomain
@@ -207,7 +208,7 @@ extension UMCAppApp {
     ///
     /// - Note: CI 등 시크릿(plist)이 배포되지 않은 환경에서도 빌드·실행이 깨지지 않도록,
     ///   plist 부재/파싱 실패/플레이스홀더 값(`GOOGLE_APP_ID`가 `__`로 시작)이면 조용히
-    ///   건너뛴다. 이 경우 푸시(FCM)만 비활성이 된다.
+    ///   건너뛴다. 이 경우 푸시(FCM)와 Analytics가 비활성이 된다.
     ///
     /// - Note: `AppDelegate.didFinishLaunchingWithOptions`도 `Messaging` 접근 전에 이 메서드를
     ///   호출한다. 두 진입점의 호출 순서는 보장되지 않지만 `FirebaseApp.app()` 가드로 멱등이다.
@@ -224,6 +225,9 @@ extension UMCAppApp {
             return
         }
         FirebaseApp.configure()
+        AppAnalytics.configure { event, parameters in
+            Analytics.logEvent(event, parameters: parameters)
+        }
     }
 
     /// 영속 스토어를 못 만들어 **인메모리로 떨어졌다**.

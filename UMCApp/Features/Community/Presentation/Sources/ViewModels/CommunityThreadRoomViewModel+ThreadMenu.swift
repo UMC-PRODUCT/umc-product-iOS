@@ -68,6 +68,7 @@ extension CommunityThreadRoomViewModel {
 
         do {
             try await listUseCase.togglePin(threadId: threadId, isPinned: target)
+            analytics("community_thread_pin_changed", ["is_pinned": String(target)])
         } catch {
             updateThread { $0.with(isPinned: !target) }
             errorHandler.handle(error, context: ErrorContext(
@@ -84,6 +85,7 @@ extension CommunityThreadRoomViewModel {
 
         do {
             try await listUseCase.toggleMute(threadId: threadId, isMuted: target)
+            analytics("community_thread_mute_changed", ["is_muted": String(target)])
         } catch {
             updateThread { $0.with(isMuted: !target) }
             errorHandler.handle(error, context: ErrorContext(
@@ -147,6 +149,7 @@ extension CommunityThreadRoomViewModel {
     private func leave() async {
         do {
             try await listUseCase.leave(threadId: threadId)
+            analytics("community_thread_left", [:])
             didLeave = true
         } catch {
             errorHandler.handle(error, context: ErrorContext(
@@ -160,6 +163,7 @@ extension CommunityThreadRoomViewModel {
     private func deleteThread() async {
         do {
             try await listUseCase.deleteThread(threadId: threadId)
+            analytics("community_thread_deleted", [:])
             didLeave = true
         } catch {
             errorHandler.handle(error, context: ErrorContext(

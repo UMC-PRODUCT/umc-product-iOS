@@ -2621,3 +2621,85 @@ private actor SharedBlockRepositoryStub: MemberBlockRepositoryProtocol {
         return blocked
     }
 }
+
+@MainActor
+@Suite("Community Analytics")
+struct CommunityAnalyticsTests {
+    @MainActor
+    private final class Recorder {
+        var events: [(String, [String: String])] = []
+        func record(_ name: String, _ parameters: [String: String]) {
+            events.append((name, parameters))
+        }
+    }
+
+    @Test("방 조회 재시도와 재연결은 진입 수를 부풀리지 않는다")
+    func roomViewCountsOnlyFirstSuccessfulLoad() async {
+        let useCase = StubRoomUseCase()
+        let recorder = Recorder()
+        let viewModel = makeRoom(useCase, recorder: recorder)
+        useCase.loadThreadError = URLError(.notConnectedToInternet)
+        await viewModel.load()
+        #expect(recorder.events.isEmpty)
+        useCase.loadThreadError = nil
+        await viewModel.load()
+        await viewModel.load()
+        await viewModel.backfill()
+        #expect(recorder.events.filter { $0.0 == "community_thread_viewed" }.count == 1)
+    }
+
+    @Test("메시지 전송 성공은 로컬 발신의 서버 확정에만 한 번 기록한다")
+    func messageCountsOnlyConfirmedLocalSend() async throws {
+        let useCase = StubRoomUseCase()
+        let recorder = Recorder()
+        let viewModel = makeRoom(useCase, recorder: recorder)
+        await viewModel.load()
+        viewModel.draft = "private message"
+        await viewModel.send()
+        #expect(recorder.events.allSatisfy { $0.0 != "community_message_sent" })
+        let clientId = try #require(useCase.sentClientMessageIds.first)
+        let message = makeMessage(id: "100", content: "private message", clientMessageId: clientId)
+        let event = CommunityThreadRealtimeEvent.messageCreated(
+            threadId: "1", message: message, clientMessageId: clientId
+        )
+        viewModel.apply(event)
+        viewModel.apply(event)
+        viewModel.apply(.messageCreated(
+            threadId: "1", message: makeMessage(id: "101"), clientMessageId: "other-device"
+        ))
+        let sent = recorder.events.filter { $0.0 == "community_message_sent" }
+        #expect(sent.count == 1)
+        #expect(sent.first?.1 == [
+            "message_type": "text", "has_reply": "false", "has_mention": "false"
+        ])
+    }
+
+    @Test("사진 업로드 실패도 전송 시도와 미확정을 한 번씩 기록한다")
+    func imageUploadFailureHasAnAttempt() async {
+        let useCase = StubRoomUseCase()
+        useCase.uploadError = URLError(.notConnectedToInternet)
+        let recorder = Recorder()
+        let viewModel = makeRoom(useCase, recorder: recorder)
+        await viewModel.load()
+        await viewModel.sendImages(jpegData: [Data([0xFF, 0xD8])])
+        let attempts = recorder.events.filter { $0.0 == "community_message_send_attempted" }
+        #expect(attempts.count == 1)
+        #expect(attempts.first?.1["message_type"] == "image")
+        #expect(recorder.events.filter { $0.0 == "community_message_send_unconfirmed" }.count == 1)
+        #expect(recorder.events.allSatisfy { $0.0 != "community_message_sent" })
+    }
+
+    private func makeRoom(
+        _ useCase: StubRoomUseCase,
+        recorder: Recorder
+    ) -> CommunityThreadRoomViewModel {
+        CommunityThreadRoomViewModel(
+            threadId: "1",
+            useCase: useCase,
+            listUseCase: StubThreadListUseCase(),
+            errorHandler: ErrorHandler(),
+            summarizer: StubSummarizer(),
+            analytics: recorder.record
+        )
+    }
+}

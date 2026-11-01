@@ -80,6 +80,12 @@ public struct NoticeDetailView: View {
             .sheet(isPresented: $viewModel.showReadStatusSheet, content: readStatusSheet)
             .sheet(isPresented: $viewModel.showReadingSummarySheet, content: readingSummarySheet)
             .alertPrompt(item: $viewModel.alertPrompt)
+            .onAppear {
+                AppAnalytics.track("screen_view", parameters: [
+                    "screen_name": "notice_detail",
+                    "screen_class": "NoticeDetailView"
+                ])
+            }
             .task { await onTask() }
     }
 

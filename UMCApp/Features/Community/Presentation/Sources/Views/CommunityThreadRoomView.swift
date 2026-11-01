@@ -135,6 +135,12 @@ struct CommunityThreadRoomView: View {
             }
             .ignoresSafeArea()
         }
+        .onAppear {
+            AppAnalytics.track("screen_view", parameters: [
+                "screen_name": "community_thread",
+                "screen_class": "CommunityThreadRoomView"
+            ])
+        }
         .umcDefaultBackground()
         // 대화는 메시지 목록과 입력창이 세로를 꽉 채워야 한다. 탭바가 남아 있으면 컴포저가
         // 그만큼 위로 밀리고 읽히는 메시지가 줄어든다 (#1312).

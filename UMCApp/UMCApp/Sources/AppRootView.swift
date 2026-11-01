@@ -82,6 +82,13 @@ struct AppRootView: View {
             guard oldState == .main else { return }
             Task { await AttendanceLiveActivityCoordinator.endAll() }
         }
+        .onChange(of: analyticsScreenName, initial: true) { _, screenName in
+            guard let screenName else { return }
+            AppAnalytics.track("screen_view", parameters: [
+                "screen_name": screenName,
+                "screen_class": "AppRootView"
+            ])
+        }
         .environment(\.appFlow, viewModel.appFlow)
         // 실패 화면의 문의 버튼이 여는 카카오톡 채널 (`RetryContentUnavailableView`).
         .environment(\.inquiryChannelOpener, inquiryChannelOpener)
@@ -96,6 +103,16 @@ struct AppRootView: View {
             NotificationCenter.default.publisher(for: .navigateToPendingApproval)
         ) { _ in
             viewModel.showPendingApproval()
+        }
+    }
+
+    /// 연결된 개인정보가 아니라 화면 종류만 기록한다. 메인 탭은 RootTabView가 담당한다.
+    private var analyticsScreenName: String? {
+        switch viewModel.state {
+        case .login: "login"
+        case .signUp: "sign_up"
+        case .pendingApproval: "pending_approval"
+        case .bootstrap, .main: nil
         }
     }
 

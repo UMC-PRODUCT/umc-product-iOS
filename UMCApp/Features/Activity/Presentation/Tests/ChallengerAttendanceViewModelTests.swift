@@ -851,4 +851,78 @@ struct ChallengerAttendanceViewModelScheduleTests {
     }
 }
 
+@MainActor
+@Suite("출석 분석 — 결과·개인정보·중복 방지")
+struct AttendanceAnalyticsTests {
+    @Test("성공은 한 번만 기록하고 개인정보를 포함하지 않는다")
+    func successAndDuplicate() async {
+        var events: [(String, [String: String])] = []
+        let viewModel = ChallengerAttendanceViewModel(
+            errorHandler: ErrorHandler(),
+            challengerAttendanceUseCase: MockChallengerAttendanceUseCase(),
+            analytics: { events.append(($0, $1)) }
+        )
+        let session = makeSession()
+        for _ in 0..<2 {
+            await viewModel.attendanceButtonTapped(
+                userId: UserID(value: "private-user"), session: session, scheduleId: "private-id"
+            )
+        }
+        #expect(events.map { $0.0 } == ["attendance_attempted", "attendance_completed"])
+        #expect(events.last?.1["attendance_status"] == "present")
+        #expect(events.allSatisfy { !$0.1.values.contains("private-user") })
+        #expect(events.allSatisfy { !$0.1.values.contains("private-id") })
+    }
+
+    @Test("범위 밖 실패는 분류만 기록하고 완료로 세지 않는다")
+    func failureClassification() async {
+        var events: [(String, [String: String])] = []
+        let useCase = MockChallengerAttendanceUseCase()
+        useCase.requestGPSAttendanceResult = .failure(DomainError.attendanceOutOfRange)
+        let viewModel = ChallengerAttendanceViewModel(
+            errorHandler: ErrorHandler(), challengerAttendanceUseCase: useCase,
+            analytics: { events.append(($0, $1)) }
+        )
+        await viewModel.attendanceButtonTapped(
+            userId: UserID(value: "U-1"), session: makeSession(), scheduleId: "S-1"
+        )
+        #expect(events.map { $0.0 } == ["attendance_attempted", "attendance_failed"])
+        #expect(events.last?.1["failure_reason"] == "out_of_range")
+    }
+
+    @Test("사유 제출 성공은 승인 대기이며 사유 원문을 수집하지 않는다")
+    func reasonSubmission() async {
+        var events: [(String, [String: String])] = []
+        let useCase = MockChallengerAttendanceUseCase()
+        useCase.timeWindowToReturn = .expired
+        let viewModel = ChallengerAttendanceViewModel(
+            errorHandler: ErrorHandler(), challengerAttendanceUseCase: useCase,
+            analytics: { events.append(($0, $1)) }
+        )
+        await viewModel.submitAttendanceReason(
+            userId: UserID(value: "U-1"), session: makeSession(),
+            reason: "private-reason", scheduleId: "S-1"
+        )
+        #expect(events.map { $0.0 } == ["attendance_attempted", "attendance_completed"])
+        #expect(events.last?.1["method"] == "absent_reason")
+        #expect(events.last?.1["attendance_status"] == "pending_approval")
+        #expect(events.allSatisfy { !$0.1.values.contains("private-reason") })
+    }
+
+    @Test("화면 재등장과 페이로드 갱신은 흐름 시작을 중복 기록하지 않는다")
+    func flowOnlyOnce() {
+        var events: [String] = []
+        let viewModel = ChallengerAttendanceViewModel(
+            errorHandler: ErrorHandler(),
+            challengerAttendanceUseCase: MockChallengerAttendanceUseCase(),
+            analytics: { name, _ in events.append(name) }
+        )
+        let session = makeSession()
+        viewModel.attendanceFlowStarted(for: session)
+        viewModel.apply(schedules: [])
+        viewModel.attendanceFlowStarted(for: session)
+        #expect(events == ["attendance_flow_started"])
+    }
+}
+
 #endif

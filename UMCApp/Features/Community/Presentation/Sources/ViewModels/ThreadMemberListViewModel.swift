@@ -402,6 +402,7 @@ public final class ThreadMemberListViewModel {
 
         do {
             try await useCase.leave(threadId: threadId)
+            AppAnalytics.track("community_thread_left")
             didLeave = true
         } catch {
             errorHandler.handle(error, context: errorContext("leaveThread"))
@@ -417,6 +418,7 @@ public final class ThreadMemberListViewModel {
 
         do {
             try await useCase.deleteThread(threadId: threadId)
+            AppAnalytics.track("community_thread_deleted")
             didLeave = true
         } catch {
             errorHandler.handle(error, context: errorContext("deleteThread"))
