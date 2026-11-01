@@ -59,6 +59,7 @@ extension CommunityThreadRoomViewModel {
         guard canSend, let target = editTarget else { return }
 
         let content = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard validateComposer(content) else { return }
         cancelEdit()
         await performEdit(messageId: target.id, content: content)
     }

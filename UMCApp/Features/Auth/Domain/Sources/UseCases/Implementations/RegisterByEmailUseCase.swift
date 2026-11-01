@@ -5,6 +5,8 @@
 //  Created by euijjang97 on 7/9/26.
 //
 
+import UMCFoundation
+
 /// 이메일(ID/PW) 회원가입 UseCase 구현체
 public final class RegisterByEmailUseCase: RegisterByEmailUseCaseProtocol {
 
@@ -28,7 +30,9 @@ public final class RegisterByEmailUseCase: RegisterByEmailUseCaseProtocol {
         schoolId: String,
         termsAgreements: [TermsAgreement]
     ) async throws -> RegisterByIdPwResult {
-        try await repository.registerByEmail(
+        try ProhibitedTextValidator.validate(name, field: "이름")
+        try ProhibitedTextValidator.validate(nickname, field: "닉네임")
+        return try await repository.registerByEmail(
             rawPassword: rawPassword,
             name: name,
             nickname: nickname,
