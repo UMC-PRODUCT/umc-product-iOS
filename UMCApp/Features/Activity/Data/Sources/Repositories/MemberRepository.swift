@@ -180,7 +180,7 @@ public final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendab
             APIResponse<ChallengerProfileDTO>.self,
             from: response.data
         ).unwrap()
-        return makePenaltyHistories(from: profile.challengerPoints, includeWarning: false)
+        return makePenaltyHistories(from: profile.challengerPoints, includeWarning: true)
     }
 
     // MARK: - 멤버 상세
@@ -627,8 +627,7 @@ private extension MemberRepository {
     }
 
     func isReward(pointType raw: String, signedPoint: Double) -> Bool {
-        guard let type = ChallengerPointType(rawValue: raw.uppercased()) else { return false }
-        return OperatorMemberPenaltyHistory.isReward(type: type, signedPoint: signedPoint)
+        signedPoint > 0
     }
 
     /// 결과 본문이 없는 변경(부여/삭제) 요청의 공통 호출·검증.

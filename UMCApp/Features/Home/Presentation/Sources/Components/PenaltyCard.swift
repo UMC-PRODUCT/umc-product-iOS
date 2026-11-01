@@ -164,7 +164,7 @@ struct PenaltyCard: View, Equatable {
                 }
 
                 VStack(spacing: 2) {
-                    Text(pointText(generation.rewardPoint + generation.penaltyPoint))
+                    Text(pointText(generation.totalPoint))
                         .appFont(.title2, weight: .semibold, color: .grey900)
                     Text("총점")
                         .appFont(.caption2, color: .grey500)

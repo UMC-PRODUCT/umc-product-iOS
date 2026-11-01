@@ -31,7 +31,8 @@ private func makeHistory(
         date: Date(timeIntervalSince1970: 0),
         reason: "사유",
         penaltyScore: penaltyScore,
-        pointType: pointType
+        pointType: pointType,
+        signedPoint: pointType == .studyLate ? -abs(penaltyScore) : penaltyScore
     )
 }
 

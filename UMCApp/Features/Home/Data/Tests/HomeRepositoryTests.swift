@@ -436,7 +436,7 @@ struct HomeRepositoryTests {
             memberId: "1", name: "홍길동", nickname: "길동", generations: ["12"],
             challengerRecords: [Fixture.record(gisuId: "1002", points: [
                 ProfileChallengerPoint(
-                    id: "1", pointType: "LATE", point: 0.5,
+                    id: "1", pointType: "LATE", point: -0.5,
                     description: "지각", createdAt: "2026-10-01T00:00:00Z"
                 )
             ])]

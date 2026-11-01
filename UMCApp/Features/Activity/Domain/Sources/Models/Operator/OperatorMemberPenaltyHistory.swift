@@ -32,7 +32,7 @@ public struct OperatorMemberPenaltyHistory: Identifiable, Equatable {
     public var isReward: Bool { Self.isReward(type: pointType, signedPoint: signedPoint) }
 
     public static func isReward(type: ChallengerPointType, signedPoint: Double) -> Bool {
-        type.isCustom ? signedPoint > 0 : type.isReward
+        signedPoint > 0
     }
 
     /// 포인트 유형

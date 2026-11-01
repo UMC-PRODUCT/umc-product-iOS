@@ -22,6 +22,9 @@ public struct HomeGeneration: Identifiable, Equatable, Sendable {
     public let rewardPoint: Double
     public let pointLogs: [PointLog]
 
+    /// 상점 합계에서 벌점의 크기를 차감한 서버 기준 총점.
+    public var totalPoint: Double { rewardPoint - penaltyPoint }
+
     // MARK: - Init
 
     public init(

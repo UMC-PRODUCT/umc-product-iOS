@@ -132,6 +132,20 @@ struct ActivityView: View {
             .task {
                 await viewModel.load()
             }
+            .task {
+                guard let administration = container.resolveIfRegistered(
+                    MemberAdministrationUseCaseProtocol.self
+                ) else { return }
+                let revision = userSession.sessionRevision
+                do {
+                    let authority = try await administration.fetchAuthority()
+                    try Task.checkCancellation()
+                    userSession.updateSystemAdministrator(authority.isSuperAdmin, expectedRevision: revision)
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    userSession.updateSystemAdministrator(false, expectedRevision: revision)
+                }
+            }
             .onChange(of: mode) { oldMode, newMode in
                 let previous = selectedSection ?? ActivitySection.defaultSection(for: oldMode)
                 selectedSection = previous.mapped(to: newMode)

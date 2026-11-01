@@ -158,8 +158,9 @@ struct PointGrantFormSheet: View {
     }
 
     private func reasonAlertMessage(for type: ChallengerPointType) -> String {
-        let sign = pointValue > 0 ? "+" : ""
-        return "\(type.displayName) (\(sign)\(pointValue)점) 사유를 입력해주세요."
+        let displayedValue = type.isCustom ? Double(pointValue) : type.defaultPointValue
+        let sign = displayedValue > 0 ? "+" : ""
+        return "\(type.displayName) (\(sign)\(displayedValue.formatted())점) 사유를 입력해주세요."
     }
 
     /// 포인트 타입 선택 행. 선택 시 체크마크 표시 및 배점 자동 설정.
@@ -173,7 +174,7 @@ struct PointGrantFormSheet: View {
 
             withAnimation(.easeInOut(duration: Constants.selectionAnimationDuration)) {
                 selectedPointType = type
-                pointValue = type.isCustom ? 0 : type.defaultPointValue
+                pointValue = type.isCustom ? 0 : (Int(exactly: type.defaultPointValue) ?? 0)
                 if type.isCustom { customPointValueText = "" }
             }
         } label: {
@@ -188,7 +189,7 @@ struct PointGrantFormSheet: View {
                 Spacer()
 
                 if !type.isCustom {
-                    Text("\(type.defaultPointValue > 0 ? "+" : "")\(type.defaultPointValue)")
+                    Text("\(type.defaultPointValue > 0 ? "+" : "")\(type.defaultPointValue.formatted())")
                         .appFont(
                             .subheadline,
                             weight: .semibold,

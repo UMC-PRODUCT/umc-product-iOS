@@ -118,6 +118,40 @@ struct UserSessionManagerTests {
 
     // MARK: - reset
 
+    @Test("시스템 관리자만 가진 사용자도 운영진 모드에 진입하고 해제 시 돌아온다")
+    func systemAdministratorAccessDoesNotRequireMembershipRole() {
+        let manager = UserSessionManager()
+        manager.updateSystemAdministrator(true)
+        manager.toggleAdminMode()
+        #expect(manager.currentActivityMode == .admin)
+        manager.updateRole(.challenger)
+        #expect(manager.currentActivityMode == .admin)
+        manager.updateSystemAdministrator(false)
+        #expect(manager.currentActivityMode == .challenger)
+        #expect(!manager.canToggleAdminMode)
+    }
+
+    @Test("로그아웃은 시스템 관리자 권한을 남기지 않는다")
+    func resetClearsSystemAdministrator() {
+        let manager = UserSessionManager()
+        manager.updateSystemAdministrator(true)
+        manager.reset()
+        #expect(!manager.isSystemAdministrator)
+        #expect(!manager.canToggleAdminMode)
+    }
+
+    @Test("로그아웃 전 시작한 요청은 새 세션의 관리자 상태를 변경하지 못한다")
+    func obsoleteAuthorityResponseCannotRestorePrivileges() {
+        let manager = UserSessionManager()
+        let revision = manager.sessionRevision
+        manager.reset()
+        manager.updateSystemAdministrator(true, expectedRevision: revision)
+        #expect(!manager.isSystemAdministrator)
+        manager.updateSystemAdministrator(true, expectedRevision: manager.sessionRevision)
+        manager.updateSystemAdministrator(false, expectedRevision: revision)
+        #expect(manager.isSystemAdministrator)
+    }
+
     @Test("reset은 역할·역할 목록·Admin 모드를 초기 상태로 되돌린다")
     func resetRestoresInitialState() {
         let manager = UserSessionManager()

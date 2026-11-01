@@ -51,6 +51,9 @@ extension DIContainer {
         register(MemberRepositoryProtocol.self) {
             StubMemberRepository()
         }
+        register(MemberAdministrationRepositoryProtocol.self) {
+            StubMemberAdministrationRepository()
+        }
         register(ChallengerAttendanceRepositoryProtocol.self) {
             StubAttendanceRepository()
         }

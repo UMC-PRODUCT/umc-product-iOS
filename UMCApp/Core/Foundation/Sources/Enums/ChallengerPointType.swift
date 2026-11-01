@@ -59,13 +59,11 @@ public enum ChallengerPointType: String, Codable, Sendable, CaseIterable, Identi
 
     /// 유형별 기본 배점 (상점은 양수, 벌점은 음수)
     ///
-    /// - Note: `.warning`/`.out` 은 벌점 개념이지만 레거시 호환을 위해 양수(1)로 유지됩니다.
-    ///   (이 때문에 `isReward` 가 `true` 로 평가되는 예외) 두 유형은 `availableTypes(for:)` 에서
-    ///   이미 제외되므로 일반 부여 흐름에는 영향이 없습니다.
-    public var defaultPointValue: Int {
+    /// 레거시 우수 워크북은 -0.5점입니다. 고정 배점은 요청에서 생략하고 서버가 적용합니다.
+    public var defaultPointValue: Double {
         switch self {
-        case .bestWorkbook: return 2
-        case .warning: return 1
+        case .bestWorkbook: return -0.5
+        case .warning: return 0
         case .out: return 1
         case .custom: return 0
         case .blogChallenge: return 3
