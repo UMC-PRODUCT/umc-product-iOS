@@ -44,6 +44,7 @@ struct CommunityRoutingView: View {
     /// 채팅방 ⋯ 메뉴에서 바꾼 고정·알림을 리스트 행에 반영한다 (#1138). 두 값은 나에게만 해당해
     /// 실시간 이벤트가 오지 않으므로, 이 통로가 없으면 돌아온 목록이 옛 상태로 남는다.
     let onThreadToggled: (CommunityThread) -> Void
+    var onComposerChange: (Bool) -> Void = { _ in }
 
     // MARK: - Body
 
@@ -63,9 +64,10 @@ struct CommunityRoutingView: View {
                 ),
                 inviteViewModel: makeInviteViewModel(threadId: threadId),
                 onThreadToggled: onThreadToggled,
-                onThreadRemoved: onThreadRemoved
+                onThreadRemoved: onThreadRemoved,
+                onComposerChange: onComposerChange,
+                initialNavigationTitle: title
             )
-            .navigationTitle(title)
 
         case .threadCreate:
             CommunityThreadCreateView(

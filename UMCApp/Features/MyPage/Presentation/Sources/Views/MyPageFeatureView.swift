@@ -6,6 +6,8 @@
 //
 
 import CoreDI
+import CoreRouting
+import CoreUIComponents
 import SwiftUI
 
 /// 마이페이지가 요청하는 명함 진입 지점.
@@ -32,7 +34,7 @@ public enum BusinessCardEntry: Hashable, Sendable {
 ///
 /// 탭 셸이 이 타입만 알면 되도록 DI 컨테이너·에러 핸들러 확보를 여기서 끝내고,
 /// 실제 화면 조립은 모듈 내부의 ``MyPageView``가 맡는다.
-public struct MyPageFeatureView: View {
+public struct MyPageFeatureView<DetailRoot: View>: View {
 
     // MARK: - Property
 
@@ -41,6 +43,7 @@ public struct MyPageFeatureView: View {
     private let onOpenBusinessCard: (BusinessCardEntry) -> Void
     private let onOpenStudy: () -> Void
     private let onOpenProjects: () -> Void
+    private let detailRoot: (AnyView) -> DetailRoot
 
     // MARK: - Init
 
@@ -53,21 +56,143 @@ public struct MyPageFeatureView: View {
     public init(
         onOpenBusinessCard: @escaping (BusinessCardEntry) -> Void,
         onOpenStudy: @escaping () -> Void,
-        onOpenProjects: @escaping () -> Void
+        onOpenProjects: @escaping () -> Void,
+        @ViewBuilder detailRoot: @escaping (AnyView) -> DetailRoot
     ) {
         self.onOpenBusinessCard = onOpenBusinessCard
         self.onOpenStudy = onOpenStudy
         self.onOpenProjects = onOpenProjects
+        self.detailRoot = detailRoot
     }
 
     // MARK: - Body
 
     public var body: some View {
-        MyPageView(
+        MyPageSplitContent(
             container: di,
             onOpenBusinessCard: onOpenBusinessCard,
             onOpenStudy: onOpenStudy,
-            onOpenProjects: onOpenProjects
+            onOpenProjects: onOpenProjects,
+            detailRoot: detailRoot
         )
+    }
+}
+
+private struct MyPageSplitContent<DetailRoot: View>: View {
+    @State private var viewModel: MyPageViewModel
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var compactColumn: NavigationSplitViewColumn = .sidebar
+    @State private var replaceablePath: NavigationPath?
+    @State private var isOverviewSelected = false
+    @Environment(PathStore.self) private var pathStore
+    let container: DIContainer
+    let onOpenBusinessCard: (BusinessCardEntry) -> Void
+    let onOpenStudy: () -> Void
+    let onOpenProjects: () -> Void
+    let detailRoot: (AnyView) -> DetailRoot
+
+    init(
+        container: DIContainer,
+        onOpenBusinessCard: @escaping (BusinessCardEntry) -> Void,
+        onOpenStudy: @escaping () -> Void,
+        onOpenProjects: @escaping () -> Void,
+        @ViewBuilder detailRoot: @escaping (AnyView) -> DetailRoot
+    ) {
+        self.container = container
+        self.onOpenBusinessCard = onOpenBusinessCard
+        self.onOpenStudy = onOpenStudy
+        self.onOpenProjects = onOpenProjects
+        self.detailRoot = detailRoot
+        _viewModel = State(initialValue: MyPageViewModel(container: container))
+    }
+
+    var body: some View {
+        NavigationSplitView(
+            columnVisibility: $columnVisibility,
+            preferredCompactColumn: $compactColumn
+        ) {
+            page(showsOverview: false)
+                .disabled(!canSelect)
+                .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 380)
+        } detail: {
+            NavigationStack(path: Binding(
+                get: { pathStore[.mypage] },
+                set: { pathStore[.mypage] = $0 }
+            )) {
+                detailRoot(AnyView(page(showsOverview: true)))
+                    .navigationDestination(for: MyPageDestination.self) { destination in
+                        MyPageRoutingView(destination: destination, container: container)
+                    }
+            }
+        }
+        .navigationSplitViewStyle(.balanced)
+        .onChange(of: horizontalSizeClass) { _, sizeClass in
+            if sizeClass == .regular { columnVisibility = .all }
+        }
+        .onChange(of: pathStore.depth(of: .mypage), initial: true) { _, depth in
+            compactColumn = depth == 0 && !isOverviewSelected ? .sidebar : .detail
+            if depth == 0 { replaceablePath = nil }
+        }
+    }
+
+    private var canSelect: Bool {
+        MyPageSplitSelection.canReplace(path: pathStore[.mypage], knownReadOnlyPath: replaceablePath)
+    }
+
+    private func page(showsOverview: Bool) -> some View {
+        MyPageView(
+            container: container,
+            onOpenBusinessCard: { entry in openExternal { onOpenBusinessCard(entry) } },
+            onOpenStudy: { openExternal(onOpenStudy) },
+            onOpenProjects: { openExternal(onOpenProjects) },
+            viewModel: viewModel,
+            showsOverview: showsOverview,
+            onShowOverview: showOverview,
+            onSelectDestination: select
+        )
+    }
+
+    private func showOverview() {
+        guard canSelect else { return }
+        isOverviewSelected = true
+        pathStore[.mypage] = NavigationPath()
+        replaceablePath = nil
+        compactColumn = .detail
+    }
+
+    private func select(_ destination: MyPageDestination) {
+        guard canSelect else { return }
+        isOverviewSelected = false
+        var path = NavigationPath()
+        path.append(destination)
+        replaceablePath = MyPageSplitSelection.isReadOnly(destination) ? path : nil
+        pathStore[.mypage] = path
+        compactColumn = .detail
+    }
+
+    private func openExternal(_ action: () -> Void) {
+        guard canSelect else { return }
+        isOverviewSelected = false
+        pathStore[.mypage] = NavigationPath()
+        replaceablePath = nil
+        action()
+        compactColumn = .detail
+    }
+}
+
+/// 편집·인증 및 알 수 없는 경로는 사이드바 선택으로 교체하지 않는다.
+enum MyPageSplitSelection {
+    static func canReplace(path: NavigationPath, knownReadOnlyPath: NavigationPath?) -> Bool {
+        guard !path.isEmpty else { return true }
+        guard let knownReadOnlyPath else { return false }
+        return path == knownReadOnlyPath
+    }
+
+    static func isReadOnly(_ destination: MyPageDestination) -> Bool {
+        switch destination {
+        case .activityLogs, .certificates, .myActivePosts: true
+        case .cardEdit, .settings, .changeEmail, .changePassword, .registerPassword: false
+        }
     }
 }

@@ -148,6 +148,35 @@ struct NoticeEditorWriteTests {
         return editor
     }
 
+    @Test func successfulCreateInvalidatesPersistentList() async {
+        let editor = makeEditor(WriteUseCase())
+        await confirmation("서버 저장 후 목록 갱신", expectedCount: 1) { changed in
+            let observer = NotificationCenter.default.addObserver(
+                forName: .noticeContentDidChange, object: editor, queue: nil
+            ) { _ in changed() }
+            defer { NotificationCenter.default.removeObserver(observer) }
+
+            await editor.createNewNotice()
+            #expect(editor.createState.value?.id == "42")
+        }
+    }
+
+    @Test func partiallyCreatedNoticeAlsoInvalidatesPersistentList() async {
+        let useCase = WriteUseCase()
+        useCase.failLinks = true
+        let editor = makeEditor(useCase)
+        editor.noticeLinks = [NoticeLinkItem(link: "https://example.com")]
+        await confirmation("일부 저장도 목록에 반영", expectedCount: 1) { changed in
+            let observer = NotificationCenter.default.addObserver(
+                forName: .noticeContentDidChange, object: editor, queue: nil
+            ) { _ in changed() }
+            defer { NotificationCenter.default.removeObserver(observer) }
+
+            await editor.createNewNotice()
+            #expect(editor.pendingCreatedNotice?.id == "42")
+        }
+    }
+
     @Test func linkFailureRetriesSameNoticeAndRetainsDraft() async {
         let useCase = WriteUseCase()
         useCase.failLinks = true

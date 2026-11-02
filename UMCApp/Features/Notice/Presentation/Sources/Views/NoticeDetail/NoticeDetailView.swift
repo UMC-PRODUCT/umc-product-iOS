@@ -40,8 +40,8 @@ public struct NoticeDetailView: View {
     // MARK: - Constants
     fileprivate enum Constants {
         static let profileSize: CGSize = .init(width: 20, height: 20)
-        static let horizontalPadding: CGFloat = DefaultConstant.defaultSafeHorizon
-        static let topSectionSpacing: CGFloat = DefaultSpacing.spacing16
+        static let horizontalPadding: CGFloat = DefaultSpacing.spacing16
+        static let topSectionSpacing: CGFloat = DefaultSpacing.spacing12
         static let subInfoSpacing: CGFloat = DefaultSpacing.spacing8
         static let tagSpacing: CGFloat = DefaultSpacing.spacing8
         static let tagPadding: EdgeInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
@@ -127,14 +127,16 @@ public struct NoticeDetailView: View {
     /// 공지 상세 데이터가 로드된 상태의 스크롤 본문
     private func detailContent(_ data: NoticeDetail) -> some View {
         ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: Constants.topSectionSpacing) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
                 topSection(data)
                 Divider()
                     .padding(.horizontal, Constants.horizontalPadding)
                 bottomSection(data)
                 Spacer()
             }
+            .adaptiveReadableWidth()
         }
+        .accessibilityIdentifier("notice.detail.content")
         .onScrollPhaseChange { _, newPhase in
             if newPhase != .idle {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -149,6 +151,11 @@ public struct NoticeDetailView: View {
     /// 공지 제목, 작성자, 작성일, 수신 대상을 표시합니다.
     private func topSection(_ data: NoticeDetail) -> some View {
         VStack(alignment: .leading, spacing: Constants.topSectionSpacing) {
+            FlowLayout(spacing: Constants.tagSpacing) {
+                ForEach(Array(data.tags.enumerated()), id: \.offset) { _, tag in
+                    detailTag(tag)
+                }
+            }
             mainInfo(data)
             subInfo(data)
         }
@@ -159,30 +166,21 @@ public struct NoticeDetailView: View {
     private func mainInfo(_ data: NoticeDetail) -> some View {
         VStack(alignment: .leading, spacing: Constants.topSectionSpacing) {
             Text(data.title)
-                .appFont(.title2, weight: .semibold)
+                .appFont(.title1, weight: .semibold)
         }
     }
 
     /// 작성자 프로필, 작성일, 수신 대상 영역
     private func subInfo(_ data: NoticeDetail) -> some View {
         VStack(alignment: .leading, spacing: Constants.subInfoSpacing) {
-            HStack {
-                HStack {
-                    authorProfileImage(data)
-                    Text(viewModel.displayedAuthorProfileLine(for: data))
-                        .lineLimit(1)
-                }
-                Spacer()
-                Text(data.createdAt.toYearMonthDay())
+            HStack(spacing: DefaultSpacing.spacing8) {
+                authorProfileImage(data)
+                Text(viewModel.displayedAuthorProfileLine(for: data))
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .appFont(.subheadline, color: .grey700)
-
-            FlowLayout(spacing: Constants.tagSpacing) {
-                ForEach(Array(data.tags.enumerated()), id: \.offset) { _, tag in
-                    detailTag(tag)
-                }
-            }
+            Text(data.createdAt.toYearMonthDay())
         }
+        .appFont(.subheadline, color: .grey700)
     }
 
     @ViewBuilder
@@ -352,6 +350,7 @@ public struct NoticeDetailView: View {
             }
             .padding(.horizontal, Constants.horizontalPadding)
             .padding(.bottom, Constants.bottomButtonPadding)
+            .adaptiveReadableWidth()
             .transition(.opacity.combined(with: .scale(scale: 0.92, anchor: .trailing)))
             .animation(Constants.collapseAnimation, value: isReadStatusBarCollapsed)
         }

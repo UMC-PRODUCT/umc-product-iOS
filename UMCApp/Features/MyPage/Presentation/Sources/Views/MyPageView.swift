@@ -21,7 +21,7 @@ import UMCFoundation
 /// 기존 섹션 7종(외부 링크·설정·법률·정보·
 /// 소셜 연동·회원 관리·UMC 채널)은 ``MyPageSettingsView``로 옮겨갔고, 툴바 ⚙ 버튼으로 진입한다.
 ///
-/// - Important: 자체 `NavigationStack`을 만들지 않는다. 탭별 스택은 상위 탭 셸이 소유한다.
+/// - Important: 탐색 스택은 상위 `MyPageFeatureView`의 상세 열이 소유한다.
 struct MyPageView: View {
 
     // MARK: - Property
@@ -33,6 +33,9 @@ struct MyPageView: View {
 
     @Environment(PathStore.self) private var pathStore
 
+    private let showsOverview: Bool
+    private let onShowOverview: () -> Void
+    private let onSelectDestination: (MyPageDestination) -> Void
     private let container: DIContainer
     private let onOpenBusinessCard: (BusinessCardEntry) -> Void
     private let onOpenStudy: () -> Void
@@ -51,8 +54,14 @@ struct MyPageView: View {
         onOpenBusinessCard: @escaping (BusinessCardEntry) -> Void,
         onOpenStudy: @escaping () -> Void,
         onOpenProjects: @escaping () -> Void,
-        viewModel: MyPageViewModel? = nil
+        viewModel: MyPageViewModel? = nil,
+        showsOverview: Bool = false,
+        onShowOverview: @escaping () -> Void = {},
+        onSelectDestination: @escaping (MyPageDestination) -> Void
     ) {
+        self.showsOverview = showsOverview
+        self.onShowOverview = onShowOverview
+        self.onSelectDestination = onSelectDestination
         self.container = container
         self.onOpenBusinessCard = onOpenBusinessCard
         self.onOpenStudy = onOpenStudy
@@ -63,72 +72,42 @@ struct MyPageView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
-                cardContent
-
-                VStack(alignment: .leading, spacing: Metrics.sectionGroupSpacing) {
-                    BusinessCardSection(
-                        receivedCardCount: viewModel.activityStat.receivedCardCount,
-                        onReceivedCards: { onOpenBusinessCard(.receivedCards) },
-                        onCardEdit: cardEditAction,
-                        isCardEditPending: viewModel.isCardEditPending
-                    )
-
-                    MyActivitySection(
-                        studyCount: viewModel.activityStat.studyCount,
-                        activityCount: viewModel.activityStat.activityCount,
-                        onStudyTap: onOpenStudy,
-                        onActivityTap: activityLogsAction,
-                        // 활동 이력도 「내 정보 편집」과 같은 프로필 스냅샷을 기다린다.
-                        isActivityPending: viewModel.isCardEditPending,
-                        onCertificateTap: {
-                            pathStore.push(MyPageDestination.certificates, on: .mypage)
-                        },
-                        onProjectTap: onOpenProjects
-                    )
-
-                    MyActiveLogSection { logType in
-                        pathStore.push(
-                            MyPageDestination.myActivePosts(logType: logType), on: .mypage
-                        )
-                    }
-                }
+        Group {
+            if showsOverview {
+                profileOverview
+            } else {
+                sidebar
             }
-            .padding(.horizontal, Metrics.contentHorizontalPadding)
-            .padding(.top, DefaultSpacing.spacing16)
-            .padding(.bottom, DefaultSpacing.spacing24)
         }
         // 시안(12766:98169)은 34pt 타이틀과 ⚙ 버튼이 **한 행**이다 — Toolbar-Top 하나가
         // Title 과 Trailing 을 나란히 담는다. `.large` 는 타이틀을 바 아래 별도 행으로
         // 내려 둘이 위아래로 갈리므로 `.inlineLarge`(툴바 안의 큰 타이틀)를 쓴다.
-        .navigationInlineLarge(naviTitle: NavigationTitle.MyPage.root)
+        .navigationInlineLarge(naviTitle: showsOverview ? NavigationTitle.MyPage.profileOverview : .root)
         .umcDefaultBackground()
-        .alertPrompt(item: $viewModel.alertPrompt)
+        .alertPrompt(item: showsOverview ? .constant(nil) : $viewModel.alertPrompt)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    pathStore.push(MyPageDestination.settings, on: .mypage)
+                    onSelectDestination(.settings)
                 } label: {
                     Image(systemName: "gearshape")
                 }
                 .accessibilityLabel("설정")
             }
         }
-        .navigationDestination(for: MyPageDestination.self) { destination in
-            MyPageRoutingView(destination: destination, container: container)
-        }
         .task {
+            guard !showsOverview else { return }
             await viewModel.fetchProfile()
         }
         .task {
+            guard !showsOverview else { return }
             await viewModel.loadBusinessCard()
         }
         // 내 정보 편집에서 이미지·링크를 수정하고 돌아오면 카드가 옛 스냅샷으로 남는다.
         // 수정 API가 세션 캐시를 갱신해 두므로 여기서는 추가 왕복 없이 최신 값을 다시 읽는다.
         // 명함도 같은 정본 프로필 캐시에서 파생되므로 함께 다시 읽는다.
         .onChange(of: pathStore.depth(of: .mypage)) { previousDepth, currentDepth in
-            guard currentDepth < previousDepth else { return }
+            guard !showsOverview, currentDepth < previousDepth else { return }
             Task {
                 await viewModel.fetchProfile()
                 await viewModel.loadBusinessCard()
@@ -137,6 +116,72 @@ struct MyPageView: View {
     }
 
     // MARK: - View Component
+
+    private var sidebar: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Metrics.sectionGroupSpacing) {
+                Button(action: onShowOverview) {
+                    HStack(spacing: DefaultSpacing.spacing12) {
+                        Image(systemName: "person.crop.circle")
+                            .font(.title)
+                        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                            Text(viewModel.profileData.value?.challengerInfo.nickname ?? "내 프로필")
+                                .appFont(.body, weight: .semibold, color: .grey900)
+                            Text("프로필 개요")
+                                .appFont(.caption1, color: .grey500)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                    }
+                    .padding(.vertical, DefaultSpacing.spacing8)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                BusinessCardSection(
+                    receivedCardCount: viewModel.activityStat.receivedCardCount,
+                    onReceivedCards: { onOpenBusinessCard(.receivedCards) },
+                    onCardEdit: cardEditAction,
+                    isCardEditPending: viewModel.isCardEditPending
+                )
+                MyActivitySection(
+                    studyCount: viewModel.activityStat.studyCount,
+                    activityCount: viewModel.activityStat.activityCount,
+                    onStudyTap: onOpenStudy,
+                    onActivityTap: activityLogsAction,
+                    isActivityPending: viewModel.isCardEditPending,
+                    onCertificateTap: { onSelectDestination(.certificates) },
+                    onProjectTap: onOpenProjects
+                )
+                MyActiveLogSection { onSelectDestination(.myActivePosts(logType: $0)) }
+            }
+            .padding(.horizontal, Metrics.contentHorizontalPadding)
+            .padding(.vertical, DefaultSpacing.spacing16)
+        }
+    }
+
+    /// 빈 선택 화면 대신, 현재 프로필 스냅샷으로 구성한 실제 개요를 표시한다.
+    private var profileOverview: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
+                cardContent
+                if let profile = viewModel.profileData.value {
+                    VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+                        Text("내 정보")
+                            .appFont(.body, weight: .semibold, color: .grey900)
+                        LabeledContent("이름", value: profile.challengerInfo.name)
+                        LabeledContent("닉네임", value: profile.challengerInfo.nickname)
+                        LabeledContent("학교", value: profile.challengerInfo.schoolName)
+                        LabeledContent("활동 이력", value: "\(profile.activityLogs.count)개")
+                    }
+                    .padding(DefaultSpacing.spacing16)
+                    .background(Color.white, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
+                }
+            }
+            .adaptiveReadableWidth(maximum: 600)
+            .padding(DefaultSpacing.spacing16)
+        }
+    }
 
     @ViewBuilder
     private var cardContent: some View {
@@ -178,7 +223,7 @@ struct MyPageView: View {
     /// (어긋난 값으로 편집이 시작되는 것을 막기 위함)다.
     private var cardEditAction: (() -> Void)? {
         guard let profile = viewModel.profileData.value else { return nil }
-        return { pathStore.push(MyPageDestination.cardEdit(profileData: profile), on: .mypage) }
+        return { onSelectDestination(.cardEdit(profileData: profile)) }
     }
 
     /// 활동 이력 목록으로 이동하는 액션. ``cardEditAction``과 같은 규칙 — 스냅샷이 없으면
@@ -187,7 +232,7 @@ struct MyPageView: View {
     private var activityLogsAction: (() -> Void)? {
         guard let profile = viewModel.profileData.value else { return nil }
         return {
-            pathStore.push(MyPageDestination.activityLogs(profile.activityLogs), on: .mypage)
+            onSelectDestination(.activityLogs(profile.activityLogs))
         }
     }
 

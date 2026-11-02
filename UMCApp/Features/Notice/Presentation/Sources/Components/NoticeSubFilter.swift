@@ -15,6 +15,7 @@ import NoticeDomain
 public struct NoticeSubFilter: View, Equatable {
 
     @Bindable var viewModel: NoticeViewModel
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     public static func == (lhs: NoticeSubFilter, rhs: NoticeSubFilter) -> Bool {
         lhs.viewModel.selectedSubFilter == rhs.viewModel.selectedSubFilter &&
@@ -29,14 +30,18 @@ public struct NoticeSubFilter: View, Equatable {
     }
 
     public var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Constants.hstackSpacing) {
-                ForEach(viewModel.subFilterChips) { chip in
-                    chipView(for: chip)
-                }
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Constants.hstackSpacing))
+            : AnyLayout(FlowLayout(spacing: Constants.hstackSpacing))
+
+        layout {
+            ForEach(viewModel.subFilterChips) { chip in
+                chipView(for: chip)
+                    .frame(minHeight: DefaultConstant.minimumTouchTarget)
             }
-            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
+        .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+        .adaptiveReadableWidth()
     }
 
     /// 칩 타입에 따라 ChipButton 또는 PartFilterMenu를 반환합니다.

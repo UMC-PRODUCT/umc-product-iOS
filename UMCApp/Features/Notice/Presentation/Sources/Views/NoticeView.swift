@@ -17,6 +17,8 @@ import NoticeDomain
 public struct NoticeView: View {
     
     // MARK: - Properties
+    private let isSidebar: Bool
+    private let selectedNoticeID: String?
     private let onNoticeSelected: (NoticeDetail) -> Void
     private let onStaffNoticeSelected: () -> Void
     @AppStorage(AppStorageKey.schoolName) private var schoolName: String = ""
@@ -38,9 +40,13 @@ public struct NoticeView: View {
     public init(
         container: DIContainer,
         errorHandler: ErrorHandler,
+        isSidebar: Bool = false,
+        selectedNoticeID: String? = nil,
         onNoticeSelected: @escaping (NoticeDetail) -> Void,
         onStaffNoticeSelected: @escaping () -> Void
     ) {
+        self.isSidebar = isSidebar
+        self.selectedNoticeID = selectedNoticeID
         self.onNoticeSelected = onNoticeSelected
         self.onStaffNoticeSelected = onStaffNoticeSelected
         _viewModel = State(
@@ -107,6 +113,9 @@ public struct NoticeView: View {
             .onReceive(NotificationCenter.default.publisher(for: .generationMappingsUpdated)) { _ in
                 viewModel.fetchGisuList()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .noticeContentDidChange)) { _ in
+                Task { await reloadCurrentNoticeList() }
+            }
             .onDisappear {
                 searchTask?.cancel()
             }
@@ -151,9 +160,13 @@ public struct NoticeView: View {
     private func availableContent(_ data: [NoticeItemModel]) -> some View {
         List(data) { item in
             noticeRow(item)
+            .adaptiveReadableWidth()
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
-            .listRowInsets(DefaultConstant.defaultListPadding)
+            .listRowInsets(isSidebar ? EdgeInsets(
+                top: DefaultSpacing.spacing4, leading: DefaultSpacing.spacing16,
+                bottom: DefaultSpacing.spacing4, trailing: DefaultSpacing.spacing16
+            ) : DefaultConstant.defaultListPadding)
         }
         .overlay(alignment: .bottom) {
             if viewModel.isLoadingMore {
@@ -251,7 +264,11 @@ public struct NoticeView: View {
     // MARK: - Row
     /// 공지 셀 탭/무한스크롤 트리거를 묶은 row 구성입니다.
     private func noticeRow(_ item: NoticeItemModel) -> some View {
-        NoticeItem(model: item) {
+        NoticeItem(
+            model: item,
+            isSidebar: isSidebar,
+            isSelected: selectedNoticeID == item.noticeId
+        ) {
             onNoticeSelected(item.toNoticeDetail())
         }
         .task(id: item.id) {

@@ -80,6 +80,7 @@ struct ScheduleHeader: View {
             .fixedSize(horizontal: !dynamicTypeSize.isAccessibilitySize, vertical: true)
             .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil)
         }
+        .accessibilityIdentifier("home.calendar.month")
     }
 
     private var modePicker: some View {

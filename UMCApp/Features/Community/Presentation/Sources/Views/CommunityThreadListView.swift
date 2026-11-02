@@ -35,22 +35,23 @@ struct CommunityThreadListView: View {
     @State private var viewModel: CommunityThreadListViewModel
 
     private let onThreadSelected: (CommunityThread) -> Void
+    private let selectedThreadID: String?
 
     /// 최근 검색어를 고른 뒤 키보드를 내려 결과를 가리지 않게 한다.
     @FocusState private var isSearchFieldFocused: Bool
 
-    @Environment(\.di) private var di
-    @Environment(ErrorHandler.self) private var errorHandler
     @Environment(PathStore.self) private var pathStore
 
     // MARK: - Init
 
     init(
         viewModel: CommunityThreadListViewModel,
+        selectedThreadID: String? = nil,
         onThreadSelected: @escaping (CommunityThread) -> Void
     ) {
         _viewModel = State(initialValue: viewModel)
         self.onThreadSelected = onThreadSelected
+        self.selectedThreadID = selectedThreadID
     }
 
     // MARK: - Body
@@ -58,8 +59,8 @@ struct CommunityThreadListView: View {
     var body: some View {
         content
             .overlay { recentSearchList }
-            // 필터·검색 버튼과 타이틀을 한 행에 두려고 `.inlineLarge` 를 쓴다 (마이페이지와 동일).
-            .navigationInlineLarge(naviTitle: NavigationTitle.Community.root)
+            .navigationTitle(NavigationTitle.Community.root.rawValue)
+            .navigationBarTitleDisplayMode(.inline)
             .umcDefaultBackground()
             .searchable(text: $viewModel.searchText, prompt: Constants.searchPrompt)
             .searchToolbarBehavior(.minimize)
@@ -78,19 +79,7 @@ struct CommunityThreadListView: View {
             .alertPrompt(item: $viewModel.alertPrompt)
             .task { await viewModel.load() }
             .task { await viewModel.observeRealtime() }
-            // 목적지 등록이 여기 있는 이유: 생성 화면이 돌려준 스레드를 `viewModel` 에 바로
-            // 꽂아야 한다. 상위(`CommunityFeatureView`)는 이 VM 인스턴스를 잡고 있지 않다.
-            .navigationDestination(for: CommunityDestination.self) { destination in
-                CommunityRoutingView(
-                    destination: destination,
-                    container: di,
-                    errorHandler: errorHandler,
-                    onThreadCreated: { viewModel.insertCreated($0) },
-                    onThreadUpdated: { viewModel.applyUpdated($0) },
-                    onThreadRemoved: { viewModel.removeThread(threadId: $0) },
-                    onThreadToggled: { viewModel.applyToggles($0) }
-                )
-            }
+
     }
 
     // MARK: - View Component
@@ -191,19 +180,22 @@ struct CommunityThreadListView: View {
     /// 행 + 스와이프. `편집` 은 권한이 있는 사람에게만 열린다 (`canEdit`).
     private func row(_ thread: CommunityThread) -> some View {
         Button {
-            // 리스트 뷰는 방에서 pop 해도 계층을 떠난 적이 없어 `.task` 가 다시 돌지 않는다.
-            // 여기서 내리지 않으면 읽고 온 배지가 다음 수동 새로고침까지 남는다.
-            viewModel.markThreadRead(threadId: thread.id)
-            // 결과를 골라 들어갔다는 건 그 검색어가 쓸모 있었다는 뜻이다. 검색 중이 아니면 무시된다.
-            viewModel.recordCurrentSearch()
             onThreadSelected(thread)
         } label: {
             ThreadListRow(
                 thread: thread,
                 hidesPreview: viewModel.blockState.hidesUnverifiedPreviews
             )
+            .overlay {
+                if selectedThreadID == thread.id {
+                    RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
+                        .strokeBorder(Color.teal500.opacity(0.5), lineWidth: 1)
+                        .allowsHitTesting(false)
+                }
+            }
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selectedThreadID == thread.id ? .isSelected : [])
         .threadCardRow()
         .swipeActions(edge: .leading, allowsFullSwipe: false) {
             Button {

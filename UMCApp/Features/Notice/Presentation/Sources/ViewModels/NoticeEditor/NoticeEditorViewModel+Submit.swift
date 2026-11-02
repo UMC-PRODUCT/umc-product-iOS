@@ -37,6 +37,13 @@ extension NoticeEditorViewModel {
         guard !createState.isLoading else { return }
         createState = .loading
 
+        var didMutateNotice = false
+        defer {
+            if didMutateNotice {
+                NotificationCenter.default.post(name: .noticeContentDidChange, object: self)
+            }
+        }
+
         do {
             let imageIds = try await uploadPendingImagesIfNeeded()
             let targetInfo = buildTargetInfo()
@@ -59,6 +66,7 @@ extension NoticeEditorViewModel {
                 pendingCreatedNotice = notice
             }
 
+            didMutateNotice = true
             if !links.isEmpty || !notice.links.isEmpty {
                 _ = try await noticeUseCase.updateLinks(noticeId: notice.id, links: links)
             }
@@ -125,9 +133,15 @@ extension NoticeEditorViewModel {
         guard !createState.isLoading else { return }
         createState = .loading
 
+        var didUpdateAnyField = false
+        defer {
+            if didUpdateAnyField {
+                NotificationCenter.default.post(name: .noticeContentDidChange, object: self)
+            }
+        }
+
         do {
             var latestNotice: NoticeDetail?
-            var didUpdateAnyField = false
 
             // 변경 감지된 필드만 개별 API 호출
             if hasBaseContentChanges {

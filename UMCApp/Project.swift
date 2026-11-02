@@ -192,6 +192,16 @@ let project = Project(
             ],
             dependencies: [.target(name: "UMCApp")]
         ),
+        .target(
+            name: "UMCAppAdaptiveUITests",
+            destinations: [.iPhone],
+            product: .uiTests,
+            bundleId: "com.umc.product.adaptiveuitests",
+            deploymentTargets: .iOS("26.4"),
+            infoPlist: .default,
+            buildableFolders: ["UMCApp/UITests"],
+            dependencies: [.target(name: "UMCApp")]
+        ),
     ],
     schemes: [
         .scheme(

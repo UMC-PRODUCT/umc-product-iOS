@@ -14,12 +14,9 @@ import CoreDesignSystem
 
 fileprivate enum Constants {
     static let cornerRadius: CGFloat = 16
-    /// 버블 최대 폭. `UIScreen.main` 은 iOS 26 에서 사용할 수 없고, 화면 비율을 쓰려면
-    /// 컨테이너 폭을 위에서 내려받는 배선이 붙는다. 아이폰 폭(320~440pt)에서 고정 280pt 면
-    /// 시안 비율(약 72%)과 맞고, 큰 화면에서는 줄 길이가 짧아져 오히려 읽기 좋다.
-    /// 긴 메시지에만 걸리는 상한이다 — 짧은 본문은 ``BubbleWidthLayout`` 이 내용 폭으로 줄인다.
-    /// `frame(maxWidth:)` 는 부모가 더 넓게 제안하면 본문과 상관없이 이 폭까지 늘어나 쓰지 않는다.
+    /// 좁은 화면의 말풍선 상한. 넓은 컨테이너에서는 가용 폭에 맞춰 본문을 더 펼친다.
     static let maxBubbleWidth: CGFloat = 280
+    static let expandedBubbleWidth: CGFloat = 520
     /// HIG 최소 탭 타깃. 재시도는 전송 실패에서 벗어나는 유일한 컨트롤이라 아이콘 크기로 두면
     /// 미스탭 비용이 크다.
     static let minimumTapTarget: CGFloat = 44
@@ -189,7 +186,10 @@ struct MessageBubble: View {
     /// 지워 두면 메타 조회가 실패한 순간 링크에 닿을 방법이 사라진다 — 남겨 두면 그 경우가
     /// 그냥 "카드 없는 텍스트 링크" 가 된다.
     private var bubbleContent: some View {
-        BubbleWidthLayout(maxWidth: Constants.maxBubbleWidth) {
+        BubbleWidthLayout(
+            maxWidth: Constants.maxBubbleWidth,
+            expandedMaxWidth: Constants.expandedBubbleWidth
+        ) {
             VStack(
                 alignment: isMine ? .trailing : .leading,
                 spacing: DefaultSpacing.spacing8
@@ -545,6 +545,7 @@ struct BubbleWidthLayout: Layout {
     // MARK: - Property
 
     let maxWidth: CGFloat
+    var expandedMaxWidth: CGFloat? = nil
 
     // MARK: - Layout
 
@@ -555,7 +556,12 @@ struct BubbleWidthLayout: Layout {
     ) -> CGSize {
         guard let subview = subviews.first else { return .zero }
         let idealWidth = subview.sizeThatFits(.unspecified).width
-        let width = min(idealWidth, maxWidth, proposal.width ?? .infinity)
+        let availableWidth = proposal.width ?? maxWidth
+        // 메시지의 발신/수신 방향이 보이도록 여유를 두되, 긴 본문을 280pt에 가두지 않는다.
+        let limit = expandedMaxWidth.map {
+            min($0, max(maxWidth, availableWidth * 2 / 3))
+        } ?? maxWidth
+        let width = min(idealWidth, limit, availableWidth)
         return subview.sizeThatFits(ProposedViewSize(width: width, height: nil))
     }
 

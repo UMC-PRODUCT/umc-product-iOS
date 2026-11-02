@@ -13,12 +13,13 @@ import UMCFoundation
 
 /// 출석 가능한 세션 한 건을 표시하는 카드
 ///
-/// 카테고리 아이콘과 제목·시간, 출석 상태 배지와 셰브론을 한 줄에 담습니다.
+/// 작은 아이콘 옆에 제목과 시간·상태를 두 줄로 모아 표시합니다.
 /// 상위 리스트에서 탭하면 지도·출석 버튼이 있는 상세가 펼쳐집니다.
 struct ChallengerSessionCard: View, Equatable {
 
     // MARK: - Property
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     private let session: Session
     private let isExpanded: Bool
     private let onTap: () -> Void
@@ -48,32 +49,49 @@ struct ChallengerSessionCard: View, Equatable {
     // MARK: - Constants
 
     fileprivate enum Constants {
-        static let titleLineLimit: Int = 3
+        static let titleLineLimit: Int = 2
     }
 
     // MARK: - Body
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: DefaultSpacing.spacing16) {
-                CardIconImage(
-                    image: info.category.symbol,
-                    color: info.category.color,
-                    isLoading: .constant(false)
+            HStack(alignment: .center, spacing: DefaultSpacing.spacing12) {
+                Image(systemName: info.category.symbol)
+                    .font(.app(.body))
+                    .foregroundStyle(info.category.color)
+                    .frame(width: DefaultSpacing.spacing32, height: DefaultSpacing.spacing32)
+                    .background(info.category.color.opacity(0.12), in: .rect(cornerRadius: DefaultSpacing.spacing8))
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                    Text(info.title)
+                        .appFont(.callout, weight: .semibold, color: .grey900)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : Constants.titleLineLimit)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    metadataLayout {
+                        Text(info.startTime.timeRange(to: info.endTime))
+                            .appFont(.subheadline, color: .grey600)
+
+                        if !(isExpanded && session.attendanceStatus == .pendingApproval) {
+                            statusBadge
+                        }
+                    }
+                }
+
+                Image(
+                    systemName: isExpanded
+                        ? DefaultConstant.chevronUpImage
+                        : DefaultConstant.chevronDownImage
                 )
-                contentSection
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                statusSection
+                .font(.app(.caption1))
+                .foregroundStyle(Color.grey400)
             }
-            .padding(DefaultConstant.defaultListPadding)
-            .background {
-                ConcentricRectangle(
-                    corners: .concentric(minimum: DefaultConstant.concentricRadius),
-                    isUniform: true
-                )
-                .fill(Color.grey000)
-                .cardShadow()
-            }
+            .padding(.horizontal, DefaultSpacing.spacing12)
+            .padding(.vertical, DefaultSpacing.spacing8)
+            .frame(minHeight: DefaultConstant.minimumTouchTarget)
+            .background(Color.Surface.content, in: .rect(cornerRadius: DefaultSpacing.spacing16))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -83,31 +101,10 @@ struct ChallengerSessionCard: View, Equatable {
 
     // MARK: - View Components
 
-    private var contentSection: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            Text(info.title)
-                .appFont(.callout, weight: .semibold, color: .grey900)
-                .lineLimit(Constants.titleLineLimit)
-
-            Text(info.startTime.timeRange(to: info.endTime))
-                .appFont(.subheadline, color: .grey500)
-        }
-    }
-
-    private var statusSection: some View {
-        HStack {
-            // 펼침 상태 + 승인 대기일 때 배지 숨김
-            if !(isExpanded && session.attendanceStatus == .pendingApproval) {
-                statusBadge
-            }
-
-            Image(
-                systemName: isExpanded
-                    ? DefaultConstant.chevronUpImage
-                    : DefaultConstant.chevronDownImage
-            )
-            .foregroundStyle(Color.grey400)
-        }
+    private var metadataLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: DefaultSpacing.spacing4))
+            : AnyLayout(FlowLayout(spacing: DefaultSpacing.spacing8))
     }
 
     /// 출석 상태 배지
@@ -118,7 +115,8 @@ struct ChallengerSessionCard: View, Equatable {
                 weight: .semibold,
                 color: session.attendanceStatus.fontColor
             )
-            .padding(DefaultConstant.badgePadding)
+            .padding(.horizontal, DefaultSpacing.spacing8)
+            .padding(.vertical, DefaultSpacing.spacing4)
             .background(session.attendanceStatus.backgroundColor, in: Capsule())
     }
 }

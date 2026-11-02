@@ -8,6 +8,7 @@
 import SwiftUI
 import CommunityDomain
 import CoreDesignSystem
+import CoreUIComponents
 
 // MARK: - Constants
 
@@ -24,7 +25,7 @@ fileprivate enum Constants {
 
 /// 스레드 리스트 한 행. 흰 카드 하나가 곧 한 행이다.
 ///
-/// 위 줄에 이모지·제목·카테고리 칩·상태 아이콘·시각, 아래 줄에 마지막 메시지와 미읽음 배지.
+/// 제목·시각과 최근 메시지·상태 두 줄로 표시해 사이드바의 목록 밀도를 유지한다.
 ///
 /// 안읽음/읽음은 **미읽음 배지 하나로만** 가른다. 카카오톡·iMessage 와 같은 방식으로, 배경·제목·
 /// 아이콘·미리보기·시각은 두 상태가 완전히 같다.
@@ -37,7 +38,7 @@ struct ThreadListRow: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    @ScaledMetric(relativeTo: .title2) private var scaledIconSize = ThreadCardMetrics.iconSize
+    @ScaledMetric(relativeTo: .title2) private var scaledIconSize = DefaultSpacing.spacing32
 
     // MARK: - Body
 
@@ -48,14 +49,12 @@ struct ThreadListRow: View {
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                 titleLine
                 previewLine
-                // 접근성 크기에서는 칩과 시각을 제목 줄에서 내린다. 한 줄에 두면 제목이
-                // 몇 글자만 남고 칩이 행을 넘긴다.
-                if isCompactMetadata {
-                    metadataLine
-                }
             }
         }
-        .threadCard()
+        .padding(.horizontal, DefaultSpacing.spacing16)
+        .padding(.vertical, DefaultSpacing.spacing8)
+        .frame(minHeight: DefaultConstant.minimumTouchTarget)
+        .background(Color.Surface.content, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
         .contentShape(.rect(cornerRadius: DefaultConstant.cornerRadius))
     }
 
@@ -84,35 +83,14 @@ struct ThreadListRow: View {
     private var titleLine: some View {
         HStack(spacing: DefaultSpacing.spacing4) {
             Text(thread.title)
-                .appFont(.subheadline, weight: .semibold, color: .grey900)
+                .appFont(.callout, weight: .semibold, color: .grey900)
                 .lineLimit(lineLimit)
                 // 칩·아이콘이 먼저 자리를 가져가면 제목이 말줄임만 남는다.
                 .layoutPriority(1)
 
-            if !isCompactMetadata {
-                ThreadCategoryChip(category: thread.category)
-            }
-
-            // 행 전체가 Button 이라 자식 레이블이 합쳐진다. 레이블을 주지 않으면
-            // 한국어 제목 사이에 SF Symbol 기본 영문 이름이 그대로 읽힌다.
-            if thread.isPinned {
-                Image(systemName: "pin.fill")
-                    .foregroundStyle(Color.grey500)
-                    .imageScale(.small)
-                    .accessibilityLabel("고정됨")
-            }
-            if thread.isMuted {
-                Image(systemName: "bell.slash.fill")
-                    .foregroundStyle(Color.grey500)
-                    .imageScale(.small)
-                    .accessibilityLabel("알림 꺼짐")
-            }
-
             Spacer(minLength: DefaultSpacing.spacing4)
 
-            if !isCompactMetadata {
-                timeLabel
-            }
+            timeLabel
         }
     }
 
@@ -120,7 +98,7 @@ struct ThreadListRow: View {
     private var timeLabel: some View {
         if let lastMessage = thread.lastMessage {
             Text(lastMessage.createdAt.relativeListLabel)
-                .appFont(.caption1, color: .grey500)
+                .appFont(.caption1, color: .grey600)
                 .lineLimit(1)
         }
     }
@@ -128,11 +106,27 @@ struct ThreadListRow: View {
     private var previewLine: some View {
         HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
             Text(previewText)
-                .appFont(.footnote, color: .grey500)
+                .appFont(.footnote, color: .grey600)
                 .lineLimit(isCompactMetadata ? Constants.accessibilityLineLimit
                                              : Constants.previewLineLimit)
 
             Spacer(minLength: DefaultSpacing.spacing4)
+
+            Text(thread.category.displayName)
+                .appFont(.caption2, color: .grey600)
+                .lineLimit(1)
+            if thread.isPinned {
+                Image(systemName: "pin.fill")
+                    .font(.caption2)
+                    .foregroundStyle(Color.grey600)
+                    .accessibilityLabel("고정됨")
+            }
+            if thread.isMuted {
+                Image(systemName: "bell.slash.fill")
+                    .font(.caption2)
+                    .foregroundStyle(Color.grey600)
+                    .accessibilityLabel("알림 꺼짐")
+            }
 
             if let badge = thread.unreadBadge {
                 // teal500 은 다크 모드에서도 채도가 유지돼 대비색은 항상 흰색이다.
@@ -145,14 +139,6 @@ struct ThreadListRow: View {
                     .background(Color.teal500, in: .capsule)
                     .accessibilityLabel("안읽음 \(badge)개")
             }
-        }
-    }
-
-    /// 접근성 크기 전용 셋째 줄. 제목 줄에서 내려온 칩과 시각을 담는다.
-    private var metadataLine: some View {
-        HStack(spacing: DefaultSpacing.spacing8) {
-            ThreadCategoryChip(category: thread.category)
-            timeLabel
         }
     }
 

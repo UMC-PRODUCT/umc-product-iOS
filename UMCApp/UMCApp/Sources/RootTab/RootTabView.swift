@@ -43,6 +43,10 @@ struct RootTabView: View {
 
     @State private var pathStore = PathStore()
     @State private var noticeLinkTask: Task<Void, Never>?
+    @State private var selectedNotice: NoticeDetail?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var noticeColumnVisibility: NavigationSplitViewVisibility = .all
+    @State private var noticeCompactColumn: NavigationSplitViewColumn = .sidebar
 
     /// 딥링크로 받은 명함 링크. 수신 모디파이어가 처리 후 비운다.
     @State private var pendingCardLink: CardLink?
@@ -154,38 +158,87 @@ struct RootTabView: View {
         }
     }
 
-    /// 탭 케이스에 따른 루트 뷰를 독립 `NavigationStack`으로 감싼다.
+    /// 공지·커뮤니티는 목록과 상세를 함께 유지하고, 다른 탭은 독립 스택을 사용합니다.
     @ViewBuilder
     private func tabRootView(_ tab: NavigationTab) -> some View {
-        NavigationStack(path: pathBinding(for: tab)) {
+        if tab == .notice {
+            noticeSplitView
+        } else if tab == .community || tab == .mypage {
             tabContent(tab)
+        } else {
+            tabNavigationStack(tab) {
+                tabContent(tab)
+            }
+        }
+    }
+
+    /// 하나의 경로를 상세 열에 바인딩해 접기·펼치기 중에도 편집과 딥링크를 보존합니다.
+    private var noticeSplitView: some View {
+        NavigationSplitView(
+            columnVisibility: $noticeColumnVisibility,
+            preferredCompactColumn: $noticeCompactColumn
+        ) {
+            tabContent(.notice)
+                .disabled(!Self.canSelectNotice(pathStore: pathStore, replacing: selectedNotice))
+                .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 380)
+        } detail: {
+            tabNavigationStack(.notice) {
+                ContentUnavailableView(
+                    "공지를 선택해 주세요",
+                    systemImage: "doc.text",
+                    description: Text("목록에서 공지를 선택하면 내용을 확인할 수 있어요.")
+                )
+                .navigationTitle("공지사항")
+                .umcDefaultBackground()
+            }
+        }
+        .navigationSplitViewStyle(.balanced)
+        .onChange(of: horizontalSizeClass) { _, sizeClass in
+            if sizeClass == .regular { noticeColumnVisibility = .all }
+        }
+        .onChange(of: pathStore.depth(of: .notice), initial: true) { _, depth in
+            noticeCompactColumn = depth == 0 ? .sidebar : .detail
+        }
+    }
+
+    private func tabNavigationStack<Content: View>(
+        _ tab: NavigationTab,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        NavigationStack(path: pathBinding(for: tab)) {
+            appDestinations(content(), tab: tab)
                 .onAppear {
                     AppAnalytics.track("screen_view", parameters: [
                         "screen_name": String(describing: tab),
                         "screen_class": "RootTabView"
                     ])
                 }
-                .navigationDestination(for: NavigationDestination.self) { destination in
-                    NavigationRoutingView(
-                        destination: destination,
-                        push: { pathStore.push($0, on: tab) }
-                    )
-                }
-                .navigationDestination(for: BusinessCardDestination.self) { destination in
-                    BusinessCardRoutingView(destination: destination, container: di)
-                }
-                .navigationDestination(for: StudyDestination.self) { _ in
-                    MyStudyFeatureView()
-                }
-                .navigationDestination(for: ProjectDestination.self) { destination in
-                    ProjectRoutingView(destination: destination, container: di)
-                }
-                #if DEBUG
-                .navigationDestination(for: BusinessCardDebugDestination.self) { _ in
-                    BusinessCardDebugView(container: di)
-                }
-                #endif
         }
+    }
+
+    /// Feature 소유 상세 스택에도 App 소유 목적지를 같은 규칙으로 등록합니다.
+    private func appDestinations<Content: View>(_ content: Content, tab: NavigationTab) -> some View {
+        content
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                NavigationRoutingView(
+                    destination: destination,
+                    push: { pathStore.push($0, on: tab) }
+                )
+            }
+            .navigationDestination(for: BusinessCardDestination.self) { destination in
+                BusinessCardRoutingView(destination: destination, container: di)
+            }
+            .navigationDestination(for: StudyDestination.self) { _ in
+                MyStudyFeatureView()
+            }
+            .navigationDestination(for: ProjectDestination.self) { destination in
+                ProjectRoutingView(destination: destination, container: di)
+            }
+            #if DEBUG
+            .navigationDestination(for: BusinessCardDebugDestination.self) { _ in
+                BusinessCardDebugView(container: di)
+            }
+            #endif
     }
 
     /// 탭별 루트 화면. 5개 탭 모두 실연결된 Feature 화면을 표시한다.
@@ -218,11 +271,14 @@ struct RootTabView: View {
             )
         case .notice:
             NoticeFeatureView(
+                isSidebar: horizontalSizeClass == .regular,
+                selectedNoticeID: pathStore.depth(of: .notice) > 0 ? selectedNotice?.id : nil,
                 onNoticeSelected: { detailItem in
-                    pathStore.push(
-                        NavigationDestination.notice(.detail(detailItem: detailItem)),
-                        on: .notice
-                    )
+                    guard Self.selectNotice(
+                        detailItem, pathStore: pathStore, replacing: selectedNotice
+                    ) else { return }
+                    selectedNotice = detailItem
+                    noticeCompactColumn = .detail
                 },
                 onStaffNoticeSelected: {
                     pathStore.push(NavigationDestination.notice(.staffNotice), on: .notice)
@@ -239,6 +295,21 @@ struct RootTabView: View {
                         NavigationDestination.notice(.detail(detailItem: detailItem)),
                         on: .community
                     )
+                },
+                detailRoot: {
+                    appDestinations(
+                        ContentUnavailableView(
+                            "스레드를 선택해 주세요",
+                            systemImage: "bubble.left.and.bubble.right",
+                            description: Text("목록에서 스레드를 선택하면 대화를 확인할 수 있어요.")
+                        )
+                        .navigationTitle("커뮤니티")
+                        .background(
+                            (horizontalSizeClass == .regular ? Color.Surface.content : Color.Surface.canvas)
+                                .ignoresSafeArea()
+                        ),
+                        tab: .community
+                    )
                 }
             )
         case .mypage:
@@ -251,7 +322,8 @@ struct RootTabView: View {
                 },
                 onOpenProjects: {
                     pathStore.push(ProjectDestination.myProjects, on: .mypage)
-                }
+                },
+                detailRoot: { overview in appDestinations(overview, tab: .mypage) }
             )
         }
     }
@@ -305,10 +377,11 @@ struct RootTabView: View {
             noticeLinkTask = Task {
                 do {
                     let useCase = di.resolve(NoticeUseCaseProtocol.self)
-                    try await Self.openNoticeLink(
+                    selectedNotice = try await Self.openNoticeLink(
                         pathStore: pathStore,
                         load: { try await useCase.getDetailNotice(noticeId: noticeId) }
                     )
+                    noticeCompactColumn = .detail
                 } catch {
                     guard !Task.isCancelled else { return }
                     errorHandler.handle(
@@ -320,15 +393,38 @@ struct RootTabView: View {
         }
     }
 
+    /// 알고 있는 단일 상세 경로만 교체합니다. 작성·편집·운영진 하위 경로는 보존합니다.
+    static func canSelectNotice(pathStore: PathStore, replacing notice: NoticeDetail?) -> Bool {
+        guard !pathStore.isAtRoot(.notice) else { return true }
+        guard let notice else { return false }
+        var detailPath = NavigationPath()
+        detailPath.append(NavigationDestination.notice(.detail(detailItem: notice)))
+        return pathStore[.notice] == detailPath
+    }
+
+    @discardableResult
+    static func selectNotice(
+        _ notice: NoticeDetail,
+        pathStore: PathStore,
+        replacing previousNotice: NoticeDetail? = nil
+    ) -> Bool {
+        guard canSelectNotice(pathStore: pathStore, replacing: previousNotice) else { return false }
+        pathStore[.notice] = NavigationPath()
+        pathStore.push(NavigationDestination.notice(.detail(detailItem: notice)), on: .notice)
+        return true
+    }
+
+    @discardableResult
     static func openNoticeLink(
         pathStore: PathStore,
         load: () async throws -> NoticeDetail
-    ) async throws {
+    ) async throws -> NoticeDetail {
         let notice = try await load()
         try Task.checkCancellation()
         pathStore.selectedTab = .notice
         pathStore[.notice] = NavigationPath()
         pathStore.push(NavigationDestination.notice(.detail(detailItem: notice)), on: .notice)
+        return notice
     }
 
     /// 탭별 독립 `NavigationStack` path 바인딩을 `PathStore`에 위임한다.

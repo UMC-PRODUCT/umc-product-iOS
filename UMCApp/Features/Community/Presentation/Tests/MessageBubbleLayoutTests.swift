@@ -69,6 +69,32 @@ struct MessageBubbleLayoutTests {
         #expect(squeezed.height == natural.height)
     }
 
+    @Test("넓은 컨테이너에서는 긴 말풍선이 읽기 폭까지 확장된다")
+    func wideContainerExpandsLongBubble() throws {
+        let renderer = ImageRenderer(
+            content: BubbleWidthLayout(maxWidth: 280, expandedMaxWidth: 520) {
+                Text(Constants.longText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        )
+        renderer.proposedSize = ProposedViewSize(width: 900, height: nil)
+        renderer.scale = 1
+        #expect(try #require(renderer.uiImage).size.width == 520)
+    }
+
+    @Test("좁은 컨테이너에서는 기존 말풍선 폭을 유지한다")
+    func narrowContainerKeepsOriginalCap() throws {
+        let renderer = ImageRenderer(
+            content: BubbleWidthLayout(maxWidth: 280, expandedMaxWidth: 520) {
+                Text(Constants.longText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        )
+        renderer.proposedSize = ProposedViewSize(width: 390, height: nil)
+        renderer.scale = 1
+        #expect(try #require(renderer.uiImage).size.width == 280)
+    }
+
     // MARK: - Function
 
     private func renderedWidth(@ViewBuilder _ content: () -> some View) throws -> CGFloat {

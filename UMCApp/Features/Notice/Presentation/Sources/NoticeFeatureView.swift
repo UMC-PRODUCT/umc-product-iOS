@@ -17,6 +17,8 @@ public struct NoticeFeatureView: View {
     @Environment(\.di) private var di
     @Environment(ErrorHandler.self) private var errorHandler
 
+    private let isSidebar: Bool
+    private let selectedNoticeID: String?
     private let onNoticeSelected: (NoticeDetail) -> Void
     private let onStaffNoticeSelected: () -> Void
 
@@ -30,9 +32,13 @@ public struct NoticeFeatureView: View {
     ///   의존 방향 금지) 실제 push는 호출부(`RootTabView`)에서 수행한다.
     ///
     public init(
+        isSidebar: Bool = false,
+        selectedNoticeID: String? = nil,
         onNoticeSelected: @escaping (NoticeDetail) -> Void,
         onStaffNoticeSelected: @escaping () -> Void
     ) {
+        self.isSidebar = isSidebar
+        self.selectedNoticeID = selectedNoticeID
         self.onNoticeSelected = onNoticeSelected
         self.onStaffNoticeSelected = onStaffNoticeSelected
     }
@@ -42,6 +48,8 @@ public struct NoticeFeatureView: View {
         NoticeView(
             container: di,
             errorHandler: errorHandler,
+            isSidebar: isSidebar,
+            selectedNoticeID: selectedNoticeID,
             onNoticeSelected: onNoticeSelected,
             onStaffNoticeSelected: onStaffNoticeSelected
         )

@@ -79,3 +79,10 @@ struct NoticePagingState {
         currentPage + 1
     }
 }
+
+// MARK: - Notice Mutation
+
+extension Notification.Name {
+    /// 서버에 공지 변경이 반영된 뒤 유지 중인 목록을 다시 조회합니다.
+    static let noticeContentDidChange = Notification.Name("noticeContentDidChange")
+}
