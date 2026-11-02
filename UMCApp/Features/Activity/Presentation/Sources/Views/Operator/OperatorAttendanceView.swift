@@ -28,6 +28,7 @@ struct OperatorAttendanceView: View {
     // MARK: - Property
 
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @Bindable private var viewModel: OperatorAttendanceViewModel
 
@@ -405,19 +406,32 @@ struct OperatorAttendanceView: View {
     // MARK: - List
 
     private func listContent(infos: [ScheduleAttendanceInfo]) -> some View {
-        ScrollView {
-            LazyVStack(spacing: DefaultSpacing.spacing12) {
-                ForEach(infos) { info in
-                    Button {
-                        onScheduleSelected(info.scheduleId)
-                    } label: {
-                        AttendanceScheduleRow(info: info)
+        GeometryReader { geometry in
+            let availableWidth = max(
+                1, geometry.size.width - 2 * DefaultConstant.defaultSafeHorizon
+            )
+            let columnCount = !dynamicTypeSize.isAccessibilitySize && availableWidth >= 692 ? 2 : 1
+            ScrollView {
+                HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
+                    ForEach(0..<columnCount, id: \.self) { column in
+                        LazyVStack(spacing: DefaultSpacing.spacing12) {
+                            ForEach(infos.enumerated().filter {
+                                $0.offset % columnCount == column
+                            }.map(\.element)) { info in
+                                Button {
+                                    onScheduleSelected(info.scheduleId)
+                                } label: {
+                                    AttendanceScheduleRow(info: info)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .top)
                     }
-                    .buttonStyle(.plain)
                 }
             }
+            .contentMargins(.horizontal, DefaultConstant.defaultSafeHorizon, for: .scrollContent)
         }
-        .contentMargins(.horizontal, DefaultConstant.defaultSafeHorizon, for: .scrollContent)
     }
 }
 

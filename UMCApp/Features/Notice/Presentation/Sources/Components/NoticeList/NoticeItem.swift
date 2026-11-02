@@ -35,12 +35,21 @@ public struct NoticeItem: View {
     // MARK: - Properties
 
     private let model: NoticeItemModel
+    private let isSidebar: Bool
+    private let isSelected: Bool
     private let action: () -> Void
 
     // MARK: - Init
 
-    public init(model: NoticeItemModel, action: @escaping () -> Void) {
+    public init(
+        model: NoticeItemModel,
+        isSidebar: Bool = false,
+        isSelected: Bool = false,
+        action: @escaping () -> Void
+    ) {
         self.model = model
+        self.isSidebar = isSidebar
+        self.isSelected = isSelected
         self.action = action
     }
 
@@ -48,41 +57,100 @@ public struct NoticeItem: View {
 
     public var body: some View {
         Button(action: action) {
-            NoticeItemPresenter(model: model)
+            NoticeItemPresenter(model: model, isSidebar: isSidebar)
                 .equatable()
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .overlay {
+            if isSelected {
+                RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
+                    .strokeBorder(Color.teal500.opacity(0.5), lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
+        }
     }
 }
 
 // MARK: - Presenter
 
 private struct NoticeItemPresenter: View, Equatable {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let model: NoticeItemModel
+    let isSidebar: Bool
 
     static func == (lhs: NoticeItemPresenter, rhs: NoticeItemPresenter) -> Bool {
-        lhs.model == rhs.model
+        lhs.model == rhs.model && lhs.isSidebar == rhs.isSidebar
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Constant.mainVSpacing) {
-            TopSection(model: model)
-            ContentSection(model: model)
-            BottomSection(model: model)
-        }
-        .frame(minHeight: Constant.mainBoxHeight)
-        .padding(Constant.mainPadding)
-        .background {
-            ConcentricRectangle(corners: .concentric(minimum: DefaultConstant.concentricRadius), isUniform: true)
-                .fill(Color.Surface.content)
-                .cardShadow()
+        Group {
+            if isSidebar {
+                compactContent
+                    .padding(.horizontal, DefaultSpacing.spacing16)
+                    .padding(.vertical, DefaultSpacing.spacing8)
+                    .frame(minHeight: DefaultConstant.minimumTouchTarget)
+                    .background(
+                        Color.Surface.content,
+                        in: .rect(cornerRadius: DefaultConstant.cornerRadius)
+                    )
+            } else {
+                VStack(alignment: .leading, spacing: Constant.mainVSpacing) {
+                    TopSection(model: model, isSidebar: false)
+                    ContentSection(model: model, isSidebar: false)
+                    BottomSection(model: model, isSidebar: false)
+                }
+                .frame(minHeight: Constant.mainBoxHeight)
+                .padding(Constant.mainPadding)
+                .background {
+                    ConcentricRectangle(
+                        corners: .concentric(minimum: DefaultConstant.concentricRadius),
+                        isUniform: true
+                    )
+                    .fill(Color.Surface.content)
+                    .cardShadow()
+                }
+            }
         }
     }
+
+    private var compactContent: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
+                Text(model.title)
+                    .appFont(.callout, weight: .semibold, color: .grey900)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
+                Text(model.date.toYearMonthDay())
+                    .appFont(.caption1, color: .grey600)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
+                Text(MarkdownSerializer.plainText(from: model.content))
+                    .appFont(.footnote, color: .grey600)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+                Spacer(minLength: 0)
+                if model.hasLink { Image(systemName: "link") }
+                if model.hasVote { Image(systemName: "chart.bar.fill") }
+                if model.isAlert { Image(systemName: "bell.fill") }
+                if !model.isRead {
+                    Circle()
+                        .fill(Color.teal500)
+                        .frame(width: Constant.unreadDotSize, height: Constant.unreadDotSize)
+                        .accessibilityLabel("읽지 않은 공지")
+                }
+            }
+            .appFont(.caption1, color: .grey600)
+        }
+    }
+
 }
 
 /// 태그 + 알림 + 날짜
 private struct TopSection: View, Equatable {
     let model: NoticeItemModel
+    let isSidebar: Bool
 
     var body: some View {
         FlowLayout(spacing: Constant.topHSpacing) {
@@ -92,6 +160,10 @@ private struct TopSection: View, Equatable {
                 } else {
                     tag(tagItem.text, color: tagItem.backColor)
                 }
+            }
+            if isSidebar {
+                Text(model.date.toYearMonthDay())
+                    .appFont(.caption1, color: .grey600)
             }
         }
     }
@@ -113,16 +185,17 @@ private struct ContentSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let model: NoticeItemModel
+    let isSidebar: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
             Text(model.title)
-                .appFont(.body, weight: .semibold, color: .grey900)
+                .appFont(isSidebar ? .callout : .body, weight: .semibold, color: .grey900)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
 
             Text(MarkdownSerializer.plainText(from: model.content))
-                .appFont(.subheadline, color: .grey600)
-                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                .appFont(isSidebar ? .footnote : .subheadline, color: .grey600)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : (isSidebar ? 1 : 2))
                 .multilineTextAlignment(.leading)
         }
     }
@@ -133,6 +206,7 @@ private struct BottomSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let model: NoticeItemModel
+    let isSidebar: Bool
 
     var body: some View {
         let layout = dynamicTypeSize.isAccessibilitySize
@@ -141,8 +215,9 @@ private struct BottomSection: View {
 
         layout {
             Text(model.displayWriter)
+                .fixedSize(horizontal: false, vertical: true)
 
-            if !dynamicTypeSize.isAccessibilitySize {
+            if !isSidebar && !dynamicTypeSize.isAccessibilitySize {
                 Spacer()
             }
 
@@ -167,11 +242,13 @@ private struct BottomSection: View {
                     .frame(width: Constant.unreadDotSize, height: Constant.unreadDotSize)
             }
 
-            Text(model.date.toYearMonthDay())
+            if !isSidebar {
+                Text(model.date.toYearMonthDay())
+            }
 
             Text("조회 \(model.viewCount)")
         }
-        .appFont(.footnote, color: .gray)
+        .appFont(isSidebar ? .caption1 : .footnote, color: .grey600)
     }
 }
 

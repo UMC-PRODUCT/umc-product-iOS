@@ -42,6 +42,9 @@ struct ChallengerAttendanceSessionView: View {
 
     // MARK: - Property
 
+    @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     @State private var attendanceViewModel: ChallengerAttendanceViewModel
     @State private var mapViewModelCache = MapViewModelCache()
     @State private var expandedSessionId: Session.ID?
@@ -94,7 +97,6 @@ struct ChallengerAttendanceSessionView: View {
     fileprivate enum Constants {
         static let animationResponse: Double = 0.35
         static let animationDamping: Double = 0.8
-        static let emptyStateVerticalPadding: CGFloat = 32
     }
 
     // MARK: - Computed Properties
@@ -124,7 +126,12 @@ struct ChallengerAttendanceSessionView: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                VStack(spacing: DefaultSpacing.spacing48) {
+                AdaptiveContentLayout(
+                    maximumColumns: dynamicTypeSize.isAccessibilitySize ? 1 : 2,
+                    spacing: DefaultSpacing.spacing24,
+                    verticalFlow: .columns,
+                    layoutDirection: layoutDirection
+                ) {
                     attendanceSessionSection
                     myAttendanceStatusSection
                 }
@@ -238,33 +245,25 @@ struct ChallengerAttendanceSessionView: View {
         title: String,
         description: String
     ) -> some View {
-        VStack(spacing: DefaultSpacing.spacing12) {
-            // 빈 상태는 전환이 아니라 처음부터 표시되는 화면이므로
-            // 전환 효과(symbolDrawOn)는 심볼이 그려지지 않아 정적 렌더로 표시합니다.
+        HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
             Image(systemName: systemImage)
-                .font(.app(.largeTitle))
+                .font(.app(.title3))
                 .foregroundStyle(tint)
+                .frame(width: DefaultSpacing.spacing32, height: DefaultSpacing.spacing32)
+                .accessibilityHidden(true)
 
-            VStack(spacing: DefaultSpacing.spacing4) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
                 Text(title)
-                    .appFont(.callout, weight: .semibold, color: .grey700)
+                    .appFont(.subheadline, weight: .semibold, color: .grey700)
 
-                Text(description)
-                    .appFont(.footnote, color: .grey500)
-                    .multilineTextAlignment(.center)
+                Text(description.replacingOccurrences(of: "\n", with: " "))
+                    .appFont(.footnote, color: .grey600)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Constants.emptyStateVerticalPadding)
-        .padding(.horizontal, DefaultSpacing.spacing16)
-        .background {
-            ConcentricRectangle(
-                corners: .concentric(minimum: DefaultConstant.concentricRadius),
-                isUniform: true
-            )
-            .fill(Color.grey000)
-            .cardShadow()
-        }
+        .padding(DefaultSpacing.spacing12)
+        .background(Color.Surface.content, in: .rect(cornerRadius: DefaultSpacing.spacing16))
     }
 
     // MARK: - Function

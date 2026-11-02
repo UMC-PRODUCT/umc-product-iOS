@@ -24,6 +24,8 @@ struct ChallengerAttendanceView: View, Equatable {
     private let userId: UserID
     private let session: Session
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showReasonSheet: Bool = false
     @State private var showPolicyPopover: Bool = false
@@ -70,7 +72,13 @@ struct ChallengerAttendanceView: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: DefaultSpacing.spacing16) {
+        AdaptiveContentLayout(
+            minimumColumnWidth: 340,
+            maximumColumns: dynamicTypeSize.isAccessibilitySize ? 1 : 2,
+            spacing: DefaultSpacing.spacing16,
+            verticalFlow: .columns,
+            layoutDirection: layoutDirection
+        ) {
             ZStack(alignment: .topTrailing) {
                 mapSection
 
@@ -78,11 +86,13 @@ struct ChallengerAttendanceView: View, Equatable {
                     .padding(DefaultSpacing.spacing12)
             }
 
-            attendanceGuidanceLine
-            attendanceActionView
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+                attendanceGuidanceLine
+                attendanceActionView
 
-            if attendanceViewModel.shouldShowReasonButton(for: session) {
-                lateReasonButton
+                if attendanceViewModel.shouldShowReasonButton(for: session) {
+                    lateReasonButton
+                }
             }
         }
         .animation(

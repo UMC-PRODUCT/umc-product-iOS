@@ -470,6 +470,31 @@ struct CommunityThreadListViewModelTests {
         #expect(rows.map(\.unreadCount) == ["0", "3"])
     }
 
+    @Test("열린 방을 다시 선택하면 이후 수신한 배지만 지우고 다른 방은 보존한다")
+    func reselectionClearsUnreadAfterIncomingMessage() async throws {
+        let useCase = StubListUseCase()
+        useCase.page = CommunityThreadPage(
+            pinned: [],
+            threads: [makeThread(id: "1"), makeThread(id: "2", unreadCount: "3")],
+            nextOffset: nil,
+            total: "2"
+        )
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.markThreadRead(threadId: "1")
+
+        let message = makeMessage(threadId: "1", content: "새 메시지", senderId: "other")
+        viewModel.apply(.messageCreated(threadId: "1", message: message, clientMessageId: nil))
+        #expect(viewModel.state.value?.first(where: { $0.id == "1" })?.unreadCount == "1")
+
+        viewModel.markThreadRead(threadId: "1")
+
+        let rows = try #require(viewModel.state.value)
+        #expect(rows.first(where: { $0.id == "1" })?.unreadCount == "0")
+        #expect(rows.first(where: { $0.id == "1" })?.lastMessage?.preview == "새 메시지")
+        #expect(rows.first(where: { $0.id == "2" })?.unreadCount == "3")
+    }
+
     @Test("목록에 없는 스레드의 이벤트는 아무것도 바꾸지 않는다")
     func ignoresEventForUnknownThread() async {
         let useCase = StubListUseCase()

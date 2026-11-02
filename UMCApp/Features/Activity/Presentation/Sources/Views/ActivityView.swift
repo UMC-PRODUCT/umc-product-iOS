@@ -30,6 +30,7 @@ struct ActivityView: View {
     /// 탭 스택의 공유 경로. 자식 화면이 요청한 push 를 이 저장소로 넘긴다.
     @Environment(PathStore.self) private var pathStore
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var viewModel: ActivityViewModel
     @State private var selectedSection: ActivitySection?
@@ -109,7 +110,7 @@ struct ActivityView: View {
     // MARK: - Body
 
     var body: some View {
-        sectionContent
+        adaptiveContent
             .navigationTitle(currentSection.title)
             .navigationBarTitleDisplayMode(.inline)
             .umcDefaultBackground()
@@ -161,6 +162,62 @@ struct ActivityView: View {
     }
 
     // MARK: - View Component
+
+    private enum Constants {
+        static let sectionRailMinimumWidth: CGFloat = 1200
+        static let sectionRailWidth: CGFloat = 216
+        static let contentMaximumWidth: CGFloat = 1100
+    }
+
+    /// 폭이 바뀌어도 자식 화면은 같은 위치에 두어 검색·스크롤·입력 상태를 유지합니다.
+    private var adaptiveContent: some View {
+        GeometryReader { geometry in
+            HStack(alignment: .top, spacing: 0) {
+                if geometry.size.width >= Constants.sectionRailMinimumWidth,
+                   !dynamicTypeSize.isAccessibilitySize {
+                    sectionRail
+                        .frame(width: Constants.sectionRailWidth)
+                }
+
+                sectionContent
+                    .adaptiveReadableWidth(maximum: Constants.contentMaximumWidth)
+                    .frame(maxHeight: .infinity)
+            }
+        }
+    }
+
+    /// 넓은 화면에서 현재 섹션과 다른 활동을 함께 확인하는 선택 영역입니다.
+    private var sectionRail: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+                ForEach(availableSections) { section in
+                    Button {
+                        selectedSection = section
+                    } label: {
+                        Label(section.title, systemImage: section.icon)
+                            .appFont(.body, weight: .semibold)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(DefaultSpacing.spacing12)
+                            .frame(minHeight: DefaultConstant.minimumTouchTarget)
+                            .foregroundStyle(
+                                currentSection == section ? Color.teal500 : Color.primary
+                            )
+                            .background(
+                                currentSection == section
+                                    ? Color.Surface.content : Color.clear,
+                                in: RoundedRectangle(
+                                    cornerRadius: DefaultConstant.cornerRadius
+                                )
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(currentSection == section ? .isSelected : [])
+                }
+            }
+            .padding(DefaultConstant.defaultSafeHorizon)
+        }
+        .accessibilityLabel("활동 섹션")
+    }
 
     /// 모드×섹션 조합에 해당하는 자식 화면
     ///

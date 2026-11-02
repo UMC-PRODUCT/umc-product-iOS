@@ -807,6 +807,7 @@ extension NoticeDetailViewModel {
     private func deleteNotice() async {
         do {
             try await noticeUseCase.deleteNotice(noticeId: noticeID)
+            NotificationCenter.default.post(name: .noticeContentDidChange, object: self)
         } catch let error as RepositoryError {
             handleDeleteError(error)
         } catch let error as DomainError {

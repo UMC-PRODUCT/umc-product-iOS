@@ -29,7 +29,6 @@ struct ScheduleCard: View, Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.selectedDate == rhs.selectedDate &&
         lhs.currentMonth == rhs.currentMonth &&
-        lhs.scheduleMode == rhs.scheduleMode &&
         lhs.scheduledDates == rhs.scheduledDates
     }
 

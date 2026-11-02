@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreDesignSystem
+import CoreUIComponents
 
 // MARK: - Metrics
 
@@ -25,10 +26,7 @@ enum ThreadCardMetrics {
         bottom: DefaultSpacing.spacing4,
         trailing: DefaultConstant.defaultSafeHorizon
     )
-    /// 시안 그림자 `#0000001A · y 2 · blur 8`. Figma blur 는 SwiftUI radius 의 두 배라 4 로 옮긴다.
-    static let shadowOpacity: Double = 0.1
-    static let shadowRadius: CGFloat = 4
-    static let shadowOffsetY: CGFloat = 2
+
 }
 
 // MARK: - Modifier
@@ -44,13 +42,8 @@ private struct ThreadCardModifier: ViewModifier {
             // 오프스크린 렌더링이 늘어난다.
             .background {
                 RoundedRectangle(cornerRadius: DefaultConstant.cornerRadius)
-                    .fill(Color.grey000)
-                    .shadow(
-                        color: .black.opacity(ThreadCardMetrics.shadowOpacity),
-                        radius: ThreadCardMetrics.shadowRadius,
-                        x: 0,
-                        y: ThreadCardMetrics.shadowOffsetY
-                    )
+                    .fill(Color.Surface.content)
+                    .cardShadow()
             }
     }
 }

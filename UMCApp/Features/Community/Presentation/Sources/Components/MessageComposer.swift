@@ -115,6 +115,7 @@ struct MessageComposer: View {
     private var inputRow: some View {
         VStack(spacing: 0) {
             TextField(Constants.placeholder, text: $text, axis: .vertical)
+                .accessibilityIdentifier("community.message.draft")
                 .appFont(.subheadline)
                 .lineLimit(Constants.lineLimit)
                 .padding(.horizontal, DefaultSpacing.spacing12)

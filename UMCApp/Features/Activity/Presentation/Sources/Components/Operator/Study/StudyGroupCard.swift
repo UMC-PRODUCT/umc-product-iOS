@@ -20,6 +20,7 @@ struct StudyGroupCard: View, Equatable {
 
     // MARK: - Property
 
+    @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -159,7 +160,12 @@ struct StudyGroupCard: View, Equatable {
     /// 헤더와의 간격(spacing16)을 이 블록 상단 패딩으로 흡수해, 접힘 시 `frame(height: 0)`로
     /// 갭까지 함께 사라지게 한다(외곽 VStack spacing은 0).
     private var expandableSections: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing16) {
+        AdaptiveContentLayout(
+            minimumColumnWidth: 280,
+            maximumColumns: dynamicTypeSize.isAccessibilitySize ? 1 : 2,
+            spacing: DefaultSpacing.spacing16,
+            layoutDirection: layoutDirection
+        ) {
             mentorSection
             membersSection
         }
@@ -193,7 +199,7 @@ struct StudyGroupCard: View, Equatable {
             // Row 1: 식별 정보 (primary)
             HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
                 Text(detail.name)
-                    .appFont(.callout, weight: .semibold)
+                    .appFont(.body, weight: .semibold)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -209,10 +215,15 @@ struct StudyGroupCard: View, Equatable {
             }
 
             // Row 2: 메타/펼침 토글 + 액션 버튼
-            metadataLayout {
+            AdaptiveContentLayout(
+                minimumColumnWidth: 220,
+                maximumColumns: dynamicTypeSize.isAccessibilitySize ? 1 : 2,
+                spacing: DefaultSpacing.spacing8,
+                verticalFlow: .columns,
+                layoutDirection: layoutDirection
+            ) {
                 metadataRow
-
-                Spacer(minLength: DefaultSpacing.spacing8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 GlassEffectContainer(spacing: DefaultSpacing.spacing8) {
                     HStack(spacing: DefaultSpacing.spacing8) {
@@ -220,15 +231,8 @@ struct StudyGroupCard: View, Equatable {
                         settingsMenu
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
-        }
-    }
-
-    private var metadataLayout: AnyLayout {
-        if dynamicTypeSize.isAccessibilitySize {
-            AnyLayout(VStackLayout(alignment: .leading, spacing: DefaultSpacing.spacing8))
-        } else {
-            AnyLayout(HStackLayout(spacing: DefaultSpacing.spacing8))
         }
     }
 
@@ -293,8 +297,7 @@ struct StudyGroupCard: View, Equatable {
                 if isExpanded {
                     Text("일정 등록")
                         .appFont(.footnote, weight: .semibold, color: .white)
-                        .lineLimit(1)
-                        .fixedSize()
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(.horizontal, isExpanded ? DefaultSpacing.spacing12 : 0)

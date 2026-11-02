@@ -8,6 +8,7 @@
 import CoreRouting
 import Foundation
 import NoticeDomain
+import SwiftUI
 import Testing
 @testable import UMCApp
 
@@ -46,6 +47,57 @@ struct NoticeDeepLinkRoutingTests {
         _ = await task.result
         #expect(paths.selectedTab == .community)
         #expect(paths.isAtRoot(.notice))
+    }
+
+    @Test
+    func selectingNoticeReplacesDetailAndPreservesOtherTabs() {
+        let paths = PathStore()
+        paths.selectedTab = .notice
+        let previous = detail(id: "34")
+        paths.push(NavigationDestination.notice(.detail(detailItem: previous)), on: .notice)
+        paths.push("home-detail", on: .home)
+        let notice = detail(id: "45")
+
+        let selected = RootTabView.selectNotice(notice, pathStore: paths, replacing: previous)
+        #expect(selected)
+
+        var expected = NavigationPath()
+        expected.append(NavigationDestination.notice(.detail(detailItem: notice)))
+        #expect(paths[.notice] == expected)
+        #expect(paths.depth(of: .home) == 1)
+        #expect(paths.selectedTab == .notice)
+    }
+
+    @Test
+    func sidebarSelectionPreservesRootCreateDraft() {
+        let paths = PathStore()
+        paths.push(
+            NavigationDestination.notice(.editor(mode: .create, selectedGisuId: "1")),
+            on: .notice
+        )
+        let editorPath = paths[.notice]
+
+        #expect(!RootTabView.selectNotice(detail(id: "45"), pathStore: paths))
+        #expect(paths[.notice] == editorPath)
+    }
+
+    @Test
+    func sidebarSelectionPreservesNestedEditorDraft() {
+        let paths = PathStore()
+        let previous = detail(id: "34")
+        paths.push(NavigationDestination.notice(.detail(detailItem: previous)), on: .notice)
+        paths.push(
+            NavigationDestination.notice(.editor(mode: .create, selectedGisuId: "1")),
+            on: .notice
+        )
+        let editorPath = paths[.notice]
+
+        #expect(!RootTabView.selectNotice(
+            detail(id: "45"), pathStore: paths, replacing: previous
+        ))
+        #expect(paths[.notice] == editorPath)
+        paths[.notice].removeLast()
+        #expect(RootTabView.canSelectNotice(pathStore: paths, replacing: previous))
     }
 
     private func detail(id: String) -> NoticeDetail {

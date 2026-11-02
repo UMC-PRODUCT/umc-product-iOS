@@ -30,7 +30,9 @@ struct HomeView: View {
 
     // MARK: - Property
 
+    @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// 홈 탭 스택의 공유 경로. 루트 복귀 감지에만 쓰므로, 경로 저장소를 주입하지 않는
     /// 프리뷰/테스트 호출부가 깨지지 않도록 옵셔널로 받는다.
     @Environment(PathStore.self) private var pathStore: PathStore?
@@ -81,12 +83,19 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView(.vertical) {
-            LazyVStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
+            AdaptiveContentLayout(
+                maximumColumns: dynamicTypeSize.isAccessibilitySize ? 1 : 2,
+                spacing: DefaultSpacing.spacing24,
+                verticalFlow: .columns,
+                layoutDirection: layoutDirection
+            ) {
                 seasonSection
                 generationSection
                 scheduleSection
                 recentNoticeSection
             }
+            .frame(maxWidth: 1100)
+            .frame(maxWidth: .infinity)
             .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
         .contentMargins(.bottom, DefaultConstant.defaultContentBottomMargins, for: .scrollContent)
@@ -149,7 +158,12 @@ struct HomeView: View {
     }
 
     private func seasonLoaded(_ seasonTypes: [SeasonType]) -> some View {
-        HStack(spacing: DefaultSpacing.spacing12) {
+        AdaptiveContentLayout(
+            minimumColumnWidth: 140,
+            maximumColumns: dynamicTypeSize.isAccessibilitySize ? 1 : 2,
+            spacing: DefaultSpacing.spacing12,
+            layoutDirection: layoutDirection
+        ) {
             ForEach(Array(seasonTypes.enumerated()), id: \.offset) { _, seasonType in
                 SeasonCard(seasonType: seasonType)
                     .equatable()
@@ -363,12 +377,14 @@ struct HomeView: View {
 
 /// 일정 카드 탭 시 눌림 효과를 제공하는 ButtonStyle
 private struct ScheduleCardPressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1.0)
             .opacity(configuration.isPressed ? 0.92 : 1.0)
             .animation(
-                .spring(response: 0.22, dampingFraction: 0.8),
+                reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.8),
                 value: configuration.isPressed
             )
     }

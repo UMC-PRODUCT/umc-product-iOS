@@ -53,6 +53,7 @@ struct CommunityThreadRoomView: View {
 
     @Environment(\.di) private var container
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(PathStore.self) private var pathStore
@@ -78,18 +79,25 @@ struct CommunityThreadRoomView: View {
     /// 스크롤이 일어나기 전에는 geometry 콜백이 오지 않으므로 초기값이 곧 실제 상태다.
     @State private var isNearBottom = true
 
+    private let onComposerChange: (Bool) -> Void
+    private let initialNavigationTitle: String
+
     // MARK: - Init
 
     init(
         viewModel: CommunityThreadRoomViewModel,
         inviteViewModel: ThreadInviteViewModel,
         onThreadToggled: @escaping (CommunityThread) -> Void,
-        onThreadRemoved: @escaping (String) -> Void
+        onThreadRemoved: @escaping (String) -> Void,
+        onComposerChange: @escaping (Bool) -> Void = { _ in },
+        initialNavigationTitle: String = ""
     ) {
         _viewModel = State(initialValue: viewModel)
         _inviteViewModel = State(initialValue: inviteViewModel)
         self.onThreadToggled = onThreadToggled
         self.onThreadRemoved = onThreadRemoved
+        self.onComposerChange = onComposerChange
+        self.initialNavigationTitle = initialNavigationTitle
     }
 
     // MARK: - Body
@@ -136,15 +144,24 @@ struct CommunityThreadRoomView: View {
             .ignoresSafeArea()
         }
         .onAppear {
+            onComposerChange(hasComposerChanges)
             AppAnalytics.track("screen_view", parameters: [
                 "screen_name": "community_thread",
                 "screen_class": "CommunityThreadRoomView"
             ])
         }
-        .umcDefaultBackground()
+        .onChange(of: hasComposerChanges, initial: true) { _, hasChanges in
+            onComposerChange(hasChanges)
+        }
+        .background {
+            Color.Surface.content
+                .ignoresSafeArea()
+        }
+        .navigationTitle(viewModel.header.value?.title ?? initialNavigationTitle)
+        .navigationSubtitle(horizontalSizeClass == .regular ? threadSubtitle : "")
         // 대화는 메시지 목록과 입력창이 세로를 꽉 채워야 한다. 탭바가 남아 있으면 컴포저가
         // 그만큼 위로 밀리고 읽히는 메시지가 줄어든다 (#1312).
-        .toolbarVisibility(.hidden, for: .tabBar)
+        .toolbarVisibility(horizontalSizeClass == .regular ? .visible : .hidden, for: .tabBar)
         .navigationBarTitleDisplayMode(.inline)
         // 참여 종료 화면의 이탈 경로는 화면 안의 버튼 하나뿐이다 (시안 #31).
         .navigationBarBackButtonHidden(viewModel.ejectionNotice != nil)
@@ -159,6 +176,10 @@ struct CommunityThreadRoomView: View {
             onThreadRemoved(viewModel.threadId)
             pathStore[.community] = NavigationPath()
         }
+    }
+
+    private var hasComposerChanges: Bool {
+        !viewModel.draft.isEmpty || viewModel.replyTarget != nil || viewModel.editTarget != nil
     }
 
     // MARK: - View Component
@@ -224,6 +245,7 @@ struct CommunityThreadRoomView: View {
                     .onChange(of: viewModel.draft) { _, _ in viewModel.draftDidChange() }
                 }
             }
+            .adaptiveReadableWidth()
         }
         .animation(.default, value: viewModel.sendCooldownNotice)
         .animation(.default, value: viewModel.reportNotice)
@@ -231,7 +253,7 @@ struct CommunityThreadRoomView: View {
         // 헤더가 오기 전에는 principal 아이템 자체를 만들지 않는다. 내용이 빈 principal 은
         // titleView 를 차지한 채로 비어 있어서, 라우팅이 걸어 둔 `navigationTitle` 까지 가린다.
         .toolbar {
-            if let thread = viewModel.header.value {
+            if horizontalSizeClass != .regular, let thread = viewModel.header.value {
                 ToolbarItem(placement: .principal) { navigationHeader(thread) }
             }
             // 헤더가 있어야 역할·고정·알림·공유 링크를 안다. 그전에는 빈 메뉴만 열린다.
@@ -468,14 +490,19 @@ struct CommunityThreadRoomView: View {
         .padding(.vertical, DefaultSpacing.spacing8)
     }
 
+    private var threadSubtitle: String {
+        guard let thread = viewModel.header.value else { return "" }
+        return "\(thread.category.displayName) · \(thread.memberCountText)"
+    }
+
     private func navigationHeader(_ thread: CommunityThread) -> some View {
         VStack(spacing: Constants.headerLineSpacing) {
             Text(thread.title)
-                .appFont(.subheadline, weight: .semibold)
+                .appFont(.callout, weight: .semibold)
                 .foregroundStyle(Color.grey900)
 
             Text("\(thread.category.displayName) · \(thread.memberCountText)")
-                .appFont(.caption2, color: .grey500)
+                .appFont(.caption1, color: .grey600)
         }
         .accessibilityElement(children: .combine)
     }
@@ -599,6 +626,7 @@ struct CommunityThreadRoomView: View {
                 }
             }
             .padding(.horizontal, DefaultSpacing.spacing16)
+            .adaptiveReadableWidth()
         }
         .defaultScrollAnchor(.bottom)
         // 오버레이가 떠 있는 동안 스크롤되면 딤에 뚫어 둔 구멍이 말풍선과 어긋난다.

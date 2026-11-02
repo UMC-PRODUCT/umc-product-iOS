@@ -76,7 +76,8 @@ struct PenaltyCard: View, Equatable {
             cardContent
                 .offset(x: dragOffset)
                 .contentShape(.rect)
-                .gesture(swipeGesture)
+                // 세로 드래그는 부모 스크롤도 인식해야 큰 글자에서 카드 밖으로 이동할 수 있다.
+                .simultaneousGesture(swipeGesture)
                 .animation(.smooth(duration: 0.3), value: currentIndex)
         }
         .padding(Constants.padding)

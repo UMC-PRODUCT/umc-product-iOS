@@ -70,6 +70,7 @@ public enum NavigationTitle {
     /// 마이페이지 화면용 타이틀
     public enum MyPage: String, NavigationTitleRepresentable {
         case root = "마이페이지"
+        case profileOverview = "내 프로필"
         /// 「명함 관리 › 내 정보 편집」이 여는 프로필 편집 폼 — 시안 `12804:30498` 의 타이틀.
         case cardEdit = "내 정보 편집"
         /// 「나의 활동 ・프로젝트」 행이 여는 활동 이력 목록 (MP-F11).
