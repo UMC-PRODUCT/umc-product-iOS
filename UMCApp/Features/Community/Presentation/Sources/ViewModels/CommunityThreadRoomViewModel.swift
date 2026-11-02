@@ -194,6 +194,7 @@ public final class CommunityThreadRoomViewModel {
     ///   - sendTimeout: 이 시간 안에 `message.created` 도 에러도 오지 않으면 실패로 본다.
     public init(
         threadId: String,
+        shareBaseURL: URL? = nil,
         useCase: CommunityThreadRoomUseCaseProtocol,
         listUseCase: CommunityThreadListUseCaseProtocol,
         errorHandler: ErrorHandler,
@@ -207,6 +208,7 @@ public final class CommunityThreadRoomViewModel {
         self.blockState = blockStore.map { CommunityMemberBlockState(store: $0) } ?? blockState
         self.analytics = analytics
         self.threadId = threadId
+        self.shareBaseURL = shareBaseURL
         self.useCase = useCase
         self.listUseCase = listUseCase
         self.errorHandler = errorHandler
@@ -215,6 +217,9 @@ public final class CommunityThreadRoomViewModel {
         self.sendTimeout = sendTimeout
         self.blockStore = blockState.store ?? blockStore
     }
+
+    /// 상대 공유 URL을 현재 API 환경의 HTTPS 링크로 바꾸는 기준 주소.
+    let shareBaseURL: URL?
 
     // MARK: - Computed Property
 

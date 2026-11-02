@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>com.apple.developer.associated-domains</key>
+    <array>
+        <string>applinks:api.university.neordinary.com</string>
+        <string>applinks:dev.api.university.neordinary.com</string>
+        <string>applinks:api-dev.university.neordinary.com</string>
+    </array>
     <key>aps-environment</key>
     <string>$(APS_ENVIRONMENT)</string>
     <key>com.apple.developer.applesignin</key>

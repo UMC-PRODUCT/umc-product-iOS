@@ -44,13 +44,13 @@ extension CommunityThreadRoomViewModel {
         header.value?.isMuted == true
     }
 
-    /// 공유 시트에 실을 링크. 서버 `shareURL` 이 우선이고, 없으면 딥링크로 대체한다 (#1142).
+    /// 공유 시트에는 현재 스레드를 가리키는 경로형 HTTPS 링크만 싣는다.
     public var shareLink: URL? {
-        if let shareURL = header.value?.shareURL,
-           let url = URL(string: shareURL.trimmingCharacters(in: .whitespacesAndNewlines)) {
-            return url
-        }
-        return MessageLink.thread(id: threadId).url
+        MessageLink.threadShareURL(
+            id: threadId,
+            serverURL: header.value?.shareURL,
+            baseURL: shareBaseURL
+        )
     }
 
     /// 공유 시트 미리보기 제목. 링크 주소 대신 스레드 제목을 보이고, 헤더 전이면 기본 문구를 쓴다 (#1403).

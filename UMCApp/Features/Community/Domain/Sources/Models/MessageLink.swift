@@ -26,10 +26,16 @@ public enum MessageLink: Hashable, Sendable {
 
     /// 커스텀 스킴. `Info.plist` 의 `CFBundleURLTypes` 에 등록된 값과 같아야 한다.
     public static let scheme = "umc"
-    /// 서버가 `CommunityThread.shareURL` 로 내려주는 웹 공유 링크 호스트.
+    /// 과거 공유 링크를 계속 열기 위한 웹 호스트.
     public static let shareHost = "umc.it.kr"
-    /// 웹 공유 링크의 스레드 경로 접두사 (`https://umc.it.kr/t/12`).
+    /// 과거 웹 공유 링크의 스레드 경로 접두사 (`https://umc.it.kr/t/12`).
     public static let shareThreadPath = "t"
+
+    /// 서버 Universal Link 계약의 운영·개발 호스트.
+    private static let threadShareHosts: Set<String> = [
+        "api.university.neordinary.com", "dev.api.university.neordinary.com",
+        "api-dev.university.neordinary.com",
+    ]
 
     // MARK: - Computed Property
 
@@ -50,9 +56,8 @@ public enum MessageLink: Hashable, Sendable {
         }
     }
 
-    /// 공유·복사용 정규 링크 문자열 (`umc://thread/12`).
-    ///
-    /// 서버가 `shareURL` 을 주는 스레드는 그 값을 우선 쓰고, 없을 때 이 값으로 대체한다.
+    /// 알림·내부 이동용 커스텀 링크 문자열 (`umc://thread/12`).
+    /// 스레드 외부 공유에는 ``threadShareURL(id:serverURL:baseURL:)`` 을 사용한다.
     public var urlString: String {
         "\(Self.scheme)://\(kind)/\(id)"
     }
@@ -66,32 +71,63 @@ public enum MessageLink: Hashable, Sendable {
 
     /// 내부 링크 URL 을 해석한다. 내부 링크가 아니면 `nil`.
     ///
-    /// 두 표기를 모두 받는다.
+    /// 기존 커스텀 스킴·웹 링크와 HTTPS Universal Link를 받는다.
     /// - 커스텀 스킴 `umc://thread/12` · `umc://notice/34` — 앱 밖에서 들어오는 딥링크
-    /// - 웹 공유 링크 `https://umc.it.kr/t/12` — 서버 `shareURL` 표기
+    /// - HTTPS 공유 링크 `https://{api host}/community/threads/12` 및 Android query 표기
+    /// - 과거 웹 공유 링크 `https://umc.it.kr/t/12`
     public static func parse(_ url: URL) -> MessageLink? {
         let segments = url.pathComponents.filter { $0 != "/" }
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let queryIds = components?.queryItems?.filter { $0.name == "threadId" } ?? []
 
         if url.scheme?.lowercased() == scheme {
-            guard let id = segments.first, isValidIdentifier(id) else { return nil }
+            let id = segments.count == 1 ? segments.first :
+                (segments.isEmpty && queryIds.count == 1 ? queryIds.first?.value : nil)
+            guard let id, isValidIdentifier(id) else { return nil }
             switch url.host?.lowercased() {
-            case "thread":
-                return .thread(id: id)
-            case "notice":
-                return .notice(id: id)
-            default:
-                return nil
+            case "thread": return .thread(id: id)
+            case "notice" where segments.count == 1: return .notice(id: id)
+            default: return nil
             }
         }
 
-        // 공지 웹 공유 링크는 서버 계약이 아직 없어 스레드 경로만 해석한다.
+        guard url.scheme?.lowercased() == "https",
+              url.user == nil, url.password == nil,
+              url.port == nil || url.port == 443 else { return nil }
+
+        if let host = url.host?.lowercased(), threadShareHosts.contains(host) {
+            guard segments.prefix(2) == ["community", "threads"] else { return nil }
+            let id = segments.count == 3 ? segments.last :
+                (segments.count == 2 && queryIds.count == 1 ? queryIds.first?.value : nil)
+            guard let id, isValidIdentifier(id) else { return nil }
+            return .thread(id: id)
+        }
+
+        // 과거 공유 링크도 계속 열 수 있도록 보존한다.
         guard url.host?.lowercased() == shareHost,
               segments.count == 2,
               segments[0] == shareThreadPath,
-              isValidIdentifier(segments[1]) else {
-            return nil
-        }
+              isValidIdentifier(segments[1]) else { return nil }
         return .thread(id: segments[1])
+    }
+
+    /// 서버 공유 URL과 앱의 API 환경을 사용해 경로형 HTTPS 공유 링크를 만든다.
+    /// 상대 API 경로·커스텀 스킴·다른 스레드 링크를 그대로 공유하지 않는다.
+    public static func threadShareURL(
+        id: String,
+        serverURL: String?,
+        baseURL: URL? = nil
+    ) -> URL? {
+        guard isValidIdentifier(id) else { return nil }
+        var host = baseURL?.host?.lowercased() ?? "api.university.neordinary.com"
+        guard threadShareHosts.contains(host) else { return nil }
+        if let serverURL,
+           let url = URL(string: serverURL.trimmingCharacters(in: .whitespacesAndNewlines)),
+           parse(url) == .thread(id: id),
+           let serverHost = url.host?.lowercased(), threadShareHosts.contains(serverHost) {
+            host = serverHost
+        }
+        return URL(string: "https://\(host)/community/threads/\(id)")
     }
 
     public static func parse(_ string: String) -> MessageLink? {
@@ -115,10 +151,15 @@ public enum MessageLink: Hashable, Sendable {
         var cursor = content.startIndex
 
         for match in detector.matches(in: content, range: full) {
-            guard let range = Range(match.range, in: content) else { continue }
-            let raw = String(content[range])
-            // 정규식이 잡았어도 해석에 실패하면 내부 링크가 아니다 — 원문 그대로 텍스트에 남긴다.
+            guard let candidateRange = Range(match.range, in: content) else { continue }
+            var raw = String(content[candidateRange])
+            // 문장 끝 구두점은 URL에서 제외하되, 잘못된 ID 접미사는 통째로 검증한다.
+            while let last = raw.last, ".,!?;:)]}\"'".contains(last) {
+                raw.removeLast()
+            }
             guard let link = parse(raw) else { continue }
+            let end = content.index(candidateRange.lowerBound, offsetBy: raw.count)
+            let range = candidateRange.lowerBound..<end
 
             if cursor < range.lowerBound {
                 segments.append(.text(String(content[cursor..<range.lowerBound])))
@@ -138,12 +179,14 @@ public enum MessageLink: Hashable, Sendable {
     /// 서버 식별자는 정수를 String 으로 직렬화한 값이다(핵심 규칙 #2). 숫자로 좁혀 두면 문장
     /// 부호가 링크 뒤에 붙어 있어도 식별자에 딸려 들어가지 않는다.
     private static func isValidIdentifier(_ value: String) -> Bool {
-        !value.isEmpty && value.allSatisfy(\.isNumber)
+        !value.isEmpty && value.utf8.allSatisfy { (48...57).contains($0) }
     }
 
     /// 본문 스캐너. 패턴이 상수라 실패할 수 없지만, 실패하면 링크 없는 본문으로 취급한다.
     private static let detector = try? NSRegularExpression(
-        pattern: #"umc://(?:thread|notice)/[0-9]+|https://umc\.it\.kr/t/[0-9]+"#,
+        pattern: #"(?:umc://(?:thread|notice)"#
+            + #"|https://(?:umc\.it\.kr|(?:api(?:-dev)?|dev\.api)\.university\.neordinary\.com))"#
+            + #"(?=[/?])[^\s<>]+"#,
         options: [.caseInsensitive]
     )
 }

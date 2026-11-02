@@ -2672,16 +2672,18 @@ struct CommunityThreadRoomViewModelTests {
 
     @Test("공유 링크는 서버 shareURL 을 우선 쓴다")
     func prefersServerShareURL() async {
-        let (_, viewModel) = await makeMenuRoom(shareURL: "https://umc.it.kr/t/1")
+        let (_, viewModel) = await makeMenuRoom(shareURL: "https://dev.api.university.neordinary.com/community/threads/1")
 
-        #expect(viewModel.shareLink?.absoluteString == "https://umc.it.kr/t/1")
+        #expect(viewModel.shareLink?.absoluteString ==
+            "https://dev.api.university.neordinary.com/community/threads/1")
     }
 
-    @Test("shareURL 이 없으면 딥링크로 대체한다")
-    func fallsBackToDeepLink() async {
+    @Test("shareURL 이 없으면 HTTPS 공유 링크로 대체한다")
+    func fallsBackToHTTPSLink() async {
         let (_, viewModel) = await makeMenuRoom()
 
-        #expect(viewModel.shareLink?.absoluteString == "umc://thread/1")
+        #expect(viewModel.shareLink?.scheme == "https")
+        #expect(viewModel.shareLink?.path == "/community/threads/1")
     }
 
     @Test("공유 미리보기 제목은 링크 대신 스레드 제목을 쓴다")
