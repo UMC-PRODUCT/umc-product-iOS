@@ -49,7 +49,7 @@ struct MemberAdministrationRepositoryTests {
     @Test("기수와 조직은 숫자 및 문자열 ID를 읽는다")
     func filtersDecode() async throws {
         let network = AdministrationNetwork([
-            #"{"success":true,"result":{"gisuList":[{"gisuId":10,"generation":"11","isActive":true}]}}"#,
+            #"{"success":true,"result":{"content":[{"gisuId":10,"generation":"11","isActive":true}],"hasNext":false}}"#,
             #"{"success":true,"result":{"gisus":[{"gisuId":"10","chapters":[{"chapterId":2,"chapterName":"지부","schools":[{"schoolId":"5","schoolName":"학교"}]}],"schools":[{"schoolId":5,"schoolName":"학교","chapterId":"2"}]}]}}"#
         ])
         let repository = MemberAdministrationRepository(networkRequesting: network)
@@ -60,6 +60,50 @@ struct MemberAdministrationRepositoryTests {
         #expect(generations.first?.isActive == true)
         #expect(organization.schools.first?.parentId == "2")
         #expect(organization.chapters.first?.id == "2")
+    }
+
+    @Test("기수 목록은 현재 엔드포인트의 마지막 페이지까지 읽고 최신순으로 정렬한다")
+    func generationsLoadAllPages() async throws {
+        let network = AdministrationNetwork([
+            #"{"success":true,"result":{"content":[{"gisuId":8,"generation":"9","isActive":false}],"hasNext":true}}"#,
+            #"{"success":true,"result":{"content":[{"gisuId":"10","generation":11,"isActive":true}],"hasNext":false}}"#
+        ])
+        let generations = try await MemberAdministrationRepository(
+            networkRequesting: network
+        ).fetchGenerations()
+        #expect(generations.map(\.id) == ["10", "8"])
+        #expect(generations.map(\.name) == ["11기", "9기"])
+        #expect(generations.first?.isActive == true)
+        #expect(network.paths == ["/api/v1/gisu", "/api/v1/gisu"])
+        let pages = network.tasks.compactMap { task -> Int? in
+            guard case let .requestParameters(query, _) = task else { return nil }
+            return query["page"] as? Int
+        }
+        #expect(pages == [0, 1])
+    }
+
+    @Test("빈 기수 목록은 추가 페이지 요청 없이 반환한다")
+    func emptyGenerationsStopPagination() async throws {
+        let network = AdministrationNetwork([
+            #"{"success":true,"result":{"content":[],"hasNext":false}}"#
+        ])
+        let generations = try await MemberAdministrationRepository(
+            networkRequesting: network
+        ).fetchGenerations()
+        #expect(generations.isEmpty)
+        #expect(network.paths == ["/api/v1/gisu"])
+    }
+
+    @Test("후속 기수 페이지 실패를 부분 목록으로 숨기지 않는다")
+    func generationsPropagateLaterPageFailure() async {
+        let network = AdministrationNetwork([
+            #"{"success":true,"result":{"content":[{"gisuId":10,"generation":11}],"hasNext":true}}"#,
+            #"{"success":false,"code":"COMMON500","message":"조회 실패"}"#
+        ])
+        await #expect(throws: (any Error).self) {
+            try await MemberAdministrationRepository(networkRequesting: network).fetchGenerations()
+        }
+        #expect(network.paths == ["/api/v1/gisu", "/api/v1/gisu"])
     }
 
     @Test("사유 수정은 newDescription을 보내고 result 없는 성공을 처리한다")

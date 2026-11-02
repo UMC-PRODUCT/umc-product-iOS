@@ -46,8 +46,18 @@ public final class MemberAdministrationRepository:
     }
 
     public func fetchGenerations() async throws -> [MemberFilterOption] {
-        let result: AdminGenerationListDTO = try await fetch(.generations)
-        return result.gisuList.sorted {
+        var generations: [AdminGenerationDTO] = []
+        var page = 0
+        while true {
+            try _Concurrency.Task.checkCancellation()
+            let result: AdminGenerationListDTO = try await fetch(
+                .generations(MemberGenerationQuery(page: page))
+            )
+            generations.append(contentsOf: result.content)
+            guard result.hasNext else { break }
+            page += 1
+        }
+        return generations.sorted {
             (Int($0.generation) ?? 0) > (Int($1.generation) ?? 0)
         }.map {
             MemberFilterOption(id: $0.gisuId, name: "\($0.generation)기", isActive: $0.isActive)
