@@ -22,6 +22,14 @@ struct MemberAdministrationQuery: Sendable {
     }
 }
 
+/// 기수 목록 API는 페이지 단위로 반환하므로 다음 페이지를 명시합니다.
+struct MemberGenerationQuery: Sendable {
+    let page: Int
+    var toParameters: [String: Any] {
+        ["page": page, "size": 100]
+    }
+}
+
 struct MemberOrganizationQuery: Sendable {
     let gisuId: String
     var toParameters: [String: Any] {

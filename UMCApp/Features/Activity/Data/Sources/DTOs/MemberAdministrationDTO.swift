@@ -94,20 +94,23 @@ struct AdminSearchItemDTO: Codable {
 
 /// 운영진 API에서 사용하는 부분 응답입니다. 식별자는 문자열로 보존합니다.
 struct AdminGenerationListDTO: Codable {
-    let gisuList: [AdminGenerationDTO]
+    let content: [AdminGenerationDTO]
+    let hasNext: Bool
 
     private enum CodingKeys: String, CodingKey {
-        case gisuList
+        case content, hasNext
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        gisuList = try container.decode([AdminGenerationDTO].self, forKey: .gisuList)
+        content = try container.decode([AdminGenerationDTO].self, forKey: .content)
+        hasNext = try container.decode(Bool.self, forKey: .hasNext)
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(gisuList, forKey: .gisuList)
+        try container.encode(content, forKey: .content)
+        try container.encode(hasNext, forKey: .hasNext)
     }
 }
 
