@@ -36,6 +36,7 @@ private final class AdministrationFake: MemberAdministrationUseCaseProtocol {
     var gate: SearchGate?
     var organizationGate: SearchGate?
     var organizationFails = false
+    var generationsFail = false
     var lastFilter: MemberSearchFilter?
     func search(filter: MemberSearchFilter, page: Int) async throws -> AdminMemberPage {
         lastFilter = filter
@@ -43,7 +44,8 @@ private final class AdministrationFake: MemberAdministrationUseCaseProtocol {
         return .init(members: [adminMember(filter.keyword.isEmpty ? "initial" : filter.keyword)], hasNext: true)
     }
     func fetchGenerations() async throws -> [MemberFilterOption] {
-        [.init(id: "10", name: "10기", isActive: true)]
+        if generationsFail { throw URLError(.badServerResponse) }
+        return [.init(id: "10", name: "10기", isActive: true)]
     }
     func fetchOrganizations(gisuId: String) async throws -> MemberOrganizationOptions {
         if organizationFails { throw DomainError.custom(message: "조직 조회 실패") }
@@ -123,6 +125,41 @@ struct MemberAdministrationViewModelTests {
         await vm.loadMore()
         #expect(api.lastFilter?.keyword == "")
         #expect(vm.members.map(\.id) == ["initial"])
+    }
+
+    @Test("중앙 교육국은 기수 조회 실패 후 재시도하면 필터와 멤버 목록을 복구한다")
+    func retryRecoversGenerationFailureForCentralEducation() async {
+        let api = AdministrationFake()
+        api.authority = .init(roles: [.init(
+            gisu: "10", gisuId: "10", roleType: .centralEducationTeamMember,
+            organizationType: .central, organizationId: nil
+        )])
+        api.generationsFail = true
+        let vm = MemberAdministrationViewModel(
+            useCase: api, membersUseCase: MemberActionsFake(), session: UserSessionManager()
+        )
+
+        await vm.load()
+
+        #expect(vm.errorMessage != nil)
+        #expect(!vm.isLoading)
+        #expect(vm.generations.isEmpty)
+        #expect(vm.organizations.schools.isEmpty)
+        #expect(vm.members.isEmpty)
+        #expect(api.lastFilter == nil)
+
+        api.generationsFail = false
+        await vm.retry()
+
+        #expect(vm.errorMessage == nil)
+        #expect(!vm.isLoading)
+        #expect(vm.generations.map(\.id) == ["10"])
+        #expect(vm.filter.gisuId == "10")
+        #expect(vm.availableSchools.map(\.id) == ["20"])
+        #expect(vm.canSelectAllSchools)
+        #expect(vm.members.map(\.id) == ["initial"])
+        #expect(api.lastFilter?.gisuId == "10")
+        #expect(api.lastFilter?.schoolId == nil)
     }
 
     @Test func retryRecoversOrganizationFailure() async {
