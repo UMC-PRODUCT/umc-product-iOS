@@ -31,7 +31,7 @@ enum AppDeepLink: Hashable {
 
     /// 내부 링크면 해석해 돌려준다. 아니면 `nil` — 소셜 로그인 콜백이 그 경로다.
     ///
-    /// 세 파서가 무는 표기는 겹치지 않는다 (`umc://thread|notice`·`https://umc.it.kr/t/…`
+    /// 세 파서가 무는 표기는 겹치지 않는다 (`umc://thread|notice`·`https://{api host}/community/threads/…`
     /// 대 `umc://card/…`·`https://{api host}/mypage/card?memberId=…` 대
     /// `umc://attendance/…`). 그래도 순서를 고정해 두는 편이 안전해 기존 동작인 메시지
     /// 링크를 먼저 본다.

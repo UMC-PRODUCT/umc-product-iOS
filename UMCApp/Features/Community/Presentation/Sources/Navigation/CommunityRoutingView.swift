@@ -53,6 +53,7 @@ struct CommunityRoutingView: View {
             CommunityThreadRoomView(
                 viewModel: CommunityThreadRoomViewModel(
                     threadId: threadId,
+                    shareBaseURL: Config.API.baseURL,
                     useCase: container.resolve(CommunityThreadRoomUseCaseProtocol.self),
                     listUseCase: container.resolve(CommunityThreadListUseCaseProtocol.self),
                     errorHandler: errorHandler,

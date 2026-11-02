@@ -48,6 +48,84 @@ struct MessageLinkTests {
         #expect(MessageLink.parse(url) == link)
     }
 
+    @Test("운영·개발 HTTPS 및 알림 query 링크를 읽는다", arguments: [
+        "https://api.university.neordinary.com/community/threads/42",
+        "https://dev.api.university.neordinary.com/community/threads/42",
+        "https://api-dev.university.neordinary.com/community/threads/42",
+        "https://api.university.neordinary.com/community/threads?threadId=42",
+        "umc://thread?threadId=42",
+    ])
+    func parsesSharedThread(_ raw: String) {
+        #expect(MessageLink.parse(raw) == .thread(id: "42"))
+    }
+
+    @Test("다른 출처·경로·잘못된 식별자의 공유 링크는 거부한다", arguments: [
+        "http://api.university.neordinary.com/community/threads/42",
+        "https://api.university.neordinary.com.evil.com/community/threads/42",
+        "https://api.university.neordinary.com/api/v1/community/threads/42",
+        "https://api.university.neordinary.com/community/threads/42/members",
+        "https://api.university.neordinary.com/community/threads/abc",
+        "https://api.university.neordinary.com/community/threads/",
+        "https://api.university.neordinary.com/community/threads?threadId=",
+        "umc://thread?threadId=42&threadId=99",
+    ])
+    func rejectsInvalidSharedThread(_ raw: String) {
+        #expect(MessageLink.parse(raw) == nil)
+    }
+
+    @Test("HTTPS 공유 링크를 본문 카드로 분해한다")
+    func splitsHTTPSShareLink() {
+        let raw = "https://api.university.neordinary.com/community/threads/42"
+        #expect(MessageLink.segments(in: "참고 \(raw) 확인") == [
+            .text("참고 "), .link(.thread(id: "42"), raw: raw), .text(" 확인"),
+        ])
+    }
+
+    @Test("공유 생성은 현재 API 환경을 보존하고 상대 경로를 HTTPS로 정규화한다")
+    func buildsEnvironmentShareLink() {
+        let base = URL(string: "https://dev.api.university.neordinary.com/api/v1")!
+        #expect(MessageLink.threadShareURL(
+            id: "42", serverURL: "/api/v1/community/threads/42", baseURL: base
+        )?.absoluteString == "https://dev.api.university.neordinary.com/community/threads/42")
+    }
+
+    @Test("잘못된 서버 공유 값은 현재 스레드의 HTTPS 링크로 대체한다", arguments: [
+        "umc://thread/42", "https://umc.it.kr/t/42", "/api/v1/community/threads/42",
+        "https://evil.com/community/threads/42",
+        "https://api.university.neordinary.com/community/threads/99",
+    ])
+    func normalizesServerShareLink(_ raw: String) {
+        #expect(MessageLink.threadShareURL(id: "42", serverURL: raw)?.absoluteString ==
+            "https://api.university.neordinary.com/community/threads/42")
+    }
+
+    @Test("잘못된 ID 접미사를 본문에서 다른 스레드 카드로 잘라내지 않는다", arguments: [
+        "https://api.university.neordinary.com/community/threads/42-other",
+        "https://api.university.neordinary.com/community/threads?threadId=42-abc",
+        "https://api.university.neordinary.com/community/threads/42.invalid",
+        "umc://thread/42-other",
+    ])
+    func keepsMalformedLinkAsText(_ raw: String) {
+        #expect(MessageLink.parse(raw) == nil)
+        #expect(MessageLink.segments(in: raw) == [.text(raw)])
+    }
+
+    @Test("공유 링크 뒤 문장부호는 본문에 남긴다")
+    func preservesLinkPunctuation() {
+        let raw = "https://api.university.neordinary.com/community/threads/42"
+        #expect(MessageLink.segments(in: "(\(raw)).") == [
+            .text("("), .link(.thread(id: "42"), raw: raw), .text(")."),
+        ])
+    }
+
+    @Test("실제 iOS 개발 API 호스트의 상대 공유 URL도 환경을 유지한다")
+    func buildsIOSDevelopmentShareLink() {
+        let base = URL(string: "https://api-dev.university.neordinary.com/api/v1")!
+        #expect(MessageLink.threadShareURL(
+            id: "42", serverURL: "/api/v1/community/threads/42", baseURL: base
+        )?.absoluteString == "https://api-dev.university.neordinary.com/community/threads/42")
+    }
+
     // MARK: - segments
 
     @Test("본문에서 내부 링크만 골라 앞뒤 텍스트와 함께 순서대로 분해한다")

@@ -62,6 +62,26 @@ struct AppDeepLinkTests {
         #expect(AppDeepLink.parse(url) == .message(.notice(id: "34")))
     }
 
+    @Test("HTTPS 공유·custom query 알림을 앱의 스레드 목적지로 연결한다", arguments: [
+        "https://api.university.neordinary.com/community/threads/42",
+        "https://dev.api.university.neordinary.com/community/threads/42",
+        "https://api-dev.university.neordinary.com/community/threads/42",
+        "umc://thread?threadId=42",
+    ])
+    func parsesSharedThread(_ raw: String) {
+        #expect(AppDeepLink.parse(URL(string: raw)!) == .message(.thread(id: "42")))
+    }
+
+    @Test("로그인 전 받은 공유 링크는 소비할 때까지 보관하고 한 번만 꺼낸다")
+    func storesSharedThreadUntilReady() {
+        let store = DeepLinkStore()
+        let url = URL(string: "https://api.university.neordinary.com/community/threads/42")!
+        #expect(store.receive(url))
+        #expect(store.pending == .message(.thread(id: "42")))
+        #expect(store.take() == .message(.thread(id: "42")))
+        #expect(store.take() == nil)
+    }
+
     // MARK: - Attendance
 
     /// 출석 승인/반려 푸시가 싣고 오는 표기. 여기서 못 읽으면 알림을 탭해도 아무 일이 없다.
