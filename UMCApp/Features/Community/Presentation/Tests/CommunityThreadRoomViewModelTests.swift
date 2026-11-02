@@ -586,6 +586,7 @@ struct CommunityThreadRoomViewModelTests {
         let viewModel = makeViewModel(useCase)
         await viewModel.load()
         viewModel.draft = "씨 발"
+        #expect(viewModel.canSend)
         await viewModel.send()
         #expect(useCase.sentContents.isEmpty)
         #expect(viewModel.messages.isEmpty)
@@ -994,6 +995,93 @@ struct CommunityThreadRoomViewModelTests {
         ))
 
         #expect(viewModel.messages.first?.deliveryState == .failed)
+    }
+
+    @Test("서버 금지어 거절은 실패 버블을 제거하고 초안과 안내를 복원한다")
+    func removesForbiddenMessageAndRestoresDraft() async throws {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.draft = "서버에서만 검증하는 표현"
+        await viewModel.send()
+        let key = try #require(useCase.sentClientMessageIds.first)
+        viewModel.markFailed(clientMessageId: key)
+
+        viewModel.applyCommandFailure(RealtimeCommandError(
+            commandId: nil, clientMessageId: key.uppercased(), status: "400",
+            code: "CHAT-0023", message: "부적절한 표현이 포함되어 있어 메시지를 전송할 수 없어요.",
+            retryable: false
+        ))
+
+        #expect(viewModel.messages.isEmpty)
+        #expect(viewModel.draft == "서버에서만 검증하는 표현")
+        #expect(viewModel.composerValidationMessage?.contains("부적절한 표현") == true)
+    }
+
+    @Test("늦은 금지어 거절은 새 초안을 덮어쓰지 않는다")
+    func forbiddenRejectionPreservesNewDraft() async throws {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.draft = "서버 검증 대상"
+        await viewModel.send()
+        let key = try #require(useCase.sentClientMessageIds.first)
+        viewModel.draft = "새로 쓰는 내용"
+        viewModel.applyCommandFailure(RealtimeCommandError(
+            commandId: nil, clientMessageId: key, status: "400",
+            code: "CHAT-0023", message: "부적절한 표현이 포함되어 있어 메시지를 전송할 수 없어요.",
+            retryable: false
+        ))
+        #expect(viewModel.messages.isEmpty)
+        #expect(viewModel.draft == "새로 쓰는 내용")
+        #expect(viewModel.composerValidationMessage != nil)
+    }
+
+    @Test("금지어 거절은 답장과 멘션을 복원하고 중복 거절은 무시한다")
+    func forbiddenRejectionRestoresAttachmentsOnce() async throws {
+        let useCase = StubRoomUseCase()
+        let original = makeMessage(id: "10", content: "답장 대상")
+        let viewModel = await makeLoadedViewModel(useCase, with: original)
+        viewModel.requestReply(original)
+        viewModel.draft = "@"
+        viewModel.selectMention(ThreadMember(
+            id: "7", name: "민수", part: "iOS", profileImageURL: nil, role: .admin
+        ))
+        viewModel.draft += "서버 검증 대상"
+        await viewModel.send()
+        let key = try #require(useCase.sentClientMessageIds.first)
+        let rejection = RealtimeCommandError(
+            commandId: nil, clientMessageId: key, status: "400",
+            code: "CHAT-0023", message: "부적절한 표현이 포함되어 있어 메시지를 전송할 수 없어요.",
+            retryable: false
+        )
+        viewModel.applyCommandFailure(rejection)
+        #expect(viewModel.replyTarget?.messageId == "10")
+        #expect(viewModel.pickedMentions.first?.id == "7")
+        #expect(viewModel.pickedMentions.first?.role == .admin)
+        #expect(viewModel.messages.map(\.id) == ["10"])
+        viewModel.draft = "수정한 내용"
+        viewModel.applyCommandFailure(rejection)
+        #expect(viewModel.draft == "수정한 내용")
+        #expect(viewModel.composerValidationMessage == nil)
+    }
+
+    @Test("이미 서버가 확정한 메시지는 늦은 금지어 오류로 제거하지 않는다")
+    func forbiddenRejectionDoesNotRemoveConfirmedMessage() async throws {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        viewModel.draft = "정상 메시지"
+        await viewModel.send()
+        let key = try #require(useCase.sentClientMessageIds.first)
+        viewModel.messages[0].deliveryState = .sent
+        viewModel.applyCommandFailure(RealtimeCommandError(
+            commandId: nil, clientMessageId: key, status: "400",
+            code: "CHAT-0023", message: "거절", retryable: false
+        ))
+        #expect(viewModel.messages.first?.deliveryState == .sent)
+        #expect(viewModel.draft.isEmpty)
+        #expect(viewModel.composerValidationMessage == nil)
     }
 
     @Test("429 는 안내를 띄우고 전송을 잠근다")

@@ -128,6 +128,9 @@ public struct RealtimeCommandError: Error, Hashable, Sendable {
     // MARK: - Computed Property
 
     public var isRateLimited: Bool { status == "429" }
+
+    /// 서버 ChatErrorCode.CHAT_MESSAGE_FORBIDDEN_WORD. 전송 여부가 불명확한 실패와 구분한다.
+    public var isForbiddenWord: Bool { code == "CHAT-0023" && !retryable }
 }
 
 /// 화면이 구독하는 실시간 신호.

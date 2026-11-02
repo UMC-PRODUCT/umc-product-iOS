@@ -165,6 +165,8 @@ public final class CommunityThreadRoomViewModel {
     private let sendTimeout: Duration
     let analytics: AppAnalytics.Handler
     @ObservationIgnored private var hasRecordedEntry = false
+    /// 서버 금지어 거절 시 선택했던 멘션 정보를 초안과 함께 복원한다.
+    @ObservationIgnored private var pendingMentions: [String: [ThreadMember]] = [:]
     /// 로컬 발신만 추적한다. 타임아웃 뒤 늦게 온 서버 확정도 한 번만 집계한다.
     @ObservationIgnored private var pendingAnalytics: [String: [String: String]] = [:]
 
@@ -381,10 +383,12 @@ public final class CommunityThreadRoomViewModel {
         // 인용·멘션은 초안에 딸린 값이라 초안을 비우기 전에 확정한다.
         let reply = replyTarget
         let mentions = mentionedMembers(in: content)
+        let selectedMentions = pickedMentions
         draft = ""
         clearComposerAttachments()
         // 서버 멱등 키이자 `message.created` 매칭 열쇠. 대문자 UUID 는 canonical 이 아니다.
         let clientMessageId = UUID().uuidString.lowercased()
+        pendingMentions[clientMessageId] = selectedMentions
         messages.append(
             optimisticMessage(
                 clientMessageId: clientMessageId,
@@ -666,7 +670,33 @@ public final class CommunityThreadRoomViewModel {
         }
         applyEditFailure(error)
         guard let clientMessageId = error.clientMessageId else { return }
-        markFailed(clientMessageId: clientMessageId)
+        if error.isForbiddenWord {
+            rejectForbiddenMessage(clientMessageId: clientMessageId, notice: error.message)
+        } else {
+            markFailed(clientMessageId: clientMessageId)
+        }
+    }
+
+    /// 저장되지 않은 금지어 메시지는 대화에서 제거한다. 새로 작성 중인 초안은 건드리지 않는다.
+    private func rejectForbiddenMessage(clientMessageId: String, notice: String) {
+        let key = clientMessageId.lowercased()
+        guard let index = messages.firstIndex(where: {
+            $0.clientMessageId?.lowercased() == key && $0.deliveryState != .sent
+        }) else { return }
+
+        let rejected = messages.remove(at: index)
+        let mentions = pendingMentions.removeValue(forKey: key) ?? []
+        pendingTimeouts.removeValue(forKey: key)?.cancel()
+        pendingAnalytics.removeValue(forKey: key)
+        if draft.isEmpty, editTarget == nil, replyTarget == nil, pickedMentions.isEmpty,
+           rejected.type == .text {
+            draft = rejected.content
+            replyTarget = rejected.replyTo
+            pickedMentions = mentions
+        }
+        composerValidationMessage = notice.isEmpty
+            ? "부적절한 표현이 포함되어 있어 메시지를 전송할 수 없어요."
+            : notice
     }
 
     // MARK: - Private Function
@@ -949,6 +979,7 @@ public final class CommunityThreadRoomViewModel {
         // 보낼 때만 정규화하면 서버가 대문자로 되돌려 줄 때 열쇠가 어긋나 중복 버블이 남는다.
         if let key = (clientMessageId ?? message.clientMessageId)?.lowercased() {
             pendingTimeouts.removeValue(forKey: key)?.cancel()
+            pendingMentions.removeValue(forKey: key)
             if let parameters = pendingAnalytics.removeValue(forKey: key) {
                 analytics("community_message_sent", parameters)
             }
