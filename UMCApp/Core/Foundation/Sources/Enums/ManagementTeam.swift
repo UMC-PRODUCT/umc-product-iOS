@@ -68,9 +68,9 @@ public enum ManagementTeam: String, CaseIterable, Codable, Sendable, Comparable 
         self == .schoolPresident || self == .schoolVicePresident
     }
 
-    /// 운영진 공지 탭 접근 가능 여부 (교내 파트장 이상)
+    /// 운영진 공지 읽기 접근 가능 여부 (기타 교내 운영진 이상)
     public var canAccessStaffNotice: Bool {
-        level >= Self.schoolPartLeader.level
+        level >= Self.schoolEtcAdmin.level
     }
 
     // MARK: - Comparable

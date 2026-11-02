@@ -70,6 +70,18 @@ struct ManagementTeamTests {
         #expect(ManagementTeam.highestPriority(in: [ManagementTeam]()) == nil)
     }
 
+    @Test("기타 교내 운영진은 운영진 공지를 읽을 수 있지만 작성할 수 없다")
+    func schoolEtcAdminCanReadWithoutWritePermission() {
+        let role = ManagementTeam.schoolEtcAdmin
+
+        #expect(role.canAccessStaffNotice)
+        #expect(!role.canWriteCentralAllNotice)
+        #expect(!role.canWriteSchoolCoreNotice)
+        #expect(!role.canWriteSchoolPartLeaderNotice)
+        #expect(!role.canWriteAnyManagementNotice)
+        #expect(!ManagementTeam.challenger.canAccessStaffNotice)
+    }
+
     // MARK: - displayName / icon
 
     @Test("challenger 는 아이콘이 없어 displayName 이 한글명과 같다")

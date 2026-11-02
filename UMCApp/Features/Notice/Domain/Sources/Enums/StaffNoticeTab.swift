@@ -41,7 +41,7 @@ public enum StaffNoticeTab: String, CaseIterable, Identifiable, Equatable, Hasha
         switch self {
         case .centralMember: return ManagementTeam.centralEducationTeamMember.level
         case .schoolCore: return ManagementTeam.schoolPresident.level
-        case .schoolPartLeader: return ManagementTeam.schoolPartLeader.level
+        case .schoolPartLeader: return ManagementTeam.schoolEtcAdmin.level
         }
     }
 
