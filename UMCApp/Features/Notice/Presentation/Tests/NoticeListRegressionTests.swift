@@ -187,8 +187,8 @@ struct NoticeListRegressionTests {
         #expect(error.userMessage.contains("소속 정보"))
     }
 
-    @Test("회장단과 파트장이 중앙·교내 범위를 목록과 검색에 동일하게 적용한다",
-          arguments: [ManagementTeam.schoolPresident, .schoolPartLeader])
+    @Test("교내 운영진이 중앙·교내 범위를 목록과 검색에 동일하게 적용한다",
+          arguments: [ManagementTeam.schoolPresident, .schoolPartLeader, .schoolEtcAdmin])
     func staffScopes(role: ManagementTeam) async {
         let useCase = ListUseCase()
         var requests = [(NoticeListRequest, String?)]()
@@ -201,6 +201,10 @@ struct NoticeListRegressionTests {
         await model.searchNotices(keyword: "중앙")
         #expect(requests.count == 2)
         #expect(requests.allSatisfy { $0.0.schoolId == nil })
+        #expect(requests.allSatisfy { $0.0.gisuId == "3" && $0.0.part == nil })
+        if role == .schoolEtcAdmin {
+            #expect(requests.allSatisfy { $0.0.noticeTab == "SCHOOL_PART_LEADER" })
+        }
         model.selectScope(.school)
         await Task.yield()
         await model.searchNotices(keyword: "교내")
@@ -210,6 +214,7 @@ struct NoticeListRegressionTests {
         #expect(requests.last?.0.page == 1)
         #expect(requests.last?.0.schoolId == "5")
         #expect(requests.last?.1 == "교내")
+        #expect(requests.allSatisfy { $0.0.gisuId == "3" && $0.0.part == nil })
     }
 
     @Test("운영진 특정 기수는 역매핑하며 전체·알 수 없는 기수를 구분한다")
