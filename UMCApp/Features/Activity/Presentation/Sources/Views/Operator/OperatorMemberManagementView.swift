@@ -14,52 +14,63 @@ struct OperatorMemberManagementView: View {
     @State private var searchText = ""
 
     init(container: DIContainer, errorHandler: ErrorHandler) {
-        _viewModel = State(initialValue: MemberAdministrationViewModel(
+        self.init(viewModel: MemberAdministrationViewModel(
             useCase: container.resolve(MemberAdministrationUseCaseProtocol.self),
             membersUseCase: container.resolve(FetchMembersUseCaseProtocol.self),
             session: container.resolve(UserSessionManager.self)
         ))
     }
 
+    init(viewModel: MemberAdministrationViewModel) {
+        _viewModel = State(initialValue: viewModel)
+    }
+
     var body: some View {
         List {
-            Section {
-                Button { showFilters = true } label: {
-                    Label("기수·지부·학교·파트 필터", systemImage: "line.3.horizontal.decrease")
-                }
-                if let generation = viewModel.generations.first(where: { $0.id == viewModel.filter.gisuId }) {
-                    Text(generation.name)
-                        .appFont(.footnote, color: .grey500)
+            if viewModel.filterOptionsState == .ready || viewModel.generations.count > 1 {
+                Section {
+                    Button { showFilters = true } label: {
+                        HStack(spacing: DefaultSpacing.spacing12) {
+                            Image(systemName: "line.3.horizontal.decrease")
+                                .foregroundStyle(.tint)
+                                .accessibilityHidden(true)
+                            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                                Text("멤버 필터").font(.headline)
+                                Text(viewModel.filterSummary).font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote).foregroundStyle(.tertiary)
+                                .accessibilityHidden(true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityElement(children: .combine)
                 }
             }
-            if viewModel.isLoading {
-                ProgressView("멤버를 불러오는 중…")
-                    .frame(maxWidth: .infinity)
-                    .listRowBackground(Color.Surface.content)
-            } else if let error = viewModel.errorMessage, viewModel.members.isEmpty {
-                Section {
-                    Text(error).appFont(.subheadline)
-                    Button("다시 시도") { Task { await viewModel.retry() } }
-                }
-            } else if viewModel.members.isEmpty {
-                ContentUnavailableView("멤버가 없습니다", systemImage: "person.3",
-                                       description: Text("검색어나 필터를 변경해 보세요."))
-            } else {
-                Section("멤버") {
-                    ForEach(viewModel.members) { item in
-                        Button { Task { await viewModel.select(item) } } label: {
-                            MemberAdministrationRow(item: item)
-                        }
-                    }
-                    if viewModel.isLoadingNextPage {
-                        ProgressView().frame(maxWidth: .infinity)
-                    } else {
-                        Button("더 불러오기") { Task { await viewModel.loadMore() } }
-                            .disabled(!viewModel.hasMore)
-                    }
-                    if let error = viewModel.errorMessage {
-                        Text(error).appFont(.footnote, color: .red)
-                    }
+            switch viewModel.filterOptionsState {
+            case .loading:
+                loadingRow("조회 범위를 확인하는 중…")
+            case .failed(let error):
+                failureSection(
+                    viewModel.generations.isEmpty ? "조회 범위를 불러올 수 없어요" : "조직을 불러올 수 없어요",
+                    error: error
+                )
+            case .ready:
+                if viewModel.isLoading {
+                    loadingRow("멤버를 찾는 중…")
+                } else if let error = viewModel.searchError {
+                    failureSection("멤버 목록을 불러올 수 없어요", error: error)
+                } else if viewModel.members.isEmpty {
+                    ContentUnavailableView(
+                        "조회된 멤버가 없어요", systemImage: "person.2",
+                        description: Text("현재 조회 범위에서 검색어나 필터를 변경해 보세요.")
+                    )
+                } else {
+                    memberSection
                 }
             }
         }
@@ -80,74 +91,78 @@ struct OperatorMemberManagementView: View {
             MemberAdministrationDetailSheet(member: member, viewModel: viewModel)
         }
     }
+    private func loadingRow(_ title: String) -> some View {
+        ProgressView(title).frame(maxWidth: .infinity)
+    }
+
+    private func failureSection(_ title: String, error: AppError) -> some View {
+        RetryContentUnavailableView(
+            title: title,
+            systemImage: "exclamationmark.triangle",
+            description: error.userMessage,
+            isRetrying: viewModel.isLoading,
+            error: error,
+            screenName: "운영진 멤버 관리",
+            retryAction: { await viewModel.retry() }
+        )
+        .listRowBackground(Color.clear)
+    }
+
+    private var memberSection: some View {
+        Section("멤버") {
+            ForEach(viewModel.members) { item in
+                Button { Task { await viewModel.select(item) } } label: {
+                    MemberAdministrationRow(item: item)
+                }
+                .buttonStyle(.plain)
+            }
+            if viewModel.isLoadingNextPage {
+                loadingRow("다음 멤버를 불러오는 중…")
+            } else if viewModel.hasMore {
+                if let reason = viewModel.nextPageError {
+                    Text("다음 멤버를 불러올 수 없어요").font(.headline)
+                    Text(reason).font(.subheadline).foregroundStyle(.secondary)
+                }
+                Button(viewModel.nextPageError == nil ? "더 불러오기" : "다음 페이지 다시 불러오기") {
+                    Task { await viewModel.loadMore() }
+                }
+            }
+        }
+    }
 }
 
 private struct MemberAdministrationRow: View {
     let item: AdminMember
+    private var member: MemberManagementItem { item.member }
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-            CoreMemberManagementRow(memberManagementItem: item.member)
-            Text("\(item.member.school) · \(item.member.generation)")
-                .appFont(.footnote, color: .grey500)
+        HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
+            MemberImagePresenter(memberManagementItem: member)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                Text([member.nickname, member.name].filter { !$0.isEmpty }.joined(separator: " / "))
+                    .font(.headline)
+                Text([member.school, member.generation].filter { !$0.isEmpty }.joined(separator: " · "))
+                    .font(.subheadline).foregroundStyle(.secondary)
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) { badges }
+                } else {
+                    FlowLayout(spacing: DefaultSpacing.spacing4) { badges }
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, DefaultSpacing.spacing4)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
     }
-}
 
-private struct MemberAdministrationFilterSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Bindable var viewModel: MemberAdministrationViewModel
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Picker("기수", selection: $viewModel.filter.gisuId) {
-                    ForEach(viewModel.generations) { Text($0.name).tag($0.id) }
-                }
-                .onChange(of: viewModel.filter.gisuId) { _, _ in
-                    Task { await viewModel.changeGeneration() }
-                }
-                if !viewModel.availableChapters.isEmpty {
-                    Picker("지부", selection: $viewModel.filter.chapterId) {
-                        if viewModel.canSelectAllChapters { Text("전체 지부").tag(String?.none) }
-                        ForEach(viewModel.availableChapters) { Text($0.name).tag(Optional($0.id)) }
-                    }
-                    .onChange(of: viewModel.filter.chapterId) { _, _ in
-                        viewModel.filter.schoolId = nil
-                        Task { await viewModel.search() }
-                    }
-                }
-                Picker("학교", selection: $viewModel.filter.schoolId) {
-                    if viewModel.canSelectAllSchools { Text("전체 학교").tag(String?.none) }
-                    ForEach(viewModel.availableSchools) { Text($0.name).tag(Optional($0.id)) }
-                }
-                .onChange(of: viewModel.filter.schoolId) { _, _ in Task { await viewModel.search() } }
-                Picker("파트", selection: $viewModel.filter.part) {
-                    Text("전체 파트").tag(String?.none)
-                    ForEach(UMCPartType.allCases.filter { $0 != .admin }, id: \.apiValue) {
-                        Text($0.name).tag(Optional($0.apiValue))
-                    }
-                }
-                .onChange(of: viewModel.filter.part) { _, _ in Task { await viewModel.search() } }
-                if viewModel.isLoading { ProgressView("필터를 불러오는 중…") }
-                if let error = viewModel.organizationError {
-                    Section {
-                        Text(error).appFont(.footnote, color: .red)
-                        Button("조직 필터 다시 불러오기") {
-                            Task { await viewModel.changeGeneration() }
-                        }
-                    }
-                }
-                if let error = viewModel.errorMessage { Text(error).appFont(.footnote, color: .red) }
-            }
-            .navigationTitle("멤버 필터")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("완료") { dismiss() }
-                }
-            }
+    @ViewBuilder private var badges: some View {
+        if member.part != .admin { MemberTag(part: member.part) }
+        if member.infra && member.part.canHaveInfra {
+            Text(UMCPartType.infraName).font(.caption)
         }
+        if member.managementTeam != .challenger { MemberTag(role: member.managementTeam) }
     }
 }

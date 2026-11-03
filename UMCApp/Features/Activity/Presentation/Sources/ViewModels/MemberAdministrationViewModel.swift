@@ -7,6 +7,12 @@ import UMCFoundation
 /// 검색 조건별 요청 세대를 분리하고, 상세 기록은 서버 응답만 표시합니다.
 @MainActor @Observable
 final class MemberAdministrationViewModel {
+    enum FilterOptionsState: Equatable {
+        case loading
+        case ready
+        case failed(AppError)
+    }
+
     private let useCase: MemberAdministrationUseCaseProtocol
     private let membersUseCase: FetchMembersUseCaseProtocol
     private let session: UserSessionManager
@@ -18,8 +24,9 @@ final class MemberAdministrationViewModel {
     private(set) var isLoadingNextPage = false
     private(set) var isMutating = false
     private(set) var isLoadingDetail = false
-    private(set) var errorMessage: String?
-    private(set) var organizationError: String?
+    private(set) var searchError: AppError?
+    private(set) var nextPageError: String?
+    private(set) var filterOptionsState: FilterOptionsState = .loading
     private(set) var detailError: String?
     private(set) var actionError: String?
     private(set) var history: [OperatorMemberPenaltyHistory] = []
@@ -32,7 +39,6 @@ final class MemberAdministrationViewModel {
     private var page = 0
     private var hasNext = false
     private var loaded = false
-    private var organizationLoadFailed = false
 
     var hasMore: Bool { hasNext }
 
@@ -81,10 +87,41 @@ final class MemberAdministrationViewModel {
     }
     var canSelectAllChapters: Bool { authority.canSearchAllSchools(gisuId: filter.gisuId) }
 
+    var filterSummary: String {
+        let generation = generations.first { $0.id == filter.gisuId }?.name
+        let chapter = availableChapters.first { $0.id == filter.chapterId }?.name
+        let school = availableSchools.first { $0.id == filter.schoolId }?.name
+        let part = filter.part.flatMap(UMCPartType.init(apiValue:))?.name
+        guard filterOptionsState == .ready else { return generation ?? "" }
+        return [generation, chapter ?? (canSelectAllChapters ? "전체 지부" : nil),
+                school ?? (canSelectAllSchools ? "전체 학교" : "학교 정보 없음"),
+                part ?? "전체 파트"].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    /// 초기화해도 검색어와 사용자의 기수별 필수 조직 범위는 유지합니다.
+    private var defaultFilter: MemberSearchFilter? {
+        guard let initial = generations.first(where: \.isActive) ?? generations.first else {
+            return nil
+        }
+        return try? authority.scopedFilter(.init(keyword: filter.keyword, gisuId: initial.id))
+    }
+
+    var canResetFilters: Bool {
+        filterOptionsState == .ready && defaultFilter.map { $0 != filter } == true
+    }
+
+    func resetFilters() async {
+        guard canResetFilters, let defaults = defaultFilter else { return }
+        let changeOrganizations = filter.gisuId != defaults.gisuId
+        filter = defaults
+        if changeOrganizations { await changeGeneration() } else { await search() }
+    }
+
     func load() async {
         guard !loaded else { return }
+        filterOptionsState = .loading
         isLoading = true
-        errorMessage = nil
+        searchError = nil
         let sessionRevision = session.sessionRevision
         do {
             let fetchedAuthority = try await useCase.fetchAuthority()
@@ -105,7 +142,7 @@ final class MemberAdministrationViewModel {
             loaded = true
             await changeGeneration()
         } catch {
-            errorMessage = message(error)
+            filterOptionsState = .failed(listError(from: error))
             isLoading = false
         }
     }
@@ -122,39 +159,40 @@ final class MemberAdministrationViewModel {
         hasNext = false
         page = 0
         isLoadingNextPage = false
+        nextPageError = nil
         organizations = .init(chapters: [], schools: [])
         isLoading = true
-        errorMessage = nil
-        organizationLoadFailed = false
-        organizationError = nil
+        searchError = nil
+        filterOptionsState = .loading
         do {
             let options = try await useCase.fetchOrganizations(gisuId: gisuId)
             guard version == organizationVersion, filter.gisuId == gisuId else { return }
             organizations = options
             filter = try authority.scopedFilter(filter)
+            filterOptionsState = .ready
             await search()
         } catch {
             guard version == organizationVersion else { return }
-            organizationLoadFailed = true
-            errorMessage = message(error)
-            organizationError = message(error)
+            filterOptionsState = .failed(listError(from: error))
             isLoading = false
         }
     }
 
     func retry() async {
         if !loaded { await load() }
-        else if organizationLoadFailed { await changeGeneration() }
+        else if case .failed = filterOptionsState { await changeGeneration() }
         else { await search() }
     }
 
     func search() async {
+        guard filterOptionsState == .ready else { return }
         requestVersion += 1
         let version = requestVersion
         isLoading = true
         defer { if version == requestVersion { isLoading = false } }
         isLoadingNextPage = false
-        errorMessage = nil
+        nextPageError = nil
+        searchError = nil
         members = []
         hasNext = false
         do {
@@ -168,7 +206,7 @@ final class MemberAdministrationViewModel {
             hasNext = result.hasNext
         } catch {
             guard version == requestVersion, !Task.isCancelled else { return }
-            errorMessage = message(error)
+            searchError = listError(from: error)
         }
     }
 
@@ -176,6 +214,7 @@ final class MemberAdministrationViewModel {
         guard hasNext, !isLoading, !isLoadingNextPage, let query = appliedFilter else { return }
         let version = requestVersion
         isLoadingNextPage = true
+        nextPageError = nil
         defer { if version == requestVersion { isLoadingNextPage = false } }
         do {
             let result = try await useCase.search(filter: query, page: page + 1)
@@ -185,8 +224,8 @@ final class MemberAdministrationViewModel {
             page += 1
             hasNext = result.hasNext
         } catch {
-            guard version == requestVersion else { return }
-            errorMessage = message(error)
+            guard version == requestVersion, !Task.isCancelled else { return }
+            nextPageError = message(error)
         }
     }
 
@@ -265,9 +304,17 @@ final class MemberAdministrationViewModel {
         await reloadHistory()
     }
 
+    /// 조직 권한 등 도메인 오류는 원래 분류로 보존하고 나머지는 공통 변환을 사용합니다.
+    private func listError(from error: Error) -> AppError {
+        if let domainError = error as? DomainError { return .domain(domainError) }
+        return AppError.from(error)
+    }
+
+    private static let genericErrorMessage = "요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요."
+
     private func message(_ error: Error) -> String {
         if let error = error as? DomainError { return error.userMessage }
         if let error = error as? AppError { return error.userMessage }
-        return "요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요."
+        return Self.genericErrorMessage
     }
 }

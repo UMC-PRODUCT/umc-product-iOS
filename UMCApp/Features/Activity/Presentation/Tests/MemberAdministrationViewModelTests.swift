@@ -37,15 +37,22 @@ private final class AdministrationFake: MemberAdministrationUseCaseProtocol {
     var organizationGate: SearchGate?
     var organizationFails = false
     var generationsFail = false
+    var firstPageFailure: AppError?
+    var nextPageFails = false
+    var lastPage: Int?
+    var generationOptions = [MemberFilterOption(id: "10", name: "10기", isActive: true)]
     var lastFilter: MemberSearchFilter?
     func search(filter: MemberSearchFilter, page: Int) async throws -> AdminMemberPage {
         lastFilter = filter
+        lastPage = page
+        if page == 0, let firstPageFailure { throw firstPageFailure }
+        if page > 0 && nextPageFails { throw URLError(.badServerResponse) }
         if filter.keyword == "old", let gate { await gate.pause() }
         return .init(members: [adminMember(filter.keyword.isEmpty ? "initial" : filter.keyword)], hasNext: true)
     }
     func fetchGenerations() async throws -> [MemberFilterOption] {
         if generationsFail { throw URLError(.badServerResponse) }
-        return [.init(id: "10", name: "10기", isActive: true)]
+        return generationOptions
     }
     func fetchOrganizations(gisuId: String) async throws -> MemberOrganizationOptions {
         if organizationFails { throw DomainError.custom(message: "조직 조회 실패") }
@@ -108,10 +115,14 @@ struct MemberAdministrationViewModelTests {
         api.organizationGate = gate
         let changing = Task { await vm.changeGeneration() }
         await gate.waitForStart()
+        #expect(vm.filterOptionsState == .loading)
+        api.lastFilter = nil
         vm.filter.keyword = "new"
         await vm.search()
+        #expect(api.lastFilter == nil)
         await gate.release()
         await changing.value
+        #expect(vm.filterOptionsState == .ready)
         #expect(vm.organizations.schools.map(\.id) == ["20"])
         #expect(vm.members.map(\.id) == ["new"])
     }
@@ -141,7 +152,7 @@ struct MemberAdministrationViewModelTests {
 
         await vm.load()
 
-        #expect(vm.errorMessage != nil)
+        #expect(vm.filterOptionsState == .failed(AppError.from(URLError(.badServerResponse))))
         #expect(!vm.isLoading)
         #expect(vm.generations.isEmpty)
         #expect(vm.organizations.schools.isEmpty)
@@ -151,7 +162,7 @@ struct MemberAdministrationViewModelTests {
         api.generationsFail = false
         await vm.retry()
 
-        #expect(vm.errorMessage == nil)
+        #expect(vm.searchError == nil)
         #expect(!vm.isLoading)
         #expect(vm.generations.map(\.id) == ["10"])
         #expect(vm.filter.gisuId == "10")
@@ -162,17 +173,76 @@ struct MemberAdministrationViewModelTests {
         #expect(api.lastFilter?.schoolId == nil)
     }
 
+    @Test func resetRestoresAuthorizedDefaultScopeAndKeepsKeyword() async {
+        let api = AdministrationFake()
+        api.generationOptions.append(.init(id: "9", name: "9기"))
+        api.authority = .init(roles: ["10", "9"].map { gisu in
+            .init(gisu: gisu, gisuId: gisu, roleType: .schoolPresident,
+                  organizationType: .school, organizationId: "20")
+        })
+        let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
+                                               session: UserSessionManager())
+        await vm.load()
+        #expect(!vm.canResetFilters)
+        vm.filter.gisuId = "9"
+        vm.filter.keyword = "검색"
+        vm.filter.part = "IOS"
+        await vm.changeGeneration()
+        #expect(vm.canResetFilters)
+        #expect(vm.filterSummary.contains("9기"))
+        #expect(vm.filterSummary.contains("학교"))
+        await vm.resetFilters()
+        #expect(!vm.canResetFilters)
+        #expect(api.lastFilter == .init(keyword: "검색", gisuId: "10", schoolId: "20"))
+    }
+
+    @Test func searchFailureRetainsReportableCauseUntilRetrySucceeds() async {
+        let api = AdministrationFake()
+        let error = AppError.repository(.invalidResponse(detail: "결과 형식 불일치"))
+        api.firstPageFailure = error
+        let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
+                                               session: UserSessionManager())
+        await vm.load()
+        #expect(vm.filterOptionsState == .ready)
+        #expect(vm.searchError == error)
+        #expect(vm.searchError?.isReportable == true)
+        api.firstPageFailure = nil
+        await vm.retry()
+        #expect(vm.searchError == nil)
+        #expect(vm.members.map(\.id) == ["initial"])
+    }
+
+    @Test func paginationFailureKeepsResultsAndRetriesSamePage() async {
+        let api = AdministrationFake()
+        let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
+                                               session: UserSessionManager())
+        await vm.load()
+        api.nextPageFails = true
+        await vm.loadMore()
+        #expect(vm.nextPageError != nil)
+        #expect(vm.searchError == nil)
+        #expect(vm.members.map(\.id) == ["initial"])
+        #expect(api.lastPage == 1)
+        api.nextPageFails = false
+        await vm.loadMore()
+        #expect(vm.nextPageError == nil)
+        #expect(api.lastPage == 1)
+    }
+
     @Test func retryRecoversOrganizationFailure() async {
         let api = AdministrationFake()
         api.organizationFails = true
         let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
                                                session: UserSessionManager())
         await vm.load()
-        #expect(vm.errorMessage != nil)
+        #expect(vm.filterOptionsState == .failed(.domain(.custom(message: "조직 조회 실패"))))
+        await vm.search()
+        #expect(api.lastFilter == nil)
+        #expect(vm.filterOptionsState == .failed(.domain(.custom(message: "조직 조회 실패"))))
         api.organizationFails = false
         await vm.retry()
         #expect(vm.organizations.schools.map(\.id) == ["20"])
-        #expect(vm.errorMessage == nil)
+        #expect(vm.searchError == nil)
     }
 
     @Test func staleSearchCannotReplaceNewResults() async {
