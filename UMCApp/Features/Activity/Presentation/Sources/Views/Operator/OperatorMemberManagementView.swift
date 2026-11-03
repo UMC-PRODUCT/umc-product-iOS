@@ -57,13 +57,13 @@ struct OperatorMemberManagementView: View {
             case .failed(let reason):
                 failureSection(
                     viewModel.generations.isEmpty ? "조회 범위를 불러올 수 없어요" : "조직을 불러올 수 없어요",
-                    reason: reason, retryLabel: "조회 범위 다시 불러오기"
+                    reason: reason
                 )
             case .ready:
                 if viewModel.isLoading {
                     loadingRow("멤버를 찾는 중…")
                 } else if let error = viewModel.errorMessage {
-                    failureSection("멤버 목록을 불러올 수 없어요", reason: error, retryLabel: "목록 다시 불러오기")
+                    failureSection("멤버 목록을 불러올 수 없어요", reason: error)
                 } else if viewModel.members.isEmpty {
                     ContentUnavailableView(
                         "조회된 멤버가 없어요", systemImage: "person.2",
@@ -95,25 +95,31 @@ struct OperatorMemberManagementView: View {
         ProgressView(title).frame(maxWidth: .infinity)
     }
 
-    private func failureSection(_ title: String, reason: String, retryLabel: String) -> some View {
-        Section {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-                Label(title, systemImage: "exclamationmark.circle")
-                    .font(.headline)
-                Text(reason)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Button {
-                    Task { await viewModel.retry() }
-                } label: {
-                    Label(retryLabel, systemImage: "arrow.clockwise")
-                        .frame(maxWidth: .infinity, minHeight: DefaultConstant.minimumTouchTarget)
-                }
-                .buttonStyle(.borderedProminent)
-                .labelStyle(.titleAndIcon)
+    private func failureSection(_ title: String, reason: String) -> some View {
+        VStack(spacing: DefaultSpacing.spacing12) {
+            Image(systemName: "exclamationmark.circle")
+                .font(.title)
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            Text(title).font(.headline)
+            if !reason.isEmpty, reason != MemberAdministrationViewModel.genericErrorMessage {
+                Text(reason).font(.subheadline).foregroundStyle(.secondary)
             }
-            .padding(.vertical, DefaultSpacing.spacing8)
+            Button {
+                Task { await viewModel.retry() }
+            } label: {
+                Label("다시 시도", systemImage: "arrow.clockwise")
+                    .font(.body.weight(.medium))
+                    .frame(minHeight: DefaultConstant.minimumTouchTarget)
+            }
+            .buttonStyle(.borderless)
+            .labelStyle(.titleAndIcon)
+            .tint(.teal700)
         }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DefaultSpacing.spacing24)
+        .listRowBackground(Color.clear)
     }
 
     private var memberSection: some View {

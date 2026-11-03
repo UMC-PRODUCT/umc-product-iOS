@@ -308,9 +308,11 @@ final class MemberAdministrationViewModel {
         await reloadHistory()
     }
 
+    static let genericErrorMessage = "요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요."
+
     private func message(_ error: Error) -> String {
         if let error = error as? DomainError { return error.userMessage }
         if let error = error as? AppError { return error.userMessage }
-        return "요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요."
+        return Self.genericErrorMessage
     }
 }
