@@ -70,7 +70,8 @@ public struct MyPageProfileView: View {
                 action: submitProfileUpdate,
                 disable: !viewModel.canSubmit,
                 isLoading: viewModel.isUpdatingProfileImage,
-                dismissOnTap: false
+                dismissOnTap: false,
+                accessibilityLabel: "프로필 저장"
             )
         }
         .onChange(of: viewModel.selectedPhotoItem) { _, _ in

@@ -21,7 +21,6 @@ struct OperatorMemberDetailSheetView: View {
 
     // MARK: - Property
 
-    @Environment(\.dismiss) private var dismiss
 
     let member: MemberManagementItem
     let availablePointTypes: [ChallengerPointType]
@@ -114,7 +113,7 @@ struct OperatorMemberDetailSheetView: View {
 
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
-        ToolBarCollection.CancelBtn { dismiss() }
+        ToolBarCollection.CloseBtn()
         ToolBarCollection.AddBtn(
             imageSystemName: "plus.circle.fill",
             action: { viewModel.showPointForm = true },

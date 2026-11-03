@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreUIComponents
 import CommunityDomain
 import CoreDesignSystem
 
@@ -57,9 +58,7 @@ struct ThreadCategorySheet: View {
             .navigationTitle("카테고리")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }
-                }
+                ToolBarCollection.CloseBtn(placement: .topBarTrailing)
             }
         }
         .presentationDetents([.medium])

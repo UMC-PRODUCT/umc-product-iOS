@@ -16,7 +16,6 @@ import UMCFoundation
 fileprivate enum Constants {
     static let navigationTitle = "신고"
     static let submitTitle = "신고하기"
-    static let dismissTitle = "취소"
     /// 신고를 누르기 직전에 가장 궁금한 두 가지 — 누가 보는지, 내 이름이 남는지.
     static let privacyNotice = "신고 내용은 스레드 개설자만 확인하며, 신고자는 익명으로 처리돼요."
     static let reasonSectionTitle = "신고 사유"
@@ -40,7 +39,6 @@ struct MessageReportSheet: View {
     /// 고른 사유. 시트를 닫으면 함께 사라지는 값이라 ViewModel 로 올리지 않는다.
     @State private var selection: ThreadMessageReportReason?
 
-    @Environment(\.dismiss) private var dismiss
 
     // MARK: - Body
 
@@ -62,10 +60,7 @@ struct MessageReportSheet: View {
             .navigationTitle(Constants.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(Constants.dismissTitle) { dismiss() }
-                        .appFont(.body, color: .grey700)
-                }
+                ToolBarCollection.CancelBtn()
             }
             .safeAreaInset(edge: .bottom) { submitButton }
         }

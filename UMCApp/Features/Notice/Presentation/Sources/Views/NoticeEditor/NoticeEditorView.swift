@@ -245,7 +245,8 @@ public struct NoticeEditorView: View {
                 action: saveNotice,
                 disable: !viewModel.canSubmit,
                 isLoading: viewModel.createState.isLoading,
-                dismissOnTap: false
+                dismissOnTap: false,
+                accessibilityLabel: viewModel.isTargetLocked ? "공지 수정" : "공지 등록"
             )
         }
     }

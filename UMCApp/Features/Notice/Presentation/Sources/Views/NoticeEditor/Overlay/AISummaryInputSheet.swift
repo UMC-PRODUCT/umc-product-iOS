@@ -48,10 +48,7 @@ struct AISummaryInputSheet: View {
             .navigationTitle("붙여넣고 AI 요약")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("취소", action: onCancel)
-                        .foregroundStyle(Color.grey500)
-                }
+                ToolBarCollection.CancelBtn(action: onCancel, dismissOnTap: false)
             }
         }
         .presentationDetents([.medium, .large])

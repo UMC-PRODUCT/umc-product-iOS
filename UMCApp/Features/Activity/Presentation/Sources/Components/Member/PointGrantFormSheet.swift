@@ -87,12 +87,13 @@ struct PointGrantFormSheet: View {
             .navigationTitle("상벌점 부여")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolBarCollection.CancelBtn { dismiss() }
+                ToolBarCollection.CancelBtn()
                 ToolBarCollection.ConfirmBtn(
                     action: { showReasonAlert = true },
                     disable: !isConfirmEnabled,
                     isLoading: isSubmittingPoint,
-                    dismissOnTap: false
+                    dismissOnTap: false,
+                    accessibilityLabel: "부여 사유 입력"
                 )
             }
             .alert("사유 입력", isPresented: $showReasonAlert) {

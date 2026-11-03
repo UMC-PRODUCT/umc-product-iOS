@@ -6,13 +6,13 @@
 //
 
 import SwiftUI
+import CoreUIComponents
 import CoreDesignSystem
 
 // MARK: - Constants
 
 fileprivate enum Constants {
     static let navigationTitle = "이모지 선택"
-    static let dismissTitle = "닫기"
     static let cellSize: CGFloat = 44
     static let emojiSize: CGFloat = 28
     /// 얼굴부터 보이게 블록 순서를 잡는다. 코드 포인트 순이면 날씨·기호가 먼저 나온다.
@@ -53,7 +53,6 @@ struct EmojiPickerSheet: View {
 
     let onSelect: (String) -> Void
 
-    @Environment(\.dismiss) private var dismiss
 
     // MARK: - Body
 
@@ -80,10 +79,7 @@ struct EmojiPickerSheet: View {
             .navigationTitle(Constants.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(Constants.dismissTitle) { dismiss() }
-                        .appFont(.body, color: .grey700)
-                }
+                ToolBarCollection.CloseBtn(placement: .topBarTrailing)
             }
         }
         .presentationDetents([.medium, .large])

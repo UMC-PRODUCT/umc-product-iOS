@@ -55,7 +55,8 @@ struct OperatorStudyGroupEditSheet: View {
                     action: submit,
                     disable: isSaveDisabled || isSaving,
                     isLoading: isSaving,
-                    dismissOnTap: false
+                    dismissOnTap: false,
+                    accessibilityLabel: "스터디 그룹 저장"
                 )
             }
         }

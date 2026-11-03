@@ -111,7 +111,7 @@ struct PendingApprovalSheet: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolBarCollection.CancelBtn { }
+        ToolBarCollection.CloseBtn()
 
         ToolBarCollection.OperationApprovalMenu(
             isSelecting: $isSelecting,

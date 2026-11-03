@@ -57,9 +57,7 @@ public struct MemberSafetyProfileView: View {
             .navigationTitle("프로필")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
-                }
+                ToolBarCollection.CloseBtn()
                 if let currentMemberId, currentMemberId != memberId {
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
@@ -193,10 +191,7 @@ private struct MemberReportFormView: View {
             .navigationTitle("사용자 신고")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
-                        .disabled(viewModel.isSubmitting)
-                }
+                ToolBarCollection.CloseBtn(disable: viewModel.isSubmitting)
             }
         }
     }

@@ -41,9 +41,7 @@ struct ChallengerAttendanceReasonSheet: View {
                 }
             }
             .toolbar {
-                ToolBarCollection.CancelBtn {
-                    dismiss()
-                }
+                ToolBarCollection.CancelBtn()
 
                 // 제출이 끝난 뒤에 닫아야 하므로 버튼의 자동 dismiss 는 끄고
                 // await 완료 후 직접 닫는다. (기본값을 쓰면 제출 중에 시트가 사라진다)
@@ -54,7 +52,8 @@ struct ChallengerAttendanceReasonSheet: View {
                             dismiss()
                         }
                     },
-                    dismissOnTap: false
+                    dismissOnTap: false,
+                    accessibilityLabel: "사유 제출"
                 )
             }
             .scrollContentBackground(.hidden)

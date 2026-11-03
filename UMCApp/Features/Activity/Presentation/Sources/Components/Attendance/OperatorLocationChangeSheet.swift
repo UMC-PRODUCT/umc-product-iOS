@@ -78,7 +78,8 @@ struct OperatorLocationChangeSheet: View {
             action: submit,
             disable: selectedPlace.isEmpty,
             isLoading: isSubmitting,
-            dismissOnTap: false
+            dismissOnTap: false,
+            accessibilityLabel: "장소 변경"
         )
     }
 

@@ -168,7 +168,8 @@ struct ProjectMemberManagementView: View {
                     action: changeStatus,
                     disable: !viewModel.canChangeStatus,
                     isLoading: viewModel.isSubmitting,
-                    dismissOnTap: false
+                    dismissOnTap: false,
+                    accessibilityLabel: "상태 변경"
                 )
             }
         }

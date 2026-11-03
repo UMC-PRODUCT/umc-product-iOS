@@ -104,7 +104,8 @@ struct StudyScheduleRegistrationView: View {
                 disable: !viewModel.canSubmit,
                 isLoading: viewModel.isSubmitting,
                 // 등록은 두 단계라 성공 여부가 확정된 뒤에 닫아야 한다.
-                dismissOnTap: false
+                dismissOnTap: false,
+                accessibilityLabel: "일정 등록"
             )
         }
         .alertPrompt(item: $viewModel.alertPrompt)

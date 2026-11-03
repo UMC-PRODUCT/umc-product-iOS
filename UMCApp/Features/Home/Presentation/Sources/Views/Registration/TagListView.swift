@@ -35,7 +35,7 @@ struct TagListView: View {
             .toolbar {
                 ToolBarCollection.CancelBtn(action: { tagList.removeAll() })
 
-                ToolBarCollection.ConfirmBtn(action: {})
+                ToolBarCollection.ConfirmBtn(action: {}, accessibilityLabel: "태그 선택 완료")
             }
         }
     }

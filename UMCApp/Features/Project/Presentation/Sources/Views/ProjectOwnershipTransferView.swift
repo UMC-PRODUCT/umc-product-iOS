@@ -69,7 +69,8 @@ struct ProjectOwnershipTransferView: View {
                 action: confirmTransfer,
                 disable: !viewModel.canSubmit,
                 isLoading: viewModel.isSubmitting,
-                dismissOnTap: false
+                dismissOnTap: false,
+                accessibilityLabel: "소유권 이전"
             )
         }
     }

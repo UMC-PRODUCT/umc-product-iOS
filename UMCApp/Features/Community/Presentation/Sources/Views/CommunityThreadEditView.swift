@@ -86,13 +86,10 @@ struct CommunityThreadEditView: View {
         // 메뉴와 저장이 한 유리 캡슐로 붙으면 한 덩어리로 읽혀, 저장하려다 메뉴를 누르기 쉽다.
         ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
-        ToolbarItem(placement: .confirmationAction) {
-            // 바뀐 게 없거나(#10) 재분류가 도는 동안(#12) `canSubmit` 이 false 라 잠긴다.
-            Button(role: .confirm, action: submit)
-                .tint(.teal500)
-                .disabled(!viewModel.canSubmit)
-                .accessibilityLabel(Constants.submitTitle)
-        }
+        ToolBarCollection.ConfirmBtn(
+            action: submit, disable: !viewModel.canSubmit, isLoading: viewModel.state.isLoading,
+            dismissOnTap: false, accessibilityLabel: LocalizedStringKey(Constants.submitTitle)
+        )
     }
 
     /// 삭제는 저장 옆에 바로 두지 않고 메뉴 안에 접는다 — 되돌릴 수 없는 작업이 한 번의 탭에

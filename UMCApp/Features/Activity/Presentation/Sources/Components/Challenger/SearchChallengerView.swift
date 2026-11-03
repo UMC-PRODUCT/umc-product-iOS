@@ -97,7 +97,7 @@ struct SearchChallengerView: View {
             .navigationTitle(NavigationTitle.Activity.searchChallenger.rawValue)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolBarCollection.ConfirmBtn(action: confirmSelection)
+                ToolBarCollection.ConfirmBtn(action: confirmSelection, accessibilityLabel: "선택 완료")
             }
             .fileImporter(
                 isPresented: $viewModel.showCSVImporter,

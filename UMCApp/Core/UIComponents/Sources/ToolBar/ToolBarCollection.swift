@@ -33,77 +33,108 @@ public struct ToolBarCollection {
     }
     
     
-    /// 시트나 편집 화면에서 취소 동작을 제공하는 툴바 버튼입니다.
+    /// 편집 취소. 직접 대화상자나 화면 전환을 처리하면 자동 dismiss를 끕니다.
     public struct CancelBtn: ToolbarContent {
-        @Environment(\.dismiss) var dismiss
-        public var action: () -> Void
-        
-        public init(action: @escaping () -> Void) {
+        @Environment(\.dismiss) private var dismiss
+        private let action: () -> Void
+        private let disable: Bool
+        private let dismissOnTap: Bool
+        private let accessibilityLabel: LocalizedStringKey
+
+        public init(
+            action: @escaping () -> Void = {},
+            disable: Bool = false,
+            dismissOnTap: Bool = true,
+            accessibilityLabel: LocalizedStringKey = "취소"
+        ) {
             self.action = action
+            self.disable = disable
+            self.dismissOnTap = dismissOnTap
+            self.accessibilityLabel = accessibilityLabel
         }
-        
+
         public var body: some ToolbarContent {
             ToolbarItem(placement: .cancellationAction) {
-                Button(role: .cancel, action: {
+                Button(role: .cancel) {
                     action()
-                    dismiss()
-                })
+                    if dismissOnTap { dismiss() }
+                } label: {
+                    Label(accessibilityLabel, systemImage: "xmark")
+                        .foregroundStyle(disable ? Color.grey300 : Color.red500)
+                }
+                .labelStyle(.iconOnly)
+                .tint(disable ? .grey300 : .red500)
+                .disabled(disable)
             }
         }
     }
-    
-    /// 저장, 완료 같은 확인 액션에 사용하는 공용 툴바 버튼입니다.
-    ///
-    /// `isLoading`이 `true`이면 체크 아이콘 대신 `ProgressView`를 노출하고,
-    /// 탭 입력도 함께 막아 중복 제출을 방지합니다.
+
+    /// 읽기 전용 화면이나 이미 반영된 선택을 닫습니다.
+    public struct CloseBtn: ToolbarContent {
+        @Environment(\.dismiss) private var dismiss
+        private let placement: ToolbarItemPlacement
+        private let disable: Bool
+
+        public init(placement: ToolbarItemPlacement = .cancellationAction, disable: Bool = false) {
+            self.placement = placement
+            self.disable = disable
+        }
+
+        public var body: some ToolbarContent {
+            ToolbarItem(placement: placement) {
+                Button(role: .close) { dismiss() }
+                    .accessibilityLabel("닫기")
+                    .disabled(disable)
+            }
+        }
+    }
+
+    /// 확인·저장. 비동기 저장은 성공한 뒤 호출자가 화면을 닫도록 설정합니다.
     public struct ConfirmBtn: ToolbarContent {
-        @Environment(\.dismiss) var dismiss
-        public let action: () -> Void
-        public let disable: Bool
-        public let isLoading: Bool
-        public let dismissOnTap: Bool
-        public let tintColor: Color
-        
+        @Environment(\.dismiss) private var dismiss
+        private let action: () -> Void
+        private let disable: Bool
+        private let isLoading: Bool
+        private let dismissOnTap: Bool
+        private let accessibilityLabel: LocalizedStringKey
+
         public init(
             action: @escaping () -> Void,
             disable: Bool = false,
             isLoading: Bool = false,
             dismissOnTap: Bool = true,
-            tintColor: Color = .teal500
+            accessibilityLabel: LocalizedStringKey = "확인"
         ) {
             self.action = action
             self.disable = disable
             self.isLoading = isLoading
             self.dismissOnTap = dismissOnTap
-            self.tintColor = tintColor
+            self.accessibilityLabel = accessibilityLabel
         }
-        
+
         public var body: some ToolbarContent {
             ToolbarItem(placement: .confirmationAction) {
-                Button(role: .confirm, action: {
+                Button(role: .confirm) {
                     guard !isLoading, !disable else { return }
                     action()
-                    if dismissOnTap {
-                        dismiss()
-                    }
-                }, label: {
-                    ZStack {
+                    if dismissOnTap { dismiss() }
+                } label: {
+                    if isLoading {
+                        ProgressView().controlSize(.small).tint(.teal500)
+                    } else {
                         Image(systemName: "checkmark")
-                            .opacity(isLoading ? 0 : 1)
-
-                        if isLoading {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(.blue)
-                        }
+                            .foregroundStyle(disable ? Color.grey300 : Color.teal500)
                     }
-                })
-                .tint((disable || isLoading) ? .grey300 : tintColor)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(accessibilityLabel)
+                .accessibilityValue(isLoading ? Text("처리 중") : Text(""))
+                .tint(disable || isLoading ? .grey300 : .teal500)
                 .disabled(disable || isLoading)
             }
         }
     }
-    
+
     /// 파괴적이거나 취소 성격이 강한 좌측 상단 액션에 사용하는 버튼입니다.
     public struct RejectBtn: ToolbarContent {
         @Environment(\.dismiss) var dismiss
