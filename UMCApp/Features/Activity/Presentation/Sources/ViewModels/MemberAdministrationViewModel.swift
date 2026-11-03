@@ -25,6 +25,7 @@ final class MemberAdministrationViewModel {
     private(set) var isMutating = false
     private(set) var isLoadingDetail = false
     private(set) var errorMessage: String?
+    private(set) var nextPageError: String?
     private(set) var filterOptionsState: FilterOptionsState = .loading
     private(set) var detailError: String?
     private(set) var actionError: String?
@@ -86,6 +87,36 @@ final class MemberAdministrationViewModel {
     }
     var canSelectAllChapters: Bool { authority.canSearchAllSchools(gisuId: filter.gisuId) }
 
+    var filterSummary: String {
+        let generation = generations.first { $0.id == filter.gisuId }?.name
+        let chapter = availableChapters.first { $0.id == filter.chapterId }?.name
+        let school = availableSchools.first { $0.id == filter.schoolId }?.name
+        let part = filter.part.flatMap(UMCPartType.init(apiValue:))?.name
+        guard filterOptionsState == .ready else { return generation ?? "" }
+        return [generation, chapter ?? (canSelectAllChapters ? "전체 지부" : nil),
+                school ?? (canSelectAllSchools ? "전체 학교" : "학교 정보 없음"),
+                part ?? "전체 파트"].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    /// 초기화해도 검색어와 사용자의 기수별 필수 조직 범위는 유지합니다.
+    private var defaultFilter: MemberSearchFilter? {
+        guard let initial = generations.first(where: \.isActive) ?? generations.first else {
+            return nil
+        }
+        return try? authority.scopedFilter(.init(keyword: filter.keyword, gisuId: initial.id))
+    }
+
+    var canResetFilters: Bool {
+        filterOptionsState == .ready && defaultFilter.map { $0 != filter } == true
+    }
+
+    func resetFilters() async {
+        guard canResetFilters, let defaults = defaultFilter else { return }
+        let changeOrganizations = filter.gisuId != defaults.gisuId
+        filter = defaults
+        if changeOrganizations { await changeGeneration() } else { await search() }
+    }
+
     func load() async {
         guard !loaded else { return }
         filterOptionsState = .loading
@@ -130,6 +161,7 @@ final class MemberAdministrationViewModel {
         hasNext = false
         page = 0
         isLoadingNextPage = false
+        nextPageError = nil
         organizations = .init(chapters: [], schools: [])
         isLoading = true
         errorMessage = nil
@@ -163,6 +195,7 @@ final class MemberAdministrationViewModel {
         isLoading = true
         defer { if version == requestVersion { isLoading = false } }
         isLoadingNextPage = false
+        nextPageError = nil
         errorMessage = nil
         members = []
         hasNext = false
@@ -185,6 +218,7 @@ final class MemberAdministrationViewModel {
         guard hasNext, !isLoading, !isLoadingNextPage, let query = appliedFilter else { return }
         let version = requestVersion
         isLoadingNextPage = true
+        nextPageError = nil
         defer { if version == requestVersion { isLoadingNextPage = false } }
         do {
             let result = try await useCase.search(filter: query, page: page + 1)
@@ -194,8 +228,8 @@ final class MemberAdministrationViewModel {
             page += 1
             hasNext = result.hasNext
         } catch {
-            guard version == requestVersion else { return }
-            errorMessage = message(error)
+            guard version == requestVersion, !Task.isCancelled else { return }
+            nextPageError = message(error)
         }
     }
 

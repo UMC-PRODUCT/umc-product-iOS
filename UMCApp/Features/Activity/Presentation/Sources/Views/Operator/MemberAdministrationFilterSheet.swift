@@ -40,6 +40,11 @@ struct MemberAdministrationFilterSheet: View {
                     } footer: {
                         Text("조건을 바꾸면 멤버 목록에 바로 반영돼요.")
                     }
+                    if viewModel.canResetFilters {
+                        Button("필터 초기화", systemImage: "arrow.counterclockwise") {
+                            Task { await viewModel.resetFilters() }
+                        }
+                    }
                     if let error = viewModel.errorMessage {
                         retrySection("멤버 목록을 불러올 수 없어요", reason: error)
                     } else if viewModel.isLoading {

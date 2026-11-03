@@ -37,15 +37,20 @@ private final class AdministrationFake: MemberAdministrationUseCaseProtocol {
     var organizationGate: SearchGate?
     var organizationFails = false
     var generationsFail = false
+    var nextPageFails = false
+    var lastPage: Int?
+    var generationOptions = [MemberFilterOption(id: "10", name: "10기", isActive: true)]
     var lastFilter: MemberSearchFilter?
     func search(filter: MemberSearchFilter, page: Int) async throws -> AdminMemberPage {
         lastFilter = filter
+        lastPage = page
+        if page > 0 && nextPageFails { throw URLError(.badServerResponse) }
         if filter.keyword == "old", let gate { await gate.pause() }
         return .init(members: [adminMember(filter.keyword.isEmpty ? "initial" : filter.keyword)], hasNext: true)
     }
     func fetchGenerations() async throws -> [MemberFilterOption] {
         if generationsFail { throw URLError(.badServerResponse) }
-        return [.init(id: "10", name: "10기", isActive: true)]
+        return generationOptions
     }
     func fetchOrganizations(gisuId: String) async throws -> MemberOrganizationOptions {
         if organizationFails { throw DomainError.custom(message: "조직 조회 실패") }
@@ -164,6 +169,46 @@ struct MemberAdministrationViewModelTests {
         #expect(vm.members.map(\.id) == ["initial"])
         #expect(api.lastFilter?.gisuId == "10")
         #expect(api.lastFilter?.schoolId == nil)
+    }
+
+    @Test func resetRestoresAuthorizedDefaultScopeAndKeepsKeyword() async {
+        let api = AdministrationFake()
+        api.generationOptions.append(.init(id: "9", name: "9기"))
+        api.authority = .init(roles: ["10", "9"].map { gisu in
+            .init(gisu: gisu, gisuId: gisu, roleType: .schoolPresident,
+                  organizationType: .school, organizationId: "20")
+        })
+        let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
+                                               session: UserSessionManager())
+        await vm.load()
+        #expect(!vm.canResetFilters)
+        vm.filter.gisuId = "9"
+        vm.filter.keyword = "검색"
+        vm.filter.part = "IOS"
+        await vm.changeGeneration()
+        #expect(vm.canResetFilters)
+        #expect(vm.filterSummary.contains("9기"))
+        #expect(vm.filterSummary.contains("학교"))
+        await vm.resetFilters()
+        #expect(!vm.canResetFilters)
+        #expect(api.lastFilter == .init(keyword: "검색", gisuId: "10", schoolId: "20"))
+    }
+
+    @Test func paginationFailureKeepsResultsAndRetriesSamePage() async {
+        let api = AdministrationFake()
+        let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
+                                               session: UserSessionManager())
+        await vm.load()
+        api.nextPageFails = true
+        await vm.loadMore()
+        #expect(vm.nextPageError != nil)
+        #expect(vm.errorMessage == nil)
+        #expect(vm.members.map(\.id) == ["initial"])
+        #expect(api.lastPage == 1)
+        api.nextPageFails = false
+        await vm.loadMore()
+        #expect(vm.nextPageError == nil)
+        #expect(api.lastPage == 1)
     }
 
     @Test func retryRecoversOrganizationFailure() async {

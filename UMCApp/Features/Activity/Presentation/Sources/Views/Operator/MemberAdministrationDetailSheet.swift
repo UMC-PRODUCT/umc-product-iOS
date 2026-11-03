@@ -18,10 +18,7 @@ struct MemberAdministrationDetailSheet: View {
         NavigationStack {
             List {
                 Section {
-                    Text("\(member.member.nickname) / \(member.member.name)")
-                        .appFont(.title3, weight: .semibold)
-                    Text("\(member.member.school) · \(member.member.part.name) · \(member.member.generation)")
-                        .appFont(.subheadline, color: .grey600)
+                    MemberPointTargetSummary(member: member)
                 }
                 if viewModel.isLoadingDetail {
                     ProgressView("상벌점 내역을 불러오는 중…")
@@ -37,24 +34,26 @@ struct MemberAdministrationDetailSheet: View {
                             Text("등록된 상벌점이 없습니다.").appFont(.subheadline, color: .grey500)
                         }
                         ForEach(viewModel.history) { item in
-                            MemberPointHistoryRow(item: item)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    if viewModel.canDeleteSelected {
-                                        Button("삭제", role: .destructive) { deleting = item }
+                            HStack(alignment: .top, spacing: DefaultSpacing.spacing8) {
+                                MemberPointHistoryRow(item: item)
+                                if viewModel.canManageSelected || viewModel.canDeleteSelected {
+                                    Menu {
+                                        actions(for: item)
+                                    } label: {
+                                        Image(systemName: "ellipsis.circle")
+                                            .frame(minWidth: DefaultConstant.minimumTouchTarget,
+                                                   minHeight: DefaultConstant.minimumTouchTarget)
+                                            .contentShape(Rectangle())
                                     }
-                                    if viewModel.canManageSelected {
-                                        Button("사유 수정") { editing = item }.tint(.teal)
-                                    }
+                                    .accessibilityLabel("\(item.pointType.displayName), \(item.reason), 더 보기")
                                 }
-                                .contextMenu {
-                                    if viewModel.canManageSelected {
-                                        Button("사유 수정", systemImage: "pencil") { editing = item }
-                                    }
-                                    if viewModel.canDeleteSelected {
-                                        Button("삭제", systemImage: "trash", role: .destructive) { deleting = item }
-                                    }
-                                }
-                                .disabled(viewModel.isMutating)
+                            }
+                            .listRowBackground(Color.Surface.content)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                actions(for: item)
+                            }
+                            .contextMenu { actions(for: item) }
+                            .disabled(viewModel.isMutating)
                         }
                     }
                 }
@@ -83,10 +82,10 @@ struct MemberAdministrationDetailSheet: View {
                 }
             }
             .sheet(isPresented: $showGrant) {
-                MemberPointEditorSheet(viewModel: viewModel, editing: nil)
+                MemberPointEditorSheet(member: member, viewModel: viewModel, editing: nil)
             }
             .sheet(item: $editing) { item in
-                MemberPointEditorSheet(viewModel: viewModel, editing: item)
+                MemberPointEditorSheet(member: member, viewModel: viewModel, editing: item)
             }
             .confirmationDialog("상벌점 기록을 삭제할까요?", isPresented: Binding(
                 get: { deleting != nil }, set: { if !$0 { deleting = nil } }
@@ -101,6 +100,31 @@ struct MemberAdministrationDetailSheet: View {
             }
         }
         .interactiveDismissDisabled(viewModel.isMutating)
+    }
+
+    @ViewBuilder
+    private func actions(for item: OperatorMemberPenaltyHistory) -> some View {
+        if viewModel.canManageSelected {
+            Button("사유 수정", systemImage: "pencil") { editing = item }
+                .tint(.teal)
+        }
+        if viewModel.canDeleteSelected {
+            Button("삭제", systemImage: "trash", role: .destructive) { deleting = item }
+        }
+    }
+}
+
+private struct MemberPointTargetSummary: View {
+    let member: AdminMember
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            Text("\(member.member.nickname) / \(member.member.name)")
+                .appFont(.title3, weight: .semibold)
+            Text("\(member.member.school) · \(member.member.part.name) · \(member.member.generation)")
+                .appFont(.subheadline, color: .grey600)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -132,13 +156,14 @@ private struct MemberPointHistoryRow: View {
                 .appFont(.caption1, color: .grey500)
         }
         .padding(.vertical, DefaultSpacing.spacing4)
-        .listRowBackground(Color.Surface.content)
+        .accessibilityElement(children: .combine)
     }
 }
 
 /// 긴 사유와 실패 시 입력 보존을 지원하는 공통 부여/사유 편집 폼입니다.
 private struct MemberPointEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
+    let member: AdminMember
     @Bindable var viewModel: MemberAdministrationViewModel
     let editing: OperatorMemberPenaltyHistory?
     @State private var type: ChallengerPointType?
@@ -161,7 +186,17 @@ private struct MemberPointEditorSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                if editing == nil {
+                Section("대상 멤버") {
+                    MemberPointTargetSummary(member: member)
+                }
+                if let editing {
+                    Section("수정할 기록") {
+                        LabeledContent("유형", value: editing.pointType.displayName)
+                        LabeledContent("배점") {
+                            Text("\(editing.signedPoint, format: .number.sign(strategy: .always()))점")
+                        }
+                    }
+                } else {
                     Section("유형") {
                         Picker("상벌점 유형", selection: $type) {
                             Text("선택해 주세요").tag(ChallengerPointType?.none)
