@@ -64,10 +64,7 @@ struct WatchAttendanceResultView: View {
                     .foregroundStyle(WatchColor.textSecondary)
             }
         case .failed(let error):
-            Text(error.userMessage)
-                .font(.watch(.cardValue))
-                .foregroundStyle(WatchColor.textPrimary)
-                .multilineTextAlignment(.center)
+            ContentUnavailableView(error.userMessage, systemImage: "exclamationmark.triangle")
         case .loaded(let outcome):
             resultCard(outcome)
         }

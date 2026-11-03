@@ -31,10 +31,7 @@ public struct FailedVerificationUMC: View {
     // MARK: - Constant
 
     fileprivate enum Constants {
-        static let topSpacerHeight: CGFloat = 80
-        static let contentSpacing: CGFloat = 40
         static let verifyButtonTopPadding: CGFloat = 16
-        static let warningIconSize: CGFloat = 120
         static let warningIcon: String = "exclamationmark.triangle"
 
         static let title: String = "UMC 챌린저 인증 실패"
@@ -65,15 +62,19 @@ public struct FailedVerificationUMC: View {
 
     public var body: some View {
         NavigationStack {
-            VStack {
-                Spacer().frame(maxHeight: Constants.topSpacerHeight)
-                topWarningImage
-                Spacer().frame(maxHeight: Constants.contentSpacing)
-                warningTitle
+            ContentUnavailableView {
+                Label {
+                    Text(Constants.title)
+                } icon: {
+                    Image(systemName: Constants.warningIcon)
+                        .symbolEffect(.pulse, isActive: viewModel.showWarning)
+                }
+            } description: {
+                Text(Constants.subtitle)
+            } actions: {
                 existingChallengerTextButton
-                Spacer()
             }
-            .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .task { viewModel.showWarning = true }
             .toolbar {
                 bottomToolbar
             }
@@ -91,30 +92,6 @@ public struct FailedVerificationUMC: View {
     }
 
     // MARK: - Subviews
-
-    private var topWarningImage: some View {
-        Image(systemName: Constants.warningIcon)
-            .renderingMode(.template)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: Constants.warningIconSize, height: Constants.warningIconSize)
-            .foregroundStyle(.red)
-            .symbolEffect(.pulse, isActive: viewModel.showWarning)
-            .task {
-                viewModel.showWarning.toggle()
-            }
-    }
-
-    private var warningTitle: some View {
-        VStack(spacing: DefaultSpacing.spacing16) {
-            Text(Constants.title)
-                .appFont(.title1, weight: .semibold, color: .grey900)
-
-            Text(Constants.subtitle)
-                .appFont(.callout, weight: .medium, color: .grey600)
-                .multilineTextAlignment(.center)
-        }
-    }
 
     private var existingChallengerTextButton: some View {
         Button {

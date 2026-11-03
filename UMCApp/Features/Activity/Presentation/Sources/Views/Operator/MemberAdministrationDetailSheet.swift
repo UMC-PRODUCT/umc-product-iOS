@@ -26,15 +26,18 @@ struct MemberAdministrationDetailSheet: View {
                 if viewModel.isLoadingDetail {
                     ProgressView("상벌점 내역을 불러오는 중…")
                 } else if let error = viewModel.detailError {
-                    Section("내역을 불러오지 못했어요") {
-                        Text(error).appFont(.subheadline)
-                        Button("다시 시도") { Task { await viewModel.reloadHistory() } }
+                    Section {
+                        RetryContentUnavailableView(
+                            title: "내역을 불러오지 못했어요", systemImage: "list.bullet",
+                            description: error, isRetrying: viewModel.isLoadingDetail,
+                            retryAction: { await viewModel.reloadHistory() }
+                        )
                     }
                 } else {
                     MemberPointSummarySection(history: viewModel.history)
                     Section("상벌점 내역") {
                         if viewModel.history.isEmpty {
-                            Text("등록된 상벌점이 없습니다.").appFont(.subheadline, color: .grey500)
+                            ContentUnavailableView("등록된 상벌점이 없습니다.", systemImage: "list.bullet")
                         }
                         ForEach(viewModel.history) { item in
                             MemberPointHistoryRow(item: item)

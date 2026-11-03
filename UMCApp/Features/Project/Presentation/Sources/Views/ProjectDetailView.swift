@@ -231,8 +231,7 @@ struct ProjectDetailView: View {
                     .frame(maxWidth: .infinity)
 
             case .loaded(let members) where members.headCount == 0:
-                Text(Constants.membersEmpty)
-                    .appFont(.footnote, color: .grey500)
+                ContentUnavailableView(Constants.membersEmpty, systemImage: "person.2")
 
             case .loaded(let members):
                 if let productOwner = members.productOwner {

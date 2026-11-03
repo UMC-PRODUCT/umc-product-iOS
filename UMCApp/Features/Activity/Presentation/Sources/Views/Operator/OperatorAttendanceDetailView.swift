@@ -394,15 +394,7 @@ struct OperatorAttendanceDetailView: View {
     }
 
     private var emptyParticipantView: some View {
-        VStack(spacing: DefaultSpacing.spacing12) {
-            Image(systemName: "person.2.slash")
-                .font(.app(.title1))
-                .foregroundStyle(Color.grey400)
-            Text("표시할 참여자가 없습니다")
-                .appFont(.subheadline, color: .grey500)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, DefaultSpacing.spacing24)
+        ContentUnavailableView("표시할 참여자가 없습니다", systemImage: "person.2.slash")
     }
 
     @ViewBuilder

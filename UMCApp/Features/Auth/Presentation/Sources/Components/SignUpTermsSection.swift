@@ -86,8 +86,8 @@ struct SignUpTermsSection: View {
         case .idle, .loading:
             ProgressView()
         case .failed:
-            Text(Constants.loadFailedMessage)
-                .appFont(.footnote, color: .grey500)
+            ContentUnavailableView(Constants.loadFailedMessage, systemImage: "doc.text")
+                .fixedSize(horizontal: false, vertical: true)
         case .loaded:
             VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
                 ForEach(termRows) { row in

@@ -90,8 +90,7 @@ struct ProjectApplicationEditorView: View {
             case .idle, .loading:
                 Progress(size: .small)
             case .loaded(let rounds) where rounds.isEmpty:
-                Text("현재 지원 가능한 매칭 차수가 없어요")
-                    .appFont(.footnote, color: .grey500)
+                ContentUnavailableView("현재 지원 가능한 매칭 차수가 없어요", systemImage: "calendar")
             case .loaded(let rounds):
                 Picker("매칭 차수", selection: $viewModel.selectedMatchingRoundId) {
                     ForEach(rounds, id: \.id) { round in
@@ -99,8 +98,7 @@ struct ProjectApplicationEditorView: View {
                     }
                 }
             case .failed(let error):
-                Text(error.userMessage)
-                    .appFont(.footnote, color: .red500)
+                ContentUnavailableView(error.userMessage, systemImage: "exclamationmark.triangle")
             }
         }
     }

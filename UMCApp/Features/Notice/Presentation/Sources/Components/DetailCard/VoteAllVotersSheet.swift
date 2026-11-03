@@ -59,8 +59,8 @@ public struct VoteAllVotersSheet: View {
             ForEach(options) { option in
                 Section {
                     if option.selectedMemberIds.isEmpty {
-                        Text("투표자 없음")
-                            .appFont(.footnote, color: .grey500)
+                        ContentUnavailableView("투표자 없음", systemImage: "person.slash")
+                            .fixedSize(horizontal: false, vertical: true)
                             .listRowInsets(.init(
                                 top: Constants.itemPadding,
                                 leading: Constants.itemPadding,

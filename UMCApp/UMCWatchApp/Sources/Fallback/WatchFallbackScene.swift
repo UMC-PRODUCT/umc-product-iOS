@@ -18,6 +18,7 @@ struct WatchFallbackScene: View {
     // MARK: - Property
 
     let presentation: WatchFallbackPresentation
+    var isFullScreen = false
     /// 핸들러를 넘기지 않으면 해당 CTA 를 **그리지 않는다** — 눌러도 아무 일도 없는 버튼이
     /// 곧 무음 실패이므로, 동작 없는 CTA 를 구조적으로 만들 수 없게 옵셔널로 둔다.
     var onPrimaryAction: (() -> Void)?
@@ -26,13 +27,27 @@ struct WatchFallbackScene: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: WatchLayout.stackSpacing) {
-            symbol
-            textBlock
-            actions
+        if isFullScreen {
+            ContentUnavailableView {
+                Label {
+                    Text(presentation.title)
+                } icon: {
+                    symbol
+                }
+            } description: {
+                detail
+            } actions: {
+                actions
+            }
+        } else {
+            VStack(spacing: WatchLayout.stackSpacing) {
+                symbol
+                textBlock
+                actions
+            }
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
         }
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Function
@@ -51,6 +66,13 @@ struct WatchFallbackScene: View {
             Text(presentation.title)
                 .font(.watch(.screenTitle))
                 .foregroundStyle(WatchColor.textPrimary)
+            detail
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var detail: some View {
+        VStack(spacing: WatchLayout.tightSpacing) {
             Text(presentation.message)
                 .font(.watch(.cardValue))
                 .foregroundStyle(WatchColor.textSecondary)

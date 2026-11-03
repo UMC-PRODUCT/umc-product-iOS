@@ -140,17 +140,10 @@ struct PingDetailView: View {
 
     /// 스냅샷에서 사라진 공지(삭제·목록 축소). 화면을 비우지 않고 사유를 말한다.
     private var missingNotice: some View {
-        VStack(spacing: WatchLayout.tightSpacing) {
-            Text(Constants.missingTitle)
-                .font(.watch(.screenTitle))
-                .foregroundStyle(WatchColor.textPrimary)
-            Text(Constants.missingDetail)
-                .font(.watch(.caption))
-                .foregroundStyle(WatchColor.textSecondary)
-        }
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, WatchLayout.screenHorizontalPadding)
+        ContentUnavailableView(
+            Constants.missingTitle, systemImage: "doc.text.magnifyingglass",
+            description: Text(Constants.missingDetail)
+        )
     }
 }
 

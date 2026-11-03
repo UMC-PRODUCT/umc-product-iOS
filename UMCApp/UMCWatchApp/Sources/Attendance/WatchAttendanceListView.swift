@@ -54,16 +54,10 @@ struct WatchAttendanceListView: View {
     /// 재시도 버튼을 두지 않는다 — 워치는 일정을 직접 조회하지 않고 iPhone 이 밀어주는 쪽이라
     /// 여기서 누를 수 있는 재시도가 존재하지 않는다.
     private func failure(_ error: AppError) -> some View {
-        VStack(spacing: WatchLayout.tightSpacing) {
-            Text(error.userMessage)
-                .font(.watch(.cardValue))
-                .foregroundStyle(WatchColor.textPrimary)
-            Text("iPhone 에서 UMC 앱을 열면 다시 전송됩니다.")
-                .font(.watch(.caption))
-                .foregroundStyle(WatchColor.textSecondary)
-        }
-        .multilineTextAlignment(.center)
-        .padding(.horizontal, WatchLayout.screenHorizontalPadding)
+        ContentUnavailableView(
+            error.userMessage, systemImage: "exclamationmark.triangle",
+            description: Text("iPhone 에서 UMC 앱을 열면 다시 전송됩니다.")
+        )
     }
 
     /// 행 전체가 진입점이다. `.plain` 이어야 행 표면이 solid 로 남는다 —

@@ -36,7 +36,14 @@ public struct NoticeReadStatusSheet: View {
                 switch viewModel.readStatusState {
                 case .idle, .loading:
                     loadingSection
-                case .loaded(_):
+                case .loaded where viewModel.filteredReadStatusUsers.isEmpty
+                    && !viewModel.isLoadingMoreReadStatus:
+                    ContentUnavailableView(
+                        viewModel.selectedReadTab == .confirmed
+                            ? "공지를 확인한 멤버가 없어요" : "공지를 확인하지 않은 멤버가 없어요",
+                        systemImage: "person.2"
+                    )
+                case .loaded:
                     userListSection
                 case .failed(let error):
                     failedSection(error: error)

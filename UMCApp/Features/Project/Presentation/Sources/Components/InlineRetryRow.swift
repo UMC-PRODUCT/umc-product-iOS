@@ -22,12 +22,17 @@ struct InlineRetryRow: View {
     // MARK: - Body
 
     var body: some View {
-        HStack {
+        ContentUnavailableView {
+            Label("불러오지 못했어요", systemImage: "exclamationmark.triangle")
+        } description: {
             Text(error.userMessage)
-                .appFont(.footnote, color: .grey500)
-            Spacer()
-            Button("다시 시도") {
+        } actions: {
+            Button {
                 Task { await retry() }
+            } label: {
+                Text("다시 시도")
+                    .frame(minWidth: DefaultConstant.minimumTouchTarget,
+                           minHeight: DefaultConstant.minimumTouchTarget)
             }
             .buttonStyle(.borderless)
         }

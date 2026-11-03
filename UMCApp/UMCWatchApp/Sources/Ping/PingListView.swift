@@ -43,13 +43,13 @@ struct PingListView: View {
 
         case .loaded(let items):
             if items.isEmpty {
-                message(Constants.emptyTitle, detail: Constants.emptyDetail)
+                message(Constants.emptyTitle, symbol: "bell", detail: Constants.emptyDetail)
             } else {
                 noticeList(items)
             }
 
         case .failed(let error):
-            message(Constants.failureTitle, detail: error.errorDescription)
+            message(Constants.failureTitle, symbol: "exclamationmark.triangle", detail: error.errorDescription)
         }
     }
 
@@ -87,20 +87,8 @@ struct PingListView: View {
             .listRowBackground(Color.clear)
     }
 
-    private func message(_ title: String, detail: String?) -> some View {
-        VStack(spacing: WatchLayout.tightSpacing) {
-            Text(title)
-                .font(.watch(.screenTitle))
-                .foregroundStyle(WatchColor.textPrimary)
-            if let detail {
-                Text(detail)
-                    .font(.watch(.caption))
-                    .foregroundStyle(WatchColor.textSecondary)
-            }
-        }
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, WatchLayout.screenHorizontalPadding)
+    private func message(_ title: String, symbol: String, detail: String?) -> some View {
+        ContentUnavailableView(title, systemImage: symbol, description: detail.map { Text($0) })
     }
 }
 

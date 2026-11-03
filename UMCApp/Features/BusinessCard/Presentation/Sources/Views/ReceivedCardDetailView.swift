@@ -119,9 +119,8 @@ public struct ReceivedCardDetailView: View {
     private var contactSection: some View {
         section(Constants.contactSection) {
             if contactRows.isEmpty {
-                Text(Constants.emptyContact)
-                    .appFont(.footnote, color: .grey500)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                ContentUnavailableView(Constants.emptyContact, systemImage: "person.crop.rectangle")
+                    .fixedSize(horizontal: false, vertical: true)
             } else {
                 ForEach(contactRows, id: \.label) { row in
                     linkRow(label: row.label, value: row.value, url: row.url)
