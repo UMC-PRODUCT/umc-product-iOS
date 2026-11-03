@@ -159,13 +159,7 @@ struct ChallengerAttendanceView: View, Equatable {
             // 일정 ID 가 없으면 지오펜스를 등록할 수 없다. 곧 로드될 것처럼 보이는 스피너
             // 대신 정적 안내를 띄운다 — 실제로는 대기해도 지도가 나타나지 않는다.
             mapPlaceholder {
-                VStack(spacing: DefaultSpacing.spacing8) {
-                    Image(systemName: "mappin.slash")
-                        .font(.title2)
-                        .foregroundStyle(Color.grey400)
-                    Text("위치 정보를 아직 불러올 수 없어요")
-                        .appFont(.footnote, color: .grey500)
-                }
+                ContentUnavailableView("위치 정보를 아직 불러올 수 없어요", systemImage: "mappin.slash")
             }
         }
     }
@@ -174,10 +168,13 @@ struct ChallengerAttendanceView: View, Equatable {
     private func mapPlaceholder(
         @ViewBuilder content: () -> some View
     ) -> some View {
-        ConcentricRectangle(corners: Constants.mapCornerRadius, isUniform: true)
-            .fill(Color.grey100)
-            .frame(height: Constants.mapPlaceholderHeight)
-            .overlay { content() }
+        content()
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, minHeight: Constants.mapPlaceholderHeight)
+            .background(
+                Color.grey100,
+                in: ConcentricRectangle(corners: Constants.mapCornerRadius, isUniform: true)
+            )
     }
 
     /// 출석 정책 팝오버를 여는 정보 버튼 (지도 우상단 오버레이)
@@ -224,9 +221,7 @@ struct ChallengerAttendanceView: View, Equatable {
         } else {
             // 일정 페이로드에는 출석 정책이 붙은 일정만 실리므로(UseCase 필터), 여기 도달하면
             // 기다려도 채워지지 않는다. "불러오는 중" 대신 사실을 그대로 안내한다.
-            Text("등록된 출석 정책이 없어요")
-                .appFont(.footnote, color: .grey500)
-                .padding(DefaultSpacing.spacing16)
+            ContentUnavailableView("등록된 출석 정책이 없어요", systemImage: "calendar.badge.exclamationmark")
         }
     }
 

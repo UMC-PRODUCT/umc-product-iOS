@@ -31,7 +31,6 @@ struct NoticeReadingSummarySheet: View {
         static let sheetTopPadding: CGFloat = DefaultSpacing.spacing24
         static let headerSpacing: CGFloat = DefaultSpacing.spacing8
         static let bodySpacing: CGFloat = DefaultSpacing.spacing16
-        static let iconSize: CGFloat = DefaultConstant.iconSize
         static let cardPadding: EdgeInsets = .init(
             top: DefaultSpacing.spacing16,
             leading: DefaultConstant.defaultSafeHorizon,
@@ -160,22 +159,17 @@ struct NoticeReadingSummarySheet: View {
     }
 
     private func failedContent(message: String) -> some View {
-        VStack(spacing: DefaultSpacing.spacing12) {
-            Image(systemName: Constants.failedIconName)
-                .font(.system(size: Constants.iconSize, weight: .medium))
-                .foregroundStyle(Color.grey400)
-
+        ContentUnavailableView {
+            Label("공지를 요약하지 못했어요", systemImage: Constants.failedIconName)
+        } description: {
             Text(message)
-                .appFont(.footnote, color: .grey500)
-                .multilineTextAlignment(.center)
-
-            MainButton(Constants.retryButtonTitle) {
+        } actions: {
+            Button(Constants.retryButtonTitle) {
                 viewModel.requestReadingSummary(content: noticeContent, modelContext: modelContext)
             }
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.bordered)
         }
-        .frame(maxWidth: .infinity)
-        .padding(Constants.cardPadding)
+        .fixedSize(horizontal: false, vertical: true)
         .background(
             Color.Surface.content, in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius)))
     }

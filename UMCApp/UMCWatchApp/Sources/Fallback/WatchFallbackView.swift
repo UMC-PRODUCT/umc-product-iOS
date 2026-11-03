@@ -27,6 +27,7 @@ struct WatchFallbackView: View {
         ScrollView {
             WatchFallbackScene(
                 presentation: reason.presentation,
+                isFullScreen: true,
                 // "다시 시도" 는 이 폴백을 닫고 요청을 띄운 화면으로 되돌린다 — 폴백 화면은
                 // 실패 원인만 알 뿐 재요청 주체를 모른다. 실제 재시도 액션은 #1207 이 붙인다.
                 onPrimaryAction: { router.pop() },

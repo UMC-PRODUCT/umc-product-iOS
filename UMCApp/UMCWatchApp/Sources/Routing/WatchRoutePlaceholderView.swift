@@ -22,16 +22,7 @@ struct WatchRoutePlaceholderView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: WatchLayout.tightSpacing) {
-            Text(route.title)
-                .font(.watch(.screenTitle))
-                .foregroundStyle(WatchColor.textPrimary)
-            Text("준비 중")
-                .font(.watch(.caption))
-                .foregroundStyle(WatchColor.textSecondary)
-        }
-        .multilineTextAlignment(.center)
-        .padding(.horizontal, WatchLayout.screenHorizontalPadding)
+        ContentUnavailableView(route.title, systemImage: "clock", description: Text("준비 중"))
         .watchScreenBackground()
     }
 }

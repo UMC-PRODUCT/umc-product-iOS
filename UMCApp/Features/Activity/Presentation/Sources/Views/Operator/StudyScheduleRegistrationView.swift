@@ -62,20 +62,24 @@ struct StudyScheduleRegistrationView: View {
                 switch viewModel.capabilitiesState {
                 case .idle, .loading:
                     ProgressView("권한 불러오는 중…")
-                case .failed:
-                    Button("권한 다시 불러오기") {
-                        Task { await viewModel.loadCapabilities() }
-                    }
+                case .failed(let error):
+                    RetryContentUnavailableView(
+                        title: "등록 권한을 불러오지 못했어요", systemImage: "lock",
+                        description: error.userMessage, retryTitle: "권한 다시 불러오기",
+                        isRetrying: false, retryAction: { await viewModel.loadCapabilities() }
+                    )
                 case .loaded:
                     EmptyView()
                 }
                 switch viewModel.participantsState {
                 case .idle, .loading:
                     ProgressView("참여자 불러오는 중…")
-                case .failed:
-                    Button("참여자 다시 불러오기") {
-                        Task { await viewModel.loadParticipantMembers() }
-                    }
+                case .failed(let error):
+                    RetryContentUnavailableView(
+                        title: "참여자를 불러오지 못했어요", systemImage: "person.2",
+                        description: error.userMessage, retryTitle: "참여자 다시 불러오기",
+                        isRetrying: false, retryAction: { await viewModel.loadParticipantMembers() }
+                    )
                 case .loaded:
                     Text("작성자 본인을 포함해 등록합니다.")
                         .appFont(.footnote, color: Color.grey500)
@@ -147,20 +151,15 @@ struct StudyScheduleRegistrationView: View {
                 ProgressView()
             }
 
-        case .failed:
-            HStack {
-                Text("주차 목록을 불러오지 못했어요")
-                    .appFont(.body, color: Color.grey500)
-                Spacer()
-                Button("재시도") {
-                    Task { await viewModel.loadWeeklyOptions() }
-                }
-                .appFont(.footnote, color: Color.teal500)
-            }
+        case .failed(let error):
+            RetryContentUnavailableView(
+                title: "주차 목록을 불러오지 못했어요", systemImage: "calendar",
+                description: error.userMessage, retryTitle: "재시도",
+                isRetrying: false, retryAction: { await viewModel.loadWeeklyOptions() }
+            )
 
         case .loaded(let options) where options.isEmpty:
-            Text("등록된 주차 커리큘럼이 없어요")
-                .appFont(.body, color: Color.grey500)
+            ContentUnavailableView("등록된 주차 커리큘럼이 없어요", systemImage: "calendar")
 
         case .loaded(let options):
             Picker("주차 커리큘럼", selection: $viewModel.selectedWeeklyOption) {

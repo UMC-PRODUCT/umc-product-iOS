@@ -245,24 +245,15 @@ struct ChallengerAttendanceSessionView: View {
         title: String,
         description: String
     ) -> some View {
-        HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
-            Image(systemName: systemImage)
-                .font(.app(.title3))
-                .foregroundStyle(tint)
-                .frame(width: DefaultSpacing.spacing32, height: DefaultSpacing.spacing32)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+        ContentUnavailableView {
+            Label {
                 Text(title)
-                    .appFont(.subheadline, weight: .semibold, color: .grey700)
-
-                Text(description.replacingOccurrences(of: "\n", with: " "))
-                    .appFont(.footnote, color: .grey600)
-                    .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: systemImage).foregroundStyle(tint)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        } description: {
+            Text(description.replacingOccurrences(of: "\n", with: " "))
         }
-        .padding(DefaultSpacing.spacing12)
         .background(Color.Surface.content, in: .rect(cornerRadius: DefaultSpacing.spacing16))
     }
 

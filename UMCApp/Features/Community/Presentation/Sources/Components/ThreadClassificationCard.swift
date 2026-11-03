@@ -210,28 +210,21 @@ struct ThreadClassificationCard: View {
         .accessibilityElement(children: .contain)
     }
 
+    @ViewBuilder
     private var failureContent: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-            Label {
-                Text(Constants.failureTitle)
-                    .appFont(.footnote, weight: .semibold, color: .grey700)
-            } icon: {
-                Image(systemName: Constants.failureImage)
-                    .foregroundStyle(Color.grey400)
+        ContentUnavailableView {
+            Label(Constants.failureTitle, systemImage: Constants.failureImage)
+        } description: {
+            VStack(spacing: DefaultSpacing.spacing4) {
+                if let message = viewModel.classificationErrorMessage {
+                    Text(message)
+                }
+                Text(Constants.manualHint)
             }
-
-            if let message = viewModel.classificationErrorMessage {
-                Text(message)
-                    .appFont(.footnote, color: .grey500)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            Text(Constants.manualHint)
-                .appFont(.caption2, color: .grey500)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            actions
         }
+        .fixedSize(horizontal: false, vertical: true)
+
+        actions
     }
 
     /// 미지원 기기. 분류만 잠기고, 카테고리·이모지를 손으로 고르는 길은 폼에 그대로 남는다.
@@ -239,14 +232,12 @@ struct ThreadClassificationCard: View {
     /// 여기서는 `canClassify` 가 늘 `false` 라 분류 버튼을 두지 않는다 — 영영 열리지 않는 버튼은
     /// 안내 문구와 경쟁만 한다.
     private var unavailableContent: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
-            Text(Constants.unavailableTitle)
-                .appFont(.footnote, weight: .semibold, color: .grey700)
-
-            Text(Constants.unavailableMessage)
-                .appFont(.footnote, color: .grey500)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
+        ContentUnavailableView(
+            Constants.unavailableTitle,
+            systemImage: Constants.engineImage,
+            description: Text(Constants.unavailableMessage)
+        )
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     /// "다시 분류하기" 는 특징 미입력·처리 중에 잠긴다. 이모지는 폼의 아이콘 섹션이 맡는다.

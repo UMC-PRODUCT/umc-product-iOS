@@ -376,13 +376,10 @@ private struct EmptyHistoryPresenter: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: DefaultSpacing.spacing8) {
-            Image(systemName: "exclamationmark.bubble.fill")
-                .appFont(.title1, color: .grey500)
-
-            Text(canViewHistory ? "포인트 기록이 없습니다" : "타인의 포인트 히스토리를 확인할 수 없습니다")
-                .appFont(.subheadline, color: .grey500)
-        }
+        ContentUnavailableView(
+            canViewHistory ? "포인트 기록이 없습니다" : "타인의 포인트 히스토리를 확인할 수 없습니다",
+            systemImage: canViewHistory ? "exclamationmark.bubble.fill" : "lock.fill"
+        )
         .frame(maxWidth: .infinity)
         .frame(minHeight: Constants.height)
         .background(

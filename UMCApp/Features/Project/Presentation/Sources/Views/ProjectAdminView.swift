@@ -139,8 +139,7 @@ struct ProjectAdminView: View {
     private func projectSection(_ dashboard: ProjectAdminDashboard) -> some View {
         Section {
             if dashboard.projects.isEmpty {
-                Text(Constants.noProjects)
-                    .appFont(.footnote, color: .grey500)
+                ContentUnavailableView(Constants.noProjects, systemImage: "briefcase")
             } else {
                 ForEach(dashboard.projects, id: \.id) { project in
                     projectRow(project)
@@ -221,8 +220,7 @@ struct ProjectAdminView: View {
                         )
                     }
                 } else {
-                    Text("집계할 지원 통계가 없습니다.")
-                        .foregroundStyle(Color.grey500)
+                    ContentUnavailableView("집계할 지원 통계가 없습니다.", systemImage: "chart.bar")
                 }
             }
         }
@@ -236,8 +234,7 @@ struct ProjectAdminView: View {
                     .frame(maxWidth: .infinity)
 
             case .loaded(let rounds) where rounds.isEmpty:
-                Text(Constants.noMatchingRounds)
-                    .appFont(.footnote, color: .grey500)
+                ContentUnavailableView(Constants.noMatchingRounds, systemImage: "calendar")
 
             case .loaded(let rounds):
                 ForEach(rounds, id: \.id) { round in
@@ -291,6 +288,9 @@ struct ProjectAdminView: View {
 
         case .loaded(let statistics):
             Section(Constants.matchingStatisticsHeader) {
+                if statistics.roundMatchingStatistics.isEmpty {
+                    ContentUnavailableView("집계할 매칭 통계가 없습니다.", systemImage: "chart.bar")
+                }
                 ForEach(
                     Array(statistics.roundMatchingStatistics.enumerated()),
                     id: \.offset

@@ -148,8 +148,7 @@ struct MyProjectsView: View {
                     }
                     .disabled(viewModel.isCreatingDraft)
                 } else if managed.isEmpty {
-                    Text("관리하는 프로젝트가 없어요")
-                        .appFont(.footnote, color: .grey500)
+                    ContentUnavailableView("관리하는 프로젝트가 없어요", systemImage: "briefcase")
                 }
             }
 
@@ -167,8 +166,7 @@ struct MyProjectsView: View {
                 loadingRow
 
             case .loaded(let applications) where applications.isEmpty:
-                Text(Constants.applicationsEmpty)
-                    .appFont(.footnote, color: .grey500)
+                ContentUnavailableView(Constants.applicationsEmpty, systemImage: "tray")
 
             case .loaded(let applications):
                 ForEach(applications, id: \.listId) { application in

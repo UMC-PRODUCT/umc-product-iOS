@@ -26,8 +26,6 @@ public struct MaintenanceView: View {
     fileprivate enum Constants {
         static let maintenanceIconName = "wrench.and.screwdriver.fill"
         static let forceUpdateIconName = "arrow.up.circle.fill"
-        static let iconSize: CGFloat = 56
-        static let maxContentWidth: CGFloat = 360
         static let updateButtonTopPadding: CGFloat = 8
 
         static let forceUpdateTitle = "업데이트가 필요해요"
@@ -46,32 +44,16 @@ public struct MaintenanceView: View {
     // MARK: - Body
 
     public var body: some View {
-        ZStack {
-            Color.grey000
-                .ignoresSafeArea()
-
-            VStack(spacing: DefaultSpacing.spacing24) {
-                Image(systemName: iconName)
-                    .font(.system(size: Constants.iconSize, weight: .semibold))
-                    .foregroundStyle(Color.orange500)
-                    .padding(.bottom, DefaultSpacing.spacing8)
-
-                Text(title)
-                    .appFont(.title2, weight: .semibold, color: .grey900)
-                    .multilineTextAlignment(.center)
-
-                Text(message)
-                    .appFont(.body, color: .grey600)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if case .forceUpdate = kind {
-                    updateButton
-                }
+        ContentUnavailableView {
+            Label(title, systemImage: iconName)
+        } description: {
+            Text(message)
+        } actions: {
+            if case .forceUpdate = kind {
+                updateButton
             }
-            .frame(maxWidth: Constants.maxContentWidth)
-            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
         }
+        .background(Color.grey000.ignoresSafeArea())
         // 스와이프/제스처로 빠져나갈 수 없도록 차단.
         .interactiveDismissDisabled(true)
     }

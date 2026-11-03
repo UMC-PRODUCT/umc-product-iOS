@@ -203,3 +203,15 @@ struct CardPresenter: View, Equatable {
 - List 우선 사용 (LazyVStack보다 뷰 재사용 효율적)
 - ForEach 내 조건부 뷰 금지 (lazy loading 깨짐)
 - List에서 `.id()` 모디파이어 사용 금지
+
+
+## 콘텐츠를 표시할 수 없는 상태
+
+목록 전체나 독립된 섹션이 비었거나, 검색에 일치하는 결과가 없거나, 권한 또는 오류로 콘텐츠를 표시할 수 없으면 SwiftUI의 `ContentUnavailableView`를 사용한다. 제목은 사용자가 기다리던 콘텐츠를 기준으로 짓고, 설명이 필요할 때 확인된 원인이나 다음 행동을 안내한다. 검색 맥락에는 `ContentUnavailableView.search(text:)`도 사용할 수 있다.
+
+- iOS의 재시도 화면은 `CoreUIComponents.RetryContentUnavailableView`를 재사용한다. 기존 재시도 콜백을 연결하고, 문의를 제공하는 화면에서는 원본 `AppError`와 문의 정책을 보존한다.
+- 권한 요청, 작성, 뒤로 가기 등 기존 복구 액션은 유지한다. 일부 섹션만 비었거나 실패하면 해당 섹션만 대체한다. 페이지 추가 실패나 오프라인 캐시가 있으면 이미 표시된 목록을 유지한다.
+- 로딩은 진행 표시기, 폼 검증은 필드 메시지, 선택 전 입력 안내는 플레이스홀더로 처리한다. 위젯·컴플리케이션의 짧은 값과 배너는 각 표면의 표시 규약을 따른다.
+- watchOS의 전체 화면은 기본 `ContentUnavailableView`로 구성하고, 필요한 힌트와 동작은 설명·액션 영역에 둔다. 대기열 카드나 확인 전까지 유지되는 공지 배너는 콘텐츠 위에 계속 표시한다.
+
+[Apple ContentUnavailableView](https://developer.apple.com/documentation/swiftui/contentunavailableview)

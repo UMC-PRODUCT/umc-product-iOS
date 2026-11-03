@@ -86,6 +86,10 @@ struct ProjectMemberManagementView: View {
                     }
                 }
                 Section(Constants.memberHeader) {
+                    if members.productOwner == nil, members.coProductOwners.isEmpty,
+                       members.partGroups.allSatisfy({ $0.members.isEmpty }) {
+                        ContentUnavailableView("아직 팀원이 없어요", systemImage: "person.2")
+                    }
                     if let owner = members.productOwner {
                         memberRow(owner, role: "PM", canManage: false)
                     }

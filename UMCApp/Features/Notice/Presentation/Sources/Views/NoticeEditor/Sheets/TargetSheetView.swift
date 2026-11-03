@@ -114,6 +114,8 @@ struct TargetSheetView: View {
         case .idle, .loading:
             Progress(message: "파트 목록을 불러오고 있어요")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .loaded(let parts) where parts.isEmpty:
+            ContentUnavailableView("선택할 파트가 없어요", systemImage: "person.2")
         case .loaded(let parts):
             partFilterSection(parts)
         case .failed:
@@ -141,6 +143,10 @@ struct TargetSheetView: View {
             switch sheetType {
             case .part:
                 EmptyView()
+            case .branch where viewModel.branchOptions.isEmpty:
+                ContentUnavailableView("선택할 지부가 없어요", systemImage: "building.2")
+            case .school where viewModel.schoolOptions.isEmpty:
+                ContentUnavailableView("선택할 학교가 없어요", systemImage: "graduationcap")
             case .branch:
                 branchFilterSection
             case .school:

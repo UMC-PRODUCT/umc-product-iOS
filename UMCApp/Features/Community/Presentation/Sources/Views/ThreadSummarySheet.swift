@@ -33,7 +33,6 @@ fileprivate enum Constants {
     static let headerIconSize: CGFloat = 16
     static let bulletIconSize: CGFloat = 5
     static let actionItemIconSize: CGFloat = 14
-    static let failureIconSize: CGFloat = DefaultConstant.iconSize
     static let cardPadding: EdgeInsets = .init(
         top: DefaultSpacing.spacing16,
         leading: DefaultConstant.defaultSafeHorizon,
@@ -209,8 +208,8 @@ struct ThreadSummarySheet: View {
             }
 
             if actionItems.isEmpty {
-                Text(Constants.emptyActionItems)
-                    .appFont(.subheadline, color: .grey500)
+                ContentUnavailableView(Constants.emptyActionItems, systemImage: Constants.actionItemImage)
+                    .fixedSize(horizontal: false, vertical: true)
             } else {
                 ForEach(actionItems, id: \.self) { item in
                     HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
@@ -253,25 +252,17 @@ struct ThreadSummarySheet: View {
     }
 
     private func failureCard(_ error: AppError) -> some View {
-        VStack(spacing: DefaultSpacing.spacing12) {
-            Image(systemName: Constants.failureImage)
-                .font(.system(size: Constants.failureIconSize, weight: .medium))
-                .foregroundStyle(Color.grey400)
-
-            Text(Constants.failureTitle)
-                .appFont(.callout, weight: .semibold, color: .grey700)
-
+        ContentUnavailableView {
+            Label(Constants.failureTitle, systemImage: Constants.failureImage)
+        } description: {
             Text(error.userMessage)
-                .appFont(.footnote, color: .grey500)
-                .multilineTextAlignment(.center)
-
-            MainButton(Constants.retryTitle) {
+        } actions: {
+            Button(Constants.retryTitle) {
                 Task { await viewModel.retrySummary() }
             }
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.bordered)
         }
-        .frame(maxWidth: .infinity)
-        .padding(Constants.cardPadding)
+        .fixedSize(horizontal: false, vertical: true)
         .background(
             Color.Surface.content,
             in: .rect(corners: .concentric(minimum: DefaultConstant.concentricRadius))
