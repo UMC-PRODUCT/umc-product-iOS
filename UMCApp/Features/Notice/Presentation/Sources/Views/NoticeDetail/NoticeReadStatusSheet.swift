@@ -18,7 +18,6 @@ import NoticeDomain
 public struct NoticeReadStatusSheet: View {
     
     // MARK: - Property
-    @Environment(\.dismiss) private var dismiss
     @Bindable var viewModel: NoticeDetailViewModel
     @State public var rotationTrigger = 0
     
@@ -44,7 +43,7 @@ public struct NoticeReadStatusSheet: View {
             }
             .navigation(naviTitle: NavigationTitle.Notice.readStatus, displayMode: .inline)
             .toolbar {
-                ToolBarCollection.CancelBtn(action: {})
+                ToolBarCollection.CloseBtn()
                 
                 if isLoadedState {
                     ToolBarCollection.ReadStatusFilter(

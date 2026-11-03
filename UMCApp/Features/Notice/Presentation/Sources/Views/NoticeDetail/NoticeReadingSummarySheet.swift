@@ -17,7 +17,6 @@ struct NoticeReadingSummarySheet: View {
 
     // MARK: - Property
 
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Bindable var viewModel: NoticeDetailViewModel
     let noticeContent: String
@@ -40,7 +39,6 @@ struct NoticeReadingSummarySheet: View {
             trailing: DefaultConstant.defaultSafeHorizon
         )
         static let retryButtonTitle: String = "다시 시도"
-        static let dismissButtonTitle: String = "닫기"
         static let headerLabel: String = "Apple Intelligence"
         static let streamingPlaceholder: String = "요약하는 중..."
         static let failedIconName: String = "exclamationmark.circle"
@@ -186,11 +184,6 @@ struct NoticeReadingSummarySheet: View {
 
     @ToolbarContentBuilder
     private var sheetToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button(Constants.dismissButtonTitle) {
-                dismiss()
-            }
-            .appFont(.body, color: .grey700)
-        }
+        ToolBarCollection.CloseBtn(placement: .topBarTrailing)
     }
 }

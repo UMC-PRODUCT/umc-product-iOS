@@ -384,19 +384,19 @@ private struct ProjectQuotaEditorView: View {
             .navigationTitle(editor.projectName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("저장") {
+                ToolBarCollection.CancelBtn()
+                ToolBarCollection.ConfirmBtn(
+                    action: {
+                        guard !isSaving else { return }
+                        isSaving = true
                         Task {
-                            isSaving = true
                             if await onSave(editor.projectId, values) { dismiss() }
                             isSaving = false
                         }
-                    }
-                    .disabled(values.isEmpty || isSaving)
-                }
+                    },
+                    disable: values.isEmpty, isLoading: isSaving,
+                    dismissOnTap: false, accessibilityLabel: "저장"
+                )
             }
         }
         .presentationDetents([.medium, .large])
@@ -471,19 +471,19 @@ private struct ProjectMatchingRoundEditorView: View {
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("저장") {
+                ToolBarCollection.CancelBtn()
+                ToolBarCollection.ConfirmBtn(
+                    action: {
+                        guard !isSaving else { return }
+                        isSaving = true
                         Task {
-                            isSaving = true
                             if await onSave(editor.matchingRoundId, form) { dismiss() }
                             isSaving = false
                         }
-                    }
-                    .disabled(!form.isValid || isSaving)
-                }
+                    },
+                    disable: !form.isValid, isLoading: isSaving,
+                    dismissOnTap: false, accessibilityLabel: "저장"
+                )
             }
         }
     }
@@ -504,9 +504,7 @@ private struct ProjectAbortEditorView: View {
             .navigationTitle(editor.projectName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
-                }
+                ToolBarCollection.CancelBtn()
                 ToolbarItem(placement: .confirmationAction) {
                     Button("중단", role: .destructive) {
                         dismiss()

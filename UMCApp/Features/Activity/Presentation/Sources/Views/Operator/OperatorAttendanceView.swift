@@ -253,7 +253,7 @@ struct OperatorAttendanceView: View {
                 displayMode: .inline
             )
             .toolbar {
-                ToolBarCollection.ConfirmBtn(action: {})
+                ToolBarCollection.CloseBtn(placement: .topBarTrailing)
             }
         }
         .presentationDetents([.medium])

@@ -109,7 +109,7 @@ struct VotingFormSheetView: View, Equatable {
     /// 상단 툴바 액션(취소/확인)
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolBarCollection.CancelBtn(action: onCancel)
+        ToolBarCollection.CancelBtn(action: onCancel, dismissOnTap: false)
         
         if mode == .create {
             ToolBarCollection.AddBtn(
@@ -123,7 +123,8 @@ struct VotingFormSheetView: View, Equatable {
                 action: handleConfirmTap,
                 disable: !formData.canConfirm,
                 isLoading: isConfirmButtonLoading,
-                dismissOnTap: false
+                dismissOnTap: false,
+                accessibilityLabel: "투표 저장"
             )
         }
     }

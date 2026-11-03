@@ -221,14 +221,15 @@ public struct ScheduleRegistrationView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         if mode == .edit {
-            ToolBarCollection.RejectBtn(action: {})
+            ToolBarCollection.CancelBtn()
 
             ToolBarCollection.ConfirmBtn(
                 action: { Task { await viewModel.updateSchedule() } },
                 disable: isActionDisabled,
                 isLoading: isSubmitting,
                 // 성공(.loaded)을 확인한 뒤 닫아야 실패 시 입력이 살아 있다.
-                dismissOnTap: false
+                dismissOnTap: false,
+                accessibilityLabel: "일정 저장"
             )
         } else {
             if isAIAvailable {
@@ -642,15 +643,10 @@ private struct AIAutofillSheet: View {
             .navigationTitle(Constants.sheetTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        viewModel.resetAIAutofillState()
-                        isPresented = false
-                    } label: {
-                        Image(systemName: "xmark")
-                            .foregroundStyle(Color.grey500)
-                    }
-                }
+                ToolBarCollection.CancelBtn(action: {
+                    viewModel.resetAIAutofillState()
+                    isPresented = false
+                }, dismissOnTap: false)
             }
         }
         .presentationDetents([.medium])

@@ -42,7 +42,8 @@ struct ProjectApplicationFormEditorView: View {
                     action: save,
                     disable: !viewModel.canSave,
                     isLoading: viewModel.isSaving,
-                    dismissOnTap: false
+                    dismissOnTap: false,
+                    accessibilityLabel: "지원서 양식 저장"
                 )
             }
             .task { await viewModel.fetch() }

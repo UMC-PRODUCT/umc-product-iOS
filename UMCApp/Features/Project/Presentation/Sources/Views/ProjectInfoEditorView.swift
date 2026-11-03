@@ -54,7 +54,8 @@ struct ProjectInfoEditorView: View {
                     action: save,
                     disable: !viewModel.canSave,
                     isLoading: viewModel.isSaving,
-                    dismissOnTap: false
+                    dismissOnTap: false,
+                    accessibilityLabel: "프로젝트 정보 저장"
                 )
             }
             .task { await viewModel.fetch() }

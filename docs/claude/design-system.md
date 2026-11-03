@@ -60,6 +60,36 @@ weight 는 `AppFontWeight`(`.regular` 기본, `Font.app(size:weight:)` 는 `.med
 `.primary` · `.secondary` · `.destructive` · `TextButtonStyle` — CTA 는 `MainButton`(CoreUIComponents)을 우선 쓰고,
 일반 버튼은 이 스타일을 `.buttonStyle(.primary)` 처럼 적용한다. Liquid Glass 버튼은 아래 "Glass Effect 선택".
 
+## iOS 상단 툴바의 확인·취소 버튼 (필수)
+
+모든 iOS 화면에서 상단 툴바로 입력을 확정하거나 취소할 때는 `CoreUIComponents.ToolBarCollection`을 사용한다.
+
+| 동작 | 컴포넌트 | 활성 상태 | VoiceOver 레이블 예시 |
+|------|----------|-----------|----------------------|
+| 저장·적용·선택 완료 | `ConfirmBtn` | 오른쪽 `checkmark`, 브랜드 `.teal500` | 저장, 필터 적용, 선택 완료 |
+| 입력 취소 | `CancelBtn` | 왼쪽 `xmark`, `.red500` | 취소, 편집 취소 |
+
+`accessibilityLabel`에는 아이콘 이름 대신 실제 동작을 넣는다. 유효하지 않은 입력은 `disable`로 차단한다.
+비동기 저장 중에는 `isLoading`으로 체크 표시를 진행 표시기로 바꾸고 중복 탭을 막는다.
+비활성·로딩 색상은 공용 버튼이 처리한다. 저장에 성공해야 닫는 폼은 `dismissOnTap: false`로 두고
+성공 분기에서 닫는다. 기본값은 액션 실행 후 자동 닫기므로 기본 동작 안에서 `dismiss()`를 다시 호출하지 않는다.
+
+```swift
+.toolbar {
+    ToolBarCollection.CancelBtn(action: {}, disable: isSaving, accessibilityLabel: "취소")
+    ToolBarCollection.ConfirmBtn(
+        action: { Task { if await save() { dismiss() } } },
+        disable: !isValid,
+        isLoading: isSaving,
+        dismissOnTap: false,
+        accessibilityLabel: "저장"
+    )
+}
+```
+
+읽기 전용 화면이나 즉시 적용 필터를 닫을 때는 중립적인 `CloseBtn` 또는 기본 닫기 액션을 사용한다.
+일반 뒤로 가기는 탐색 동작으로 구분하고, 생성·공유·삭제 등 고유 명령은 동작에 맞는 아이콘과 역할을 사용한다. 특히 입력 취소의 빨간색은 데이터를 삭제한다는 뜻이 아니다.
+
 ## Shape 패턴 (권장)
 
 ```swift

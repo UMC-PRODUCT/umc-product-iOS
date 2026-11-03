@@ -72,9 +72,7 @@ struct MemberAdministrationDetailSheet: View {
             .navigationTitle("멤버 상세")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }.disabled(viewModel.isMutating)
-                }
+                ToolBarCollection.CloseBtn(disable: viewModel.isMutating)
                 if viewModel.canManageSelected {
                     ToolbarItem(placement: .primaryAction) {
                         Button("상벌점 부여", systemImage: "plus") { showGrant = true }
@@ -198,14 +196,12 @@ private struct MemberPointEditorSheet: View {
             .navigationTitle(editing == nil ? "상벌점 부여" : "사유 수정")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }.disabled(viewModel.isMutating)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button { Task { await save() } } label: {
-                        if viewModel.isMutating { ProgressView() } else { Text("저장") }
-                    }.disabled(!canSave)
-                }
+                ToolBarCollection.CancelBtn(disable: viewModel.isMutating)
+                ToolBarCollection.ConfirmBtn(
+                    action: { Task { await save() } },
+                    disable: !canSave, isLoading: viewModel.isMutating,
+                    dismissOnTap: false, accessibilityLabel: "저장"
+                )
             }
             .task { if let editing { reason = editing.reason } }
         }
