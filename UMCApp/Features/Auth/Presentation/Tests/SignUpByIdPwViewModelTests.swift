@@ -209,7 +209,8 @@ struct SignUpByIdPwViewModelCanSubmitTests {
             fillTerms: true
         )
         viewModel.name = "홍길동"
-        viewModel.nickname = "길동이"
+        viewModel.nicknameAvailability.nickname = "길동이"
+        await viewModel.nicknameAvailability.check()
         viewModel.password = "password1234"
         viewModel.passwordConfirm = "password1234"
         // debounce가 아직 만료되지 않았으므로 emailAvailabilityState는 .idle이다.
@@ -227,7 +228,8 @@ struct SignUpByIdPwViewModelCanSubmitTests {
             fillTerms: true
         )
         viewModel.name = "홍길동"
-        viewModel.nickname = "길동이"
+        viewModel.nicknameAvailability.nickname = "길동이"
+        await viewModel.nicknameAvailability.check()
         viewModel.password = "password1234"
         viewModel.passwordConfirm = "password1234"
         try await waitForEmailAvailabilityDebounce(on: viewModel)
@@ -313,6 +315,26 @@ struct SignUpByIdPwViewModelRegisterTests {
 
         #expect(viewModel.registerState == .loaded("member-3"))
         #expect(viewModel.isApprovedAfterRegister == false)
+    }
+
+    @Test("가입 시 닉네임이 선점되면 입력한 정보를 유지하고 새 닉네임 확인을 요구한다")
+    func nicknameConflictAllowsCorrection() async throws {
+        let useCase = MockRegisterByEmailUseCase()
+        useCase.result = .failure(RegistrationError.nicknameAlreadyUsed)
+        let viewModel = try await makeValidFormViewModel(registerByEmailUseCase: useCase)
+
+        await viewModel.register()
+
+        #expect(viewModel.registerState == .idle)
+        #expect(viewModel.nicknameAvailability.state == .loaded(false))
+        #expect(!viewModel.canSubmit)
+        await viewModel.register()
+        #expect(useCase.callCount == 1)
+
+        viewModel.nicknameAvailability.nickname = "새이름"
+        #expect(!viewModel.canSubmit)
+        await viewModel.nicknameAvailability.check()
+        #expect(viewModel.canSubmit)
     }
 
     @Test("가입 실패 → registerState.idle 복귀 + ErrorHandler Alert 노출")
@@ -452,7 +474,7 @@ private func makeVerifiedEmailViewModel(
 
     if fillSchool {
         await viewModel.fetchSchools()
-        viewModel.selectedSchool = School(id: "1", name: "테스트대학교")
+        viewModel.nicknameAvailability.selectedSchool = School(id: "1", name: "테스트대학교")
     }
     if fillTerms {
         await viewModel.termsAgreementFlow.fetchTerms()
@@ -481,11 +503,12 @@ private func makeFormFilledButTermsNotLoadedViewModel(
         checkEmailAvailabilityUseCase: checkEmailAvailabilityUseCase
     )
     await viewModel.fetchSchools()
-    viewModel.selectedSchool = School(id: "1", name: "테스트대학교")
+    viewModel.nicknameAvailability.selectedSchool = School(id: "1", name: "테스트대학교")
     // termsAgreementFlow.fetchTerms()를 호출하지 않아 termsState == .idle을 유지한다.
 
     viewModel.name = "홍길동"
-    viewModel.nickname = "길동이"
+    viewModel.nicknameAvailability.nickname = "길동이"
+    await viewModel.nicknameAvailability.check()
     viewModel.password = "password1234"
     viewModel.passwordConfirm = "password1234"
     viewModel.emailVerificationFlow.email = "member@umc.dev"
@@ -533,11 +556,12 @@ private func makeValidFormViewModel(
     await viewModel.termsAgreementFlow.fetchTerms()
 
     viewModel.name = "홍길동"
-    viewModel.nickname = "길동이"
+    viewModel.nicknameAvailability.nickname = "길동이"
     viewModel.password = "password1234"
     viewModel.passwordConfirm = "password1234"
     viewModel.emailVerificationFlow.email = "member@umc.dev"
-    viewModel.selectedSchool = School(id: "1", name: "테스트대학교")
+    viewModel.nicknameAvailability.selectedSchool = School(id: "1", name: "테스트대학교")
+    await viewModel.nicknameAvailability.check()
 
     try await requestVerification(on: viewModel)
     try await waitForEmailAvailabilityDebounce(on: viewModel)

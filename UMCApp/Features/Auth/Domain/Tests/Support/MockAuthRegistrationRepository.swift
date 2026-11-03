@@ -80,6 +80,10 @@ final class MockAuthRegistrationRepository:
         return try checkEmailAvailabilityResult.get()
     }
 
+    func checkNicknameAvailability(schoolId: String, nickname: String) async throws -> Bool {
+        throw MockError.notStubbed
+    }
+
     // MARK: - fetchSchools
 
     var fetchSchoolsResult: Result<[School], Error> = .failure(MockError.notStubbed)

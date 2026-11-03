@@ -65,9 +65,14 @@ public struct SignUpView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DefaultSpacing.spacing24) {
+                    SignUpSchoolSection(
+                        schoolsState: viewModel.schoolsState,
+                        selectedSchool: $viewModel.nicknameAvailability.selectedSchool
+                    )
+
                     SignUpNameNicknameSection(
                         name: $viewModel.name,
-                        nickname: $viewModel.nickname,
+                        availability: viewModel.nicknameAvailability,
                         focusBinding: $focusedField,
                         onNicknameSubmit: { focusedField = nil }
                     )
@@ -87,11 +92,6 @@ public struct SignUpView: View {
                         onEmailChanged: {
                             viewModel.emailVerificationFlow.handleEmailChanged()
                         }
-                    )
-
-                    SignUpSchoolSection(
-                        schoolsState: viewModel.schoolsState,
-                        selectedSchool: $viewModel.selectedSchool
                     )
 
                     SignUpTermsSection(

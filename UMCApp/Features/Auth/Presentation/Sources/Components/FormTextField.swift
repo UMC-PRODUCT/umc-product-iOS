@@ -57,7 +57,7 @@ struct FormTextField: View {
     @Previewable @State var name: String = ""
     VStack(spacing: DefaultSpacing.spacing16) {
         FormTextField(title: "이름", placeholder: "이름 입력", text: $name, submitLabel: .done)
-        FormTextField(title: "닉네임", placeholder: "한글 1~5자", text: .constant("umc챌린저"))
+        FormTextField(title: "닉네임", placeholder: "한글 1~4자", text: .constant("챌린저"))
     }
     .padding()
 }

@@ -384,6 +384,26 @@ struct SignUpViewModelRegisterTests {
         #expect(loginUseCase.executeGoogleCallCount == 0)
     }
 
+    @Test("가입 시 닉네임이 선점되면 입력한 정보를 유지하고 새 닉네임 확인을 요구한다")
+    func nicknameConflictAllowsCorrection() async throws {
+        let useCase = MockRegisterUseCase()
+        useCase.result = .failure(RegistrationError.nicknameAlreadyUsed)
+        let viewModel = try await makeValidFormViewModel(registerUseCase: useCase)
+
+        await viewModel.register()
+
+        #expect(viewModel.registerState == .idle)
+        #expect(viewModel.nicknameAvailability.state == .loaded(false))
+        #expect(!viewModel.isFormValid)
+        await viewModel.register()
+        #expect(useCase.callCount == 1)
+
+        viewModel.nicknameAvailability.nickname = "새이름"
+        #expect(!viewModel.isFormValid)
+        await viewModel.nicknameAvailability.check()
+        #expect(viewModel.isFormValid)
+    }
+
     @Test("가입 실패 → registerState.idle 복귀 + ErrorHandler Alert 노출")
     func registerFailureSetsIdleWithErrorAlert() async throws {
         let registerUseCase = MockRegisterUseCase()
@@ -501,9 +521,10 @@ private func makeValidFormViewModel(
     await viewModel.termsAgreementFlow.fetchTerms()
 
     viewModel.name = "홍길동"
-    viewModel.nickname = "길동이"
+    viewModel.nicknameAvailability.nickname = "길동이"
     viewModel.emailVerificationFlow.email = "member@umc.dev"
-    viewModel.selectedSchool = School(id: "1", name: "테스트대학교")
+    viewModel.nicknameAvailability.selectedSchool = School(id: "1", name: "테스트대학교")
+    await viewModel.nicknameAvailability.check()
 
     try await viewModel.emailVerificationFlow.requestEmailVerification()
     try await viewModel.emailVerificationFlow.verifyEmailCode("123456")
@@ -532,9 +553,10 @@ private func makeFormFilledButTermsNotLoadedViewModel(
     // termsAgreementFlow.fetchTerms()를 호출하지 않아 termsState == .idle을 유지한다.
 
     viewModel.name = "홍길동"
-    viewModel.nickname = "길동이"
+    viewModel.nicknameAvailability.nickname = "길동이"
     viewModel.emailVerificationFlow.email = "member@umc.dev"
-    viewModel.selectedSchool = School(id: "1", name: "테스트대학교")
+    viewModel.nicknameAvailability.selectedSchool = School(id: "1", name: "테스트대학교")
+    await viewModel.nicknameAvailability.check()
     try await viewModel.emailVerificationFlow.requestEmailVerification()
     try await viewModel.emailVerificationFlow.verifyEmailCode("123456")
 
@@ -594,5 +616,71 @@ private final class MockLoginUseCase: LoginUseCaseProtocol, @unchecked Sendable 
     func executeGoogle(accessToken: String) async throws -> OAuthLoginResult {
         executeGoogleCallCount += 1
         return try executeGoogleResult.get()
+    }
+}
+
+@MainActor
+@Suite("학교별 닉네임 중복 확인")
+struct NicknameAvailabilityTests {
+    @Test(arguments: ["가", "가나다라", "힣"])
+    func allowsHangulSyllables(_ nickname: String) {
+        let flow = NicknameAvailabilityFlow { _, _ in true }
+        flow.nickname = nickname
+        #expect(flow.isValidNickname)
+        #expect(!flow.canCheck)
+        flow.selectedSchool = School(id: "1", name: "테스트대학교")
+        #expect(flow.canCheck)
+    }
+
+    @Test(arguments: ["", "가나다라마", "가", "ㄱ", "한 글", "공백 ", "abc", "별1", "🐻"])
+    func blocksInvalidNickname(_ nickname: String) {
+        let flow = NicknameAvailabilityFlow { _, _ in true }
+        flow.selectedSchool = School(id: "1", name: "테스트대학교")
+        flow.nickname = nickname
+        #expect(!flow.canCheck)
+    }
+
+    @Test("학교를 바꿨다가 돌아와도 이전 요청 결과를 사용하지 않는다")
+    func ignoresStaleCheckAfterSchoolChange() async {
+        let started = AsyncStream<Void>.makeStream()
+        let release = AsyncStream<Bool>.makeStream()
+        let useCase = MockFetchSignUpDataUseCase()
+        useCase.nicknameAvailability = { _, _ in
+            started.continuation.yield()
+            var values = release.stream.makeAsyncIterator()
+            return await values.next() ?? false
+        }
+        let flow = NicknameAvailabilityFlow(checkAvailability: useCase.checkNicknameAvailability)
+        let school = School(id: "1", name: "테스트대학교")
+        flow.selectedSchool = school
+        flow.nickname = "길동이"
+        let check = Task { await flow.check() }
+        var events = started.stream.makeAsyncIterator()
+        _ = await events.next()
+        #expect(flow.state.isLoading)
+        flow.selectedSchool = School(id: "2", name: "다른대학교")
+        flow.selectedSchool = school
+        release.continuation.yield(true)
+        await check.value
+        #expect(flow.state == .idle)
+    }
+
+    @Test("조회 실패 후 재시도하고 닉네임을 바꾸면 확인 결과를 해제한다")
+    func retriesAndInvalidatesAvailability() async {
+        let useCase = MockFetchSignUpDataUseCase()
+        useCase.nicknameAvailability = { _, _ in throw DummyError() }
+        let flow = NicknameAvailabilityFlow(checkAvailability: useCase.checkNicknameAvailability)
+        flow.selectedSchool = School(id: "2", name: "테스트대학교")
+        flow.nickname = "가"
+        await flow.check()
+        #expect(flow.canCheck)
+        useCase.nicknameAvailability = { schoolId, nickname in
+            schoolId == "2" && nickname == "가"
+        }
+        await flow.check()
+        #expect(flow.state == .loaded(true))
+        flow.nickname = "가"
+        #expect(flow.state == .idle)
+        #expect(!flow.canCheck)
     }
 }

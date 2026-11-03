@@ -193,6 +193,47 @@ private func makeTermsAgreements() -> [TermsAgreement] {
 @Suite("AuthRepository — registerByEmail")
 struct AuthRepositoryRegisterByEmailTests {
 
+    @Test("닉네임 확인은 학교·닉네임 쿼리를 인증 없이 보내고 사용 가능 여부를 읽는다",
+          arguments: [true, false])
+    func nicknameAvailability(_ available: Bool) async throws {
+        let (sut, network, _) = makeRepository(
+            .success(Fixture.success(#"{ "available": \#(available) }"#))
+        )
+
+        let result = try await sut.checkNicknameAvailability(schoolId: "23", nickname: "하늘")
+        #expect(result == available)
+        #expect(network.requestWithoutAuthCount == 1)
+        #expect(network.lastMethod == .get)
+        #expect(network.lastPath == "/api/v1/member/nicknames/availability")
+        guard case .requestParameters(let parameters, _) = network.lastTarget?.task else {
+            Issue.record("닉네임 확인 쿼리가 없습니다")
+            return
+        }
+        #expect(parameters as? [String: String] == ["schoolId": "23", "nickname": "하늘"])
+    }
+
+    @Test("가입 요청의 409 MEMBER-0020을 닉네임 충돌로 전달한다", arguments: [true, false])
+    func mapsNicknameConflict(emailRegistration: Bool) async {
+        let (sut, _, tokenStore) = makeRepository(.failure(Fixture.networkRequestFailed(
+            statusCode: 409, code: "MEMBER-0020", message: "중복 닉네임"
+        )))
+        await #expect(throws: RegistrationError.nicknameAlreadyUsed) {
+            if emailRegistration {
+                _ = try await sut.registerByEmail(
+                    rawPassword: "password1234", name: "홍길동", nickname: "하늘",
+                    emailVerificationToken: "verified", schoolId: "1", termsAgreements: []
+                )
+            } else {
+                _ = try await sut.register(
+                    oAuthVerificationToken: "oauth", name: "홍길동", nickname: "하늘",
+                    emailVerificationToken: "verified", schoolId: "1",
+                    profileImageId: nil, termsAgreements: []
+                )
+            }
+        }
+        #expect(await tokenStore.saveCallCount == 0)
+    }
+
     @Test("성공 응답이면 토큰을 저장하고 RegisterByIdPwResult를 반환하며 /member/register/email(POST, 비인증)을 호출한다")
     func registerByEmailSucceeds() async throws {
         let (sut, stub, tokenStore) = makeRepository(

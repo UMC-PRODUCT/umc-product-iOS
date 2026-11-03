@@ -367,6 +367,21 @@ extension AuthRepository: AuthRegistrationRepositoryProtocol {
         }
     }
 
+    public func checkNicknameAvailability(schoolId: String, nickname: String) async throws -> Bool {
+        let query = NicknameAvailabilityQuery(schoolId: schoolId, nickname: nickname)
+        let response = try await adapter.requestWithoutAuth(
+            AuthRouter.checkNicknameAvailability(query: query)
+        )
+        do {
+            let result = try JSONDecoder().decode(
+                APIResponse<NicknameAvailabilityResponseDTO>.self, from: response.data
+            )
+            return try result.unwrap().available
+        } catch let error as DecodingError {
+            throw RepositoryError.decodingError(detail: "\(error)")
+        }
+    }
+
     // MARK: - School / Terms
 
     public func fetchSchools() async throws -> [School] {
@@ -412,7 +427,7 @@ extension AuthRepository: AuthRegistrationRepositoryProtocol {
         profileImageId: String?,
         termsAgreements: [TermsAgreement]
     ) async throws -> RegisterResult {
-        let response = try await adapter.requestWithoutAuth(
+        let response = try await requestRegistration(
             AuthRouter.register(
                 body: RegisterRequestDTO(
                     oAuthVerificationToken: oAuthVerificationToken,
@@ -457,7 +472,7 @@ extension AuthRepository: AuthRegistrationRepositoryProtocol {
         schoolId: String,
         termsAgreements: [TermsAgreement]
     ) async throws -> RegisterByIdPwResult {
-        let response = try await adapter.requestWithoutAuth(
+        let response = try await requestRegistration(
             AuthRouter.registerByEmail(
                 body: EmailRegisterRequestDTO(
                     rawPassword: rawPassword,
@@ -492,6 +507,18 @@ extension AuthRepository: AuthRegistrationRepositoryProtocol {
             return RegisterByIdPwResult(memberId: dto.memberId)
         } catch let decodingError as DecodingError {
             throw RepositoryError.decodingError(detail: "\(decodingError)")
+        }
+    }
+
+    private func requestRegistration(_ target: AuthRouter) async throws -> Response {
+        do {
+            return try await adapter.requestWithoutAuth(target)
+        } catch let error as NetworkError {
+            if case .requestFailed(409, _) = error,
+               case .serverError("MEMBER-0020", _) = Self.parseServerError(from: error) {
+                throw RegistrationError.nicknameAlreadyUsed
+            }
+            throw error
         }
     }
 
