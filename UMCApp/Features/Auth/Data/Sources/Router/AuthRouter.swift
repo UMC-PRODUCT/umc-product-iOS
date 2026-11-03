@@ -36,6 +36,8 @@ public enum AuthRouter: BaseTargetType {
     case verifyEmailCode(body: VerifyEmailCodeRequestDTO)
     /// 이메일 중복 확인
     case checkEmailAvailability(query: CheckEmailAvailabilityQuery)
+    /// 학교별 닉네임 중복 확인
+    case checkNicknameAvailability(query: NicknameAvailabilityQuery)
     /// 학교 목록 조회
     case fetchSchools
     /// 약관 조회
@@ -90,6 +92,8 @@ public enum AuthRouter: BaseTargetType {
             return "/api/v1/auth/email-verification/code"
         case .checkEmailAvailability:
             return "/api/v1/auth/email/availability"
+        case .checkNicknameAvailability:
+            return "/api/v1/member/nicknames/availability"
         case .fetchSchools:
             return "/api/v1/schools/all"
         case .fetchTerms(let termsType):
@@ -127,7 +131,7 @@ public enum AuthRouter: BaseTargetType {
 
     public var method: Moya.Method {
         switch self {
-        case .checkEmailAvailability, .fetchSchools, .fetchTerms, .fetchMyOAuth:
+        case .checkEmailAvailability, .checkNicknameAvailability, .fetchSchools, .fetchTerms, .fetchMyOAuth:
             return .get
         case .fetchMemberSummary:
             return .get
@@ -163,6 +167,8 @@ public enum AuthRouter: BaseTargetType {
             return .requestJSONEncodable(body)
         case .verifyEmailCode(let body):
             return .requestJSONEncodable(body)
+        case .checkNicknameAvailability(let query):
+            return .requestParameters(parameters: query.toParameters, encoding: URLEncoding.queryString)
         case .checkEmailAvailability(let query):
             return .requestParameters(
                 parameters: query.toParameters,

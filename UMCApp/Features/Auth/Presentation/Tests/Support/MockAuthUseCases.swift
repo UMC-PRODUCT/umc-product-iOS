@@ -24,6 +24,12 @@ final class MockFetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol, @uncheck
     private(set) var fetchTermsCallCount = 0
     private(set) var fetchTermsReceivedTypes: [TermsType] = []
 
+    var nicknameAvailability: (String, String) async throws -> Bool = { _, _ in true }
+
+    func checkNicknameAvailability(schoolId: String, nickname: String) async throws -> Bool {
+        try await nicknameAvailability(schoolId, nickname)
+    }
+
     func fetchSchools() async throws -> [School] {
         fetchSchoolsCallCount += 1
         return try fetchSchoolsResult.get()

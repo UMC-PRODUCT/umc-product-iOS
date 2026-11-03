@@ -46,17 +46,13 @@ final class SignUpByIdPwViewModel {
     /// 사용자 실명
     var name: String = ""
 
-    /// 사용자 닉네임
-    var nickname: String = ""
+    var nicknameAvailability: NicknameAvailabilityFlow
 
     /// 비밀번호
     var password: String = ""
 
     /// 비밀번호 확인
     var passwordConfirm: String = ""
-
-    /// 선택된 학교
-    var selectedSchool: School?
 
     /// 학교 목록 로딩 상태
     private(set) var schoolsState: Loadable<[School]> = .idle
@@ -110,6 +106,9 @@ final class SignUpByIdPwViewModel {
                 ResendEmailVerificationUseCaseProtocol.self
             )
         )
+        self.nicknameAvailability = NicknameAvailabilityFlow(
+            checkAvailability: self.fetchSignUpDataUseCase.checkNicknameAvailability
+        )
         self.termsAgreementFlow = TermsAgreementFlow(
             fetchSignUpDataUseCase: self.fetchSignUpDataUseCase
         )
@@ -142,11 +141,10 @@ final class SignUpByIdPwViewModel {
     /// 하드코딩된 termsId fallback은 두지 않는다.
     var canSubmit: Bool {
         !name.isEmpty &&
-        !nickname.isEmpty &&
+        nicknameAvailability.state.value == true &&
         !emailVerificationFlow.email.isEmpty &&
         isPasswordValid &&
         isPasswordConfirmed &&
-        selectedSchool != nil &&
         emailVerificationFlow.isEmailVerified &&
         isEmailAvailable &&
         termsAgreementFlow.mandatoryTermsAgreed
@@ -243,11 +241,12 @@ final class SignUpByIdPwViewModel {
     func register() async {
         guard !registerState.isLoading else { return }
         guard canSubmit,
-              let selectedSchool,
+              let selectedSchool = nicknameAvailability.selectedSchool,
               let emailVerificationToken = emailVerificationFlow.emailVerificationToken else {
             return
         }
 
+        let submittedRevision = nicknameAvailability.revision
         registerState = .loading
 
         let agreements = termsAgreementFlow.termsAgreements.map {
@@ -258,7 +257,7 @@ final class SignUpByIdPwViewModel {
             let result = try await registerByEmailUseCase.execute(
                 rawPassword: password,
                 name: name,
-                nickname: nickname,
+                nickname: nicknameAvailability.nickname,
                 emailVerificationToken: emailVerificationToken,
                 schoolId: selectedSchool.id,
                 termsAgreements: agreements
@@ -266,6 +265,9 @@ final class SignUpByIdPwViewModel {
 
             isApprovedAfterRegister = await resolveApprovalStatus()
             registerState = .loaded(result.memberId)
+        } catch RegistrationError.nicknameAlreadyUsed {
+            registerState = .idle
+            nicknameAvailability.markUnavailable(for: submittedRevision)
         } catch {
             registerState = .idle
             errorHandler.handle(error, context: ErrorContext(

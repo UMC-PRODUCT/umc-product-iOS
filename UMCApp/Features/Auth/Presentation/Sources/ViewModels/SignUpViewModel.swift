@@ -38,11 +38,7 @@ final class SignUpViewModel {
     /// 사용자 실명
     var name: String
 
-    /// 사용자 닉네임
-    var nickname: String
-
-    /// 선택된 학교
-    var selectedSchool: School?
+    var nicknameAvailability: NicknameAvailabilityFlow
 
     /// 학교 목록 로딩 상태
     private(set) var schoolsState: Loadable<[School]> = .idle
@@ -85,11 +81,13 @@ final class SignUpViewModel {
                 ResendEmailVerificationUseCaseProtocol.self
             )
         )
+        self.nicknameAvailability = NicknameAvailabilityFlow(
+            checkAvailability: self.fetchSignUpDataUseCase.checkNicknameAvailability
+        )
         self.termsAgreementFlow = TermsAgreementFlow(
             fetchSignUpDataUseCase: self.fetchSignUpDataUseCase
         )
         self.name = initialFullName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        self.nickname = ""
     }
 
     // MARK: - Computed Property
@@ -97,9 +95,8 @@ final class SignUpViewModel {
     /// 폼 유효성 검증 상태 — 필수 약관 동의를 포함한다.
     var isFormValid: Bool {
         !name.isEmpty &&
-        !nickname.isEmpty &&
+        nicknameAvailability.state.value == true &&
         !emailVerificationFlow.email.isEmpty &&
-        selectedSchool != nil &&
         emailVerificationFlow.isEmailVerified &&
         termsAgreementFlow.mandatoryTermsAgreed
     }
@@ -125,11 +122,12 @@ final class SignUpViewModel {
     func register() async {
         guard !registerState.isLoading else { return }
         guard isFormValid,
-              let selectedSchool,
+              let selectedSchool = nicknameAvailability.selectedSchool,
               let emailVerificationToken = emailVerificationFlow.emailVerificationToken else {
             return
         }
 
+        let submittedRevision = nicknameAvailability.revision
         registerState = .loading
         requiresManualLoginAfterRegister = false
 
@@ -141,7 +139,7 @@ final class SignUpViewModel {
             let result = try await registerUseCase.execute(
                 oAuthVerificationToken: oAuthVerificationToken,
                 name: name,
-                nickname: nickname,
+                nickname: nicknameAvailability.nickname,
                 emailVerificationToken: emailVerificationToken,
                 schoolId: selectedSchool.id,
                 profileImageId: nil,
@@ -157,6 +155,9 @@ final class SignUpViewModel {
             }
 
             registerState = .loaded(result.memberId)
+        } catch RegistrationError.nicknameAlreadyUsed {
+            registerState = .idle
+            nicknameAvailability.markUnavailable(for: submittedRevision)
         } catch {
             registerState = .idle
             errorHandler.handle(error, context: ErrorContext(

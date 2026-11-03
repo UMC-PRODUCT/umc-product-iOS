@@ -59,9 +59,14 @@ public struct SignUpByIdPwView: View {
     public var body: some View {
         ScrollView {
             VStack(spacing: DefaultSpacing.spacing24) {
+                SignUpSchoolSection(
+                    schoolsState: viewModel.schoolsState,
+                    selectedSchool: $viewModel.nicknameAvailability.selectedSchool
+                )
+
                 SignUpNameNicknameSection(
                     name: $viewModel.name,
-                    nickname: $viewModel.nickname,
+                    availability: viewModel.nicknameAvailability,
                     focusBinding: $focusedField,
                     onNicknameSubmit: { focusedField = .password }
                 )
@@ -99,11 +104,6 @@ public struct SignUpByIdPwView: View {
                         emailAvailabilityStatusRow
                     }
                 }
-
-                SignUpSchoolSection(
-                    schoolsState: viewModel.schoolsState,
-                    selectedSchool: $viewModel.selectedSchool
-                )
 
                 SignUpTermsSection(
                     termsState: viewModel.termsAgreementFlow.termsState,

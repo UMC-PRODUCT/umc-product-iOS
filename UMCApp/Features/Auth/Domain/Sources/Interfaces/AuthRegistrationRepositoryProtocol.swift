@@ -47,6 +47,9 @@ public protocol AuthRegistrationRepositoryProtocol: Sendable {
     /// - Returns: 사용 가능하면 true
     func checkEmailAvailability(email: String) async throws -> Bool
 
+    /// 해당 학교에서 닉네임을 사용할 수 있는지 확인한다.
+    func checkNicknameAvailability(schoolId: String, nickname: String) async throws -> Bool
+
     /// 학교 목록을 조회한다.
     func fetchSchools() async throws -> [School]
 

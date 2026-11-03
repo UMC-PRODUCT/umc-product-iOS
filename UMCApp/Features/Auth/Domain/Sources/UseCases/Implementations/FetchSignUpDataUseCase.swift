@@ -20,6 +20,10 @@ public final class FetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol {
 
     // MARK: - Function
 
+    public func checkNicknameAvailability(schoolId: String, nickname: String) async throws -> Bool {
+        try await repository.checkNicknameAvailability(schoolId: schoolId, nickname: nickname)
+    }
+
     public func fetchSchools() async throws -> [School] {
         try await repository.fetchSchools()
     }
