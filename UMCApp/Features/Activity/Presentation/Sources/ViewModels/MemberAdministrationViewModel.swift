@@ -7,6 +7,12 @@ import UMCFoundation
 /// 검색 조건별 요청 세대를 분리하고, 상세 기록은 서버 응답만 표시합니다.
 @MainActor @Observable
 final class MemberAdministrationViewModel {
+    enum FilterOptionsState: Equatable {
+        case loading
+        case ready
+        case failed(String)
+    }
+
     private let useCase: MemberAdministrationUseCaseProtocol
     private let membersUseCase: FetchMembersUseCaseProtocol
     private let session: UserSessionManager
@@ -19,7 +25,7 @@ final class MemberAdministrationViewModel {
     private(set) var isMutating = false
     private(set) var isLoadingDetail = false
     private(set) var errorMessage: String?
-    private(set) var organizationError: String?
+    private(set) var filterOptionsState: FilterOptionsState = .loading
     private(set) var detailError: String?
     private(set) var actionError: String?
     private(set) var history: [OperatorMemberPenaltyHistory] = []
@@ -32,7 +38,6 @@ final class MemberAdministrationViewModel {
     private var page = 0
     private var hasNext = false
     private var loaded = false
-    private var organizationLoadFailed = false
 
     var hasMore: Bool { hasNext }
 
@@ -83,6 +88,7 @@ final class MemberAdministrationViewModel {
 
     func load() async {
         guard !loaded else { return }
+        filterOptionsState = .loading
         isLoading = true
         errorMessage = nil
         let sessionRevision = session.sessionRevision
@@ -105,7 +111,9 @@ final class MemberAdministrationViewModel {
             loaded = true
             await changeGeneration()
         } catch {
-            errorMessage = message(error)
+            let description = message(error)
+            filterOptionsState = .failed(description)
+            errorMessage = description
             isLoading = false
         }
     }
@@ -125,30 +133,31 @@ final class MemberAdministrationViewModel {
         organizations = .init(chapters: [], schools: [])
         isLoading = true
         errorMessage = nil
-        organizationLoadFailed = false
-        organizationError = nil
+        filterOptionsState = .loading
         do {
             let options = try await useCase.fetchOrganizations(gisuId: gisuId)
             guard version == organizationVersion, filter.gisuId == gisuId else { return }
             organizations = options
             filter = try authority.scopedFilter(filter)
+            filterOptionsState = .ready
             await search()
         } catch {
             guard version == organizationVersion else { return }
-            organizationLoadFailed = true
-            errorMessage = message(error)
-            organizationError = message(error)
+            let description = message(error)
+            filterOptionsState = .failed(description)
+            errorMessage = description
             isLoading = false
         }
     }
 
     func retry() async {
         if !loaded { await load() }
-        else if organizationLoadFailed { await changeGeneration() }
+        else if case .failed = filterOptionsState { await changeGeneration() }
         else { await search() }
     }
 
     func search() async {
+        guard filterOptionsState == .ready else { return }
         requestVersion += 1
         let version = requestVersion
         isLoading = true

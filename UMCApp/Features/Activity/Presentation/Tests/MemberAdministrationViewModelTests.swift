@@ -108,10 +108,14 @@ struct MemberAdministrationViewModelTests {
         api.organizationGate = gate
         let changing = Task { await vm.changeGeneration() }
         await gate.waitForStart()
+        #expect(vm.filterOptionsState == .loading)
+        api.lastFilter = nil
         vm.filter.keyword = "new"
         await vm.search()
+        #expect(api.lastFilter == nil)
         await gate.release()
         await changing.value
+        #expect(vm.filterOptionsState == .ready)
         #expect(vm.organizations.schools.map(\.id) == ["20"])
         #expect(vm.members.map(\.id) == ["new"])
     }
@@ -168,6 +172,10 @@ struct MemberAdministrationViewModelTests {
         let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
                                                session: UserSessionManager())
         await vm.load()
+        #expect(vm.errorMessage != nil)
+        #expect(vm.filterOptionsState == .failed("조직 조회 실패"))
+        await vm.search()
+        #expect(api.lastFilter == nil)
         #expect(vm.errorMessage != nil)
         api.organizationFails = false
         await vm.retry()
