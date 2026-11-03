@@ -54,6 +54,7 @@ public struct RetryContentUnavailableView: View {
     public let screenName: String
     public let retryAction: () async -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.inquiryChannelOpener) private var inquiryChannelOpener
     @Environment(ErrorHandler.self) private var errorHandler
     @State private var reportPrompt: AlertPrompt?
@@ -91,6 +92,15 @@ public struct RetryContentUnavailableView: View {
         self.retryAction = retryAction
     }
 
+    /// 큰 글씨에서 두 액션이 서로의 너비를 줄여 제목을 잘게 나누지 않도록 합니다.
+    private var actionLayout: AnyLayout {
+        if dynamicTypeSize.isAccessibilitySize, error?.isReportable == true,
+           inquiryChannelOpener != nil {
+            return AnyLayout(VStackLayout(spacing: 12))
+        }
+        return AnyLayout(HStackLayout(spacing: 12))
+    }
+
     // MARK: - Body
     public var body: some View {
         ContentUnavailableView {
@@ -99,7 +109,7 @@ public struct RetryContentUnavailableView: View {
             Text(description)
                 .multilineTextAlignment(.center)
         } actions: {
-            HStack(spacing: 12) {
+            actionLayout {
                 Button {
                     Task {
                         await retryAction()
@@ -123,10 +133,15 @@ public struct RetryContentUnavailableView: View {
                 .disabled(isRetrying)
 
                 if let error, error.isReportable, inquiryChannelOpener != nil {
-                    Button(Constants.reportTitle) {
+                    Button {
                         presentReportPrompt(for: error)
+                    } label: {
+                        Text(Constants.reportTitle)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, minHeight: 44)
                     }
-                    .frame(maxWidth: .infinity, minHeight: 44)
                     .buttonStyle(.glass)
                 }
             }

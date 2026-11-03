@@ -37,6 +37,7 @@ private final class AdministrationFake: MemberAdministrationUseCaseProtocol {
     var organizationGate: SearchGate?
     var organizationFails = false
     var generationsFail = false
+    var firstPageFailure: AppError?
     var nextPageFails = false
     var lastPage: Int?
     var generationOptions = [MemberFilterOption(id: "10", name: "10기", isActive: true)]
@@ -44,6 +45,7 @@ private final class AdministrationFake: MemberAdministrationUseCaseProtocol {
     func search(filter: MemberSearchFilter, page: Int) async throws -> AdminMemberPage {
         lastFilter = filter
         lastPage = page
+        if page == 0, let firstPageFailure { throw firstPageFailure }
         if page > 0 && nextPageFails { throw URLError(.badServerResponse) }
         if filter.keyword == "old", let gate { await gate.pause() }
         return .init(members: [adminMember(filter.keyword.isEmpty ? "initial" : filter.keyword)], hasNext: true)
@@ -150,7 +152,7 @@ struct MemberAdministrationViewModelTests {
 
         await vm.load()
 
-        #expect(vm.errorMessage != nil)
+        #expect(vm.filterOptionsState == .failed(AppError.from(URLError(.badServerResponse))))
         #expect(!vm.isLoading)
         #expect(vm.generations.isEmpty)
         #expect(vm.organizations.schools.isEmpty)
@@ -160,7 +162,7 @@ struct MemberAdministrationViewModelTests {
         api.generationsFail = false
         await vm.retry()
 
-        #expect(vm.errorMessage == nil)
+        #expect(vm.searchError == nil)
         #expect(!vm.isLoading)
         #expect(vm.generations.map(\.id) == ["10"])
         #expect(vm.filter.gisuId == "10")
@@ -194,6 +196,22 @@ struct MemberAdministrationViewModelTests {
         #expect(api.lastFilter == .init(keyword: "검색", gisuId: "10", schoolId: "20"))
     }
 
+    @Test func searchFailureRetainsReportableCauseUntilRetrySucceeds() async {
+        let api = AdministrationFake()
+        let error = AppError.repository(.invalidResponse(detail: "결과 형식 불일치"))
+        api.firstPageFailure = error
+        let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
+                                               session: UserSessionManager())
+        await vm.load()
+        #expect(vm.filterOptionsState == .ready)
+        #expect(vm.searchError == error)
+        #expect(vm.searchError?.isReportable == true)
+        api.firstPageFailure = nil
+        await vm.retry()
+        #expect(vm.searchError == nil)
+        #expect(vm.members.map(\.id) == ["initial"])
+    }
+
     @Test func paginationFailureKeepsResultsAndRetriesSamePage() async {
         let api = AdministrationFake()
         let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
@@ -202,7 +220,7 @@ struct MemberAdministrationViewModelTests {
         api.nextPageFails = true
         await vm.loadMore()
         #expect(vm.nextPageError != nil)
-        #expect(vm.errorMessage == nil)
+        #expect(vm.searchError == nil)
         #expect(vm.members.map(\.id) == ["initial"])
         #expect(api.lastPage == 1)
         api.nextPageFails = false
@@ -217,15 +235,14 @@ struct MemberAdministrationViewModelTests {
         let vm = MemberAdministrationViewModel(useCase: api, membersUseCase: MemberActionsFake(),
                                                session: UserSessionManager())
         await vm.load()
-        #expect(vm.errorMessage != nil)
-        #expect(vm.filterOptionsState == .failed("조직 조회 실패"))
+        #expect(vm.filterOptionsState == .failed(.domain(.custom(message: "조직 조회 실패"))))
         await vm.search()
         #expect(api.lastFilter == nil)
-        #expect(vm.errorMessage != nil)
+        #expect(vm.filterOptionsState == .failed(.domain(.custom(message: "조직 조회 실패"))))
         api.organizationFails = false
         await vm.retry()
         #expect(vm.organizations.schools.map(\.id) == ["20"])
-        #expect(vm.errorMessage == nil)
+        #expect(vm.searchError == nil)
     }
 
     @Test func staleSearchCannotReplaceNewResults() async {

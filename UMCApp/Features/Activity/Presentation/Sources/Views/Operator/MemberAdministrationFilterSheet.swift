@@ -24,10 +24,10 @@ struct MemberAdministrationFilterSheet: View {
                 switch viewModel.filterOptionsState {
                 case .loading:
                     ProgressView(viewModel.generations.isEmpty ? "기수를 불러오는 중…" : "학교와 지부를 불러오는 중…")
-                case .failed(let reason):
+                case .failed(let error):
                     retrySection(
                         viewModel.generations.isEmpty ? "조회 범위를 불러올 수 없어요" : "학교와 지부를 불러올 수 없어요",
-                        reason: reason
+                        reason: error.userMessage
                     )
                 case .ready:
                     Section {
@@ -45,8 +45,8 @@ struct MemberAdministrationFilterSheet: View {
                             Task { await viewModel.resetFilters() }
                         }
                     }
-                    if let error = viewModel.errorMessage {
-                        retrySection("멤버 목록을 불러올 수 없어요", reason: error)
+                    if let error = viewModel.searchError {
+                        retrySection("멤버 목록을 불러올 수 없어요", reason: error.userMessage)
                     } else if viewModel.isLoading {
                         ProgressView("멤버를 찾는 중…")
                     }

@@ -54,16 +54,16 @@ struct OperatorMemberManagementView: View {
             switch viewModel.filterOptionsState {
             case .loading:
                 loadingRow("조회 범위를 확인하는 중…")
-            case .failed(let reason):
+            case .failed(let error):
                 failureSection(
                     viewModel.generations.isEmpty ? "조회 범위를 불러올 수 없어요" : "조직을 불러올 수 없어요",
-                    reason: reason
+                    error: error
                 )
             case .ready:
                 if viewModel.isLoading {
                     loadingRow("멤버를 찾는 중…")
-                } else if let error = viewModel.errorMessage {
-                    failureSection("멤버 목록을 불러올 수 없어요", reason: error)
+                } else if let error = viewModel.searchError {
+                    failureSection("멤버 목록을 불러올 수 없어요", error: error)
                 } else if viewModel.members.isEmpty {
                     ContentUnavailableView(
                         "조회된 멤버가 없어요", systemImage: "person.2",
@@ -95,30 +95,16 @@ struct OperatorMemberManagementView: View {
         ProgressView(title).frame(maxWidth: .infinity)
     }
 
-    private func failureSection(_ title: String, reason: String) -> some View {
-        VStack(spacing: DefaultSpacing.spacing12) {
-            Image(systemName: "exclamationmark.circle")
-                .font(.title)
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
-            Text(title).font(.headline)
-            if !reason.isEmpty, reason != MemberAdministrationViewModel.genericErrorMessage {
-                Text(reason).font(.subheadline).foregroundStyle(.secondary)
-            }
-            Button {
-                Task { await viewModel.retry() }
-            } label: {
-                Label("다시 시도", systemImage: "arrow.clockwise")
-                    .font(.body.weight(.medium))
-                    .frame(minHeight: DefaultConstant.minimumTouchTarget)
-            }
-            .buttonStyle(.borderless)
-            .labelStyle(.titleAndIcon)
-            .tint(.teal700)
-        }
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, DefaultSpacing.spacing24)
+    private func failureSection(_ title: String, error: AppError) -> some View {
+        RetryContentUnavailableView(
+            title: title,
+            systemImage: "exclamationmark.triangle",
+            description: error.userMessage,
+            isRetrying: viewModel.isLoading,
+            error: error,
+            screenName: "운영진 멤버 관리",
+            retryAction: { await viewModel.retry() }
+        )
         .listRowBackground(Color.clear)
     }
 

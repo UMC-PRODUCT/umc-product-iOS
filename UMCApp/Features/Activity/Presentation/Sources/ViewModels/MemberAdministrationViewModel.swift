@@ -10,7 +10,7 @@ final class MemberAdministrationViewModel {
     enum FilterOptionsState: Equatable {
         case loading
         case ready
-        case failed(String)
+        case failed(AppError)
     }
 
     private let useCase: MemberAdministrationUseCaseProtocol
@@ -24,7 +24,7 @@ final class MemberAdministrationViewModel {
     private(set) var isLoadingNextPage = false
     private(set) var isMutating = false
     private(set) var isLoadingDetail = false
-    private(set) var errorMessage: String?
+    private(set) var searchError: AppError?
     private(set) var nextPageError: String?
     private(set) var filterOptionsState: FilterOptionsState = .loading
     private(set) var detailError: String?
@@ -121,7 +121,7 @@ final class MemberAdministrationViewModel {
         guard !loaded else { return }
         filterOptionsState = .loading
         isLoading = true
-        errorMessage = nil
+        searchError = nil
         let sessionRevision = session.sessionRevision
         do {
             let fetchedAuthority = try await useCase.fetchAuthority()
@@ -142,9 +142,7 @@ final class MemberAdministrationViewModel {
             loaded = true
             await changeGeneration()
         } catch {
-            let description = message(error)
-            filterOptionsState = .failed(description)
-            errorMessage = description
+            filterOptionsState = .failed(listError(from: error))
             isLoading = false
         }
     }
@@ -164,7 +162,7 @@ final class MemberAdministrationViewModel {
         nextPageError = nil
         organizations = .init(chapters: [], schools: [])
         isLoading = true
-        errorMessage = nil
+        searchError = nil
         filterOptionsState = .loading
         do {
             let options = try await useCase.fetchOrganizations(gisuId: gisuId)
@@ -175,9 +173,7 @@ final class MemberAdministrationViewModel {
             await search()
         } catch {
             guard version == organizationVersion else { return }
-            let description = message(error)
-            filterOptionsState = .failed(description)
-            errorMessage = description
+            filterOptionsState = .failed(listError(from: error))
             isLoading = false
         }
     }
@@ -196,7 +192,7 @@ final class MemberAdministrationViewModel {
         defer { if version == requestVersion { isLoading = false } }
         isLoadingNextPage = false
         nextPageError = nil
-        errorMessage = nil
+        searchError = nil
         members = []
         hasNext = false
         do {
@@ -210,7 +206,7 @@ final class MemberAdministrationViewModel {
             hasNext = result.hasNext
         } catch {
             guard version == requestVersion, !Task.isCancelled else { return }
-            errorMessage = message(error)
+            searchError = listError(from: error)
         }
     }
 
@@ -308,7 +304,13 @@ final class MemberAdministrationViewModel {
         await reloadHistory()
     }
 
-    static let genericErrorMessage = "요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요."
+    /// 조직 권한 등 도메인 오류는 원래 분류로 보존하고 나머지는 공통 변환을 사용합니다.
+    private func listError(from error: Error) -> AppError {
+        if let domainError = error as? DomainError { return .domain(domainError) }
+        return AppError.from(error)
+    }
+
+    private static let genericErrorMessage = "요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요."
 
     private func message(_ error: Error) -> String {
         if let error = error as? DomainError { return error.userMessage }
