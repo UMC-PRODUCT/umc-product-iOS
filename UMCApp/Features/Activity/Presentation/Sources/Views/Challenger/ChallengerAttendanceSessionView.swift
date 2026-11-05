@@ -45,6 +45,8 @@ struct ChallengerAttendanceSessionView: View {
     @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    @ScaledMetric(relativeTo: .title) private var emptyStateIconSize = DefaultSpacing.spacing32
+
     @State private var attendanceViewModel: ChallengerAttendanceViewModel
     @State private var mapViewModelCache = MapViewModelCache()
     @State private var expandedSessionId: Session.ID?
@@ -197,10 +199,9 @@ struct ChallengerAttendanceSessionView: View {
 
     private var emptySessionView: some View {
         emptyStateCard(
-            systemImage: "checkmark.circle.fill",
-            tint: .green500,
-            title: "모든 세션 출석을 완료했어요",
-            description: "지금은 출석할 수 있는 세션이 없어요.\n새로운 세션이 열리면 이곳에 표시됩니다."
+            systemImage: "calendar.badge.clock",
+            title: "지금은 출석할 세션이 없어요",
+            description: "새로운 세션이 열리면\n여기서 출석을 체크할 수 있어요."
         )
     }
 
@@ -224,10 +225,9 @@ struct ChallengerAttendanceSessionView: View {
 
     private var emptyHistoryView: some View {
         emptyStateCard(
-            systemImage: "clock.badge.checkmark",
-            tint: .teal400,
-            title: "아직 출석 기록이 없어요",
-            description: "출석 가능한 세션에서 출석을 완료하면\n이곳에 나의 출석 현황이 표시됩니다."
+            systemImage: "clock.arrow.circlepath",
+            title: "표시할 출석 기록이 없어요",
+            description: "출석한 세션의 기록을\n여기서 확인할 수 있어요."
         )
     }
 
@@ -241,20 +241,38 @@ struct ChallengerAttendanceSessionView: View {
 
     private func emptyStateCard(
         systemImage: String,
-        tint: Color,
         title: String,
         description: String
     ) -> some View {
         ContentUnavailableView {
-            Label {
+            VStack(spacing: DefaultSpacing.spacing16) {
+                Image(systemName: systemImage)
+                    .font(.title)
+                    .frame(width: emptyStateIconSize, height: emptyStateIconSize)
+                    .foregroundStyle(Color.teal600)
+                    .padding(DefaultSpacing.spacing16)
+                    .background(
+                        Color.teal100,
+                        in: .rect(cornerRadius: DefaultConstant.cornerRadius)
+                    )
+                    .accessibilityHidden(true)
+
                 Text(title)
-            } icon: {
-                Image(systemName: systemImage).foregroundStyle(tint)
+                    .appFont(.body, weight: .semibold, color: .grey900)
+                    .multilineTextAlignment(.center)
             }
+            .padding(.top, DefaultSpacing.spacing8)
         } description: {
-            Text(description.replacingOccurrences(of: "\n", with: " "))
+            Text(description)
+                .appFont(.subheadline, color: .grey600)
+                .multilineTextAlignment(.center)
         }
-        .background(Color.Surface.content, in: .rect(cornerRadius: DefaultSpacing.spacing16))
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity)
+        .background(
+            Color.Surface.content,
+            in: .rect(cornerRadius: DefaultConstant.cornerRadius)
+        )
     }
 
     // MARK: - Function
@@ -328,5 +346,14 @@ struct ChallengerAttendanceSessionView: View {
 
         AttendancePreviewData.sessionScreen(sessions: AttendancePreviewData.upcomingSessions)
     }
+}
+
+#Preview("세션 없음 · 큰 글자") {
+    ZStack {
+        Color.Surface.canvas.ignoresSafeArea()
+
+        AttendancePreviewData.sessionScreen(sessions: [])
+    }
+    .environment(\.dynamicTypeSize, .accessibility3)
 }
 #endif
