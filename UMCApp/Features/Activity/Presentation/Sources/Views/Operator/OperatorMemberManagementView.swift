@@ -27,30 +27,6 @@ struct OperatorMemberManagementView: View {
 
     var body: some View {
         List {
-            if viewModel.filterOptionsState == .ready || viewModel.generations.count > 1 {
-                Section {
-                    Button { showFilters = true } label: {
-                        HStack(spacing: DefaultSpacing.spacing12) {
-                            Image(systemName: "line.3.horizontal.decrease")
-                                .foregroundStyle(.tint)
-                                .accessibilityHidden(true)
-                            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                                Text("멤버 필터").font(.headline)
-                                Text(viewModel.filterSummary).font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer(minLength: 0)
-                            Image(systemName: "chevron.right")
-                                .font(.footnote).foregroundStyle(.tertiary)
-                                .accessibilityHidden(true)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityElement(children: .combine)
-                }
-            }
             switch viewModel.filterOptionsState {
             case .loading:
                 loadingRow("조회 범위를 확인하는 중…")
@@ -70,7 +46,23 @@ struct OperatorMemberManagementView: View {
                         description: Text("현재 조회 범위에서 검색어나 필터를 변경해 보세요.")
                     )
                 } else {
-                    memberSection
+                    memberRows
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .toolbar {
+            if viewModel.filterOptionsState == .ready || viewModel.generations.count > 1 {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(
+                        "멤버 필터",
+                        systemImage: viewModel.canResetFilters
+                            ? "line.3.horizontal.decrease.circle.fill"
+                            : "line.3.horizontal.decrease"
+                    ) {
+                        showFilters = true
+                    }
+                    .accessibilityValue(viewModel.filterSummary)
                 }
             }
         }
@@ -108,8 +100,8 @@ struct OperatorMemberManagementView: View {
         .listRowBackground(Color.clear)
     }
 
-    private var memberSection: some View {
-        Section("멤버") {
+    private var memberRows: some View {
+        Group {
             ForEach(viewModel.members) { item in
                 Button { Task { await viewModel.select(item) } } label: {
                     MemberAdministrationRow(item: item)
@@ -161,7 +153,7 @@ private struct MemberAdministrationRow: View {
     @ViewBuilder private var badges: some View {
         if member.part != .admin { MemberTag(part: member.part) }
         if member.infra && member.part.canHaveInfra {
-            Text(UMCPartType.infraName).font(.caption)
+            MemberTag.infra()
         }
         if member.managementTeam != .challenger { MemberTag(role: member.managementTeam) }
     }

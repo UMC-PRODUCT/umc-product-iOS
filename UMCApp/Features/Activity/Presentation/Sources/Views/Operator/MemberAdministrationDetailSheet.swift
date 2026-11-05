@@ -21,7 +21,11 @@ struct MemberAdministrationDetailSheet: View {
                     MemberPointTargetSummary(member: member)
                 }
                 if viewModel.isLoadingDetail {
-                    ProgressView("상벌점 내역을 불러오는 중…")
+                    Section {
+                        ProgressView("상벌점 내역을 불러오는 중…")
+                    } footer: {
+                        permissionNotice
+                    }
                 } else if let error = viewModel.detailError {
                     Section {
                         RetryContentUnavailableView(
@@ -29,12 +33,18 @@ struct MemberAdministrationDetailSheet: View {
                             description: error, isRetrying: viewModel.isLoadingDetail,
                             retryAction: { await viewModel.reloadHistory() }
                         )
+                    } footer: {
+                        permissionNotice
                     }
                 } else {
                     MemberPointSummarySection(history: viewModel.history)
-                    Section("상벌점 내역") {
+                    Section {
                         if viewModel.history.isEmpty {
-                            ContentUnavailableView("등록된 상벌점이 없습니다.", systemImage: "list.bullet")
+                            ContentUnavailableView {
+                                Label("등록된 상벌점이 없습니다.", systemImage: "list.bullet")
+                                    .labelStyle(.titleAndIcon)
+                                    .appFont(.subheadline, weight: .medium, color: .secondary)
+                            }
                         }
                         ForEach(viewModel.history) { item in
                             HStack(alignment: .top, spacing: DefaultSpacing.spacing8) {
@@ -58,18 +68,16 @@ struct MemberAdministrationDetailSheet: View {
                             .contextMenu { actions(for: item) }
                             .disabled(viewModel.isMutating)
                         }
+                    } header: {
+                        Text("상벌점 내역")
+                    } footer: {
+                        permissionNotice
                     }
                 }
                 if let error = viewModel.actionError {
                     Section { Text(error).appFont(.footnote, color: .red) }
                 }
-                if !viewModel.canManageSelected {
-                    Text("이 멤버의 상벌점은 조회만 할 수 있습니다.")
-                        .appFont(.footnote, color: .grey500)
-                } else if !viewModel.canDeleteSelected {
-                    Text("상벌점 삭제는 해당 기수 중앙 총괄만 할 수 있습니다.")
-                        .appFont(.footnote, color: .grey500)
-                }
+
             }
             .navigationTitle("멤버 상세")
             .navigationBarTitleDisplayMode(.inline)
@@ -104,6 +112,17 @@ struct MemberAdministrationDetailSheet: View {
     }
 
     @ViewBuilder
+    private var permissionNotice: some View {
+        if !viewModel.canManageSelected {
+            Text("이 멤버의 상벌점은 조회만 할 수 있습니다.")
+                .appFont(.footnote, color: .secondary)
+        } else if !viewModel.canDeleteSelected {
+            Text("상벌점 삭제는 해당 기수 중앙 총괄만 할 수 있습니다.")
+                .appFont(.footnote, color: .secondary)
+        }
+    }
+
+    @ViewBuilder
     private func actions(for item: OperatorMemberPenaltyHistory) -> some View {
         if viewModel.canManageSelected {
             Button("사유 수정", systemImage: "pencil") { editing = item }
@@ -119,27 +138,72 @@ private struct MemberPointTargetSummary: View {
     let member: AdminMember
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-            Text("\(member.member.nickname) / \(member.member.name)")
-                .appFont(.title3, weight: .semibold)
-            Text("\(member.member.school) · \(member.member.part.name) · \(member.member.generation)")
-                .appFont(.subheadline, color: .grey600)
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
+                    Text(member.member.nickname)
+                        .appFont(.title2, weight: .semibold)
+                    Text(member.member.name)
+                        .appFont(.body, color: .secondary)
+                }
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                    Text(member.member.nickname)
+                        .appFont(.title2, weight: .semibold)
+                    Text(member.member.name)
+                        .appFont(.body, color: .secondary)
+                }
+            }
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                Text(member.member.school)
+                Text("\(member.member.part.name) · \(member.member.generation)")
+            }
+            .appFont(.subheadline, color: .secondary)
         }
+        .padding(.vertical, DefaultSpacing.spacing8)
         .accessibilityElement(children: .combine)
     }
 }
 
 private struct MemberPointSummarySection: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let history: [OperatorMemberPenaltyHistory]
+
     var body: some View {
         Section("상벌점 합계") {
-            LabeledContent("상점", value: number(history.filter(\.isReward).reduce(0) { $0 + $1.penaltyScore }))
-            LabeledContent("벌점", value: number(history.filter { !$0.isReward }.reduce(0) { $0 + $1.penaltyScore }))
-            LabeledContent("총점", value: number(history.reduce(0) { $0 + $1.signedPoint }))
+            if dynamicTypeSize.isAccessibilitySize {
+                pointSummary
+            } else {
+                HStack(alignment: .top, spacing: DefaultSpacing.spacing16) {
+                    pointSummary
+                }
+                .padding(.vertical, DefaultSpacing.spacing8)
+            }
         }
-        .appFont(.body)
     }
-    private func number(_ value: Double) -> String { value.formatted(.number.precision(.fractionLength(0...2))) }
+
+    @ViewBuilder
+    private var pointSummary: some View {
+        point("상점", value: history.filter(\.isReward).reduce(0) { $0 + $1.penaltyScore })
+        point("벌점", value: history.filter { !$0.isReward }.reduce(0) { $0 + $1.penaltyScore })
+        point("총점", value: history.reduce(0) { $0 + $1.signedPoint }, emphasized: true)
+    }
+
+    private func point(_ title: String, value: Double, emphasized: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+            Text(title)
+                .appFont(.subheadline, color: .secondary)
+            Text("\(number(value))점")
+                .appFont(.title2, weight: emphasized ? .semibold : .medium)
+                .monospacedDigit()
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func number(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(0...2)))
+    }
 }
 
 private struct MemberPointHistoryRow: View {

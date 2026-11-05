@@ -81,6 +81,14 @@ public struct MemberTag: View {
         )
     }
 
+    /// 인프라 겸직을 기존 파트 태그와 같은 형태로 표시합니다.
+    public static func infra(size: Size = .small) -> MemberTag {
+        MemberTag(
+            title: UMCPartType.infraName, foreground: .tagText,
+            background: .tagPartWebPEBackground, size: size
+        )
+    }
+
     private init(title: String, foreground: Color, background: Color, size: Size) {
         self.title = title
         self.foreground = foreground
