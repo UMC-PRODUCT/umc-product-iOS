@@ -39,10 +39,12 @@ struct ThreadFilterMenu: View {
 
             picker(Constants.categorySectionTitle, items: CommunityThreadFilter.categoryItems)
         } label: {
-            Image(systemName: Constants.menuImage)
-                .foregroundStyle(Color.grey900)
+            Image(systemName: selection == .all
+                  ? Constants.menuImage : "line.3.horizontal.decrease.circle.fill")
+                .foregroundStyle(selection == .all ? Color.grey900 : Color.teal500)
         }
         .accessibilityLabel(Constants.menuAccessibilityLabel)
+        .accessibilityValue(selection.displayName)
     }
 
     // MARK: - View Component

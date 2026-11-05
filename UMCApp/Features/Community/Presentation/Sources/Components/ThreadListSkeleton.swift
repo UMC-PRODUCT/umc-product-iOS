@@ -56,24 +56,26 @@ struct ThreadListSkeleton: View {
 
     private func row(previewTrailingInset: CGFloat) -> some View {
         HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
-            Circle()
+            RoundedRectangle(cornerRadius: DefaultSpacing.spacing16)
                 .fill(Color.grey100)
                 .frame(
                     width: min(scaledIconSize, ThreadCardMetrics.maxIconSize),
                     height: min(scaledIconSize, ThreadCardMetrics.maxIconSize)
                 )
 
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
                 ShimmerBar(
                     trailingInset: Constants.titleTrailingInset,
                     height: Constants.titleBarHeight
                 )
                 ShimmerBar(trailingInset: previewTrailingInset)
+                ShimmerBar(trailingInset: Constants.titleTrailingInset)
             }
             // 뼈대 줄은 14pt 캡슐이라 실제 텍스트의 첫 baseline 보다 살짝 높게 뜬다. 카드
             // 크롬과 무관한 보정이라 ``ThreadCardMetrics`` 로 올리지 않는다.
             .padding(.top, DefaultSpacing.spacing4)
         }
-        .threadCard()
+        .padding(DefaultSpacing.spacing16)
+        .background(Color.Surface.content, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
     }
 }

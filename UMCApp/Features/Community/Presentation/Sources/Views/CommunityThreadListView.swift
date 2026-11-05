@@ -115,14 +115,17 @@ struct CommunityThreadListView: View {
         }
     }
 
-    /// 고정 섹션이 없으면 `전체` 헤더도 없앤다. `Section("")` 은 헤더를 지우는 게 아니라
-    /// 빈 헤더를 그려서 리스트 상단에 정체불명의 여백을 남긴다.
+    /// 목록의 범위와 현재 필터를 헤더에 표시하고, 고정 항목은 별도 섹션으로 구분한다.
     private func threadList(_ threads: [CommunityThread]) -> some View {
         List {
             if let query = viewModel.trimmedQuery {
                 searchResultSection(query: query, threads: threads)
             } else if viewModel.pinned.isEmpty {
-                pagedRows(threads)
+                Section {
+                    pagedRows(threads)
+                } header: {
+                    sectionHeader("스레드")
+                }
             } else {
                 Section {
                     ForEach(viewModel.pinned) { thread in
@@ -149,9 +152,17 @@ struct CommunityThreadListView: View {
     /// `.plain` 기본 헤더는 작은 회색이라 카드 목록 위에서 묻힌다. `textCase(nil)` 은 검색어처럼
     /// 영문이 섞인 헤더가 대문자로 뒤집히지 않게 한다.
     private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .appFont(.callout, weight: .semibold, color: .grey900)
-            .textCase(nil)
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .appFont(.callout, weight: .semibold, color: .grey900)
+            Spacer(minLength: DefaultSpacing.spacing8)
+            if viewModel.trimmedQuery == nil && viewModel.filter != .all {
+                Text(viewModel.filter.displayName)
+                    .appFont(.footnote, color: .grey600)
+            }
+        }
+        .textCase(nil)
+        .padding(.bottom, DefaultSpacing.spacing4)
     }
 
     /// 검색 중 한 섹션. 서버가 `q` 를 받으면 `pinned` 를 비우고 고정 스레드까지 `threads` 에
