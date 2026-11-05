@@ -11,6 +11,10 @@ import UMCFoundation
 
 @Observable
 final class NicknameAvailabilityFlow {
+    /// 서버 PR #1459의 운영·개발 환경 배포를 검증한 뒤 활성화한다.
+    /// 미배포 API 오류를 사용 가능 응답으로 간주하지 않고 사전 조회 자체를 중단한다.
+    let isPreflightEnabled: Bool
+
     private let checkAvailability: (String, String) async throws -> Bool
     private(set) var state: Loadable<Bool> = .idle
     @ObservationIgnored private(set) var revision = UUID()
@@ -28,7 +32,11 @@ final class NicknameAvailabilityFlow {
         }
     }
 
-    init(checkAvailability: @escaping (String, String) async throws -> Bool) {
+    init(
+        isPreflightEnabled: Bool = false,
+        checkAvailability: @escaping (String, String) async throws -> Bool
+    ) {
+        self.isPreflightEnabled = isPreflightEnabled
         self.checkAvailability = checkAvailability
     }
 
@@ -38,8 +46,18 @@ final class NicknameAvailabilityFlow {
             && syllables.allSatisfy { (0xAC00...0xD7A3).contains($0.value) }
     }
 
-    var canCheck: Bool {
+    private var hasValidInput: Bool {
         isValidNickname && (Int64(selectedSchool?.id ?? "") ?? 0) > 0
+    }
+
+    /// 사전 조회가 꺼져도 최종 가입에서 확인한 중복은 입력이 바뀔 때까지 차단한다.
+    var canProceed: Bool {
+        hasValidInput && state.value != false
+            && (!isPreflightEnabled || state.value == true)
+    }
+
+    var canCheck: Bool {
+        isPreflightEnabled && hasValidInput
             && !state.isLoading && state.value != true
     }
 

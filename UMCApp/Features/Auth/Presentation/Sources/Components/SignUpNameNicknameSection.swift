@@ -65,11 +65,13 @@ struct SignUpNameNicknameSection: View {
             Text(statusMessage)
                 .appFont(.footnote, color: .grey700)
 
-            Button(availability.state.isLoading ? "확인 중…" : "닉네임 중복 확인") {
-                Task { await availability.check() }
+            if availability.isPreflightEnabled {
+                Button(availability.state.isLoading ? "확인 중…" : "닉네임 중복 확인") {
+                    Task { await availability.check() }
+                }
+                .buttonStyle(.bordered)
+                .disabled(!availability.canCheck)
             }
-            .buttonStyle(.bordered)
-            .disabled(!availability.canCheck)
         }
         .onChange(of: availability.state) { _, state in
             if state == .loaded(false) { focusBinding.wrappedValue = .nickname }
@@ -78,6 +80,9 @@ struct SignUpNameNicknameSection: View {
 
     private var statusMessage: String {
         if !availability.nickname.isEmpty && !availability.isValidNickname {
+            return "닉네임은 한글 완성형 음절 1~4자로 입력해 주세요."
+        }
+        if !availability.isPreflightEnabled && availability.state != .loaded(false) {
             return "닉네임은 한글 완성형 음절 1~4자로 입력해 주세요."
         }
         switch availability.state {

@@ -317,7 +317,25 @@ struct SignUpByIdPwViewModelRegisterTests {
         #expect(viewModel.isApprovedAfterRegister == false)
     }
 
-    @Test("가입 시 닉네임이 선점되면 입력한 정보를 유지하고 새 닉네임 확인을 요구한다")
+    @Test("사전 조회 API가 없어도 유효한 입력으로 최종 가입을 진행한다")
+    func registersWithoutUndeployedNicknamePreflight() async throws {
+        let useCase = MockRegisterByEmailUseCase()
+        useCase.result = .success(RegisterByIdPwResult(memberId: "member-1"))
+        let viewModel = try await makeValidFormViewModel(registerByEmailUseCase: useCase)
+        viewModel.nicknameAvailability = NicknameAvailabilityFlow { _, _ in
+            throw MockRegisterByEmailUseCase.MockError.notStubbed
+        }
+        viewModel.nicknameAvailability.selectedSchool = School(id: "1", name: "테스트대학교")
+        viewModel.nicknameAvailability.nickname = "지야"
+
+        await viewModel.nicknameAvailability.check()
+        #expect(viewModel.nicknameAvailability.state == .idle)
+        #expect(viewModel.canSubmit)
+        await viewModel.register()
+        #expect(viewModel.registerState == .loaded("member-1"))
+    }
+
+    @Test("가입 시 닉네임이 중복이면 입력을 유지하고 수정 전까지 재가입을 차단한다")
     func nicknameConflictAllowsCorrection() async throws {
         let useCase = MockRegisterByEmailUseCase()
         useCase.result = .failure(RegistrationError.nicknameAlreadyUsed)
@@ -332,8 +350,6 @@ struct SignUpByIdPwViewModelRegisterTests {
         #expect(useCase.callCount == 1)
 
         viewModel.nicknameAvailability.nickname = "새이름"
-        #expect(!viewModel.canSubmit)
-        await viewModel.nicknameAvailability.check()
         #expect(viewModel.canSubmit)
     }
 
