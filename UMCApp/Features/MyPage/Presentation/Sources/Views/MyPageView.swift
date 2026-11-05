@@ -34,6 +34,7 @@ struct MyPageView: View {
     @Environment(PathStore.self) private var pathStore
 
     private let showsOverview: Bool
+    private let showsSidebarCard: Bool
     private let onShowOverview: () -> Void
     private let onSelectDestination: (MyPageDestination) -> Void
     private let container: DIContainer
@@ -56,10 +57,12 @@ struct MyPageView: View {
         onOpenProjects: @escaping () -> Void,
         viewModel: MyPageViewModel? = nil,
         showsOverview: Bool = false,
+        showsSidebarCard: Bool = false,
         onShowOverview: @escaping () -> Void = {},
         onSelectDestination: @escaping (MyPageDestination) -> Void
     ) {
         self.showsOverview = showsOverview
+        self.showsSidebarCard = showsSidebarCard
         self.onShowOverview = onShowOverview
         self.onSelectDestination = onSelectDestination
         self.container = container
@@ -120,24 +123,11 @@ struct MyPageView: View {
     private var sidebar: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Metrics.sectionGroupSpacing) {
-                Button(action: onShowOverview) {
-                    HStack(spacing: DefaultSpacing.spacing12) {
-                        Image(systemName: "person.crop.circle")
-                            .font(.title)
-                        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                            Text(viewModel.profileData.value?.challengerInfo.nickname ?? "내 프로필")
-                                .appFont(.body, weight: .semibold, color: .grey900)
-                            Text("프로필 개요")
-                                .appFont(.caption1, color: .grey500)
-                        }
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                    }
-                    .padding(.vertical, DefaultSpacing.spacing8)
-                    .contentShape(.rect)
+                if showsSidebarCard {
+                    cardContent
+                } else {
+                    profileOverviewLink
                 }
-                .buttonStyle(.plain)
                 BusinessCardSection(
                     receivedCardCount: viewModel.activityStat.receivedCardCount,
                     onReceivedCards: { onOpenBusinessCard(.receivedCards) },
@@ -158,6 +148,27 @@ struct MyPageView: View {
             .padding(.horizontal, Metrics.contentHorizontalPadding)
             .padding(.vertical, DefaultSpacing.spacing16)
         }
+    }
+
+    private var profileOverviewLink: some View {
+        Button(action: onShowOverview) {
+            HStack(spacing: DefaultSpacing.spacing12) {
+                Image(systemName: "person.crop.circle")
+                    .font(.title)
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                    Text(viewModel.profileData.value?.challengerInfo.nickname ?? "내 프로필")
+                        .appFont(.body, weight: .semibold, color: .grey900)
+                    Text("프로필 개요")
+                        .appFont(.caption1, color: .grey500)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+            }
+            .padding(.vertical, DefaultSpacing.spacing8)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
     }
 
     /// 빈 선택 화면 대신, 현재 프로필 스냅샷으로 구성한 실제 개요를 표시한다.

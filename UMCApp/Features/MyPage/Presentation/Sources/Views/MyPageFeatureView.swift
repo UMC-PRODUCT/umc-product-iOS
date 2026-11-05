@@ -148,6 +148,8 @@ private struct MyPageSplitContent<DetailRoot: View>: View {
             onOpenProjects: { openExternal(onOpenProjects) },
             viewModel: viewModel,
             showsOverview: showsOverview,
+            // 분할 열 내부가 아닌 전체 화면 폭을 기준으로 iPhone 루트 명함을 유지한다.
+            showsSidebarCard: horizontalSizeClass != .regular,
             onShowOverview: showOverview,
             onSelectDestination: select
         )
