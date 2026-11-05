@@ -23,7 +23,8 @@ private func makeMember(
     challengerID: String? = nil,
     name: String = "홍길동",
     part: UMCPartType = .front(type: .ios),
-    rewardPoints: Double = 0
+    rewardPoints: Double = 0,
+    badge: Bool = false
 ) -> MemberManagementItem {
     MemberManagementItem(
         memberID: memberID,
@@ -37,7 +38,7 @@ private func makeMember(
         part: part,
         penalty: 0,
         rewardPoints: rewardPoints,
-        badge: false,
+        badge: badge,
         managementTeam: .challenger,
         attendanceRecords: [],
         penaltyHistory: []
@@ -204,6 +205,51 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
 @Suite("MemberListViewModel — 첫 페이지 로딩 (도메인 규칙)")
 struct MemberListViewModelFirstPageTests {
 
+    @Test("구성원 첫 페이지는 Admin을 제외한 뒤 회원 중복을 제거한다")
+    func firstPageFiltersAdminBeforeDeduplication() async {
+        let admin = makeMember(memberID: "1", part: .admin)
+        let member = makeMember(memberID: "1", part: .pm, badge: true)
+        let duplicate = makeMember(memberID: "1", name: "중복")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([admin, member, duplicate], hasNext: true, currentPage: 0)
+        let viewModel = makeViewModel(useCase: useCase)
+
+        await viewModel.fetchMembers()
+
+        #expect(viewModel.membersState == .loaded([member]))
+        #expect(viewModel.hasMorePages)
+        #expect(useCase.executePageCalls == [0])
+    }
+
+    @Test("Admin만 있는 첫 페이지는 표시 가능한 다음 페이지까지 이어받는다")
+    func firstPageSkipsHiddenPages() async {
+        let member = makeMember(memberID: "1")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage(
+            [makeMember(memberID: "admin", part: .admin)], hasNext: true, currentPage: 0
+        )
+        useCase.pages[1] = makePage([], hasNext: true, currentPage: 1)
+        useCase.pages[2] = makePage([member], hasNext: true, currentPage: 2)
+        let viewModel = makeViewModel(useCase: useCase)
+
+        await viewModel.fetchMembers()
+
+        #expect(viewModel.membersState == .loaded([member]))
+        #expect(useCase.executePageCalls == [0, 1, 2])
+    }
+
+    @Test("운영 관리 목록은 Admin 파트를 유지한다")
+    func adminModeKeepsAdminPart() async {
+        let admin = makeMember(memberID: "1", part: .admin)
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([admin], hasNext: false, currentPage: 0)
+        let viewModel = makeViewModel(useCase: useCase, mode: .admin)
+
+        await viewModel.fetchMembers()
+
+        #expect(viewModel.membersState == .loaded([admin]))
+    }
+
     @Test("관리 모드는 최초·추가·검색 해제·재조회에도 같은 조회 모드를 유지한다")
     func adminModePersistsThroughPaginationSearchAndRefresh() async {
         let first = makeMember(memberID: "1", name: "홍길동")
@@ -292,6 +338,121 @@ struct MemberListViewModelFirstPageTests {
 @Suite("MemberListViewModel — 무한스크롤 페이지네이션 (도메인 규칙)")
 struct MemberListViewModelPaginationTests {
 
+    @Test("추가 페이지가 Admin 또는 중복뿐이면 새 회원이 나올 때까지 이어받는다")
+    func nextPageSkipsHiddenAndDuplicatePages() async {
+        let first = makeMember(memberID: "1")
+        let next = makeMember(memberID: "2")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([first], hasNext: true, currentPage: 0)
+        useCase.pages[1] = makePage(
+            [makeMember(memberID: "admin", part: .admin)], hasNext: true, currentPage: 1
+        )
+        useCase.pages[2] = makePage([first], hasNext: true, currentPage: 2)
+        useCase.pages[3] = makePage([next, next], hasNext: false, currentPage: 3)
+        let viewModel = makeViewModel(useCase: useCase)
+
+        await viewModel.fetchMembers()
+        await viewModel.fetchNextPage()
+
+        #expect(viewModel.membersState == .loaded([first, next]))
+        #expect(!viewModel.hasMorePages)
+        #expect(!viewModel.isLoadingNextPage)
+        #expect(useCase.executePageCalls == [0, 1, 2, 3])
+    }
+
+    @Test("추가 로딩 이후 새로고침 취소는 다음 페이지 위치를 보존한다")
+    func cancelledRefreshPreservesPagePosition() async {
+        let first = makeMember(memberID: "1")
+        let second = makeMember(memberID: "2")
+        let third = makeMember(memberID: "3")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([first], hasNext: true, currentPage: 0)
+        useCase.pages[1] = makePage([second], hasNext: true, currentPage: 1)
+        useCase.pages[2] = makePage([third], hasNext: false, currentPage: 2)
+        let viewModel = makeViewModel(useCase: useCase)
+        await viewModel.fetchMembers()
+        await viewModel.fetchNextPage()
+        useCase.executePageError = CancellationError()
+        await viewModel.fetchMembers()
+        useCase.executePageError = nil
+        await viewModel.fetchNextPage()
+
+        #expect(viewModel.membersState == .loaded([first, second, third]))
+        #expect(useCase.executePageCalls == [0, 1, 0, 2])
+    }
+
+    @Test("마지막 페이지가 Admin과 중복뿐이면 기존 목록을 유지하고 종료한다")
+    func hiddenFinalPageEndsPagination() async {
+        let member = makeMember(memberID: "1")
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([member], hasNext: true, currentPage: 0)
+        useCase.pages[1] = makePage(
+            [member, makeMember(memberID: "admin", part: .admin)],
+            hasNext: false, currentPage: 1
+        )
+        let viewModel = makeViewModel(useCase: useCase)
+        await viewModel.fetchMembers()
+        await viewModel.fetchNextPage()
+        await viewModel.fetchNextPage()
+
+        #expect(viewModel.membersState == .loaded([member]))
+        #expect(!viewModel.hasMorePages)
+        #expect(useCase.executePageCalls == [0, 1])
+    }
+
+    @Test("구성원 새로고침 후 늦게 도착한 이전 추가 응답은 무시한다")
+    func staleChallengerPageDoesNotOverwriteRefresh() async {
+        let old = makeMember(memberID: "old")
+        let refreshed = makeMember(memberID: "refreshed")
+        let useCase = MockFetchMembersUseCase()
+        let gate = PageGate()
+        useCase.pages[0] = makePage([old], hasNext: true, currentPage: 0)
+        useCase.pages[1] = makePage([makeMember(memberID: "late")],
+                                    hasNext: false, currentPage: 1)
+        useCase.nextPageGate = gate
+        let viewModel = makeViewModel(useCase: useCase)
+        await viewModel.fetchMembers()
+        let pagination = Task { await viewModel.fetchNextPage() }
+        await gate.waitUntilPaused()
+        useCase.pages[0] = makePage([refreshed], hasNext: true, currentPage: 0)
+        await viewModel.fetchMembers()
+        await gate.resume()
+        await pagination.value
+
+        #expect(viewModel.membersState == .loaded([refreshed]))
+        #expect(viewModel.hasMorePages)
+        #expect(!viewModel.isLoadingNextPage)
+        #expect(useCase.executePageCalls == [0, 1, 0])
+    }
+
+    @Test("취소를 무시한 추가 응답도 반영하지 않고 중복 요청을 막는다")
+    func cancelledPageDoesNotCommitAndCanRetry() async {
+        let first = makeMember(memberID: "1")
+        let next = makeMember(memberID: "2")
+        let useCase = MockFetchMembersUseCase()
+        let gate = PageGate()
+        useCase.pages[0] = makePage([first], hasNext: true, currentPage: 0)
+        useCase.pages[1] = makePage([next], hasNext: false, currentPage: 1)
+        useCase.nextPageGate = gate
+        let viewModel = makeViewModel(useCase: useCase)
+        await viewModel.fetchMembers()
+        let pagination = Task { await viewModel.fetchNextPage() }
+        await gate.waitUntilPaused()
+        await viewModel.fetchNextPage()
+        #expect(useCase.executePageCalls == [0, 1])
+        pagination.cancel()
+        await gate.resume()
+        await pagination.value
+        #expect(viewModel.membersState == .loaded([first]))
+        #expect(!viewModel.isLoadingNextPage)
+        #expect(viewModel.hasMorePages)
+        useCase.nextPageGate = nil
+        await viewModel.fetchNextPage()
+
+        #expect(viewModel.membersState == .loaded([first, next]))
+        #expect(useCase.executePageCalls == [0, 1, 1])
+    }
+
     @Test(
         "추가 응답을 기다리는 동안 첫 페이지 기수가 바뀌면 이전 목록에 합치지 않는다",
         arguments: ["1100", "1200"]
@@ -318,7 +479,7 @@ struct MemberListViewModelPaginationTests {
         await pagination.value
 
         #expect(viewModel.membersState == .loaded([newFirst]))
-        #expect(useCase.executePageCalls == [0, 1, 0, 0])
+        #expect(useCase.executePageCalls == [0, 1, 0])
     }
 
     @Test("첫 페이지 재조회가 취소돼도 기존 관리 기수의 추가 페이지를 정상 합친다")
