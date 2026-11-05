@@ -141,7 +141,7 @@ final class SignUpByIdPwViewModel {
     /// 하드코딩된 termsId fallback은 두지 않는다.
     var canSubmit: Bool {
         !name.isEmpty &&
-        nicknameAvailability.state.value == true &&
+        nicknameAvailability.canProceed &&
         !emailVerificationFlow.email.isEmpty &&
         isPasswordValid &&
         isPasswordConfirmed &&

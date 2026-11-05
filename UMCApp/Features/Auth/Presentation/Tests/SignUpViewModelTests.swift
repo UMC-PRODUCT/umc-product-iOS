@@ -384,7 +384,25 @@ struct SignUpViewModelRegisterTests {
         #expect(loginUseCase.executeGoogleCallCount == 0)
     }
 
-    @Test("가입 시 닉네임이 선점되면 입력한 정보를 유지하고 새 닉네임 확인을 요구한다")
+    @Test("사전 조회 API가 없어도 유효한 입력으로 최종 가입을 진행한다")
+    func registersWithoutUndeployedNicknamePreflight() async throws {
+        let useCase = MockRegisterUseCase()
+        useCase.result = .success(RegisterResult(memberId: "member-1", sessionEstablished: true))
+        let viewModel = try await makeValidFormViewModel(registerUseCase: useCase)
+        viewModel.nicknameAvailability = NicknameAvailabilityFlow { _, _ in
+            throw DummyError()
+        }
+        viewModel.nicknameAvailability.selectedSchool = School(id: "1", name: "테스트대학교")
+        viewModel.nicknameAvailability.nickname = "지야"
+
+        await viewModel.nicknameAvailability.check()
+        #expect(viewModel.nicknameAvailability.state == .idle)
+        #expect(viewModel.isFormValid)
+        await viewModel.register()
+        #expect(viewModel.registerState == .loaded("member-1"))
+    }
+
+    @Test("가입 시 닉네임이 중복이면 입력을 유지하고 수정 전까지 재가입을 차단한다")
     func nicknameConflictAllowsCorrection() async throws {
         let useCase = MockRegisterUseCase()
         useCase.result = .failure(RegistrationError.nicknameAlreadyUsed)
@@ -399,8 +417,6 @@ struct SignUpViewModelRegisterTests {
         #expect(useCase.callCount == 1)
 
         viewModel.nicknameAvailability.nickname = "새이름"
-        #expect(!viewModel.isFormValid)
-        await viewModel.nicknameAvailability.check()
         #expect(viewModel.isFormValid)
     }
 
@@ -622,9 +638,44 @@ private final class MockLoginUseCase: LoginUseCaseProtocol, @unchecked Sendable 
 @MainActor
 @Suite("학교별 닉네임 중복 확인")
 struct NicknameAvailabilityTests {
+    @Test("사전 조회 비활성화 시 API를 호출하거나 사용 가능으로 표시하지 않는다")
+    func disabledPreflightDoesNotCallAPI() async {
+        var callCount = 0
+        let flow = NicknameAvailabilityFlow { _, _ in
+            callCount += 1
+            throw DummyError()
+        }
+        flow.selectedSchool = School(id: "1", name: "테스트대학교")
+        flow.nickname = "지야"
+
+        await flow.check()
+
+        #expect(callCount == 0)
+        #expect(flow.state == .idle)
+        #expect(!flow.canCheck)
+        #expect(flow.canProceed)
+    }
+
+    @Test(arguments: ["", "가나다라마", "가", "ㄱ", "한 글", "공백 ", "abc", "별1", "🐻"])
+    func disabledPreflightStillRejectsInvalidNickname(_ nickname: String) {
+        let flow = NicknameAvailabilityFlow { _, _ in true }
+        flow.selectedSchool = School(id: "1", name: "테스트대학교")
+        flow.nickname = nickname
+        #expect(!flow.canProceed)
+    }
+
+    @Test(arguments: ["", "0", "-1", "invalid"])
+    func disabledPreflightStillRequiresValidSchool(_ schoolId: String) {
+        let flow = NicknameAvailabilityFlow { _, _ in true }
+        flow.nickname = "지야"
+        #expect(!flow.canProceed)
+        flow.selectedSchool = School(id: schoolId, name: "테스트대학교")
+        #expect(!flow.canProceed)
+    }
+
     @Test(arguments: ["가", "가나다라", "힣"])
     func allowsHangulSyllables(_ nickname: String) {
-        let flow = NicknameAvailabilityFlow { _, _ in true }
+        let flow = NicknameAvailabilityFlow(isPreflightEnabled: true) { _, _ in true }
         flow.nickname = nickname
         #expect(flow.isValidNickname)
         #expect(!flow.canCheck)
@@ -634,7 +685,7 @@ struct NicknameAvailabilityTests {
 
     @Test(arguments: ["", "가나다라마", "가", "ㄱ", "한 글", "공백 ", "abc", "별1", "🐻"])
     func blocksInvalidNickname(_ nickname: String) {
-        let flow = NicknameAvailabilityFlow { _, _ in true }
+        let flow = NicknameAvailabilityFlow(isPreflightEnabled: true) { _, _ in true }
         flow.selectedSchool = School(id: "1", name: "테스트대학교")
         flow.nickname = nickname
         #expect(!flow.canCheck)
@@ -650,7 +701,10 @@ struct NicknameAvailabilityTests {
             var values = release.stream.makeAsyncIterator()
             return await values.next() ?? false
         }
-        let flow = NicknameAvailabilityFlow(checkAvailability: useCase.checkNicknameAvailability)
+        let flow = NicknameAvailabilityFlow(
+            isPreflightEnabled: true,
+            checkAvailability: useCase.checkNicknameAvailability
+        )
         let school = School(id: "1", name: "테스트대학교")
         flow.selectedSchool = school
         flow.nickname = "길동이"
@@ -669,11 +723,15 @@ struct NicknameAvailabilityTests {
     func retriesAndInvalidatesAvailability() async {
         let useCase = MockFetchSignUpDataUseCase()
         useCase.nicknameAvailability = { _, _ in throw DummyError() }
-        let flow = NicknameAvailabilityFlow(checkAvailability: useCase.checkNicknameAvailability)
+        let flow = NicknameAvailabilityFlow(
+            isPreflightEnabled: true,
+            checkAvailability: useCase.checkNicknameAvailability
+        )
         flow.selectedSchool = School(id: "2", name: "테스트대학교")
         flow.nickname = "가"
         await flow.check()
         #expect(flow.canCheck)
+        #expect(!flow.canProceed)
         useCase.nicknameAvailability = { schoolId, nickname in
             schoolId == "2" && nickname == "가"
         }

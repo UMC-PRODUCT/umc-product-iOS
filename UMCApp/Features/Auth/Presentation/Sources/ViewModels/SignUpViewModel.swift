@@ -95,7 +95,7 @@ final class SignUpViewModel {
     /// 폼 유효성 검증 상태 — 필수 약관 동의를 포함한다.
     var isFormValid: Bool {
         !name.isEmpty &&
-        nicknameAvailability.state.value == true &&
+        nicknameAvailability.canProceed &&
         !emailVerificationFlow.email.isEmpty &&
         emailVerificationFlow.isEmailVerified &&
         termsAgreementFlow.mandatoryTermsAgreed
