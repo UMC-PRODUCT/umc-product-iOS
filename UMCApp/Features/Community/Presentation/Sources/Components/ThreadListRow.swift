@@ -25,7 +25,7 @@ fileprivate enum Constants {
 
 /// 스레드 리스트 한 행. 흰 카드 하나가 곧 한 행이다.
 ///
-/// 제목·시각과 최근 메시지·상태 두 줄로 표시해 사이드바의 목록 밀도를 유지한다.
+/// 제목·최근 대화·분류와 참여 정보를 분리해 스레드의 맥락을 빠르게 읽게 한다.
 ///
 /// 안읽음/읽음은 **미읽음 배지 하나로만** 가른다. 카카오톡·iMessage 와 같은 방식으로, 배경·제목·
 /// 아이콘·미리보기·시각은 두 상태가 완전히 같다.
@@ -38,7 +38,7 @@ struct ThreadListRow: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    @ScaledMetric(relativeTo: .title2) private var scaledIconSize = DefaultSpacing.spacing32
+    @ScaledMetric(relativeTo: .title2) private var scaledIconSize = ThreadCardMetrics.iconSize
 
     // MARK: - Body
 
@@ -46,16 +46,18 @@ struct ThreadListRow: View {
         HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
             icon
 
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
                 titleLine
                 previewLine
+                metadataLine
             }
         }
         .padding(.horizontal, DefaultSpacing.spacing16)
-        .padding(.vertical, DefaultSpacing.spacing8)
+        .padding(.vertical, DefaultSpacing.spacing16)
         .frame(minHeight: DefaultConstant.minimumTouchTarget)
         .background(Color.Surface.content, in: .rect(cornerRadius: DefaultConstant.cornerRadius))
         .contentShape(.rect(cornerRadius: DefaultConstant.cornerRadius))
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Computed Property
@@ -77,7 +79,8 @@ struct ThreadListRow: View {
                 width: min(scaledIconSize, ThreadCardMetrics.maxIconSize),
                 height: min(scaledIconSize, ThreadCardMetrics.maxIconSize)
             )
-            .background(Color.grey100, in: .circle)
+            .background(Color.Surface.canvas, in: .rect(cornerRadius: DefaultSpacing.spacing16))
+            .accessibilityHidden(true)
     }
 
     private var titleLine: some View {
@@ -104,17 +107,45 @@ struct ThreadListRow: View {
     }
 
     private var previewLine: some View {
-        HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing8) {
-            Text(previewText)
-                .appFont(.footnote, color: .grey600)
-                .lineLimit(isCompactMetadata ? Constants.accessibilityLineLimit
-                                             : Constants.previewLineLimit)
+        Text(previewText)
+            .appFont(.footnote, color: .grey600)
+            .lineLimit(isCompactMetadata ? Constants.accessibilityLineLimit
+                                         : Constants.previewLineLimit)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
 
-            Spacer(minLength: DefaultSpacing.spacing4)
+    private var metadataLine: some View {
+        let layout = isCompactMetadata
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: DefaultSpacing.spacing8))
+            : AnyLayout(HStackLayout(spacing: DefaultSpacing.spacing8))
+        return layout {
+            categoryAndMembers
+            if !isCompactMetadata {
+                Spacer(minLength: DefaultSpacing.spacing4)
+            }
+            statusIndicators
+        }
+    }
 
+    private var categoryAndMembers: some View {
+        let layout = isCompactMetadata
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: DefaultSpacing.spacing8))
+            : AnyLayout(HStackLayout(spacing: DefaultSpacing.spacing8))
+        return layout {
             Text(thread.category.displayName)
+                .appFont(.caption2, weight: .medium, color: .grey700)
+                .padding(.horizontal, DefaultSpacing.spacing8)
+                .padding(.vertical, DefaultSpacing.spacing4)
+                .background(Color.Surface.canvas, in: .capsule)
+            Label(thread.memberCountText, systemImage: "person.2")
+                .labelStyle(.titleAndIcon)
                 .appFont(.caption2, color: .grey600)
-                .lineLimit(1)
+        }
+        .fixedSize(horizontal: !isCompactMetadata, vertical: true)
+    }
+
+    private var statusIndicators: some View {
+        HStack(spacing: DefaultSpacing.spacing8) {
             if thread.isPinned {
                 Image(systemName: "pin.fill")
                     .font(.caption2)
@@ -149,7 +180,7 @@ struct ThreadListRow: View {
 
 // MARK: - ThreadCategoryChip
 
-/// 카테고리 칩. 스레드 리스트 행과 생성·편집 폼의 미리보기가 같은 모양을 쓴다.
+/// 생성·편집 폼 미리보기에 사용하는 카테고리 칩.
 ///
 /// 시스템 블루를 쓴다. 다크 모드 대비는 시스템이 맞춰 주므로 별도 토큰을 만들지 않는다.
 struct ThreadCategoryChip: View {
