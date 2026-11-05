@@ -39,6 +39,7 @@ final class MemberListViewModel {
     private(set) var hasMorePages: Bool = true
     private var currentPage: Int = 0
     private var currentGisuId: String?
+    private var listRequestID = UUID()
 
     // MARK: - Init
 
@@ -101,10 +102,13 @@ final class MemberListViewModel {
 
         let previousState = membersState
         membersState = .loading
-        currentPage = 0
-        hasMorePages = true
+        listRequestID = UUID()
+        let requestID = listRequestID
+        isLoadingNextPage = false
         do {
-            let page = try await fetchMembersUseCase.executePage(page: 0, mode: mode)
+            let page = try await fetchDisplayPage(
+                startingAt: 0, existing: [], requestID: requestID
+            )
             membersState = .loaded(page.members)
             hasMorePages = page.hasNext
             currentPage = page.currentPage
@@ -134,34 +138,69 @@ final class MemberListViewModel {
         guard hasMorePages, !isLoadingNextPage else { return }
         guard case .loaded(let existing) = membersState else { return }
         let existingGisuId = currentGisuId
+        let requestID = listRequestID
 
         isLoadingNextPage = true
-        defer { isLoadingNextPage = false }
+        defer {
+            if requestID == listRequestID {
+                isLoadingNextPage = false
+            }
+        }
 
         do {
-            let nextPage = currentPage + 1
-            let page = try await fetchMembersUseCase.executePage(
-                page: nextPage,
-                mode: mode
+            let page = try await fetchDisplayPage(
+                startingAt: currentPage + 1, existing: existing, requestID: requestID
             )
-            if mode == .admin,
-               page.gisuId != existingGisuId || currentGisuId != existingGisuId {
+            if mode == .admin, page.gisuId != existingGisuId {
                 await fetchMembers()
                 return
             }
-            // memberID 가 둘 다 있을 때만 중복으로 판단한다. memberID 가 nil 인 멤버를
-            // nil == nil 로 묶어 일괄 제거하지 않도록 non-nil 일 때만 비교한다.
-            let deduplicatedMembers = page.members.filter { newMember in
-                guard let newMemberID = newMember.memberID else { return true }
-                return !existing.contains { $0.memberID == newMemberID }
-            }
-            membersState = .loaded(existing + deduplicatedMembers)
+            // 요청 중 단건 상세 정보가 갱신됐을 수 있으므로 최신 목록에 합친다.
+            guard case .loaded(let current) = membersState else { return }
+            membersState = .loaded(current + page.members)
             hasMorePages = page.hasNext
             currentPage = page.currentPage
         } catch let error as DomainError where mode == .admin {
+            guard requestID == listRequestID, !Task.isCancelled else { return }
             membersState = .failed(.domain(error))
         } catch {
-            // 다음 페이지 실패 시 기존 데이터 유지
+            // 다음 페이지 실패·취소 시 기존 데이터와 페이지 위치 유지
+        }
+    }
+
+    /// 표시할 새 회원이 없는 구성원 페이지는 다음 페이지로 넘어간다.
+    ///
+    /// 운영 관리 모드의 Admin 파트는 유지하고, 구성원 목록에서만 숨긴다.
+    /// 회원 ID가 없는 항목은 서로 다른 회원일 수 있으므로 중복 제거하지 않는다.
+    private func fetchDisplayPage(
+        startingAt firstPage: Int,
+        existing: [MemberManagementItem],
+        requestID: UUID
+    ) async throws -> MemberPage {
+        var nextPage = firstPage
+        var memberIDs = Set(existing.compactMap(\.memberID))
+
+        while true {
+            try Task.checkCancellation()
+            guard requestID == listRequestID else { throw CancellationError() }
+            let page = try await fetchMembersUseCase.executePage(page: nextPage, mode: mode)
+            try Task.checkCancellation()
+            guard requestID == listRequestID else { throw CancellationError() }
+
+            let members = page.members.filter { member in
+                if mode == .challenger, member.part == .admin { return false }
+                guard let memberID = member.memberID else { return true }
+                return memberIDs.insert(memberID).inserted
+            }
+            if mode == .admin || !members.isEmpty || !page.hasNext {
+                return MemberPage(
+                    members: members,
+                    hasNext: page.hasNext,
+                    currentPage: page.currentPage,
+                    gisuId: page.gisuId
+                )
+            }
+            nextPage = max(nextPage, page.currentPage) + 1
         }
     }
 
