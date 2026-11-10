@@ -83,13 +83,15 @@ public final class HomeRepository: HomeRepositoryProtocol, @unchecked Sendable {
     /// 소속 기수 목록과, 가장 이른 기수 시작일 기준 누적 활동일을 시즌 카드 값으로 구성한다.
     private func makeSeasonTypes(profile: Profile) async throws -> [SeasonType] {
         let generationNumbers = profile.generations
-        let activityDays = try await calculateActivityDays(targetGisuIds: profile.targetGisuIds())
-
         var seasonTypes: [SeasonType] = []
         if !generationNumbers.isEmpty {
             seasonTypes.append(.gens(generationNumbers))
         }
-        if let activityDays {
+        if profile.isUmcProduct {
+            seasonTypes.append(.productAccount)
+        } else if let activityDays = try await calculateActivityDays(
+            targetGisuIds: profile.targetGisuIds()
+        ) {
             seasonTypes.append(.days(activityDays))
         }
         return seasonTypes

@@ -104,15 +104,11 @@ extension NoticeViewModel {
                     )
                 }
             } else {
+                // 조회는 성공했지만 소속 기수가 없는 계정은 정상적인 빈 상태다.
+                requestID = UUID()
+                pagingState.reset()
                 isGisuListLoaded = false
-                noticeItems = .failed(.domain(.custom(message: "기수 정보를 불러오지 못했습니다.")))
-                errorHandler.handle(
-                    DomainError.custom(message: "기수 정보를 불러오지 못했습니다."),
-                    context: .init(
-                        feature: "Notice",
-                        action: "fetchGisuList"
-                    )
-                )
+                noticeItems = .loaded([])
             }
         } catch {
             gisuPairs = []

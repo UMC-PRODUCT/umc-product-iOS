@@ -33,6 +33,11 @@ enum StubSessionFixtures {
         case .a: return personaAProfile
         case .b: return personaBProfile
         case .c: return personaCProfile
+        case .product:
+            return Profile(
+                memberId: "4", name: "프로덕트", nickname: "제품팀", generations: [],
+                isUmcProduct: true
+            )
         }
     }
 
@@ -151,7 +156,12 @@ enum StubSessionFixtures {
     // MARK: - Home
 
     /// 홈 시즌 카드/세대별 상벌점 카드 픽스처 (HomeView #Preview 데이터 기반).
-    static let homeProfileResult = HomeProfileResult(
+    static var homeProfileResult: HomeProfileResult {
+        guard StubPersona.current == .product else { return defaultHomeProfileResult }
+        return HomeProfileResult(memberId: "4", seasonTypes: [.productAccount], generations: [])
+    }
+
+    private static let defaultHomeProfileResult = HomeProfileResult(
         memberId: "1",
         seasonTypes: [.gens(["11", "12"]), .days(128)],
         generations: [

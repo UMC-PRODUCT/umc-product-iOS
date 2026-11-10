@@ -155,6 +155,25 @@ private enum Fixture {
 @Suite("HomeRepository — 정본 프로필 파이프라인 합성 검증")
 struct HomeRepositoryTests {
 
+    @Test("프로덕트 계정은 기수 유무와 관계없이 누적 활동일을 표시하지 않는다",
+          arguments: [false, true])
+    func productAccountReplacesActivityDays(hasGeneration: Bool) async throws {
+        let profiles = MockMemberProfileRepository()
+        profiles.result = .success(Profile(
+            memberId: "4", name: "제품", nickname: "제품팀",
+            generations: hasGeneration ? ["11"] : [], isUmcProduct: true
+        ))
+        let network = StubHomeNetwork(.failure(MockMemberProfileRepository.MockError.notStubbed))
+        let repository = HomeRepository(networkRequesting: network, memberProfileRepository: profiles)
+
+        let result = try await repository.fetchMyProfile()
+
+        #expect(result.seasonTypes.contains(.productAccount))
+        #expect(!result.seasonTypes.contains(.days(0)))
+        #expect(network.requestCount == 0)
+        if hasGeneration { #expect(result.seasonTypes.contains(.gens(["11"]))) }
+    }
+
     @Test("fetchMyProfile()이 Profile을 HomeProfileResult로 매핑한다 — 세대 파생/포인트 분류/활동일 계산")
     func fetchMyProfileMapsProfileToHomeProfileResult() async throws {
         let now = Date()

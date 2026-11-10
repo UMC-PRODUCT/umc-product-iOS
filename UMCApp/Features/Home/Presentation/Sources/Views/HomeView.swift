@@ -90,7 +90,9 @@ struct HomeView: View {
                 layoutDirection: layoutDirection
             ) {
                 seasonSection
-                generationSection
+                if viewModel.seasonState.value?.contains(.productAccount) != true {
+                    generationSection
+                }
                 scheduleSection
                 recentNoticeSection
             }

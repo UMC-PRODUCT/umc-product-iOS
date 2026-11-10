@@ -97,8 +97,9 @@ private final class ListUseCase: NoticeUseCaseProtocol {
 }
 
 private struct ListGenerations: ChallengerGenRepositoryProtocol {
+    var pairs: [(gen: String, gisuId: String)] = [("11", "3")]
     func replaceMappings(_ pairs: [(gen: String, gisuId: String)]) throws {}
-    func fetchGenGisuIdPairs() throws -> [(gen: String, gisuId: String)] { [("11", "3")] }
+    func fetchGenGisuIdPairs() throws -> [(gen: String, gisuId: String)] { pairs }
 }
 
 private struct ListReads: NoticeReadRepositoryProtocol {
@@ -151,6 +152,18 @@ private func listPage(_ id: String, hasNext: Bool = true) -> NoticePage {
 @Suite("공지 조회 범위와 응답 순서 (#1544–#1547)", .timeLimit(.minutes(1)))
 @MainActor
 struct NoticeListRegressionTests {
+
+    @Test("소속 기수가 없으면 공지는 경고 없이 빈 상태로 표시한다")
+    func noGenerationsSettlesAsEmpty() {
+        let container = listContainer(ListUseCase())
+        container.register(ChallengerGenRepositoryProtocol.self) { ListGenerations(pairs: []) }
+        let errors = ErrorHandler()
+        let model = NoticeViewModel(container: container, errorHandler: errors)
+        model.fetchGisuList()
+        #expect(model.noticeItems == .loaded([]))
+        #expect(model.generations.isEmpty)
+        #expect(errors.currentError == nil)
+    }
     private func model(_ useCase: ListUseCase) throws -> NoticeViewModel {
         let model = NoticeViewModel(container: listContainer(useCase), errorHandler: ErrorHandler())
         model.gisuPairs = [("11", "3")]

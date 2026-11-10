@@ -205,6 +205,39 @@ struct MemberProfileResponseDTOTests {
         #expect(externalLinks.personal == "https://chulsoo.dev")
     }
 
+    @Test("프로덕트 필드 누락·null·false는 기존 승인 조건을 유지한다",
+          arguments: ["{}", "{\"isUmcProduct\":null}", "{\"isUmcProduct\":false}"])
+    func absentProductPermissionDoesNotApprove(json: String) throws {
+        let dto = try JSONDecoder().decode(MemberProfileResponseDTO.self, from: Data(json.utf8))
+        #expect(!dto.isUmcProduct)
+        #expect(!dto.toDomain().isApproved)
+    }
+
+    @Test("프로덕트 권한을 인코딩해도 유지한다")
+    func productPermissionRoundTrips() throws {
+        let dto = try JSONDecoder().decode(
+            MemberProfileResponseDTO.self, from: Data("{\"isUmcProduct\":true}".utf8)
+        )
+        let decoded = try JSONDecoder().decode(
+            MemberProfileResponseDTO.self, from: JSONEncoder().encode(dto)
+        )
+        #expect(decoded.isUmcProduct)
+        #expect(Profile(memberId: "1", name: "", nickname: "", generations: ["11"]).isApproved)
+    }
+
+    @Test("프로덕트 권한은 기수와 학교 없이도 메인 진입을 허용한다")
+    func productAccountCanEnterWithoutMembership() throws {
+        let data = Data("{\"id\":\"42\",\"isUmcProduct\":true}".utf8)
+        let profile = try JSONDecoder().decode(MemberProfileResponseDTO.self, from: data).toDomain()
+
+        #expect(profile.isApproved)
+        #expect(profile.isUmcProduct)
+        #expect(profile.generations.isEmpty)
+        #expect(profile.roles.isEmpty)
+        #expect(profile.schoolId.isEmpty)
+        #expect(profile.latestChallengerId == nil)
+    }
+
     // MARK: - infra (#1351 서버 Part 체계 개편)
 
     /// 서버는 신규 두 파트에서만 `infra` 를 내려주고 나머지 파트에서는 키를 생략한다.

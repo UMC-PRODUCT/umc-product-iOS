@@ -48,6 +48,10 @@ public struct Profile: Equatable, Hashable, Sendable {
     /// 기수별 챌린저 활동 기록 (MyPage 병합 필드)
     public let challengerRecords: [ProfileChallengerRecord]
 
+    /// 서버가 판정한 프로덕트 권한 여부(SUPER_ADMIN 포함).
+    /// 메인 진입 외 기능 권한은 기존 역할과 기능별 권한으로 별도 판정한다.
+    public let isUmcProduct: Bool
+
     // MARK: - Init
 
     public init(
@@ -68,7 +72,8 @@ public struct Profile: Equatable, Hashable, Sendable {
         profileImageLink: String? = nil,
         status: MemberStatus = .active,
         externalLinks: ProfileExternalLinks? = nil,
-        challengerRecords: [ProfileChallengerRecord] = []
+        challengerRecords: [ProfileChallengerRecord] = [],
+        isUmcProduct: Bool = false
     ) {
         self.memberId = memberId
         self.name = name
@@ -88,12 +93,13 @@ public struct Profile: Equatable, Hashable, Sendable {
         self.status = status
         self.externalLinks = externalLinks
         self.challengerRecords = challengerRecords
+        self.isUmcProduct = isUmcProduct
     }
 
     // MARK: - Function
 
-    /// 소속 기수가 하나라도 있으면 승인된 챌린저로 판단한다.
+    /// 소속 기수가 있거나 프로덕트 권한이 있으면 메인 진입을 허용한다.
     public var isApproved: Bool {
-        !generations.isEmpty
+        !generations.isEmpty || isUmcProduct
     }
 }

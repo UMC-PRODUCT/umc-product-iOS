@@ -34,6 +34,8 @@ enum StubPersona: String, CaseIterable {
     /// 서버가 파트를 추가했는데 앱이 아직 모르는 상황을 만든다. 이 신원으로 교환하면
     /// 상대 명함첩에 「운영진」이 아니라 「RUST」로 남아야 한다.
     case c
+    /// 학교·기수·챌린저 이력 없이 메인 진입하는 프로덕트 계정.
+    case product
 
     // MARK: - Constants
 
