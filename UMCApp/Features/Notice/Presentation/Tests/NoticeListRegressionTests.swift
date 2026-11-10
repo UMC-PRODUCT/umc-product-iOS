@@ -136,9 +136,11 @@ private func listContainer(_ useCase: ListUseCase) -> DIContainer {
     return container
 }
 
-private func listItem(_ id: String, gisuId: String? = "3") -> NoticeItemModel {
+private func listItem(
+    _ id: String, gisuId: String? = "3", scope: NoticeScope = .campus
+) -> NoticeItemModel {
     NoticeItemModel(
-        noticeId: id, generation: "0", scope: .campus, category: .general,
+        noticeId: id, generation: "0", scope: scope, category: .general,
         mustRead: false, isAlert: false, date: .distantPast, title: id, content: "본문",
         writer: "작성자", links: [], images: [], vote: nil, viewCount: "0",
         targetsAllGenerations: true, targetGisuId: gisuId
@@ -302,6 +304,163 @@ struct NoticeListRegressionTests {
         pending?.resume(returning: listPage("central", hasNext: true))
         await oldTask.value
         #expect(model.noticeItems.value?.map(\.noticeId) == ["school"])
+        #expect(!model.pagingState.hasNextPage)
+    }
+
+    @Test("지부장 전체 필터는 조직 제한 없이 서버 권한 범위를 표시한다")
+    func chapterPresidentAllScope() async throws {
+        let useCase = ListUseCase()
+        var requests = [NoticeListRequest]()
+        useCase.handler = { request, _ in
+            requests.append(request)
+            return listPage("other-chapter", hasNext: false)
+        }
+        let model = try model(useCase)
+        model.memberRole = .chapterPresident
+        #expect(model.baseMainFilterItems.contains(.all))
+        model.currentState = GenerationFilterState(mainFilter: .all)
+        await model.fetchNotices()
+        await model.searchNotices(keyword: "검색")
+        #expect(requests.count == 2)
+        #expect(requests.allSatisfy {
+            $0.gisuId == "3" && $0.chapterId == nil && $0.schoolId == nil && $0.part == nil
+        })
+        #expect(model.noticeItems.value?.map(\.noticeId) == ["other-chapter"])
+        model.memberRole = .challenger
+        #expect(!model.baseMainFilterItems.contains(.all))
+    }
+
+    @Test("UMC 필터의 연속 빈 페이지를 넘어 표시 항목이나 마지막 페이지까지 조회한다",
+          arguments: [false, true], [false, true])
+    func skipsFilteredPages(search: Bool, exhausted: Bool) async throws {
+        let useCase = ListUseCase()
+        var pages = [Int]()
+        var keywords = [String?]()
+        useCase.handler = { request, keyword in
+            pages.append(request.page)
+            keywords.append(keyword)
+            let item = listItem(
+                "page-\(request.page)",
+                scope: request.page == 2 && !exhausted ? .central : .campus
+            )
+            return NoticePage(items: [item], hasNext: request.page < 2, totalElements: "3")
+        }
+        let model = try model(useCase)
+        model.currentState = GenerationFilterState(mainFilter: .central)
+        if search { await model.searchNotices(keyword: "검색") }
+        else { await model.fetchNotices() }
+        #expect(pages == [0, 1, 2])
+        #expect(keywords.allSatisfy { $0 == (search ? "검색" : nil) })
+        #expect(model.noticeItems.value?.map(\.noticeId) == (exhausted ? [] : ["page-2"]))
+        #expect(model.pagingState.currentPage == 2)
+        #expect(!model.pagingState.hasNextPage)
+        #expect(!model.isLoadingMore)
+    }
+
+    @Test("UMC 다음 페이지가 필터로 비어도 기존 목록을 유지하고 중복 요청을 막는다")
+    func skipsIntermediatePages() async throws {
+        let useCase = ListUseCase()
+        var pages = [Int]()
+        var pending: CheckedContinuation<NoticePage, Error>?
+        useCase.handler = { request, _ in
+            pages.append(request.page)
+            if request.page == 2 {
+                return try await withCheckedThrowingContinuation { pending = $0 }
+            }
+            return listPage("hidden")
+        }
+        let model = try model(useCase)
+        model.currentState = GenerationFilterState(mainFilter: .central)
+        let initial = listItem("initial")
+        model.noticeItems = .loaded([initial])
+        model.pagingState.applySuccess(page: 0, hasNextPage: true)
+        var finished = false
+        let task = Task {
+            await model.loadNextPageIfNeeded(currentItem: initial)
+            finished = true
+        }
+        while pending == nil && !finished { await Task.yield() }
+        guard pending != nil else {
+            Issue.record("빈 중간 페이지에서 다음 요청이 멈췄습니다")
+            return
+        }
+        await model.loadNextPageIfNeeded(currentItem: initial)
+        #expect(pages == [1, 2])
+        #expect(model.isLoadingMore)
+        let visible = listItem("visible", scope: .central)
+        pending?.resume(returning: NoticePage(items: [visible], hasNext: false, totalElements: "3"))
+        await task.value
+        #expect(model.noticeItems.value?.map(\.noticeId) == ["initial", "visible"])
+        #expect(model.pagingState.currentPage == 2)
+        #expect(!model.isLoadingMore)
+    }
+
+    @Test("빈 페이지 후 실패·취소 시 최초 요청 위치를 유지해 재시도한다",
+          arguments: [0, 1], [false, true])
+    func interruptedFilteredPages(firstPage: Int, cancelled: Bool) async throws {
+        let useCase = ListUseCase()
+        var pages = [Int]()
+        useCase.handler = { request, _ in
+            pages.append(request.page)
+            if request.page == firstPage { return listPage("hidden") }
+            if cancelled { throw CancellationError() }
+            throw DomainError.custom(message: "조회 실패")
+        }
+        let model = try model(useCase)
+        model.currentState = GenerationFilterState(mainFilter: .central)
+        model.noticeItems = .loaded([listItem("initial")])
+        model.pagingState.applySuccess(page: 0, hasNextPage: true)
+        await model.fetchNotices(page: firstPage)
+        #expect(pages == [firstPage, firstPage + 1])
+        #expect(!model.isLoadingMore)
+        if firstPage == 0 && !cancelled {
+            guard case .failed = model.noticeItems else {
+                Issue.record("첫 조회 중 후속 페이지 실패도 재시도 상태여야 합니다")
+                return
+            }
+        } else {
+            #expect(model.noticeItems.value?.map(\.noticeId) == ["initial"])
+        }
+        pages = []
+        useCase.handler = { request, _ in
+            pages.append(request.page)
+            return NoticePage(items: [listItem("retry", scope: .central)],
+                              hasNext: false, totalElements: "1")
+        }
+        await model.fetchNotices(page: firstPage)
+        #expect(pages == [firstPage])
+        #expect(model.noticeItems.value?.last?.noticeId == "retry")
+    }
+
+    @Test("빈 페이지 자동 조회 중 필터가 바뀌면 이전 요청을 더 진행하지 않는다")
+    func staleFilteredPageChain() async throws {
+        let useCase = ListUseCase()
+        var oldPages = [Int]()
+        var pending: CheckedContinuation<NoticePage, Error>?
+        useCase.handler = { request, keyword in
+            if keyword != nil { return listPage("fresh", hasNext: false) }
+            oldPages.append(request.page)
+            if request.page == 0 { return listPage("hidden") }
+            return try await withCheckedThrowingContinuation { pending = $0 }
+        }
+        let model = try model(useCase)
+        model.currentState = GenerationFilterState(mainFilter: .central)
+        var finished = false
+        let task = Task {
+            await model.fetchNotices()
+            finished = true
+        }
+        while pending == nil && !finished { await Task.yield() }
+        guard pending != nil else {
+            Issue.record("빈 첫 페이지에서 다음 요청이 멈췄습니다")
+            return
+        }
+        model.currentState = GenerationFilterState(mainFilter: .all)
+        await model.searchNotices(keyword: "최신")
+        pending?.resume(returning: listPage("stale"))
+        await task.value
+        #expect(oldPages == [0, 1])
+        #expect(model.noticeItems.value?.map(\.noticeId) == ["fresh"])
         #expect(!model.pagingState.hasNextPage)
     }
 

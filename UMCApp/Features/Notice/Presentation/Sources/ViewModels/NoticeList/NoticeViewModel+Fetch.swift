@@ -105,9 +105,30 @@ extension NoticeViewModel {
         guard let gisuId = preparePagingAndResolveGisuId(page: page) else { return }
 
         do {
-            let request = try buildNoticeListRequest(gisuId: gisuId, page: page)
-            let response = try await requestAction(request)
-            try await applyPagedResponse(response, page: page, requestID: currentRequestID)
+            var requestedPage = page
+            while true {
+                try Task.checkCancellation()
+                guard currentRequestID == requestID else { return }
+                let request = try buildNoticeListRequest(gisuId: gisuId, page: requestedPage)
+                let response = try await requestAction(request)
+                try Task.checkCancellation()
+                guard currentRequestID == requestID else { return }
+
+                // 표시할 셀이 없으면 스크롤이 다음 요청을 시작할 수 없으므로 계속 조회합니다.
+                // 최종 페이지에서만 커밋해 실패·취소 시 최초 요청 위치에서 재시도합니다.
+                if case .central = selectedMainFilter,
+                   visibleItems(in: response).isEmpty, response.hasNext {
+                    requestedPage += 1
+                    continue
+                }
+                try await applyPagedResponse(
+                    response,
+                    page: requestedPage,
+                    replacesItems: page == 0,
+                    requestID: currentRequestID
+                )
+                return
+            }
         } catch is CancellationError {
             guard currentRequestID == requestID else { return }
             handleCancelledFetch(page: page, previousState: previousState)
@@ -190,7 +211,7 @@ extension NoticeViewModel {
     ///   - page: 조회한 페이지 인덱스
     @MainActor
     private func applyPagedResponse(
-        _ response: NoticePage, page: Int, requestID: UUID
+        _ response: NoticePage, page: Int, replacesItems: Bool, requestID: UUID
     ) async throws {
         guard requestID == self.requestID else { return }
         #if DEBUG
@@ -219,17 +240,7 @@ extension NoticeViewModel {
             return
         }
 
-        /// 현재 선택된 조회 필터에 맞지 않는 공지를 클라이언트 측에서 정리합니다.
-        ///
-        /// iOS-01은 서버-01, 서버-03만 노출하도록 후처리합니다.
-        let filteredItems: [NoticeItemModel]
-        if case .central = selectedMainFilter {
-            filteredItems = response.items.filter {
-                $0.scope == .central && $0.category == .general
-            }
-        } else {
-            filteredItems = response.items
-        }
+        let filteredItems = visibleItems(in: response)
 
         let branchNames = await resolveBranchNameOverrides(from: filteredItems)
         // 지부명 조회 중 취소된 요청의 결과가 목록에 커밋되지 않도록 차단
@@ -251,12 +262,18 @@ extension NoticeViewModel {
         }
         pagingState.applySuccess(page: page, hasNextPage: response.hasNext)
 
-        if page == 0 {
+        if replacesItems {
             noticeItems = .loaded(items)
         } else {
             let mergedItems = (noticeItems.value ?? []) + items
             noticeItems = .loaded(mergedItems)
         }
+    }
+
+    /// UMC 공지는 중앙 일반 공지만 표시하고, 나머지 필터는 서버 조회 범위를 유지합니다.
+    private func visibleItems(in response: NoticePage) -> [NoticeItemModel] {
+        guard case .central = selectedMainFilter else { return response.items }
+        return response.items.filter { $0.scope == .central && $0.category == .general }
     }
 
     /// 지부 공지 중 지부명이 비어 있는 항목의 chapterId를 실제 지부명으로 해석합니다.

@@ -147,10 +147,13 @@ final class NoticeViewModel {
 
     /// 역할(memberRole) 기반으로 노출할 메인필터 항목 목록을 반환합니다.
     ///
-    /// 권한과 무관하게 상위 조직 필터는 UMC 공지/본인 지부/본인 학교를 노출합니다.
+    /// UMC 공지/본인 지부/본인 학교를 노출하고, 지부장은 서버 권한 범위의 전체 공지도 조회합니다.
     /// 파트 필터는 별도 Nested Menu에서 제공합니다.
     var mainFilterItems: [NoticeMainFilterType] {
-        [.central, .branch(currentBranchFilterTitle), .school(currentSchoolFilterTitle)]
+        let organizationFilters: [NoticeMainFilterType] = [
+            .central, .branch(currentBranchFilterTitle), .school(currentSchoolFilterTitle)
+        ]
+        return memberRole == .chapterPresident ? [.all] + organizationFilters : organizationFilters
     }
 
     /// 상단 메인 메뉴에 표시할 기본 조직 필터 목록(파트 제외)
