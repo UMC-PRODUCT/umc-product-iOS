@@ -44,18 +44,19 @@ struct FormPickerField<T>: View {
         } label: {
             menuLabel
         }
+        .accessibilityLabel(isRequired ? "\(title), 필수" : title)
+        .accessibilityValue(selection.map(displayText) ?? placeholder)
     }
 
     private var menuLabel: some View {
         HStack {
             Text(selection.map(displayText) ?? placeholder)
-                .appFont(.callout, color: selection == nil ? .grey400 : .grey900)
+                .appFont(.callout, color: selection == nil ? .grey600 : .grey900)
             Spacer()
             Image(systemName: DefaultConstant.chevronDownImage)
                 .foregroundStyle(Color.grey900)
         }
-        .padding(DefaultConstant.defaultTextFieldPadding)
-        .background(Color.Surface.content, in: .capsule)
+        .modifier(AuthFormFieldSurface())
     }
 }
 

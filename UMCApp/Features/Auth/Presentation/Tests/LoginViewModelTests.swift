@@ -23,6 +23,7 @@ struct LoginViewModelKakaoTests {
         let viewModel = makeViewModel()
         #expect(viewModel.loginState == .idle)
         #expect(viewModel.signUpDestination == nil)
+        #expect(viewModel.activeLoginProvider == nil)
     }
 
     @Test("기존 회원 + 승인됨 → .loaded(profile), 프로필 로컬 저장소 동기화 1회 수행")
@@ -146,6 +147,10 @@ struct LoginViewModelKakaoTests {
         let first = Task { await viewModel.loginWithKakao() }
         await Task.yield()
 
+        #expect(viewModel.activeLoginProvider == .kakao)
+        viewModel.loginWithApple()
+        await viewModel.loginWithGoogle()
+        #expect(viewModel.activeLoginProvider == .kakao)
         await viewModel.loginWithKakao()
         await first.value
 
@@ -191,6 +196,8 @@ struct LoginViewModelOtherProvidersTests {
 
         viewModel.loginWithApple()
         #expect(appleLoginManager.signWithAppleCallCount == 1)
+        #expect(viewModel.activeLoginProvider == .apple)
+        #expect(viewModel.loginState.isLoading)
 
         appleLoginManager.simulateSuccess(authorizationCode: "auth-code", email: nil, fullName: nil)
         try await waitUntil { viewModel.loginState.isComplete }

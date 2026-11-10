@@ -56,6 +56,7 @@ public struct LoginView: View {
 
                 LoginActionStack(
                     isLoading: viewModel.loginState.isLoading,
+                    loadingMethod: viewModel.activeLoginProvider.map(LoginMethod.social),
                     onKakaoTap: { Task { await viewModel.loginWithKakao() } },
                     onAppleTap: { viewModel.loginWithApple() },
                     onGoogleTap: { Task { await viewModel.loginWithGoogle() } },

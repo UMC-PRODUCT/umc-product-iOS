@@ -47,7 +47,7 @@ struct SignUpPasswordSection: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
             passwordField
             passwordConfirmField
         }
@@ -61,21 +61,28 @@ struct SignUpPasswordSection: View {
             SecureField(
                 "",
                 text: $password,
-                prompt: Text(Constants.passwordPlaceholder).font(.app(.callout))
+                prompt: Text(Constants.passwordPlaceholder)
+                    .font(.app(.callout)).foregroundStyle(Color.grey600)
             )
+            .font(.app(.callout))
+            .textFieldStyle(.plain)
+            .textContentType(.newPassword)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled(true)
             .foregroundStyle(Color.grey900)
-            .padding(DefaultConstant.defaultTextFieldPadding)
-            .background(
-                Color.Surface.content, in: .capsule)
+            .accessibilityLabel("\(Constants.passwordTitle), 필수")
+            .modifier(AuthFormFieldSurface(
+                isFocused: focusBinding.wrappedValue == .password,
+                hasError: !password.isEmpty && !isPasswordValid
+            ))
             .submitLabel(.next)
             .focused(focusBinding, equals: .password)
             .onSubmit { focusBinding.wrappedValue = .passwordConfirm }
 
             if !password.isEmpty, !isPasswordValid {
-                Text("8자 이상 입력해 주세요.")
+                Label("8자 이상 입력해 주세요.", systemImage: "exclamationmark.circle")
                     .appFont(.footnote, color: .red500)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.leading, DefaultSpacing.spacing8)
             }
         }
@@ -87,21 +94,28 @@ struct SignUpPasswordSection: View {
             SecureField(
                 "",
                 text: $passwordConfirm,
-                prompt: Text(Constants.passwordConfirmPlaceholder).font(.app(.callout))
+                prompt: Text(Constants.passwordConfirmPlaceholder)
+                    .font(.app(.callout)).foregroundStyle(Color.grey600)
             )
+            .font(.app(.callout))
+            .textFieldStyle(.plain)
+            .textContentType(.newPassword)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled(true)
             .foregroundStyle(Color.grey900)
-            .padding(DefaultConstant.defaultTextFieldPadding)
-            .background(
-                Color.Surface.content, in: .capsule)
+            .accessibilityLabel("\(Constants.passwordConfirmTitle), 필수")
+            .modifier(AuthFormFieldSurface(
+                isFocused: focusBinding.wrappedValue == .passwordConfirm,
+                hasError: !passwordConfirm.isEmpty && !isPasswordConfirmed
+            ))
             .submitLabel(.next)
             .focused(focusBinding, equals: .passwordConfirm)
             .onSubmit(onConfirmSubmit)
 
             if !passwordConfirm.isEmpty, !isPasswordConfirmed {
-                Text("비밀번호가 일치하지 않습니다.")
+                Label("비밀번호가 일치하지 않습니다.", systemImage: "exclamationmark.circle")
                     .appFont(.footnote, color: .red500)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.leading, DefaultSpacing.spacing8)
             }
         }

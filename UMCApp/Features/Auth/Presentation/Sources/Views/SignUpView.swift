@@ -29,7 +29,7 @@ public struct SignUpView: View {
 
     fileprivate enum Constants {
         static let naviSubtitle: String = "동아리 활동을 위해 정보를 입력해주세요."
-        static let submitTitle: String = "완료"
+        static let submitTitle: String = "가입 완료"
         static let completedTitle: String = "가입이 완료됐어요"
         static let pendingApprovalMessage: String =
             "운영진 승인 후 서비스를 이용할 수 있어요. 잠시만 기다려주세요."
@@ -64,7 +64,7 @@ public struct SignUpView: View {
     public var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DefaultSpacing.spacing24) {
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing32) {
                     SignUpSchoolSection(
                         schoolsState: viewModel.schoolsState,
                         selectedSchool: $viewModel.nicknameAvailability.selectedSchool
@@ -105,6 +105,7 @@ public struct SignUpView: View {
                 .safeAreaPadding(.vertical, DefaultConstant.defaultContentTopMargins)
                 .safeAreaPadding(.horizontal, DefaultConstant.defaultSafeHorizon)
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigation(naviTitle: NavigationTitle.Auth.signUp, displayMode: .large)
             .navigationSubtitle(Constants.naviSubtitle)
             .safeAreaInset(edge: .bottom) {
@@ -129,8 +130,11 @@ public struct SignUpView: View {
         } label: {
             Group {
                 if viewModel.registerState.isLoading {
-                    ProgressView()
-                        .tint(.white)
+                    HStack(spacing: DefaultSpacing.spacing8) {
+                        ProgressView().tint(.white)
+                        Text("가입 중…")
+                            .appFont(.subheadline, weight: .semibold, color: .white)
+                    }
                 } else {
                     Text(Constants.submitTitle)
                         .appFont(.subheadline, weight: .semibold, color: .white)
@@ -139,6 +143,7 @@ public struct SignUpView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, DefaultConstant.defaultBtnPadding)
         }
+        .accessibilityLabel(viewModel.registerState.isLoading ? "가입 중" : Constants.submitTitle)
         .buttonStyle(.glassProminent)
         .tint(.teal500)
         .disabled(!viewModel.isFormValid || viewModel.registerState.isLoading)
