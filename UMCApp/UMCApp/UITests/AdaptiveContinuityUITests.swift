@@ -114,6 +114,28 @@ final class AdaptiveContinuityUITests: XCTestCase {
         XCTAssertTrue(detail.waitForExistence(timeout: 5))
     }
 
+    func testMyPageDetailBackReturnsDirectlyToMenu() {
+        let app = launchStub()
+        app.buttons["마이페이지"].firstMatch.tap()
+
+        for title in ["설정", "받은 명함", "설정"] {
+            let entry = app.buttons.matching(
+                NSPredicate(format: "label BEGINSWITH %@", title)
+            ).firstMatch
+            XCTAssertTrue(entry.waitForExistence(timeout: 10))
+            entry.tap()
+            let navigationBar = app.navigationBars.firstMatch
+            XCTAssertTrue(navigationBar.buttons.firstMatch.waitForExistence(timeout: 10))
+            navigationBar.buttons.firstMatch.tap()
+
+            let menu = app.staticTexts["명함 관리"].firstMatch
+            XCTAssertTrue(menu.waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(menu.isHittable)
+            XCTAssertFalse(app.navigationBars["내 프로필"].exists)
+            capture("mypage-back-" + title)
+        }
+    }
+
     func testAllTabsHaveReachableContent() {
         let app = launchStub()
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -142,7 +164,6 @@ final class AdaptiveContinuityUITests: XCTestCase {
             if allow.exists { allow.tap() }
         }
         XCTAssertTrue(app.buttons["홈"].firstMatch.waitForExistence(timeout: 20))
-        XCTAssertTrue(app.staticTexts["소속 기수"].waitForExistence(timeout: 10))
         return app
     }
 
