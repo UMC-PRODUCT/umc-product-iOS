@@ -40,6 +40,15 @@ final class MemberListViewModel {
     private var currentPage: Int = 0
     private var currentGisuId: String?
     private var listRequestID = UUID()
+    private var detailRequestID = UUID()
+    private(set) var selectedGisuId: String?
+    private(set) var generations: [MemberFilterOption]
+    private let generationProvider: (() async throws -> [MemberFilterOption])?
+    private var hasLoadedGenerations = false
+
+    var selectedGenerationTitle: String {
+        generations.first { $0.id == selectedGisuId }?.name ?? "현재 기수"
+    }
 
     // MARK: - Init
 
@@ -47,12 +56,18 @@ final class MemberListViewModel {
         fetchMembersUseCase: FetchMembersUseCaseProtocol,
         errorHandler: ErrorHandler,
         userSessionManager: UserSessionManager,
-        mode: ActivityMode = .challenger
+        mode: ActivityMode = .challenger,
+        generations: [MemberFilterOption] = [],
+        initialGisuId: String? = nil,
+        generationProvider: (() async throws -> [MemberFilterOption])? = nil
     ) {
         self.fetchMembersUseCase = fetchMembersUseCase
         self.errorHandler = errorHandler
         self.userSessionManager = userSessionManager
         self.mode = mode
+        self.generations = generations
+        self.selectedGisuId = generations.first(where: \.isActive)?.id ?? initialGisuId
+        self.generationProvider = generationProvider
     }
 
     // MARK: - Computed Property
@@ -92,6 +107,20 @@ final class MemberListViewModel {
 
     // MARK: - Function
 
+    /// 기수 변경 시 진행 중인 이전 목록·상세 요청을 무효화합니다.
+    func selectGeneration(_ gisuId: String) async {
+        guard selectedGisuId != gisuId else { return }
+        selectedGisuId = gisuId
+        listRequestID = UUID()
+        detailRequestID = UUID()
+        selectedMember = nil
+        isLoadingMemberDetail = false
+        membersState = .idle
+        currentPage = 0
+        hasMorePages = true
+        await fetchMembers()
+    }
+
     /// 멤버 첫 페이지를 조회합니다.
     ///
     /// `.task` 라이프사이클 취소(빠른 화면 이탈·탭 전환·pull-to-refresh 재요청)로 던져지는
@@ -106,27 +135,47 @@ final class MemberListViewModel {
         let requestID = listRequestID
         isLoadingNextPage = false
         do {
+            if mode == .challenger, !hasLoadedGenerations, let generationProvider {
+                let options = try await generationProvider()
+                guard requestID == listRequestID else { return }
+                try Task.checkCancellation()
+                generations = options
+                selectedGisuId = options.first(where: \.isActive)?.id
+                    ?? options.first(where: { $0.id == selectedGisuId })?.id
+                guard selectedGisuId != nil else {
+                    throw DomainError.custom(message: "현재 기수 정보를 불러오지 못했습니다.")
+                }
+                hasLoadedGenerations = true
+            }
             let page = try await fetchDisplayPage(
                 startingAt: 0, existing: [], requestID: requestID
             )
+            guard requestID == listRequestID else { return }
             membersState = .loaded(page.members)
             hasMorePages = page.hasNext
             currentPage = page.currentPage
             currentGisuId = page.gisuId
         } catch is CancellationError {
+            guard requestID == listRequestID else { return }
             membersState = previousState
         } catch let error as NSError
             where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
+            guard requestID == listRequestID else { return }
             membersState = previousState
         } catch let error as AppError {
+            guard requestID == listRequestID else { return }
             membersState = .failed(error)
         } catch let error as DomainError {
+            guard requestID == listRequestID else { return }
             membersState = .failed(.domain(error))
         } catch let error as NetworkError {
+            guard requestID == listRequestID else { return }
             membersState = .failed(.network(error))
         } catch let error as RepositoryError {
+            guard requestID == listRequestID else { return }
             membersState = .failed(.repository(error))
         } catch {
+            guard requestID == listRequestID else { return }
             membersState = .failed(
                 .unknown(message: error.localizedDescription)
             )
@@ -183,7 +232,9 @@ final class MemberListViewModel {
         while true {
             try Task.checkCancellation()
             guard requestID == listRequestID else { throw CancellationError() }
-            let page = try await fetchMembersUseCase.executePage(page: nextPage, mode: mode)
+            let page = try await fetchMembersUseCase.executePage(
+                page: nextPage, mode: mode, gisuId: selectedGisuId
+            )
             try Task.checkCancellation()
             guard requestID == listRequestID else { throw CancellationError() }
 
@@ -277,42 +328,25 @@ final class MemberListViewModel {
             return
         }
 
+        detailRequestID = UUID()
+        let requestID = detailRequestID
         isLoadingMemberDetail = true
-        defer { isLoadingMemberDetail = false }
-
-        let memberId = member.memberID ?? ""
-        async let generationsTask = try? fetchMembersUseCase.fetchAllGenerations(
-            memberId: memberId
-        )
-
-        var detailedMember = await fetchMemberDetail(for: member)
-
-        let generations = await generationsTask ?? member.generation
-        if !generations.isEmpty {
-            detailedMember = MemberManagementItem(
-                id: detailedMember.id,
-                memberID: detailedMember.memberID,
-                challengerID: detailedMember.challengerID,
-                profile: detailedMember.profile,
-                name: detailedMember.name,
-                nickname: detailedMember.nickname,
-                generation: generations,
-                school: detailedMember.school,
-                position: detailedMember.position,
-                part: detailedMember.part,
-                infra: detailedMember.infra,
-                penalty: detailedMember.penalty,
-                rewardPoints: detailedMember.rewardPoints,
-                badge: detailedMember.badge,
-                managementTeam: detailedMember.managementTeam,
-                attendanceRecords: detailedMember.attendanceRecords,
-                penaltyHistory: detailedMember.penaltyHistory,
-                canViewPenaltyHistory: detailedMember.canViewPenaltyHistory,
-                generationPoints: detailedMember.generationPoints
+        defer {
+            if requestID == detailRequestID { isLoadingMemberDetail = false }
+        }
+        do {
+            let detailedMember = try await fetchMemberDetail(
+                for: member, requirePointHistory: true
+            )
+            guard requestID == detailRequestID, !Task.isCancelled else { return }
+            selectedMember = detailedMember
+        } catch {
+            guard requestID == detailRequestID, !Task.isCancelled else { return }
+            errorHandler.handle(
+                error,
+                context: ErrorContext(feature: "Activity", action: "openChallengerMemberDetail")
             )
         }
-
-        selectedMember = detailedMember
     }
 
     /// 포인트 기록을 삭제합니다.
@@ -361,7 +395,7 @@ final class MemberListViewModel {
     /// 일정하다. mutation 은 이미 서버에 반영됐고 상세 조회는 실패 시 원본 멤버를 그대로
     /// 돌려주므로(`fetchMemberDetail`), 이 경로는 사용자 흐름을 막지 않는 best-effort 다.
     private func refreshMember(after member: MemberManagementItem) async {
-        let detailedMember = await fetchMemberDetail(for: member)
+        let detailedMember = (try? await fetchMemberDetail(for: member)) ?? member
 
         // 로컬 목록에서 해당 멤버 항목만 교체한다(전체 페이지 재요청 없음).
         if case .loaded(var members) = membersState,
@@ -401,24 +435,34 @@ final class MemberListViewModel {
 
     /// 멤버의 상세 정보(포인트 히스토리, 기수 포인트)를 조회합니다.
     private func fetchMemberDetail(
-        for member: MemberManagementItem
-    ) async -> MemberManagementItem {
+        for member: MemberManagementItem,
+        requirePointHistory: Bool = false
+    ) async throws -> MemberManagementItem {
         guard let challengerId = member.challengerID else {
             return member
         }
 
-        let memberId = member.memberID ?? ""
-
-        async let pointHistoryTask = try? fetchMembersUseCase.fetchPointHistory(
-            challengerId: challengerId
-        )
-        async let genPointsTask = try? fetchMembersUseCase
-            .fetchGenerationPointSummaries(memberId: memberId)
-
-        let fetchedHistory = await pointHistoryTask
+        let fetchedHistory: [OperatorMemberPenaltyHistory]?
+        if requirePointHistory {
+            fetchedHistory = try await fetchMembersUseCase.fetchPointHistory(
+                challengerId: challengerId
+            )
+        } else {
+            fetchedHistory = try? await fetchMembersUseCase.fetchPointHistory(
+                challengerId: challengerId
+            )
+        }
         let pointHistory = fetchedHistory ?? member.penaltyHistory
-        let generationPoints = await genPointsTask ?? []
-
+        let generationPoints: [GenerationPointSummary]
+        if mode == .admin {
+            generationPoints = (try? await fetchMembersUseCase.fetchGenerationPointSummaries(
+                memberId: member.memberID ?? ""
+            )) ?? []
+        } else {
+            generationPoints = []
+        }
+        // 공개 멤버 프로필의 points는 비공개 처리되어 빈 배열이므로 요약에 사용하지 않는다.
+        // 목록에서 선택한 기수의 challengerId 이력만 조회하고 같은 기수의 합계를 표시한다.
         let penaltyItems = pointHistory.filter { !$0.isReward }
         let rewardItems = pointHistory.filter { $0.isReward }
         let totalPenalty = fetchedHistory == nil

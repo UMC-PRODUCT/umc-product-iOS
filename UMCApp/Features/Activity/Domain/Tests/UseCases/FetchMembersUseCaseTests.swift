@@ -77,6 +77,7 @@ private final class MockMemberRepository: @unchecked Sendable, MemberRepositoryP
 
     private(set) var fetchMembersCallCount = 0
     private(set) var fetchMembersPageCalls: [Int] = []
+    private(set) var requestedGisuIds: [String?] = []
     private(set) var listModes: [ActivityMode] = []
     private(set) var grantPointCalls: [GrantCall] = []
     private(set) var deletePointCalls: [String] = []
@@ -99,6 +100,11 @@ private final class MockMemberRepository: @unchecked Sendable, MemberRepositoryP
         listModes.append(mode)
         if let error { throw error }
         return fetchMembersPageResult
+    }
+
+    func fetchMembersPage(page: Int, mode: ActivityMode, gisuId: String?) async throws -> MemberPage {
+        requestedGisuIds.append(gisuId)
+        return try await fetchMembersPage(page: page, mode: mode)
     }
 
     /// 본 UseCase 는 챌린저 검색을 노출하지 않는다 (``SearchChallengersUseCase`` 담당).
@@ -340,6 +346,19 @@ struct FetchMembersUseCaseErrorTests {
         await #expect(throws: MockMemberRepository.MockError.stubbed) {
             try await callMethod(method, on: useCase)
         }
+    }
+}
+
+@Suite("FetchMembersUseCase — 선택 기수 전달")
+struct FetchMembersGenerationTests {
+    @Test("선택된 서버 기수 ID를 Repository까지 전달한다")
+    func forwardsSelectedGeneration() async throws {
+        let repository = MockMemberRepository()
+        let useCase = FetchMembersUseCase(repository: repository)
+        _ = try await useCase.executePage(page: 2, mode: .challenger, gisuId: "90")
+        #expect(repository.requestedGisuIds == ["90"])
+        #expect(repository.fetchMembersPageCalls == [2])
+        #expect(repository.listModes == [.challenger])
     }
 }
 

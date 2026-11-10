@@ -121,6 +121,9 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
     var pages: [Int: MemberPage] = [:]
     var executePageError: Error?
     var nextPageGate: PageGate?
+    var firstPageGate: PageGate?
+    private(set) var requestedGisuIds: [String?] = []
+    private(set) var pointHistoryIds: [String] = []
     var grantPointError: Error?
     var deletePointError: Error?
     var pointHistory: [OperatorMemberPenaltyHistory] = []
@@ -159,6 +162,17 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
         return result
     }
 
+    func executePage(page: Int, mode: ActivityMode, gisuId: String?) async throws -> MemberPage {
+        requestedGisuIds.append(gisuId)
+        if page == 0, let gate = firstPageGate {
+            firstPageGate = nil
+            let result = pages[page] ?? makePage([], hasNext: false, currentPage: page)
+            await gate.pause()
+            return result
+        }
+        return try await executePage(page: page, mode: mode)
+    }
+
     func grantPoint(
         challengerId: String,
         pointType: ChallengerPointType,
@@ -177,6 +191,7 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
     func fetchPointHistory(
         challengerId: String
     ) async throws -> [OperatorMemberPenaltyHistory] {
+        pointHistoryIds.append(challengerId)
         if let pointHistoryError { throw pointHistoryError }
         return pointHistory
     }
@@ -809,7 +824,7 @@ struct MemberListViewModelSubmitPointTests {
         await viewModel.fetchMembers()
         useCase.pointHistoryError = DummyError()
         await viewModel.openChallengerMemberDetail(member)
-        #expect(viewModel.selectedMember?.rewardPoints == 5)
+        #expect(viewModel.selectedMember == nil)
         useCase.pointHistoryError = nil
         await viewModel.openChallengerMemberDetail(member)
         #expect(viewModel.selectedMember?.rewardPoints == 0)
@@ -1000,7 +1015,7 @@ struct MemberListViewModelDetailTests {
         #expect(viewModel.selectedMember?.canViewPenaltyHistory == true)
     }
 
-    @Test("상세 조회 → 비어있지 않은 기수 텍스트로 generation 덮어쓰기")
+    @Test("상세 조회는 목록에서 선택한 기수를 유지하고 공개 프로필 요약을 쓰지 않는다")
     func detailOverridesGenerationWhenPresent() async {
         let member = makeMember(memberID: "1", challengerID: "C-1")
         let useCase = MockFetchMembersUseCase()
@@ -1009,7 +1024,82 @@ struct MemberListViewModelDetailTests {
 
         await viewModel.openChallengerMemberDetail(member)
 
-        #expect(viewModel.selectedMember?.generation == "9기, 10기")
+        #expect(viewModel.selectedMember?.generation == "9기")
+        #expect(viewModel.selectedMember?.generationPoints.isEmpty == true)
+        #expect(useCase.pointHistoryIds == ["C-1"])
+    }
+}
+
+@MainActor
+@Suite("MemberListViewModel — 기수 필터")
+struct MemberListGenerationTests {
+    private func makeFilteredViewModel(_ useCase: MockFetchMembersUseCase) -> MemberListViewModel {
+        MemberListViewModel(
+            fetchMembersUseCase: useCase,
+            errorHandler: ErrorHandler(),
+            userSessionManager: UserSessionManager(),
+            generations: [
+                MemberFilterOption(id: "90", name: "9기"),
+                MemberFilterOption(id: "3", name: "11기", isActive: true),
+                MemberFilterOption(id: "120", name: "12기")
+            ]
+        )
+    }
+
+    @Test("미래 기수가 있어도 활성 기수를 기본 선택하고 요청에는 ID를 전달한다")
+    func defaultsToLatestAndPassesIdentifier() async {
+        let useCase = MockFetchMembersUseCase()
+        useCase.pages[0] = makePage([makeMember(memberID: "1")], hasNext: true, currentPage: 0)
+        useCase.pages[1] = makePage([], hasNext: false, currentPage: 1)
+        let viewModel = makeFilteredViewModel(useCase)
+        await viewModel.fetchMembers()
+        await viewModel.fetchNextPage()
+        #expect(viewModel.selectedGenerationTitle == "11기")
+        #expect(useCase.requestedGisuIds == ["3", "3"])
+        viewModel.searchText = "홍"
+        await viewModel.selectGeneration("90")
+        #expect(useCase.executePageCalls == [0, 1, 0])
+        #expect(useCase.requestedGisuIds.last == "90")
+        #expect(viewModel.searchText == "홍")
+    }
+
+    @Test("서버의 활성 기수는 저장된 사용자 활동 기수와 미래 기수보다 우선한다")
+    func serverActiveGenerationWins() async {
+        let useCase = MockFetchMembersUseCase()
+        let viewModel = MemberListViewModel(
+            fetchMembersUseCase: useCase,
+            errorHandler: ErrorHandler(),
+            userSessionManager: UserSessionManager(),
+            initialGisuId: "90",
+            generationProvider: {
+                [
+                    MemberFilterOption(id: "120", name: "12기"),
+                    MemberFilterOption(id: "3", name: "11기", isActive: true),
+                    MemberFilterOption(id: "90", name: "9기")
+                ]
+            }
+        )
+        await viewModel.fetchMembers()
+        #expect(viewModel.selectedGisuId == "3")
+        #expect(viewModel.selectedGenerationTitle == "11기")
+        #expect(useCase.requestedGisuIds == ["3"])
+    }
+
+    @Test("기수 변경 전에 시작한 첫 페이지가 늦게 끝나도 새 목록을 덮어쓰지 않는다")
+    func ignoresOldFirstPage() async {
+        let useCase = MockFetchMembersUseCase()
+        let gate = PageGate()
+        useCase.firstPageGate = gate
+        useCase.pages[0] = makePage([makeMember(memberID: "old")], hasNext: true, currentPage: 0)
+        let viewModel = makeFilteredViewModel(useCase)
+        let firstRequest = Task { await viewModel.fetchMembers() }
+        await gate.waitUntilPaused()
+        useCase.pages[0] = makePage([makeMember(memberID: "new")], hasNext: false, currentPage: 0)
+        await viewModel.selectGeneration("90")
+        await gate.resume()
+        await firstRequest.value
+        #expect(viewModel.membersState.value?.map(\.memberID) == ["new"])
+        #expect(viewModel.hasMorePages == false)
     }
 }
 

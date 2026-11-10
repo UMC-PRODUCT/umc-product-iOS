@@ -88,15 +88,22 @@ public final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendab
     public func fetchMembersPage(
         page: Int, mode: ActivityMode = .challenger
     ) async throws -> MemberPage {
+        try await fetchMembersPage(page: page, mode: mode, gisuId: nil)
+    }
+
+    public func fetchMembersPage(
+        page: Int, mode: ActivityMode, gisuId selectedGisuId: String?
+    ) async throws -> MemberPage {
         let schoolId = try requireSchoolId()
-        let gisuId = try resolveGisuId(for: mode)
+        let gisuId = mode == .admin
+            ? try resolveGisuId(for: mode) : selectedGisuId ?? context.gisuId
         let response = try await networkRequesting.request(
             StudyRouter.searchChallengersOffset(
                 query: ChallengerSearchQuery(
                     page: page,
                     size: Constants.searchPageSize,
                     schoolId: schoolId,
-                    gisuId: mode == .admin ? gisuId : nil
+                    gisuId: gisuId
                 )
             )
         )
@@ -111,7 +118,7 @@ public final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendab
             members: members,
             hasNext: pageResult.hasNext,
             currentPage: pageResult.page,
-            gisuId: mode == .admin ? gisuId : nil
+            gisuId: gisuId
         )
     }
 
@@ -453,7 +460,9 @@ private extension MemberRepository {
             profile: profile?.profileImageURL ?? descriptor.profileImageURL,
             name: profile?.name.nonEmpty ?? descriptor.name,
             nickname: profile?.nickname.nonEmpty ?? descriptor.nickname,
-            generation: allGenerationsText(from: profile, fallback: descriptor.generation),
+            generation: mode == .challenger
+                ? descriptor.generation
+                : allGenerationsText(from: profile, fallback: descriptor.generation),
             school: profile?.schoolName.nonEmpty ?? descriptor.schoolName,
             position: descriptor.position,
             part: descriptor.part,
@@ -512,7 +521,7 @@ private extension MemberRepository {
             }
         }
 
-        guard mode == .challenger else { return nil }
+        guard mode == .challenger, preferredGisuId == nil else { return nil }
         return matchedMemberRecords.first ?? profile.challengerRecords.first
     }
 

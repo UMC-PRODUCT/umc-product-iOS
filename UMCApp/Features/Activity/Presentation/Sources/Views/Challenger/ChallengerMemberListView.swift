@@ -46,7 +46,12 @@ struct ChallengerMemberListView: View {
                 fetchMembersUseCase: container.resolve(FetchMembersUseCaseProtocol.self),
                 errorHandler: errorHandler,
                 userSessionManager: container.resolve(UserSessionManager.self),
-                mode: .challenger
+                mode: .challenger,
+                initialGisuId: AppStorageKey.gisuIdString(),
+                generationProvider: {
+                    try await container.resolve(MemberAdministrationUseCaseProtocol.self)
+                        .fetchGenerations()
+                }
             )
         )
     }
@@ -73,6 +78,34 @@ struct ChallengerMemberListView: View {
         }
         .task {
             await viewModel.fetchMembers()
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            HStack {
+                Text("활동 기수")
+                    .appFont(.subheadline, color: .grey700)
+                Spacer()
+                Menu {
+                    ForEach(viewModel.generations, id: \.id) { generation in
+                        Button {
+                            Task { await viewModel.selectGeneration(generation.id) }
+                        } label: {
+                            if generation.id == viewModel.selectedGisuId {
+                                Label(generation.name, systemImage: "checkmark")
+                            } else {
+                                Text(generation.name)
+                            }
+                        }
+                    }
+                } label: {
+                    Label(viewModel.selectedGenerationTitle, systemImage: "chevron.down")
+                        .appFont(.subheadline, weight: .semibold)
+                        .frame(minHeight: DefaultConstant.minimumTouchTarget)
+                }
+                .disabled(viewModel.generations.isEmpty)
+                .accessibilityLabel("활동 기수 선택, \(viewModel.selectedGenerationTitle)")
+            }
+            .padding(.horizontal, DefaultConstant.defaultSafeHorizon)
+            .background(Color.Surface.canvas)
         }
         .searchable(text: $viewModel.searchText)
         .searchToolbarBehavior(.minimize)
