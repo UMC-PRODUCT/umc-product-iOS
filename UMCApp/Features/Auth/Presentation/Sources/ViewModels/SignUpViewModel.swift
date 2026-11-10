@@ -7,6 +7,7 @@
 
 import AuthDomain
 import CoreDI
+import CoreDomain
 import Foundation
 import UMCFoundation
 
@@ -27,6 +28,8 @@ final class SignUpViewModel {
     private let fetchSignUpDataUseCase: FetchSignUpDataUseCaseProtocol
     private let registerUseCase: RegisterUseCaseProtocol
     private let loginUseCase: LoginUseCaseProtocol
+    private let fetchMemberProfileUseCase: FetchMemberProfileUseCaseProtocol
+    private let syncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol
     private let errorHandler: ErrorHandler
 
     /// 이메일 인증(발송·검증·재전송) 상태와 액션 — `EmailVerificationFlow`에 위임한다.
@@ -52,6 +55,9 @@ final class SignUpViewModel {
     /// (예: Apple의 1회용 `authorizationCode` 소비)에 `true`가 된다.
     private(set) var requiresManualLoginAfterRegister = false
 
+    /// 가입 후 프로필 조회로 확인한 메인 진입 가능 여부
+    private(set) var isApprovedAfterRegister = false
+
     // MARK: - Init
 
     init(
@@ -67,6 +73,8 @@ final class SignUpViewModel {
         self.fetchSignUpDataUseCase = container.resolve(FetchSignUpDataUseCaseProtocol.self)
         self.registerUseCase = container.resolve(RegisterUseCaseProtocol.self)
         self.loginUseCase = container.resolve(LoginUseCaseProtocol.self)
+        self.fetchMemberProfileUseCase = container.resolve(FetchMemberProfileUseCaseProtocol.self)
+        self.syncProfileStorageUseCase = container.resolve(SyncProfileStorageUseCaseProtocol.self)
         self.errorHandler = errorHandler
 
         let trimmedEmail = initialEmail?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -130,6 +138,7 @@ final class SignUpViewModel {
         let submittedRevision = nicknameAvailability.revision
         registerState = .loading
         requiresManualLoginAfterRegister = false
+        isApprovedAfterRegister = false
 
         let agreements = termsAgreementFlow.termsAgreements.map {
             TermsAgreement(termsId: $0.key, isAgreed: $0.value)
@@ -154,6 +163,9 @@ final class SignUpViewModel {
                 }
             }
 
+            if !requiresManualLoginAfterRegister {
+                isApprovedAfterRegister = await resolveApprovalStatus()
+            }
             registerState = .loaded(result.memberId)
         } catch RegistrationError.nicknameAlreadyUsed {
             registerState = .idle
@@ -169,6 +181,18 @@ final class SignUpViewModel {
     }
 
     // MARK: - Private Function
+
+    /// 프로필 조회가 실패하면 가입 완료는 유지하고 승인 대기로 처리한다.
+    private func resolveApprovalStatus() async -> Bool {
+        do {
+            let profile = try await fetchMemberProfileUseCase.execute()
+            guard profile.isApproved else { return false }
+            syncProfileStorageUseCase.execute(profile: profile)
+            return true
+        } catch {
+            return false
+        }
+    }
 
     /// 가입 직후 서버가 세션 토큰을 발급하지 않은 경우, 가입 직전 사용한 소셜 자격으로
     /// 재로그인해 세션을 복구한다 (레거시 `restoreSessionAfterRegisterIfNeeded` 대응).

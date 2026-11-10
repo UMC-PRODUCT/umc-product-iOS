@@ -180,12 +180,7 @@ public struct SignUpView: View {
         }
     }
 
-    /// 가입 완료 처리: 세션 확립 여부에 따라 다음 화면을 분기한다.
-    ///
-    /// 소셜 신규가입 회원은 이 시점에 기수(세대)가 배정되지 않았으므로 `showMain()`으로는
-    /// 분기하지 않는다. 가입 직후 세션이 정상 확립됐다면(`requiresManualLoginAfterRegister == false`)
-    /// 승인 대기 화면으로 바로 이동하고, 세션 복구에 실패했다면 인증된 API가 필요한
-    /// 승인 대기 화면 대신 로그인 화면에서 다시 로그인하도록 안내한다.
+    /// 세션 복구와 프로필 승인 판정에 따라 가입 완료 화면을 분기한다.
     private func handleRegisterStateChange(_ newState: Loadable<String>) {
         guard case .loaded = newState else { return }
         if viewModel.requiresManualLoginAfterRegister {
@@ -195,6 +190,8 @@ public struct SignUpView: View {
                 positiveBtnTitle: Constants.manualLoginConfirmTitle,
                 positiveBtnAction: { appFlow.showLogin() }
             )
+        } else if viewModel.isApprovedAfterRegister {
+            appFlow.showMain()
         } else {
             alertPrompt = AlertPrompt(
                 title: Constants.completedTitle,

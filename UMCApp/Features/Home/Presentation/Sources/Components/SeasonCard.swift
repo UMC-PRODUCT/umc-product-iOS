@@ -30,12 +30,7 @@ struct SeasonCard: View, Equatable {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            icon
-            Spacer(minLength: 0)
-            title
-            value
-        }
+        content
         .padding(Constants.mainPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(minHeight: Constants.cardHeight)
@@ -46,6 +41,30 @@ struct SeasonCard: View, Equatable {
     }
 
     // MARK: - Component
+
+    @ViewBuilder
+    private var content: some View {
+        if seasonType == .productAccount {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing12) {
+                HStack(spacing: DefaultSpacing.spacing8) {
+                    icon.accessibilityHidden(true)
+                    Text("UMC PRODUCT")
+                        .appFont(.callout, weight: .semibold, color: .grey900)
+                }
+                Text("프로덕트 전용 계정으로 이용 중입니다")
+                    .appFont(.subheadline, color: .grey600)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .accessibilityElement(children: .combine)
+        } else {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+                icon
+                Spacer(minLength: 0)
+                title
+                value
+            }
+        }
+    }
 
     private var icon: some View {
         Image(systemName: iconName)
@@ -61,6 +80,8 @@ struct SeasonCard: View, Equatable {
     @ViewBuilder
     private var value: some View {
         switch seasonType {
+        case .productAccount:
+            EmptyView()
         case .days(let count):
             Text("\(count)일")
                 .appFont(.title3, weight: .semibold, color: .grey900)
@@ -73,6 +94,8 @@ struct SeasonCard: View, Equatable {
 
     private var iconName: String {
         switch seasonType {
+        case .productAccount:
+            "person.crop.rectangle"
         case .days:
             "flame.fill"
         case .gens:
@@ -82,6 +105,8 @@ struct SeasonCard: View, Equatable {
 
     private var titleText: String {
         switch seasonType {
+        case .productAccount:
+            "UMC PRODUCT"
         case .days:
             "누적 활동일"
         case .gens:

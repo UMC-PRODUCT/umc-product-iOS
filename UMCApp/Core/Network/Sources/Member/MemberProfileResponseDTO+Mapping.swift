@@ -106,7 +106,8 @@ extension MemberProfileResponseDTO {
             profileImageLink: profileImageLink,
             status: status,
             externalLinks: domainExternalLinks,
-            challengerRecords: domainChallengerRecords
+            challengerRecords: domainChallengerRecords,
+            isUmcProduct: isUmcProduct
         )
     }
 

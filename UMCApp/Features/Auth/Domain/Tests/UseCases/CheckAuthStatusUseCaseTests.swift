@@ -50,6 +50,18 @@ private func makeUseCase(
 @Suite("CheckAuthStatusUseCase — 부트스트랩 인증 상태 판정")
 struct CheckAuthStatusUseCaseTests {
 
+    @Test("기수 없는 프로덕트 계정은 자동 로그인 승인된다")
+    func approvesProductAccountWithoutGenerations() async {
+        let repository = MockAuthRepository()
+        repository.hasSessionResult = true
+        let fetchProfile = MockFetchMemberProfileUseCase()
+        fetchProfile.result = .success(Profile(
+            memberId: "42", name: "제품", nickname: "제품", generations: [], isUmcProduct: true
+        ))
+        let useCase = makeUseCase(repository: repository, fetchMemberProfileUseCase: fetchProfile)
+        #expect(await useCase.execute() == .approved)
+    }
+
     @Test("토큰이 없으면 세션 갱신·프로필 조회 없이 notLoggedIn")
     func returnsNotLoggedInWhenNoSession() async {
         let repository = MockAuthRepository()

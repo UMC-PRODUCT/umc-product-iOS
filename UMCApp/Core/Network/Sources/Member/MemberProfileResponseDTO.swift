@@ -34,6 +34,7 @@ public struct MemberProfileResponseDTO: Codable {
     public let profile: MemberProfileExternalLinksDTO?
     public let status: MemberStatus
     public let roles: [MemberProfileRoleDTO]
+    public let isUmcProduct: Bool
     public let challengerRecords: [MemberProfileChallengerRecordDTO]
 
     private enum CodingKeys: String, CodingKey {
@@ -47,6 +48,7 @@ public struct MemberProfileResponseDTO: Codable {
         case profile
         case status
         case roles
+        case isUmcProduct
         case challengerRecords
     }
 
@@ -66,6 +68,7 @@ public struct MemberProfileResponseDTO: Codable {
             forKey: .profile
         )
         status = try container.decodeIfPresent(MemberStatus.self, forKey: .status) ?? .active
+        isUmcProduct = try container.decodeIfPresent(Bool.self, forKey: .isUmcProduct) ?? false
         roles = try container.decodeIfPresent([MemberProfileRoleDTO].self, forKey: .roles) ?? []
         challengerRecords = try container.decodeIfPresent(
             [MemberProfileChallengerRecordDTO].self,
@@ -86,6 +89,7 @@ public struct MemberProfileResponseDTO: Codable {
         try container.encodeIfPresent(profileImageLink, forKey: .profileImageLink)
         try container.encodeIfPresent(profile, forKey: .profile)
         try container.encode(status, forKey: .status)
+        try container.encode(isUmcProduct, forKey: .isUmcProduct)
         try container.encode(roles, forKey: .roles)
         try container.encode(challengerRecords, forKey: .challengerRecords)
     }

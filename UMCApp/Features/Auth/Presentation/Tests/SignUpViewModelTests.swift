@@ -8,6 +8,7 @@
 import Testing
 import Foundation
 import CoreDI
+import CoreDomain
 import AuthDomain
 import UMCFoundation
 @testable import AuthPresentation
@@ -211,6 +212,38 @@ struct SignUpViewModelEmailVerificationTests {
 @MainActor
 @Suite("SignUpViewModel — 회원가입")
 struct SignUpViewModelRegisterTests {
+
+    @Test("소셜 가입 후 프로덕트 권한으로 메인 진입하고 프로필을 동기화한다")
+    func productRegistrationIsApproved() async throws {
+        let fetchProfile = MockFetchMemberProfileUseCase()
+        fetchProfile.result = .success(Profile(
+            memberId: "42", name: "프로덕트", nickname: "제품", generations: [],
+            isUmcProduct: true
+        ))
+        let syncProfile = MockSyncProfileStorageUseCase()
+        let registerUseCase = MockRegisterUseCase()
+        registerUseCase.result = .success(RegisterResult(memberId: "42", sessionEstablished: true))
+        let viewModel = try await makeValidFormViewModel(
+            registerUseCase: registerUseCase,
+            fetchProfile: fetchProfile, syncProfile: syncProfile
+        )
+
+        await viewModel.register()
+
+        #expect(viewModel.isApprovedAfterRegister)
+        #expect(!viewModel.requiresManualLoginAfterRegister)
+        #expect(syncProfile.receivedProfile?.memberId == "42")
+    }
+
+    @Test("가입 후 프로필 조회 실패는 승인 대기로 처리한다")
+    func profileFailureDoesNotApproveRegistration() async throws {
+        let registerUseCase = MockRegisterUseCase()
+        registerUseCase.result = .success(RegisterResult(memberId: "42", sessionEstablished: true))
+        let viewModel = try await makeValidFormViewModel(registerUseCase: registerUseCase)
+        await viewModel.register()
+        #expect(!viewModel.isApprovedAfterRegister)
+        #expect(!viewModel.requiresManualLoginAfterRegister)
+    }
 
     @Test("폼이 유효하지 않으면 register()는 아무 것도 하지 않는다")
     func registerNoOpsWhenFormInvalid() async {
@@ -464,6 +497,8 @@ private func makeViewModel(
     resendEmailVerificationUseCase: ResendEmailVerificationUseCaseProtocol? = nil,
     registerUseCase: RegisterUseCaseProtocol? = nil,
     loginUseCase: LoginUseCaseProtocol? = nil,
+    fetchProfile: FetchMemberProfileUseCaseProtocol? = nil,
+    syncProfile: SyncProfileStorageUseCaseProtocol? = nil,
     errorHandler: ErrorHandler? = nil,
     verificationToken: String = "oauth-verification-token",
     initialEmail: String? = nil,
@@ -486,6 +521,12 @@ private func makeViewModel(
     container.register(RegisterUseCaseProtocol.self) {
         registerUseCase ?? MockRegisterUseCase()
     }
+    container.register(FetchMemberProfileUseCaseProtocol.self) {
+        fetchProfile ?? MockFetchMemberProfileUseCase()
+    }
+    container.register(SyncProfileStorageUseCaseProtocol.self) {
+        syncProfile ?? MockSyncProfileStorageUseCase()
+    }
     container.register(LoginUseCaseProtocol.self) {
         loginUseCase ?? MockLoginUseCase()
     }
@@ -505,6 +546,8 @@ private func makeViewModel(
 private func makeValidFormViewModel(
     registerUseCase: RegisterUseCaseProtocol? = nil,
     loginUseCase: LoginUseCaseProtocol? = nil,
+    fetchProfile: FetchMemberProfileUseCaseProtocol? = nil,
+    syncProfile: SyncProfileStorageUseCaseProtocol? = nil,
     errorHandler: ErrorHandler? = nil,
     postRegisterLoginContext: PostRegisterLoginContext? = nil
 ) async throws -> SignUpViewModel {
@@ -529,6 +572,8 @@ private func makeValidFormViewModel(
         verifyEmailCodeUseCase: verifyEmailCodeUseCase,
         registerUseCase: registerUseCase,
         loginUseCase: loginUseCase,
+        fetchProfile: fetchProfile,
+        syncProfile: syncProfile,
         errorHandler: errorHandler,
         postRegisterLoginContext: postRegisterLoginContext
     )
@@ -741,4 +786,17 @@ struct NicknameAvailabilityTests {
         #expect(flow.state == .idle)
         #expect(!flow.canCheck)
     }
+}
+
+private final class MockFetchMemberProfileUseCase: FetchMemberProfileUseCaseProtocol,
+    @unchecked Sendable {
+    enum MockError: Error { case notStubbed }
+    var result: Result<Profile, Error> = .failure(MockError.notStubbed)
+    func execute() async throws -> Profile { try result.get() }
+}
+
+private final class MockSyncProfileStorageUseCase: SyncProfileStorageUseCaseProtocol,
+    @unchecked Sendable {
+    private(set) var receivedProfile: Profile?
+    func execute(profile: Profile) { receivedProfile = profile }
 }

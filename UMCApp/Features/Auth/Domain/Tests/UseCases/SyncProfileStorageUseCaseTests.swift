@@ -25,6 +25,27 @@ private func makeIsolatedUserDefaults() -> UserDefaults {
 @Suite("SyncProfileStorageUseCase — 프로필 로컬 저장소 동기화")
 struct SyncProfileStorageUseCaseTests {
 
+    @Test("무소속 프로덕트 계정은 자동 로그인만 허용하고 이전 소속과 운영 권한을 지운다")
+    func productAccountClearsMembershipWithoutGrantingAdmin() {
+        let defaults = makeIsolatedUserDefaults()
+        let session = UserSessionManager()
+        session.updateRole(.schoolPresident)
+        for key in [AppStorageKey.schoolId, AppStorageKey.gisuId, AppStorageKey.challengerId] {
+            defaults.set("previous", forKey: key)
+        }
+        SyncProfileStorageUseCase(userSessionManager: session, userDefaults: defaults).execute(
+            profile: Profile(
+                memberId: "42", name: "제품", nickname: "제품", generations: [], isUmcProduct: true
+            )
+        )
+        #expect(defaults.bool(forKey: AppStorageKey.canAutoLogin))
+        #expect(defaults.string(forKey: AppStorageKey.schoolId) == "")
+        #expect(defaults.string(forKey: AppStorageKey.gisuId) == "")
+        #expect(defaults.string(forKey: AppStorageKey.challengerId) == "")
+        #expect(session.currentRole == .challenger)
+        #expect(!session.canToggleAdminMode)
+    }
+
     @Test("관리 기수는 활동 이력이 아닌 최신 운영 역할의 서버 ID를 저장한다")
     func savesLatestManagementRoleGeneration() {
         let defaults = makeIsolatedUserDefaults()

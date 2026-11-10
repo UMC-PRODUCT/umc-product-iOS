@@ -48,6 +48,22 @@ struct LoginViewModelKakaoTests {
         #expect(syncProfileStorageUseCase.receivedProfile == profile)
     }
 
+    @Test("기수 없는 프로덕트 계정은 소셜 로그인 후 메인 진입 상태가 된다")
+    func productAccountSetsLoaded() async {
+        let loginUseCase = MockLoginUseCase()
+        loginUseCase.executeKakaoResult = .success(.existingMember)
+        let fetchProfile = MockFetchMemberProfileUseCase()
+        let profile = Profile(
+            memberId: "42", name: "제품", nickname: "제품", generations: [], isUmcProduct: true
+        )
+        fetchProfile.result = .success(profile)
+        let viewModel = makeViewModel(
+            loginUseCase: loginUseCase, fetchMemberProfileUseCase: fetchProfile
+        )
+        await viewModel.loginWithKakao()
+        #expect(viewModel.loginState == .loaded(profile))
+    }
+
     @Test("기존 회원 + 승인 대기(기수 없음) → .failed(.auth(.pendingApproval)), 동기화는 수행하지 않는다")
     func pendingApprovalSetsFailedPendingApproval() async {
         let loginUseCase = MockLoginUseCase()
