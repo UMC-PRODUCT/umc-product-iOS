@@ -134,7 +134,7 @@ struct ProjectApplicationEditorView: View {
                         text: textBinding(questionId: questionId),
                         axis: question.type == .longText ? .vertical : .horizontal
                     )
-                    .disabled(!viewModel.canEdit)
+                    .disabled(!viewModel.canEdit || viewModel.isPerformingAction)
                 case .file, .schedule, .unknown:
                     Label(
                         "이 질문 유형은 현재 앱에서 작성할 수 없어요.",
@@ -144,13 +144,22 @@ struct ProjectApplicationEditorView: View {
                 }
             }
             .padding(.vertical, DefaultSpacing.spacing4)
-            .disabled(!viewModel.canEdit)
+            .disabled(!viewModel.canEdit || viewModel.isPerformingAction)
         }
     }
 
     private var actionSection: some View {
         Section {
-            if viewModel.canEdit {
+            if viewModel.status == .submitted {
+                if case .failed = viewModel.matchingRounds {
+                    Button("수정 가능 기간 다시 확인") {
+                        Task { await viewModel.fetchEditingRounds() }
+                    }
+                    .disabled(viewModel.isPerformingAction)
+                }
+                Button("수정 저장", action: save)
+                    .disabled(!viewModel.canSave || viewModel.isPerformingAction)
+            } else if viewModel.canEdit {
                 Button("임시 저장", action: save)
                     .disabled(!viewModel.canSave || viewModel.isPerformingAction)
                 Button("지원서 제출", action: confirmSubmission)
@@ -164,8 +173,10 @@ struct ProjectApplicationEditorView: View {
             if let unsupportedQuestion = viewModel.unsupportedQuestions.first {
                 Text(
                     "‘\(unsupportedQuestion.title)’ 질문은 아직 지원하지 않아 "
-                        + "임시 저장과 제출을 할 수 없어요."
+                        + "저장과 제출을 할 수 없어요."
                 )
+            } else if let message = viewModel.submittedEditingMessage {
+                Text(message)
             } else {
                 Text("현재 상태: \(viewModel.status?.title ?? "작성 중")")
             }
@@ -211,7 +222,7 @@ struct ProjectApplicationEditorView: View {
     private func confirmSubmission() {
         alertPrompt = AlertPrompt(
             title: "지원서 제출",
-            message: "제출한 지원서는 더 이상 수정할 수 없어요. 제출할까요?",
+            message: "제출 후에도 해당 매칭 차수의 지원 기간에는 수정할 수 있어요. 제출할까요?",
             positiveBtnTitle: "제출",
             positiveBtnAction: submit,
             negativeBtnTitle: "취소"

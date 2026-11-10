@@ -128,6 +128,132 @@ struct ProjectApplicationFlowViewModelTests {
         #expect(viewModel.canSave == false)
     }
 
+    @Test("제출본은 같은 차수의 시작과 종료 시각을 포함한 기간에만 수정한다")
+    func submittedEditingUsesAppliedRoundWindow() async {
+        for timestamp in [-1.0, 0, 50, 100, 101] {
+            let (viewModel, _, _) = submittedEditor(time: timestamp)
+            await viewModel.fetch()
+            #expect(viewModel.canEdit == (0...100).contains(timestamp))
+        }
+    }
+
+    @Test("다른 차수가 열려 있어도 해당 지원서의 차수가 없으면 수정하지 않는다")
+    func unrelatedRoundDoesNotEnableEditing() async {
+        let (viewModel, application, _) = submittedEditor(time: 50)
+        application.detail = ProjectApplicationDetail(
+            applicationId: "301", applicant: Self.applicant,
+            matchingRound: .init(id: "202", type: .planDeveloper, phase: .second),
+            status: nil, submittedAt: nil, statusChangedAt: nil,
+            formResponse: Self.formResponse(status: .submitted)
+        )
+        await viewModel.fetch()
+        viewModel.selectedMatchingRoundId = "other-round"
+        #expect(!viewModel.canSave)
+    }
+
+    @Test("수정 저장은 전체 답변을 PUT하고 재제출하지 않는다")
+    func submittedSaveOnlyUpdatesAnswers() async throws {
+        let (viewModel, application, _) = submittedEditor(time: 50)
+        await viewModel.fetch()
+        viewModel.updateText(questionId: "401", text: "수정한 지원 동기")
+        try await viewModel.save()
+        #expect(application.updatedApplications.first?.answers == [
+            ProjectAnswerInput(questionId: "401", textValue: "수정한 지원 동기")
+        ])
+        #expect(application.createdApplications.isEmpty)
+        #expect(application.submittedApplications.isEmpty)
+        #expect(viewModel.status == .submitted)
+        await #expect(throws: AppError.self) { try await viewModel.submit() }
+        #expect(application.updatedApplications.count == 1)
+    }
+
+    @Test("제출본 필수 답변 누락은 요청 전에 차단한다")
+    func submittedSaveValidatesRequiredAnswers() async {
+        let (viewModel, application, _) = submittedEditor(time: 50)
+        await viewModel.fetch()
+        viewModel.updateText(questionId: "401", text: "  ")
+        await #expect(throws: AppError.self) { try await viewModel.save() }
+        #expect(application.updatedApplications.isEmpty)
+    }
+
+    @Test("화면을 연 뒤 기간이 종료되면 저장하지 않는다")
+    func expirationBeforeSaveBlocksRequest() async {
+        var currentTime = Date(timeIntervalSince1970: 50)
+        let application = ProjectApplicationUseCaseSpy()
+        application.detail = Self.hiddenDecisionApplicationDetail
+        let rounds = ProjectMatchingRoundUseCaseSpy()
+        rounds.rounds = [Self.matchingRound]
+        let viewModel = ProjectApplicationEditorViewModel(
+            projectId: "101", applicationId: "301", applicationUseCase: application,
+            matchingRoundUseCase: rounds, chapterId: nil, now: { currentTime }
+        )
+        await viewModel.fetch()
+        currentTime = Date(timeIntervalSince1970: 101)
+        await #expect(throws: AppError.self) { try await viewModel.save() }
+        #expect(application.updatedApplications.isEmpty)
+    }
+
+    @Test("판정 또는 철회 상태는 기간 내에도 수정할 수 없다")
+    func terminalStatesRemainReadOnly() async {
+        for status in [ProjectApplicationStatus.approved, .rejected, .cancelled] {
+            let (viewModel, application, _) = submittedEditor(time: 50)
+            application.detail = ProjectApplicationDetail(
+                applicationId: "301", applicant: Self.applicant,
+                matchingRound: .init(id: "201", type: .planDeveloper, phase: .first),
+                status: status, submittedAt: nil, statusChangedAt: nil,
+                formResponse: Self.formResponse(status: .submitted)
+            )
+            await viewModel.fetch()
+            #expect(!viewModel.canEdit)
+        }
+    }
+
+    @Test("기간 조회 실패 후 다시 확인하면 입력을 보존하고 수정을 허용한다")
+    func failedPeriodLookupCanRetryWithoutLosingAnswers() async {
+        let (viewModel, _, rounds) = submittedEditor(time: 50)
+        rounds.fetchError = TestError.unused
+        await viewModel.fetch()
+        #expect(!viewModel.canEdit)
+        #expect(viewModel.form.value != nil)
+        viewModel.updateText(questionId: "401", text: "보존할 답변")
+        rounds.fetchError = nil
+        await viewModel.fetchEditingRounds()
+        #expect(viewModel.canEdit)
+        #expect(viewModel.answers["401"]?.text == "보존할 답변")
+    }
+
+    @Test("서버가 기간 종료를 반환하면 답변을 보존하고 후속 수정을 막는다")
+    func serverClosedRoundPreservesAnswers() async {
+        let (viewModel, application, _) = submittedEditor(time: 50)
+        await viewModel.fetch()
+        viewModel.updateText(questionId: "401", text: "보존할 답변")
+        application.updateError = AppError.network(.requestFailed(
+            statusCode: 400, data: Data(#"{"code":"PROJECT-0208"}"#.utf8)
+        ))
+        await #expect(throws: AppError.self) { try await viewModel.save() }
+        #expect(!viewModel.canEdit)
+        #expect(viewModel.answers["401"]?.text == "보존할 답변")
+        #expect(application.submittedApplications.isEmpty)
+    }
+
+    private func submittedEditor(time: TimeInterval) -> (
+        ProjectApplicationEditorViewModel,
+        ProjectApplicationUseCaseSpy,
+        ProjectMatchingRoundUseCaseSpy
+    ) {
+        let application = ProjectApplicationUseCaseSpy()
+        application.detail = Self.hiddenDecisionApplicationDetail
+        application.updatedResult = .init(applicationId: "301", status: .submitted)
+        let rounds = ProjectMatchingRoundUseCaseSpy()
+        rounds.rounds = [Self.matchingRound]
+        let viewModel = ProjectApplicationEditorViewModel(
+            projectId: "101", applicationId: "301", applicationUseCase: application,
+            matchingRoundUseCase: rounds, chapterId: nil,
+            now: { Date(timeIntervalSince1970: time) }
+        )
+        return (viewModel, application, rounds)
+    }
+
     @Test("파일·일정 질문은 잘못된 textValue 저장 요청을 만들지 않는다")
     func unsupportedAnswerTypesBlockSaving() async {
         for questionType in [ProjectQuestionType.file, .schedule] {
@@ -480,6 +606,7 @@ private final class ProjectApplicationUseCaseSpy:
     var decisionResult = ProjectApplicationResult(applicationId: "301", status: .approved)
     var createdApplications: [CreateCall] = []
     var updatedApplications: [UpdateCall] = []
+    var updateError: Error?
     var submittedApplications: [SubmitCall] = []
     var cancelledApplications: [CancelCall] = []
     var singleApplicationQueries: [SingleQuery] = []
@@ -506,6 +633,7 @@ private final class ProjectApplicationUseCaseSpy:
     func updateAnswers(projectId: String, applicationId: String,
                        answers: [ProjectAnswerInput]) async throws -> ProjectApplicationResult {
         updatedApplications.append(.init(applicationId: applicationId, answers: answers))
+        if let updateError { throw updateError }
         return updatedResult
     }
     func submitApplication(projectId: String, applicationId: String) async throws
@@ -556,9 +684,13 @@ private final class ProjectMatchingRoundUseCaseSpy:
     @unchecked Sendable {
 
     var rounds: [ProjectMatchingRound] = []
+    var fetchError: Error?
 
     func fetchMatchingRounds(chapterId: String?, time: Date?) async throws
-        -> [ProjectMatchingRound] { rounds }
+        -> [ProjectMatchingRound] {
+        if let fetchError { throw fetchError }
+        return rounds
+    }
     func createMatchingRound(_ draft: ProjectMatchingRoundDraft) async throws -> String {
         throw TestError.unused
     }
