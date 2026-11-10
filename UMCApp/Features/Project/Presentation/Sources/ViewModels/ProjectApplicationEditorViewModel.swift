@@ -34,6 +34,9 @@ final class ProjectApplicationEditorViewModel {
     private let applicationUseCase: ProjectApplicationUseCaseProtocol
     private let matchingRoundUseCase: ProjectMatchingRoundUseCaseProtocol
     private let chapterId: String?
+    private let now: () -> Date
+    private var appliedMatchingRoundId: String?
+    private var submittedEditingRejected = false
 
     // MARK: - Init
 
@@ -44,6 +47,7 @@ final class ProjectApplicationEditorViewModel {
         self.applicationUseCase = provider.applicationUseCase
         self.matchingRoundUseCase = provider.matchingRoundUseCase
         self.chapterId = UserDefaults.standard.string(forKey: AppStorageKey.chapterId)
+        self.now = Date.init
     }
 
     init(
@@ -51,18 +55,43 @@ final class ProjectApplicationEditorViewModel {
         applicationId: String?,
         applicationUseCase: ProjectApplicationUseCaseProtocol,
         matchingRoundUseCase: ProjectMatchingRoundUseCaseProtocol,
-        chapterId: String?
+        chapterId: String?,
+        now: @escaping () -> Date = Date.init
     ) {
         self.projectId = projectId
         self.applicationId = applicationId
         self.applicationUseCase = applicationUseCase
         self.matchingRoundUseCase = matchingRoundUseCase
         self.chapterId = chapterId
+        self.now = now
     }
 
     // MARK: - Computed Property
 
-    var canEdit: Bool { applicationId == nil || status == .draft }
+    var canEdit: Bool {
+        applicationId == nil || status == .draft || canEditSubmittedApplication
+    }
+
+    var canEditSubmittedApplication: Bool {
+        guard status == .submitted, !submittedEditingRejected,
+              let appliedMatchingRoundId,
+              let round = matchingRounds.value?.first(where: { $0.id == appliedMatchingRoundId }),
+              round.phase != .randomMatching,
+              let startsAt = round.startsAt, let endsAt = round.endsAt else { return false }
+        let currentTime = now()
+        return startsAt <= currentTime && currentTime <= endsAt
+    }
+
+    var submittedEditingMessage: String? {
+        guard status == .submitted else { return nil }
+        if canEditSubmittedApplication {
+            return "제출한 지원서는 해당 매칭 차수의 지원 기간에만 수정할 수 있어요."
+        }
+        if matchingRounds.value == nil {
+            return "수정 가능 기간을 확인하지 못했어요. 다시 불러와 주세요."
+        }
+        return "해당 매칭 차수의 지원 기간이 아니어서 수정할 수 없어요."
+    }
 
     var canCancel: Bool { status == .draft || status == .submitted }
 
@@ -118,13 +147,18 @@ final class ProjectApplicationEditorViewModel {
     }
 
     func save() async throws {
+        guard !isPerformingAction else { return }
+        try await saveAnswers()
+    }
+
+    private func saveAnswers() async throws {
         if let unsupportedQuestion = unsupportedQuestions.first {
             throw Self.unsupportedQuestionError(unsupportedQuestion)
         }
         guard canSave else {
             throw AppError.validation(.invalidValue(
                 field: "지원서",
-                reason: "매칭 차수와 필수 답변을 확인해 주세요"
+                reason: submittedEditingMessage ?? "매칭 차수와 필수 답변을 확인해 주세요"
             ))
         }
         let inputs = try answerInputs()
@@ -146,17 +180,34 @@ final class ProjectApplicationEditorViewModel {
             status = created.status
             resolvedApplicationId = created.applicationId
         }
-        let updated = try await applicationUseCase.updateAnswers(
-            projectId: projectId,
-            applicationId: resolvedApplicationId,
-            answers: inputs
-        )
-        status = updated.status
+        do {
+            let updated = try await applicationUseCase.updateAnswers(
+                projectId: projectId,
+                applicationId: resolvedApplicationId,
+                answers: inputs
+            )
+            status = updated.status
+        } catch {
+            if status == .submitted, Self.isClosedRoundError(error) {
+                submittedEditingRejected = true
+                throw AppError.validation(.invalidValue(
+                    field: "지원서",
+                    reason: "해당 매칭 차수의 지원 기간이 종료되어 수정할 수 없어요"
+                ))
+            }
+            throw error
+        }
     }
 
     func submit() async throws {
-        try await save()
-        guard let applicationId else { return }
+        guard !isPerformingAction else { return }
+        guard applicationId == nil || status == .draft else {
+            throw AppError.validation(.invalidValue(
+                field: "지원서", reason: "이미 제출한 지원서는 수정 저장을 이용해 주세요"
+            ))
+        }
+        try await saveAnswers()
+        guard let applicationId, status == .draft else { return }
         isPerformingAction = true
         defer { isPerformingAction = false }
         let submitted = try await applicationUseCase.submitApplication(
@@ -164,6 +215,8 @@ final class ProjectApplicationEditorViewModel {
             applicationId: applicationId
         )
         status = submitted.status
+        appliedMatchingRoundId = selectedMatchingRoundId
+        await fetchEditingRounds()
     }
 
     func cancel(reason: String?) async throws {
@@ -240,8 +293,39 @@ final class ProjectApplicationEditorViewModel {
             formResponseStatus: response.status
         )
         selectedMatchingRoundId = detail.matchingRound?.id
+        appliedMatchingRoundId = detail.matchingRound?.id
+        submittedEditingRejected = false
+        if status == .submitted { await fetchEditingRounds() }
         form = .loaded(snapshot)
         initializeAnswers(from: response.sections)
+    }
+
+    /// 전체 차수에서 지원서에 연결된 ID를 찾아 기간을 확인한다.
+    /// 현재 열린 다른 차수를 근거로 과거 지원서의 편집을 허용하지 않는다.
+    func fetchEditingRounds() async {
+        matchingRounds = .loading
+        do {
+            matchingRounds = .loaded(try await matchingRoundUseCase.fetchMatchingRounds(
+                chapterId: nil,
+                time: nil
+            ))
+        } catch {
+            matchingRounds = .failed(AppError.from(error))
+        }
+    }
+
+    private static func isClosedRoundError(_ error: Error) -> Bool {
+        switch AppError.from(error) {
+        case .repository(.serverError(let code, _)):
+            return code == "PROJECT-0208"
+        case .network(.requestFailed(_, let data)):
+            guard let data,
+                  let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            else { return false }
+            return body["code"] as? String == "PROJECT-0208"
+        default:
+            return false
+        }
     }
 
     private func fetchNewApplicationForm() async throws {
