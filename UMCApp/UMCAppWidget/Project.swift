@@ -13,6 +13,7 @@ let project = widgetExtensionProject(
     bundleId: "com.umc.product.widget",
     // 호스트 앱과 같은 iPhone 전용 (`UMCApp/Project.swift` 참조).
     destinations: [.iPhone],
+    resources: ["Resources/**"],
     entitlements: .file(path: "UMCAppWidget.entitlements"),
     dependencies: [
         .project(target: "CoreWidgetShared", path: .relativeToRoot("Core/WidgetShared")),

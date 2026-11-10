@@ -18,6 +18,7 @@ import ProjectDescription
 ///   - destinations: 지원 플랫폼 (기본값 iOS). watchOS Complication은 `[.appleWatch]`
 ///   - deploymentTargets: 배포 대상 (기본값 iOS 26.4)
 ///   - displayName: 위젯 갤러리 표시 이름
+///   - resources: 위젯 전용 이미지 등 리소스 (기본값 nil)
 ///   - entitlements: entitlements 파일 경로 (기본값 nil)
 ///   - dependencies: 의존성 목록
 public func widgetExtensionProject(
@@ -26,6 +27,7 @@ public func widgetExtensionProject(
     destinations: Destinations = .iOS,
     deploymentTargets: DeploymentTargets = .iOS("26.4"),
     displayName: String = "UMC",
+    resources: ResourceFileElements? = nil,
     entitlements: Entitlements? = nil,
     dependencies: [TargetDependency] = []
 ) -> Project {
@@ -55,6 +57,7 @@ public func widgetExtensionProject(
                     ]
                 ),
                 sources: ["Sources/**"],
+                resources: resources,
                 entitlements: entitlements,
                 dependencies: dependencies
             )

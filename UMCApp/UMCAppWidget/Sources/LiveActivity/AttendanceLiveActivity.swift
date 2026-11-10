@@ -32,10 +32,6 @@ struct AttendanceLiveActivity: Widget {
             let phase = context.displayedPhase
 
             return DynamicIsland {
-                DynamicIslandExpandedRegion(.leading) {
-                    AttendanceActivityHeader(title: attributes.title, phase: phase)
-                        .dynamicIsland(verticalPlacement: .belowIfTooWide)
-                }
                 DynamicIslandExpandedRegion(.bottom) {
                     AttendanceExpandedContent(attributes: attributes, phase: phase)
                 }
@@ -88,6 +84,24 @@ private extension ActivityViewContext<AttendanceActivityAttributes> {
         checkInStartAt: .now.addingTimeInterval(-60),
         onTimeEndAt: .now.addingTimeInterval(512),
         lateEndAt: .now.addingTimeInterval(1_800)
+    )
+) {
+    AttendanceLiveActivity()
+} contentStates: {
+    AttendanceActivityAttributes.ContentState(phase: .beforeCheckIn)
+    AttendanceActivityAttributes.ContentState(phase: .onTime)
+    AttendanceActivityAttributes.ContentState(phase: .late)
+    AttendanceActivityAttributes.ContentState(phase: .closed)
+}
+#Preview(
+    "Dynamic Island 단계",
+    as: .dynamicIsland(.expanded),
+    using: AttendanceActivityAttributes(
+        scheduleId: "1",
+        title: "UMC 12기 iOS 스터디 6주차 · 네트워크 실습 및 코드 리뷰",
+        checkInStartAt: .now.addingTimeInterval(-60),
+        onTimeEndAt: .now.addingTimeInterval(240),
+        lateEndAt: .now.addingTimeInterval(540)
     )
 ) {
     AttendanceLiveActivity()
