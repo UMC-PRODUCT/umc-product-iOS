@@ -27,6 +27,9 @@ public protocol MemberRepositoryProtocol {
     /// - Parameter page: 0-based 페이지 인덱스
     func fetchMembersPage(page: Int, mode: ActivityMode) async throws -> MemberPage
 
+    /// 선택한 서버 기수 ID로 구성원 페이지를 조회합니다.
+    func fetchMembersPage(page: Int, mode: ActivityMode, gisuId: String?) async throws -> MemberPage
+
     // MARK: - 챌린저 검색
 
     /// 이름/닉네임 키워드로 챌린저를 검색합니다 (cursor 기반).
@@ -93,4 +96,10 @@ public protocol MemberRepositoryProtocol {
     func fetchAttendanceRecords(
         memberId: String
     ) async throws -> [MemberAttendanceRecord]
+}
+
+public extension MemberRepositoryProtocol {
+    func fetchMembersPage(page: Int, mode: ActivityMode, gisuId: String?) async throws -> MemberPage {
+        try await fetchMembersPage(page: page, mode: mode)
+    }
 }

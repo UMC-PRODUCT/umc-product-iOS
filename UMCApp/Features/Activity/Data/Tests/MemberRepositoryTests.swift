@@ -411,8 +411,8 @@ struct MemberRepositoryListTests {
         #expect(member.generation == "10기, 11기")
     }
 
-    @Test("챌린저 모드는 관리 기수가 없어도 기존 학교 범위를 유지한다")
-    func challengerModePreservesSchoolOnlyScope() async throws {
+    @Test("챌린저 모드는 관리 기수가 없어도 현재 활동 기수로 조회한다")
+    func challengerModeUsesCurrentGeneration() async throws {
         let (sut, stub) = makeRepository(
             .success(Fixture.success(Fixture.offsetPage(items: []))),
             context: StubMemberContext(managementGisuId: nil)
@@ -422,8 +422,26 @@ struct MemberRepositoryListTests {
 
         #expect(page.members.isEmpty)
         #expect(stub.requestedParameters.first?["schoolId"] as? String == "5")
-        #expect(stub.requestedParameters.first?["gisuId"] == nil)
-        #expect(page.gisuId == nil)
+        #expect(stub.requestedParameters.first?["gisuId"] as? String == "70")
+        #expect(page.gisuId == "70")
+    }
+
+    @Test("선택 기수는 세션 기수보다 우선하며 다른 기수의 challengerId를 사용하지 않는다")
+    func challengerSelectionUsesMatchingRecord() async throws {
+        let page = Fixture.offsetPage(items: [Fixture.offsetItem(
+            memberId: "100", challengerId: "C9", gisu: 9
+        )])
+        let profile = Fixture.memberProfile(records: [
+            Fixture.record(challengerId: "C11", gisu: 11, gisuId: "3", points: []),
+            Fixture.record(challengerId: "C9", gisu: 9, gisuId: "90", points: [])
+        ])
+        let (sut, stub) = makeRepository([
+            .success(Fixture.success(page)), .success(Fixture.success(profile))
+        ])
+        let result = try await sut.fetchMembersPage(page: 0, mode: .challenger, gisuId: "90")
+        #expect(stub.requestedParameters.first?["gisuId"] as? String == "90")
+        #expect(result.members.first?.challengerID == "C9")
+        #expect(result.members.first?.generation == "9기")
     }
 
     @Test("fetchMembersPage — 오프셋 검색 후 프로필을 보강하고 페이지 메타를 매핑한다")

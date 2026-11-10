@@ -27,6 +27,9 @@ public protocol FetchMembersUseCaseProtocol {
     /// - Parameter page: 0-based 페이지 인덱스
     func executePage(page: Int, mode: ActivityMode) async throws -> MemberPage
 
+    /// 선택한 서버 기수 ID로 구성원 페이지를 조회합니다.
+    func executePage(page: Int, mode: ActivityMode, gisuId: String?) async throws -> MemberPage
+
     // MARK: - 상벌점 부여 / 삭제
 
     /// 챌린저에게 포인트를 부여합니다.
@@ -76,4 +79,10 @@ public protocol FetchMembersUseCaseProtocol {
     func fetchAttendanceRecords(
         memberId: String
     ) async throws -> [MemberAttendanceRecord]
+}
+
+public extension FetchMembersUseCaseProtocol {
+    func executePage(page: Int, mode: ActivityMode, gisuId: String?) async throws -> MemberPage {
+        try await executePage(page: page, mode: mode)
+    }
 }
