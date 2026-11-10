@@ -483,3 +483,150 @@ struct AuthRepositoryLocalCredentialTests {
         }
     }
 }
+
+// MARK: - Suite: OAuth 로그인 분기
+
+@MainActor
+@Suite("AuthRepository — Google OAuth 로그인 분기")
+struct AuthRepositoryGoogleLoginTests {
+
+    @Test("LOGIN_SUCCESS는 세션 토큰을 저장하고 기존 회원을 반환한다")
+    func loginSuccessReturnsExistingMember() async throws {
+        let (sut, network, tokenStore) = makeRepository(.success(oauthResponse("""
+        {
+            "success": true,
+            "code": "LOGIN_SUCCESS",
+            "accessToken": "google-access",
+            "refreshToken": "google-refresh",
+            "oAuthVerificationToken": null
+        }
+        """)))
+
+        let result = try await sut.loginGoogle(accessToken: "provider-token")
+
+        guard case .existingMember = result else {
+            Issue.record("로그인 성공한 기존 회원을 신규 회원으로 분류했습니다")
+            return
+        }
+        #expect(network.requestWithoutAuthCount == 1)
+        #expect(await tokenStore.saveCallCount == 1)
+        #expect(await tokenStore.savedAccessToken == "google-access")
+        #expect(await tokenStore.savedRefreshToken == "google-refresh")
+    }
+
+    @Test("REGISTER_REQUIRED는 가입 인증 토큰을 반환하고 세션을 저장하지 않는다")
+    func registrationRequiredReturnsNewMember() async throws {
+        let (sut, _, tokenStore) = makeRepository(.success(oauthResponse("""
+        {
+            "success": true,
+            "code": "REGISTER_REQUIRED",
+            "accessToken": null,
+            "refreshToken": null,
+            "oAuthVerificationToken": "google-verification"
+        }
+        """)))
+
+        let result = try await sut.loginGoogle(accessToken: "provider-token")
+
+        guard case .newMember(let verificationToken) = result else {
+            Issue.record("가입이 필요한 회원을 기존 회원으로 분류했습니다")
+            return
+        }
+        #expect(verificationToken == "google-verification")
+        #expect(await tokenStore.saveCallCount == 0)
+    }
+
+    @Test("결과 코드나 성공 상태가 없거나 잘못되면 토큰이 있어도 실패한다", arguments: [
+        #""success": true, "code": "UNKNOWN""#,
+        #""success": true, "code": "COMMON200""#,
+        #""success": true, "code": """#,
+        #""success": true, "code": null"#,
+        #""success": true"#,
+        #""success": false, "code": "LOGIN_SUCCESS""#,
+        #""code": "LOGIN_SUCCESS""#,
+        #""success": false, "code": "REGISTER_REQUIRED""#,
+        #""code": "REGISTER_REQUIRED""#
+    ])
+    func invalidResultStatusDoesNotCreateSession(_ statusFields: String) async {
+        await expectRejectedResponse("""
+        {
+            \(statusFields),
+            "accessToken": "google-access",
+            "refreshToken": "google-refresh",
+            "oAuthVerificationToken": "google-verification"
+        }
+        """)
+    }
+
+    @Test("LOGIN_SUCCESS는 토큰 하나라도 누락되거나 비어 있으면 가입으로 우회하지 않는다",
+          arguments: [
+            #""refreshToken": "google-refresh""#,
+            #""accessToken": "google-access""#,
+            #""accessToken": null, "refreshToken": "google-refresh""#,
+            #""accessToken": "google-access", "refreshToken": null"#,
+            #""accessToken": "", "refreshToken": "google-refresh""#,
+            #""accessToken": "google-access", "refreshToken": """#,
+            #""accessToken": " \n\t", "refreshToken": "google-refresh""#,
+            #""accessToken": "google-access", "refreshToken": " \n\t""#,
+            #""accessToken": null, "refreshToken": null"#
+          ])
+    func incompleteLoginTokensDoNotFallBackToRegistration(_ tokenFields: String) async {
+        await expectRejectedResponse("""
+        {
+            "success": true,
+            "code": "LOGIN_SUCCESS",
+            \(tokenFields),
+            "oAuthVerificationToken": "google-verification"
+        }
+        """)
+    }
+
+    @Test("REGISTER_REQUIRED는 인증 토큰이 누락되거나 비어 있으면 기존 회원으로 우회하지 않는다",
+          arguments: [
+            "",
+            #", "oAuthVerificationToken": null"#,
+            #", "oAuthVerificationToken": """#,
+            #", "oAuthVerificationToken": " \n\t""#
+          ])
+    func incompleteRegistrationTokenDoesNotCreateSession(_ verificationField: String) async {
+        await expectRejectedResponse("""
+        {
+            "success": true,
+            "code": "REGISTER_REQUIRED",
+            "accessToken": "google-access",
+            "refreshToken": "google-refresh"
+            \(verificationField)
+        }
+        """)
+    }
+
+    // MARK: - Helper
+
+    /// 바깥 봉투의 공통 성공 코드를 회원 분기 코드로 잘못 사용하지 않도록 실제 스키마를 쓴다.
+    private func oauthResponse(_ resultJSON: String) -> Data {
+        Data("""
+        { "success": true, "code": "COMMON200", "message": "성공", "result": \(resultJSON) }
+        """.utf8)
+    }
+
+    /// 잘못된 응답은 회원 분류를 반환하거나 세션 토큰을 저장하지 않아야 한다.
+    private func expectRejectedResponse(_ resultJSON: String) async {
+        let (sut, _, tokenStore) = makeRepository(.success(oauthResponse(resultJSON)))
+
+        do {
+            _ = try await sut.loginGoogle(accessToken: "provider-token")
+            Issue.record("잘못된 OAuth 응답에서 회원 분류를 반환했습니다")
+        } catch let error as RepositoryError {
+            guard case .invalidResponse = error else {
+                Issue.record("응답 계약 위반 대신 다른 저장소 오류를 반환했습니다: \(error)")
+                return
+            }
+        } catch {
+            Issue.record("응답 계약 위반 대신 다른 오류를 반환했습니다: \(error)")
+        }
+
+        #expect(await tokenStore.saveCallCount == 0)
+        #expect(await tokenStore.savedAccessToken == nil)
+        #expect(await tokenStore.savedRefreshToken == nil)
+    }
+}

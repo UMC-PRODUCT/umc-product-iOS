@@ -81,13 +81,17 @@ public struct SignUpView: View {
                         email: $viewModel.emailVerificationFlow.email,
                         isVerified: $viewModel.emailVerificationFlow.isEmailVerified,
                         onVerificationRequested: {
-                            try await viewModel.emailVerificationFlow.requestEmailVerification()
+                            try await handleEmailVerification {
+                                try await viewModel.emailVerificationFlow.requestEmailVerification()
+                            }
                         },
                         onVerificationComplete: { code in
                             try await viewModel.emailVerificationFlow.verifyEmailCode(code)
                         },
                         onResend: {
-                            try await viewModel.emailVerificationFlow.resendEmailVerification()
+                            try await handleEmailVerification {
+                                try await viewModel.emailVerificationFlow.resendEmailVerification()
+                            }
                         },
                         onEmailChanged: {
                             viewModel.emailVerificationFlow.handleEmailChanged()
@@ -107,6 +111,15 @@ public struct SignUpView: View {
             }
             .navigation(naviTitle: NavigationTitle.Auth.signUp, displayMode: .large)
             .navigationSubtitle(Constants.naviSubtitle)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("로그인 화면으로 돌아가기") {
+                        focusedField = nil
+                        appFlow.showLogin()
+                    }
+                    .disabled(viewModel.registerState.isLoading)
+                }
+            }
             .safeAreaInset(edge: .bottom) {
                 submitButton
             }
@@ -146,6 +159,21 @@ public struct SignUpView: View {
     }
 
     // MARK: - Function
+
+    private func handleEmailVerification(_ action: () async throws -> Void) async throws {
+        do {
+            try await action()
+        } catch EmailVerificationError.emailAlreadyExists {
+            alertPrompt = AlertPrompt(
+                title: "이미 가입된 이메일이에요",
+                message: "로그인 화면으로 돌아가 기존에 가입한 방법으로 로그인해주세요.",
+                positiveBtnTitle: "로그인 화면으로 돌아가기",
+                positiveBtnAction: { appFlow.showLogin() },
+                negativeBtnTitle: "계속 입력"
+            )
+            throw EmailVerificationError.emailAlreadyExists
+        }
+    }
 
     /// 가입 완료 처리: 세션 확립 여부에 따라 다음 화면을 분기한다.
     ///
