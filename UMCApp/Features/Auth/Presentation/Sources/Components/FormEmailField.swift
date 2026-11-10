@@ -59,6 +59,9 @@ struct FormEmailField: View {
     /// 이메일 텍스트가 변경될 때 실행되는 콜백 (인증 상태 리셋과는 별개로 매 입력마다 호출됨)
     var onEmailChanged: (() -> Void)?
 
+    @FocusState private var emailIsFocused: Bool
+    @FocusState private var codeIsFocused: Bool
+
     @State private var showError: Bool = false
     @State private var phase: Phase = .initial
     @State private var verificationCode: String = ""
@@ -129,12 +132,15 @@ struct FormEmailField: View {
     private var textFieldView: some View {
         HStack {
             TextField("", text: $text, prompt: placeholderView)
+                .font(.app(.callout))
+                .textFieldStyle(.plain)
                 .foregroundStyle(Color.grey900)
-                .tint(showError ? .red500 : .teal500)
-                .padding(DefaultConstant.defaultTextFieldPadding)
+                .accessibilityLabel(isRequired ? "\(title), 필수" : title)
+                .focused($emailIsFocused)
+                .modifier(AuthFormFieldSurface(
+                    isFocused: emailIsFocused, hasError: showError
+                ))
                 .submitLabel(submitLabel)
-                .background(
-                    Color.Surface.content, in: .capsule)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
@@ -146,8 +152,6 @@ struct FormEmailField: View {
                     resetVerificationStateForEmailChange()
                     onEmailChanged?()
                 }
-
-            Spacer()
 
             Button {
                 withAnimation(.easeInOut(duration: DefaultConstant.animationTime)) {
@@ -167,6 +171,7 @@ struct FormEmailField: View {
     private var placeholderView: Text {
         Text(placeholder)
             .font(.app(.callout))
+            .foregroundStyle(Color.grey600)
     }
 
     private var errorMessageView: some View {
@@ -195,11 +200,16 @@ struct FormEmailField: View {
     }
 
     private var verificationCodeField: some View {
-        TextField("", text: $verificationCode, prompt: Text("인증번호 6자리").font(.app(.callout)))
+        TextField("", text: $verificationCode, prompt: Text("인증번호 6자리")
+            .font(.app(.callout)).foregroundStyle(Color.grey600))
+            .font(.app(.callout))
+            .textFieldStyle(.plain)
+            .accessibilityLabel("인증번호, 필수")
+            .focused($codeIsFocused)
             .foregroundStyle(Color.grey900)
-            .padding(DefaultConstant.defaultTextFieldPadding)
-            .background(
-                Color.Surface.content, in: .capsule)
+            .modifier(AuthFormFieldSurface(
+                isFocused: codeIsFocused, hasError: showError
+            ))
             .keyboardType(.numberPad)
             .textContentType(.oneTimeCode)
             .onChange(of: verificationCode) { _, newValue in

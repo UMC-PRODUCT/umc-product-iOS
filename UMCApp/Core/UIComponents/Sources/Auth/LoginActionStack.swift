@@ -16,22 +16,18 @@ public struct LoginActionStack: View {
     // MARK: - Property
 
     private let isLoading: Bool
+    private let loadingMethod: LoginMethod?
     private let onKakaoTap: () -> Void
     private let onAppleTap: () -> Void
     private let onGoogleTap: () -> Void
     private let onEmailTap: () -> Void
     private let onSupportTap: () -> Void
 
-    private enum Constants {
-        static let supportInquiryPrompt: String = "로그인에 문제가 있으신가요?"
-        static let supportChannelLabel: String = "고객센터"
-        static let supportChannelSuffix: String = "로 문의해 주세요."
-    }
-
     // MARK: - Init
 
     public init(
         isLoading: Bool,
+        loadingMethod: LoginMethod? = nil,
         onKakaoTap: @escaping () -> Void,
         onAppleTap: @escaping () -> Void,
         onGoogleTap: @escaping () -> Void,
@@ -39,6 +35,7 @@ public struct LoginActionStack: View {
         onSupportTap: @escaping () -> Void
     ) {
         self.isLoading = isLoading
+        self.loadingMethod = loadingMethod
         self.onKakaoTap = onKakaoTap
         self.onAppleTap = onAppleTap
         self.onGoogleTap = onGoogleTap
@@ -71,32 +68,35 @@ public struct LoginActionStack: View {
 
     private var kakaoLoginButton: some View {
         Button(action: onKakaoTap) {
-            SocialLoginLabel(.kakao)
+            SocialLoginLabel(.kakao, isLoading: isLoading && loadingMethod == .social(.kakao))
         }
         .buttonStyle(.plain)
         .disabled(isLoading)
         .accessibilityLabel(Text("카카오로 시작하기"))
         .accessibilityHint(Text("카카오 계정으로 로그인합니다"))
+        .accessibilityValue(isLoading && loadingMethod == .social(.kakao) ? "로그인 중" : "")
     }
 
     private var appleLoginButton: some View {
         Button(action: onAppleTap) {
-            SocialLoginLabel(.apple)
+            SocialLoginLabel(.apple, isLoading: isLoading && loadingMethod == .social(.apple))
         }
         .buttonStyle(.plain)
         .disabled(isLoading)
         .accessibilityLabel(Text("Apple로 시작하기"))
         .accessibilityHint(Text("Apple 계정으로 로그인합니다"))
+        .accessibilityValue(isLoading && loadingMethod == .social(.apple) ? "로그인 중" : "")
     }
 
     private var googleLoginButton: some View {
         Button(action: onGoogleTap) {
-            SocialLoginLabel(.google)
+            SocialLoginLabel(.google, isLoading: isLoading && loadingMethod == .social(.google))
         }
         .buttonStyle(.plain)
         .disabled(isLoading)
         .accessibilityLabel(Text("Google로 시작하기"))
         .accessibilityHint(Text("Google 계정으로 로그인합니다"))
+        .accessibilityValue(isLoading && loadingMethod == .social(.google) ? "로그인 중" : "")
         .overlay {
             Capsule()
                 .fill(.clear)
@@ -115,25 +115,17 @@ public struct LoginActionStack: View {
     }
 
     private var supportFooter: some View {
-        VStack(spacing: DefaultSpacing.spacing4) {
-            Text(Constants.supportInquiryPrompt)
-                .appFont(.footnote, color: .grey500)
-            HStack(spacing: .zero) {
-                Button(action: onSupportTap) {
-                    Text(Constants.supportChannelLabel)
-                        .foregroundStyle(.indigo)
-                        .appFont(.footnote, color: .grey500)
-                        .underline()
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("고객센터로 문의하기"))
-                .accessibilityHint(Text("카카오톡 UMC 문의 채널을 엽니다"))
-
-                Text(Constants.supportChannelSuffix)
-                    .appFont(.footnote, color: .grey500)
-            }
+        Button(action: onSupportTap) {
+            Text("로그인이 안 되나요? \(Text("문의하기").foregroundStyle(Color.indigo).underline())")
+            .foregroundStyle(Color.grey600)
+            .appFont(.footnote)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity, minHeight: DefaultConstant.minimumTouchTarget)
+            .contentShape(.rect)
         }
-        .multilineTextAlignment(.center)
+        .buttonStyle(.plain)
+        .accessibilityLabel("로그인이 안 되나요? 문의하기")
+        .accessibilityHint("카카오톡 UMC 문의 채널을 엽니다")
     }
 }
 

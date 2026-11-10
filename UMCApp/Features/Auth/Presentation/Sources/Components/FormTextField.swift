@@ -20,6 +20,8 @@ struct FormTextField: View {
     let placeholder: String
     @Binding var text: String
     var isRequired: Bool = true
+    var isFocused: Bool = false
+    var hasError: Bool = false
     var submitLabel: SubmitLabel = .next
     var onSubmit: (() -> Void)?
 
@@ -36,10 +38,12 @@ struct FormTextField: View {
 
     private var textFieldView: some View {
         TextField("", text: $text, prompt: placeholderView)
+            .textFieldStyle(.plain)
+            .font(.app(.callout))
+            .autocorrectionDisabled()
+            .accessibilityLabel(isRequired ? "\(title), 필수" : title)
             .foregroundStyle(Color.grey900)
-            .padding(DefaultConstant.defaultTextFieldPadding)
-            .background(
-                Color.Surface.content, in: .capsule)
+            .modifier(AuthFormFieldSurface(isFocused: isFocused, hasError: hasError))
             .submitLabel(submitLabel)
             .onSubmit { onSubmit?() }
     }
@@ -47,6 +51,30 @@ struct FormTextField: View {
     private var placeholderView: Text {
         Text(placeholder)
             .font(.app(.callout))
+            .foregroundStyle(Color.grey600)
+    }
+}
+
+/// 인증 폼의 입력 영역을 구분하는 표면과 포커스·오류 테두리.
+struct AuthFormFieldSurface: ViewModifier {
+    var isFocused: Bool = false
+    var hasError: Bool = false
+
+    private var borderColor: Color {
+        hasError ? .red500 : (isFocused ? .teal600 : .grey300)
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .padding(DefaultConstant.defaultTextFieldPadding)
+            .frame(minHeight: DefaultConstant.minimumTouchTarget)
+            .background(Color.Surface.canvas, in: .rect(cornerRadius: DefaultSpacing.spacing12))
+            .overlay {
+                RoundedRectangle(cornerRadius: DefaultSpacing.spacing12)
+                    .strokeBorder(borderColor, lineWidth: isFocused || hasError ? 2 : 1)
+                    .allowsHitTesting(false)
+            }
+            .tint(hasError ? .red500 : .teal600)
     }
 }
 
@@ -56,7 +84,7 @@ struct FormTextField: View {
 #Preview {
     @Previewable @State var name: String = ""
     VStack(spacing: DefaultSpacing.spacing16) {
-        FormTextField(title: "이름", placeholder: "이름 입력", text: $name, submitLabel: .done)
+        FormTextField(title: "이름", placeholder: "예: 홍길동", text: $name, submitLabel: .done)
         FormTextField(title: "닉네임", placeholder: "한글 1~4자", text: .constant("챌린저"))
     }
     .padding()

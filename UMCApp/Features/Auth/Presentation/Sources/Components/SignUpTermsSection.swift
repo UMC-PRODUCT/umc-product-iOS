@@ -76,8 +76,15 @@ struct SignUpTermsSection: View {
                 Text(Constants.allAgreeTitle)
                     .appFont(.callout, weight: .semibold)
             }
+            .frame(
+                maxWidth: .infinity,
+                minHeight: DefaultConstant.minimumTouchTarget,
+                alignment: .leading
+            )
+            .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .accessibilityValue(isAllTermsAgreed ? "동의함" : "동의하지 않음")
     }
 
     @ViewBuilder
@@ -110,17 +117,29 @@ struct SignUpTermsSection: View {
                         .foregroundStyle(row.isAgreed ? Color.teal500 : Color.grey400)
                     Text(row.title)
                         .appFont(.subheadline)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(row.isMandatory ? "(필수)" : "(선택)")
                         .appFont(.footnote, color: row.isMandatory ? .red500 : .grey400)
                 }
+                .frame(minHeight: DefaultConstant.minimumTouchTarget, alignment: .leading)
+                .contentShape(.rect)
             }
             .buttonStyle(.plain)
+            .accessibilityValue(row.isAgreed ? "동의함" : "동의하지 않음")
 
             Spacer(minLength: 0)
 
-            Button("보기") { openTerms(row.link) }
-                .appFont(.footnote, color: .teal500)
-                .buttonStyle(.plain)
+            Button { openTerms(row.link) } label: {
+                Text("보기")
+                    .appFont(.footnote, color: .teal500)
+                    .frame(
+                        minWidth: DefaultConstant.minimumTouchTarget,
+                        minHeight: DefaultConstant.minimumTouchTarget
+                    )
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(row.title) 보기")
         }
     }
 

@@ -153,6 +153,7 @@ public struct BootstrapView: View {
             case .loginReady:
                 LoginActionStack(
                     isLoading: loginViewModel.loginState.isLoading,
+                    loadingMethod: loginViewModel.activeLoginProvider.map(LoginMethod.social),
                     onKakaoTap: { Task { await loginViewModel.loginWithKakao() } },
                     onAppleTap: { loginViewModel.loginWithApple() },
                     onGoogleTap: { Task { await loginViewModel.loginWithGoogle() } },

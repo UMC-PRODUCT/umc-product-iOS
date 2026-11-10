@@ -46,6 +46,8 @@ final class LoginViewModel {
 
     /// 소셜 로그인 진행 상태. `.loaded`는 승인된 기존 회원 로그인 성공을 의미한다.
     var loginState: Loadable<Profile> = .idle
+    /// 현재 요청의 로그인 수단. 재시도에도 같은 버튼에서 진행 상태를 표시한다.
+    private(set) var activeLoginProvider: SocialType?
     /// 신규 회원(가입 필요) 판정 시 노출되는 회원가입 화면 목적지.
     var signUpDestination: SignUpDestination?
 
@@ -76,6 +78,7 @@ final class LoginViewModel {
     @MainActor
     func loginWithKakao() async {
         guard !loginState.isLoading else { return }
+        activeLoginProvider = .kakao
         loginState = .loading
         trackAnalytics("login_attempt", ["method": "kakao"])
 
@@ -106,6 +109,7 @@ final class LoginViewModel {
     @MainActor
     func loginWithApple() {
         guard !loginState.isLoading else { return }
+        activeLoginProvider = .apple
         loginState = .loading
         trackAnalytics("login_attempt", ["method": "apple"])
 
@@ -139,6 +143,7 @@ final class LoginViewModel {
     @MainActor
     func loginWithGoogle() async {
         guard !loginState.isLoading else { return }
+        activeLoginProvider = .google
         loginState = .loading
         trackAnalytics("login_attempt", ["method": "google"])
 

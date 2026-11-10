@@ -18,6 +18,7 @@ public struct SocialLoginLabel: View {
     // MARK: - Property
 
     private let loginMethod: LoginMethod
+    private let isLoading: Bool
 
     fileprivate enum Constants {
         static let leadingPadding: CGFloat = 16
@@ -26,25 +27,34 @@ public struct SocialLoginLabel: View {
 
     // MARK: - Init
 
-    public init(_ loginMethod: LoginMethod) {
+    public init(_ loginMethod: LoginMethod, isLoading: Bool = false) {
         self.loginMethod = loginMethod
+        self.isLoading = isLoading
     }
 
-    public init(_ socialType: SocialType) {
-        self.init(.social(socialType))
+    public init(_ socialType: SocialType, isLoading: Bool = false) {
+        self.init(.social(socialType), isLoading: isLoading)
     }
 
     // MARK: - Body
 
     public var body: some View {
         ZStack(alignment: .leading) {
-            Text(loginMethod.loginButtonTitle)
+            Text(isLoading ? "로그인 중…" : loginMethod.loginButtonTitle)
                 .appFont(.callout, color: loginMethod.fontColor)
                 .frame(maxWidth: .infinity)
                 .frame(height: Constants.buttonHeight)
                 .background(loginMethod.color, in: .capsule)
 
             loginLogo
+
+            if isLoading {
+                ProgressView()
+                    .tint(loginMethod.fontColor)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, Constants.leadingPadding)
+                    .accessibilityHidden(true)
+            }
         }
     }
 

@@ -10,7 +10,7 @@ import SwiftUI
 
 /// 회원가입 이름 · 닉네임 입력 섹션.
 ///
-/// 이름과 닉네임 필드를 `HStack`으로 나란히 배치한다. 포커스는 부모의
+/// 이름과 닉네임 필드를 세로로 배치해 입력 공간을 확보한다. 포커스는 부모의
 /// `FocusState.Binding`을 그대로 주입받아 `SignUpPasswordSection`과 흐름을 공유한다.
 struct SignUpNameNicknameSection: View {
 
@@ -31,7 +31,7 @@ struct SignUpNameNicknameSection: View {
 
     fileprivate enum Constants {
         static let nameTitle: String = "이름"
-        static let namePlaceholder: String = "이름 입력"
+        static let namePlaceholder: String = "예: 홍길동"
         static let nicknameTitle: String = "닉네임"
         static let nicknamePlaceholder: String = "한글 1~4자"
     }
@@ -40,15 +40,17 @@ struct SignUpNameNicknameSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-            HStack(alignment: .top, spacing: DefaultSpacing.spacing12) {
+            VStack(alignment: .leading, spacing: DefaultSpacing.spacing24) {
                 FormTextField(
                     title: Constants.nameTitle,
                     placeholder: Constants.namePlaceholder,
                     text: $name,
                     isRequired: true,
+                    isFocused: focusBinding.wrappedValue == .name,
                     submitLabel: .next,
                     onSubmit: { focusBinding.wrappedValue = .nickname }
                 )
+                .textContentType(.name)
                 .focused(focusBinding, equals: .name)
 
                 FormTextField(
@@ -56,14 +58,21 @@ struct SignUpNameNicknameSection: View {
                     placeholder: Constants.nicknamePlaceholder,
                     text: $availability.nickname,
                     isRequired: true,
+                    isFocused: focusBinding.wrappedValue == .nickname,
+                    hasError: hasNicknameError,
                     submitLabel: .done,
                     onSubmit: onNicknameSubmit
                 )
                 .focused(focusBinding, equals: .nickname)
             }
 
-            Text(statusMessage)
-                .appFont(.footnote, color: .grey700)
+            Label(
+                statusMessage,
+                systemImage: hasNicknameError ? "exclamationmark.circle" : "info.circle"
+            )
+                .appFont(.footnote, color: hasNicknameError ? .red500 : .grey700)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityElement(children: .combine)
 
             if availability.isPreflightEnabled {
                 Button(availability.state.isLoading ? "확인 중…" : "닉네임 중복 확인") {
@@ -76,6 +85,11 @@ struct SignUpNameNicknameSection: View {
         .onChange(of: availability.state) { _, state in
             if state == .loaded(false) { focusBinding.wrappedValue = .nickname }
         }
+    }
+
+    private var hasNicknameError: Bool {
+        (!availability.nickname.isEmpty && !availability.isValidNickname)
+            || availability.state == .loaded(false)
     }
 
     private var statusMessage: String {
