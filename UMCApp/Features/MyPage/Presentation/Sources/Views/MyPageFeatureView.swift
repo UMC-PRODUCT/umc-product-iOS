@@ -9,6 +9,7 @@ import CoreDI
 import CoreRouting
 import CoreUIComponents
 import SwiftUI
+import UIKit
 
 /// 마이페이지가 요청하는 명함 진입 지점.
 ///
@@ -91,6 +92,9 @@ private struct MyPageSplitContent<DetailRoot: View>: View {
     let onOpenStudy: () -> Void
     let onOpenProjects: () -> Void
     let detailRoot: (AnyView) -> DetailRoot
+    // iPhone은 한 번의 뒤로 가기로 메뉴에 복귀하는 단일 스택을 유지한다.
+    // 회전 중 스택 종류를 바꾸면 상세 화면의 편집 상태가 소실되므로 크기 클래스로 분기하지 않는다.
+    private let usesSplitNavigation = UIDevice.current.userInterfaceIdiom != .phone
 
     init(
         container: DIContainer,
@@ -108,6 +112,21 @@ private struct MyPageSplitContent<DetailRoot: View>: View {
     }
 
     var body: some View {
+        Group {
+            if usesSplitNavigation {
+                splitContent
+            } else {
+                // iPhone에서는 메뉴 자체가 루트여야 한 번의 뒤로 가기로 복귀한다.
+                navigationStack(showsOverview: false)
+            }
+        }
+        .onChange(of: pathStore.depth(of: .mypage), initial: true) { _, depth in
+            compactColumn = depth == 0 && !isOverviewSelected ? .sidebar : .detail
+            if depth == 0 { replaceablePath = nil }
+        }
+    }
+
+    private var splitContent: some View {
         NavigationSplitView(
             columnVisibility: $columnVisibility,
             preferredCompactColumn: $compactColumn
@@ -116,23 +135,23 @@ private struct MyPageSplitContent<DetailRoot: View>: View {
                 .disabled(!canSelect)
                 .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 380)
         } detail: {
-            NavigationStack(path: Binding(
-                get: { pathStore[.mypage] },
-                set: { pathStore[.mypage] = $0 }
-            )) {
-                detailRoot(AnyView(page(showsOverview: true)))
-                    .navigationDestination(for: MyPageDestination.self) { destination in
-                        MyPageRoutingView(destination: destination, container: container)
-                    }
-            }
+            navigationStack(showsOverview: true)
         }
         .navigationSplitViewStyle(.balanced)
         .onChange(of: horizontalSizeClass) { _, sizeClass in
             if sizeClass == .regular { columnVisibility = .all }
         }
-        .onChange(of: pathStore.depth(of: .mypage), initial: true) { _, depth in
-            compactColumn = depth == 0 && !isOverviewSelected ? .sidebar : .detail
-            if depth == 0 { replaceablePath = nil }
+    }
+
+    private func navigationStack(showsOverview: Bool) -> some View {
+        NavigationStack(path: Binding(
+            get: { pathStore[.mypage] },
+            set: { pathStore[.mypage] = $0 }
+        )) {
+            detailRoot(AnyView(page(showsOverview: showsOverview)))
+                .navigationDestination(for: MyPageDestination.self) { destination in
+                    MyPageRoutingView(destination: destination, container: container)
+                }
         }
     }
 
@@ -149,7 +168,7 @@ private struct MyPageSplitContent<DetailRoot: View>: View {
             viewModel: viewModel,
             showsOverview: showsOverview,
             // 분할 열 내부가 아닌 전체 화면 폭을 기준으로 iPhone 루트 명함을 유지한다.
-            showsSidebarCard: horizontalSizeClass != .regular,
+            showsSidebarCard: !usesSplitNavigation || horizontalSizeClass != .regular,
             onShowOverview: showOverview,
             onSelectDestination: select
         )
