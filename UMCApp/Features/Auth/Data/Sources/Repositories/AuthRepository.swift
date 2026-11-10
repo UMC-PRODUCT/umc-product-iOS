@@ -245,14 +245,30 @@ public struct AuthRepository: AuthRepositoryProtocol, @unchecked Sendable {
             )
             let dto = try apiResponse.unwrap()
 
-            if let tokenPair = dto.tokenPair {
+            guard dto.success == true else {
+                throw RepositoryError.invalidResponse(detail: "OAuth 로그인 결과가 성공이 아닙니다")
+            }
+
+            switch dto.code {
+            case "LOGIN_SUCCESS":
+                guard let tokenPair = dto.tokenPair else {
+                    throw RepositoryError.invalidResponse(detail: "OAuth 로그인 토큰이 없습니다")
+                }
                 try await tokenStore.save(
                     accessToken: tokenPair.accessToken,
                     refreshToken: tokenPair.refreshToken
                 )
                 return .existingMember
+            case "REGISTER_REQUIRED":
+                guard let verificationToken = dto.oAuthVerificationToken,
+                      !verificationToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                else {
+                    throw RepositoryError.invalidResponse(detail: "OAuth 가입 인증 토큰이 없습니다")
+                }
+                return .newMember(verificationToken: verificationToken)
+            default:
+                throw RepositoryError.invalidResponse(detail: "알 수 없는 OAuth 로그인 결과입니다")
             }
-            return .newMember(verificationToken: dto.oAuthVerificationToken ?? "")
         } catch let decodingError as DecodingError {
             #if DEBUG
             // 응답 body에는 accessToken/refreshToken이 포함될 수 있어 raw body는 출력하지
