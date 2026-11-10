@@ -38,30 +38,12 @@ struct AttendanceLockScreenView: View {
     }
 
     private var lockScreenContent: some View {
-        HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
-                AttendanceActivityHeader(title: attributes.title, phase: phase)
-
-                HStack(alignment: .firstTextBaseline, spacing: DefaultSpacing.spacing4) {
-                    AttendanceCountdownText(attributes: attributes, phase: phase)
-                        .font(.system(size: Constants.lockScreenTimerSize, weight: .bold))
-                        .foregroundStyle(phase.timerColor)
-                        .fixedSize()
-                    AttendancePhaseText(phase: phase)
-                }
-
-                AttendancePhaseProgressBar(attributes: attributes, phase: phase)
-            }
-            .frame(maxWidth: Constants.lockScreenContentWidth, alignment: .leading)
-
-            Spacer(minLength: 0)
-
-            AttendancePhaseIcon(phase: phase, size: Constants.lockScreenIconSize)
-                // 시안처럼 오른쪽 가장자리에서 살짝 잘려 보이게 밀어낸다.
-                .offset(x: Constants.lockScreenIconOverhang)
-        }
+        AttendanceCardContent(
+            attributes: attributes,
+            phase: phase,
+            timerSize: Constants.lockScreenTimerSize
+        )
         .padding(DefaultSpacing.spacing16)
-        .background { AttendancePhaseGlow(phase: phase) }
     }
 
     private var smallContent: some View {
@@ -81,52 +63,151 @@ struct AttendanceLockScreenView: View {
 
 // MARK: - Dynamic Island Expanded
 
-/// Dynamic Island 확장 하단 영역 — 큰 카운트다운·단계 문구·진행 막대와 오른쪽 아이콘.
+/// 확장 영역은 시간 안내와 전체 폭 진행 단계를 분리해 한눈에 읽히도록 구성한다.
 struct AttendanceExpandedContent: View {
-
-    // MARK: - Property
-
     let attributes: AttendanceActivityAttributes
     let phase: AttendanceActivityPhase
 
-    // MARK: - Body
+    var body: some View {
+        AttendanceCardContent(
+            attributes: attributes,
+            phase: phase,
+            timerSize: Constants.expandedTimerSize
+        )
+        .padding(.horizontal, DefaultSpacing.spacing8)
+        .environment(\.colorScheme, .dark)
+    }
+}
+
+/// 잠금 화면과 확장 아일랜드의 헤더·카운트다운·단계 표시를 같은 구성으로 유지한다.
+private struct AttendanceCardContent: View {
+    let attributes: AttendanceActivityAttributes
+    let phase: AttendanceActivityPhase
+    let timerSize: CGFloat
 
     var body: some View {
-        HStack(alignment: .center, spacing: DefaultSpacing.spacing12) {
-            VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
-                AttendanceCountdownText(attributes: attributes, phase: phase)
-                    .font(.system(size: Constants.expandedTimerSize, weight: .bold))
-                    .foregroundStyle(phase.timerColor)
-                AttendancePhaseText(phase: phase)
-                AttendancePhaseProgressBar(attributes: attributes, phase: phase)
-                    .padding(.top, DefaultSpacing.spacing4)
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing8) {
+            AttendancePhaseHeader(phase: phase)
+
+            HStack(alignment: .center, spacing: DefaultSpacing.spacing12) {
+                VStack(alignment: .leading, spacing: 0) {
+                    AttendanceCountdownText(attributes: attributes, phase: phase)
+                        .font(.system(size: timerSize, weight: .bold))
+                        .foregroundStyle(phase.timerColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .multilineTextAlignment(.leading)
+                    Text(phase.countdownLabel)
+                        .appFont(.caption1, color: .white.opacity(0.72))
+                        .lineLimit(1)
+                }
+                .accessibilityElement(children: .combine)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                AttendancePhaseIllustration(phase: phase)
             }
-            .frame(maxWidth: Constants.lockScreenContentWidth, alignment: .leading)
-
-            Spacer(minLength: 0)
-
-            AttendancePhaseIcon(phase: phase, size: Constants.expandedIconSize)
+            AttendancePhaseProgressBar(attributes: attributes, phase: phase)
         }
-        .environment(\.colorScheme, .dark)
+    }
+}
+
+/// 카메라 옆의 좁은 영역 대신 전체 폭 안쪽에 앱 표시와 단계 문구를 함께 둔다.
+private struct AttendancePhaseHeader: View {
+    let phase: AttendanceActivityPhase
+
+    var body: some View {
+        HStack(spacing: DefaultSpacing.spacing12) {
+            AttendanceActivityHeader(title: "UMC", phase: phase)
+            Spacer(minLength: DefaultSpacing.spacing8)
+            Text(phase.title)
+                .appFont(.caption1, weight: .semibold, color: phase.tint)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.trailing)
+                .layoutPriority(1)
+        }
+    }
+}
+
+/// 투명 배경의 3D 렌더 이미지를 고정된 안전 영역 안에 비율을 유지해 표시한다.
+private struct AttendancePhaseIllustration: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    let phase: AttendanceActivityPhase
+
+    var body: some View {
+        ZStack {
+            illustration
+                // 단계만 식별자로 써서 타이머 갱신에는 진입 효과를 반복하지 않는다.
+                .id(phase)
+                .transition(illustrationTransition)
+        }
+        .frame(
+            width: Constants.expandedIllustrationSize,
+            height: Constants.expandedIllustrationSize
+        )
+        .animation(
+            reduceMotion
+                ? .easeOut(duration: Constants.illustrationFadeDuration)
+                : .spring(duration: Constants.illustrationSpringDuration, bounce: 0.2),
+            value: phase
+        )
+        .accessibilityHidden(true)
+    }
+
+    private var illustration: some View {
+        Group {
+            if let imageName {
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                AttendancePhaseIcon(phase: phase, size: Constants.expandedIconSize)
+            }
+        }
+        .frame(
+            width: Constants.expandedIllustrationSize,
+            height: Constants.expandedIllustrationSize
+        )
+    }
+
+    /// Live Activity 갱신 시 짧게 올라오며 안착한다. 동작 줄이기는 투명도만 바꾼다.
+    private var illustrationTransition: AnyTransition {
+        if reduceMotion { return .opacity }
+        return .asymmetric(
+            insertion: .offset(y: Constants.illustrationEntryOffset)
+                .combined(with: .scale(scale: 0.94))
+                .combined(with: .opacity),
+            removal: .opacity
+        )
+    }
+
+    private var imageName: String? {
+        switch phase {
+        case .beforeCheckIn: nil
+        case .onTime: "AttendanceOnTime3D"
+        case .late: "AttendanceLate3D"
+        case .closed: "AttendanceClosed3D"
+        }
     }
 }
 
 // MARK: - Components
 
-/// 단계 색 둥근 사각 "U" 배지 + 세션 제목.
+/// 실제 앱 아이콘 + 세션 제목.
 struct AttendanceActivityHeader: View {
     let title: String
     let phase: AttendanceActivityPhase
 
     var body: some View {
         HStack(spacing: DefaultSpacing.spacing8) {
-            Text("U")
-                .appFont(.caption1, weight: .semibold, color: .white)
+            // AppIcon.icon을 Xcode가 렌더링한 실제 앱 아이콘의 정적 사본이다.
+            Image("UMCAppIcon")
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
                 .frame(width: Constants.badgeSize, height: Constants.badgeSize)
-                .background(
-                    phase.tint,
-                    in: RoundedRectangle(cornerRadius: Constants.badgeCornerRadius)
-                )
+                .accessibilityHidden(true)
             Text(title)
                 .appFont(.caption1, weight: .medium, color: .white)
                 .lineLimit(1)
@@ -179,6 +260,7 @@ struct AttendancePhaseDot: View {
         Circle()
             .fill(phase.tint)
             .frame(width: Constants.dotSize, height: Constants.dotSize)
+            .accessibilityLabel(phase.title)
     }
 }
 
@@ -192,21 +274,7 @@ struct AttendancePhaseIcon: View {
             .symbolRenderingMode(.hierarchical)
             .font(.system(size: size))
             .foregroundStyle(phase.tint.gradient)
-            .shadow(color: phase.tint.opacity(Constants.glowOpacity), radius: size / 4)
-    }
-}
-
-/// 잠금 화면 배경 — 오른쪽 아래에서 번지는 단계 색 광원.
-struct AttendancePhaseGlow: View {
-    let phase: AttendanceActivityPhase
-
-    var body: some View {
-        RadialGradient(
-            colors: [phase.tint.opacity(Constants.backgroundGlowOpacity), .clear],
-            center: .bottomTrailing,
-            startRadius: 0,
-            endRadius: Constants.backgroundGlowRadius
-        )
+            .accessibilityHidden(true)
     }
 }
 
@@ -225,15 +293,32 @@ struct AttendancePhaseProgressBar: View {
             segment(.late, label: "지각")
             segment(.closed, label: "결석")
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("출석 시간 단계: 출석, 지각, 결석. 현재 \(phase.title)")
     }
 
     private func segment(_ segment: AttendanceActivityPhase, label: String) -> some View {
         VStack(spacing: DefaultSpacing.spacing4) {
             segmentBar(segment)
                 .tint(segment.tint)
-            Text(label)
-                .appFont(.caption2, color: segment == phase ? segment.tint : .grey500)
+                .frame(height: Constants.progressHeight)
+            HStack(spacing: DefaultSpacing.spacing4) {
+                if segment == phase {
+                    Circle()
+                        .fill(segment.tint)
+                        .frame(width: Constants.currentPhaseDotSize,
+                               height: Constants.currentPhaseDotSize)
+                }
+                Text(label)
+                    .appFont(
+                        .caption2,
+                        weight: segment == phase ? .semibold : .regular,
+                        color: segment == phase ? segment.tint : .white.opacity(0.6)
+                    )
+            }
+            .lineLimit(1)
         }
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
@@ -285,10 +370,20 @@ extension AttendanceActivityPhase {
         }
     }
 
+    /// 숫자가 가리키는 경계이며, 개인의 출석 처리 결과를 뜻하지 않는다.
+    var countdownLabel: String {
+        switch self {
+        case .beforeCheckIn: "출석 시작까지"
+        case .onTime: "정시 출석 마감까지"
+        case .late: "지각 마감까지"
+        case .closed: "출석 시간이 종료됐어요"
+        }
+    }
+
     var symbolName: String {
         switch self {
         case .beforeCheckIn: "clock.fill"
-        case .onTime: "checkmark.shield.fill"
+        case .onTime: "location.circle.fill"
         case .late: "doc.badge.clock.fill"
         case .closed: "lock.fill"
         }
@@ -309,16 +404,15 @@ extension AttendanceActivityPhase {
 
 fileprivate enum Constants {
     static let lockScreenTimerSize: CGFloat = 40
-    static let expandedTimerSize: CGFloat = 44
+    static let expandedTimerSize: CGFloat = 32
     static let smallTimerSize: CGFloat = 22
-    static let lockScreenContentWidth: CGFloat = 220
-    static let lockScreenIconSize: CGFloat = 72
-    static let lockScreenIconOverhang: CGFloat = 20
-    static let expandedIconSize: CGFloat = 56
+    static let expandedIconSize: CGFloat = 32
+    static let expandedIllustrationSize: CGFloat = 56
+    static let illustrationEntryOffset: CGFloat = 6
+    static let illustrationSpringDuration: TimeInterval = 0.4
+    static let illustrationFadeDuration: TimeInterval = 0.18
+    static let progressHeight: CGFloat = 4
+    static let currentPhaseDotSize: CGFloat = 4
     static let badgeSize: CGFloat = 20
-    static let badgeCornerRadius: CGFloat = 6
     static let dotSize: CGFloat = 10
-    static let glowOpacity: Double = 0.6
-    static let backgroundGlowOpacity: Double = 0.35
-    static let backgroundGlowRadius: CGFloat = 220
 }
