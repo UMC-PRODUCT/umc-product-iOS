@@ -4,15 +4,18 @@
 > 출처: [artemnovichkov/xcode-27-system-prompts](https://github.com/artemnovichkov/xcode-27-system-prompts)
 > (이전 출처였던 `xcode-26-system-prompts` 는 더 이상 갱신되지 않는다.)
 >
-> **동기화 기준 커밋**: [`e132fcf8`](https://github.com/artemnovichkov/xcode-27-system-prompts/commit/e132fcf82b2bcd8d7e117a44af8f8323f771f8c1) (2026-09-29, "Update with Xcode 27.2 beta 2")
+> **동기화 기준 커밋**: [`801762d7`](https://github.com/artemnovichkov/xcode-27-system-prompts/commit/801762d709c9a280b2c7c9f9f375656aa7bdfff2) (2026-10-27, "Update with Xcode 27.2 RC")
 > — 여기 있는 파일은 전부 이 커밋에서 무손실 복사한 것이다.
 > 다음 갱신 때 이 SHA를 기준으로 `git diff` 하면 무엇이 바뀌었는지 바로 나온다 (§5).
 >
-> **직전 동기화**: `75f3b2ae`(2026-08-25) → `e132fcf8` 반영분(2026-10-11, #1566): 스킬팩 `app-resizability` 신규(5 reference),
-> `audit-xcode-security-settings` 에 `checked-pointer-arithmetic.md` 추가 + SKILL·reference 6종 개정(Xcode 27.2 beta 2 의
-> Checked Pointer Arithmetic / `arm64e.x1` 슬라이스 / watchOS MTE), `swiftui-specialist/references/dataflow.md` 에
-> "`private` 이어야 `@State` 가 지연 초기화된다" 절 추가, `swiftui-whats-new-27/references/state-macro.md` 오타 수정.
-> 프레임워크 개별 가이드 20종은 변경 없음.
+> **직전 동기화**: `e132fcf8`(2026-09-29) → `801762d7` 반영분(2026-11-15): Xcode 27.2 beta 3 에서 스킬팩
+> **`xctrace` 신규**(Instruments CLI 로 트레이스 수집·`.trace`/`.atrc` 읽기·행(hang) 분류, reference 2종).
+> 27.2 RC 는 `AgentVersions.plist`·`IDEIntelligenceChat.xcplugindata` 만 바꿨다. 기존 프레임워크 가이드 20종과
+> 스킬팩 10종(reference 85종)은 바이트 동일하다.
+>
+> 그 이전 `75f3b2ae` → `e132fcf8`(2026-10-11, #1566): `app-resizability` 신규(5 reference),
+> `audit-xcode-security-settings` 에 `checked-pointer-arithmetic.md` 추가와 SKILL·reference 6종 개정,
+> `swiftui-specialist/references/dataflow.md` 에 "`private` 이어야 `@State` 가 지연 초기화된다" 절 추가.
 >
 > **사용법**: Apple 프레임워크 API를 다룰 때 아래 해당 문서를 `Read` 로 열어
 > 정확한 API 시그니처/패턴/가용성을 확인한 뒤 코드를 작성한다.
@@ -30,8 +33,8 @@
 | 위치 | 내용 |
 |------|------|
 | `*.md` (이 폴더 바로 아래) | 프레임워크 개별 가이드 20종 — 업스트림 `AdditionalDocumentation/` |
-| `skills/<이름>/SKILL.md` | Apple이 작성한 스킬팩 진입 문서 10종 — 언제 어떤 reference를 읽어야 하는지 안내 |
-| `skills/<이름>/references/*.md` | 스킬팩 본문 85종 — 실제 API 설명·코드 예시 |
+| `skills/<이름>/SKILL.md` | Apple이 작성한 스킬팩 진입 문서 11종 — 언제 어떤 reference를 읽어야 하는지 안내 |
+| `skills/<이름>/references/*.md` | 스킬팩 본문 87종 — 실제 API 설명·코드 예시 |
 | `skills/audit-xcode-security-settings/scripts/` | 스킬팩에 딸린 보조 스크립트 |
 
 ---
@@ -53,6 +56,7 @@ UMC 앱은 SwiftUI + Liquid Glass + Widget + (Apple Intelligence) 기반이라 �
 | `FoundationModels-Using-on-device-LLM-in-your-app.md` | 온디바이스 LLM (Apple Intelligence 기능) |
 | `skills/swiftui-whats-new-27/` | SDK 27 SwiftUI 신규 API·deprecation (⚠️ 가용성 게이팅 필요) |
 | `skills/app-intents-specialist/` | App Intents(Siri/단축어) 작성 규약 — The Ping·딥링크 확장 시 |
+| `skills/xctrace/` | 화면 멈춤·스크롤 끊김·CPU/메모리 과다를 `xctrace`(Instruments CLI)로 기록하고 분석할 때. 행(hang) 분류는 `xctrace-hangs-triage.md` |
 | `Widgets-for-visionOS.md` | visionOS 위젯 |
 
 ---
@@ -86,7 +90,7 @@ UMC 앱은 SwiftUI + Liquid Glass + Widget + (Apple Intelligence) 기반이라 �
 
 ---
 
-## 3. Apple 스킬팩 (10종 · reference 85종)
+## 3. Apple 스킬팩 (11종 · reference 87종)
 
 각 스킬은 `SKILL.md`(언제 무엇을 읽을지 안내) + `references/*.md`(본문)로 구성된다.
 **먼저 `SKILL.md` 를 읽고, 필요한 reference만 골라 읽는다.**
@@ -241,6 +245,18 @@ C 코드용 경계 안전성 언어 확장. 이 프로젝트는 순수 Swift라 
 | `build-settings.md` | 컴파일러 플래그·Xcode 빌드 설정·soft trap 모드·`ptrcheck.h` |
 | `runtime-debugging.md` | 경계 위반 런타임 디버깅 — trap 동작, LLDB, 워치포인트, 크래시 로그 |
 
+### 3-11. `skills/xctrace/` — Instruments CLI로 성능 분석 (Xcode 27.2 beta 3 신규)
+
+`xctrace` 로 트레이스를 기록하고 `.trace`·`.atrc`(Apple Trace) 파일을 터미널에서 읽는다.
+앱이 느리거나 CPU·메모리를 많이 쓰거나 멈출 때, 또는 최적화 전후를 측정할 때 쓴다.
+SKILL.md 지시대로 **`xctrace` 명령을 실행하기 전에 `xctrace-overview.md` 를 먼저 읽는다.**
+이 프로젝트에서는 STOMP 채팅 스크롤, 홈 대시보드 렌더링, 지도·출석 화면 멈춤을 분석할 때 해당된다.
+
+| reference | 내용 |
+|-----------|------|
+| `xctrace-overview.md` | `xctrace help`·`man xctrace` 로 명령 확인, 트레이스 구조(파일·run·instrument·dynamic track·detail), `toc` → `list tracks` → `show` 탐색 순서, 콜 트리 정렬·프레임 확인, 심볼화, 출력 크기, 흔한 실수 |
+| `xctrace-hangs-triage.md` | `xctrace triage --style hangs` 의 5단계 심각도(33ms·100ms·250ms·500ms·2s 초과), CPU 사용률이 높은 busy hang 과 시스템 콜에서 대기하는 blocked hang 구분. 애니메이션 프레임 드롭은 이 명령이 아니라 Instruments "Animation Hitches" 템플릿 소관 |
+
 ---
 
 ## 4. 반영하지 않은 업스트림 자료
@@ -251,6 +267,7 @@ C 코드용 경계 안전성 언어 확장. 이 프로젝트는 순수 Swift라 
 |------------|------|
 | `*.idechatprompttemplate` 중 스킬 진입점이 아닌 것 (`BasicSystemPrompt`, `Query`, `IntegratorSystemPrompt`, `CodingToolTemplate*` 등 40여 개) | Xcode 채팅 UI의 시스템 프롬프트·템플릿. API 문서가 아님 |
 | `AgentVersions.plist` · `IDEIntelligenceChat.xcplugindata` · `bert-estimate.vocab` | 바이너리/설정 자산 |
+| `ChatPromptInput.xclangspec` · `Xcode.SourceCodeLanguage.ChatPromptInput.plist` | Xcode 채팅 입력창의 `@` 참조·`/` 명령 문법 정의 (27.2 beta 3 추가) |
 | `README.md` | 업스트림 저장소 안내문 |
 
 ## 5. 갱신 방법
@@ -258,7 +275,7 @@ C 코드용 경계 안전성 언어 확장. 이 프로젝트는 순수 Swift라 
 업스트림이 다시 바뀌면 아래를 실행한 뒤 이 인덱스의 표를 손본다.
 
 ```bash
-PINNED=e132fcf82b2bcd8d7e117a44af8f8323f771f8c1   # 현재 반영된 커밋 (문서 상단과 동일하게 유지할 것)
+PINNED=801762d709c9a280b2c7c9f9f375656aa7bdfff2   # 현재 반영된 커밋 (문서 상단과 동일하게 유지할 것)
 SRC=/tmp/x27                                        # 작업용 임시 경로 — 아무 데나 괜찮다
 DEST=docs/claude/apple-frameworks
 

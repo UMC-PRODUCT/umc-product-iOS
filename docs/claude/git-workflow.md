@@ -30,12 +30,13 @@ Git Flow + **연속 브랜치 파생** 지원
 | 외부 TestFlight | `testflight/external/{version}/{build}` | dev | `USE_DEV_SERVER=1` |
 | App Store 릴리즈 | `release/{version}/{build}` | prod | 미설정 |
 
-- `origin/develop` 에서 분기한다. `{version}` 은 `MARKETING_VERSION`(예: `3.5.0`), `{build}` 는
+- `origin/develop` 에서 분기한다. `{version}` 은 `MARKETING_VERSION`(예: `5.3.0`), `{build}` 는
   `CURRENT_PROJECT_VERSION` — `UMCApp/Makefile` 이 브랜치명 끝 숫자를 읽어 `make generate` 에 넣는다.
 - **빌드 번호는 105 이상**, 같은 마케팅 버전 안에서 TestFlight·App Store 두 계열을 합쳐 **중복 금지**.
-  App Store Connect 에서 미사용인지 확인한 뒤 쓴다. (예: `testflight/external/3.5.0/111` → `release/3.5.0/112`)
+  App Store Connect 에서 미사용인지 확인한 뒤 쓴다. (예: `testflight/external/5.3.0/124` → `release/5.3.0/125`)
+  다음 번호는 `git ls-remote --heads origin 'release/*' 'testflight/*'` 로 두 계열의 최댓값을 확인해 정한다.
 - 배포 브랜치는 **PR 을 만들지 않는다**(요청받은 경우만). 푸시 자체가 배포다. force-push·빌드 번호 재사용 금지.
-- 릴리즈가 나가면 태그 `v{version}` 을 단다(현재 최신 `v3.5.0`).
+- 릴리즈가 나가면 태그 `v{version}` 을 단다. 현재 최신 태그는 `v4.0.0` 이고, 5.0.0~5.3.0 은 배포 브랜치만 있고 태그가 없다.
 - 배포 후 `develop` 의 `MARKETING_VERSION` 이 낮으면 **별도 `chore/{이슈번호}` PR** 로 버전만 동기화한다
   (`Settings+Recommended.swift` 의 `MARKETING_VERSION` 한 줄, 로컬 `CURRENT_PROJECT_VERSION` 기본값 `1` 유지).
   배포 브랜치 자체를 develop 에 머지하지 않는다.

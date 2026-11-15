@@ -143,14 +143,15 @@ weight 는 `AppFontWeight`(`.regular` 기본, `Font.app(size:weight:)` 는 `.med
 |------|---------|------|
 | `ArticleTextField/` | `ArticleTextField` | 제목/본문 겸용 텍스트 입력 (`ArticleTextFieldType` `.title`, `.content`) |
 | `Auth/` | `LoginActionStack` · `SocialLoginLabel` · `LoginMethod` | 소셜 로그인 버튼 묶음 (Auth·MyPage 재사용) |
-| `Badge/` | `AttendanceStatusBadge` · `InfoBadge` | 출석 상태·정보 뱃지 |
+| `Badge/` | `AttendanceStatusBadge` · `InfoBadge` · `MemberTag` | 출석 상태·정보 뱃지, 파트·역할 태그 |
 | `ChipButton/` | `ChipButton` (+ Style/Size/Environment) | 칩 형태 버튼 |
 | `ChromaticLens/` | `ChromaticLens` · `RefractiveCinematic` | 굴절 효과 (Apple Intelligence 안내 등) |
 | `Icon/` | `CardIconImage` | 카드형 아이콘 래퍼 |
-| `Layout/` | `FlowLayout` | 줄바꿈 플로우 레이아웃 |
+| `Layout/` | `FlowLayout` · `AdaptiveContentLayout` | 줄바꿈 플로우 레이아웃, 가용 폭에 따라 1열↔2열로 같은 자식 뷰를 재배치 (홈 — `UMCApp/Docs/iPhone-Duo-Adaptive-Layout.md`) |
 | `Loading/` | `LoadingView` | 로딩 인디케이터 |
 | `Logo/` | `AuthLogoBlock` | 인증 화면 로고 블록 |
 | `MainButton/` | `MainButton` (+ Size/Environment/Modifiers) | 주요 CTA 버튼 |
+| `Member/` | `MemberSafetyProfileView` · `MemberReportFormViewModel` | 참여자·메시지 발신자 프로필의 차단·신고 공통 메뉴와 신고 폼 (이 폴더 때문에 `CoreUIComponents` 가 `CoreDomain` 에 의존) |
 | `PlaceSelectView/` | `PlaceSelectView` · `MapPlacePickerView` · `PlaceSelection` | 장소 선택 (지도 피커·POI 길게 누르기 팁) |
 | `Progress/` | `Progress` (+ `ProgressSize`) | 진행률 표시 |
 | `Schedule/` | `DatePickerRow` · `TimePickerRow` · `DateTimeRow` · `InPersonToggle` · `AttendancePolicyTimeSection` | 일정 등록 폼 행 |
@@ -158,7 +159,7 @@ weight 는 `AppFontWeight`(`.regular` 기본, `Font.app(size:weight:)` 는 `.med
 | `State/` | `RetryContentUnavailableView` | 빈 상태/에러 + 재시도 |
 | `ToolBar/` | `ToolBarCollection` | 툴바 헬퍼 |
 | `Utilities/` | `RemoteImage`(Kingfisher) · `CapsuleModifier` · `DefaultBackgroundModifier` · `KeyboardToolbarModifier` · `NavigationModifier`/`NavigationTitle` · `RainbowBorderModifier` · `ShadowReuse` | 공용 모디파이어 |
-| `Extensions/` | `Image+*Assets` · `UMCPartType+Color` · `ManagementTeam+Color` · `ScheduleIconCategory+Visual` | 에셋·도메인 열거형의 시각 매핑 (배치 기준: 색/이미지 매핑은 UIComponents) |
+| `Extensions/` | `Image+*Assets` · `UMCPartType+Color` · `ManagementTeam+Color` · `ScheduleIconCategory+Visual` · `Map+Category` | 에셋·도메인 열거형의 시각 매핑 (배치 기준: 색/이미지 매핑은 UIComponents) |
 
 > 명함 카드 UI(`BusinessCardFaceView`)는 공용 컴포넌트가 아니라 `BusinessCardPresentation` 소유다 — 다른 Feature 는 그 모듈을 링크해 재사용한다(`build-and-modules.md` "경계 정책 — BusinessCard").
 
