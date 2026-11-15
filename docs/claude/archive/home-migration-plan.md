@@ -1,3 +1,6 @@
+> 2026-08-10 #1117 에서 잔여 17건을 모두 반영하고 끝난 조사 기록이다. 현재 Home 구조는 코드와
+> `docs/claude/build-and-modules.md` 를 기준으로 본다.
+
 # Home 마이그레이션 잔여 검토
 
 > 레거시 `AppProduct/AppProduct/Features/Home/` → Tuist `UMCApp/Features/Home/` 이관의

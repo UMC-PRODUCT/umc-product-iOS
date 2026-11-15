@@ -39,7 +39,7 @@ UMC(University MakeUs Challenge) 동아리 운영을 하나의 앱으로 통합�
 |------|------|
 | 🔔 **The Ping** | 공지 수신 확인 추적 · 미확인자 재알림 · 푸시 딥링크 진입 |
 | 📍 **GPS 스마트 출석** | 지오펜스 기반 정시·지각·이탈 자동 판정, 지도에서 세션 장소 지정 |
-| 📱 **Mobile-First Admin** | 출석 세션 · 상벌점 · 리치 텍스트 공지 · 스터디 커리큘럼/제출 현황 관리 |
+| 📱 **Mobile-First Admin** | 출석 세션 · 멤버·상벌점 · 리치 텍스트 공지 · 스터디 커리큘럼 · 프로젝트 지원자 심사 |
 | 💬 **실시간 커뮤니티 스레드** | STOMP over WebSocket 채팅 — 답장 인용·@멘션·반응, 공유 딥링크(`umc://thread/{id}`) |
 | 🧠 **온디바이스 AI** | FoundationModels 기반 대화 요약·액션 아이템 추출·스레드 자동 분류 |
 | 🪪 **명함 근거리 교환** | MultipeerConnectivity + NearbyInteraction, QR·딥링크 폴백 |
@@ -89,7 +89,7 @@ UMC(University MakeUs Challenge) 동아리 운영을 하나의 앱으로 통합�
 
 ## 🔑 시크릿 설정
 
-- `Secrets.xcconfig`(`BASE_URL`, `KAKAO_KEY`)와 `GoogleService-Info.plist`는 **팀 내부 채널**에서 수령합니다.
+- `Secrets.xcconfig`(`BASE_URL`, `KAKAO_KEY`, `TMAP_SECRET_KEY`)와 `GoogleService-Info.plist`는 **팀 내부 채널**에서 수령합니다.
 - 실제 키·설정 파일은 원격 저장소에 커밋하지 않습니다.
 - 상세 절차: [Build & Run › 시크릿 설정](https://github.com/UMC-PRODUCT/umc-product-iOS/wiki/Build-and-Run)
 

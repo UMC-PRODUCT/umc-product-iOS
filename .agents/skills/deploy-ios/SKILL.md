@@ -19,11 +19,12 @@ TestFlight and App Store uploads for the same marketing version must use differe
 numbers. Start at 105. Use the next unused number across both branch families and check
 remote branches for reuse before pushing.
 
-For the next deployment (user-designated on 2026-11-01), start at build **113**:
-version **4.0.0** uses external TestFlight **113** and App Store **114**. These allocations
-are user-designated; App Store Connect availability and Xcode Cloud settings remain
-unverified unless independently available. For later
-deployments, use the next unused number across both families; do not reuse 113 or 114.
+As of 2026-11-15 the highest used build number is **125** (`release/5.3.0/125`, with
+external TestFlight `testflight/external/5.3.0/124`). The next deployment starts at **126**
+unless the user designates other numbers. Confirm with
+`git ls-remote --heads origin 'release/*' 'testflight/*'` before pushing, because this note
+can lag behind remote branches. App Store Connect availability and Xcode Cloud settings
+remain unverified unless independently available.
 
 ## Deploy
 

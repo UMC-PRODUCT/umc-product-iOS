@@ -3,7 +3,7 @@
 > **목적**: 레거시 `AppProduct/AppProduct/`의 **모든 Swift 파일**을 Tuist `UMCApp/`의 어느 모듈로 옮기는지 파일 단위로 정리한 표입니다.
 > 배치 *규칙*은 `docs/claude/build-and-modules.md`(모듈 구조·경계 정책)와 `docs/claude/architecture.md`(레이어 구조)를 따른다.
 > (과거 참조하던 `tuist-module-placement-guide.md`·`tuist-migration-roadmap.md` 는 저장소에 없다.)
-> 현재 `UMCApp/` 는 Core 12개 + Feature 10개 모듈이며 3.x 릴리즈가 전부 여기서 나갔다 — 이 표는 **남은 레거시 파일을
+> 현재 `UMCApp/` 는 Core 12개 + Feature 10개 모듈이며 3.0.0 이후 릴리즈(최신 5.3.0)가 전부 여기서 나갔다 — 이 표는 **남은 레거시 파일을
 > 대조할 때의 목적지 사전**으로 쓰고, 이미 다른 설계로 대체된 행은 아래 상태 표기를 따른다.
 
 | 항목 | 값 |

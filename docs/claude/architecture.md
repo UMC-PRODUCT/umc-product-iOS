@@ -49,6 +49,8 @@ UMCApp/Features/{Feature}/
 ```
 
 - Mock/Stub 은 해당 레이어 `Sources/Mock` 에 `#if DEBUG` 로 둔다 (핵심 규칙 #5).
+  앱 전체를 더미데이터로 띄우는 stub 세션은 App 타겟 `UMCApp/UMCApp/Sources/Debug/StubSession/` 에 있다
+  (`UMCApp-Stub` 스킴 — `docs/claude/build-and-modules.md` "실행 스킴").
 - DI 등록은 App 타겟의 `UMCApp/UMCApp/Sources/DIContainer+{Feature}.swift` 확장에서 한다.
 
 ### 계층 원칙
@@ -107,15 +109,18 @@ let useCase = container.resolve(LoginUseCaseProtocol.self)
 
 | 계층 | 타입 | 위치 | 역할 |
 |------|------|------|------|
-| 앱 생명주기 | `AppFlowViewModel` / `AppFlowState` | `UMCApp/UMCApp/Sources/AppFlow/` | bootstrap → login/signUp → main 전역 상태머신. 하위 Feature 는 `AppFlow` 환경값(클로저 묶음)으로만 전환을 요청 — 구체 타입 의존 없음 |
+| 앱 생명주기 | `AppFlowViewModel` / `AppFlowState` | `UMCApp/UMCApp/Sources/AppFlow/` | bootstrap → login/signUp → pendingApproval(미승인 회원) → main 전역 상태머신. 하위 Feature 는 `AppFlow` 환경값(클로저 묶음)으로만 전환을 요청 — 구체 타입 의존 없음 |
 | 탭 경로 | `PathStore` · `NavigationTab` | `Core/Routing/Sources/` | 탭별 독립 `NavigationPath` 를 한 곳에서 보관. App 셸이 소유해 `.environment` 로 주입하고 각 탭 `NavigationStack(path:)` 바인딩 소스로 쓴다. 탭을 가로지르는 이동(`selectedTab` + push)의 진입점 |
-| Feature 목적지 | `{Feature}Destination` (`Activity`·`Project`·`MyPage`·`BusinessCard`) | `{Feature}Presentation/Sources/Navigation/` | Feature 가 **자기 목적지 타입을 자기 모듈에** 두고, 루트 화면이 `.navigationDestination(for:)` 을 자기 탭 스택에 등록. 목적지 화면을 `public` 으로 열 필요 없음 |
+| Feature 목적지 | `{Feature}Destination` (`Activity`·`Community`·`Project`·`MyPage`·`BusinessCard`, Activity 스터디는 `StudyDestination`) | `{Feature}Presentation/Sources/Navigation/` | Feature 가 **자기 목적지 타입을 자기 모듈에** 두고, 루트 화면이 `.navigationDestination(for:)` 을 자기 탭 스택에 등록. 목적지 화면을 `public` 으로 열 필요 없음 |
 | 과도기 목적지 | `NavigationDestination` (Home/Notice) | `UMCApp/UMCApp/Sources/Navigation/` | 아직 App 에 남은 Home·Notice 목적지. Notice 화면은 콜백 클로저로 의도만 올리고 push 는 `RootTabView`/`NavigationRoutingView` 가 수행(#1027). Feature 로 옮기면 사라질 타입 |
 | 딥링크 | `AppDeepLink`(`message`·`card`·`attendance`) · `DeepLinkStore` | `UMCApp/UMCApp/Sources/Navigation/` | `umc://thread|notice/…`·`https://umc.it.kr/t/…`·푸시 → 탭 선택 + 경로 push |
 
 - `NavigationPath` 는 타입 소거라 **Core → Feature, Feature → App 역방향 의존 없이** 서로 다른 Feature 목적지를 한 스택에 섞을 수 있다. 모든 목적지를 모은 전역 enum 을 Core 에 두지 않는다.
 - `PathStore`·`AppFlowViewModel`·`ErrorHandler`·`UserSessionManager` 는 핵심 규칙 #1 의 명시적 예외(앱 생명주기 전역 관리자)로 `@Observable` 전역 객체다. 액터 격리 정책을 바꾸려면 네 타입을 함께 다룬다.
 - 탭 표시 정보(제목·SF Symbol)는 App 타겟 확장 `NavigationTab+Presentation.swift` 에 둔다 — `CoreRouting` 은 라우팅 정체성만 가진다.
+- 넓은 창에서 목록·상세를 나란히 보여 주는 공지·커뮤니티·마이페이지는 `NavigationSplitView` 하나가 목록과 상세를 소유하고,
+  상세 경로는 기존 `PathStore` 탭 경로를 그대로 쓴다. 창 크기가 바뀌어도 경로·ViewModel 을 다시 만들지 않으며,
+  편집·작성 중인 경로를 목록 선택으로 덮어쓰지 않는다 — `UMCApp/Docs/iPhone-Duo-Adaptive-Layout.md`.
 
 ## Observation 패턴
 
@@ -210,6 +215,14 @@ errorHandler.handle(error, context: ErrorContext(
 - **ErrorHandler**: 작업 흐름 중단, 즉각적 사용자 액션 필요 (세션 만료, 권한 요청, 네트워크 오류)
 - **Loadable**: 화면 내 상태 표시 (리스트 로딩 실패, 도메인 에러, 검증 실패)
 
+### 금지어 검증 (`ProhibitedTextValidator`)
+
+공개 입력(메시지·답글, 스레드 생성·수정, 가입 이름·닉네임)은 **전송 전에 UseCase 에서**
+`UMCFoundation.ProhibitedTextValidator.validate(_:field:)` 로 검사한다. 걸리면 `AppError.validation(.invalidValue(field:reason:))` 로 던지므로
+화면은 다른 검증 실패와 같이 처리하고, 사용자가 쓰던 초안·수정 모드는 유지한다.
+목록은 `ProhibitedTextCatalog`(원본 ID·분류 보존)이며 NFKC·소문자·보이지 않는 문자 정규화와 공백 삽입 우회를 잡는다.
+신고·문의 본문, URL·이메일·비밀번호에는 호출하지 않는다. 서버 검증을 대체하지 않는다.
+
 ### AlertPrompt (확인/취소 다이얼로그)
 
 ```swift
@@ -239,3 +252,12 @@ final class SomeViewModel {
 **AlertPrompt 사용 기준:**
 - 파괴적 작업 전 확인 (삭제, 초기화 등)
 - 사용자 선택이 필요한 분기점
+
+## Analytics (`AppAnalytics`)
+
+Feature 는 Firebase 를 직접 import 하지 않고 `UMCFoundation.AppAnalytics.track(_:parameters:)` 만 호출한다(`@MainActor`).
+App 타겟이 Firebase 초기화에 성공한 뒤 `AppAnalytics.configure(handler:)` 로 수집기를 설치하며, 설치 전에는 no-op 이다.
+
+- 이벤트 이름·매개변수는 **고정된 분류값만** 쓴다. 사용자 식별자·본문·검색어·URL·위치 좌표·서버 오류 원문은 보내지 않는다.
+- 결과 이벤트는 서버가 확정한 시점에 한 번만 기록한다(중복 방지 조건은 회귀 테스트로 검증).
+- 명함 교환 흐름은 수집 대상에서 뺀다. 화면 조회는 자동 수집을 끄고(`FirebaseAutomaticScreenReportingEnabled: false`) 명시적으로 기록한다.

@@ -107,8 +107,8 @@ case .addLink(_, let body):
 
 - Body: `Features/{Feature}/Data/Sources/DTOs/Request/{Name}RequestDTO.swift`
 - Query: `Features/{Feature}/Data/Sources/DTOs/Request/{Name}Query.swift`
-- Core 공용 엔드포인트(인가·회원 프로필·스토리지)는 `Core/Network/Sources/{Authorization,Member,Storage}/` 에
-  Router·DTO·Repository 를 함께 둔다.
+- Core 공용 엔드포인트(인가·회원 프로필·회원 차단/신고·스토리지)는 `Core/Network/Sources/{Authorization,Member,Storage}/` 에
+  Router·DTO·Repository 를 함께 둔다. (차단·신고는 `MemberBlockRepository`·`MemberReportRepository` — 커뮤니티·프로필이 공유)
 
 ## 적용 범위
 

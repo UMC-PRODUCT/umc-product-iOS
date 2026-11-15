@@ -14,13 +14,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **App Statement**: "Focus on Growth, We Handle the Ops"
 - **목적**: 동아리 운영 도구 일원화 (디스코드/구글시트/노션 분산 문제 해결)
 - **주요 모듈**: 인증/온보딩, 홈 대시보드, 공지사항, 운영/학교 관리, 스터디/활동, 커뮤니티, 프로젝트 지원·심사, 명함 교환, 마이페이지, watchOS 앱, Live Activity
-- **구현 기능 예시**: The Ping, GPS 스마트 출석, STOMP 커뮤니티(사진 메시지 포함), 프로젝트 목록·운영진 관리·지원·지원자 심사, 명함 근거리 교환, Apple Intelligence 안내, 출석 Live Activity
-- **App Store 릴리즈**: 3.5.0 (태그 `v3.5.0`, 배포 브랜치 `release/3.5.0/112`) — `UMCApp/`(Tuist) 빌드.
-  `develop`의 `MARKETING_VERSION`은 `UMCApp/Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift`에서 관리한다.
-  3.x 계열은 전부 `UMCApp/`에서 나갔고, 레거시 `AppProduct/`는 마지막 릴리즈 2.2.0(태그 `v2.2.0`) 상태로 동결돼 있다.
+- **구현 기능 예시**: The Ping, GPS 스마트 출석, STOMP 커뮤니티(사진 메시지·사용자 차단/신고 포함), 운영진 멤버·상벌점 관리, 프로젝트 목록·운영진 관리·지원(기간 내 수정)·지원자 심사, 명함 근거리 교환, Apple Intelligence 안내, 출석 Live Activity, 공개 입력 금지어 검증, iPhone Duo(창 크기 변경) 적응형 화면
+- **App Store 릴리즈**: 최신 배포 브랜치 `release/5.3.0/125`(5.3.0) — `UMCApp/`(Tuist) 빌드. 릴리즈 태그는 `v4.0.0`까지 달려 있다.
+  `develop`의 `MARKETING_VERSION`은 `UMCApp/Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift`에서 관리하며 배포 뒤 동기화 PR로 올린다.
+  3.0.0 이후 릴리즈는 전부 `UMCApp/`에서 나갔고, 레거시 `AppProduct/`는 마지막 릴리즈 2.2.0(태그 `v2.2.0`) 상태로 동결돼 있다.
 - **두 빌드 축**: `AppProduct/`(레거시 xcodeproj, **`v2.2.0`에 동결 — 수정 금지**) + `UMCApp/`(Tuist) — **모든 신규·유지보수·이식 작업은 `UMCApp/`에서만 수행** (핵심 규칙 #9 참조)
 - **모듈 구성(UMCApp)**: Core 12개(`Foundation`·`Domain`·`Network`·`DI`·`Routing`·`DesignSystem`·`UIComponents`·`Photo`·`NearbyExchange`·`WatchConnectivity`·`WatchDesignSystem`·`WidgetShared`) + Feature 10개(`Activity`·`Auth`·`Badge`·`BusinessCard`·`Community`·`Home`·`Maintenance`·`MyPage`·`Notice`·`Project`) + `UMCAppWidget`·`UMCWatchApp`·`UMCWatchComplication`
 - **네트워크 스택**: HTTP 전송·토큰 갱신·STOMP는 SPM 패키지 **Aquila**(`Aquila`·`AquilaMoya`)가 담당하고, 엔드포인트 정의는 Moya `TargetType` Router로 유지한다. Aquila는 `CoreNetwork`만 import한다 (상세: `docs/claude/network-router.md`)
+- **Firebase**: FCM 푸시와 이용 이벤트(Analytics)는 App 타겟만 링크한다. Feature는 `UMCFoundation.AppAnalytics`만 호출하고 식별자·본문·위치 좌표는 보내지 않는다 (상세: `docs/claude/architecture.md` "Analytics")
 
 ## 아키텍처 한눈에
 
@@ -32,7 +33,7 @@ View ←→ ViewModel(@Observable) → UseCase(Protocol) → Repository → Data
 ```
 
 - **Presentation → Domain → Data** 단방향. 상위는 하위의 Protocol에만 의존 (DIP)
-- **Router**: `CoreRouting.PathStore`(탭별 독립 `NavigationPath`) + App의 `AppFlowViewModel`(bootstrap/login/main 상태머신)·딥링크. Feature는 자기 목적지 타입을 자기 모듈에 두고 `.navigationDestination(for:)`을 자기 탭 스택에 등록한다 — Core → Feature, Feature → App 역방향 의존 금지
+- **Router**: `CoreRouting.PathStore`(탭별 독립 `NavigationPath`) + App의 `AppFlowViewModel`(bootstrap/login/signUp/pendingApproval/main 상태머신)·딥링크. Feature는 자기 목적지 타입을 자기 모듈에 두고 `.navigationDestination(for:)`을 자기 탭 스택에 등록한다 — Core → Feature, Feature → App 역방향 의존 금지
 - 상세: `docs/claude/architecture.md`
 
 ## 핵심 규칙 (항상 적용)
@@ -103,7 +104,7 @@ View ←→ ViewModel(@Observable) → UseCase(Protocol) → Repository → Data
 open AppProduct/AppProduct.xcodeproj
 
 # UMCApp (Tuist) — 표준 진입점은 Makefile. 모든 작업은 여기서.
-cd UMCApp && make open          # generate + Xcode 열기
+cd UMCApp && make open          # generate + Xcode 열기 (UMCApp = 실서버, UMCApp-Stub = 더미데이터·로그인 생략)
 cd UMCApp && make test          # 테스트
 cd UMCApp && make test-network  # CoreNetwork 단위+통합 테스트 (로컬 Vapor 서버가 떠 있으면 통합도 실행)
 cd UMCApp && make build-watch   # watchOS 앱 빌드
@@ -137,13 +138,15 @@ cd AppProductTestServer && make integration
 | 프로젝트 구조(AppProduct) | `docs/claude/project-structure.md` | 레거시 디렉터리 탐색 (열람 전용) |
 | PR 리뷰 규칙 & 체크리스트 | `docs/claude/pr-review.md` | PR 리뷰 작성 시 |
 | 근거리 교환 실기기 검증 | `docs/claude/nearby-exchange-device-verification.md` | 근거리 명함 교환을 실기기 2대로 검증할 때, 조직 팀 App ID capability·서명 문제를 풀 때 |
+| iPhone Duo 적응형 화면 | `UMCApp/Docs/iPhone-Duo-Adaptive-Layout.md` | 창 크기 변경·분할 화면 레이아웃, `NavigationSplitView` 경로 보존, 탭별 열 배치 기준을 확인할 때 |
+| 완료·철거된 설계 기록 | `docs/claude/archive/` | 철거된 3D 명함 스택, 끝난 Home 이관 검토 등 과거 결정 근거를 찾을 때 (현행 규약 아님) |
 
 Apple 프레임워크 API — 신규 Apple API를 다룰 때:
 
 | 모음 | 인덱스 | 언제 읽나 |
 |------|--------|----------|
 | Apple 프레임워크 가이드(20종) | `docs/claude/apple-frameworks/INDEX.md` | `glassEffect`·`GlassEffectContainer`(Liquid Glass) · 툴바 신규 API · `AttributedString`/리치 텍스트 · FoundationModels(온디바이스 LLM) · SwiftData 상속 · `@MainActor`/actor/async 동시성 · Swift Charts 3D · WebKit·AlarmKit·MapKit·StoreKit 연동 |
-| Apple 스킬팩(10종 · reference 85종, Apple 원문 · Xcode 27.2 beta 2 기준) | `docs/claude/apple-frameworks/INDEX.md` §3 | **SwiftUI·App Intents 코드를 새로 쓰거나 리뷰할 때.** `@Observable`/`@State`/`@Binding` 소유권 · `@Environment`/`@Entry` 무효화 경고 · `ForEach`/`List` identity(`id: \.self` 안티패턴) · soft-deprecated API 확인(`NavigationView`, 구 `onChange`) · 조건부 `.if` 모디파이어 · 뷰 분해/init 비용 · `Animatable` · App Intents 스키마/`AppEnum` · UIKit 현대화·창 크기 변경/iPhone Duo 대응 · Xcode 보안 빌드 설정(Enhanced Security·MTE·Checked Pointer Arithmetic) |
+| Apple 스킬팩(11종 · reference 87종, Apple 원문 · Xcode 27.2 RC 기준) | `docs/claude/apple-frameworks/INDEX.md` §3 | **SwiftUI·App Intents 코드를 새로 쓰거나 리뷰할 때, 성능을 측정할 때.** `@Observable`/`@State`/`@Binding` 소유권 · `@Environment`/`@Entry` 무효화 경고 · `ForEach`/`List` identity(`id: \.self` 안티패턴) · soft-deprecated API 확인(`NavigationView`, 구 `onChange`) · 조건부 `.if` 모디파이어 · 뷰 분해/init 비용 · `Animatable` · App Intents 스키마/`AppEnum` · UIKit 현대화·창 크기 변경/iPhone Duo 대응 · Xcode 보안 빌드 설정(Enhanced Security·MTE·Checked Pointer Arithmetic) · `xctrace`(Instruments CLI)로 멈춤(hang)·CPU·메모리 분석 |
 
 기획·설계 문서 — 기존 개인 기획 레포는 삭제되었다. 별도 기획 레포를 전제로 하지 않는다.
 
