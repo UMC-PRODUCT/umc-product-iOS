@@ -13,7 +13,7 @@ enum MemberAdministrationRouter: BaseTargetType {
 
     var path: String {
         switch self {
-        case .search: "/api/v2/challenger/search"
+        case .search: "/api/v2/challenger/admin/search"
         case .generations: "/api/v1/gisu"
         case .organizations: "/api/v2/gisu"
         case .authority: "/api/v2/member/me"
