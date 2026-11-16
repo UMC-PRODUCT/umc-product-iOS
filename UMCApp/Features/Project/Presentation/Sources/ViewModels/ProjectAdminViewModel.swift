@@ -163,12 +163,12 @@ final class ProjectAdminViewModel {
         guard actions(for: projectId).contains(.editPartQuota) else { return }
         let entries = values.compactMap { part, value -> ProjectPartQuotaEntry? in
             let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let quota = Int(trimmed), quota > 0 else { return nil }
+            guard let quota = Int(trimmed), (1...999).contains(quota) else { return nil }
             return ProjectPartQuotaEntry(part: part, quota: String(quota))
         }
         guard entries.count == values.count, !entries.isEmpty else {
             commandError = .domain(
-                .custom(message: "정원은 1명 이상으로 입력해 주세요.")
+                .custom(message: "정원은 1명 이상 999명 이하로 입력해 주세요.")
             )
             return
         }

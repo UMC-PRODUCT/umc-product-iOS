@@ -306,7 +306,7 @@ public struct ProjectInfoUpdate: Sendable, Equatable {
     }
 }
 
-/// 파트 TO 설정 항목 (`PUT /api/v1/projects/{projectId}/part-quotas`). `quota` 는 1 이상.
+/// 파트 TO 설정 항목 (`PUT /api/v1/projects/{projectId}/part-quotas`). `quota` 는 1~999.
 public struct ProjectPartQuotaEntry: Sendable, Equatable {
     public let part: UMCPartType
     public let quota: String
