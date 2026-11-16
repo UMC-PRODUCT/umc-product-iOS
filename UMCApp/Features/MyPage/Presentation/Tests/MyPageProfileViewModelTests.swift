@@ -238,7 +238,8 @@ struct MyPageProfileViewModelTests {
             challengeId: 1,
             socialConnections: [SocialConnection(memberOAuthId: "5", socialType: .apple)]
         )
-        let refreshed = makeStubProfileData(challengeId: 55, socialConnections: [])
+        var refreshed = makeStubProfileData(challengeId: 55, socialConnections: [])
+        refreshed.isUmcProduct = true
         let mock = MockMyPageRepository()
         mock.fetchMyProfileResult = .success(refreshed)
         let viewModel = makeViewModel(profile: original, repository: mock)
@@ -251,6 +252,7 @@ struct MyPageProfileViewModelTests {
         // 기록 추가는 세션 캐시를 무효화하지 않으므로 캐시를 우회해야 방금 추가한 이력이 보인다.
         #expect(mock.fetchMyProfileReceivedForceRefresh == true)
         #expect(viewModel.profileData.challengeId == 55)
+        #expect(viewModel.profileData.isUmcProduct)
         #expect(viewModel.profileData.socialConnections == original.socialConnections)
         #expect(viewModel.didRecentlyAddActivityLog == true)
         #expect(viewModel.isAddingActivityLog == false)

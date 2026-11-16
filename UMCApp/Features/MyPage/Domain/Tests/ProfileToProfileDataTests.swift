@@ -23,7 +23,8 @@ struct ProfileToProfileDataTests {
     private static func makeProfile(
         roles: [ProfileRole] = [],
         challengerRecords: [ProfileChallengerRecord] = [],
-        externalLinks: ProfileExternalLinks? = nil
+        externalLinks: ProfileExternalLinks? = nil,
+        isUmcProduct: Bool = false
     ) -> Profile {
         Profile(
             memberId: "1",
@@ -36,7 +37,8 @@ struct ProfileToProfileDataTests {
             email: "test@umc.kr",
             status: .active,
             externalLinks: externalLinks,
-            challengerRecords: challengerRecords
+            challengerRecords: challengerRecords,
+            isUmcProduct: isUmcProduct
         )
     }
 
@@ -87,6 +89,16 @@ struct ProfileToProfileDataTests {
     }
 
     // MARK: - Tests
+
+    @Test("프로덕트 표시를 보존하되 기수별 역할과 활동 이력을 만들지 않는다", arguments: [true, false])
+    func productAccountDisplayPreservesServerFlag(isUmcProduct: Bool) {
+        let profile = Self.makeProfile(isUmcProduct: isUmcProduct)
+        let result = profile.toProfileData()
+
+        #expect(result.isUmcProduct == isUmcProduct)
+        #expect(result.activityLogs.isEmpty)
+        #expect(profile.roles.isEmpty)
+    }
 
     @Test("빈 입력 → 기본값 (challengeId=0, gen=0, 빈 activityLogs)")
     func emptyInputGivesDefaults() {
