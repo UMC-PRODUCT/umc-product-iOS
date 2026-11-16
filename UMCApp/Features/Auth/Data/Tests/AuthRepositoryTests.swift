@@ -630,3 +630,55 @@ struct AuthRepositoryGoogleLoginTests {
         #expect(await tokenStore.savedRefreshToken == nil)
     }
 }
+
+@MainActor
+@Suite("AuthRepository — 기존 챌린저 인증")
+struct AuthRepositoryExistingChallengerTests {
+
+    @Test("409 중복 계정 응답의 코드와 로그인 안내를 보존한다", arguments: ["message", "result"])
+    func preservesDuplicateAccountGuidance(_ messageField: String) async throws {
+        let message = "기존 Google 계정(te***@example.com)으로 로그인해주세요."
+        let body = try JSONSerialization.data(withJSONObject: [
+            "code": "CHALLENGER-0023", messageField: message
+        ])
+        let (sut, network, _) = makeRepository(
+            .failure(NetworkError.requestFailed(statusCode: 409, data: body))
+        )
+
+        await #expect(throws: RepositoryError.serverError(
+            code: "CHALLENGER-0023", message: message
+        )) {
+            try await sut.registerExistingChallenger(code: "ABC123")
+        }
+        #expect(network.requestCount == 1)
+    }
+
+    @Test("성공 응답은 기존 인증 엔드포인트로 한 번 요청한다")
+    func succeeds() async throws {
+        let (sut, network, _) = makeRepository(.success(Fixture.success("null")))
+
+        try await sut.registerExistingChallenger(code: "ABC123")
+
+        #expect(network.requestCount == 1)
+        #expect(network.lastPath == "/api/v1/challenger-record/member")
+        #expect(network.lastMethod == .post)
+    }
+
+    @Test("파싱할 수 없는 응답과 네트워크 오류는 원본을 전파한다", arguments: [
+        NetworkError.timeout,
+        NetworkError.requestFailed(statusCode: 409, data: Data("invalid".utf8)),
+        Fixture.networkRequestFailed(
+            statusCode: 500, code: "INTERNAL-0001", message: "Internal Server Error"
+        ),
+        Fixture.networkRequestFailed(
+            statusCode: 409, code: "OTHER-0001", message: "Unexpected conflict"
+        )
+    ])
+    func preservesUnmappedError(_ error: NetworkError) async {
+        let (sut, _, _) = makeRepository(.failure(error))
+
+        await #expect(throws: error) {
+            try await sut.registerExistingChallenger(code: "ABC123")
+        }
+    }
+}

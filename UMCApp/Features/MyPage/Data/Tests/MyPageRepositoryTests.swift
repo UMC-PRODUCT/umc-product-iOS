@@ -546,13 +546,14 @@ struct MyPageRepositoryAddRecordTests {
 
     @Test("addChallengerRecord — 서버 에러 본문(requestFailed)을 RepositoryError.serverError로 승격한다")
     func addRecordMapsServerError() async {
-        let body = Fixture.failureBody(code: "REC409", message: "이미 등록된 기록입니다.")
+        let message = "기존 Google 계정(te***@example.com)으로 로그인해주세요."
+        let body = Fixture.failureBody(code: "CHALLENGER-0023", message: message)
         let (sut, _) = makeRepository(
             .failure(NetworkError.requestFailed(statusCode: 409, data: body))
         )
 
         await #expect(throws: RepositoryError.serverError(
-            code: "REC409", message: "이미 등록된 기록입니다."
+            code: "CHALLENGER-0023", message: message
         )) {
             try await sut.addChallengerRecord(code: "X")
         }

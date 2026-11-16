@@ -564,18 +564,24 @@ extension AuthRepository: AuthRegistrationRepositoryProtocol {
     }
 
     public func registerExistingChallenger(code: String) async throws {
-        let response = try await adapter.request(
-            AuthRouter.registerExistingChallenger(
-                body: RegisterExistingChallengerRequestDTO(code: code)
-            )
-        )
-
         do {
+            let response = try await adapter.request(
+                AuthRouter.registerExistingChallenger(
+                    body: RegisterExistingChallengerRequestDTO(code: code)
+                )
+            )
             let apiResponse = try JSONDecoder().decode(
                 APIResponse<EmptyResult>.self,
                 from: response.data
             )
             try apiResponse.validateSuccess()
+        } catch let error as NetworkError {
+            if case .requestFailed(409, _) = error,
+               let serverError = Self.parseServerError(from: error),
+               serverError.code == "CHALLENGER-0023" {
+                throw serverError
+            }
+            throw error
         } catch let decodingError as DecodingError {
             throw RepositoryError.decodingError(detail: "\(decodingError)")
         }
