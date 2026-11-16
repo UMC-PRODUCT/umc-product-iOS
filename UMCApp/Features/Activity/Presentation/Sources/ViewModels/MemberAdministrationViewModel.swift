@@ -225,7 +225,7 @@ final class MemberAdministrationViewModel {
             hasNext = result.hasNext
         } catch {
             guard version == requestVersion, !Task.isCancelled else { return }
-            nextPageError = message(error)
+            nextPageError = listError(from: error).userMessage
         }
     }
 

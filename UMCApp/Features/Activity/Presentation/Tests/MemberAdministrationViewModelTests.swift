@@ -37,7 +37,8 @@ private final class AdministrationFake: MemberAdministrationUseCaseProtocol {
     var organizationGate: SearchGate?
     var organizationFails = false
     var generationsFail = false
-    var firstPageFailure: AppError?
+    var firstPageFailure: (any Error)?
+    var nextPageFailure: (any Error)?
     var nextPageFails = false
     var lastPage: Int?
     var generationOptions = [MemberFilterOption(id: "10", name: "10기", isActive: true)]
@@ -46,6 +47,7 @@ private final class AdministrationFake: MemberAdministrationUseCaseProtocol {
         lastFilter = filter
         lastPage = page
         if page == 0, let firstPageFailure { throw firstPageFailure }
+        if page > 0, let nextPageFailure { throw nextPageFailure }
         if page > 0 && nextPageFails { throw URLError(.badServerResponse) }
         if filter.keyword == "old", let gate { await gate.pause() }
         return .init(members: [adminMember(filter.keyword.isEmpty ? "initial" : filter.keyword)], hasNext: true)
@@ -189,6 +191,7 @@ struct MemberAdministrationViewModelTests {
         vm.filter.part = "IOS"
         await vm.changeGeneration()
         #expect(vm.canResetFilters)
+        #expect(api.lastFilter?.gisuId == "9")
         #expect(vm.filterSummary.contains("9기"))
         #expect(vm.filterSummary.contains("학교"))
         await vm.resetFilters()
@@ -210,6 +213,45 @@ struct MemberAdministrationViewModelTests {
         await vm.retry()
         #expect(vm.searchError == nil)
         #expect(vm.members.map(\.id) == ["initial"])
+    }
+
+    @Test("관리자 검색 권한 거부는 기존 목록을 지우고 서버 안내를 표시한다")
+    func searchAccessDeniedClearsResults() async {
+        let api = AdministrationFake()
+        let vm = MemberAdministrationViewModel(
+            useCase: api, membersUseCase: MemberActionsFake(), session: UserSessionManager()
+        )
+        await vm.load()
+        #expect(!vm.members.isEmpty)
+        let message = "챌린저 검색 권한이 없어요. 검색 기수와 소속 범위를 확인해주세요."
+        let data = Data(#"{"success":false,"code":"MEMBER-0015","message":"챌린저 검색 권한이 없어요. 검색 기수와 소속 범위를 확인해주세요."}"#.utf8)
+        let error = UMCFoundation.NetworkError.requestFailed(statusCode: 403, data: data)
+        api.firstPageFailure = error
+
+        await vm.search()
+
+        #expect(vm.members.isEmpty)
+        #expect(!vm.hasMore)
+        #expect(!vm.isLoading)
+        #expect(vm.searchError == .network(error))
+        #expect(vm.searchError?.userMessage == message)
+    }
+
+    @Test("후속 페이지의 원본 403 오류도 서버 권한 안내를 표시한다")
+    func paginationAccessDeniedPreservesServerMessage() async {
+        let api = AdministrationFake()
+        let vm = MemberAdministrationViewModel(
+            useCase: api, membersUseCase: MemberActionsFake(), session: UserSessionManager()
+        )
+        await vm.load()
+        let data = Data(#"{"success":false,"code":"MEMBER-0015","message":"검색 기수와 소속 범위를 확인해주세요."}"#.utf8)
+        api.nextPageFailure = UMCFoundation.NetworkError.requestFailed(statusCode: 403, data: data)
+
+        await vm.loadMore()
+
+        #expect(vm.nextPageError == "검색 기수와 소속 범위를 확인해주세요.")
+        #expect(!vm.isLoadingNextPage)
+        #expect(api.lastPage == 1)
     }
 
     @Test func paginationFailureKeepsResultsAndRetriesSamePage() async {

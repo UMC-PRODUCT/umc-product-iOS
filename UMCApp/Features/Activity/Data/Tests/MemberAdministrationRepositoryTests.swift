@@ -3,12 +3,14 @@ import Foundation
 import Testing
 import Moya
 import ActivityDomain
+import UMCFoundation
 @testable import ActivityData
 
 #if DEBUG
 private final class AdministrationNetwork: NetworkRequesting {
     enum StubError: Error { case unexpectedRequest }
     var responses: [Data]
+    var failure: UMCFoundation.NetworkError?
     var paths: [String] = []
     var methods: [Moya.Method] = []
     var tasks: [Moya.Task] = []
@@ -17,6 +19,7 @@ private final class AdministrationNetwork: NetworkRequesting {
         paths.append(target.path)
         methods.append(target.method)
         tasks.append(target.task)
+        if let failure { throw failure }
         guard !responses.isEmpty else { throw StubError.unexpectedRequest }
         return Response(statusCode: 200, data: responses.removeFirst())
     }
@@ -36,7 +39,8 @@ struct MemberAdministrationRepositoryTests {
         #expect(result.members.first?.generation == "11")
         #expect(result.members.first?.member.part == .admin)
         #expect(result.hasNext)
-        #expect(network.paths == ["/api/v2/challenger/search"])
+        #expect(network.methods == [.get])
+        #expect(network.paths == ["/api/v2/challenger/admin/search"])
         guard case let .requestParameters(query, _) = network.tasks[0] else {
             Issue.record("검색 쿼리 누락"); return
         }
@@ -44,6 +48,41 @@ struct MemberAdministrationRepositoryTests {
         #expect(query["keyword"] as? String == "검색")
         #expect(query["chapterId"] as? String == "2")
         #expect(query["gisuId"] as? String == "10")
+    }
+
+    @Test("기수를 생략하면 서버의 활성 기수 기본값을 사용한다")
+    func searchOmitsUnselectedGeneration() async throws {
+        let network = AdministrationNetwork([
+            #"{"success":true,"result":{"page":{"content":[],"hasNext":false}}}"#
+        ])
+        _ = try await MemberAdministrationRepository(networkRequesting: network)
+            .search(filter: .init(), page: 0)
+        guard case let .requestParameters(query, _) = network.tasks[0] else {
+            Issue.record("검색 쿼리 누락"); return
+        }
+        #expect(query["gisuId"] == nil)
+        #expect(network.paths == ["/api/v2/challenger/admin/search"])
+    }
+
+    @Test("관리자 검색 403은 일반 검색 재시도 없이 호출자에게 전달한다")
+    func searchPropagatesAccessDenied() async {
+        let network = AdministrationNetwork([])
+        let data = Data(#"{"success":false,"code":"MEMBER-0015","message":"챌린저 검색 권한이 없어요. 검색 기수와 소속 범위를 확인해주세요."}"#.utf8)
+        network.failure = .requestFailed(statusCode: 403, data: data)
+        do {
+            _ = try await MemberAdministrationRepository(networkRequesting: network)
+                .search(filter: .init(gisuId: "9"), page: 0)
+            Issue.record("권한 오류가 전달되어야 합니다")
+        } catch let error as UMCFoundation.NetworkError {
+            guard case let .requestFailed(statusCode, body) = error else {
+                Issue.record("HTTP 오류가 보존되어야 합니다"); return
+            }
+            #expect(statusCode == 403)
+            #expect(body == data)
+        } catch {
+            Issue.record("예상하지 못한 오류: \(error)")
+        }
+        #expect(network.paths == ["/api/v2/challenger/admin/search"])
     }
 
     @Test("기수와 조직은 숫자 및 문자열 ID를 읽는다")
