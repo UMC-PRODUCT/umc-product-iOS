@@ -67,6 +67,9 @@ private final class AdministrationFake: MemberAdministrationUseCaseProtocol {
 private final class MemberActionsFake: FetchMembersUseCaseProtocol {
     var history: [OperatorMemberPenaltyHistory] = []
     var historyFails = false
+    var historyError: Error?
+    var historyGate: SearchGate?
+    var historyModes: [ActivityMode] = []
     var grantCount = 0
     var deletedId: String?
     func execute(mode: ActivityMode) async throws -> [MemberManagementItem] { [] }
@@ -80,9 +83,13 @@ private final class MemberActionsFake: FetchMembersUseCaseProtocol {
                          penaltyScore: 3, pointType: pointType, signedPoint: Double(pointValue))]
     }
     func deletePoint(challengerPointId: String) async throws { deletedId = challengerPointId; history = [] }
-    func fetchPointHistory(challengerId: String) async throws -> [OperatorMemberPenaltyHistory] {
+    func fetchPointHistory(challengerId: String, mode: ActivityMode) async throws -> [OperatorMemberPenaltyHistory] {
+        historyModes.append(mode)
+        let result = history
+        if let historyGate { await historyGate.pause() }
+        if let historyError { throw historyError }
         if historyFails { throw DomainError.custom(message: "조회 거부") }
-        return history
+        return result
     }
     func fetchAllGenerations(memberId: String) async throws -> String { "10기" }
     func fetchGenerationPointSummaries(memberId: String) async throws -> [GenerationPointSummary] { [] }
@@ -91,6 +98,43 @@ private final class MemberActionsFake: FetchMembersUseCaseProtocol {
 
 @MainActor
 struct MemberAdministrationViewModelTests {
+    @Test func forbiddenReloadClearsPreviouslyVisibleHistory() async {
+        let actions = MemberActionsFake()
+        actions.history = [.init(challengerPointId: "point", date: .now, reason: "기록",
+                                 penaltyScore: 1, pointType: .custom)]
+        let vm = MemberAdministrationViewModel(useCase: AdministrationFake(),
+            membersUseCase: actions, session: UserSessionManager())
+        await vm.select(adminMember("target"))
+        #expect(vm.history.count == 1)
+        actions.historyError = NetworkError.requestFailed(statusCode: 403, data: nil)
+        await vm.reloadHistory()
+        #expect(vm.history.isEmpty)
+        #expect(vm.detailError?.contains("권한") == true)
+        #expect(!vm.isLoadingDetail)
+        #expect(actions.historyModes == [.admin, .admin])
+    }
+
+    @Test func generationChangeDiscardsPendingDetail() async {
+        let actions = MemberActionsFake()
+        actions.history = [.init(challengerPointId: "old", date: .now, reason: "이전 기수",
+                                 penaltyScore: 1, pointType: .custom)]
+        let vm = MemberAdministrationViewModel(useCase: AdministrationFake(),
+            membersUseCase: actions, session: UserSessionManager())
+        await vm.load()
+        let gate = SearchGate()
+        actions.historyGate = gate
+        let pending = Task { await vm.select(adminMember("old")) }
+        await gate.waitForStart()
+        vm.filter.gisuId = "9"
+        await vm.changeGeneration()
+        await gate.release()
+        await pending.value
+        #expect(vm.selectedMember == nil)
+        #expect(vm.history.isEmpty)
+        #expect(vm.detailError == nil)
+        #expect(!vm.isLoadingDetail)
+    }
+
     @Test func cancelledSearchClearsItsLoadingState() async {
         let api = AdministrationFake()
         let gate = SearchGate()

@@ -82,6 +82,7 @@ private final class MockMemberRepository: @unchecked Sendable, MemberRepositoryP
     private(set) var grantPointCalls: [GrantCall] = []
     private(set) var deletePointCalls: [String] = []
     private(set) var fetchPointHistoryCalls: [String] = []
+    private(set) var pointHistoryModes: [ActivityMode] = []
     private(set) var fetchAllGenerationsCalls: [String] = []
     private(set) var fetchGenerationPointSummariesCalls: [String] = []
     private(set) var fetchAttendanceRecordsCalls: [String] = []
@@ -140,9 +141,10 @@ private final class MockMemberRepository: @unchecked Sendable, MemberRepositoryP
     }
 
     func fetchPointHistory(
-        challengerId: String
+        challengerId: String, mode: ActivityMode
     ) async throws -> [OperatorMemberPenaltyHistory] {
         fetchPointHistoryCalls.append(challengerId)
+        pointHistoryModes.append(mode)
         if let error { throw error }
         return fetchPointHistoryResult
     }
@@ -210,7 +212,7 @@ private func callMethod(
     case .deletePoint:
         try await useCase.deletePoint(challengerPointId: "P-1")
     case .fetchPointHistory:
-        _ = try await useCase.fetchPointHistory(challengerId: "C-1")
+        _ = try await useCase.fetchPointHistory(challengerId: "C-1", mode: .challenger)
     case .fetchAllGenerations:
         _ = try await useCase.fetchAllGenerations(memberId: "M-1")
     case .fetchGenerationPointSummaries:
@@ -296,14 +298,16 @@ struct FetchMembersUseCaseDelegationTests {
         #expect(repository.deletePointCalls == ["P-3"])
     }
 
-    @Test("fetchPointHistory — challengerId 위임 + Repository 결과 반환")
-    func fetchPointHistoryForwardsIdAndReturns() async throws {
+    @Test("fetchPointHistory — ID와 조회 모드를 Repository에 전달",
+          arguments: [ActivityMode.challenger, .admin])
+    func fetchPointHistoryForwardsIdAndReturns(mode: ActivityMode) async throws {
         let repository = MockMemberRepository()
         let useCase = makeUseCase(repository: repository)
 
-        _ = try await useCase.fetchPointHistory(challengerId: "C-7")
+        _ = try await useCase.fetchPointHistory(challengerId: "C-7", mode: mode)
 
         #expect(repository.fetchPointHistoryCalls == ["C-7"])
+        #expect(repository.pointHistoryModes == [mode])
     }
 
     @Test(

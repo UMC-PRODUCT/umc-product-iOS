@@ -44,6 +44,8 @@ enum StudyRouter: Sendable {
     case deleteChallengerPoint(challengerPointId: String)
     /// 챌린저 프로필 조회 (포인트 히스토리 용) — `GET /api/v1/challenger/{challengerId}`
     case getChallengerProfile(challengerId: String)
+    /// 운영진 챌린저 상세와 상벌점 이력 조회
+    case getAdminChallengerProfile(challengerId: String)
 
     // MARK: - 운영진 스터디 그룹 CRUD / 일정 연결
 
@@ -89,6 +91,8 @@ extension StudyRouter: BaseTargetType {
             return "/api/v1/challenger/points/\(challengerPointId)"
         case .getChallengerProfile(let challengerId):
             return "/api/v1/challenger/\(challengerId)"
+        case .getAdminChallengerProfile(let challengerId):
+            return "/api/v2/challenger/admin/\(challengerId)"
         case .createStudyGroup:
             return "/api/v1/study-groups"
         case .updateStudyGroup(let groupId, _):
@@ -116,7 +120,8 @@ extension StudyRouter: BaseTargetType {
              .getMemberProfile,
              .searchChallengersOffset,
              .searchChallengersCursor,
-             .getChallengerProfile:
+             .getChallengerProfile,
+             .getAdminChallengerProfile:
             return .get
         case .createStudyGroup,
              .linkStudyGroupSchedule,
@@ -169,6 +174,7 @@ extension StudyRouter: BaseTargetType {
         case .getStudyGroupDetail,
              .getMemberProfile,
              .getChallengerProfile,
+             .getAdminChallengerProfile,
              .deleteStudyGroup,
              .addStudyGroupMember,
              .removeStudyGroupMember,

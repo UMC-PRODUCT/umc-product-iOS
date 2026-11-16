@@ -124,6 +124,7 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
     var firstPageGate: PageGate?
     private(set) var requestedGisuIds: [String?] = []
     private(set) var pointHistoryIds: [String] = []
+    private(set) var pointHistoryModes: [ActivityMode] = []
     var grantPointError: Error?
     var deletePointError: Error?
     var pointHistory: [OperatorMemberPenaltyHistory] = []
@@ -189,9 +190,10 @@ private final class MockFetchMembersUseCase: @unchecked Sendable, FetchMembersUs
     }
 
     func fetchPointHistory(
-        challengerId: String
+        challengerId: String, mode: ActivityMode
     ) async throws -> [OperatorMemberPenaltyHistory] {
         pointHistoryIds.append(challengerId)
+        pointHistoryModes.append(mode)
         if let pointHistoryError { throw pointHistoryError }
         return pointHistory
     }
@@ -998,18 +1000,20 @@ struct MemberListViewModelDetailTests {
         #expect(viewModel.selectedMember == member)
     }
 
-    @Test("상세 조회 → 히스토리에서 상/벌 합계 집계 + 열람 권한 true")
-    func detailAggregatesPenaltyAndRewardFromHistory() async {
+    @Test("화면 모드를 전달하고 상세 이력에서 상벌점을 집계한다",
+          arguments: [ActivityMode.challenger, .admin])
+    func detailAggregatesPenaltyAndRewardFromHistory(mode: ActivityMode) async {
         let member = makeMember(memberID: "1", challengerID: "C-1")
         let useCase = MockFetchMembersUseCase()
         useCase.pointHistory = [
             makeHistory(pointType: .studyLate, penaltyScore: 2),
             makeHistory(pointType: .bestWorkbook, penaltyScore: 3),
         ]
-        let viewModel = makeViewModel(useCase: useCase)
+        let viewModel = makeViewModel(useCase: useCase, mode: mode)
 
         await viewModel.openChallengerMemberDetail(member)
 
+        #expect(useCase.pointHistoryModes == [mode])
         #expect(viewModel.selectedMember?.penalty == 2)
         #expect(viewModel.selectedMember?.rewardPoints == 3)
         #expect(viewModel.selectedMember?.canViewPenaltyHistory == true)

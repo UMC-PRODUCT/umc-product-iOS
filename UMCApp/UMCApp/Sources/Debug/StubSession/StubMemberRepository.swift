@@ -74,7 +74,7 @@ struct StubMemberRepository: MemberRepositoryProtocol {
     }
 
     func fetchPointHistory(
-        challengerId: String
+        challengerId: String, mode: ActivityMode
     ) async throws -> [OperatorMemberPenaltyHistory] {
         member(challengerId: challengerId)?.penaltyHistory ?? []
     }

@@ -178,10 +178,12 @@ public final class MemberRepository: MemberRepositoryProtocol, @unchecked Sendab
     }
 
     public func fetchPointHistory(
-        challengerId: String
+        challengerId: String, mode: ActivityMode
     ) async throws -> [OperatorMemberPenaltyHistory] {
         let response = try await networkRequesting.request(
-            StudyRouter.getChallengerProfile(challengerId: challengerId)
+            mode == .admin
+                ? StudyRouter.getAdminChallengerProfile(challengerId: challengerId)
+                : StudyRouter.getChallengerProfile(challengerId: challengerId)
         )
         let profile = try decoder.decode(
             APIResponse<ChallengerProfileDTO>.self,
