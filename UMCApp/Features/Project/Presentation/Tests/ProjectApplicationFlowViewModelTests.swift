@@ -522,12 +522,15 @@ private extension ProjectApplicationFlowViewModelTests {
     )
 }
 
-private final class ProjectUseCaseSpy: ProjectUseCaseProtocol, @unchecked Sendable {
+final class ProjectUseCaseSpy: ProjectUseCaseProtocol, @unchecked Sendable {
     var projectPage = ProjectPage<ProjectSummary>(
         items: [], page: "0", size: "20", totalElements: "0", totalPages: "0",
         hasNext: false, hasPrevious: false
     )
     var receivedSearchQueries: [ProjectSearchQuery] = []
+    var permissions: [ProjectPermission] = []
+    var quotaUpdates: [[ProjectPartQuotaEntry]] = []
+    var quotaError: AppError?
 
     func fetchProjects(query: ProjectSearchQuery) async throws -> ProjectPage<ProjectSummary> {
         receivedSearchQueries.append(query)
@@ -566,12 +569,21 @@ private final class ProjectUseCaseSpy: ProjectUseCaseProtocol, @unchecked Sendab
     func publishProject(projectId: String) async throws -> ProjectStatusResult {
         throw TestError.unused
     }
-    func updatePartQuotas(projectId: String, entries: [ProjectPartQuotaEntry]) async throws {}
+    func updatePartQuotas(projectId: String, entries: [ProjectPartQuotaEntry]) async throws {
+        quotaUpdates.append(entries)
+        if let quotaError { throw quotaError }
+    }
     func abortProject(projectId: String, reason: String) async throws {}
     func completeProjects(projectIds: [String]) async throws {}
-    func fetchPermissions(projectIds: [String]) async throws -> [ProjectPermission] { [] }
+    func fetchPermissions(projectIds: [String]) async throws -> [ProjectPermission] { permissions }
     func fetchStatistics(projectIds: [String]) async throws -> ProjectChapterStatistics {
-        throw TestError.unused
+        ProjectChapterStatistics(
+            chapterId: "5", matchingRound: nil,
+            summary: .init(
+                roundApplicationStatistics: [], schoolApplicationStatistics: [],
+                projectRoundStatistics: []
+            )
+        )
     }
     func fetchStatistics(chapterId: String) async throws -> ProjectChapterStatistics {
         throw TestError.unused

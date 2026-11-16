@@ -144,6 +144,63 @@ struct ProjectAdminViewModelTests {
         #expect(requestedBatches.flatMap { $0 } == projectIds)
     }
 
+    @Test("PUT 정원은 1~999만 전송한다", arguments: ["0", "1", "999", "1000", "", " ", "abc"])
+    func validatesPartQuotaRange(value: String) async throws {
+        let (viewModel, useCase) = try await makeQuotaViewModel()
+        await viewModel.updatePartQuotas(projectId: "101", values: [.pm: value])
+
+        let isValid = value == "1" || value == "999"
+        #expect(useCase.quotaUpdates.count == (isValid ? 1 : 0))
+        #expect((viewModel.commandError == nil) == isValid)
+        if isValid {
+            #expect(useCase.quotaUpdates.first?.first?.quota == value)
+        } else {
+            #expect(viewModel.commandError?.userMessage == "정원은 1명 이상 999명 이하로 입력해 주세요.")
+        }
+    }
+
+    @Test("최소 TO 충돌은 서버 안내를 유지한다")
+    func preservesMinimumQuotaConflict() async throws {
+        let (viewModel, useCase) = try await makeQuotaViewModel()
+        let message = "PM 합격자를 포함한 최소 정원보다 작게 설정할 수 없습니다."
+        let data = try JSONSerialization.data(withJSONObject: [
+            "code": "PROJECT-0252", "message": message
+        ])
+        useCase.quotaError = .network(.requestFailed(statusCode: 409, data: data))
+
+        await viewModel.updatePartQuotas(projectId: "101", values: [.pm: "1"])
+
+        #expect(useCase.quotaUpdates.count == 1)
+        #expect(viewModel.commandError?.userMessage == message)
+        #expect(!viewModel.isSubmitting)
+        #expect(viewModel.dashboard.value != nil)
+    }
+
+    @Test("서버가 정원 편집을 허용하지 않으면 전송하지 않는다")
+    func deniedQuotaPermissionDoesNotSubmit() async throws {
+        let (viewModel, useCase) = try await makeQuotaViewModel(allowsEditing: false)
+        await viewModel.updatePartQuotas(projectId: "101", values: [.pm: "1"])
+        #expect(useCase.quotaUpdates.isEmpty)
+    }
+
+    private func makeQuotaViewModel(allowsEditing: Bool = true) async throws
+        -> (ProjectAdminViewModel, ProjectUseCaseSpy) {
+        let useCase = ProjectUseCaseSpy()
+        let repository = MockProjectRepository()
+        useCase.projectPage = try await repository.fetchManagedProjects(
+            gisuId: "9", keyword: nil, page: 0, size: 100
+        )
+        useCase.permissions = allowsEditing
+            ? try await repository.fetchPermissions(projectIds: ["101"]) : []
+        let viewModel = ProjectAdminViewModel(
+            projectUseCase: useCase,
+            matchingRoundUseCase: ProjectMatchingRoundUseCase(repository: repository),
+            role: .chapterPresident, gisuId: "9", chapterId: nil
+        )
+        await viewModel.fetch()
+        return (viewModel, useCase)
+    }
+
     private func makeViewModel(role: ManagementTeam) -> ProjectAdminViewModel {
         let repository = MockProjectRepository()
         return ProjectAdminViewModel(

@@ -74,8 +74,8 @@ struct ProjectAdminView: View {
             } message: { error in
                 Text(error.userMessage)
             }
-            .sheet(item: $quotaEditor) { editor in
-                ProjectQuotaEditorView(editor: editor) { projectId, values in
+            .sheet(item: quotaEditorBinding) { editor in
+                ProjectQuotaEditorView(editor: editor, error: viewModel.commandError) { projectId, values in
                     await viewModel.updatePartQuotas(projectId: projectId, values: values)
                     return viewModel.commandError == nil
                 }
@@ -310,9 +310,19 @@ struct ProjectAdminView: View {
         }
     }
 
+    private var quotaEditorBinding: Binding<ProjectQuotaEditorState?> {
+        Binding(
+            get: { quotaEditor },
+            set: { editor in
+                if editor == nil { viewModel.clearCommandError() }
+                quotaEditor = editor
+            }
+        )
+    }
+
     private var commandErrorPresented: Binding<Bool> {
         Binding(
-            get: { viewModel.commandError != nil },
+            get: { viewModel.commandError != nil && quotaEditor == nil },
             set: { if !$0 { viewModel.clearCommandError() } }
         )
     }
@@ -358,6 +368,7 @@ private struct ProjectAbortEditorState: Identifiable {
 
 private struct ProjectQuotaEditorView: View {
     let editor: ProjectQuotaEditorState
+    let error: AppError?
     let onSave: (String, [UMCPartType: String]) async -> Bool
 
     @Environment(\.dismiss) private var dismiss
@@ -366,9 +377,11 @@ private struct ProjectQuotaEditorView: View {
 
     init(
         editor: ProjectQuotaEditorState,
+        error: AppError?,
         onSave: @escaping (String, [UMCPartType: String]) async -> Bool
     ) {
         self.editor = editor
+        self.error = error
         self.onSave = onSave
         _values = State(initialValue: editor.quotas)
     }
@@ -376,6 +389,12 @@ private struct ProjectQuotaEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let error {
+                    Section {
+                        Text(error.userMessage)
+                            .foregroundStyle(Color.red500)
+                    }
+                }
                 ForEach(UMCPartType.allCases, id: \.self) { part in
                     TextField(part.name, text: quotaBinding(for: part))
                         .keyboardType(.numberPad)
