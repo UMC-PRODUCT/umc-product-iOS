@@ -112,6 +112,32 @@ struct FailedVerificationUMCViewModelTests {
         #expect(viewModel.alertPrompt?.message == "알 수 없는 오류")
     }
 
+    @Test("중복 계정 안내를 보존하고 프로필 갱신이나 메인 진입을 수행하지 않는다")
+    func duplicateAccountPreservesGuidanceAndStaysOnScreen() async {
+        let message = "기존 Google 계정(te***@example.com)으로 로그인해주세요."
+        let registerUseCase = MockRegisterExistingChallengerUseCase()
+        registerUseCase.executeResult = .failure(RepositoryError.serverError(
+            code: "CHALLENGER-0023", message: message
+        ))
+        let fetchUseCase = MockFetchMemberProfileUseCase()
+        let syncUseCase = MockSyncProfileStorageUseCase()
+        let viewModel = makeViewModel(
+            registerExistingChallengerUseCase: registerUseCase,
+            fetchMemberProfileUseCase: fetchUseCase,
+            syncProfileStorageUseCase: syncUseCase
+        )
+        viewModel.challengerCode = "ABC123"
+
+        await viewModel.submitChallengerCode()
+        viewModel.alertPrompt?.positiveBtnAction?()
+
+        #expect(viewModel.alertPrompt?.message == message)
+        #expect(viewModel.destination == nil)
+        #expect(fetchUseCase.callCount == 0)
+        #expect(syncUseCase.executeCallCount == 0)
+        #expect(!viewModel.isSubmitting)
+    }
+
     @Test("6자리이지만 영숫자가 아닌 코드는 재인증 API를 호출하지 않는다")
     func sixCharacterNonAlphanumericCodeDoesNotCallUseCase() async {
         let registerUseCase = MockRegisterExistingChallengerUseCase()
