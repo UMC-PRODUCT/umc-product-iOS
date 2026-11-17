@@ -158,6 +158,23 @@ final class AdaptiveContinuityUITests: XCTestCase {
         }
     }
 
+    func testNoticeDetailBackReturnsDirectlyToList() {
+        let app = launchStub()
+        app.buttons["공지"].firstMatch.tap()
+        let notice = app.staticTexts["12기 중앙 해커톤 일정 안내"].firstMatch
+        XCTAssertTrue(notice.waitForExistence(timeout: 10))
+        notice.tap()
+        XCTAssertTrue(app.scrollViews["notice.detail.content"].waitForExistence(timeout: 10))
+        let back = app.buttons["BackButton"].firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: 10))
+        back.tap()
+
+        XCTAssertTrue(notice.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(notice.isHittable)
+        XCTAssertFalse(app.staticTexts["공지를 선택해 주세요"].exists)
+        capture("notice-back-to-list")
+    }
+
     func testAllTabsHaveReachableContent() {
         let app = launchStub()
         XCUIDevice.shared.orientation = .landscapeLeft

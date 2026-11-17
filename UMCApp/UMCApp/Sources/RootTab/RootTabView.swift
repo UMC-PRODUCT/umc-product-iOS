@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 import ActivityDomain
 import ActivityPresentation
@@ -47,6 +48,11 @@ struct RootTabView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var noticeColumnVisibility: NavigationSplitViewVisibility = .all
     @State private var noticeCompactColumn: NavigationSplitViewColumn = .sidebar
+    // iPhone은 공지 목록을 루트로 둔 단일 스택이라 상세에서 한 번의 뒤로 가기로 목록에 복귀한다.
+    // 접힌 분할 화면은 목록과 상세 사이에 빈 안내 화면을 끼워 넣는다 (#1683).
+    // 회전 중 스택 종류를 바꾸면 작성·편집 상태가 소실되므로 크기 클래스로 분기하지 않는다.
+    // 마이페이지(#1658)와 같은 임시 기준이다. 선택을 상세 열 루트로 두는 전환은 #1686.
+    private let usesSplitNavigation = UIDevice.current.userInterfaceIdiom != .phone
 
     /// 딥링크로 받은 명함 링크. 수신 모디파이어가 처리 후 비운다.
     @State private var pendingCardLink: CardLink?
@@ -162,7 +168,13 @@ struct RootTabView: View {
     @ViewBuilder
     private func tabRootView(_ tab: NavigationTab) -> some View {
         if tab == .notice {
-            noticeSplitView
+            if usesSplitNavigation {
+                noticeSplitView
+            } else {
+                tabNavigationStack(.notice) {
+                    tabContent(.notice)
+                }
+            }
         } else if tab == .community || tab == .mypage {
             tabContent(tab)
         } else {
@@ -271,7 +283,7 @@ struct RootTabView: View {
             )
         case .notice:
             NoticeFeatureView(
-                isSidebar: horizontalSizeClass == .regular,
+                isSidebar: usesSplitNavigation && horizontalSizeClass == .regular,
                 selectedNoticeID: pathStore.depth(of: .notice) > 0 ? selectedNotice?.id : nil,
                 onNoticeSelected: { detailItem in
                     guard Self.selectNotice(
