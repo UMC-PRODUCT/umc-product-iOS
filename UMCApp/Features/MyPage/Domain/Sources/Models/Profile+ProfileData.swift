@@ -41,7 +41,8 @@ public extension Profile {
             challengerInfo: challengerInfo,
             socialConnections: [],
             activityLogs: activityLogs(),
-            profileLink: profileLinks()
+            profileLink: profileLinks(),
+            isUmcProduct: isUmcProduct
         )
     }
 }

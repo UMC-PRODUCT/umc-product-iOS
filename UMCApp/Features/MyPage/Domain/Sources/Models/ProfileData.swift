@@ -26,6 +26,9 @@ public struct ProfileData: Identifiable, Equatable, Hashable {
     /// 활동 이력 목록 (기수별, 역할별)
     public var activityLogs: [ActivityLog]
 
+    /// 홈과 동일한 프로덕트 계정 표시 여부(SUPER_ADMIN 포함).
+    public var isUmcProduct: Bool
+
     /// 외부 프로필 링크 목록 (Github, Blog 등)
     public var profileLink: [ProfileLink]
 
@@ -40,7 +43,8 @@ public struct ProfileData: Identifiable, Equatable, Hashable {
         challengerInfo: ChallengerInfo,
         socialConnections: [SocialConnection],
         activityLogs: [ActivityLog],
-        profileLink: [ProfileLink]
+        profileLink: [ProfileLink],
+        isUmcProduct: Bool = false
     ) {
         self.id = id
         self.challengeId = challengeId
@@ -48,6 +52,7 @@ public struct ProfileData: Identifiable, Equatable, Hashable {
         self.socialConnections = socialConnections
         self.activityLogs = activityLogs
         self.profileLink = profileLink
+        self.isUmcProduct = isUmcProduct
     }
 }
 

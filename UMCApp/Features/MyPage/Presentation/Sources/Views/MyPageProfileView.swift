@@ -109,6 +109,12 @@ public struct MyPageProfileView: View {
             nickname: profile.wrappedValue.challengerInfo.nickname
         )
 
+        if profile.wrappedValue.isUmcProduct {
+            Section("계정") {
+                MemberTag.product()
+            }
+        }
+
         SchoolSection(
             univ: profile.wrappedValue.challengerInfo.schoolName,
             header: Constants.schoolHeader

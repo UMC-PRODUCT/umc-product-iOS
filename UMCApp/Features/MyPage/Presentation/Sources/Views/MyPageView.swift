@@ -125,6 +125,9 @@ struct MyPageView: View {
             VStack(alignment: .leading, spacing: Metrics.sectionGroupSpacing) {
                 if showsSidebarCard {
                     cardContent
+                    if viewModel.profileData.value?.isUmcProduct == true {
+                        MemberTag.product()
+                    }
                 } else {
                     profileOverviewLink
                 }
@@ -182,6 +185,11 @@ struct MyPageView: View {
                             .appFont(.body, weight: .semibold, color: .grey900)
                         LabeledContent("이름", value: profile.challengerInfo.name)
                         LabeledContent("닉네임", value: profile.challengerInfo.nickname)
+                        if profile.isUmcProduct {
+                            LabeledContent("계정") {
+                                MemberTag.product()
+                            }
+                        }
                         LabeledContent("학교", value: profile.challengerInfo.schoolName)
                         LabeledContent("활동 이력", value: "\(profile.activityLogs.count)개")
                     }
