@@ -60,10 +60,6 @@ public final class MyPageViewModel {
     /// 채워져 오므로(``ActivityStat/empty``) 별도 실패 상태를 두지 않는다.
     public private(set) var activityStat: ActivityStat = .empty
 
-    /// 명함 카드 뒷면 QR. 카드 로드에 성공해도 생성이 실패하면 `nil`로 남는다
-    /// (``CardQRViewModel``과 같은 정책 — QR만 못 만들었다고 카드까지 감출 이유가 없다).
-    public private(set) var qrImage: CGImage?
-
     /// Alert 표시를 위한 프롬프트 상태 (확인/취소 다이얼로그).
     public var alertPrompt: AlertPrompt?
 
@@ -157,15 +153,15 @@ public final class MyPageViewModel {
         }
     }
 
-    /// 내 명함과 v3 루트 행 카운트, 카드 뒷면 QR을 조회합니다.
+    /// 내 명함과 v3 루트 행 카운트를 조회합니다.
     ///
     /// `fetchProfile`과 별개 상태·별개 UseCase다 — 명함은 같은 정본 프로필 캐시에서 파생되지만
     /// (``BusinessCardUseCaseProviding``), 화면이 그 캐시를 두 번 조회한다고 왕복이 늘지는 않는다.
     /// 에러 분기는 `fetchProfile`과 동일한 규칙을 따른다.
     ///
     /// 이미 로드된 카드가 있으면 그대로 보여 둔 채 재조회한다(stale-while-revalidate) —
-    /// pop 복귀 재조회마다 `.loading`으로 밀면 카드 전체가 깜빡이고, 재조회가 취소되면
-    /// `qrImage`가 빈 채 남는다. 그래서 중복 호출 가드도 상태(`.loading`)가 아니라
+    /// pop 복귀 재조회마다 `.loading`으로 밀면 카드 전체가 깜빡인다. 그래서 중복 호출 가드도
+    /// 상태(`.loading`)가 아니라
     /// 별도 플래그로 건다. 처음 진입·실패 후 재시도만 로딩 상태를 그린다.
     ///
     /// - Parameter forceRefresh: `true`이면 프로필 캐시를 우회해 서버 최신으로 갱신한다.
@@ -178,7 +174,6 @@ public final class MyPageViewModel {
         let previousState = myCard
         if myCard.value == nil {
             myCard = .loading
-            qrImage = nil
         }
 
         activityStat = await businessCardProvider.fetchActivityStatUseCase.execute()
@@ -188,9 +183,6 @@ public final class MyPageViewModel {
                 forceRefresh: forceRefresh
             )
             myCard = .loaded(card)
-            // QR만 못 만들었다고 카드까지 감출 이유가 없다. 카드는 그대로 두고
-            // QR 자리만 비운다 — 화면이 그 상태를 플레이스홀더로 그린다.
-            qrImage = try? businessCardProvider.generateCardQRUseCase.execute(for: card)
         } catch is CancellationError {
             myCard = previousState
         } catch let error as AppError {

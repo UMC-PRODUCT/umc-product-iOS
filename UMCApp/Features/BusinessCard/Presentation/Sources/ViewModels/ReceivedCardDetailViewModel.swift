@@ -40,7 +40,7 @@ public final class ReceivedCardDetailViewModel {
 
     public private(set) var card: ReceivedCard
 
-    /// 명함 뒷면(그 사람의 링크 QR + 외부 링크) 표시 여부.
+    /// 명함 뒷면(그 사람의 연락처·링크) 표시 여부.
     public var isFlipped = false
 
     /// 교환 맥락 메모 입력 바인딩.
@@ -49,14 +49,11 @@ public final class ReceivedCardDetailViewModel {
     public var alertPrompt: AlertPrompt?
 
     /// 상대 명함 링크 QR. 생성 실패는 화면을 막지 않는다 — 뒷면 QR 자리가 빌 뿐이다.
-    public private(set) var qrImage: CGImage?
-
     /// 삭제가 끝났다. 화면이 이 값을 보고 스스로 닫는다.
     public private(set) var isDeleted = false
 
     private let deleteReceivedCard: DeleteReceivedCardUseCaseProtocol
     private let updateExchangeContext: UpdateExchangeContextUseCaseProtocol
-    private let generateCardQR: GenerateCardQRUseCaseProtocol
     private let errorHandler: ErrorHandler
 
     // MARK: - Init
@@ -65,25 +62,16 @@ public final class ReceivedCardDetailViewModel {
         card: ReceivedCard,
         deleteReceivedCard: DeleteReceivedCardUseCaseProtocol,
         updateExchangeContext: UpdateExchangeContextUseCaseProtocol,
-        generateCardQR: GenerateCardQRUseCaseProtocol,
         errorHandler: ErrorHandler
     ) {
         self.card = card
         self.contextDraft = card.exchangeContext ?? ""
         self.deleteReceivedCard = deleteReceivedCard
         self.updateExchangeContext = updateExchangeContext
-        self.generateCardQR = generateCardQR
         self.errorHandler = errorHandler
     }
 
     // MARK: - Function
-
-    /// 뒷면 QR 은 뒤집을 때가 아니라 진입할 때 미리 만든다 — 생성이 동기라 뒤집는 순간
-    /// 만들면 그 프레임에서 애니메이션이 걸린다.
-    public func prepare() {
-        guard qrImage == nil else { return }
-        qrImage = try? generateCardQR.execute(for: card.profile)
-    }
 
     /// 편집 화면을 따로 두지 않는다 — 메모 한 줄이라 포커스가 빠질 때 저장한다.
     /// 값이 그대로면 저장소를 건드리지 않는다.

@@ -76,7 +76,6 @@ public struct BusinessCardRoutingView: View {
                     card: card,
                     deleteReceivedCard: provider.deleteReceivedCardUseCase,
                     updateExchangeContext: provider.updateExchangeContextUseCase,
-                    generateCardQR: provider.generateCardQRUseCase,
                     errorHandler: errorHandler
                 )
             )
