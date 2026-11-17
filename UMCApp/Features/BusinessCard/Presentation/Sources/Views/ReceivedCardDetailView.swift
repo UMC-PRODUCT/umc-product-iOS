@@ -91,7 +91,7 @@ public struct ReceivedCardDetailView: View {
                 BusinessCardFaceView(
                     card: viewModel.card.profile,
                     isFlipped: viewModel.isFlipped,
-                    qrImage: viewModel.qrImage,
+                    showsEditHint: false,
                     onFlip: { viewModel.isFlipped.toggle() }
                 )
 
@@ -107,7 +107,6 @@ public struct ReceivedCardDetailView: View {
         .navigationTitle(Constants.title)
         .navigationBarTitleDisplayMode(.inline)
         .alertPrompt(item: $viewModel.alertPrompt)
-        .onAppear { viewModel.prepare() }
         // 삭제된 명함을 계속 띄워 두면 「지웠는데 그대로 있다」로 읽힌다.
         .onChange(of: viewModel.isDeleted) { _, isDeleted in
             if isDeleted { dismiss() }
