@@ -124,9 +124,10 @@ final class AdaptiveContinuityUITests: XCTestCase {
             ).firstMatch
             XCTAssertTrue(entry.waitForExistence(timeout: 10))
             entry.tap()
-            let navigationBar = app.navigationBars.firstMatch
-            XCTAssertTrue(navigationBar.buttons.firstMatch.waitForExistence(timeout: 10))
-            navigationBar.buttons.firstMatch.tap()
+            // Duo는 뒤로 가기 버튼을 탐색 막대가 아닌 측면 레일에 두므로 시스템 식별자로 찾는다.
+            let back = app.buttons["BackButton"].firstMatch
+            XCTAssertTrue(back.waitForExistence(timeout: 10))
+            back.tap()
 
             let menu = app.staticTexts["명함 관리"].firstMatch
             XCTAssertTrue(menu.waitForExistence(timeout: 5), app.debugDescription)
