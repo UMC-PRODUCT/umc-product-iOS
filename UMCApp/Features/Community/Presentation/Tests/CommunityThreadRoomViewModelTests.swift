@@ -1177,6 +1177,27 @@ struct CommunityThreadRoomViewModelTests {
         #expect(viewModel.messages.first?.deliveryState == .sending)
     }
 
+    @Test("사진 선택 상한은 서버가 메시지 한 통에 받는 4장이다")
+    func limitsImageSelectionToServerMaximum() {
+        #expect(MessageComposer.maxImageSelection == 4)
+        #expect(MessageComposer.maxImageSelection == CommunityThreadRoomUseCase.imageMaxCount)
+    }
+
+    @Test("고른 사진 4장은 IMAGE 한 통으로 보내고, 상한을 넘긴 사진은 싣지 않는다")
+    func sendsUpToFourImagesInOneMessage() async throws {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+
+        await viewModel.sendImages(jpegData: Array(repeating: Self.jpeg, count: 5))
+
+        let message = try #require(viewModel.messages.first)
+        #expect(viewModel.messages.count == 1)
+        #expect(message.files.count == 4)
+        #expect(useCase.uploadedImages.count == 4)
+        #expect(useCase.imageSendCalls == [["file-1", "file-2", "file-3", "file-4"]])
+    }
+
     @Test("비참여자는 사진도 보내지 않는다")
     func blocksImageAsNonMember() async {
         let useCase = StubRoomUseCase()
