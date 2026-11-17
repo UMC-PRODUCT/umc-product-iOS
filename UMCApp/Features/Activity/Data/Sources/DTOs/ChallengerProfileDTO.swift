@@ -9,10 +9,10 @@ import Foundation
 
 /// 챌린저 프로필 응답 DTO (포인트 히스토리 전용 부분 디코딩)
 ///
-/// `GET /api/v1/challenger/{challengerId}`
+/// `GET /api/v1/challenger/{challengerId}` 및 관리자 v2 상세의 공통 응답
 ///
 /// - Note: 레거시는 멤버 관리 포인트 히스토리를 MyPage `ChallengerMemberDTO` 전체로
-///   디코딩했습니다. 본 모듈의 ``MemberRepository/fetchPointHistory(challengerId:)`` 는
+///   디코딩했습니다. 본 모듈의 ``MemberRepository/fetchPointHistory(challengerId:mode:)`` 는
 ///   `challengerPoints` 만 쓰므로 그 필드만 디코딩합니다. MyPage 모듈에 기대지 않고
 ///   챌린저 엔드포인트를 이식하려는 것입니다(나머지 응답 필드는 무시).
 /// - Note: 레거시 `ChallengerMemberDTO` 와 동일하게, `challengerPoints` 가 비어 있으면 루트

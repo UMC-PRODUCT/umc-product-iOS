@@ -445,11 +445,11 @@ final class MemberListViewModel {
         let fetchedHistory: [OperatorMemberPenaltyHistory]?
         if requirePointHistory {
             fetchedHistory = try await fetchMembersUseCase.fetchPointHistory(
-                challengerId: challengerId
+                challengerId: challengerId, mode: mode
             )
         } else {
             fetchedHistory = try? await fetchMembersUseCase.fetchPointHistory(
-                challengerId: challengerId
+                challengerId: challengerId, mode: mode
             )
         }
         let pointHistory = fetchedHistory ?? member.penaltyHistory

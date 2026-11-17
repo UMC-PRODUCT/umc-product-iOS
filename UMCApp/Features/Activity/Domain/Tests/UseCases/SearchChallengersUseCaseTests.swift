@@ -97,7 +97,7 @@ private final class MockSearchMemberRepository: @unchecked Sendable, MemberRepos
     }
 
     func fetchPointHistory(
-        challengerId: String
+        challengerId: String, mode: ActivityMode
     ) async throws -> [OperatorMemberPenaltyHistory] {
         throw MockError.unimplemented
     }

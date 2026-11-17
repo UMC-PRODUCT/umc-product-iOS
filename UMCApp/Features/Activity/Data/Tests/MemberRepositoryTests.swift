@@ -923,14 +923,15 @@ struct MemberRepositoryHistoryTests {
                           createdAt: "2026-06-01T09:00:00.000Z")
         ])
         let (sut, _) = makeRepository(.success(Fixture.success(profile)))
-        let history = try await sut.fetchPointHistory(challengerId: "7")
+        let history = try await sut.fetchPointHistory(challengerId: "7", mode: .challenger)
         #expect(history.map(\.signedPoint) == [3, -2])
         #expect(history.map(\.penaltyScore) == [3, 2])
         #expect(history.map(\.isReward) == [true, false])
     }
 
-    @Test("fetchPointHistory — WARNING 을 포함한 모든 서버 기록을 최신순으로 매핑한다")
-    func fetchPointHistoryPreservesAllPointsAndSorts() async throws {
+    @Test("일반·운영진 경로를 분리하고 같은 DTO로 모든 이력을 최신순 매핑한다",
+          arguments: [ActivityMode.challenger, .admin])
+    func fetchPointHistoryPreservesAllPointsAndSorts(mode: ActivityMode) async throws {
         let profile = Fixture.challengerProfile(points: [
             Fixture.point(id: "1", pointType: "WARNING", point: 1,
                           createdAt: "2026-06-01T09:00:00.000Z"),
@@ -941,14 +942,16 @@ struct MemberRepositoryHistoryTests {
         ])
         let (sut, stub) = makeRepository(.success(Fixture.success(profile)))
 
-        let history = try await sut.fetchPointHistory(challengerId: "7")
+        let history = try await sut.fetchPointHistory(challengerId: "7", mode: mode)
 
         #expect(history.count == 3)
         #expect(history.map(\.challengerPointId) == ["2", "3", "1"])
         #expect(history.reduce(0) { $0 + $1.signedPoint } == 5)
         #expect(history.first?.pointType == .out)
         #expect(history.first?.penaltyScore == 1)
-        #expect(stub.lastPath == "/api/v1/challenger/7")
+        #expect(stub.lastPath == (mode == .admin
+            ? "/api/v2/challenger/admin/7" : "/api/v1/challenger/7"))
+        #expect(stub.lastMethod == .get)
     }
 
     @Test("fetchPointHistory — challengerPoints 가 없으면 루트 points 폴백을 사용한다")
@@ -962,7 +965,7 @@ struct MemberRepositoryHistoryTests {
         """
         let (sut, _) = makeRepository(.success(Fixture.success(pointsFallbackProfile)))
 
-        let history = try await sut.fetchPointHistory(challengerId: "7")
+        let history = try await sut.fetchPointHistory(challengerId: "7", mode: .challenger)
 
         #expect(history.count == 1)
         #expect(history.first?.challengerPointId == "5")
@@ -974,8 +977,18 @@ struct MemberRepositoryHistoryTests {
         let (sut, _) = makeRepository(.failure(TestError.network))
 
         await #expect(throws: TestError.network) {
-            try await sut.fetchPointHistory(challengerId: "7")
+            try await sut.fetchPointHistory(challengerId: "7", mode: .challenger)
         }
+    }
+
+    @Test("관리자 상세 403은 v1 재시도 없이 전파한다")
+    func adminHistoryDoesNotFallbackOnForbidden() async {
+        let error = NetworkError.requestFailed(statusCode: 403, data: nil)
+        let (sut, stub) = makeRepository(.failure(error))
+        await #expect(throws: error) {
+            try await sut.fetchPointHistory(challengerId: "7", mode: .admin)
+        }
+        #expect(stub.requestedPaths == ["/api/v2/challenger/admin/7"])
     }
 
     @Test("fetchGenerationPointSummaries — 기수별 상/벌점을 분리해 오름차순 정렬한다")

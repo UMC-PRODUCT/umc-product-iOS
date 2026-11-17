@@ -148,6 +148,12 @@ final class MemberAdministrationViewModel {
     }
 
     func changeGeneration() async {
+        detailVersion += 1
+        selectedMember = nil
+        history = []
+        detailError = nil
+        actionError = nil
+        isLoadingDetail = false
         requestVersion += 1
         organizationVersion += 1
         let version = organizationVersion
@@ -243,14 +249,21 @@ final class MemberAdministrationViewModel {
         let version = detailVersion
         isLoadingDetail = true
         detailError = nil
+        history = []
         defer { if version == detailVersion { isLoadingDetail = false } }
         do {
-            let result = try await membersUseCase.fetchPointHistory(challengerId: target.id)
+            let result = try await membersUseCase.fetchPointHistory(
+                challengerId: target.id, mode: .admin
+            )
             guard version == detailVersion, selectedMember?.id == target.id else { return }
             history = result
         } catch {
             guard version == detailVersion, selectedMember?.id == target.id else { return }
-            detailError = message(error)
+            if case .network(.requestFailed(statusCode: 403, _)) = AppError.from(error) {
+                detailError = "이 챌린저를 조회할 권한이 없어요. 대상 기수와 소속 범위를 확인해 주세요."
+            } else {
+                detailError = message(error)
+            }
         }
     }
 

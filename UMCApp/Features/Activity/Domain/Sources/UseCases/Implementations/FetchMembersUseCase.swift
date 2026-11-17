@@ -62,9 +62,9 @@ public final class FetchMembersUseCase: FetchMembersUseCaseProtocol {
     }
 
     public func fetchPointHistory(
-        challengerId: String
+        challengerId: String, mode: ActivityMode
     ) async throws -> [OperatorMemberPenaltyHistory] {
-        try await repository.fetchPointHistory(challengerId: challengerId)
+        try await repository.fetchPointHistory(challengerId: challengerId, mode: mode)
     }
 
     public func fetchAllGenerations(memberId: String) async throws -> String {

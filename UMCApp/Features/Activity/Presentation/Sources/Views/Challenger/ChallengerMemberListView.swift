@@ -229,7 +229,7 @@ private struct PreviewFetchMembersUseCase: FetchMembersUseCaseProtocol {
     func deletePoint(challengerPointId: String) async throws {}
 
     func fetchPointHistory(
-        challengerId: String
+        challengerId: String, mode: ActivityMode
     ) async throws -> [OperatorMemberPenaltyHistory] {
         []
     }

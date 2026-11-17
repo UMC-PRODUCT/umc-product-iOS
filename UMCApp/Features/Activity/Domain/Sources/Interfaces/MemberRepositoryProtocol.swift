@@ -68,11 +68,11 @@ public protocol MemberRepositoryProtocol {
     /// - Parameter challengerPointId: 삭제할 포인트 식별자 (서버 응답)
     func deletePoint(challengerPointId: String) async throws
 
-    /// 특정 챌린저의 포인트 히스토리를 조회합니다.
+    /// 화면 모드에 맞는 일반 v1 또는 운영진 v2 상세로 포인트 이력을 조회합니다.
     ///
     /// - Parameter challengerId: 조회 대상 챌린저 식별자 (서버 응답)
     func fetchPointHistory(
-        challengerId: String
+        challengerId: String, mode: ActivityMode
     ) async throws -> [OperatorMemberPenaltyHistory]
 
     // MARK: - 멤버 상세
