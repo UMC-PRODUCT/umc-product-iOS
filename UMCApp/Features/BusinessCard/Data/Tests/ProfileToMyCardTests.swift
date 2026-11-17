@@ -41,8 +41,8 @@ struct ProfileToMyCardTests {
         #expect(card.email == "one@umc.dev")
     }
 
-    @Test("외부 링크 3종(github·linkedIn·blog)이 모두 명함으로 넘어온다 — 시안 뒷면 3줄")
-    func mapsAllThreeExternalLinks() throws {
+    @Test("외부 링크 5종이 모두 명함으로 넘어온다 — 뒷면 링크 줄 (#1679)")
+    func mapsAllExternalLinks() throws {
         let profile = Profile(
             memberId: "42", name: "정의찬", nickname: "제옹", generations: [],
             externalLinks: ProfileExternalLinks(
@@ -61,6 +61,8 @@ struct ProfileToMyCardTests {
         #expect(card.github == "github.com/UMC-PRODUCT")
         #expect(card.linkedIn == "linkedin.com/in/umc")
         #expect(card.blog == "umc.tistory.com")
+        #expect(card.instagram == "instagram.com/umc")
+        #expect(card.personal == "umc.dev")
     }
 
     /// 예전에는 여기서 `generation = "0"`, `part = .admin` 인 명함이 **에러 없이** 나왔다.

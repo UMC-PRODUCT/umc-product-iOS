@@ -51,6 +51,8 @@ public extension Profile {
             github: externalLinks?.github?.nonEmpty,
             linkedIn: externalLinks?.linkedIn?.nonEmpty,
             blog: externalLinks?.blog?.nonEmpty,
+            instagram: externalLinks?.instagram?.nonEmpty,
+            personal: externalLinks?.personal?.nonEmpty,
             avatarURL: latestRecord?.profileImageLink?.nonEmpty ?? profileImageLink?.nonEmpty,
             partRaw: unrecognizedPart
         )

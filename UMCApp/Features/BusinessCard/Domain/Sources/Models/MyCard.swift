@@ -35,6 +35,9 @@ public struct MyCard: Equatable, Hashable, Sendable {
     public let github: String?
     public let linkedIn: String?
     public let blog: String?
+    /// 명함 뒷면에만 쓰는 링크. 기기 간 교환 페이로드와 받은 명함 저장소에는 아직 싣지 않는다 (#1679).
+    public let instagram: String?
+    public let personal: String?
     public let avatarURL: String?
 
     // MARK: - Init
@@ -50,6 +53,8 @@ public struct MyCard: Equatable, Hashable, Sendable {
         github: String?,
         linkedIn: String?,
         blog: String?,
+        instagram: String? = nil,
+        personal: String? = nil,
         avatarURL: String?,
         partRaw: String? = nil
     ) {
@@ -64,6 +69,8 @@ public struct MyCard: Equatable, Hashable, Sendable {
         self.github = github
         self.linkedIn = linkedIn
         self.blog = blog
+        self.instagram = instagram
+        self.personal = personal
         self.avatarURL = avatarURL
     }
 
