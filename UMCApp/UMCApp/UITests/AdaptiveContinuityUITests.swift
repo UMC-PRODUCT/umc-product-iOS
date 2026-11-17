@@ -136,6 +136,28 @@ final class AdaptiveContinuityUITests: XCTestCase {
         }
     }
 
+    func testCommunityThreadBackReturnsDirectlyToList() {
+        let app = launchStub()
+        app.buttons["커뮤니티"].firstMatch.tap()
+        let thread = app.staticTexts["iOS 스터디"].firstMatch
+
+        for _ in 0..<2 {
+            XCTAssertTrue(thread.waitForExistence(timeout: 10))
+            thread.tap()
+            let composer = app.descendants(matching: .any)
+                .matching(identifier: "community.message.draft").firstMatch
+            XCTAssertTrue(composer.waitForExistence(timeout: 15))
+            let back = app.buttons["BackButton"].firstMatch
+            XCTAssertTrue(back.waitForExistence(timeout: 10))
+            back.tap()
+
+            XCTAssertTrue(thread.waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(thread.isHittable)
+            XCTAssertFalse(app.staticTexts["스레드를 선택해 주세요"].exists)
+            capture("community-back-to-list")
+        }
+    }
+
     func testAllTabsHaveReachableContent() {
         let app = launchStub()
         XCUIDevice.shared.orientation = .landscapeLeft

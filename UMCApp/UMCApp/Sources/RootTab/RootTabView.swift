@@ -296,21 +296,7 @@ struct RootTabView: View {
                         on: .community
                     )
                 },
-                detailRoot: {
-                    appDestinations(
-                        ContentUnavailableView(
-                            "스레드를 선택해 주세요",
-                            systemImage: "bubble.left.and.bubble.right",
-                            description: Text("목록에서 스레드를 선택하면 대화를 확인할 수 있어요.")
-                        )
-                        .navigationTitle("커뮤니티")
-                        .background(
-                            (horizontalSizeClass == .regular ? Color.Surface.content : Color.Surface.canvas)
-                                .ignoresSafeArea()
-                        ),
-                        tab: .community
-                    )
-                }
+                detailRoot: { root in appDestinations(root, tab: .community) }
             )
         case .mypage:
             MyPageFeatureView(
