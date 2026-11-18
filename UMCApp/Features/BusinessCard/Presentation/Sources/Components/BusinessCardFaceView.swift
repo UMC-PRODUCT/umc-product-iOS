@@ -22,7 +22,8 @@ import UIKit
 ///
 /// 양면 모두 왼쪽에 프로필 사진을 둔다(#1679). 앞면은 이름 행·파트 행·발급 행(학교 · 기수),
 /// 뒷면은 연락처·링크 줄(이메일 · GitHub · LinkedIn · Blog · Instagram · 개인링크)이고 줄이
-/// 하나도 없으면 빈 상태 문구를 보인다. 헤더와 하단 버튼 두 개는 양면 공통이다.
+/// 하나도 없으면 빈 상태 문구를 보인다. 줄을 누르면 메일 작성이나 링크가 열린다.
+/// 헤더와 하단 버튼 두 개는 양면 공통이다.
 ///
 /// 면 상태는 들지 않는다 — 뒤집힘 여부의 정본은 소유자이고 ``isFlipped`` 로 내려준다.
 /// 뷰가 드는 것은 **진행 중인 회전 각도뿐**이다. 끄는 손가락·관성은 소유자가 알 필요가 없고,
@@ -56,6 +57,7 @@ public struct BusinessCardFaceView: View {
     /// 관성 스핀은 손을 뗀 뒤 저절로 도는 모션이라 이 설정이 이긴다. 끄는 동안 따라
     /// 도는 것도 막는다 — 큰 3D 회전은 손이 만든 것이라도 어지러움을 부른다.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.openURL) private var openURL
 
     private enum Constants {
         static let title = "BUSINESS CARD"
@@ -396,12 +398,20 @@ public struct BusinessCardFaceView: View {
     }
 
     /// 뒷면은 연락처·링크 줄이다. 줄마다 따로 읽으면 어느 면인지 모른 채 값만 이어지므로
-    /// 앞면처럼 한 덩어리로 읽는다.
+    /// 앞면처럼 한 덩어리로 읽는다. 그러면 줄 버튼에 닿을 수 없어 여는 동작은 줄마다
+    /// 액션으로 단다.
     private var backFace: some View {
         backFaceContent
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(card.backFaceAccessibilityLabel)
+            .accessibilityActions {
+                ForEach(card.backFaceContacts, id: \.self) { contact in
+                    if let url = contact.url {
+                        Button(contact.openActionName) { openURL(url) }
+                    }
+                }
+            }
     }
 
     @ViewBuilder
@@ -439,7 +449,27 @@ public struct BusinessCardFaceView: View {
         .frame(maxWidth: .infinity, minHeight: Metrics.avatarSize)
     }
 
+    /// 누르면 이메일은 메일 작성, 링크는 브라우저로 연다. 열 수 없는 값은 텍스트로만 둔다 —
+    /// 눌러도 아무 일 없는 줄을 만들지 않는다(``ReceivedCardDetailView`` 와 같은 규칙).
+    ///
+    /// 카드 회전 팬은 이동이 있어야 시작하므로 줄 탭과 겹치지 않는다.
+    @ViewBuilder
     private func contactRow(_ contact: CardContact) -> some View {
+        if let url = contact.url {
+            Button {
+                openURL(url)
+            } label: {
+                contactLabel(contact)
+            }
+            .buttonStyle(.plain)
+        } else {
+            contactLabel(contact)
+        }
+    }
+
+    /// 글자 밖 빈 곳도 누르도록 줄 폭 전체를 누르는 영역으로 잡는다. 줄 높이가 낮아
+    /// 글자만 누르게 하면 짧은 값은 맞히기 어렵다.
+    private func contactLabel(_ contact: CardContact) -> some View {
         HStack(alignment: .center, spacing: Metrics.linkSpacing) {
             contactIcon(contact.kind)
                 .resizable()
@@ -450,6 +480,8 @@ public struct BusinessCardFaceView: View {
                 .appFont(.footnote, color: Color.white)
                 .lineLimit(1)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
     /// 아이콘 에셋은 흰색 원본이라 틴트 없이 크기만 잡는다. Blog 와 개인링크는 시안이 같은

@@ -23,7 +23,7 @@ extension MyCard {
     /// 뒷면 연락처·링크 줄. 이메일 → GitHub → LinkedIn → Blog → Instagram → 개인링크 순이다.
     ///
     /// 값 없는 줄은 뺀다 — 빈 줄은 서버 미입력을 링크가 있는 것처럼 보이게 한다.
-    /// 링크는 ``linkDisplayText(_:)`` 로 줄여 보인다.
+    /// 링크는 ``linkDisplayText(_:)`` 로 줄여 보이고, 누르면 여는 주소는 원래 값으로 만든다.
     var backFaceContacts: [CardContact] {
         let candidates: [(CardContact.Kind, String?)] = [
             (.email, email),
@@ -36,8 +36,15 @@ extension MyCard {
         return candidates.compactMap { kind, value in
             guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !value.isEmpty else { return nil }
-            let shown = kind == .email ? value : Self.linkDisplayText(value)
-            return CardContact(kind: kind, value: shown)
+            if kind == .email {
+                let url = URL(string: Constants.mailScheme + value)
+                return CardContact(kind: kind, value: value, url: url)
+            }
+            return CardContact(
+                kind: kind,
+                value: Self.linkDisplayText(value),
+                url: Self.linkURL(value)
+            )
         }
     }
 
@@ -53,6 +60,25 @@ extension MyCard {
             text.removeLast()
         }
         return text.isEmpty ? url : text
+    }
+
+    /// 줄을 눌렀을 때 열 웹 주소. 스킴 없이 온 값(`github.com/umc`)은 `https://` 를 붙인다 —
+    /// 그대로 두면 `URL` 이 상대 경로로 읽혀 열리지 않는다.
+    ///
+    /// `http(s)` 가 아닌 스킴은 열지 않는다. 받은 명함의 값은 상대가 넣은 것이라 다른 앱을
+    /// 여는 주소가 섞여 올 수 있다.
+    private static func linkURL(_ value: String) -> URL? {
+        let lowercased = value.lowercased()
+        let candidate: String
+        if Constants.webSchemes.contains(where: lowercased.hasPrefix) {
+            candidate = value
+        } else if value.contains(Constants.schemeSeparator) {
+            return nil
+        } else {
+            candidate = Constants.defaultWebScheme + value
+        }
+        guard let url = URL(string: candidate), url.host()?.isEmpty == false else { return nil }
+        return url
     }
 
     // MARK: - Accessibility
@@ -94,7 +120,23 @@ struct CardContact: Hashable {
     }
 
     let kind: Kind
+    /// 카드에 보이는 값. 링크는 스킴·`www.`·끝 `/` 를 뗀 표기다.
     let value: String
+    /// 줄을 누르면 여는 주소 — 이메일은 `mailto:`, 링크는 웹 주소. 열 수 없는 값이면 `nil` 이고
+    /// 줄은 텍스트로만 둔다.
+    let url: URL?
+
+    /// VoiceOver 액션 이름. 뒷면이 한 덩어리로 읽혀 줄 버튼에 닿을 수 없어 액션으로 연다.
+    var openActionName: String {
+        switch kind {
+        case .email: "메일 보내기"
+        case .github: "GitHub 열기"
+        case .linkedIn: "LinkedIn 열기"
+        case .blog: "블로그 열기"
+        case .instagram: "Instagram 열기"
+        case .personal: "개인 링크 열기"
+        }
+    }
 }
 
 /// 화면과 VoiceOver 가 함께 쓰는 명함 문구.
@@ -111,6 +153,10 @@ private enum Constants {
     static let separator = ", "
     static let partSuffix = " 파트"
     static let generationSuffix = "기"
+    static let webSchemes = ["https://", "http://"]
+    static let defaultWebScheme = "https://"
+    static let schemeSeparator = "://"
+    static let mailScheme = "mailto:"
     /// 앞에서부터 차례로 뗀다 — `https://www.` 처럼 겹쳐 붙은 경우도 둘 다 떨어진다.
-    static let linkPrefixes = ["https://", "http://", "www."]
+    static let linkPrefixes = webSchemes + ["www."]
 }

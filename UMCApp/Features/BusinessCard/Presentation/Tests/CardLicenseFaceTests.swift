@@ -39,7 +39,29 @@ struct CardLicenseFaceTests {
     func backFaceContactsSkipEmptyValues() {
         let contacts = card(email: "  ", github: nil, blog: "umc.tistory.com").backFaceContacts
 
-        #expect(contacts == [CardContact(kind: .blog, value: "umc.tistory.com")])
+        #expect(contacts.map(\.kind) == [.blog])
+        #expect(contacts.map(\.value) == ["umc.tistory.com"])
+    }
+
+    @Test("줄을 누르면 이메일은 mailto, 스킴 없는 링크는 https 로 열고, 웹이 아닌 스킴은 열지 않는다")
+    func backFaceContactsOpenMailOrWebOnly() {
+        let urls = card(
+            email: "one@umc.dev",
+            github: "github.com/umc",
+            linkedIn: "HTTP://www.linkedin.com/in/umc/",
+            blog: "https://",
+            instagram: "instagram://user?username=umc",
+            personal: "umc.dev"
+        ).backFaceContacts.map(\.url?.absoluteString)
+
+        #expect(urls == [
+            "mailto:one@umc.dev",
+            "https://github.com/umc",
+            "HTTP://www.linkedin.com/in/umc/",
+            nil,
+            nil,
+            "https://umc.dev"
+        ])
     }
 
     @Test("링크 줄은 스킴·www·끝 슬래시를 떼고 보이고, 이메일은 그대로 둔다")
