@@ -24,8 +24,8 @@ public enum BusinessCardPreviewData {
     // MARK: - My Card
 
     /// 명함_l(``BusinessCardFaceView``)·명함_m(``BusinessCardSummaryView``) 프리뷰가
-    /// 공유하는 「내 카드」 한 장. 뒷면 링크 3종(github·linkedIn·blog)을 모두 채워
-    /// 뒷면 프리뷰도 같은 값으로 렌더된다.
+    /// 공유하는 「내 카드」 한 장. 뒷면 6줄(이메일·링크 5종)을 모두 채워
+    /// 줄이 가장 많은 뒷면을 프리뷰에서 바로 본다 (#1679).
     ///
     /// 파트는 가장 긴 표기(`Mobile Product Engineer`)라 잘림을 프리뷰에서 바로 본다 (#1374).
     public static let myCard = MyCard(
@@ -39,6 +39,8 @@ public enum BusinessCardPreviewData {
         github: "github.com/umc",
         linkedIn: "linkedin.com/in/umc",
         blog: "umc.blog",
+        instagram: "instagram.com/umc",
+        personal: "umc.dev",
         avatarURL: nil
     )
 

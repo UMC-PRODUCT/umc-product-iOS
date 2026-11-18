@@ -68,11 +68,11 @@ enum StubSessionFixtures {
         email: "stub@umc.test",
         externalLinks: ProfileExternalLinks(
             id: "1",
-            linkedIn: "linkedin.com/in/umc-a",
-            instagram: nil,
-            github: "github.com/umc-a",
-            blog: "umc-a.tistory.com",
-            personal: nil
+            linkedIn: "https://linkedin.com/in/umc-a",
+            instagram: "https://www.instagram.com/umc-a/",
+            github: "https://github.com/umc-a",
+            blog: "https://umc-a.tistory.com",
+            personal: "https://umc-a.dev"
         )
     )
 

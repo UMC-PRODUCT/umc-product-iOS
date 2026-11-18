@@ -42,6 +42,18 @@ struct CardLicenseFaceTests {
         #expect(contacts == [CardContact(kind: .blog, value: "umc.tistory.com")])
     }
 
+    @Test("링크 줄은 스킴·www·끝 슬래시를 떼고 보이고, 이메일은 그대로 둔다")
+    func backFaceLinksDropURLDecoration() {
+        let values = card(
+            email: "one@umc.dev",
+            github: "https://github.com/umc/",
+            instagram: "HTTP://www.instagram.com/umc",
+            personal: "umc.dev"
+        ).backFaceContacts.map(\.value)
+
+        #expect(values == ["one@umc.dev", "github.com/umc", "instagram.com/umc", "umc.dev"])
+    }
+
     @Test("뒷면 라벨은 화면 순서대로 값을 읽고, 줄이 없으면 빈 상태 문구를 읽는다")
     func backFaceLabelReadsContactsOrEmptyState() {
         let filled = card(email: "one@umc.dev", personal: "umc.dev").backFaceAccessibilityLabel

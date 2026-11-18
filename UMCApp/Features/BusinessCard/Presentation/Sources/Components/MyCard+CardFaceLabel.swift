@@ -23,6 +23,7 @@ extension MyCard {
     /// 뒷면 연락처·링크 줄. 이메일 → GitHub → LinkedIn → Blog → Instagram → 개인링크 순이다.
     ///
     /// 값 없는 줄은 뺀다 — 빈 줄은 서버 미입력을 링크가 있는 것처럼 보이게 한다.
+    /// 링크는 ``linkDisplayText(_:)`` 로 줄여 보인다.
     var backFaceContacts: [CardContact] {
         let candidates: [(CardContact.Kind, String?)] = [
             (.email, email),
@@ -35,8 +36,23 @@ extension MyCard {
         return candidates.compactMap { kind, value in
             guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !value.isEmpty else { return nil }
-            return CardContact(kind: kind, value: value)
+            let shown = kind == .email ? value : Self.linkDisplayText(value)
+            return CardContact(kind: kind, value: shown)
         }
+    }
+
+    /// 링크는 입력 그대로(`https://www.github.com/umc/`) 오지만 카드 한 줄 폭이 좁아
+    /// 사람이 읽는 부분만 남긴다. 스킴·`www.`·끝 `/` 는 어느 링크에나 붙어 폭만 차지하고,
+    /// 남겨 두면 정작 아이디가 말줄임으로 잘린다.
+    private static func linkDisplayText(_ url: String) -> String {
+        var text = url
+        for prefix in Constants.linkPrefixes where text.lowercased().hasPrefix(prefix) {
+            text.removeFirst(prefix.count)
+        }
+        while text.hasSuffix("/") {
+            text.removeLast()
+        }
+        return text.isEmpty ? url : text
     }
 
     // MARK: - Accessibility
@@ -95,4 +111,6 @@ private enum Constants {
     static let separator = ", "
     static let partSuffix = " 파트"
     static let generationSuffix = "기"
+    /// 앞에서부터 차례로 뗀다 — `https://www.` 처럼 겹쳐 붙은 경우도 둘 다 떨어진다.
+    static let linkPrefixes = ["https://", "http://", "www."]
 }
