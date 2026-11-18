@@ -37,21 +37,6 @@ struct ActivityStatRepositoryTests {
 
     private enum StubError: Error { case offline }
 
-    @Test("스크랩 카운트 — APIResponse 래핑 응답의 totalElements를 String 그대로 통과시킨다")
-    func bookmarkCountFromWrappedResponse() async throws {
-        let stub = StubRequesting()
-        stub.responsesByPath["/api/v1/posts/scrapped"] = Data("""
-        {"success":true,"code":"200","message":"ok",
-         "result":{"content":[],"page":"0","size":"1",
-                   "totalElements":"7","totalPages":"7","hasNext":true,"hasPrevious":false}}
-        """.utf8)
-        let sut = ActivityStatRepository(
-            networkRequesting: stub, memberProfileRepository: StubProfileRepository()
-        )
-
-        #expect(try await sut.fetchBookmarkCount() == "7")
-    }
-
     @Test("스터디 카운트 — 커서 응답(총개수 없음)은 항목 수를 센다")
     func studyCountFromCursorPage() async throws {
         let stub = StubRequesting()
@@ -155,29 +140,17 @@ struct ActivityStatRepositoryTests {
         }
     }
 
-    @Test("스크랩 응답을 못 읽으면 0이 아니라 에러를 던진다")
-    func bookmarkCountThrowsOnUndecodableResponse() async throws {
-        let sut = ActivityStatRepository(
-            networkRequesting: StubRequesting(),
-            memberProfileRepository: StubProfileRepository()
-        )
-
-        await #expect(throws: (any Error).self) {
-            _ = try await sut.fetchBookmarkCount()
-        }
-    }
-
     // MARK: - 통합 카운트
 
-    /// 서버에 `/me/stats` 가 배포되기 전까지 릴리스가 지나는 경로다. 세 소스 중 성공한
-    /// 것만 담고 실패는 `nil` 로 남긴다 — 받은 명함 수는 이 조합이 알 수 없어 항상 `nil`.
-    @Test("조합 구현의 통합 카운트는 성공한 소스만 담고 받은 명함 수는 비운다")
+    /// 서버에 `/me/stats` 가 배포되기 전까지 릴리스가 지나는 경로다. 스터디 수만 서버에서
+    /// 세고 실패는 `nil` 로 남긴다 — 받은 명함 수는 이 조합이 알 수 없어 항상 `nil`.
+    @Test("조합 구현의 통합 카운트는 스터디 수를 담고 받은 명함 수는 비운다")
     func memberStatsFromCombinedSources() async throws {
         let stub = StubRequesting()
-        stub.responsesByPath["/api/v1/posts/scrapped"] = Data("""
+        stub.responsesByPath["/api/v1/study-groups/managed"] = Data("""
         {"success":true,"code":"200","message":"ok",
-         "result":{"content":[],"page":"0","size":"1",
-                   "totalElements":"7","totalPages":"7","hasNext":false,"hasPrevious":false}}
+         "result":{"studyGroups":[{"id":"1"},{"id":"2"},{"id":"3"}],
+                   "nextCursor":null,"hasNext":false}}
         """.utf8)
         let sut = ActivityStatRepository(
             networkRequesting: stub, memberProfileRepository: StubProfileRepository()
@@ -185,9 +158,20 @@ struct ActivityStatRepositoryTests {
 
         let stats = try await sut.fetchMemberStats()
 
-        #expect(stats.bookmarkCount == "7")
-        #expect(stats.studyCount == nil)          // 빈 본문 — 조회 실패
+        #expect(stats.studyCount == "3")
         #expect(stats.receivedCardCount == nil)   // 이 조합이 셀 수 없는 값
+    }
+
+    @Test("스터디 조회가 실패해도 통합 카운트는 던지지 않고 스터디 수만 비운다")
+    func memberStatsKeepsStudyFailureAsNil() async throws {
+        let sut = ActivityStatRepository(
+            networkRequesting: StubRequesting(), memberProfileRepository: StubProfileRepository()
+        )
+
+        let stats = try await sut.fetchMemberStats()
+
+        #expect(stats.studyCount == nil)          // 빈 본문 — 조회 실패
+        #expect(stats.receivedCardCount == nil)
     }
 
     @Test("프로필 조회 실패는 활동 카운트 0이 아니라 에러로 올라온다")

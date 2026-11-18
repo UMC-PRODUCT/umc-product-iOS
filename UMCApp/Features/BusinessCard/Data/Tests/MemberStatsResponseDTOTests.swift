@@ -17,13 +17,12 @@ struct MemberStatsResponseDTOTests {
         let dto = try JSONDecoder().decode(
             MemberStatsResponseDTO.self,
             from: Data("""
-            {"receivedCardCount":12,"studyCount":"3","scrapCount":7}
+            {"receivedCardCount":12,"studyCount":"3"}
             """.utf8)
         )
 
         #expect(dto.receivedCardCount == "12")
         #expect(dto.studyCount == "3")
-        #expect(dto.scrapCount == "7")
     }
 
     /// 「0건」과 「못 셌다」가 같은 값이 되면 화면이 통신 실패를 0으로 단언한다 (#1222).
@@ -32,7 +31,7 @@ struct MemberStatsResponseDTOTests {
         let dto = try JSONDecoder().decode(
             MemberStatsResponseDTO.self,
             from: Data("""
-            {"receivedCardCount":"0","studyCount":"0","scrapCount":"0"}
+            {"receivedCardCount":"0","studyCount":"0"}
             """.utf8)
         )
 

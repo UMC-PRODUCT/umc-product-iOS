@@ -264,7 +264,7 @@ struct MyPageViewModelLoadBusinessCardTests {
     func loadSuccessFillsCardAndStat() async {
         let card = makeMyCard(memberId: "7")
         let stat = ActivityStat(
-            receivedCardCount: "12", studyCount: "3", activityCount: "1", bookmarkCount: "0"
+            receivedCardCount: "12", studyCount: "3", activityCount: "1"
         )
         let viewModel = makeViewModel(
             repository: StubRepository(result: .success(makeProfileData(challengeId: 1))),

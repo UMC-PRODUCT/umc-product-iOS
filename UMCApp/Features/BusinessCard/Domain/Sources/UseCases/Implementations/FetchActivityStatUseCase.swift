@@ -49,14 +49,13 @@ public final class FetchActivityStatUseCase:
         return await ActivityStat(
             receivedCardCount: received,
             studyCount: nonEmpty(stats.studyCount),
-            activityCount: activityTask,
-            bookmarkCount: nonEmpty(stats.bookmarkCount)
+            activityCount: activityTask
         )
     }
 
     // MARK: - Private Function
 
-    /// 통합 조회가 통째로 실패하면 세 값 전부 「못 셌다」다.
+    /// 통합 조회가 통째로 실패하면 두 값 전부 「못 셌다」다.
     private func memberStats() async -> MemberStats {
         (try? await statRepository.fetchMemberStats()) ?? .unavailable
     }

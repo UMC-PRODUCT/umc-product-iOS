@@ -24,41 +24,7 @@ public struct StudyCountQueryDTO {
     }
 }
 
-/// 스크랩 카운트 쿼리 — totalElements만 필요하므로 최소 페이지(size 1)로 요청한다.
-public struct ScrappedCountQueryDTO {
-    public let page: Int
-    public let size: Int
-
-    public init(page: Int = 0, size: Int = 1) {
-        self.page = page
-        self.size = size
-    }
-
-    public var toParameters: [String: Any] {
-        ["page": page, "size": size]
-    }
-}
-
 // MARK: - Response
-
-/// 스크랩 페이지 응답에서 totalElements만 취하는 얇은 DTO (핵심규칙 #3 custom Codable).
-struct ScrappedCountPageDTO: Codable {
-    let totalElements: String
-
-    private enum CodingKeys: String, CodingKey {
-        case totalElements
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        totalElements = try container.decodeFlexibleString(forKey: .totalElements)
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(totalElements, forKey: .totalElements)
-    }
-}
 
 /// 스터디 커서 페이지에서 항목 수만 세는 얇은 DTO.
 /// 서버가 `cursor` 래핑 / `content` / `studyGroups` 어느 키로 응답해도 흡수한다

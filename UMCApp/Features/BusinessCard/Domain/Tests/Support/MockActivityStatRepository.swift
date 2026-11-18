@@ -14,8 +14,6 @@ final class MockActivityStatRepository: ActivityStatRepositoryProtocol, @uncheck
 
     /// 잘림 표기(`"50+"`)까지 실어야 해서 String (프로토콜과 동일).
     var studyCountResult: Result<String, Error> = .failure(MockError.notStubbed)
-    /// 서버 `totalElements` 원본 통과라 String (프로토콜과 동일).
-    var bookmarkCountResult: Result<String, Error> = .failure(MockError.notStubbed)
     var activityCountResult: Result<Int, Error> = .failure(MockError.notStubbed)
 
     /// 서버 통계 한 방의 응답. `nil`이면 위 소스별 스텁으로 조립한다 — 소스별 실패를
@@ -35,8 +33,7 @@ final class MockActivityStatRepository: ActivityStatRepositoryProtocol, @uncheck
         }
         return MemberStats(
             receivedCardCount: nil,
-            studyCount: try? studyCountResult.get(),
-            bookmarkCount: try? bookmarkCountResult.get()
+            studyCount: try? studyCountResult.get()
         )
     }
 

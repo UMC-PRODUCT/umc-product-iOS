@@ -13,7 +13,7 @@ import BusinessCardDomain
 
 /// 서버 통합 카운트 저장소 (`GET /api/v2/member/me/stats`).
 ///
-/// 소스 3개를 앱에서 조합하던 ``ActivityStatRepository`` 를 한 왕복으로 대체한다. 다만
+/// 소스 여럿을 앱에서 조합하던 ``ActivityStatRepository`` 를 한 왕복으로 대체한다. 다만
 /// 서버에 이 경로가 아직 없어서(2026-08-30 확인) **릴리스 기본 구현은 여전히 조합 쪽**이다
 /// — 여기서 갈아 끼우면 릴리스의 카운트가 전부 "-"로 퇴행한다.
 ///
@@ -48,7 +48,7 @@ public final class MemberStatsRepository: ActivityStatRepositoryProtocol, @unche
 
     // MARK: - Function
 
-    /// 서버가 세 값을 non-null 로 준다 — 「0건」과 「못 셌다」를 서버가 섞지 않는다.
+    /// 서버가 두 값을 non-null 로 준다 — 「0건」과 「못 셌다」를 서버가 섞지 않는다.
     /// 조회 자체가 실패하면 그대로 던지고, 「전부 못 셌다」 판단은 UseCase가 한다.
     public func fetchMemberStats() async throws -> MemberStats {
         let response = try await networkRequesting.request(BusinessCardRouter.getMemberStats)
@@ -57,8 +57,7 @@ public final class MemberStatsRepository: ActivityStatRepositoryProtocol, @unche
         )
         return MemberStats(
             receivedCardCount: stats.receivedCardCount,
-            studyCount: stats.studyCount,
-            bookmarkCount: stats.scrapCount
+            studyCount: stats.studyCount
         )
     }
 

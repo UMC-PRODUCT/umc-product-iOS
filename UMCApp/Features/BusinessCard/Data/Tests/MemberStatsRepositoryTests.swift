@@ -31,12 +31,12 @@ struct MemberStatsRepositoryTests {
         }
     }
 
-    @Test("APIResponse 봉투를 벗기고 scrapCount를 스크랩 자리에 싣는다")
+    @Test("APIResponse 봉투를 벗기고 받은 명함·스터디 수를 싣는다")
     func decodesWrappedStats() async throws {
         let stub = StubRequesting()
         stub.data = Data("""
         {"success":true,"code":"200","message":"ok",
-         "result":{"receivedCardCount":"12","studyCount":"3","scrapCount":"7"}}
+         "result":{"receivedCardCount":"12","studyCount":"3"}}
         """.utf8)
         let sut = MemberStatsRepository(
             networkRequesting: stub, memberProfileRepository: StubProfileRepository()
@@ -46,7 +46,6 @@ struct MemberStatsRepositoryTests {
 
         #expect(stats.receivedCardCount == "12")
         #expect(stats.studyCount == "3")
-        #expect(stats.bookmarkCount == "7")
     }
 
     /// 못 읽었는데 0을 돌려주면 UseCase가 「0개」와 구분할 수 없다 (#1222).
