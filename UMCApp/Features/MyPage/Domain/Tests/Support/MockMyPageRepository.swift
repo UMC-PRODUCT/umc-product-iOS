@@ -123,42 +123,6 @@ final class MockMyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable 
         }
     }
 
-    // MARK: - fetchMyPosts
-
-    var fetchMyPostsResult: Result<MyActivePostPage, Error> = .failure(MockError.notStubbed)
-    private(set) var fetchMyPostsCallCount = 0
-    private(set) var fetchMyPostsReceivedQuery: MyPagePostListQuery?
-
-    func fetchMyPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage {
-        fetchMyPostsCallCount += 1
-        fetchMyPostsReceivedQuery = query
-        return try fetchMyPostsResult.get()
-    }
-
-    // MARK: - fetchCommentedPosts
-
-    var fetchCommentedPostsResult: Result<MyActivePostPage, Error> = .failure(MockError.notStubbed)
-    private(set) var fetchCommentedPostsCallCount = 0
-    private(set) var fetchCommentedPostsReceivedQuery: MyPagePostListQuery?
-
-    func fetchCommentedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage {
-        fetchCommentedPostsCallCount += 1
-        fetchCommentedPostsReceivedQuery = query
-        return try fetchCommentedPostsResult.get()
-    }
-
-    // MARK: - fetchScrappedPosts
-
-    var fetchScrappedPostsResult: Result<MyActivePostPage, Error> = .failure(MockError.notStubbed)
-    private(set) var fetchScrappedPostsCallCount = 0
-    private(set) var fetchScrappedPostsReceivedQuery: MyPagePostListQuery?
-
-    func fetchScrappedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage {
-        fetchScrappedPostsCallCount += 1
-        fetchScrappedPostsReceivedQuery = query
-        return try fetchScrappedPostsResult.get()
-    }
-
     // MARK: - fetchTerms
 
     var fetchTermsResult: Result<MyPageTerms, Error> = .failure(MockError.notStubbed)

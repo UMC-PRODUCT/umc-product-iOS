@@ -14,7 +14,7 @@ import MyPageDomain
 
 /// MyPage Repository 구현체
 ///
-/// 프로필 조회/활동 게시글 조회/약관 조회를 처리합니다.
+/// 프로필 조회/약관 조회를 처리합니다.
 public final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable {
     
     // MARK: - Property
@@ -202,20 +202,6 @@ public final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendab
         }
     }
     
-    // MARK: - Posts
-
-    public func fetchMyPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage {
-        try await fetchPostPage(target: .getMyPosts(query: MyPagePostListQueryDTO(query: query)))
-    }
-
-    public func fetchCommentedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage {
-        try await fetchPostPage(target: .getCommentedPosts(query: MyPagePostListQueryDTO(query: query)))
-    }
-
-    public func fetchScrappedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage {
-        try await fetchPostPage(target: .getScrappedPosts(query: MyPagePostListQueryDTO(query: query)))
-    }
-
     /// 약관 타입으로 약관 정보를 조회합니다.
     ///
     /// - Note: 인증 없이 호출 가능한 공개 API (`requestWithoutAuth`)를 사용합니다.
@@ -256,22 +242,6 @@ private extension MyPageRepository {
 // MARK: - Private Function
 
 private extension MyPageRepository {
-    /// 게시글 페이지 API 응답을 `MyActivePostPage` 도메인으로 변환하는 공통 메서드.
-    private func fetchPostPage(target: MyPageRouter) async throws -> MyActivePostPage {
-        let response = try await adapter.request(target)
-        let apiResponse = try decoder.decode(
-            APIResponse<MyPagePostPageDTO<MyPagePostResponseDTO>>.self,
-            from: response.data
-        )
-        let result = try apiResponse.unwrap()
-        
-        return MyActivePostPage(
-            items: result.content.map { $0.toCommunityItemModel() },
-            page: Int(result.page) ?? 0,
-            hasNext: result.hasNext
-        )
-    }
-    
     /// 업로드된 이미지 ID로 회원 프로필 이미지를 갱신합니다.
     private func patchMemberProfileImage(profileImageId: String) async throws -> ProfileData {
         let response = try await adapter.request(

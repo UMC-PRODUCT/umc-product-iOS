@@ -99,42 +99,6 @@ final class MockMyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable 
         return try updateProfileLinksResult.get()
     }
 
-    // MARK: - fetchMyPosts
-
-    var fetchMyPostsResult: Result<MyActivePostPage, Error> = .failure(MockError.notStubbed)
-    private(set) var fetchMyPostsCallCount = 0
-    private(set) var fetchMyPostsReceivedQuery: MyPagePostListQuery?
-
-    func fetchMyPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage {
-        fetchMyPostsCallCount += 1
-        fetchMyPostsReceivedQuery = query
-        return try fetchMyPostsResult.get()
-    }
-
-    // MARK: - fetchCommentedPosts
-
-    var fetchCommentedPostsResult: Result<MyActivePostPage, Error> = .failure(MockError.notStubbed)
-    private(set) var fetchCommentedPostsCallCount = 0
-    private(set) var fetchCommentedPostsReceivedQuery: MyPagePostListQuery?
-
-    func fetchCommentedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage {
-        fetchCommentedPostsCallCount += 1
-        fetchCommentedPostsReceivedQuery = query
-        return try fetchCommentedPostsResult.get()
-    }
-
-    // MARK: - fetchScrappedPosts
-
-    var fetchScrappedPostsResult: Result<MyActivePostPage, Error> = .failure(MockError.notStubbed)
-    private(set) var fetchScrappedPostsCallCount = 0
-    private(set) var fetchScrappedPostsReceivedQuery: MyPagePostListQuery?
-
-    func fetchScrappedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage {
-        fetchScrappedPostsCallCount += 1
-        fetchScrappedPostsReceivedQuery = query
-        return try fetchScrappedPostsResult.get()
-    }
-
     // MARK: - Unused (본 ViewModel들이 호출하지 않음)
 
     var fetchMemberProfileResult: Result<MemberProfileSummary, Error> = .failure(MockError.notStubbed)
@@ -189,38 +153,6 @@ func makeStubProfileData(
         activityLogs: [],
         profileLink: profileLink
     )
-}
-
-/// 커뮤니티 게시글 아이템 픽스처
-func makeStubCommunityItem(
-    postId: String,
-    title: String = "제목"
-) -> CommunityItemModel {
-    CommunityItemModel(
-        postId: postId,
-        userId: "u1",
-        category: .free,
-        title: title,
-        content: "내용",
-        profileImage: nil,
-        userName: "이름",
-        userNickname: nil,
-        part: .pm,
-        createdAt: Date(timeIntervalSince1970: 0),
-        likeCount: 0,
-        commentCount: 0,
-        scrapCount: 0,
-        lightningInfo: nil
-    )
-}
-
-/// 게시글 목록 페이지 픽스처
-func makeStubPostPage(
-    items: [CommunityItemModel],
-    page: Int = 0,
-    hasNext: Bool = false
-) -> MyActivePostPage {
-    MyActivePostPage(items: items, page: page, hasNext: hasNext)
 }
 
 /// jpegData 인코딩이 nil이 아님을 보장하는 1x1 단색 이미지.

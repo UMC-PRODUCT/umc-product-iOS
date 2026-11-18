@@ -47,15 +47,6 @@ extension DIContainer {
         register(DeleteMemberUseCaseProtocol.self) {
             DeleteMemberUseCase(repository: self.resolve(MyPageRepositoryProtocol.self))
         }
-        register(FetchMyPostsUseCaseProtocol.self) {
-            FetchMyPostsUseCase(repository: self.resolve(MyPageRepositoryProtocol.self))
-        }
-        register(FetchMyCommentedPostsUseCaseProtocol.self) {
-            FetchMyCommentedPostsUseCase(repository: self.resolve(MyPageRepositoryProtocol.self))
-        }
-        register(FetchMyScrappedPostsUseCaseProtocol.self) {
-            FetchMyScrappedPostsUseCase(repository: self.resolve(MyPageRepositoryProtocol.self))
-        }
         register(FetchTermsUseCaseProtocol.self) {
             FetchTermsUseCase(repository: self.resolve(MyPageRepositoryProtocol.self))
         }
