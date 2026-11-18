@@ -342,7 +342,7 @@
 | `Data/Router/CommunityRouter.swift` | CommunityData |
 | `Data/Router/TMapGeocodingRouter.swift` | CommunityData |
 | `Domain/Enums/CommunityButtonType.swift` | CommunityDomain |
-| `Domain/Enums/CommunityItemCategory.swift` | CommunityDomain |
+| `Domain/Enums/CommunityItemCategory.swift` | **제거됨(#1677)** — CoreDomain `Post/` 로 이식됐으나 마지막 사용처(마이페이지 옛 글 목록)와 함께 철거. 커뮤니티는 스레드로 대체됐다 |
 | `Domain/Enums/CommunityMenu.swift` | CommunityDomain |
 | `Domain/Interfaces/CommunityDetailRepositoryProtocol.swift` | CommunityDomain |
 | `Domain/Interfaces/CommunityPostRepositoryProtocol.swift` | CommunityDomain |
@@ -350,8 +350,8 @@
 | `Domain/Interfaces/TMapGeocodingRepositoryProtocol.swift` | CommunityDomain |
 | `Domain/Models/CommunityCommentModel.swift` | CommunityDomain |
 | `Domain/Models/CommunityFameItemModel.swift` | CommunityDomain |
-| `Domain/Models/CommunityItemModel.swift` | CommunityDomain |
-| `Domain/Models/CommunityLightningInfo.swift` | CommunityDomain |
+| `Domain/Models/CommunityItemModel.swift` | **제거됨(#1677)** — CoreDomain `Post/` 로 이식됐으나 마지막 사용처(마이페이지 옛 글 목록)와 함께 철거. 커뮤니티는 스레드로 대체됐다 |
+| `Domain/Models/CommunityLightningInfo.swift` | **제거됨(#1677)** — CoreDomain `Post/` 로 이식됐으나 마지막 사용처(마이페이지 옛 글 목록)와 함께 철거. 커뮤니티는 스레드로 대체됐다 |
 | `Domain/UseCases/CreateLightningUseCaseProtocol.swift` | CommunityDomain |
 | `Domain/UseCases/CreatePostUseCaseProtocol.swift` | CommunityDomain |
 | `Domain/UseCases/DeleteCommentUseCaseProtocol.swift` | CommunityDomain |
@@ -561,7 +561,7 @@
 |---|---|
 | `Data/DTO/AddChallengerRecordRequestDTO.swift` | MyPageData |
 | `Data/DTO/MyPageFlexibleNumberDecoding.swift` | MyPageData |
-| `Data/DTO/MyPagePostDTO.swift` | MyPageData |
+| `Data/DTO/MyPagePostDTO.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Data/DTO/MyPageProfileDTO.swift` | CoreNetwork (Member — MemberProfileResponseDTO로 통합, #961) |
 | `Data/DTO/MyPageTermsDTO.swift` | MyPageData |
 | `Data/DTO/MyPageUploadDTO.swift` | MyPageData |
@@ -569,22 +569,22 @@
 | `Data/Repository/MyPageRepository.swift` | MyPageData |
 | `Data/Router/MyPageRouter.swift` | MyPageData |
 | `Domain/Interface/MyPageRepositoryProtocol.swift` | MyPageDomain |
-| `Domain/Models/MyActivePostPage.swift` | MyPageDomain |
+| `Domain/Models/MyActivePostPage.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Domain/Models/MyPageTerms.swift` | MyPageDomain |
 | `Domain/Models/ProfileData.swift` | MyPageDomain |
 | `Domain/UseCases/AddChallengerRecordUseCaseProtocol.swift` | MyPageDomain |
 | `Domain/UseCases/DeleteMemberUseCaseProtocol.swift` | MyPageDomain |
-| `Domain/UseCases/FetchMyCommentedPostsUseCaseProtocol.swift` | MyPageDomain |
+| `Domain/UseCases/FetchMyCommentedPostsUseCaseProtocol.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Domain/UseCases/FetchMyPageProfileUseCaseProtocol.swift` | MyPageDomain |
-| `Domain/UseCases/FetchMyPostsUseCaseProtocol.swift` | MyPageDomain |
-| `Domain/UseCases/FetchMyScrappedPostsUseCaseProtocol.swift` | MyPageDomain |
+| `Domain/UseCases/FetchMyPostsUseCaseProtocol.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
+| `Domain/UseCases/FetchMyScrappedPostsUseCaseProtocol.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Domain/UseCases/FetchTermsUseCaseProtocol.swift` | MyPageDomain |
 | `Domain/UseCases/Implementations/AddChallengerRecordUseCase.swift` | MyPageDomain |
 | `Domain/UseCases/Implementations/DeleteMemberUseCase.swift` | MyPageDomain |
-| `Domain/UseCases/Implementations/FetchMyCommentedPostsUseCase.swift` | MyPageDomain |
+| `Domain/UseCases/Implementations/FetchMyCommentedPostsUseCase.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Domain/UseCases/Implementations/FetchMyPageProfileUseCase.swift` | MyPageDomain |
-| `Domain/UseCases/Implementations/FetchMyPostsUseCase.swift` | MyPageDomain |
-| `Domain/UseCases/Implementations/FetchMyScrappedPostsUseCase.swift` | MyPageDomain |
+| `Domain/UseCases/Implementations/FetchMyPostsUseCase.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
+| `Domain/UseCases/Implementations/FetchMyScrappedPostsUseCase.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Domain/UseCases/Implementations/FetchTermsUseCase.swift` | MyPageDomain |
 | `Domain/UseCases/Implementations/UpdateMyPageProfileImageUseCase.swift` | MyPageDomain |
 | `Domain/UseCases/Implementations/UpdateMyPageProfileLinksUseCase.swift` | MyPageDomain |
@@ -605,7 +605,7 @@
 | `Presentation/Components/Section/MypageSection/HelpSection.swift` | **이식 제외(dead)** — 레거시 호출처 0건(`HelpSection()` 을 그리는 화면이 없음) |
 | `Presentation/Components/Section/MypageSection/LawSection.swift` | MyPagePresentation |
 | `Presentation/Components/Section/MypageSection/LinkSection.swift` | MyPagePresentation (`ProfileLinkSection` 으로 개명) |
-| `Presentation/Components/Section/MypageSection/MyActiveLogSection.swift` | MyPagePresentation · **dormant** — 이식 완료됐으나 마이페이지 v3 재편(#1196)으로 소비자 0건. 루트의 활동 요약은 신규 `MyActivitySection` 이 대체. 라우팅 enum `MyActiveLogsType` 은 계속 사용 중이므로 enum 까지 지우지 말 것. 삭제 금지(의도적 존치) |
+| `Presentation/Components/Section/MypageSection/MyActiveLogSection.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Presentation/Components/Section/MypageSection/ProfileCardSection.swift` | MyPagePresentation · **dormant** — 이식 완료됐으나 마이페이지 v3 재편(#1196)으로 루트가 명함 카드(`BusinessCardSection`)로 교체되며 소비자 0건. 삭제 금지(의도적 존치) |
 | `Presentation/Components/Section/MypageSection/SettingSection.swift` | MyPagePresentation |
 | `Presentation/Components/Section/MypageSection/SocialSection.swift` | MyPagePresentation (`SocialConnectSection` 으로 개명) |
@@ -613,15 +613,15 @@
 | `Presentation/Enum/FollowType.swift` | MyPagePresentation (`UMCChannelType` 으로 개명). 아이콘은 `CoreUIComponents` 번들 자산 접근자 `Image.umcInstagram`/`.umcChannelLogo` 로 노출 |
 | `Presentation/Enum/HelpType.swift` | **이식 제외(dead)** — 유일 소비자인 `HelpSection` 이 dead |
 | `Presentation/Enum/LawsType.swift` | MyPagePresentation |
-| `Presentation/Enum/MyActiveLogsType.swift` | MyPagePresentation |
+| `Presentation/Enum/MyActiveLogsType.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Presentation/Enum/MyPageSectionType.swift` | MyPagePresentation |
 | `Presentation/Enum/ScocialLinkType.swift` | MyPagePresentation |
 | `Presentation/Enum/SettingType.swift` | MyPagePresentation |
 | `Presentation/Provider/MyPageUseCaseProvider.swift` | MyPagePresentation |
-| `Presentation/ViewModels/MyActivePostsViewModel.swift` | MyPagePresentation |
+| `Presentation/ViewModels/MyActivePostsViewModel.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Presentation/ViewModels/MyPageProfileViewModel.swift` | MyPagePresentation |
 | `Presentation/ViewModels/MyPageViewModel.swift` | MyPagePresentation |
-| `Presentation/Views/MyActivePostsView.swift` | MyPagePresentation |
+| `Presentation/Views/MyActivePostsView.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Presentation/Views/MyPageProfileView.swift` | MyPagePresentation |
 | `Presentation/Views/MyPageView.swift` | MyPagePresentation |
 
@@ -861,7 +861,7 @@
 | `Mock/MissionPreviewData.swift` | ActivityDomain/Sources/Mock |
 | `Mock/MockChallengerAttendanceUseCase.swift` | ActivityDomain/Sources/Mock |
 | `Mock/MyAttendanceHistoryTestView.swift` | ActivityPresentation/Sources/Mock |
-| `Mock/MyPageMockData.swift` | MyPageDomain/Sources/Mock (CommunityItemModel부는 CoreDomain) |
+| `Mock/MyPageMockData.swift` | MyPageDomain/Sources/Mock (CommunityItemModel부는 CoreDomain으로 갔다가 #1677에서 제거) |
 | `Mock/NoticeMockData.swift` | NoticeDomain/Sources/Mock |
 | `Mock/StudyGroupPreviewData.swift` | ActivityDomain/Sources/Mock |
 | `Navigation/NavigationDestination.swift` | App (UMCApp/UMCApp/Sources) |
