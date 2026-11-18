@@ -212,7 +212,7 @@ enum MyPageSplitSelection {
 
     static func isReadOnly(_ destination: MyPageDestination) -> Bool {
         switch destination {
-        case .activityLogs, .certificates, .myActivePosts: true
+        case .activityLogs, .certificates: true
         case .cardEdit, .settings, .changeEmail, .changePassword, .registerPassword: false
         }
     }

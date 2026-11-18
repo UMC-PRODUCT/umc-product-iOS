@@ -38,11 +38,6 @@ enum MyPageDestination: Hashable {
     /// 「수료증 ・인증서」 발급·조회·다운로드 (#1450).
     case certificates
 
-    /// 내 활동 게시글 목록 (내가 쓴 글 / 댓글 단 글 / 스크랩).
-    ///
-    /// - Parameter logType: 진입 시 처음 보여줄 활동 종류. 화면 안에서 세 종류를 전환할 수 있다.
-    case myActivePosts(logType: MyActiveLogsType)
-
     /// 설정 화면 (프로필 링크·시스템 설정·약관·앱 정보·소셜 연동·인증·UMC 채널).
     ///
     /// 프로필이 있어야 의미가 있는 섹션(외부 링크·소셜 연동)은 화면이 직접 조회하므로

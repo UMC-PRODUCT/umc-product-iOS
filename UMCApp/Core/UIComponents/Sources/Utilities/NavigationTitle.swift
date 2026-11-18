@@ -78,9 +78,6 @@ public enum NavigationTitle {
         case activityLogs = "나의 활동 ・프로젝트"
         case certificates = "수료증 ・인증서"
         case settings = "설정"
-        case writtenPosts = "내가 쓴 글"
-        case commentedPosts = "댓글 단 글"
-        case scrappedPosts = "스크랩"
         case productTeam = "UMC PRODUCT"
     }
 
