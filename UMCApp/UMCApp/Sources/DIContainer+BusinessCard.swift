@@ -39,6 +39,21 @@ extension DIContainer {
                 memberProfileRepository: self.resolve(MemberProfileRepositoryProtocol.self)
             )
         }
+        // 뒷면 링크 우선순위는 서버에 없어 기기 SwiftData에만 둔다 (#1679). 순서를 바꾸는
+        // 내 정보 편집(MyPage)이 조회·저장 UseCase를 직접 꺼내 쓴다.
+        register(CardLinkPriorityRepositoryProtocol.self) {
+            CardLinkPriorityRepository(modelContext: self.resolve(ModelContext.self))
+        }
+        register(FetchCardLinkPriorityUseCaseProtocol.self) {
+            FetchCardLinkPriorityUseCase(
+                repository: self.resolve(CardLinkPriorityRepositoryProtocol.self)
+            )
+        }
+        register(SaveCardLinkPriorityUseCaseProtocol.self) {
+            SaveCardLinkPriorityUseCase(
+                repository: self.resolve(CardLinkPriorityRepositoryProtocol.self)
+            )
+        }
         // 상대 명함(QR 딥링크)은 캐시 없는 단발 조회라 내 명함과 저장소를 나눈다.
         register(PeerCardRepositoryProtocol.self) {
             PeerCardRepository(adapter: self.resolve(MoyaNetworkAdapter.self))
@@ -92,6 +107,7 @@ extension DIContainer {
         register(BusinessCardUseCaseProviding.self) {
             BusinessCardUseCaseProvider(
                 businessCardRepository: self.resolve(BusinessCardRepositoryProtocol.self),
+                linkPriorityRepository: self.resolve(CardLinkPriorityRepositoryProtocol.self),
                 peerCardRepository: self.resolve(PeerCardRepositoryProtocol.self),
                 receivedCardRepository: self.resolve(ReceivedCardRepositoryProtocol.self),
                 activityStatRepository: self.resolve(ActivityStatRepositoryProtocol.self),

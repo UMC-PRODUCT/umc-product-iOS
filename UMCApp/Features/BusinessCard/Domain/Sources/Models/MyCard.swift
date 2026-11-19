@@ -39,6 +39,10 @@ public struct MyCard: Equatable, Hashable, Sendable {
     public let instagram: String?
     public let personal: String?
     public let avatarURL: String?
+    /// 뒷면에 보일 링크를 고르는 순서 (#1679). 내 명함은 사용자가 정한 순서, 받은 명함은 기본 순서다.
+    ///
+    /// 기기에만 저장하는 값이라 교환 페이로드에는 싣지 않는다.
+    public let linkPriority: [CardLinkType]
 
     // MARK: - Init
 
@@ -56,7 +60,8 @@ public struct MyCard: Equatable, Hashable, Sendable {
         instagram: String? = nil,
         personal: String? = nil,
         avatarURL: String?,
-        partRaw: String? = nil
+        partRaw: String? = nil,
+        linkPriority: [CardLinkType] = CardLinkType.allCases
     ) {
         self.partRaw = partRaw
         self.memberId = memberId
@@ -72,6 +77,7 @@ public struct MyCard: Equatable, Hashable, Sendable {
         self.instagram = instagram
         self.personal = personal
         self.avatarURL = avatarURL
+        self.linkPriority = CardLinkType.normalizedPriority(linkPriority)
     }
 
     // MARK: - Computed Property
@@ -121,7 +127,54 @@ public struct MyCard: Equatable, Hashable, Sendable {
         cardLink.urlString
     }
 
+    /// 뒷면에 보일 링크 하나 — 우선순위에서 값이 있는 첫 링크다. 명함은 간결해야 해서
+    /// 링크는 하나만 싣는다 (#1679).
+    public var primaryLink: (type: CardLinkType, value: String)? {
+        for type in linkPriority {
+            if let value = link(type) {
+                return (type, value)
+            }
+        }
+        return nil
+    }
+
     // MARK: - Function
+
+    /// 종류별 링크 값. 비어 있거나 공백뿐이면 `nil`.
+    public func link(_ type: CardLinkType) -> String? {
+        let value: String?
+        switch type {
+        case .github: value = github
+        case .linkedIn: value = linkedIn
+        case .blog: value = blog
+        case .instagram: value = instagram
+        case .personal: value = personal
+        }
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else { return nil }
+        return trimmed
+    }
+
+    /// 링크 우선순위만 바꾼 명함.
+    public func withLinkPriority(_ priority: [CardLinkType]) -> MyCard {
+        MyCard(
+            memberId: memberId,
+            name: name,
+            nickname: nickname,
+            part: part,
+            generation: generation,
+            university: university,
+            email: email,
+            github: github,
+            linkedIn: linkedIn,
+            blog: blog,
+            instagram: instagram,
+            personal: personal,
+            avatarURL: avatarURL,
+            partRaw: partRaw,
+            linkPriority: priority
+        )
+    }
 
     /// 명함으로 쓸 수 있는 최소 조건을 확인한다.
     ///

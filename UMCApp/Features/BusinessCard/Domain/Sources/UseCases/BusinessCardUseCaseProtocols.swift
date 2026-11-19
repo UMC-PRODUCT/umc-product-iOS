@@ -14,6 +14,16 @@ public protocol FetchMyCardUseCaseProtocol: Sendable {
     func execute(forceRefresh: Bool) async throws -> MyCard
 }
 
+/// 명함 뒷면 링크 우선순위 조회 (#1679). 맨 위에 있는 링크가 뒷면에 보인다.
+public protocol FetchCardLinkPriorityUseCaseProtocol: Sendable {
+    func execute() async throws -> [CardLinkType]
+}
+
+/// 명함 뒷면 링크 우선순위 저장 (#1679). 기기에만 저장한다.
+public protocol SaveCardLinkPriorityUseCaseProtocol: Sendable {
+    func execute(_ priority: [CardLinkType]) async throws
+}
+
 /// 상대 명함 조회 (QR 딥링크 스캔).
 ///
 /// 딥링크는 memberId만 싣는다 — 명함 내용은 서버에서 받아 온다.

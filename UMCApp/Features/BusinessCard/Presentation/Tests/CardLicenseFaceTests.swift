@@ -14,15 +14,15 @@ import UMCFoundation
 /// 명함 면 표기 중 **눈으로 못 보는 규칙**만 본다.
 ///
 /// 레이아웃은 프리뷰가 보여주므로 테스트하지 않는다. 조용히 틀려도 화면상으로는 멀쩡한 것,
-/// 즉 「뒷면 줄이 시안 순서대로 값 있는 것만 나오는가」(#1679)와 「앞면·뒷면 라벨이 화면에
+/// 즉 「뒷면이 이메일과 우선순위 맨 위 링크 하나만 싣는가」(#1679)와 「앞면·뒷면 라벨이 화면에
 /// 남은 항목만 화면 순서대로 읽는가」(#1363 · #1374)를 단정한다.
 @Suite("명함 면 표기")
 struct CardLicenseFaceTests {
 
     // MARK: - 1. 뒷면 연락처·링크 줄
 
-    @Test("뒷면 줄은 이메일 → GitHub → LinkedIn → Blog → Instagram → 개인링크 순이다")
-    func backFaceContactsFollowDesignOrder() {
+    @Test("뒷면에는 이메일과 링크 하나만 싣고, 기본 순서의 첫 링크는 GitHub 이다")
+    func backFaceShowsEmailAndOneLink() {
         let kinds = card(
             email: "one@umc.dev",
             github: "github.com/umc",
@@ -32,48 +32,57 @@ struct CardLicenseFaceTests {
             personal: "umc.dev"
         ).backFaceContacts.map(\.kind)
 
-        #expect(kinds == [.email, .github, .linkedIn, .blog, .instagram, .personal])
+        #expect(kinds == [.email, .github])
     }
 
-    @Test("값이 없거나 공백뿐인 줄은 뺀다")
-    func backFaceContactsSkipEmptyValues() {
-        let contacts = card(email: "  ", github: nil, blog: "umc.tistory.com").backFaceContacts
+    @Test("사용자가 정한 우선순위에서 맨 위 링크를 싣는다")
+    func backFaceFollowsLinkPriority() {
+        let contacts = card(
+            email: "one@umc.dev",
+            github: "github.com/umc",
+            instagram: "instagram.com/umc",
+            linkPriority: [.instagram, .github]
+        ).backFaceContacts
 
-        #expect(contacts.map(\.kind) == [.blog])
-        #expect(contacts.map(\.value) == ["umc.tistory.com"])
+        #expect(contacts.map(\.kind) == [.email, .instagram])
+        #expect(contacts.map(\.value) == ["one@umc.dev", "instagram.com/umc"])
+    }
+
+    @Test("값이 없거나 공백뿐인 항목은 빼고, 맨 위 링크가 비면 다음 순서 링크를 싣는다")
+    func backFaceContactsSkipEmptyValues() {
+        let contacts = card(
+            email: "  ",
+            linkedIn: "  ",
+            blog: "umc.tistory.com",
+            personal: "umc.dev",
+            linkPriority: [.linkedIn, .personal, .blog]
+        ).backFaceContacts
+
+        #expect(contacts.map(\.kind) == [.personal])
+        #expect(contacts.map(\.value) == ["umc.dev"])
     }
 
     @Test("줄을 누르면 이메일은 mailto, 스킴 없는 링크는 https 로 열고, 웹이 아닌 스킴은 열지 않는다")
     func backFaceContactsOpenMailOrWebOnly() {
-        let urls = card(
-            email: "one@umc.dev",
-            github: "github.com/umc",
-            linkedIn: "HTTP://www.linkedin.com/in/umc/",
-            blog: "https://",
-            instagram: "instagram://user?username=umc",
-            personal: "umc.dev"
-        ).backFaceContacts.map(\.url?.absoluteString)
+        func urls(_ card: MyCard) -> [String?] {
+            card.backFaceContacts.map(\.url?.absoluteString)
+        }
 
-        #expect(urls == [
-            "mailto:one@umc.dev",
-            "https://github.com/umc",
-            "HTTP://www.linkedin.com/in/umc/",
-            nil,
-            nil,
-            "https://umc.dev"
-        ])
+        #expect(urls(card(email: "one@umc.dev", github: "github.com/umc"))
+            == ["mailto:one@umc.dev", "https://github.com/umc"])
+        #expect(urls(card(linkedIn: "HTTP://www.linkedin.com/in/umc/"))
+            == ["HTTP://www.linkedin.com/in/umc/"])
+        #expect(urls(card(blog: "https://")) == [nil])
+        #expect(urls(card(instagram: "instagram://user?username=umc")) == [nil])
     }
 
     @Test("링크 줄은 스킴·www·끝 슬래시를 떼고 보이고, 이메일은 그대로 둔다")
     func backFaceLinksDropURLDecoration() {
-        let values = card(
-            email: "one@umc.dev",
-            github: "https://github.com/umc/",
-            instagram: "HTTP://www.instagram.com/umc",
-            personal: "umc.dev"
-        ).backFaceContacts.map(\.value)
+        let github = card(email: "one@umc.dev", github: "https://github.com/umc/")
+        let instagram = card(instagram: "HTTP://www.instagram.com/umc")
 
-        #expect(values == ["one@umc.dev", "github.com/umc", "instagram.com/umc", "umc.dev"])
+        #expect(github.backFaceContacts.map(\.value) == ["one@umc.dev", "github.com/umc"])
+        #expect(instagram.backFaceContacts.map(\.value) == ["instagram.com/umc"])
     }
 
     @Test("뒷면 라벨은 화면 순서대로 값을 읽고, 줄이 없으면 빈 상태 문구를 읽는다")
@@ -115,7 +124,8 @@ struct CardLicenseFaceTests {
         linkedIn: String? = nil,
         blog: String? = nil,
         instagram: String? = nil,
-        personal: String? = nil
+        personal: String? = nil,
+        linkPriority: [CardLinkType] = CardLinkType.allCases
     ) -> MyCard {
         MyCard(
             memberId: memberId,
@@ -130,7 +140,8 @@ struct CardLicenseFaceTests {
             blog: blog,
             instagram: instagram,
             personal: personal,
-            avatarURL: nil
+            avatarURL: nil,
+            linkPriority: linkPriority
         )
     }
 

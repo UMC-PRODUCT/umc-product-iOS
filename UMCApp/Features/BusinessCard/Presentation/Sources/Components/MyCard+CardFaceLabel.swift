@@ -20,32 +20,28 @@ extension MyCard {
 
     // MARK: - Contact
 
-    /// 뒷면 연락처·링크 줄. 이메일 → GitHub → LinkedIn → Blog → Instagram → 개인링크 순이다.
+    /// 뒷면 연락처·링크 줄. 이메일과 우선순위 맨 위 링크(``MyCard/primaryLink``) 하나다.
     ///
-    /// 값 없는 줄은 뺀다 — 빈 줄은 서버 미입력을 링크가 있는 것처럼 보이게 한다.
-    /// 링크는 ``linkDisplayText(_:)`` 로 줄여 보이고, 누르면 여는 주소는 원래 값으로 만든다.
+    /// 명함은 간결해야 해서 링크를 다 늘어놓지 않는다 (#1679). 순서는 사용자가 내 정보
+    /// 편집에서 끌어서 정하고, 값 없는 링크는 건너뛴다 — 빈 줄은 서버 미입력을 링크가 있는
+    /// 것처럼 보이게 한다. 링크는 ``linkDisplayText(_:)`` 로 줄여 보이고, 누르면 여는 주소는
+    /// 원래 값으로 만든다.
     var backFaceContacts: [CardContact] {
-        let candidates: [(CardContact.Kind, String?)] = [
-            (.email, email),
-            (.github, github),
-            (.linkedIn, linkedIn),
-            (.blog, blog),
-            (.instagram, instagram),
-            (.personal, personal)
-        ]
-        return candidates.compactMap { kind, value in
-            guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !value.isEmpty else { return nil }
-            if kind == .email {
-                let url = URL(string: Constants.mailScheme + value)
-                return CardContact(kind: kind, value: value, url: url)
-            }
-            return CardContact(
-                kind: kind,
-                value: Self.linkDisplayText(value),
-                url: Self.linkURL(value)
+        var contacts: [CardContact] = []
+        if let email = email?.trimmingCharacters(in: .whitespacesAndNewlines), !email.isEmpty {
+            let url = URL(string: Constants.mailScheme + email)
+            contacts.append(CardContact(kind: .email, value: email, url: url))
+        }
+        if let link = primaryLink {
+            contacts.append(
+                CardContact(
+                    kind: CardContact.Kind(link.type),
+                    value: Self.linkDisplayText(link.value),
+                    url: Self.linkURL(link.value)
+                )
             )
         }
+        return contacts
     }
 
     /// 링크는 입력 그대로(`https://www.github.com/umc/`) 오지만 카드 한 줄 폭이 좁아
@@ -117,6 +113,16 @@ struct CardContact: Hashable {
         case blog
         case instagram
         case personal
+
+        init(_ type: CardLinkType) {
+            switch type {
+            case .github: self = .github
+            case .linkedIn: self = .linkedIn
+            case .blog: self = .blog
+            case .instagram: self = .instagram
+            case .personal: self = .personal
+            }
+        }
     }
 
     let kind: Kind
