@@ -64,6 +64,9 @@ extension DIContainer {
         register(CommunityThreadRepositoryProtocol.self) {
             MockCommunityThreadRepository()
         }
+        register(ThreadMemberProfileRepositoryProtocol.self) {
+            StubThreadMemberProfileRepository()
+        }
 
         Logger(subsystem: "UMCApp", category: "StubSession")
             .notice("""

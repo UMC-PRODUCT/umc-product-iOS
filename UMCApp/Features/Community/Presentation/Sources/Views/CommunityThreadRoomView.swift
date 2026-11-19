@@ -287,10 +287,11 @@ struct CommunityThreadRoomView: View {
                     store: store,
                     reportUseCase: container.resolve(ReportMemberUseCaseProtocol.self)
                 ) {
-                    Section {
-                        Label(message.senderName, systemImage: "person.crop.circle")
-                            .appFont(.title3, weight: .semibold)
-                    }
+                    ThreadMemberProfileContent(
+                        memberId: message.senderId,
+                        name: message.senderName,
+                        useCase: container.resolve(ThreadMemberProfileUseCaseProtocol.self)
+                    )
                 }
             }
         }

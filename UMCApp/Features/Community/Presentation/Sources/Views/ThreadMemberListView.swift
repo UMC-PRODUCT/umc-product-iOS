@@ -96,10 +96,11 @@ struct ThreadMemberListView: View {
                     store: container.resolve(MemberBlockStore.self),
                     reportUseCase: container.resolve(ReportMemberUseCaseProtocol.self)
                 ) {
-                    Section {
-                        Label(member.name, systemImage: "person.crop.circle")
-                            .appFont(.title3, weight: .semibold)
-                    }
+                    ThreadMemberProfileContent(
+                        memberId: member.id,
+                        name: member.name,
+                        useCase: container.resolve(ThreadMemberProfileUseCaseProtocol.self)
+                    )
                 }
             }
             .task { await viewModel.load() }
