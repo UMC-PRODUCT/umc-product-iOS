@@ -30,6 +30,7 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
     private let updateCardContactSettingsUseCase: UpdateCardContactSettingsUseCaseProtocol
     private let fetchCardLinkPriorityUseCase: FetchCardLinkPriorityUseCaseProtocol
     private let saveCardLinkPriorityUseCase: SaveCardLinkPriorityUseCaseProtocol
+    private let invalidateMyCardCacheUseCase: InvalidateMyCardCacheUseCaseProtocol
     private let kakaoLoginManager: KakaoLoginManaging
     private let googleLoginManager: GoogleLoginManaging
 
@@ -102,6 +103,7 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         updateCardContactSettingsUseCase: UpdateCardContactSettingsUseCaseProtocol,
         fetchCardLinkPriorityUseCase: FetchCardLinkPriorityUseCaseProtocol,
         saveCardLinkPriorityUseCase: SaveCardLinkPriorityUseCaseProtocol,
+        invalidateMyCardCacheUseCase: InvalidateMyCardCacheUseCaseProtocol,
         kakaoLoginManager: KakaoLoginManaging = KakaoLoginManager(),
         googleLoginManager: GoogleLoginManaging = GoogleLoginManager()
     ) {
@@ -113,6 +115,7 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         self.updateCardContactSettingsUseCase = updateCardContactSettingsUseCase
         self.fetchCardLinkPriorityUseCase = fetchCardLinkPriorityUseCase
         self.saveCardLinkPriorityUseCase = saveCardLinkPriorityUseCase
+        self.invalidateMyCardCacheUseCase = invalidateMyCardCacheUseCase
         self.kakaoLoginManager = kakaoLoginManager
         self.googleLoginManager = googleLoginManager
     }
@@ -220,7 +223,15 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         
         var savedContacts: CardContactSettings?
         if hasContactUpdate {
-            savedContacts = try await updateCardContactSettingsUseCase.execute(contactSettings)
+            // 명함 뒷면은 따로 캐시돼 있어 비워야 돌아갔을 때 바뀐 공개 설정이 보인다. 응답을
+            // 못 받았어도 서버에는 반영됐을 수 있어 실패해도 비운다.
+            do {
+                savedContacts = try await updateCardContactSettingsUseCase.execute(contactSettings)
+            } catch {
+                await invalidateMyCardCacheUseCase.execute()
+                throw error
+            }
+            await invalidateMyCardCacheUseCase.execute()
         }
 
         updatedProfile.socialConnections = currentSocialConnections

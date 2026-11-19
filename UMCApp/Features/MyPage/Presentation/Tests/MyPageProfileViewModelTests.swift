@@ -210,7 +210,10 @@ struct MyPageProfileViewModelTests {
         let serverProfile = makeStubProfileData(challengeId: 42, socialConnections: [])
         let mock = MockMyPageRepository()
         mock.updateProfileImageResult = .success(serverProfile)
-        let viewModel = makeViewModel(profile: original, repository: mock)
+        let invalidateMyCard = SpyInvalidateMyCardCacheUseCase()
+        let viewModel = makeViewModel(
+            profile: original, repository: mock, invalidateMyCard: invalidateMyCard
+        )
 
         await viewModel.didLoadImage(image: makeStubImage())
         try await viewModel.submitProfileUpdate()
@@ -225,6 +228,8 @@ struct MyPageProfileViewModelTests {
         #expect(viewModel.selectedPhotoItem == nil)
         #expect(viewModel.isUpdatingProfileImage == false)
         #expect(viewModel.canSubmit == false)
+        // 사진은 정본 프로필 캐시로 명함 앞면에 반영된다. 뒷면 캐시는 그대로 둔다.
+        #expect(invalidateMyCard.callCount == 0)
     }
 
     @Test("고해상도 이미지 submit — 긴 변 1024px로 줄인 5MB 이하 JPEG 업로드")
@@ -247,8 +252,10 @@ struct MyPageProfileViewModelTests {
     func submitContactUpdateSendsWholeSettings() async throws {
         let mock = MockMyPageRepository()
         let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        let invalidateMyCard = SpyInvalidateMyCardCacheUseCase()
         let viewModel = makeViewModel(
-            profile: makeStubProfileData(), repository: mock, contacts: contacts
+            profile: makeStubProfileData(), repository: mock, contacts: contacts,
+            invalidateMyCard: invalidateMyCard
         )
         await viewModel.loadContactSettings()
 
@@ -264,6 +271,7 @@ struct MyPageProfileViewModelTests {
         #expect(sent.isEmailPublic == makeStoredContacts().isEmailPublic)
         #expect(viewModel.savedContactSettings == .loaded(sent))
         #expect(viewModel.canSubmit == false)
+        #expect(invalidateMyCard.callCount == 1)
     }
 
     @Test("이미지+연락처 동시 변경 시 두 UseCase 모두 호출")
@@ -334,8 +342,10 @@ struct MyPageProfileViewModelTests {
     func submitContactFailurePropagatesAndKeepsDiff() async {
         let contacts = StubCardContactUseCase(stored: makeStoredContacts())
         contacts.updateError = MyPageTestError.boom
+        let invalidateMyCard = SpyInvalidateMyCardCacheUseCase()
         let viewModel = makeViewModel(
-            profile: makeStubProfileData(challengeId: 1), contacts: contacts
+            profile: makeStubProfileData(challengeId: 1), contacts: contacts,
+            invalidateMyCard: invalidateMyCard
         )
         await viewModel.loadContactSettings()
 
@@ -348,6 +358,8 @@ struct MyPageProfileViewModelTests {
         #expect(viewModel.savedContactSettings == .loaded(makeStoredContacts()))
         #expect(viewModel.isUpdatingProfileImage == false)
         #expect(viewModel.canSubmit == true)
+        // 응답만 못 받았을 수도 있어 명함 캐시는 실패해도 비운다.
+        #expect(invalidateMyCard.callCount == 1)
     }
 
     @Test("이미지 성공 후 연락처 실패 — 에러 전파 + 서버 응답 미반영 + 이미지/연락처 pending 모두 보존")
@@ -505,7 +517,8 @@ private func makeViewModel(
     fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol = StubFetchMyOAuthUseCase(result: .success([])),
     deleteMemberOAuthUseCase: SpyDeleteMemberOAuthUseCase = SpyDeleteMemberOAuthUseCase(),
     contacts: StubCardContactUseCase = StubCardContactUseCase(stored: makeStoredContacts()),
-    linkPriority: StubLinkPriorityUseCase = StubLinkPriorityUseCase()
+    linkPriority: StubLinkPriorityUseCase = StubLinkPriorityUseCase(),
+    invalidateMyCard: SpyInvalidateMyCardCacheUseCase = SpyInvalidateMyCardCacheUseCase()
 ) -> MyPageProfileViewModel {
     // GoogleLoginManaging은 MainActor 격리라 파라미터 기본값으로 만들 수 없어 본문에서 생성한다.
     MyPageProfileViewModel(
@@ -517,6 +530,7 @@ private func makeViewModel(
         updateCardContactSettingsUseCase: contacts,
         fetchCardLinkPriorityUseCase: linkPriority,
         saveCardLinkPriorityUseCase: linkPriority,
+        invalidateMyCardCacheUseCase: invalidateMyCard,
         kakaoLoginManager: StubKakaoLoginManager(),
         googleLoginManager: StubGoogleLoginManager()
     )
@@ -592,6 +606,15 @@ private final class StubCardContactUseCase:
         received = settings
         if let updateError { throw updateError }
         return settings.normalized
+    }
+}
+
+private final class SpyInvalidateMyCardCacheUseCase:
+    InvalidateMyCardCacheUseCaseProtocol, @unchecked Sendable {
+    private(set) var callCount = 0
+
+    func execute() async {
+        callCount += 1
     }
 }
 

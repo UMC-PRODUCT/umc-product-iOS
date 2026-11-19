@@ -66,6 +66,9 @@ public struct MyPageProfileView: View {
                 ),
                 saveCardLinkPriorityUseCase: container.resolve(
                     SaveCardLinkPriorityUseCaseProtocol.self
+                ),
+                invalidateMyCardCacheUseCase: container.resolve(
+                    InvalidateMyCardCacheUseCaseProtocol.self
                 )
             )
         )
