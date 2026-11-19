@@ -11,40 +11,46 @@ import CoreDesignSystem
 import UMCFoundation
 
 /// 참여자·메시지 발신자 프로필의 공통 안전 메뉴.
-public struct MemberSafetyProfileView: View {
+///
+/// 시트의 틀(닫기·차단·신고 메뉴·신고 폼)만 맡고, 폼 안에 보일 프로필 내용은 화면을 띄우는
+/// 쪽이 `content` 로 넣는다 (#1681). 내용을 못 불러와도 차단·신고는 그대로 쓸 수 있다.
+public struct MemberSafetyProfileView<Content: View>: View {
     private let memberId: String
     private let name: String
     private let currentMemberId: String?
     private let store: MemberBlockStore
     private let reportUseCase: ReportMemberUseCaseProtocol
+    private let content: Content
     @State private var alertPrompt: AlertPrompt?
     @State private var failure: String?
     @State private var isLoading = false
     @State private var showsReport = false
     @Environment(\.dismiss) private var dismiss
 
+    /// - Parameter content: 폼에 넣을 프로필 내용. `Section` 들을 그대로 넣으면 된다.
     public init(
         memberId: String, name: String, currentMemberId: String?, store: MemberBlockStore,
-        reportUseCase: ReportMemberUseCaseProtocol
+        reportUseCase: ReportMemberUseCaseProtocol,
+        @ViewBuilder content: () -> Content
     ) {
         self.memberId = memberId
         self.name = name
         self.currentMemberId = currentMemberId
         self.store = store
         self.reportUseCase = reportUseCase
+        self.content = content()
     }
 
     public var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    Label(name, systemImage: "person.crop.circle")
-                        .appFont(.title3, weight: .semibold)
-                    if store.isBlocked(memberId) {
+                if store.isBlocked(memberId) {
+                    Section {
                         Label("차단한 사용자", systemImage: "person.crop.circle.badge.xmark")
                             .foregroundStyle(.secondary)
                     }
                 }
+                content
                 if let failure {
                     Section {
                         Text(failure).foregroundStyle(.secondary)

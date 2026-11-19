@@ -95,7 +95,12 @@ struct ThreadMemberListView: View {
                     currentMemberId: viewModel.currentMemberId,
                     store: container.resolve(MemberBlockStore.self),
                     reportUseCase: container.resolve(ReportMemberUseCaseProtocol.self)
-                )
+                ) {
+                    Section {
+                        Label(member.name, systemImage: "person.crop.circle")
+                            .appFont(.title3, weight: .semibold)
+                    }
+                }
             }
             .task { await viewModel.load() }
             .onChange(of: viewModel.didLeave) { _, didLeave in
