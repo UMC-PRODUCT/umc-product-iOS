@@ -21,7 +21,8 @@ import UMCFoundation
 ///
 /// 사용자에게는 **「내 정보 편집」**으로 보인다 — 시안 `12804:30498` 의 필드가 이 폼과 1:1 로
 /// 같아서(#1232) 화면을 새로 만들지 않고 타이틀만 시안에 맞췄다. 이름·학교·기수는 읽기 전용
-/// (프로필이 원본), 실제로 수정되는 값은 사진·외부 링크·활동 이력·연동 계정이다.
+/// (프로필이 원본), 실제로 수정되는 값은 사진·연락 이메일·외부 링크(공개 여부 포함)·활동 이력·
+/// 연동 계정이다. 연락 이메일·링크는 명함 API로 따로 읽고 저장한다 (#1678).
 public struct MyPageProfileView: View {
 
     // MARK: - Property
@@ -37,7 +38,7 @@ public struct MyPageProfileView: View {
     private enum Constants {
         static let schoolHeader = "학교"
         static let activityLogHeader = "활동 이력"
-        static let profileLinkHeader = "외부 프로필 링크"
+        static let contactHeader = "연락처·외부 링크"
 
         static let codeAlertTitle = "챌린저 코드 입력"
         static let codeAlertMessage = "운영진에게 발급받은 6자리 코드를 입력해주세요."
@@ -54,6 +55,12 @@ public struct MyPageProfileView: View {
                 useCaseProvider: container.resolve(MyPageUseCaseProviding.self),
                 fetchMyOAuthUseCase: container.resolve(FetchMyOAuthUseCaseProtocol.self),
                 deleteMemberOAuthUseCase: container.resolve(DeleteMemberOAuthUseCaseProtocol.self),
+                fetchCardContactSettingsUseCase: container.resolve(
+                    FetchCardContactSettingsUseCaseProtocol.self
+                ),
+                updateCardContactSettingsUseCase: container.resolve(
+                    UpdateCardContactSettingsUseCaseProtocol.self
+                ),
                 fetchCardLinkPriorityUseCase: container.resolve(
                     FetchCardLinkPriorityUseCaseProtocol.self
                 ),
@@ -86,6 +93,9 @@ public struct MyPageProfileView: View {
                 dismissOnTap: false,
                 accessibilityLabel: "프로필 저장"
             )
+        }
+        .task {
+            await viewModel.loadContactSettings()
         }
         .onChange(of: viewModel.selectedPhotoItem) { _, _ in
             Task { await viewModel.loadSelectedImage() }
@@ -141,11 +151,14 @@ public struct MyPageProfileView: View {
             didRecentlyAdd: viewModel.didRecentlyAddActivityLog
         )
 
-        ProfileLinkEditSection(
-            profileLink: profile.profileLink,
+        CardContactEditSection(
+            settings: $viewModel.contactSettings,
+            loadState: viewModel.savedContactSettings,
+            email: profile.wrappedValue.email,
             linkPriority: viewModel.linkPriority,
-            header: Constants.profileLinkHeader,
-            onMove: viewModel.moveLinks(fromOffsets:toOffset:)
+            header: Constants.contactHeader,
+            onMove: viewModel.moveLinks(fromOffsets:toOffset:),
+            onRetry: { Task { await viewModel.loadContactSettings() } }
         )
     }
 
@@ -167,7 +180,7 @@ public struct MyPageProfileView: View {
 
     // MARK: - Function
 
-    /// 프로필 수정(이미지·링크·링크 순서)을 저장하고 완료 시 화면을 닫습니다.
+    /// 프로필 수정(이미지·링크·공개 여부·링크 순서)을 저장하고 완료 시 화면을 닫습니다.
     private func submitProfileUpdate() {
         Task {
             do {

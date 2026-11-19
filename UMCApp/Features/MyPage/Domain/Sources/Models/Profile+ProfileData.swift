@@ -42,6 +42,7 @@ public extension Profile {
             socialConnections: [],
             activityLogs: activityLogs(),
             profileLink: profileLinks(),
+            email: (latestRecord?.email).flatMap(\.nonEmpty) ?? email.nonEmpty ?? "",
             isUmcProduct: isUmcProduct
         )
     }

@@ -32,6 +32,10 @@ public struct ProfileData: Identifiable, Equatable, Hashable {
     /// 외부 프로필 링크 목록 (Github, Blog 등)
     public var profileLink: [ProfileLink]
 
+    /// 명함 뒷면에 싣는 이메일 (#1678). 따로 입력받지 않고 계정에 있는 이메일을 쓴다 —
+    /// 명함 쪽(`Profile+MyCard`)과 같은 규칙으로 최근 활동 기록의 이메일, 없으면 로그인 이메일.
+    public var email: String
+
     /// 화면 표시용 연동 소셜 타입 목록
     public var socialConnected: [SocialType] {
         socialConnections.map(\.socialType)
@@ -44,6 +48,7 @@ public struct ProfileData: Identifiable, Equatable, Hashable {
         socialConnections: [SocialConnection],
         activityLogs: [ActivityLog],
         profileLink: [ProfileLink],
+        email: String = "",
         isUmcProduct: Bool = false
     ) {
         self.id = id
@@ -52,6 +57,7 @@ public struct ProfileData: Identifiable, Equatable, Hashable {
         self.socialConnections = socialConnections
         self.activityLogs = activityLogs
         self.profileLink = profileLink
+        self.email = email
         self.isUmcProduct = isUmcProduct
     }
 }

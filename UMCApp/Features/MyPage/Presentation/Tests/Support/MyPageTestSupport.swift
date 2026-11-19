@@ -87,18 +87,6 @@ final class MockMyPageRepository: MyPageRepositoryProtocol, @unchecked Sendable 
         return try updateProfileImageResult.get()
     }
 
-    // MARK: - updateProfileLinks
-
-    var updateProfileLinksResult: Result<ProfileData, Error> = .failure(MockError.notStubbed)
-    private(set) var updateProfileLinksCallCount = 0
-    private(set) var updateProfileLinksReceivedLinks: [ProfileLink]?
-
-    func updateProfileLinks(_ links: [ProfileLink]) async throws -> ProfileData {
-        updateProfileLinksCallCount += 1
-        updateProfileLinksReceivedLinks = links
-        return try updateProfileLinksResult.get()
-    }
-
     // MARK: - Unused (본 ViewModel들이 호출하지 않음)
 
     var fetchMemberProfileResult: Result<MemberProfileSummary, Error> = .failure(MockError.notStubbed)

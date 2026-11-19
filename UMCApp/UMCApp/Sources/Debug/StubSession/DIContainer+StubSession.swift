@@ -13,6 +13,7 @@ import CommunityDomain
 import CoreDI
 import CoreDomain
 import HomeDomain
+import MyPageDomain
 import NoticeDomain
 import os.log
 
@@ -59,6 +60,10 @@ extension DIContainer {
         }
         register(OperatorAttendanceRepositoryProtocol.self) {
             StubAttendanceRepository()
+        }
+        // 명함 연락처·링크(#1678)는 실서버 명함 API를 쓰므로 stub 세션에서는 메모리 값으로 바꿔 낀다.
+        register(CardContactSettingsRepositoryProtocol.self) {
+            StubCardContactSettingsRepository()
         }
         // 실시간(STOMP)은 그대로 둔다 — 교체하면 재연결·백필 경로를 stub 모드에서 못 밟는다.
         register(CommunityThreadRepositoryProtocol.self) {

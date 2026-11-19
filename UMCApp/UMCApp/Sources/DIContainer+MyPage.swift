@@ -39,9 +39,21 @@ extension DIContainer {
                 repository: self.resolve(MyPageRepositoryProtocol.self)
             )
         }
-        register(UpdateMyPageProfileLinksUseCaseProtocol.self) {
-            UpdateMyPageProfileLinksUseCase(
-                repository: self.resolve(MyPageRepositoryProtocol.self)
+        // 명함 연락처·링크는 명함 API(#1678)를 쓰는 별도 저장소라 stub 세션이 따로 바꿔 낀다.
+        register(CardContactSettingsRepositoryProtocol.self) {
+            CardContactSettingsRepository(
+                adapter: self.resolve(MoyaNetworkAdapter.self),
+                memberProfileRepository: self.resolve(MemberProfileRepositoryProtocol.self)
+            )
+        }
+        register(FetchCardContactSettingsUseCaseProtocol.self) {
+            FetchCardContactSettingsUseCase(
+                repository: self.resolve(CardContactSettingsRepositoryProtocol.self)
+            )
+        }
+        register(UpdateCardContactSettingsUseCaseProtocol.self) {
+            UpdateCardContactSettingsUseCase(
+                repository: self.resolve(CardContactSettingsRepositoryProtocol.self)
             )
         }
         register(DeleteMemberUseCaseProtocol.self) {

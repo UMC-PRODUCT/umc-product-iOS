@@ -26,6 +26,8 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
     private let useCaseProvider: MyPageUseCaseProviding
     private let fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol
     private let deleteMemberOAuthUseCase: DeleteMemberOAuthUseCaseProtocol
+    private let fetchCardContactSettingsUseCase: FetchCardContactSettingsUseCaseProtocol
+    private let updateCardContactSettingsUseCase: UpdateCardContactSettingsUseCaseProtocol
     private let fetchCardLinkPriorityUseCase: FetchCardLinkPriorityUseCaseProtocol
     private let saveCardLinkPriorityUseCase: SaveCardLinkPriorityUseCaseProtocol
     private let kakaoLoginManager: KakaoLoginManaging
@@ -51,9 +53,14 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
     /// 소셜 연동 해제 API 진행 상태
     public var disconnectingSocialType: SocialType?
     
-    /// 최초 조회 / 수정 화면 진입 시 링크 스냅샷
-    private var initialProfileLinkState: [SocialLinkType: String]
-    /// 편집 중인 링크 우선순위 (#1679). 맨 위에서부터 값 있는 첫 링크가 명함 뒷면에 보인다.
+    /// 서버에 저장된 명함 링크와 공개 여부 (#1678).
+    ///
+    /// 프로필(`/member/me`)에는 공개 여부가 없어 화면 진입 뒤 명함 수정 API(MEMBER-105)로
+    /// 따로 읽는다. 변경 감지의 기준이기도 하다.
+    public private(set) var savedContactSettings: Loadable<CardContactSettings> = .idle
+    /// 편집 중인 링크와 공개 여부. 조회가 끝나면 저장된 값으로 채운다.
+    public var contactSettings = CardContactSettings()
+    /// 편집 중인 링크 우선순위 (#1679). 맨 위에서부터 공개한 첫 링크가 명함 뒷면에 보인다.
     public private(set) var linkPriority: [SocialLinkType] = SocialLinkType.allCases
     /// 기기에 저장된 링크 우선순위. 변경 감지의 기준이다.
     private var savedLinkPriority: [SocialLinkType] = SocialLinkType.allCases
@@ -63,7 +70,7 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
     /// 저장 버튼 활성화 여부
     public var canSubmit: Bool {
         !isUpdatingProfileImage
-            && (hasPendingImageUpdate || hasPendingLinkUpdate || hasPendingLinkPriorityUpdate)
+            && (hasPendingImageUpdate || hasPendingContactUpdate || hasPendingLinkPriorityUpdate)
     }
     
     /// 갤러리에서 새 이미지를 선택하여 업로드 대기 중인지 여부
@@ -71,26 +78,16 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         selectedImageData != nil
     }
     
-    /// 현재 링크 상태가 최초 스냅샷과 달라져 서버 반영이 필요한지 여부
-    private var hasPendingLinkUpdate: Bool {
-        Self.makeProfileLinkState(from: normalizedProfileLinksForSubmit) != initialProfileLinkState
+    /// 링크·공개 여부가 저장된 값과 달라져 서버 반영이 필요한지 여부. 조회 전에는 비교할
+    /// 기준이 없으므로 `false` 다.
+    private var hasPendingContactUpdate: Bool {
+        guard let saved = savedContactSettings.value else { return false }
+        return contactSettings.normalized != saved.normalized
     }
-    
+
     /// 링크 순서를 바꿔 기기에 저장해야 하는지 여부
     private var hasPendingLinkPriorityUpdate: Bool {
         linkPriority != savedLinkPriority
-    }
-
-    /// 현재 프로필 링크를 정규화하여 서버 제출용 배열로 반환합니다.
-    private var normalizedProfileLinksForSubmit: [ProfileLink] {
-        let currentLinks = Self.makeProfileLinkState(from: profileData.profileLink)
-        
-        return SocialLinkType.allCases.map {
-            ProfileLink(
-                type: $0,
-                url: currentLinks[$0] ?? ""
-            )
-        }
     }
     
     
@@ -101,6 +98,8 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         useCaseProvider: MyPageUseCaseProviding,
         fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol,
         deleteMemberOAuthUseCase: DeleteMemberOAuthUseCaseProtocol,
+        fetchCardContactSettingsUseCase: FetchCardContactSettingsUseCaseProtocol,
+        updateCardContactSettingsUseCase: UpdateCardContactSettingsUseCaseProtocol,
         fetchCardLinkPriorityUseCase: FetchCardLinkPriorityUseCaseProtocol,
         saveCardLinkPriorityUseCase: SaveCardLinkPriorityUseCaseProtocol,
         kakaoLoginManager: KakaoLoginManaging = KakaoLoginManager(),
@@ -110,11 +109,37 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         self.useCaseProvider = useCaseProvider
         self.fetchMyOAuthUseCase = fetchMyOAuthUseCase
         self.deleteMemberOAuthUseCase = deleteMemberOAuthUseCase
+        self.fetchCardContactSettingsUseCase = fetchCardContactSettingsUseCase
+        self.updateCardContactSettingsUseCase = updateCardContactSettingsUseCase
         self.fetchCardLinkPriorityUseCase = fetchCardLinkPriorityUseCase
         self.saveCardLinkPriorityUseCase = saveCardLinkPriorityUseCase
         self.kakaoLoginManager = kakaoLoginManager
         self.googleLoginManager = googleLoginManager
-        self.initialProfileLinkState = Self.makeProfileLinkState(from: profileData.profileLink)
+    }
+
+    /// 명함 연락처·링크와 공개 여부를 조회합니다.
+    ///
+    /// 이미 읽었거나 읽는 중이면 다시 읽지 않는다 — 화면이 다시 나타날 때마다 덮어쓰면
+    /// 편집 중인 값이 사라진다. 실패 뒤 재시도는 `.failed` 에서만 다시 탄다.
+    @MainActor
+    public func loadContactSettings() async {
+        switch savedContactSettings {
+        case .loading, .loaded: return
+        case .idle, .failed: break
+        }
+
+        savedContactSettings = .loading
+        do {
+            let saved = try await fetchCardContactSettingsUseCase.execute()
+            contactSettings = saved
+            savedContactSettings = .loaded(saved)
+        } catch is CancellationError {
+            savedContactSettings = .idle
+        } catch let error as AppError {
+            savedContactSettings = .failed(error)
+        } catch {
+            savedContactSettings = .failed(.unknown(message: error.localizedDescription))
+        }
     }
     
     /// 기기에 저장된 링크 우선순위를 읽습니다 (#1679). 못 읽으면 기본 순서로 둡니다.
@@ -158,12 +183,17 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         }
         
         let hasImageUpdate = selectedImageData != nil
-        let hasLinkUpdate = hasPendingLinkUpdate
+        let hasContactUpdate = hasPendingContactUpdate
         let hasPriorityUpdate = hasPendingLinkPriorityUpdate
-        guard hasImageUpdate || hasLinkUpdate || hasPriorityUpdate else {
+        guard hasImageUpdate || hasContactUpdate || hasPriorityUpdate else {
             return
         }
-        
+
+        // 사진을 먼저 올린 뒤 형식 오류로 멈추면 절반만 저장된다. 검사는 어떤 요청보다 먼저 한다.
+        if hasContactUpdate {
+            try validateContactSettings()
+        }
+
         isUpdatingProfileImage = true
         defer { isUpdatingProfileImage = false }
 
@@ -188,15 +218,17 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
                 )
         }
         
-        if hasLinkUpdate {
-            updatedProfile = try await useCaseProvider
-                .updateMyPageProfileLinksUseCase
-                .execute(profileLinks: normalizedProfileLinksForSubmit)
+        var savedContacts: CardContactSettings?
+        if hasContactUpdate {
+            savedContacts = try await updateCardContactSettingsUseCase.execute(contactSettings)
         }
-        
+
         updatedProfile.socialConnections = currentSocialConnections
         profileData = updatedProfile
-        initialProfileLinkState = Self.makeProfileLinkState(from: updatedProfile.profileLink)
+        if let savedContacts {
+            contactSettings = savedContacts
+            savedContactSettings = .loaded(savedContacts)
+        }
         selectedImageData = nil
         selectedPhotoItem = nil
     }
@@ -219,7 +251,6 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
             forceRefresh: true
         )
         profileData.socialConnections = currentSocialConnections
-        initialProfileLinkState = Self.makeProfileLinkState(from: profileData.profileLink)
         showRecentActivityLogAddedState()
     }
     
@@ -250,21 +281,15 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         SocialType.saveConnected(updatedConnections.map(\.socialType))
     }
 
-    /// 프로필 링크 배열을 `[SocialLinkType: String]` 스냅샷으로 변환합니다.
+    /// 바뀐 링크 중 형식이 틀린 값이 있으면 저장하지 않고 검증 오류를 던집니다.
     ///
-    /// 변경 감지(diff) 비교에 사용되며, URL 공백을 제거하고
-    /// 모든 `SocialLinkType` 케이스에 대해 키를 보장합니다.
-    private static func makeProfileLinkState(
-        from profileLinks: [ProfileLink]
-    ) -> [SocialLinkType: String] {
-        var mapped: [SocialLinkType: String] = [:]
-        profileLinks.forEach {
-            mapped[$0.type] = $0.url.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        return Dictionary(
-            uniqueKeysWithValues: SocialLinkType.allCases.map { type in
-                (type, mapped[type] ?? "")
-            }
+    /// 링크는 서버가 명함에 싣는 기준(http(s)와 점이 든 호스트)을 따른다. 이 기준을 벗어난
+    /// 링크는 저장은 돼도 명함에는 나오지 않는다.
+    private func validateContactSettings() throws {
+        guard let saved = savedContactSettings.value,
+              let type = contactSettings.firstInvalidLink(comparedTo: saved) else { return }
+        throw AppError.validation(
+            .invalidFormat(field: type.title, expected: Constants.linkExample)
         )
     }
     
@@ -283,6 +308,7 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
 }
 
 fileprivate enum Constants {
+    static let linkExample = "https://로 시작하는 주소"
     static let profileImageMaxPixelLength: CGFloat = 1024
     // 서버 FileCategory.PROFILE_IMAGE 상한
     static let profileImageMaxByteCount = 5 * 1024 * 1024

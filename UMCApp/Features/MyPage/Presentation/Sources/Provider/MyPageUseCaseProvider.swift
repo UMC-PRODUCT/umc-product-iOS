@@ -18,8 +18,6 @@ public protocol MyPageUseCaseProviding {
     var addChallengerRecordUseCase: AddChallengerRecordUseCaseProtocol { get }
     /// 프로필 이미지변경 UseCase
     var updateMyPageProfileImageUseCase: UpdateMyPageProfileImageUseCaseProtocol { get }
-    /// 프로필 외부 링크 수정 UseCase
-    var updateMyPageProfileLinksUseCase: UpdateMyPageProfileLinksUseCaseProtocol { get }
     /// 회원 탈퇴 UseCase
     var deleteMemberUseCase: DeleteMemberUseCaseProtocol { get }
     /// 약관 조회 UseCase
@@ -39,8 +37,6 @@ public final class MyPageUseCaseProvider: MyPageUseCaseProviding {
     
     public let updateMyPageProfileImageUseCase: UpdateMyPageProfileImageUseCaseProtocol
     
-    public let updateMyPageProfileLinksUseCase: UpdateMyPageProfileLinksUseCaseProtocol
-    
     public let deleteMemberUseCase: DeleteMemberUseCaseProtocol
     
     public let fetchTermsUseCase: FetchTermsUseCaseProtocol
@@ -51,7 +47,6 @@ public final class MyPageUseCaseProvider: MyPageUseCaseProviding {
         self.fetchMyPageProfileUseCase = FetchMyPageProfileUseCase(repository: repository)
         self.addChallengerRecordUseCase = AddChallengerRecordUseCase(repository: repository)
         self.updateMyPageProfileImageUseCase = UpdateMyPageProfileImageUseCase(repository: repository)
-        self.updateMyPageProfileLinksUseCase = UpdateMyPageProfileLinksUseCase(repository: repository)
         self.deleteMemberUseCase = DeleteMemberUseCase(repository: repository)
         self.fetchTermsUseCase = FetchTermsUseCase(repository: repository)
     }
