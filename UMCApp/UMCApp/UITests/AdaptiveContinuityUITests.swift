@@ -124,9 +124,10 @@ final class AdaptiveContinuityUITests: XCTestCase {
             ).firstMatch
             XCTAssertTrue(entry.waitForExistence(timeout: 10))
             entry.tap()
-            let navigationBar = app.navigationBars.firstMatch
-            XCTAssertTrue(navigationBar.buttons.firstMatch.waitForExistence(timeout: 10))
-            navigationBar.buttons.firstMatch.tap()
+            // Duo는 뒤로 가기 버튼을 탐색 막대가 아닌 측면 레일에 두므로 시스템 식별자로 찾는다.
+            let back = app.buttons["BackButton"].firstMatch
+            XCTAssertTrue(back.waitForExistence(timeout: 10))
+            back.tap()
 
             let menu = app.staticTexts["명함 관리"].firstMatch
             XCTAssertTrue(menu.waitForExistence(timeout: 5), app.debugDescription)
@@ -134,6 +135,45 @@ final class AdaptiveContinuityUITests: XCTestCase {
             XCTAssertFalse(app.navigationBars["내 프로필"].exists)
             capture("mypage-back-" + title)
         }
+    }
+
+    func testCommunityThreadBackReturnsDirectlyToList() {
+        let app = launchStub()
+        app.buttons["커뮤니티"].firstMatch.tap()
+        let thread = app.staticTexts["iOS 스터디"].firstMatch
+
+        for _ in 0..<2 {
+            XCTAssertTrue(thread.waitForExistence(timeout: 10))
+            thread.tap()
+            let composer = app.descendants(matching: .any)
+                .matching(identifier: "community.message.draft").firstMatch
+            XCTAssertTrue(composer.waitForExistence(timeout: 15))
+            let back = app.buttons["BackButton"].firstMatch
+            XCTAssertTrue(back.waitForExistence(timeout: 10))
+            back.tap()
+
+            XCTAssertTrue(thread.waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(thread.isHittable)
+            XCTAssertFalse(app.staticTexts["스레드를 선택해 주세요"].exists)
+            capture("community-back-to-list")
+        }
+    }
+
+    func testNoticeDetailBackReturnsDirectlyToList() {
+        let app = launchStub()
+        app.buttons["공지"].firstMatch.tap()
+        let notice = app.staticTexts["12기 중앙 해커톤 일정 안내"].firstMatch
+        XCTAssertTrue(notice.waitForExistence(timeout: 10))
+        notice.tap()
+        XCTAssertTrue(app.scrollViews["notice.detail.content"].waitForExistence(timeout: 10))
+        let back = app.buttons["BackButton"].firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: 10))
+        back.tap()
+
+        XCTAssertTrue(notice.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(notice.isHittable)
+        XCTAssertFalse(app.staticTexts["공지를 선택해 주세요"].exists)
+        capture("notice-back-to-list")
     }
 
     func testAllTabsHaveReachableContent() {

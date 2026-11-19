@@ -6,8 +6,10 @@
 //
 
 import SwiftUI
+import UIKit
 
 import CommunityDomain
+import CoreDesignSystem
 import CoreDI
 import CoreRouting
 import CoreUIComponents
@@ -17,7 +19,7 @@ import UMCFoundation
 /// 커뮤니티 탭 진입점.
 ///
 /// 목록과 상세의 네이티브 분할 화면을 소유하며, 상세 경로는 App의 `PathStore`를 공유한다.
-/// App 소유 목적지는 `detailRoot` 빌더로 등록해 Feature 역방향 의존을 만들지 않는다.
+/// App 소유 목적지는 `detailRoot` 빌더가 스택 루트에 등록해 Feature 역방향 의존을 만들지 않는다.
 public struct CommunityFeatureView<DetailRoot: View>: View {
 
     // MARK: - Property
@@ -25,7 +27,7 @@ public struct CommunityFeatureView<DetailRoot: View>: View {
     /// 공지 링크 카드 탭. 공지 상세 목적지는 App 소유(`NavigationDestination`)라 Feature 가
     /// 직접 push 할 수 없다 — 홈 탭이 쓰는 콜백 방식을 그대로 따른다 (#1027).
     private let onNoticeSelected: (NoticeDetail) -> Void
-    private let detailRoot: () -> DetailRoot
+    private let detailRoot: (AnyView) -> DetailRoot
 
     @Environment(PathStore.self) private var pathStore
     @Environment(\.di) private var di
@@ -35,7 +37,7 @@ public struct CommunityFeatureView<DetailRoot: View>: View {
 
     public init(
         onNoticeSelected: @escaping (NoticeDetail) -> Void,
-        @ViewBuilder detailRoot: @escaping () -> DetailRoot
+        @ViewBuilder detailRoot: @escaping (AnyView) -> DetailRoot
     ) {
         self.onNoticeSelected = onNoticeSelected
         self.detailRoot = detailRoot
@@ -113,54 +115,28 @@ private struct CommunitySplitContent<DetailRoot: View>: View {
     @Environment(PathStore.self) private var pathStore
     @Environment(\.di) private var di
     @Environment(ErrorHandler.self) private var errorHandler
-    let detailRoot: () -> DetailRoot
+    let detailRoot: (AnyView) -> DetailRoot
+    // iPhone은 목록을 루트로 둔 단일 스택이라 채팅방에서 한 번의 뒤로 가기로 목록에 복귀한다.
+    // 접힌 분할 화면은 목록과 채팅방 사이에 상세 열의 빈 안내 화면을 끼워 넣는다 (#1683).
+    // 회전 중 스택 종류를 바꾸면 초안·실시간 구독이 끊기므로 크기 클래스로 분기하지 않는다.
+    // 마이페이지(#1658)와 같은 임시 기준이다. 선택을 상세 열 루트로 두는 전환은 #1686.
+    private let usesSplitNavigation = UIDevice.current.userInterfaceIdiom != .phone
 
     init(
         viewModel: CommunityThreadListViewModel,
-        @ViewBuilder detailRoot: @escaping () -> DetailRoot
+        @ViewBuilder detailRoot: @escaping (AnyView) -> DetailRoot
     ) {
         _viewModel = State(initialValue: viewModel)
         self.detailRoot = detailRoot
     }
 
     var body: some View {
-        NavigationSplitView(
-            columnVisibility: $columnVisibility,
-            preferredCompactColumn: $compactColumn
-        ) {
-            CommunityThreadListView(
-                viewModel: viewModel,
-                selectedThreadID: selectedThreadID,
-                onThreadSelected: selectThread
-            )
-                .disabled(!canSelectThread)
-                .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 380)
-        } detail: {
-            NavigationStack(path: Binding(
-                get: { pathStore[.community] },
-                set: { pathStore[.community] = $0 }
-            )) {
-                detailRoot()
-                    .navigationDestination(for: CommunityDestination.self) { destination in
-                        CommunityRoutingView(
-                            destination: destination,
-                            container: di,
-                            errorHandler: errorHandler,
-                            onThreadCreated: { viewModel.insertCreated($0) },
-                            onThreadUpdated: { viewModel.applyUpdated($0) },
-                            onThreadRemoved: { viewModel.removeThread(threadId: $0) },
-                            onThreadToggled: { viewModel.applyToggles($0) },
-                            onComposerChange: { hasComposerChanges = $0 }
-                        )
-                        .onAppear {
-                            if case .threadRoom = destination { selectedRoom = destination }
-                        }
-                    }
+        Group {
+            if usesSplitNavigation {
+                splitContent
+            } else {
+                navigationStack(root: threadList)
             }
-        }
-        .navigationSplitViewStyle(.balanced)
-        .onChange(of: horizontalSizeClass) { _, sizeClass in
-            if sizeClass == .regular { columnVisibility = .all }
         }
         .onChange(of: pathStore.depth(of: .community), initial: true) { _, depth in
             compactColumn = depth == 0 ? .sidebar : .detail
@@ -181,6 +157,69 @@ private struct CommunitySplitContent<DetailRoot: View>: View {
                 Button("지우고 이동", role: .destructive) { openThread(thread) }
             }
             Button("계속 작성", role: .cancel) { pendingThread = nil }
+        }
+    }
+
+    private var splitContent: some View {
+        NavigationSplitView(
+            columnVisibility: $columnVisibility,
+            preferredCompactColumn: $compactColumn
+        ) {
+            threadList
+                .disabled(!canSelectThread)
+                .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 380)
+        } detail: {
+            navigationStack(root: emptyDetail)
+        }
+        .navigationSplitViewStyle(.balanced)
+        .onChange(of: horizontalSizeClass) { _, sizeClass in
+            if sizeClass == .regular { columnVisibility = .all }
+        }
+    }
+
+    private var threadList: some View {
+        CommunityThreadListView(
+            viewModel: viewModel,
+            selectedThreadID: selectedThreadID,
+            onThreadSelected: selectThread
+        )
+    }
+
+    /// 분할 화면에서 아직 스레드를 고르지 않은 상세 열.
+    private var emptyDetail: some View {
+        ContentUnavailableView(
+            "스레드를 선택해 주세요",
+            systemImage: "bubble.left.and.bubble.right",
+            description: Text("목록에서 스레드를 선택하면 대화를 확인할 수 있어요.")
+        )
+        .navigationTitle("커뮤니티")
+        .background(
+            (horizontalSizeClass == .regular ? Color.Surface.content : Color.Surface.canvas)
+                .ignoresSafeArea()
+        )
+    }
+
+    private func navigationStack<Root: View>(root: Root) -> some View {
+        NavigationStack(path: Binding(
+            get: { pathStore[.community] },
+            set: { pathStore[.community] = $0 }
+        )) {
+            detailRoot(AnyView(root))
+                .navigationDestination(for: CommunityDestination.self) { destination in
+                    CommunityRoutingView(
+                        destination: destination,
+                        container: di,
+                        errorHandler: errorHandler,
+                        onThreadCreated: { viewModel.insertCreated($0) },
+                        onThreadUpdated: { viewModel.applyUpdated($0) },
+                        onThreadRemoved: { viewModel.removeThread(threadId: $0) },
+                        onThreadToggled: { viewModel.applyToggles($0) },
+                        onComposerChange: { hasComposerChanges = $0 }
+                    )
+                    .onAppear {
+                        if case .threadRoom = destination { selectedRoom = destination }
+                    }
+                }
         }
     }
 
