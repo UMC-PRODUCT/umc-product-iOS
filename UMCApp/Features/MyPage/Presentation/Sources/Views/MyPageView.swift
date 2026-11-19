@@ -17,7 +17,7 @@ import UMCFoundation
 
 /// MyPage 탭 루트 화면 (v3 — 명함 중심).
 ///
-/// 명함 카드 + 「명함 관리」 + 「나의 활동」 + 「커뮤니티 활동」 섹션이 루트다.
+/// 명함 카드 + 「명함 관리」 + 「나의 활동」 섹션이 루트다.
 /// 기존 섹션 7종(외부 링크·설정·법률·정보·
 /// 소셜 연동·회원 관리·UMC 채널)은 ``MyPageSettingsView``로 옮겨갔고, 툴바 ⚙ 버튼으로 진입한다.
 ///
@@ -146,7 +146,6 @@ struct MyPageView: View {
                     onCertificateTap: { onSelectDestination(.certificates) },
                     onProjectTap: onOpenProjects
                 )
-                MyActiveLogSection { onSelectDestination(.myActivePosts(logType: $0)) }
             }
             .padding(.horizontal, Metrics.contentHorizontalPadding)
             .padding(.vertical, DefaultSpacing.spacing16)

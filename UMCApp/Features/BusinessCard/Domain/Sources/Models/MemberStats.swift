@@ -20,20 +20,16 @@ public struct MemberStats: Equatable, Sendable {
 
     public let receivedCardCount: String?
     public let studyCount: String?
-    public let bookmarkCount: String?
 
     // MARK: - Init
 
-    public init(receivedCardCount: String?, studyCount: String?, bookmarkCount: String?) {
+    public init(receivedCardCount: String?, studyCount: String?) {
         self.receivedCardCount = receivedCardCount
         self.studyCount = studyCount
-        self.bookmarkCount = bookmarkCount
     }
 
     // MARK: - Static
 
     /// 아무것도 세지 못한 상태.
-    public static let unavailable = MemberStats(
-        receivedCardCount: nil, studyCount: nil, bookmarkCount: nil
-    )
+    public static let unavailable = MemberStats(receivedCardCount: nil, studyCount: nil)
 }

@@ -140,17 +140,6 @@ struct MyPageRouterMigratedPathMethodTests {
         #expect(router.method == .delete)
     }
 
-    @Test("활동 게시글 3종 — 각자 고유 path에 method는 .get")
-    func postListPathsAndMethod() {
-        let query = MyPagePostListQueryDTO(query: MyPagePostListQuery())
-        #expect(MyPageRouter.getMyPosts(query: query).path == "/api/v1/posts/my")
-        #expect(MyPageRouter.getCommentedPosts(query: query).path == "/api/v1/posts/commented")
-        #expect(MyPageRouter.getScrappedPosts(query: query).path == "/api/v1/posts/scrapped")
-        #expect(MyPageRouter.getMyPosts(query: query).method == .get)
-        #expect(MyPageRouter.getCommentedPosts(query: query).method == .get)
-        #expect(MyPageRouter.getScrappedPosts(query: query).method == .get)
-    }
-
     @Test("patchMember와 deleteMember는 path가 같고 method로만 구분된다")
     func patchAndDeleteShareSamePath() {
         let patch = MyPageRouter.patchMember(
@@ -213,46 +202,6 @@ struct MyPageRouterMigratedTaskTests {
         #expect(json["kakaoAccessToken"] as? String == "kakao-token")
         #expect(json.keys.count == 2)
     }
-
-    @Test("활동 게시글 3종 — task는 .requestParameters(URLEncoding.queryString) + page/size 포함")
-    func postListTasksAreQueryParameters() {
-        let query = MyPagePostListQueryDTO(
-            query: MyPagePostListQuery(page: 1, size: 10, sort: [])
-        )
-        let routers = [
-            MyPageRouter.getMyPosts(query: query),
-            MyPageRouter.getCommentedPosts(query: query),
-            MyPageRouter.getScrappedPosts(query: query),
-        ]
-        for router in routers {
-            guard case let .requestParameters(parameters, encoding) = router.task else {
-                Issue.record("Expected .requestParameters, got \(router.task)")
-                continue
-            }
-            #expect(encoding is URLEncoding)
-            #expect(parameters["page"] as? Int == 1)
-            #expect(parameters["size"] as? Int == 10)
-        }
-    }
-
-    @Test("활동 게시글 — sort 배열은 대괄호 없이 `sort=` 로 인코딩된다 (Spring Pageable 계약)")
-    func postListSortEncodedWithoutBrackets() throws {
-        let query = MyPagePostListQueryDTO(
-            query: MyPagePostListQuery(page: 0, size: 20, sort: ["createdAt,DESC"])
-        )
-        guard case let .requestParameters(parameters, encoding) =
-            MyPageRouter.getMyPosts(query: query).task else {
-            Issue.record("Expected .requestParameters")
-            return
-        }
-        let baseURL = try #require(URL(string: "https://example.com/api/v1/posts/my"))
-
-        let request = try encoding.encode(URLRequest(url: baseURL), with: parameters)
-        let encodedQuery = try #require(request.url?.query)
-
-        #expect(encodedQuery.contains("sort=createdAt"))
-        #expect(!encodedQuery.contains("sort%5B%5D"))
-    }
 }
 
 // MARK: - 요청 DTO / 쿼리 인코딩 계약
@@ -310,30 +259,6 @@ struct MyPageRouterEncodingTests {
             DeleteMemberRequestDTO(googleAccessToken: nil, kakaoAccessToken: nil)
         )
         #expect(empty.isEmpty)
-    }
-
-    @Test("MyPagePostListQueryDTO.toParameters — sort가 비면 page/size 2키만 포함")
-    func postListQueryParametersWithoutSort() {
-        let dto = MyPagePostListQueryDTO(
-            query: MyPagePostListQuery(page: 2, size: 20, sort: [])
-        )
-        let params = dto.toParameters
-        #expect(params["page"] as? Int == 2)
-        #expect(params["size"] as? Int == 20)
-        #expect(params["sort"] == nil)
-        #expect(params.keys.count == 2)
-    }
-
-    @Test("MyPagePostListQueryDTO.toParameters — sort가 있으면 sort 배열 포함 3키")
-    func postListQueryParametersWithSort() {
-        let dto = MyPagePostListQueryDTO(
-            query: MyPagePostListQuery(page: 0, size: 10, sort: ["createdAt,DESC"])
-        )
-        let params = dto.toParameters
-        #expect(params["page"] as? Int == 0)
-        #expect(params["size"] as? Int == 10)
-        #expect(params["sort"] as? [String] == ["createdAt,DESC"])
-        #expect(params.keys.count == 3)
     }
 }
 

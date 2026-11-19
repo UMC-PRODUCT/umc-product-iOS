@@ -12,11 +12,10 @@ import Testing
 @Suite("FetchActivityStatUseCase — 병렬 조합과 소스별 실패 구분")
 struct FetchActivityStatUseCaseTests {
 
-    @Test("네 소스가 전부 성공하면 각 값이 String으로 담긴다")
+    @Test("세 소스가 전부 성공하면 각 값이 String으로 담긴다")
     func combinesAllSources() async {
         let stat = MockActivityStatRepository()
         stat.studyCountResult = .success("3")
-        stat.bookmarkCountResult = .success("7")
         stat.activityCountResult = .success(2)
         let received = MockReceivedCardRepository()
         received.countResult = .success(12)
@@ -28,7 +27,7 @@ struct FetchActivityStatUseCaseTests {
         let result = await sut.execute()
 
         #expect(result == ActivityStat(
-            receivedCardCount: "12", studyCount: "3", activityCount: "2", bookmarkCount: "7"
+            receivedCardCount: "12", studyCount: "3", activityCount: "2"
         ))
     }
 
@@ -38,7 +37,6 @@ struct FetchActivityStatUseCaseTests {
     func failedSourceBecomesNil() async {
         let stat = MockActivityStatRepository()
         stat.studyCountResult = .failure(MockError.notStubbed) // 스터디만 실패
-        stat.bookmarkCountResult = .success("7")               // 서버 원본 String
         stat.activityCountResult = .success(2)
         let received = MockReceivedCardRepository()
         received.countResult = .success(12)
@@ -50,7 +48,7 @@ struct FetchActivityStatUseCaseTests {
         let result = await sut.execute()
 
         #expect(result.studyCount == nil)
-        #expect(result.bookmarkCount == "7")
+        #expect(result.activityCount == "2")
         #expect(result.receivedCardCount == "12")
     }
 
@@ -59,7 +57,6 @@ struct FetchActivityStatUseCaseTests {
     func zeroDiffersFromFailure() async {
         let succeeded = MockActivityStatRepository()
         succeeded.studyCountResult = .success("0")
-        succeeded.bookmarkCountResult = .success("0")
         succeeded.activityCountResult = .success(0)
         let failed = MockActivityStatRepository()  // 전 소스 미스텁 = 실패
         let received = MockReceivedCardRepository()
@@ -82,7 +79,6 @@ struct FetchActivityStatUseCaseTests {
     func passesTruncationMarkerThrough() async {
         let stat = MockActivityStatRepository()
         stat.studyCountResult = .success("50+")
-        stat.bookmarkCountResult = .success("0")
         stat.activityCountResult = .success(0)
         let sut = FetchActivityStatUseCase(
             statRepository: stat,
@@ -92,11 +88,10 @@ struct FetchActivityStatUseCaseTests {
         #expect(await sut.execute().studyCount == "50+")
     }
 
-    @Test("스크랩 카운트가 빈 문자열이면 못 세운 것으로 본다")
-    func blankBookmarkCountBecomesNil() async {
+    @Test("스터디 카운트가 빈 문자열이면 못 세운 것으로 본다")
+    func blankStudyCountBecomesNil() async {
         let stat = MockActivityStatRepository()
-        stat.studyCountResult = .success("0")
-        stat.bookmarkCountResult = .success("  ")
+        stat.studyCountResult = .success("  ")
         stat.activityCountResult = .success(0)
         let sut = FetchActivityStatUseCase(
             statRepository: stat,
@@ -105,7 +100,7 @@ struct FetchActivityStatUseCaseTests {
 
         let result = await sut.execute()
 
-        #expect(result.bookmarkCount == nil)
+        #expect(result.studyCount == nil)
     }
 
     /// 서버가 세는 편이 정확하다 — 명함첩은 여러 기기에서 쓰이고 로컬 캐시는 아직
@@ -114,7 +109,7 @@ struct FetchActivityStatUseCaseTests {
     func prefersServerReceivedCardCount() async {
         let stat = MockActivityStatRepository()
         stat.memberStatsResult = .success(MemberStats(
-            receivedCardCount: "31", studyCount: "3", bookmarkCount: "7"
+            receivedCardCount: "31", studyCount: "3"
         ))
         stat.activityCountResult = .success(2)
         let received = MockReceivedCardRepository()
@@ -132,7 +127,7 @@ struct FetchActivityStatUseCaseTests {
     func fallsBackToLocalReceivedCardCount() async {
         let stat = MockActivityStatRepository()
         stat.memberStatsResult = .success(MemberStats(
-            receivedCardCount: nil, studyCount: "3", bookmarkCount: "7"
+            receivedCardCount: nil, studyCount: "3"
         ))
         stat.activityCountResult = .success(2)
         let received = MockReceivedCardRepository()
@@ -148,8 +143,7 @@ struct FetchActivityStatUseCaseTests {
     @Test("서버가 준 비정상 문자열도 변환 없이 통과시킨다 (핵심규칙 #2)")
     func passesServerValueThrough() async {
         let stat = MockActivityStatRepository()
-        stat.studyCountResult = .success("0")
-        stat.bookmarkCountResult = .success("1,024")
+        stat.studyCountResult = .success("1,024")
         stat.activityCountResult = .success(0)
         let sut = FetchActivityStatUseCase(
             statRepository: stat,
@@ -158,6 +152,6 @@ struct FetchActivityStatUseCaseTests {
 
         let result = await sut.execute()
 
-        #expect(result.bookmarkCount == "1,024")
+        #expect(result.studyCount == "1,024")
     }
 }

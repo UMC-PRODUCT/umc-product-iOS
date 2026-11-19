@@ -26,19 +26,6 @@ struct BusinessCardRouterTests {
         #expect(encoding is URLEncoding)
     }
 
-    @Test("스크랩 목록은 GET /api/v1/posts/scrapped — size 1로 totalElements만 취한다")
-    func scrappedContract() throws {
-        let router = BusinessCardRouter.getScrappedPosts(query: ScrappedCountQueryDTO())
-
-        #expect(router.path == "/api/v1/posts/scrapped")
-        #expect(router.method == .get)
-        guard case .requestParameters(let parameters, _) = router.task else {
-            Issue.record("requestParameters가 아님"); return
-        }
-        #expect(parameters["page"] as? Int == 0)
-        #expect(parameters["size"] as? Int == 1)
-    }
-
     @Test("통합 카운트는 GET /api/v2/member/me/stats — v1이 아니다")
     func memberStatsContract() throws {
         let router = BusinessCardRouter.getMemberStats

@@ -197,13 +197,12 @@ struct DebugToolsView: View {
             labeled("받은 명함", stat.receivedCardCount ?? "- (조회 실패)")
             labeled("스터디", stat.studyCount ?? "- (조회 실패)")
             labeled("활동", stat.activityCount ?? "- (조회 실패)")
-            labeled("스크랩", stat.bookmarkCount ?? "- (조회 실패)")
         } header: {
             Text("활동 카운트 원본 — FetchActivityStatUseCase")
         } footer: {
             Text("""
             서버 통계 한 방 + 실패한 값만 로컬 폴백. 실패한 소스만 "-"로 떨어지고 \
-            나머지는 유지되어야 한다. 스터디는 잘리면 "50+". 스크랩은 시안 v3에 자리가 없다.
+            나머지는 유지되어야 한다. 스터디는 잘리면 "50+".
             """)
         }
     }

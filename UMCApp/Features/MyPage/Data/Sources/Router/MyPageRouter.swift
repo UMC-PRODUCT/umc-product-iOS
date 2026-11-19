@@ -26,12 +26,6 @@ public enum MyPageRouter {
     case patchMemberProfileLinks(request: UpdateMemberProfileLinksRequestDTO)
     /// 회원 탈퇴 (소셜 연동 해제용 access token 동봉)
     case deleteMember(request: DeleteMemberRequestDTO)
-    /// 내가 쓴 글 목록 (`GET /api/v1/posts/my`)
-    case getMyPosts(query: MyPagePostListQueryDTO)
-    /// 댓글 단 글 목록 (`GET /api/v1/posts/commented`)
-    case getCommentedPosts(query: MyPagePostListQueryDTO)
-    /// 스크랩한 글 목록 (`GET /api/v1/posts/scrapped`)
-    case getScrappedPosts(query: MyPagePostListQueryDTO)
     /// 약관 조회 (`GET /api/v1/terms/type/{termsType}`)
     case getTerms(termsType: String)
 }
@@ -53,12 +47,6 @@ extension MyPageRouter: BaseTargetType {
             return "/api/v1/member/profile/links"
         case .deleteMember:
             return "/api/v1/member"
-        case .getMyPosts:
-            return "/api/v1/posts/my"
-        case .getCommentedPosts:
-            return "/api/v1/posts/commented"
-        case .getScrappedPosts:
-            return "/api/v1/posts/scrapped"
         case .getTerms(let termsType):
             return "/api/v1/terms/type/\(termsType)"
         }
@@ -78,12 +66,6 @@ extension MyPageRouter: BaseTargetType {
             return .patch
         case .deleteMember:
             return .delete
-        case .getMyPosts:
-            return .get
-        case .getCommentedPosts:
-            return .get
-        case .getScrappedPosts:
-            return .get
         case .getTerms:
             return .get
         }
@@ -103,12 +85,6 @@ extension MyPageRouter: BaseTargetType {
             return .requestJSONEncodable(request)
         case .deleteMember(let request):
             return .requestJSONEncodable(request)
-        case .getMyPosts(let query), .getCommentedPosts(let query), .getScrappedPosts(let query):
-            // 기본값(.brackets)은 `sort[]=` 로 직렬화돼 Spring Pageable 이 `sort` 를 무시한다.
-            return .requestParameters(
-                parameters: query.toParameters,
-                encoding: URLEncoding(destination: .queryString, arrayEncoding: .noBrackets)
-            )
         case .getTerms:
             return .requestPlain
         }

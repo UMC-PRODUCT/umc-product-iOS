@@ -22,12 +22,6 @@ public protocol MyPageUseCaseProviding {
     var updateMyPageProfileLinksUseCase: UpdateMyPageProfileLinksUseCaseProtocol { get }
     /// 회원 탈퇴 UseCase
     var deleteMemberUseCase: DeleteMemberUseCaseProtocol { get }
-    /// 내 글 조회 UseCase
-    var fetchMyPostsUseCase: FetchMyPostsUseCaseProtocol { get }
-    /// 댓글 단 글들 조회 UseCase
-    var fetchMyCommentedPostsUseCase: FetchMyCommentedPostsUseCaseProtocol { get }
-    /// 스크랩한 글들 조회 UseCase
-    var fetchMyScrappedPostsUseCase: FetchMyScrappedPostsUseCaseProtocol { get }
     /// 약관 조회 UseCase
     var fetchTermsUseCase: FetchTermsUseCaseProtocol { get }
 }
@@ -49,12 +43,6 @@ public final class MyPageUseCaseProvider: MyPageUseCaseProviding {
     
     public let deleteMemberUseCase: DeleteMemberUseCaseProtocol
     
-    public let fetchMyPostsUseCase: FetchMyPostsUseCaseProtocol
-    
-    public let fetchMyCommentedPostsUseCase: FetchMyCommentedPostsUseCaseProtocol
-    
-    public let fetchMyScrappedPostsUseCase: FetchMyScrappedPostsUseCaseProtocol
-    
     public let fetchTermsUseCase: FetchTermsUseCaseProtocol
     
     // MARK: - Function
@@ -65,9 +53,6 @@ public final class MyPageUseCaseProvider: MyPageUseCaseProviding {
         self.updateMyPageProfileImageUseCase = UpdateMyPageProfileImageUseCase(repository: repository)
         self.updateMyPageProfileLinksUseCase = UpdateMyPageProfileLinksUseCase(repository: repository)
         self.deleteMemberUseCase = DeleteMemberUseCase(repository: repository)
-        self.fetchMyPostsUseCase = FetchMyPostsUseCase(repository: repository)
-        self.fetchMyCommentedPostsUseCase = FetchMyCommentedPostsUseCase(repository: repository)
-        self.fetchMyScrappedPostsUseCase = FetchMyScrappedPostsUseCase(repository: repository)
         self.fetchTermsUseCase = FetchTermsUseCase(repository: repository)
     }
 }

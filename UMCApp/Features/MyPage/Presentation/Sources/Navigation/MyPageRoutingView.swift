@@ -42,9 +42,6 @@ struct MyPageRoutingView: View {
         case .cardEdit(let profileData):
             MyPageProfileView(container: container, profileData: profileData)
 
-        case .myActivePosts(let logType):
-            MyActivePostsView(container: container, logType: logType)
-
         case .settings:
             MyPageSettingsView(container: container)
 

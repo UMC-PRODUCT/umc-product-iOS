@@ -19,24 +19,21 @@ public struct ActivityStat: Equatable, Sendable {
     public let receivedCardCount: String?
     public let studyCount: String?
     public let activityCount: String?
-    public let bookmarkCount: String?
 
     // MARK: - Init
 
     public init(
         receivedCardCount: String?,
         studyCount: String?,
-        activityCount: String?,
-        bookmarkCount: String?
+        activityCount: String?
     ) {
         self.receivedCardCount = receivedCardCount
         self.studyCount = studyCount
         self.activityCount = activityCount
-        self.bookmarkCount = bookmarkCount
     }
 
     /// 아직 아무 소스도 조회하지 않은 상태.
     public static let empty = ActivityStat(
-        receivedCardCount: nil, studyCount: nil, activityCount: nil, bookmarkCount: nil
+        receivedCardCount: nil, studyCount: nil, activityCount: nil
     )
 }

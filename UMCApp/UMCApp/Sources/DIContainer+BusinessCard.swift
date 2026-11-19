@@ -58,7 +58,7 @@ extension DIContainer {
             #endif
         }
         register(ActivityStatRepositoryProtocol.self) {
-            // 서버 `GET /api/v1/members/me/stats` 가 아직 없어 3소스 조합이 릴리스 기본이다.
+            // 서버 `GET /api/v1/members/me/stats` 가 아직 없어 소스 조합이 릴리스 기본이다.
             // 검증 화면에서 단일 엔드포인트 구현으로 바꿔 낀다.
             #if DEBUG
             if CardSyncBackendChoice.current == .live {

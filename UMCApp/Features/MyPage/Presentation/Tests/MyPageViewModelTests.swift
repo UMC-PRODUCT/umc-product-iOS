@@ -264,7 +264,7 @@ struct MyPageViewModelLoadBusinessCardTests {
     func loadSuccessFillsCardAndStat() async {
         let card = makeMyCard(memberId: "7")
         let stat = ActivityStat(
-            receivedCardCount: "12", studyCount: "3", activityCount: "1", bookmarkCount: "0"
+            receivedCardCount: "12", studyCount: "3", activityCount: "1"
         )
         let viewModel = makeViewModel(
             repository: StubRepository(result: .success(makeProfileData(challengeId: 1))),
@@ -810,9 +810,6 @@ private final class StubRepository: MyPageRepositoryProtocol, @unchecked Sendabl
     }
 
     func fetchMemberProfile(memberId: Int) async throws -> MemberProfileSummary { fatalError("unused") }
-    func fetchMyPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage { fatalError("unused") }
-    func fetchCommentedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage { fatalError("unused") }
-    func fetchScrappedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage { fatalError("unused") }
     func fetchTerms(termsType: String) async throws -> MyPageTerms { fatalError("unused") }
     func addChallengerRecord(code: String) async throws { fatalError("unused") }
     func updateProfileImage(imageData: Data, fileName: String, contentType: String) async throws -> ProfileData { fatalError("unused") }
@@ -834,9 +831,6 @@ private final class ThrowingRepository: MyPageRepositoryProtocol, @unchecked Sen
     }
 
     func fetchMemberProfile(memberId: Int) async throws -> MemberProfileSummary { fatalError("unused") }
-    func fetchMyPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage { fatalError("unused") }
-    func fetchCommentedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage { fatalError("unused") }
-    func fetchScrappedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage { fatalError("unused") }
     func fetchTerms(termsType: String) async throws -> MyPageTerms { fatalError("unused") }
     func addChallengerRecord(code: String) async throws { fatalError("unused") }
     func updateProfileImage(imageData: Data, fileName: String, contentType: String) async throws -> ProfileData { fatalError("unused") }
@@ -871,9 +865,6 @@ private final class SlowStubRepository: MyPageRepositoryProtocol, @unchecked Sen
     }
 
     func fetchMemberProfile(memberId: Int) async throws -> MemberProfileSummary { fatalError("unused") }
-    func fetchMyPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage { fatalError("unused") }
-    func fetchCommentedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage { fatalError("unused") }
-    func fetchScrappedPosts(query: MyPagePostListQuery) async throws -> MyActivePostPage { fatalError("unused") }
     func fetchTerms(termsType: String) async throws -> MyPageTerms { fatalError("unused") }
     func addChallengerRecord(code: String) async throws { fatalError("unused") }
     func updateProfileImage(imageData: Data, fileName: String, contentType: String) async throws -> ProfileData { fatalError("unused") }

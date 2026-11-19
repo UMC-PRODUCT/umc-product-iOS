@@ -13,7 +13,7 @@ import BusinessCardDomain
 
 /// 마이페이지 행 카운트 저장소 (MP-F07~F09).
 ///
-/// 통합 stat API 부재로 기존 소스 3개를 조합한다. 실패는 소스별로 격리해 `nil` 로 남긴다
+/// 통합 stat API 부재로 기존 소스를 조합한다. 실패는 소스별로 격리해 `nil` 로 남긴다
 /// — 조회 실패를 "0"으로 바꾸지 않는다 (#1222).
 ///
 /// 서버에 `GET /api/v2/member/me/stats` 가 배포되면 ``MemberStatsRepository`` 로 갈아
@@ -48,19 +48,13 @@ public final class ActivityStatRepository: ActivityStatRepositoryProtocol, @unch
 
     // MARK: - Function
 
-    /// 세 소스 중 **성공한 것만** 담는다. 소스별 실패를 여기서 격리하지 않으면 스터디
-    /// 조회 하나가 죽었을 때 스크랩 숫자까지 같이 사라진다.
+    /// 스터디 수만 서버에서 센다. 실패는 던지지 않고 `nil`(「못 셌다」)로 남긴다.
     ///
     /// `receivedCardCount` 는 `nil` 이다 — 서버에 명함첩이 없으니 셀 방법이 없고, 로컬
     /// 캐시로 메우는 판단은 UseCase가 한다.
     public func fetchMemberStats() async throws -> MemberStats {
-        async let study = try? fetchStudyCount()
-        async let bookmark = try? fetchBookmarkCount()
-        return await MemberStats(
-            receivedCardCount: nil,
-            studyCount: study,
-            bookmarkCount: bookmark
-        )
+        let study = try? await fetchStudyCount()
+        return MemberStats(receivedCardCount: nil, studyCount: study)
     }
 
     /// 커서 응답에는 총개수가 없다 — 한 페이지(50) 를 받아 항목 수를 센다.
@@ -80,19 +74,6 @@ public final class ActivityStatRepository: ActivityStatRepositoryProtocol, @unch
         let page = try decoder.decodeAbsorbingWrapper(StudyCountPageDTO.self, from: response.data)
         guard page.itemCount > 0 else { return nil }
         return page.hasNext ? "\(page.itemCount)+" : "\(page.itemCount)"
-    }
-
-    /// 서버 `totalElements`를 **변환 없이 그대로** 돌려준다 (핵심 규칙 #2).
-    /// Int로 바꾸면 Repository 경계를 서버 정수가 Int로 건너고, `?? 0`이 비정상 값을
-    /// 조용히 0으로 삼킨다. 표시 문자열은 UseCase가 그대로 쓴다.
-    public func fetchBookmarkCount() async throws -> String {
-        let response = try await networkRequesting.request(
-            BusinessCardRouter.getScrappedPosts(query: ScrappedCountQueryDTO())
-        )
-        let page = try decoder.decodeAbsorbingWrapper(
-            ScrappedCountPageDTO.self, from: response.data
-        )
-        return page.totalElements
     }
 
     /// 활동·프로젝트 이력 수 = 마이페이지 활동 목록의 항목 수 (추가 왕복 없음 — 프로필 캐시).

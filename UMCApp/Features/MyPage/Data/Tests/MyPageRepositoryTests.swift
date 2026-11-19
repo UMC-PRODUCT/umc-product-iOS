@@ -267,41 +267,6 @@ private enum Fixture {
     static let termsObject = """
     { "id": "terms-1", "link": "https://umc.it.kr/terms/privacy", "isMandatory": true }
     """
-
-    /// 게시글 항목 result 본문
-    static func postObject(postId: String) -> String {
-        """
-        {
-            "postId": "\(postId)",
-            "title": "제목",
-            "content": "본문",
-            "category": "FREE",
-            "authorId": "10",
-            "authorName": "작성자",
-            "authorPart": "IOS",
-            "createdAt": "2026-01-01T00:00:00Z",
-            "commentCount": "5",
-            "likeCount": "10",
-            "isLiked": false
-        }
-        """
-    }
-
-    /// Spring 페이지 result 본문
-    static func postPageObject(page: String, hasNext: Bool, postIds: [String]) -> String {
-        let content = postIds.map { postObject(postId: $0) }.joined(separator: ",")
-        return """
-        {
-            "content": [\(content)],
-            "page": "\(page)",
-            "size": "20",
-            "totalElements": "40",
-            "totalPages": "3",
-            "hasNext": \(hasNext),
-            "hasPrevious": false
-        }
-        """
-    }
 }
 
 // MARK: - Helper
@@ -454,56 +419,6 @@ struct MyPageRepositoryProfileTests {
 
         #expect(summary.memberId == "42")
         #expect(summary.name == "김챌린저")
-    }
-}
-
-// MARK: - Suite: 활동 게시글 조회 매핑
-
-@Suite("MyPageRepository — 활동 게시글 조회 매핑")
-struct MyPageRepositoryPostsTests {
-
-    @Test("fetchMyPosts — 페이지 응답을 MyActivePostPage로 매핑한다(page String→Int, hasNext)")
-    func fetchMyPostsMapsPage() async throws {
-        let (sut, stub) = makeRepository(
-            .success(Fixture.success(
-                Fixture.postPageObject(page: "2", hasNext: true, postIds: ["1", "2"])
-            ))
-        )
-
-        let page = try await sut.fetchMyPosts(query: MyPagePostListQuery(page: 2, size: 20))
-
-        #expect(page.items.count == 2)
-        #expect(page.items.first?.postId == "1")
-        #expect(page.page == 2)
-        #expect(page.hasNext == true)
-        #expect(stub.lastPath == "/api/v1/posts/my")
-        #expect(stub.lastMethod == .get)
-    }
-
-    @Test("fetchCommentedPosts — 댓글 단 글 엔드포인트를 호출한다")
-    func fetchCommentedPostsHitsEndpoint() async throws {
-        let (sut, stub) = makeRepository(
-            .success(Fixture.success(
-                Fixture.postPageObject(page: "0", hasNext: false, postIds: ["9"])
-            ))
-        )
-
-        _ = try await sut.fetchCommentedPosts(query: MyPagePostListQuery())
-
-        #expect(stub.lastPath == "/api/v1/posts/commented")
-    }
-
-    @Test("fetchScrappedPosts — 스크랩 글 엔드포인트를 호출한다")
-    func fetchScrappedPostsHitsEndpoint() async throws {
-        let (sut, stub) = makeRepository(
-            .success(Fixture.success(
-                Fixture.postPageObject(page: "0", hasNext: false, postIds: ["9"])
-            ))
-        )
-
-        _ = try await sut.fetchScrappedPosts(query: MyPagePostListQuery())
-
-        #expect(stub.lastPath == "/api/v1/posts/scrapped")
     }
 }
 
