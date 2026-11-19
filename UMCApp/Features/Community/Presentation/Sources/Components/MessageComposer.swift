@@ -25,21 +25,23 @@ fileprivate enum Constants {
     /// 자동완성 오버레이 최대 높이 — 약 3.5행. 반쯤 걸친 행이 보여야 더 있다는 게 드러난다.
     static let mentionListMaxHeight: CGFloat = 176
     static let mentionRowAvatarSize = CGSize(width: 28, height: 28)
-    /// 한 번에 고를 수 있는 사진 수. 서버는 4장까지 받지만 우선 1장만 연다 (#1451).
-    static let maxImageSelection = 1
 }
 
 /// 하단 입력창.
 ///
 /// 마이크는 음성 체인이 후속 PR 이라 버튼만 두고 비활성화한다 — 나중에 붙을 때 입력창 높이가
-/// 바뀌지 않게 자리를 미리 잡아 둔다. 사진 버튼은 버튼 줄 왼쪽 끝에 둔다 — 고르는 즉시
-/// 전송하므로 입력 중인 글과 섞이지 않는다 (#1451).
+/// 바뀌지 않게 자리를 미리 잡아 둔다. 사진 버튼은 버튼 줄 왼쪽 끝에 둔다 — 피커에서 확인을
+/// 누르면 바로 전송하므로 입력 중인 글과 섞이지 않는다 (#1451).
 ///
 /// 인용 칩과 `@` 자동완성은 입력줄 **위로 쌓는다**. 오버레이로 띄우면 마지막 말풍선을 가리는데,
 /// 답장을 쓰는 순간에 가장 보고 싶은 게 바로 그 말풍선이다.
 struct MessageComposer: View {
 
     // MARK: - Property
+
+    /// 한 번에 고를 수 있는 사진 수. 서버가 메시지 한 통에 받는 상한과 같다 (#1676).
+    /// 테스트가 직접 읽는다.
+    static let maxImageSelection = CommunityThreadRoomUseCase.imageMaxCount
 
     @Binding var text: String
 
@@ -163,11 +165,14 @@ struct MessageComposer: View {
 
     }
 
-    /// 고르는 즉시 올려 보낸다. 선택을 비워 둬야 같은 사진을 다시 골라도 `onChange` 가 돈다.
+    /// 피커 오른쪽 위 확인을 누르면 올려 보낸다. 여러 장 선택이라 사진을 누르는 순간 닫히지 않고,
+    /// 이 확인이 곧 전송 확인이다 (#1676). 고른 순서가 말풍선 그리드 순서가 되므로 순번을 띄운다.
+    /// 선택을 비워 둬야 같은 사진을 다시 골라도 `onChange` 가 돈다.
     private var imageButton: some View {
         PhotosPicker(
             selection: $pickedImages,
-            maxSelectionCount: Constants.maxImageSelection,
+            maxSelectionCount: Self.maxImageSelection,
+            selectionBehavior: .ordered,
             matching: .images
         ) {
             Image(systemName: "photo")
