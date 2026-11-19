@@ -21,8 +21,9 @@ import UIKit
 /// 하는데, 카드가 얻는 건 톤 하나뿐이라 값이 맞지 않는다.
 ///
 /// 양면 모두 왼쪽에 프로필 사진을 둔다(#1679). 앞면은 이름 행·파트 행·발급 행(학교 · 기수),
-/// 뒷면은 연락처·링크 줄(이메일 · GitHub · LinkedIn · Blog · Instagram · 개인링크)이고 줄이
-/// 하나도 없으면 빈 상태 문구를 보인다. 줄을 누르면 메일 작성이나 링크가 열린다.
+/// 뒷면은 이메일과 우선순위 맨 위 링크 한 줄이고(``MyCard/primaryLink``) 둘 다 없으면 빈 상태
+/// 문구를 보인다. 줄을 누르면 메일 작성이나 링크가 열린다. 접근성 글자 크기에서는 사진을 글자
+/// 위로 올린다(``faceLayout``).
 /// 헤더와 하단 버튼 두 개는 양면 공통이다.
 ///
 /// 면 상태는 들지 않는다 — 뒤집힘 여부의 정본은 소유자이고 ``isFlipped`` 로 내려준다.
@@ -58,6 +59,7 @@ public struct BusinessCardFaceView: View {
     /// 도는 것도 막는다 — 큰 3D 회전은 손이 만든 것이라도 어지러움을 부른다.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private enum Constants {
         static let title = "BUSINESS CARD"
@@ -321,7 +323,7 @@ public struct BusinessCardFaceView: View {
     /// #1374 에서 **기수 칩**도 뺐다. 기수는 발급 행 오른쪽 `GEN. {기수}` 로 옮겨 한 줄을
     /// 줄였다 — 칩과 학교가 각각 한 줄씩 차지해 카드 오른쪽 절반이 비어 있었다.
     private var frontFace: some View {
-        HStack(alignment: .center, spacing: Metrics.contentSpacing) {
+        faceLayout {
             avatar
 
             VStack(alignment: .leading, spacing: Metrics.faceBlockSpacing) {
@@ -365,29 +367,54 @@ public struct BusinessCardFaceView: View {
     /// 왔다(#1374) — 「몇 기에 발급된 카드인가」라 뜻도 맞는다.
     ///
     /// 폭이 모자라면 학교가 먼저 말줄임된다. 기수는 짧고, 잘리면 숫자가 통째로 사라진다.
+    /// 접근성 글자 크기에서는 학교와 기수를 두 줄로 나눠 학교를 자르지 않는다.
     private var issuerRow: some View {
         VStack(alignment: .leading, spacing: Metrics.linkSpacing) {
             Rectangle()
                 .fill(Color.white.opacity(Metrics.dividerOpacity))
                 .frame(height: Metrics.dividerHeight)
 
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                // 한글이라 모노·대문자 대상이 아니다. 자간만 라이선스 어법에 맞춘다.
-                Text(card.university)
-                    .appFont(.caption1, color: Color.white)
-                    .tracking(Metrics.tracking)
-                    .lineLimit(1)
+            if dynamicTypeSize.isAccessibilitySize {
+                universityText
+                generationText
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    universityText
 
-                Spacer(minLength: Metrics.linkSpacing)
+                    Spacer(minLength: Metrics.linkSpacing)
 
-                licenseText(Constants.generationPrefix + card.generation)
-                    .lineLimit(1)
-                    .layoutPriority(1)
+                    generationText
+                        .layoutPriority(1)
+                }
             }
         }
     }
 
-    /// 양면 왼쪽 프로필 사진. 사진이 없으면 ``RemoteImage`` 가 UMC 기본 프로필을 그린다.
+    /// 한글이라 모노·대문자 대상이 아니다. 자간만 라이선스 어법에 맞춘다.
+    private var universityText: some View {
+        Text(card.university)
+            .appFont(.caption1, color: Color.white)
+            .tracking(Metrics.tracking)
+            .lineLimit(1)
+    }
+
+    private var generationText: some View {
+        licenseText(Constants.generationPrefix + card.generation)
+            .lineLimit(1)
+    }
+
+    /// 사진과 글자 묶음의 배치. 평소에는 사진을 왼쪽에 두고, 접근성 글자 크기에서는 위로 올린다.
+    ///
+    /// 사진이 왼쪽에 남으면 글자가 카드 폭의 절반 남짓만 쓰게 돼, AX 크기에서 파트명이 단어
+    /// 중간에서 끊기고("Enginee / r") 이름·학교·이메일이 말줄임된다. 글자 크기에 상한을 두지
+    /// 않는 건 명함 화면이 AX5 까지 늘어나도록 맞춘 결정(#1234)을 따르기 위해서다.
+    private var faceLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Metrics.contentSpacing))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: Metrics.contentSpacing))
+    }
+
+    /// 양면 프로필 사진. 사진이 없으면 ``RemoteImage`` 가 UMC 기본 프로필을 그린다.
     private var avatar: some View {
         RemoteImage(
             urlString: card.avatarURL ?? "",
@@ -420,7 +447,7 @@ public struct BusinessCardFaceView: View {
         if contacts.isEmpty {
             emptyContacts
         } else {
-            HStack(alignment: .center, spacing: Metrics.contentSpacing) {
+            faceLayout {
                 avatar
 
                 VStack(alignment: .leading, spacing: Metrics.contactSpacing) {
