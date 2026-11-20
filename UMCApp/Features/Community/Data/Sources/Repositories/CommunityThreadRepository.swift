@@ -199,6 +199,10 @@ public struct CommunityThreadRepository: CommunityThreadRepositoryProtocol, @unc
         _ = try await payload(EmptyResult.self, from: .leave(threadId: threadId))
     }
 
+    public func acknowledgeKick(threadId: String) async throws {
+        _ = try await payload(EmptyResult.self, from: .acknowledgeKick(threadId: threadId))
+    }
+
     public func reportMessage(messageId: String, reason: String) async throws {
         _ = try await payload(
             EmptyResult.self,

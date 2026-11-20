@@ -51,6 +51,9 @@ struct CommunityThreadRoomView: View {
     /// 나가기·삭제로 스레드가 목록에서 빠졌음을 알린다.
     private let onThreadRemoved: (String) -> Void
 
+    /// 강퇴됐음을 알린다. 리스트가 서버에 강퇴 확인을 보내고 목록을 다시 받는다 (#1682).
+    private let onThreadKicked: (String) -> Void
+
     @Environment(\.di) private var container
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -89,6 +92,7 @@ struct CommunityThreadRoomView: View {
         inviteViewModel: ThreadInviteViewModel,
         onThreadToggled: @escaping (CommunityThread) -> Void,
         onThreadRemoved: @escaping (String) -> Void,
+        onThreadKicked: @escaping (String) -> Void,
         onComposerChange: @escaping (Bool) -> Void = { _ in },
         initialNavigationTitle: String = ""
     ) {
@@ -96,6 +100,7 @@ struct CommunityThreadRoomView: View {
         _inviteViewModel = State(initialValue: inviteViewModel)
         self.onThreadToggled = onThreadToggled
         self.onThreadRemoved = onThreadRemoved
+        self.onThreadKicked = onThreadKicked
         self.onComposerChange = onComposerChange
         self.initialNavigationTitle = initialNavigationTitle
     }
@@ -168,6 +173,13 @@ struct CommunityThreadRoomView: View {
         .onChange(of: viewModel.shouldDismiss) { _, shouldDismiss in
             guard shouldDismiss else { return }
             dismiss()
+        }
+        // 참여 종료 화면이 뜨는 순간 알린다 — 안내를 읽는 동안 리스트가 확인을 보내고 목록을 다시
+        // 받아, 돌아왔을 때는 이미 빠져 있다. 이 화면을 나가는 길이 확인 버튼 하나라, 뜬 시점에 이미
+        // 강퇴 안내를 본 것으로 친다 (#1682).
+        .onChange(of: viewModel.isKicked) { _, isKicked in
+            guard isKicked else { return }
+            onThreadKicked(viewModel.threadId)
         }
         // 나가기·삭제가 확정되면 리스트 행까지 지우고 루트로 되돌린다. `dismiss()` 로 한 단계만
         // 접으면 참여자 목록을 거쳐 들어온 경우 이미 나온 스레드의 화면이 그대로 남는다.

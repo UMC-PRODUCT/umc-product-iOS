@@ -31,6 +31,9 @@ public enum CommunityThreadRouter {
     case kickMember(threadId: String, memberId: String)
     case changeMemberRole(threadId: String, memberId: String, body: ThreadMemberRoleBody)
     case leave(threadId: String)
+    /// 강퇴 확인 (COMMUNITY-THREAD-012). 서버가 `KICKED` 를 `KICKED_ACKNOWLEDGED` 로 바꿔
+    /// 목록 조회에서 뺀다 (#1682).
+    case acknowledgeKick(threadId: String)
     case reportMessage(messageId: String, body: ReportMessageBody)
     /// 다른 회원 공개 프로필 (`GET /api/v1/member/profile/{memberId}`, MEMBER-101) (#1681).
     case getMemberProfile(memberId: String)
@@ -76,6 +79,8 @@ extension CommunityThreadRouter: BaseTargetType {
             return "\(membersPath(threadId))/\(memberId)/role"
         case .leave(let threadId):
             return "\(threadsPath)/\(threadId)/leave"
+        case .acknowledgeKick(let threadId):
+            return "\(threadsPath)/\(threadId)/kick/acknowledge"
         case .reportMessage(let messageId, _):
             return "\(messagesPath)/\(messageId)/report"
         case .getMemberProfile(let memberId):
@@ -98,7 +103,7 @@ extension CommunityThreadRouter: BaseTargetType {
             return .delete
         case .changeMemberRole, .updateThread:
             return .patch
-        case .createThread, .invite, .leave, .reportMessage:
+        case .createThread, .invite, .leave, .acknowledgeKick, .reportMessage:
             return .post
         }
     }
@@ -131,7 +136,7 @@ extension CommunityThreadRouter: BaseTargetType {
         case .reportMessage(_, let body):
             return .requestJSONEncodable(body)
         case .getBlockedMembers, .setMemberBlocked, .getThread, .deleteThread, .setPin, .setMute,
-             .kickMember, .leave, .getMemberProfile:
+             .kickMember, .leave, .acknowledgeKick, .getMemberProfile:
             return .requestPlain
         }
     }

@@ -142,6 +142,16 @@ struct CommunityThreadListUseCaseTests {
 
         #expect(await repository.leaveCalls == ["thread-9"])
     }
+
+    @Test("강퇴 확인은 해당 스레드로 Repository 를 호출한다")
+    func forwardsAcknowledgeKick() async throws {
+        let repository = FakeThreadRepository()
+        let useCase = CommunityThreadListUseCase(repository: repository)
+
+        try await useCase.acknowledgeKick(threadId: "thread-9")
+
+        #expect(await repository.acknowledgeKickCalls == ["thread-9"])
+    }
 }
 
 @Suite("커뮤니티 스레드 생성 UseCase")
@@ -1001,6 +1011,7 @@ private actor FakeThreadRepository: CommunityThreadRepositoryProtocol {
     private(set) var kickCalls: [MemberCall] = []
     private(set) var roleCalls: [MemberCall] = []
     private(set) var leaveCalls: [String] = []
+    private(set) var acknowledgeKickCalls: [String] = []
     private(set) var reportCalls: [ReportCall] = []
     private(set) var updateThreadCalls: [UpdateThreadCall] = []
     private(set) var deleteThreadCalls: [String] = []
@@ -1156,6 +1167,11 @@ private actor FakeThreadRepository: CommunityThreadRepositoryProtocol {
 
     func leaveThread(threadId: String) async throws {
         leaveCalls.append(threadId)
+        if let error { throw error }
+    }
+
+    func acknowledgeKick(threadId: String) async throws {
+        acknowledgeKickCalls.append(threadId)
         if let error { throw error }
     }
 

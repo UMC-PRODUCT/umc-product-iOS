@@ -317,6 +317,7 @@ private final class StubThreadListUseCase: CommunityThreadListUseCaseProtocol {
     private(set) var pinCalls: [(threadId: String, isPinned: Bool)] = []
     private(set) var muteCalls: [(threadId: String, isMuted: Bool)] = []
     private(set) var leaveCalls: [String] = []
+    private(set) var acknowledgeKickCalls: [String] = []
     private(set) var deleteCalls: [String] = []
 
     func loadThreads(
@@ -339,6 +340,11 @@ private final class StubThreadListUseCase: CommunityThreadListUseCaseProtocol {
 
     func leave(threadId: String) async throws {
         leaveCalls.append(threadId)
+        if let commandError { throw commandError }
+    }
+
+    func acknowledgeKick(threadId: String) async throws {
+        acknowledgeKickCalls.append(threadId)
         if let commandError { throw commandError }
     }
 
@@ -2097,11 +2103,31 @@ struct CommunityThreadRoomViewModelTests {
         viewModel.apply(.threadDeleted(threadId: "1", deletedAt: Date()))
 
         #expect(viewModel.ejectionNotice != nil)
+        // 삭제된 스레드에는 확인할 강퇴가 없다 — 리스트가 강퇴 확인을 보내지 않는다.
+        #expect(viewModel.isKicked == false)
         #expect(viewModel.shouldDismiss == false)
 
         viewModel.acknowledgeEjection()
 
         #expect(viewModel.shouldDismiss)
+    }
+
+    /// 강퇴는 리스트가 서버에 확인을 보내야 목록에서 빠진다 (#1682). 삭제(404·410)와 구분한다.
+    @Test(
+        "진입 조회가 403 이면 강퇴로, 404·410 이면 삭제로 참여를 끝낸다",
+        arguments: [(403, true), (404, false), (410, false)]
+    )
+    func distinguishesKickFromDeletion(statusCode: Int, isKicked: Bool) async {
+        let useCase = StubRoomUseCase()
+        useCase.loadThreadError = AppError.network(
+            .requestFailed(statusCode: statusCode, data: nil)
+        )
+        let viewModel = makeViewModel(useCase)
+
+        await viewModel.load()
+
+        #expect(viewModel.ejectionNotice != nil)
+        #expect(viewModel.isKicked == isKicked)
     }
 
     @Test("참여 종료 화면은 떠 있던 알림을 걷어 낸다 — 볼 수 없는 방의 선택지다")
@@ -2207,6 +2233,7 @@ struct CommunityThreadRoomViewModelTests {
         await waitUntil { viewModel.ejectionNotice != nil }
 
         #expect(viewModel.ejectionNotice != nil)
+        #expect(viewModel.isKicked)
     }
 
     // MARK: - New Message Count

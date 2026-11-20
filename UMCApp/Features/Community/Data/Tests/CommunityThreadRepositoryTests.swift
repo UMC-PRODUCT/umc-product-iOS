@@ -362,6 +362,24 @@ struct CommunityThreadRepositoryTests {
         #expect(threadId == "12")
     }
 
+    /// 확인하지 않으면 서버가 강퇴된 스레드를 목록에 계속 돌려준다 (#1682).
+    @Test("acknowledgeKick 이 POST /threads/{id}/kick/acknowledge 로 간다")
+    func acknowledgeKickCallsAcknowledge() async throws {
+        let (repository, network) = makeRepository(.success(Fixture.empty))
+
+        try await repository.acknowledgeKick(threadId: "12")
+
+        #expect(network.lastPath == "/api/v1/community/threads/12/kick/acknowledge")
+        #expect(network.lastMethod == .post)
+        guard case .acknowledgeKick(let threadId) = network.lastTarget else {
+            Issue.record(
+                "lastTarget 이 acknowledgeKick 이 아닙니다: \(String(describing: network.lastTarget))"
+            )
+            return
+        }
+        #expect(threadId == "12")
+    }
+
     /// 신고만 `/threads` 하위가 아니다. 다른 엔드포인트를 따라 스레드 밑으로 붙이면 서버는
     /// 그런 경로를 모른다 — 경로를 여기서 못 박아 둔다.
     @Test("reportMessage 는 /messages/{id}/report 로 가고 사유 코드를 그대로 싣는다")
