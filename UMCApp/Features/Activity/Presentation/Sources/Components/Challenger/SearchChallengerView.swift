@@ -30,6 +30,8 @@ struct SearchChallengerView: View {
 
     /// 고를 수 있는 memberId. `nil` 이면 제한하지 않는다.
     private let selectableMemberIds: Set<String>?
+    /// 결과에서 뺄 memberId. 상위 시트가 `hidesSelf` 일 때 본인을 넘긴다.
+    private let excludedMemberIds: Set<String>
     private let preferredGeneration: String?
     private let preferredPart: UMCPartType?
 
@@ -68,15 +70,18 @@ struct SearchChallengerView: View {
     ///   - useCase: 챌린저 검색 UseCase (상위에서 DI 로 해석해 주입)
     ///   - selectedChallengers: 상위 화면의 선택 목록 바인딩
     ///   - selectableMemberIds: 고를 수 있는 memberId (기본값 `nil` — 제한 없음)
+    ///   - excludedMemberIds: 결과에서 뺄 memberId (기본값 빈 집합 — 빼지 않음)
     init(
         useCase: SearchChallengersUseCaseProtocol,
         selectedChallengers: Binding<[ChallengerInfo]>,
         selectableMemberIds: Set<String>? = nil,
+        excludedMemberIds: Set<String> = [],
         preferredGeneration: String? = nil,
         preferredPart: UMCPartType? = nil
     ) {
         self._selectedChallengers = selectedChallengers
         self.selectableMemberIds = selectableMemberIds
+        self.excludedMemberIds = excludedMemberIds
         self.preferredGeneration = preferredGeneration
         self.preferredPart = preferredPart
         self._viewModel = State(
@@ -217,6 +222,7 @@ struct SearchChallengerView: View {
 
     private func isSelectable(_ challenger: ChallengerInfo) -> Bool {
         (selectableMemberIds?.contains(challenger.memberId) ?? true)
+            && !excludedMemberIds.contains(challenger.memberId)
             && (preferredGeneration == nil || challenger.gen == preferredGeneration)
             && (preferredPart == nil || challenger.part == preferredPart)
     }

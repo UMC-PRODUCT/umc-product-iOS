@@ -36,11 +36,13 @@ public struct SelectedChallengerView: View {
 
     /// 검색으로 추가할 수 있는 memberId. `nil` 이면 제한하지 않습니다.
     private let selectableMemberIds: Set<String>?
+    /// 검색 결과에서 본인을 숨길지. 본인이 들어가면 안 되는 화면(스레드 생성)이 켭니다.
+    private let hidesSelf: Bool
     private let preferredGeneration: String?
     private let preferredPart: UMCPartType?
     private let requiresStudyContext: Bool
 
-    /// 현재 사용자의 memberId (본인은 삭제 방지)
+    /// 현재 사용자의 memberId (본인은 삭제 방지, `hidesSelf` 면 검색에서 숨김)
     private var myMemberIdSet: Set<String> {
         guard let id = AppStorageKey.memberIdString() else { return [] }
         return [id]
@@ -52,10 +54,13 @@ public struct SelectedChallengerView: View {
     ///   - challenger: 상위 화면의 선택 목록 바인딩
     ///   - searchUseCase: 검색 UseCase (기본값 `nil` — DI 컨테이너에서 해석)
     ///   - selectableMemberIds: 검색 결과 중 고를 수 있는 memberId (기본값 `nil` — 제한 없음)
+    ///   - hidesSelf: 검색 결과에서 본인을 숨길지 (기본값 `false` — 본인도 고를 수 있음).
+    ///     스터디 멘토처럼 본인을 고르는 화면이 있어 기본으로는 켜지 않습니다.
     public init(
         challenger: Binding<[ChallengerInfo]>,
         searchUseCase: SearchChallengersUseCaseProtocol? = nil,
         selectableMemberIds: Set<String>? = nil,
+        hidesSelf: Bool = false,
         preferredGeneration: String? = nil,
         preferredPart: UMCPartType? = nil,
         requiresStudyContext: Bool = false
@@ -63,6 +68,7 @@ public struct SelectedChallengerView: View {
         self._challenger = challenger
         self.searchUseCase = searchUseCase
         self.selectableMemberIds = selectableMemberIds
+        self.hidesSelf = hidesSelf
         self.preferredGeneration = preferredGeneration
         self.preferredPart = preferredPart
         self.requiresStudyContext = requiresStudyContext
@@ -94,6 +100,7 @@ public struct SelectedChallengerView: View {
                         useCase: resolvedSearchUseCase,
                         selectedChallengers: $challenger,
                         selectableMemberIds: selectableMemberIds,
+                        excludedMemberIds: hidesSelf ? myMemberIdSet : [],
                         preferredGeneration: preferredGeneration,
                         preferredPart: preferredPart
                     )
