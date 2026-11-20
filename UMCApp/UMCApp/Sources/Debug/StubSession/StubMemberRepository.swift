@@ -36,7 +36,7 @@ struct StubMemberRepository: MemberRepositoryProtocol {
         cursor: Int?,
         size: Int
     ) async throws -> ChallengerSearchPage {
-        let candidates = StubSessionFixtures.members.map { member in
+        let members = StubSessionFixtures.members.map { member in
             ChallengerInfo(
                 memberId: member.memberID ?? "",
                 challengerId: member.challengerID,
@@ -48,6 +48,9 @@ struct StubMemberRepository: MemberRepositoryProtocol {
                 part: member.part
             )
         }
+        // 서버 검색은 로그인한 본인도 돌려준다. 빼 두면 본인을 고르는 경로(#1675)를 stub
+        // 세션에서 재현할 수 없다.
+        let candidates = [signedInChallenger].compactMap { $0 } + members
         guard let keyword, !keyword.isEmpty else {
             return ChallengerSearchPage(challengers: candidates, hasNext: false, nextCursor: nil)
         }
@@ -56,6 +59,26 @@ struct StubMemberRepository: MemberRepositoryProtocol {
                 || $0.nickname.localizedCaseInsensitiveContains(keyword)
         }
         return ChallengerSearchPage(challengers: filtered, hasNext: false, nextCursor: nil)
+    }
+
+    /// 지금 신원을 검색 결과 한 줄로 바꾼다. 챌린저 기록이 없는 신원(제품팀)은 검색에 나오지 않는다.
+    private var signedInChallenger: ChallengerInfo? {
+        let profile = StubSessionFixtures.profile
+        guard let challengerId = profile.latestChallengerId,
+              let generation = profile.generations.first,
+              let part = profile.responsiblePart.flatMap(UMCPartType.init(apiValue:)) else {
+            return nil
+        }
+        return ChallengerInfo(
+            memberId: profile.memberId,
+            challengerId: challengerId,
+            gen: generation,
+            name: profile.name,
+            nickname: profile.nickname,
+            schoolName: profile.schoolName,
+            profileImage: profile.profileImageLink,
+            part: part
+        )
     }
 
     // MARK: - 상벌점 부여 / 삭제

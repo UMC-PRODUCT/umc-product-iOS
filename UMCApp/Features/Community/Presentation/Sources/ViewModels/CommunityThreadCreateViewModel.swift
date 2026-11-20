@@ -48,7 +48,7 @@ public final class CommunityThreadCreateViewModel {
 
     /// 생성과 동시에 초대할 챌린저. 챌린저 검색 시트(`SelectedChallengerView`)가 통째로 되쓴다.
     ///
-    /// 그 시트는 개수 제한을 모르므로 여기서 받아 적을 때 중복(`memberId` 기준)과 상한을
+    /// 그 시트는 개수 제한을 모르므로 여기서 받아 적을 때 중복(`memberId` 기준)·본인과 상한을
     /// 정리한다 — 잘린 경우에만 ``inviteeCapacityNotice`` 가 채워진다.
     public var invitees: [ChallengerInfo] = [] {
         didSet { clampInvitees() }
@@ -68,17 +68,22 @@ public final class CommunityThreadCreateViewModel {
     private let useCase: CommunityThreadCreateUseCaseProtocol
     let classifier: ThreadClassifying
     public let descriptionRefiner: ThreadDescriptionRefining
+    /// 초대 목록에서 본인을 가려 내는 유일한 열쇠. 없으면 거르지 못한다.
+    private let currentMemberId: String?
 
     // MARK: - Init
 
+    /// - Parameter currentMemberId: 초대 목록에서 뺄 본인 memberId.
     public init(
         useCase: CommunityThreadCreateUseCaseProtocol,
         classifier: ThreadClassifying,
-        descriptionRefiner: ThreadDescriptionRefining
+        descriptionRefiner: ThreadDescriptionRefining,
+        currentMemberId: String? = AppStorageKey.memberIdString()
     ) {
         self.useCase = useCase
         self.classifier = classifier
         self.descriptionRefiner = descriptionRefiner
+        self.currentMemberId = currentMemberId
     }
 
     // MARK: - Computed Property
@@ -136,13 +141,22 @@ public final class CommunityThreadCreateViewModel {
         text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private func isMe(_ memberId: String) -> Bool {
+        guard let currentMemberId, !currentMemberId.isEmpty else { return false }
+        return memberId == currentMemberId
+    }
+
     /// 중복·상한을 넘긴 선택만 되쓴다 — 매번 대입하면 `didSet` 이 무한히 재진입한다.
     ///
     /// 사유는 되쓰기 **뒤에** 적는다. 되쓰기가 `didSet` 을 한 번 더 태우고 그 안쪽 호출은
     /// 이미 정리된 값을 보므로, 순서를 뒤집으면 방금 적은 사유를 안쪽이 지운다.
+    ///
+    /// 본인도 여기서 뺀다. 서버가 개설자를 먼저 넣으므로 초대 목록에 섞이면 "이미 참여 중"
+    /// (`COMMUNITY-0038`)으로 생성 전체가 거절된다 (#1675). 검색 시트도 본인을 숨기지만, CSV 로
+    /// 고른 인원처럼 검색을 거치지 않는 경로가 있어 보내기 전 마지막 자리인 여기서 한 번 더 막는다.
     private func clampInvitees() {
         var seen = Set<String>()
-        let unique = invitees.filter { seen.insert($0.memberId).inserted }
+        let unique = invitees.filter { !isMe($0.memberId) && seen.insert($0.memberId).inserted }
         let clamped = Array(unique.prefix(CommunityThreadCreateRule.inviteMaxCount))
         let isOverflowing = unique.count > CommunityThreadCreateRule.inviteMaxCount
 
@@ -150,7 +164,7 @@ public final class CommunityThreadCreateViewModel {
             invitees = clamped
         }
 
-        // 중복 제거로 줄어든 건 사용자가 알 필요가 없다 — 상한에 걸려 잘렸을 때만 알린다.
+        // 중복·본인을 뺀 건 사용자가 알 필요가 없다 — 상한에 걸려 잘렸을 때만 알린다.
         inviteeCapacityNotice = isOverflowing
             ? "한 번에 \(CommunityThreadCreateRule.inviteMaxCount)명까지 선택할 수 있어요."
             : nil

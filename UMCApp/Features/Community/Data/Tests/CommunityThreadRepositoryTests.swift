@@ -482,6 +482,23 @@ struct CommunityThreadRepositoryTests {
         }
     }
 
+    /// 본인을 초대 목록에 넣으면 서버가 개설자를 먼저 넣은 뒤 "이미 참여 중" 으로 생성 전체를
+    /// 거절한다 (#1675). 생성 경로도 초대와 같은 사유로 바꿔야 화면이 뜻을 알 수 있다.
+    @Test("생성 시점 초대가 거절되면 같은 ThreadInviteError 로 바꾼다")
+    func mapsCreateInviteRejection() async {
+        let body = Data(#"{"success":false,"code":"COMMUNITY-0038","message":"거절"}"#.utf8)
+        let (repository, _) = makeRepository(
+            .failure(NetworkError.requestFailed(statusCode: 409, data: body))
+        )
+
+        await #expect(throws: ThreadInviteError.alreadyJoined) {
+            _ = try await repository.createThread(
+                title: "iOS 스터디", description: "매주 화요일", category: "STUDY",
+                icon: "📚", memberIds: ["1"]
+            )
+        }
+    }
+
     @Test("모르는 초대 거절 코드는 원래 에러를 그대로 올린다")
     func keepsUnknownInviteRejection() async {
         let (repository, _) = makeRepository(.success(Fixture.failure))

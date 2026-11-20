@@ -85,6 +85,9 @@ struct CommunityThreadCreateView: View {
     /// 선택 시트는 Activity 의 `SelectedChallengerView` 를 그대로 쓴다 — 일정 등록의 참여자
     /// 선택(`ScheduleRegistrationView`)이 이미 같은 방식으로 재사용하고 있다. 그쪽은 개수
     /// 제한을 모르므로 상한은 ViewModel 이 되쓸 때 자른다.
+    ///
+    /// 일정과 달리 본인은 초대 목록에 넣으면 안 된다 — 서버가 개설자로 먼저 넣고, 목록에서 다시
+    /// 만나면 생성 전체를 거절한다 (#1675). 그래서 시트 검색에서 본인을 숨긴다.
     private var inviteeRow: some View {
         Button {
             isInviteePickerPresented = true
@@ -106,7 +109,7 @@ struct CommunityThreadCreateView: View {
         .accessibilityValue(inviteeValue)
         .accessibilityHint(Constants.inviteeHint)
         .sheet(isPresented: $isInviteePickerPresented) {
-            SelectedChallengerView(challenger: $viewModel.invitees)
+            SelectedChallengerView(challenger: $viewModel.invitees, hidesSelf: true)
                 .presentationDragIndicator(.visible)
         }
     }
