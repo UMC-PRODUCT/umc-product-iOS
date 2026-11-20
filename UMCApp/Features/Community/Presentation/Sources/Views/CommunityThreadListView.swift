@@ -244,11 +244,14 @@ struct CommunityThreadListView: View {
                 .tint(.green)
             }
 
-            Button(role: .destructive) {
+            // `role: .destructive` 를 달면 목록이 누르는 즉시 행 삭제 애니메이션을 돌려, 확인 알림에서
+            // 취소해도 행이 사라진 채로 남는다 (#1685). 행은 나가기가 확정된 뒤 `leave` 가 지운다.
+            Button {
                 viewModel.confirmLeave(thread)
             } label: {
                 Label("나가기", systemImage: "rectangle.portrait.and.arrow.right")
             }
+            .tint(.red)
         }
     }
 
