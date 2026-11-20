@@ -41,6 +41,11 @@ enum StubSessionFixtures {
         }
     }
 
+    /// 스레드에서 누른 다른 회원(#1681). 지금 신원과 겹치지 않게 B, 내가 B면 A를 돌려준다.
+    static var otherMemberProfile: Profile {
+        StubPersona.current == .b ? personaAProfile : personaBProfile
+    }
+
     private static let personaAProfile = Profile(
         memberId: "1",
         name: "김유엠",

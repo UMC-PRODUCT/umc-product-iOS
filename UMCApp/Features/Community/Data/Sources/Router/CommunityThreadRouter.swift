@@ -32,6 +32,8 @@ public enum CommunityThreadRouter {
     case changeMemberRole(threadId: String, memberId: String, body: ThreadMemberRoleBody)
     case leave(threadId: String)
     case reportMessage(messageId: String, body: ReportMessageBody)
+    /// 다른 회원 공개 프로필 (`GET /api/v1/member/profile/{memberId}`, MEMBER-101) (#1681).
+    case getMemberProfile(memberId: String)
 }
 
 extension CommunityThreadRouter: BaseTargetType {
@@ -76,12 +78,15 @@ extension CommunityThreadRouter: BaseTargetType {
             return "\(threadsPath)/\(threadId)/leave"
         case .reportMessage(let messageId, _):
             return "\(messagesPath)/\(messageId)/report"
+        case .getMemberProfile(let memberId):
+            return "/api/v1/member/profile/\(memberId)"
         }
     }
 
     public var method: Moya.Method {
         switch self {
-        case .getBlockedMembers, .getThreads, .getThread, .getMessages, .getMembers, .getInvitableMembers:
+        case .getBlockedMembers, .getThreads, .getThread, .getMessages, .getMembers,
+             .getInvitableMembers, .getMemberProfile:
             return .get
         case .setMemberBlocked(_, let isBlocked):
             return isBlocked ? .post : .delete
@@ -125,7 +130,8 @@ extension CommunityThreadRouter: BaseTargetType {
             return .requestJSONEncodable(body)
         case .reportMessage(_, let body):
             return .requestJSONEncodable(body)
-        case .getBlockedMembers, .setMemberBlocked, .getThread, .deleteThread, .setPin, .setMute, .kickMember, .leave:
+        case .getBlockedMembers, .setMemberBlocked, .getThread, .deleteThread, .setPin, .setMute,
+             .kickMember, .leave, .getMemberProfile:
             return .requestPlain
         }
     }

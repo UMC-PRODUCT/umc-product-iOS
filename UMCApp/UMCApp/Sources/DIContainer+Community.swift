@@ -70,6 +70,10 @@ extension DIContainer {
         register(CommunityThreadRepositoryProtocol.self) {
             CommunityThreadRepository(adapter: self.resolve(MoyaNetworkAdapter.self))
         }
+        // 메시지 발신자·참여자 프로필 시트(#1681). 스레드 저장소와 계약이 달라 따로 둔다.
+        register(ThreadMemberProfileRepositoryProtocol.self) {
+            ThreadMemberProfileRepository(adapter: self.resolve(MoyaNetworkAdapter.self))
+        }
     }
 
     // MARK: - UseCase
@@ -118,6 +122,11 @@ extension DIContainer {
         register(CommunityThreadInviteUseCaseProtocol.self) {
             CommunityThreadInviteUseCase(
                 repository: self.resolve(CommunityThreadRepositoryProtocol.self)
+            )
+        }
+        register(ThreadMemberProfileUseCaseProtocol.self) {
+            ThreadMemberProfileUseCase(
+                repository: self.resolve(ThreadMemberProfileRepositoryProtocol.self)
             )
         }
     }

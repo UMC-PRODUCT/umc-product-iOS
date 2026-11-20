@@ -95,7 +95,13 @@ struct ThreadMemberListView: View {
                     currentMemberId: viewModel.currentMemberId,
                     store: container.resolve(MemberBlockStore.self),
                     reportUseCase: container.resolve(ReportMemberUseCaseProtocol.self)
-                )
+                ) {
+                    ThreadMemberProfileContent(
+                        memberId: member.id,
+                        name: member.name,
+                        useCase: container.resolve(ThreadMemberProfileUseCaseProtocol.self)
+                    )
+                }
             }
             .task { await viewModel.load() }
             .onChange(of: viewModel.didLeave) { _, didLeave in

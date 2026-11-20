@@ -286,7 +286,13 @@ struct CommunityThreadRoomView: View {
                     currentMemberId: viewModel.currentMemberId,
                     store: store,
                     reportUseCase: container.resolve(ReportMemberUseCaseProtocol.self)
-                )
+                ) {
+                    ThreadMemberProfileContent(
+                        memberId: message.senderId,
+                        name: message.senderName,
+                        useCase: container.resolve(ThreadMemberProfileUseCaseProtocol.self)
+                    )
+                }
             }
         }
         .task { await viewModel.observeRealtime() }
