@@ -62,6 +62,9 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     var sendError: Error?
     var loadThreadError: Error?
     var loadMessagesError: Error?
+    var loadMessagesGate: CheckedContinuation<Void, Never>?
+    var gatesMessages = false
+    private(set) var messageLoadCount = 0
     var reactionError: Error?
     var deleteError: Error?
     var editError: Error?
@@ -91,8 +94,13 @@ private final class StubRoomUseCase: CommunityThreadRoomUseCaseProtocol {
     }
 
     func loadMessages(threadId: String, before: String?) async throws -> ThreadMessagePage {
+        messageLoadCount += 1
+        let page = pages[before] ?? ThreadMessagePage(messages: [], hasMore: false, nextBefore: nil)
+        if gatesMessages {
+            await withCheckedContinuation { loadMessagesGate = $0 }
+        }
         if let loadMessagesError { throw loadMessagesError }
-        return pages[before] ?? ThreadMessagePage(messages: [], hasMore: false, nextBefore: nil)
+        return page
     }
 
     func loadMembers(threadId: String) async throws -> [ThreadMember] {
@@ -973,6 +981,128 @@ struct CommunityThreadRoomViewModelTests {
         await waitUntil { viewModel.messages.first?.deliveryState == .failed }
 
         #expect(viewModel.messages.first?.deliveryState == .failed)
+        #expect(useCase.messageLoadCount == 1)
+    }
+
+    @Test("ACK 뒤 이벤트가 없어도 REST messageId로 복구하고 늦은 이벤트와 중복되지 않는다",
+          .timeLimit(.minutes(1)))
+    func recoversAcknowledgedMessage() async throws {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase, sendTimeout: .milliseconds(20))
+        await viewModel.load()
+        viewModel.draft = "안녕"
+        await viewModel.send()
+        let key = try #require(useCase.sentClientMessageIds.first)
+        let message = makeMessage(id: "77", content: "서버 원문")
+        useCase.pages[nil] = ThreadMessagePage(
+            messages: [makeMessage(id: "78")], hasMore: true, nextBefore: "78"
+        )
+        useCase.pages["78"] = ThreadMessagePage(
+            messages: [message], hasMore: false, nextBefore: nil
+        )
+        viewModel.apply(.commandAcknowledged(
+            threadId: "1", commandId: key, messageId: "77",
+            clientMessageId: key.uppercased(), deduplicated: true
+        ))
+        #expect(viewModel.messages.first?.deliveryState == .sending)
+        await waitUntil { viewModel.messages.first?.deliveryState == .sent }
+        #expect(viewModel.messages.map(\.id) == ["77"])
+        #expect(viewModel.messages.first?.content == "서버 원문")
+        #expect(useCase.messageLoadCount == 3)
+        viewModel.apply(.messageCreated(threadId: "1", message: message, clientMessageId: key))
+        #expect(viewModel.messages.map(\.id) == ["77"])
+    }
+
+    @Test("ACK 복구 조회가 실패하거나 메시지가 없으면 기존 실패 상태로 돌아간다",
+           .timeLimit(.minutes(1)), arguments: [false, true])
+    func recoveryFailureRemainsRetryable(throwsError: Bool) async throws {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase, sendTimeout: .milliseconds(20))
+        await viewModel.load()
+        viewModel.draft = "안녕"
+        await viewModel.send()
+        let key = try #require(useCase.sentClientMessageIds.first)
+        viewModel.apply(.commandAcknowledged(
+            threadId: "1", commandId: key, messageId: "77",
+            clientMessageId: key, deduplicated: false
+        ))
+        if throwsError { useCase.loadMessagesError = AppError.network(.timeout) }
+        await waitUntil { viewModel.messages.first?.deliveryState == .failed }
+        #expect(viewModel.messages.first?.deliveryState == .failed)
+        #expect(useCase.messageLoadCount == 2)
+    }
+
+    @Test("ACK 복구 도중 이벤트·나가기·재시도는 이전 REST 응답을 무효화한다",
+          .timeLimit(.minutes(1)), arguments: ["event", "leave", "retry", "dispose"])
+    func recoveryIgnoresStaleResponse(action: String) async throws {
+        let useCase = StubRoomUseCase()
+        var viewModel: CommunityThreadRoomViewModel? = makeViewModel(
+            useCase, sendTimeout: .milliseconds(20)
+        )
+        await viewModel?.load()
+        viewModel?.draft = "안녕"
+        await viewModel?.send()
+        let key = try #require(useCase.sentClientMessageIds.first)
+        useCase.pages[nil] = ThreadMessagePage(
+            messages: [makeMessage(id: "77", content: "오래된 응답")],
+            hasMore: false, nextBefore: nil
+        )
+        useCase.gatesMessages = true
+        viewModel?.apply(.commandAcknowledged(
+            threadId: "1", commandId: key, messageId: "77",
+            clientMessageId: key, deduplicated: false
+        ))
+        await waitUntil { useCase.loadMessagesGate != nil }
+        let gate = try #require(useCase.loadMessagesGate)
+        weak var releasedViewModel = viewModel
+        switch action {
+        case "event":
+            viewModel?.apply(.messageCreated(
+                threadId: "1", message: makeMessage(id: "77", content: "최신 이벤트"),
+                clientMessageId: key
+            ))
+        case "leave":
+            viewModel?.didLeave = true
+        case "retry":
+            viewModel?.markFailed(clientMessageId: key)
+            let failed = try #require(viewModel?.messages.first)
+            await viewModel?.retry(failed)
+        default:
+            viewModel = nil
+            #expect(releasedViewModel == nil)
+        }
+        gate.resume()
+        useCase.loadMessagesGate = nil
+        useCase.gatesMessages = false
+        for _ in 0..<20 { await Task.yield() }
+        if action == "event" {
+            #expect(viewModel?.messages.map(\.id) == ["77"])
+            #expect(viewModel?.messages.first?.content == "최신 이벤트")
+        } else if action != "dispose" {
+            #expect(viewModel?.messages.first?.id == key)
+        }
+    }
+
+    @Test("백필이 먼저 추가한 서버 버블도 ACK 복구로 낙관적 버블과 합친다",
+          .timeLimit(.minutes(1)))
+    func recoveryMergesBackfilledDuplicate() async throws {
+        let useCase = StubRoomUseCase()
+        let viewModel = makeViewModel(useCase, sendTimeout: .milliseconds(20))
+        await viewModel.load()
+        viewModel.draft = "안녕"
+        await viewModel.send()
+        let key = try #require(useCase.sentClientMessageIds.first)
+        useCase.pages[nil] = ThreadMessagePage(
+            messages: [makeMessage(id: "77")], hasMore: false, nextBefore: nil
+        )
+        viewModel.apply(.commandAcknowledged(
+            threadId: "1", commandId: key, messageId: "77",
+            clientMessageId: key, deduplicated: false
+        ))
+        await viewModel.backfill()
+        await waitUntil { viewModel.messages.count == 1 }
+        #expect(viewModel.messages.map(\.id) == ["77"])
+        #expect(viewModel.messages.first?.deliveryState == .sent)
     }
 
     @Test("에러 프레임이 오면 해당 낙관적 메시지를 failed 로 바꾼다")

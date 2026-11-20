@@ -179,6 +179,7 @@ public final class CommunityThreadRoomViewModel {
     @ObservationIgnored private var reloadRequested = false
     /// clientMessageId → 타임아웃 감시 태스크. 응답이 오면 취소한다.
     @ObservationIgnored private var pendingTimeouts: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var acknowledgedMessageIds: [String: String] = [:]
     @ObservationIgnored private var readWatermarkTask: Task<Void, Never>?
     @ObservationIgnored private var lastSentWatermark: String?
     @ObservationIgnored private var cooldownTask: Task<Void, Never>?
@@ -191,7 +192,7 @@ public final class CommunityThreadRoomViewModel {
     ///     숨기면 화면이 DI 컨테이너를 우회해 특정 구현에 묶인다.
     ///   - currentMemberId: 내 메시지 판별용. 메시지 응답에 `isMine` 류 플래그가 없어
     ///     `senderId` 대조가 유일한 방법이다.
-    ///   - sendTimeout: 이 시간 안에 `message.created` 도 에러도 오지 않으면 실패로 본다.
+    ///   - sendTimeout: 서버 이벤트가 없으면 ACK의 메시지를 REST로 확인한 뒤 실패를 판단한다.
     public init(
         threadId: String,
         shareBaseURL: URL? = nil,
@@ -657,10 +658,14 @@ public final class CommunityThreadRoomViewModel {
             membershipCheckTask?.cancel()
             membershipCheckTask = Task { [weak self] in await self?.backfill() }
 
-        case .commandAcknowledged(_, let commandId, _, _, _):
-            // command.acknowledged 는 저장 확정이 아니라 접수 확인이다(§3.2) — 상태를 안 바꾼다.
-            // 다만 커밋 뒤에만 오므로 그 명령이 실패로 뒤집힐 일은 없다 — 수정 되돌리기 대기만 푼다.
+        case .commandAcknowledged(_, let commandId, let messageId, let clientMessageId, _):
             settleEdit(commandId: commandId)
+            if let messageId, let key = clientMessageId?.lowercased(),
+               messages.contains(where: {
+                   $0.clientMessageId?.lowercased() == key && $0.deliveryState == .sending
+               }) {
+                acknowledgedMessageIds[key] = messageId
+            }
 
         case .readUpdated, .unknown:
             // read.updated 는 남의 영수증과 구분할 수 없어 no-op (Task 14 와 같은 정책).
@@ -692,6 +697,7 @@ public final class CommunityThreadRoomViewModel {
         let rejected = messages.remove(at: index)
         let mentions = pendingMentions.removeValue(forKey: key) ?? []
         pendingTimeouts.removeValue(forKey: key)?.cancel()
+        acknowledgedMessageIds.removeValue(forKey: key)
         pendingAnalytics.removeValue(forKey: key)
         if draft.isEmpty, editTarget == nil, replyTarget == nil, pickedMentions.isEmpty,
            rejected.type == .text {
@@ -955,17 +961,48 @@ public final class CommunityThreadRoomViewModel {
 
     /// 응답이 오지 않는 경우를 닫는다. 업로드 완료 뒤부터 서버 확정을 기다린다.
     func startTimeout(for clientMessageId: String) {
-        pendingTimeouts[clientMessageId]?.cancel()
-        pendingTimeouts[clientMessageId] = Task { [weak self, sendTimeout] in
+        let key = clientMessageId.lowercased()
+        pendingTimeouts[key]?.cancel()
+        acknowledgedMessageIds.removeValue(forKey: key)
+        pendingTimeouts[key] = Task { [weak self, sendTimeout, useCase, threadId] in
             try? await Task.sleep(for: sendTimeout)
-            guard !Task.isCancelled else { return }
-            self?.markFailed(clientMessageId: clientMessageId)
+            guard !Task.isCancelled, self?.canRecoverMessage(key) == true else { return }
+            if let messageId = self?.acknowledgedMessageIds[key] {
+                var before: String?
+                var visitedCursors: Set<String> = []
+                do {
+                    repeat {
+                        let page = try await useCase.loadMessages(threadId: threadId, before: before)
+                        guard !Task.isCancelled, self?.canRecoverMessage(key) == true else {
+                            return
+                        }
+                        if let message = page.messages.first(where: { $0.id == messageId }) {
+                            self?.insertOrReplace(message, clientMessageId: key)
+                            return
+                        }
+                        guard page.hasMore, let next = page.nextBefore,
+                              visitedCursors.insert(next).inserted else { break }
+                        before = next
+                    } while true
+                } catch {
+                    // 조회 실패도 기존 버블의 재시도 경로로 돌린다.
+                }
+            }
+            guard !Task.isCancelled, self?.canRecoverMessage(key) == true else { return }
+            self?.markFailed(clientMessageId: key)
+        }
+    }
+
+    private func canRecoverMessage(_ key: String) -> Bool {
+        !didLeave && !shouldDismiss && ejectionNotice == nil && messages.contains {
+            $0.clientMessageId?.lowercased() == key && $0.deliveryState == .sending
         }
     }
 
     func markFailed(clientMessageId: String) {
         let key = clientMessageId.lowercased()
         pendingTimeouts.removeValue(forKey: key)?.cancel()
+        acknowledgedMessageIds.removeValue(forKey: key)
         // 이미 에코가 도착해 `.sent` 가 된 항목은 되돌리지 않는다. 전송 프레임의 실패와
         // 서버 확정이 겹치는 구간에서 이 가드가 유일한 방어다.
         guard let index = messages.firstIndex(where: { $0.clientMessageId?.lowercased() == key }),
@@ -984,6 +1021,7 @@ public final class CommunityThreadRoomViewModel {
         // 보낼 때만 정규화하면 서버가 대문자로 되돌려 줄 때 열쇠가 어긋나 중복 버블이 남는다.
         if let key = (clientMessageId ?? message.clientMessageId)?.lowercased() {
             pendingTimeouts.removeValue(forKey: key)?.cancel()
+            acknowledgedMessageIds.removeValue(forKey: key)
             pendingMentions.removeValue(forKey: key)
             if let parameters = pendingAnalytics.removeValue(forKey: key) {
                 analytics("community_message_sent", parameters)
@@ -992,6 +1030,11 @@ public final class CommunityThreadRoomViewModel {
             let match = messages.firstIndex { $0.clientMessageId?.lowercased() == key }
             if let index = match {
                 messages[index] = message.with(deliveryState: .sent)
+                // 백필이 먼저 넣은 서버 버블과 낙관적 버블이 함께 남지 않게 합친다.
+                for duplicate in messages.indices.reversed()
+                    where duplicate != index && messages[duplicate].id == message.id {
+                    messages.remove(at: duplicate)
+                }
                 return
             }
         }
