@@ -36,7 +36,14 @@ extension DIContainer {
 
         register(BusinessCardRepositoryProtocol.self) {
             BusinessCardRepository(
-                memberProfileRepository: self.resolve(MemberProfileRepositoryProtocol.self)
+                memberProfileRepository: self.resolve(MemberProfileRepositoryProtocol.self),
+                adapter: self.resolve(MoyaNetworkAdapter.self)
+            )
+        }
+        // 내 정보 편집(MyPage)이 연락처 공개 설정을 저장한 뒤 내 명함 뒷면 캐시를 비운다 (#1678).
+        register(InvalidateMyCardCacheUseCaseProtocol.self) {
+            InvalidateMyCardCacheUseCase(
+                repository: self.resolve(BusinessCardRepositoryProtocol.self)
             )
         }
         // 뒷면 링크 우선순위는 서버에 없어 기기 SwiftData에만 둔다 (#1679). 순서를 바꾸는

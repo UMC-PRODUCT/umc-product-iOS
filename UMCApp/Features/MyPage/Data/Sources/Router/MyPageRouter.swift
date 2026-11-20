@@ -22,8 +22,10 @@ public enum MyPageRouter {
     case addChallengerRecord(code: String)
     /// 회원 정보 수정(프로필 이미지 ID 반영)
     case patchMember(request: UpdateMemberProfileImageRequestDTO)
-    /// 회원 정보 수정(외부 링크 반영)
-    case patchMemberProfileLinks(request: UpdateMemberProfileLinksRequestDTO)
+    /// 명함 수정 화면 조회 — 연락처·링크와 공개 여부 (`GET /api/v1/member/me/business-card/edit`)
+    case getMyBusinessCardEdit
+    /// 명함 수정 — 연락처·링크와 공개 여부 (`PATCH /api/v1/member/me/business-card`)
+    case patchMyBusinessCard(request: EditBusinessCardRequestDTO)
     /// 회원 탈퇴 (소셜 연동 해제용 access token 동봉)
     case deleteMember(request: DeleteMemberRequestDTO)
     /// 약관 조회 (`GET /api/v1/terms/type/{termsType}`)
@@ -43,8 +45,10 @@ extension MyPageRouter: BaseTargetType {
             return "/api/v1/challenger-record/member"
         case .patchMember:
             return "/api/v1/member"
-        case .patchMemberProfileLinks:
-            return "/api/v1/member/profile/links"
+        case .getMyBusinessCardEdit:
+            return "/api/v1/member/me/business-card/edit"
+        case .patchMyBusinessCard:
+            return "/api/v1/member/me/business-card"
         case .deleteMember:
             return "/api/v1/member"
         case .getTerms(let termsType):
@@ -62,7 +66,9 @@ extension MyPageRouter: BaseTargetType {
             return .post
         case .patchMember:
             return .patch
-        case .patchMemberProfileLinks:
+        case .getMyBusinessCardEdit:
+            return .get
+        case .patchMyBusinessCard:
             return .patch
         case .deleteMember:
             return .delete
@@ -73,7 +79,7 @@ extension MyPageRouter: BaseTargetType {
 
     public var task: Moya.Task {
         switch self {
-        case .getMemberProfile, .getChallengerProfile:
+        case .getMemberProfile, .getChallengerProfile, .getMyBusinessCardEdit:
             return .requestPlain
         case .addChallengerRecord(let code):
             return .requestJSONEncodable(
@@ -81,7 +87,7 @@ extension MyPageRouter: BaseTargetType {
             )
         case .patchMember(let request):
             return .requestJSONEncodable(request)
-        case .patchMemberProfileLinks(let request):
+        case .patchMyBusinessCard(let request):
             return .requestJSONEncodable(request)
         case .deleteMember(let request):
             return .requestJSONEncodable(request)

@@ -10,7 +10,7 @@ import Foundation
 /// 외부 프로필 링크의 종류를 정의하는 열거형입니다.
 ///
 /// UI 프로퍼티(icon/title/placeholder)는 Presentation 모듈의 extension으로 제공합니다.
-public enum SocialLinkType: String, CaseIterable {
+public enum SocialLinkType: String, CaseIterable, Sendable {
     /// 깃허브 링크
     case github = "GITHUB"
     /// 링크드인 링크

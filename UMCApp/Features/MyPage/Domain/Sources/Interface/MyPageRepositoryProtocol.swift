@@ -31,10 +31,6 @@ public protocol MyPageRepositoryProtocol: Sendable {
         contentType: String
     ) async throws -> ProfileData
 
-    /// 외부 프로필 링크(GitHub, LinkedIn, Blog) 정보를 서버에 반영합니다.
-    func updateProfileLinks(
-        _ links: [ProfileLink]
-    ) async throws -> ProfileData
     
     /// 회원 탈퇴를 수행합니다.
     ///

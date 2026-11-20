@@ -122,12 +122,19 @@ struct MyPageRouterMigratedPathMethodTests {
         #expect(router.method == .patch)
     }
 
-    @Test("patchMemberProfileLinks — path는 /api/v1/member/profile/links, method는 .patch")
-    func patchMemberProfileLinks() {
-        let router = MyPageRouter.patchMemberProfileLinks(
-            request: UpdateMemberProfileLinksRequestDTO(links: [])
+    @Test("getMyBusinessCardEdit — path는 /api/v1/member/me/business-card/edit, method는 .get")
+    func getMyBusinessCardEdit() {
+        let router = MyPageRouter.getMyBusinessCardEdit
+        #expect(router.path == "/api/v1/member/me/business-card/edit")
+        #expect(router.method == .get)
+    }
+
+    @Test("patchMyBusinessCard — path는 /api/v1/member/me/business-card, method는 .patch")
+    func patchMyBusinessCard() {
+        let router = MyPageRouter.patchMyBusinessCard(
+            request: EditBusinessCardRequestDTO(settings: CardContactSettings())
         )
-        #expect(router.path == "/api/v1/member/profile/links")
+        #expect(router.path == "/api/v1/member/me/business-card")
         #expect(router.method == .patch)
     }
 
@@ -159,13 +166,14 @@ struct MyPageRouterMigratedPathMethodTests {
 @Suite("MyPageRouter — 이식 케이스 task 형태 계약")
 struct MyPageRouterMigratedTaskTests {
 
-    @Test("조회 계열(getMemberProfile/getChallengerProfile) — task는 .requestPlain")
+    @Test("조회 계열(getMemberProfile/getChallengerProfile/getMyBusinessCardEdit) — task는 .requestPlain")
     func plainTasks() {
         #expect(isRequestPlain(MyPageRouter.getMemberProfile(memberId: 7).task))
         #expect(isRequestPlain(MyPageRouter.getChallengerProfile(challengerId: 3).task))
+        #expect(isRequestPlain(MyPageRouter.getMyBusinessCardEdit.task))
     }
 
-    @Test("본문 전송 계열(기록 추가·프로필 수정·링크 수정·탈퇴) — task는 .requestJSONEncodable")
+    @Test("본문 전송 계열(기록 추가·프로필 수정·명함 수정·탈퇴) — task는 .requestJSONEncodable")
     func jsonEncodableTasks() {
         #expect(isRequestJSONEncodable(MyPageRouter.addChallengerRecord(code: "ABC").task))
         #expect(isRequestJSONEncodable(
@@ -174,8 +182,8 @@ struct MyPageRouterMigratedTaskTests {
             ).task
         ))
         #expect(isRequestJSONEncodable(
-            MyPageRouter.patchMemberProfileLinks(
-                request: UpdateMemberProfileLinksRequestDTO(links: [])
+            MyPageRouter.patchMyBusinessCard(
+                request: EditBusinessCardRequestDTO(settings: CardContactSettings())
             ).task
         ))
         #expect(isRequestJSONEncodable(
@@ -223,28 +231,45 @@ struct MyPageRouterEncodingTests {
         #expect(json.keys.count == 1)
     }
 
-    @Test("UpdateMemberProfileLinkRequestDTO — { type, link } 로 인코딩")
-    func updateProfileLinkItemDTOEncoding() throws {
-        let json = try encodeToJSON(
-            UpdateMemberProfileLinkRequestDTO(type: "GITHUB", link: "https://github.com/x")
+    /// 서버는 링크를 전체 교체한다 — 목록에 없는 종류는 지우고, 빈 문자열은 빈 값으로 저장한다.
+    @Test("EditBusinessCardRequestDTO — 링크 5종을 모두 싣고, 빈 값은 link 키를 빼며, 공백을 다듬는다")
+    func editBusinessCardDTOEncoding() throws {
+        let settings = CardContactSettings(
+            isEmailPublic: false,
+            links: [
+                .github: CardContactItem(value: "https://github.com/umc ", isPublic: true),
+                .blog: CardContactItem(value: "   ", isPublic: false)
+            ]
         )
-        #expect(json["type"] as? String == "GITHUB")
-        #expect(json["link"] as? String == "https://github.com/x")
-        #expect(json.keys.count == 2)
+        let json = try encodeToJSON(EditBusinessCardRequestDTO(settings: settings))
+        let contact = try #require(json["contact"] as? [String: Any])
+        let links = try #require(json["links"] as? [[String: Any]])
+        let byType = Dictionary(uniqueKeysWithValues: links.map { ($0["type"] as? String ?? "", $0) })
+
+        #expect(json["profileImageId"] == nil)
+        #expect(contact["email"] == nil)
+        #expect(contact["isPublic"] as? Bool == false)
+        #expect(links.map { $0["type"] as? String } == SocialLinkType.allCases.map(\.apiType))
+        #expect(byType["GITHUB"]?["link"] as? String == "https://github.com/umc")
+        #expect(byType["BLOG"]?["link"] == nil)
+        #expect(byType["BLOG"]?["isPublic"] as? Bool == false)
+        #expect(byType["LINKEDIN"]?["isPublic"] as? Bool == true)
     }
 
-    @Test("UpdateMemberProfileLinksRequestDTO — { links: [...] } 배열 래핑으로 인코딩")
-    func updateProfileLinksDTOEncoding() throws {
-        let dto = UpdateMemberProfileLinksRequestDTO(links: [
-            UpdateMemberProfileLinkRequestDTO(type: "GITHUB", link: "https://gh"),
-            UpdateMemberProfileLinkRequestDTO(type: "BLOG", link: "https://blog"),
-        ])
-        let json = try encodeToJSON(dto)
-        let links = try #require(json["links"] as? [[String: Any]])
-        #expect(json.keys.count == 1)
-        #expect(links.count == 2)
-        #expect(links.first?["type"] as? String == "GITHUB")
-        #expect(links.first?["link"] as? String == "https://gh")
+    /// 저장 API는 연락용 이메일 칸을 늘 함께 받는다. 비워 보내면 서버가 저장된 값을 지운다.
+    @Test("EditBusinessCardRequestDTO — 연락용 이메일은 받은 그대로 다시 싣고, 없으면 email 키를 뺀다")
+    func editBusinessCardDTOPassesContactEmailThrough() throws {
+        let kept = try encodeToJSON(EditBusinessCardRequestDTO(
+            settings: CardContactSettings(isEmailPublic: false, contactEmail: "contact@umc.dev")
+        ))
+        let empty = try encodeToJSON(EditBusinessCardRequestDTO(settings: CardContactSettings()))
+        let keptContact = try #require(kept["contact"] as? [String: Any])
+        let emptyContact = try #require(empty["contact"] as? [String: Any])
+
+        #expect(keptContact["email"] as? String == "contact@umc.dev")
+        #expect(keptContact["isPublic"] as? Bool == false)
+        #expect(emptyContact["email"] == nil)
+        #expect(emptyContact["isPublic"] as? Bool == true)
     }
 
     @Test("DeleteMemberRequestDTO — nil 토큰은 키째 빠진다 (서버는 해당 Provider revoke만 건너뜀)")

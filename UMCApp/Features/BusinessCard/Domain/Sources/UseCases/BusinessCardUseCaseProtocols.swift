@@ -24,6 +24,14 @@ public protocol SaveCardLinkPriorityUseCaseProtocol: Sendable {
     func execute(_ priority: [CardLinkType]) async throws
 }
 
+/// 내 명함 캐시 비우기 (#1678).
+///
+/// 내 정보 편집에서 링크·공개 여부를 저장한 뒤 부른다. 다음 조회 때 공개 여부를 서버에서
+/// 다시 받아 뒷면에 반영한다.
+public protocol InvalidateMyCardCacheUseCaseProtocol: Sendable {
+    func execute() async
+}
+
 /// 상대 명함 조회 (QR 딥링크 스캔).
 ///
 /// 딥링크는 memberId만 싣는다 — 명함 내용은 서버에서 받아 온다.

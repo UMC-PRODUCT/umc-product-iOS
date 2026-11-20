@@ -54,6 +54,9 @@ enum BusinessCardRouter {
     /// 보장되지 않는 것이 「운영진 · 0기」 명함(#1223)의 근본 원인이라, 그 전환의 대상이
     /// 될 계약을 먼저 못박는다.
     case getCardByMemberId(memberId: String)
+    /// 명함 수정 화면 조회 (`GET /api/v1/member/me/business-card/edit`, MEMBER-105) — 이메일·
+    /// 링크의 공개 여부를 읽는다 (#1678). 값은 정본 프로필 것을 쓰고 공개 여부만 가져다 쓴다.
+    case getMyBusinessCardEdit
 }
 
 extension BusinessCardRouter: BaseTargetType {
@@ -66,6 +69,7 @@ extension BusinessCardRouter: BaseTargetType {
         case .deleteCardExchange(let cardMemberId):
             return "/api/v1/cards/exchanges/\(cardMemberId)"
         case .getCardByMemberId(let memberId): return "/api/v1/cards/members/\(memberId)"
+        case .getMyBusinessCardEdit: return "/api/v1/member/me/business-card/edit"
         }
     }
 
@@ -74,7 +78,7 @@ extension BusinessCardRouter: BaseTargetType {
         case .createCardExchange: return .post
         case .deleteCardExchange: return .delete
         case .getMyStudyGroups, .getMemberProfile,
-             .getMemberStats, .getCardExchanges, .getCardByMemberId:
+             .getMemberStats, .getCardExchanges, .getCardByMemberId, .getMyBusinessCardEdit:
             return .get
         }
     }
@@ -93,7 +97,8 @@ extension BusinessCardRouter: BaseTargetType {
             )
         case .createCardExchange(let body):
             return .requestJSONEncodable(body)
-        case .getMemberProfile, .getMemberStats, .deleteCardExchange, .getCardByMemberId:
+        case .getMemberProfile, .getMemberStats, .deleteCardExchange, .getCardByMemberId,
+             .getMyBusinessCardEdit:
             return .requestPlain
         }
     }

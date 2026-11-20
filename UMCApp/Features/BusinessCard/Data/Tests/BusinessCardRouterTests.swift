@@ -37,6 +37,17 @@ struct BusinessCardRouterTests {
         }
     }
 
+    @Test("명함 공개 여부는 GET /api/v1/member/me/business-card/edit — 본문 없음 (#1678)")
+    func myBusinessCardEditContract() throws {
+        let router = BusinessCardRouter.getMyBusinessCardEdit
+
+        #expect(router.path == "/api/v1/member/me/business-card/edit")
+        #expect(router.method == .get)
+        guard case .requestPlain = router.task else {
+            Issue.record("requestPlain이 아님"); return
+        }
+    }
+
     /// 첫 페이지에 빈 커서를 실어 보내면 서버가 그것을 커서 값으로 파싱하려 든다.
     @Test("명함첩 조회는 GET /api/v1/cards/exchanges — 첫 페이지는 cursor 키가 없다")
     func cardExchangesContract() throws {

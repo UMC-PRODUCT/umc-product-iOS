@@ -139,44 +139,6 @@ public final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendab
         return try await patchMemberProfileImage(profileImageId: prepared.fileId)
     }
     
-    /// 프로필 외부 링크를 정규화한 뒤 서버에 PATCH 요청으로 반영합니다.
-    ///
-    /// 서버는 링크 세트를 통째로 교체하므로, 요청에 없는 타입은 삭제됩니다.
-    ///
-    /// - Parameter links: 보존할 링크까지 포함한 전체 프로필 링크 배열
-    /// - Returns: 갱신된 프로필 데이터
-    public func updateProfileLinks(
-        _ links: [ProfileLink]
-    ) async throws -> ProfileData {
-        let request = UpdateMemberProfileLinksRequestDTO(
-            links: normalizedProfileLinks(links).map {
-                UpdateMemberProfileLinkRequestDTO(
-                    type: $0.type.apiType,
-                    link: $0.url
-                )
-            }
-        )
-
-        do {
-            let response = try await adapter.request(
-                MyPageRouter.patchMemberProfileLinks(
-                    request: request
-                )
-            )
-
-            let apiResponse = try decoder.decode(
-                APIResponse<MemberProfileResponseDTO>.self,
-                from: response.data
-            )
-
-            let profile = try apiResponse.unwrap().toDomain()
-            await memberProfileRepository.primeCache(with: profile)
-            return profile.toProfileData()
-        } catch let error as NetworkError {
-            throw Self.parseServerError(from: error) ?? error
-        }
-    }
-
     /// 회원 탈퇴 처리
     ///
     /// - Note: 백엔드(MEMBER-003)는 탈퇴 전 회원 정보 스냅샷을 `result`로 반환하지만
@@ -219,8 +181,10 @@ public final class MyPageRepository: MyPageRepositoryProtocol, @unchecked Sendab
 
 // MARK: - Private Helpers
 
-private extension MyPageRepository {
-    private static func parseServerError(from error: NetworkError) -> Error? {
+extension MyPageRepository {
+    /// 서버 에러 응답의 `code`·`message` 를 꺼내 ``RepositoryError/serverError(code:message:)`` 로
+    /// 바꾼다. 같은 모듈의 ``CardContactSettingsRepository`` 도 쓴다.
+    static func parseServerError(from error: NetworkError) -> Error? {
         guard case .requestFailed(_, let data) = error,
               let data,
               let json = try? JSONSerialization.jsonObject(with: data) as? [String:Any]
@@ -260,24 +224,5 @@ private extension MyPageRepository {
         let profile = try apiResponse.unwrap().toDomain()
         await memberProfileRepository.primeCache(with: profile)
         return profile.toProfileData()
-    }
-    
-    /// 프로필 링크 배열을 정규화합니다.
-    ///
-    /// URL 앞뒤 공백을 제거하고 `SocialLinkType.allCases` 순서로 정렬하되, 빈 값은 뺍니다.
-    ///
-    /// - Important: 서버(`MemberProfile.updateLinks`)는 5종을 전부 `null` 로 지운 뒤 요청에
-    ///   온 것만 채운다. 그래서 호출자는 편집하지 않은 링크까지 전부 넘겨야 기존 값이
-    ///   보존되고, 빈 값은 `""` 가 아니라 요청에서 빠져야 `null` 로 저장된다.
-    private func normalizedProfileLinks(_ links: [ProfileLink]) -> [ProfileLink] {
-        var mapped: [SocialLinkType: String] = [:]
-        links.forEach { link in
-            mapped[link.type] = link.url.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        return SocialLinkType.allCases.compactMap { type in
-            guard let url = mapped[type], !url.isEmpty else { return nil }
-            return ProfileLink(type: type, url: url)
-        }
     }
 }

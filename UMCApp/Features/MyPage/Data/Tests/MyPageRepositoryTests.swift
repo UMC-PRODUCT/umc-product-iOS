@@ -562,134 +562,105 @@ struct MyPageRepositoryDeleteTests {
     }
 }
 
-// MARK: - Suite: 프로필 링크 수정 (정규화 계약)
+// MARK: - Suite: 명함 연락처·링크 (#1678)
 
-@Suite("MyPageRepository — 프로필 링크 정규화")
-struct MyPageRepositoryUpdateLinksTests {
+@Suite("CardContactSettingsRepository — 명함 수정 API")
+struct CardContactSettingsRepositoryTests {
 
-    @Test("updateProfileLinks — 5종을 allCases 순서로 모두 보내고 URL 공백을 trim한다")
-    func updateLinksSendsAllFiveTypes() async throws {
-        // 서버는 요청에 없는 타입을 null로 지우므로, 받은 5종이 빠짐없이 나가야 기존 값이 보존된다.
-        let input = [
-            ProfileLink(type: .personal, url: "https://me.dev"),
-            ProfileLink(type: .github, url: "  https://github.com/me  "),
-            ProfileLink(type: .linkedin, url: "https://linkedin.com/in/me"),
-            ProfileLink(type: .blog, url: "https://blog.me"),
-            ProfileLink(type: .instagram, url: "https://instagram.com/me")
-        ]
-        let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.profileObject)))
+    private static let editJSON = """
+    {
+      "memberId": "1", "name": "김유엠", "schoolName": "한성대학교",
+      "contact": { "email": "one@umc.dev", "isPublic": false },
+      "links": [
+        { "type": "LINKEDIN", "link": null, "isPublic": true },
+        { "type": "INSTAGRAM", "link": "https://instagram.com/umc", "isPublic": false },
+        { "type": "GITHUB", "link": "https://github.com/umc", "isPublic": true },
+        { "type": "BLOG", "link": null, "isPublic": true },
+        { "type": "PERSONAL", "link": null, "isPublic": true },
+        { "type": "THREADS", "link": "https://threads.net/umc", "isPublic": true }
+      ]
+    }
+    """
 
-        let result = try await sut.updateProfileLinks(input)
+    private func makeSUT(
+        _ outcome: StubMyPageNetwork.Outcome,
+        profileRepository: MockMemberProfileRepository = MockMemberProfileRepository()
+    ) -> (CardContactSettingsRepository, StubMyPageNetwork) {
+        let stub = StubMyPageNetwork(outcome)
+        let sut = CardContactSettingsRepository(
+            networkRequesting: stub,
+            memberProfileRepository: profileRepository
+        )
+        return (sut, stub)
+    }
 
-        #expect(result.challengeId == 777)
-        #expect(stub.lastPath == "/api/v1/member/profile/links")
+    @Test("조회 — GET /member/me/business-card/edit 응답을 이메일 공개 여부·링크로 옮기고 모르는 종류는 버린다")
+    func fetchMapsEditResponse() async throws {
+        let (sut, stub) = makeSUT(.success(Fixture.success(Self.editJSON)))
+
+        let settings = try await sut.fetchCardContactSettings()
+
+        #expect(stub.lastPath == "/api/v1/member/me/business-card/edit")
+        #expect(stub.lastMethod == .get)
+        #expect(settings.isEmailPublic == false)
+        #expect(settings.contactEmail == "one@umc.dev")
+        #expect(settings.link(.github) == CardContactItem(value: "https://github.com/umc", isPublic: true))
+        #expect(settings.link(.instagram).isPublic == false)
+        #expect(settings.link(.linkedin) == CardContactItem(value: "", isPublic: true))
+        #expect(settings.links.count == SocialLinkType.allCases.count)
+    }
+
+    @Test("저장 — PATCH /member/me/business-card 로 보내고, 저장 뒤 정본 프로필을 강제로 다시 읽는다")
+    func updateSendsPatchAndRefreshesProfile() async throws {
+        let profileRepository = MockMemberProfileRepository()
+        let (sut, stub) = makeSUT(
+            .success(Fixture.success(Self.editJSON)),
+            profileRepository: profileRepository
+        )
+        let input = CardContactSettings(
+            isEmailPublic: false,
+            links: [.github: CardContactItem(value: "https://github.com/umc", isPublic: true)]
+        )
+
+        let saved = try await sut.updateCardContactSettings(input)
+
+        #expect(stub.lastPath == "/api/v1/member/me/business-card")
         #expect(stub.lastMethod == .patch)
-
-        let links = try sentProfileLinks(stub)
-        #expect(links.map(\.type) == ["GITHUB", "LINKEDIN", "BLOG", "INSTAGRAM", "PERSONAL"])
-        #expect(links.map(\.link) == [
-            "https://github.com/me",
-            "https://linkedin.com/in/me",
-            "https://blog.me",
-            "https://instagram.com/me",
-            "https://me.dev"
-        ])
+        guard case let .patchMyBusinessCard(request) = try #require(stub.lastTarget) else {
+            Issue.record("기대한 라우터 케이스는 .patchMyBusinessCard 입니다"); return
+        }
+        #expect(request == EditBusinessCardRequestDTO(settings: input))
+        #expect(saved.isEmailPublic == false)
+        #expect(profileRepository.fetchMyProfileCallCount == 1)
+        #expect(profileRepository.lastForceRefresh == true)
     }
 
-    @Test("updateProfileLinks — 빈 값·공백뿐인 링크는 \"\"로 보내지 않고 요청에서 뺀다")
-    func updateLinksDropsEmptyLinks() async throws {
-        let input = [
-            ProfileLink(type: .github, url: "https://github.com/me"),
-            ProfileLink(type: .linkedin, url: ""),
-            ProfileLink(type: .blog, url: "   "),
-            ProfileLink(type: .instagram, url: "https://instagram.com/me"),
-            ProfileLink(type: .personal, url: "")
-        ]
-        let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.profileObject)))
+    @Test("저장 뒤 프로필 재조회가 실패해도 저장 결과는 그대로 돌려준다")
+    func updateIgnoresProfileRefreshFailure() async throws {
+        // MockMemberProfileRepository 기본값은 실패(notStubbed)다.
+        let (sut, _) = makeSUT(.success(Fixture.success(Self.editJSON)))
 
-        _ = try await sut.updateProfileLinks(input)
+        let saved = try await sut.updateCardContactSettings(CardContactSettings())
 
-        let links = try sentProfileLinks(stub)
-        #expect(links.map(\.type) == ["GITHUB", "INSTAGRAM"])
-        #expect(links.allSatisfy { !$0.link.isEmpty })
+        #expect(saved.link(.github).value == "https://github.com/umc")
     }
 
-    @Test("updateProfileLinks — 모든 링크가 비면 빈 배열을 보낸다")
-    func updateLinksSendsEmptyArrayWhenAllCleared() async throws {
-        let input = SocialLinkType.allCases.map { ProfileLink(type: $0, url: "") }
-        let (sut, stub) = makeRepository(.success(Fixture.success(Fixture.profileObject)))
-
-        _ = try await sut.updateProfileLinks(input)
-
-        #expect(try sentProfileLinks(stub).isEmpty)
-    }
-
-    @Test("updateProfileLinks — 성공 시 정본 프로필 캐시를 응답 스냅샷으로 갱신한다")
-    func updateLinksPrimesMemberProfileCache() async throws {
-        let memberProfileRepository = MockMemberProfileRepository()
-        let (sut, _) = makeRepository(
-            .success(Fixture.success(Fixture.profileObject)),
-            memberProfileRepository: memberProfileRepository
-        )
-
-        _ = try await sut.updateProfileLinks([ProfileLink(type: .github, url: "x")])
-
-        #expect(memberProfileRepository.primeCacheCallCount == 1)
-        #expect(memberProfileRepository.primedProfiles.first?.memberId == "42")
-    }
-
-    @Test("updateProfileLinks — 실패하면 정본 프로필 캐시를 갱신하지 않는다")
-    func updateLinksFailureDoesNotPrimeCache() async {
-        let memberProfileRepository = MockMemberProfileRepository()
-        let body = Fixture.failureBody(code: "M400", message: "잘못된 링크 형식입니다.")
-        let (sut, _) = makeRepository(
+    @Test("저장 — 서버 검증 실패 본문(requestFailed)을 RepositoryError.serverError로 승격하고 프로필은 다시 읽지 않는다")
+    func updateMapsServerErrorWithoutRefresh() async {
+        let profileRepository = MockMemberProfileRepository()
+        let body = Fixture.failureBody(code: "COMMON-400", message: "이메일 형식이 아닙니다.")
+        let (sut, _) = makeSUT(
             .failure(NetworkError.requestFailed(statusCode: 400, data: body)),
-            memberProfileRepository: memberProfileRepository
+            profileRepository: profileRepository
         )
 
         await #expect(throws: RepositoryError.serverError(
-            code: "M400", message: "잘못된 링크 형식입니다."
+            code: "COMMON-400", message: "이메일 형식이 아닙니다."
         )) {
-            _ = try await sut.updateProfileLinks([ProfileLink(type: .github, url: "x")])
+            _ = try await sut.updateCardContactSettings(CardContactSettings())
         }
-        #expect(memberProfileRepository.primeCacheCallCount == 0)
+        #expect(profileRepository.fetchMyProfileCallCount == 0)
     }
-
-    @Test("updateProfileLinks — 서버 에러 본문(requestFailed)을 RepositoryError.serverError로 승격한다")
-    func updateLinksMapsServerError() async {
-        let body = Fixture.failureBody(code: "M400", message: "잘못된 링크 형식입니다.")
-        let (sut, _) = makeRepository(
-            .failure(NetworkError.requestFailed(statusCode: 400, data: body))
-        )
-
-        await #expect(throws: RepositoryError.serverError(
-            code: "M400", message: "잘못된 링크 형식입니다."
-        )) {
-            _ = try await sut.updateProfileLinks([ProfileLink(type: .github, url: "x")])
-        }
-    }
-
-    @Test("updateProfileLinks — 파싱 불가한 NetworkError는 원본 그대로 전파한다")
-    func updateLinksPropagatesNonMappableError() async {
-        let (sut, _) = makeRepository(.failure(NetworkError.timeout))
-
-        await #expect(throws: NetworkError.timeout) {
-            _ = try await sut.updateProfileLinks([ProfileLink(type: .github, url: "x")])
-        }
-    }
-}
-
-/// 마지막 요청이 링크 PATCH 였는지 확인하고 전송된 링크 항목을 꺼낸다.
-private func sentProfileLinks(
-    _ stub: StubMyPageNetwork
-) throws -> [UpdateMemberProfileLinkRequestDTO] {
-    guard case let .patchMemberProfileLinks(request) = try #require(stub.lastTarget) else {
-        Issue.record(
-            "기대한 라우터 케이스는 .patchMemberProfileLinks 입니다: \(String(describing: stub.lastTarget))"
-        )
-        return []
-    }
-    return request.links
 }
 
 // MARK: - Suite: 프로필 이미지 업로드 오케스트레이션

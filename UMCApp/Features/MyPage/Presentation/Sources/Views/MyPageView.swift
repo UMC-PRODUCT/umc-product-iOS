@@ -108,7 +108,8 @@ struct MyPageView: View {
         }
         // 내 정보 편집에서 이미지·링크를 수정하고 돌아오면 카드가 옛 스냅샷으로 남는다.
         // 수정 API가 세션 캐시를 갱신해 두므로 여기서는 추가 왕복 없이 최신 값을 다시 읽는다.
-        // 명함도 같은 정본 프로필 캐시에서 파생되므로 함께 다시 읽는다.
+        // 명함 앞면도 같은 정본 프로필 캐시에서 파생되므로 함께 다시 읽는다. 뒷면 캐시는 연락처를
+        // 저장할 때 비워 두므로, 그때만 공개 여부(MEMBER-105)를 한 번 다시 받는다 (#1678).
         .onChange(of: pathStore.depth(of: .mypage)) { previousDepth, currentDepth in
             guard !showsOverview, currentDepth < previousDepth else { return }
             Task {

@@ -157,6 +157,7 @@ public final class MyPageViewModel {
     ///
     /// `fetchProfile`과 별개 상태·별개 UseCase다 — 명함은 같은 정본 프로필 캐시에서 파생되지만
     /// (``BusinessCardUseCaseProviding``), 화면이 그 캐시를 두 번 조회한다고 왕복이 늘지는 않는다.
+    /// 뒷면 공개 여부(MEMBER-105)도 명함 저장소가 메모리에 들고 있다 (#1678).
     /// 에러 분기는 `fetchProfile`과 동일한 규칙을 따른다.
     ///
     /// 이미 로드된 카드가 있으면 그대로 보여 둔 채 재조회한다(stale-while-revalidate) —

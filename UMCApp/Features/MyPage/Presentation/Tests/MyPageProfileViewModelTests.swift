@@ -17,14 +17,15 @@ import MyPageDomain
 @testable import MyPagePresentation
 
 @MainActor
-@Suite("MyPageProfileViewModel — 제출 가능 여부 / 이미지·링크 수정 / 활동 이력 추가")
+@Suite("MyPageProfileViewModel — 제출 가능 여부 / 이미지·연락처 수정 / 활동 이력 추가")
 struct MyPageProfileViewModelTests {
 
     // MARK: - canSubmit
 
     @Test("변경이 없으면 canSubmit은 false")
-    func canSubmitFalseWithoutChanges() {
+    func canSubmitFalseWithoutChanges() async {
         let viewModel = makeViewModel(profile: makeStubProfileData())
+        await viewModel.loadContactSettings()
         #expect(viewModel.canSubmit == false)
     }
 
@@ -37,15 +38,79 @@ struct MyPageProfileViewModelTests {
         #expect(viewModel.canSubmit == true)
     }
 
-    @Test("링크가 최초 스냅샷과 달라지면 canSubmit은 true")
-    func canSubmitTrueAfterLinkChange() {
-        let viewModel = makeViewModel(profile: makeStubProfileData(profileLink: []))
+    @Test("연락처·링크를 불러온 뒤 링크가 바뀌면 canSubmit은 true")
+    func canSubmitTrueAfterLinkChange() async {
+        let viewModel = makeViewModel(profile: makeStubProfileData())
+        await viewModel.loadContactSettings()
 
-        viewModel.profileData.profileLink = [
-            ProfileLink(type: .github, url: "https://github.com/tester")
-        ]
+        viewModel.contactSettings.links[.github] = CardContactItem(
+            value: "https://github.com/tester", isPublic: true
+        )
 
         #expect(viewModel.canSubmit == true)
+    }
+
+    @Test("공개 여부만 바꿔도 canSubmit은 true")
+    func canSubmitTrueAfterVisibilityChange() async {
+        let viewModel = makeViewModel(profile: makeStubProfileData())
+        await viewModel.loadContactSettings()
+
+        viewModel.contactSettings.isEmailPublic = false
+
+        #expect(viewModel.canSubmit == true)
+    }
+
+    /// 비교할 저장값이 없으면 무엇이 바뀌었는지 알 수 없다 — 빈 값으로 저장해 서버 값을 지우면 안 된다.
+    @Test("연락처·링크를 불러오기 전에는 입력이 바뀌어도 canSubmit은 false")
+    func canSubmitFalseBeforeContactsLoad() {
+        let viewModel = makeViewModel(profile: makeStubProfileData())
+
+        viewModel.contactSettings.links[.github] = CardContactItem(
+            value: "https://github.com/tester", isPublic: true
+        )
+
+        #expect(viewModel.canSubmit == false)
+    }
+
+    // MARK: - loadContactSettings
+
+    @Test("연락처·링크 조회 성공 — 편집값과 저장값을 서버 값으로 채운다")
+    func loadContactSettingsFillsValues() async {
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        let viewModel = makeViewModel(profile: makeStubProfileData(), contacts: contacts)
+
+        await viewModel.loadContactSettings()
+
+        #expect(viewModel.contactSettings == makeStoredContacts())
+        #expect(viewModel.savedContactSettings == .loaded(makeStoredContacts()))
+    }
+
+    @Test("연락처·링크 조회 실패 — failed로 두고, 재시도하면 다시 읽는다")
+    func loadContactSettingsFailureAllowsRetry() async {
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        contacts.fetchError = MyPageTestError.boom
+        let viewModel = makeViewModel(profile: makeStubProfileData(), contacts: contacts)
+
+        await viewModel.loadContactSettings()
+        #expect(viewModel.savedContactSettings.error != nil)
+
+        contacts.fetchError = nil
+        await viewModel.loadContactSettings()
+        #expect(contacts.fetchCallCount == 2)
+        #expect(viewModel.savedContactSettings == .loaded(makeStoredContacts()))
+    }
+
+    @Test("이미 불러왔으면 다시 읽지 않아 편집 중인 값을 덮지 않는다")
+    func loadContactSettingsKeepsEdits() async {
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        let viewModel = makeViewModel(profile: makeStubProfileData(), contacts: contacts)
+        await viewModel.loadContactSettings()
+
+        viewModel.contactSettings.isEmailPublic = false
+        await viewModel.loadContactSettings()
+
+        #expect(contacts.fetchCallCount == 1)
+        #expect(viewModel.contactSettings.isEmailPublic == false)
     }
 
     // MARK: - 링크 우선순위 (#1679)
@@ -81,9 +146,12 @@ struct MyPageProfileViewModelTests {
     func submitPriorityOnlySavesLocally() async throws {
         let mock = MockMyPageRepository()
         let linkPriority = StubLinkPriorityUseCase()
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
         let viewModel = makeViewModel(
-            profile: makeStubProfileData(), repository: mock, linkPriority: linkPriority
+            profile: makeStubProfileData(), repository: mock, contacts: contacts,
+            linkPriority: linkPriority
         )
+        await viewModel.loadContactSettings()
         await viewModel.loadLinkPriority()
         viewModel.moveLinks(fromOffsets: IndexSet(integer: 4), toOffset: 0)
 
@@ -91,7 +159,7 @@ struct MyPageProfileViewModelTests {
 
         #expect(linkPriority.saved == [.personal, .github, .linkedIn, .blog, .instagram])
         #expect(mock.updateProfileImageCallCount == 0)
-        #expect(mock.updateProfileLinksCallCount == 0)
+        #expect(contacts.updateCallCount == 0)
         #expect(viewModel.canSubmit == false)
     }
 
@@ -120,12 +188,16 @@ struct MyPageProfileViewModelTests {
     @Test("변경 없이 submit하면 어떤 UseCase도 호출하지 않음 (no-op)")
     func submitWithoutChangesIsNoOp() async throws {
         let mock = MockMyPageRepository()
-        let viewModel = makeViewModel(profile: makeStubProfileData(), repository: mock)
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        let viewModel = makeViewModel(
+            profile: makeStubProfileData(), repository: mock, contacts: contacts
+        )
+        await viewModel.loadContactSettings()
 
         try await viewModel.submitProfileUpdate()
 
         #expect(mock.updateProfileImageCallCount == 0)
-        #expect(mock.updateProfileLinksCallCount == 0)
+        #expect(contacts.updateCallCount == 0)
     }
 
     @Test("이미지 변경 submit — updateProfileImage 호출 + jpeg 메타데이터 + socialConnections 보존")
@@ -138,7 +210,10 @@ struct MyPageProfileViewModelTests {
         let serverProfile = makeStubProfileData(challengeId: 42, socialConnections: [])
         let mock = MockMyPageRepository()
         mock.updateProfileImageResult = .success(serverProfile)
-        let viewModel = makeViewModel(profile: original, repository: mock)
+        let invalidateMyCard = SpyInvalidateMyCardCacheUseCase()
+        let viewModel = makeViewModel(
+            profile: original, repository: mock, invalidateMyCard: invalidateMyCard
+        )
 
         await viewModel.didLoadImage(image: makeStubImage())
         try await viewModel.submitProfileUpdate()
@@ -153,6 +228,8 @@ struct MyPageProfileViewModelTests {
         #expect(viewModel.selectedPhotoItem == nil)
         #expect(viewModel.isUpdatingProfileImage == false)
         #expect(viewModel.canSubmit == false)
+        // 사진은 정본 프로필 캐시로 명함 앞면에 반영된다. 뒷면 캐시는 그대로 둔다.
+        #expect(invalidateMyCard.callCount == 0)
     }
 
     @Test("고해상도 이미지 submit — 긴 변 1024px로 줄인 5MB 이하 JPEG 업로드")
@@ -171,128 +248,140 @@ struct MyPageProfileViewModelTests {
         #expect(uploadedData.count <= 5 * 1024 * 1024)
     }
 
-    @Test("링크 변경 submit — updateProfileLinks 호출 + 전체 SocialLinkType 정규화 전달")
-    func submitLinkUpdateCallsLinksUseCase() async throws {
-        let serverProfile = makeStubProfileData(challengeId: 7)
+    @Test("연락처·링크 변경 submit — 편집하지 않은 항목까지 전체를 저장하고 저장값을 기준으로 삼는다")
+    func submitContactUpdateSendsWholeSettings() async throws {
         let mock = MockMyPageRepository()
-        mock.updateProfileLinksResult = .success(serverProfile)
-        let viewModel = makeViewModel(profile: makeStubProfileData(profileLink: []), repository: mock)
-
-        viewModel.profileData.profileLink = [
-            ProfileLink(type: .github, url: "https://github.com/tester")
-        ]
-        try await viewModel.submitProfileUpdate()
-
-        #expect(mock.updateProfileImageCallCount == 0)
-        #expect(mock.updateProfileLinksCallCount == 1)
-        // 모든 SocialLinkType 케이스가 정규화되어 전달됨
-        #expect(mock.updateProfileLinksReceivedLinks?.count == SocialLinkType.allCases.count)
-        let github = mock.updateProfileLinksReceivedLinks?.first { $0.type == .github }
-        #expect(github?.url == "https://github.com/tester")
-        #expect(viewModel.profileData.challengeId == 7)
-        #expect(viewModel.canSubmit == false)
-    }
-
-    @Test("GitHub만 수정해도 편집하지 않은 Instagram·개인 링크 기존 값이 함께 제출된다")
-    func submitLinkUpdateKeepsUneditedLinks() async throws {
-        let mock = MockMyPageRepository()
-        mock.updateProfileLinksResult = .success(makeStubProfileData())
-        let original = makeStubProfileData(profileLink: [
-            ProfileLink(type: .github, url: "https://github.com/old"),
-            ProfileLink(type: .instagram, url: "https://instagram.com/tester"),
-            ProfileLink(type: .personal, url: "https://tester.dev")
-        ])
-        let viewModel = makeViewModel(profile: original, repository: mock)
-
-        viewModel.profileData.profileLink[0].url = "https://github.com/new"
-        try await viewModel.submitProfileUpdate()
-
-        let sent = Dictionary(
-            uniqueKeysWithValues: (mock.updateProfileLinksReceivedLinks ?? []).map {
-                ($0.type, $0.url)
-            }
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        let invalidateMyCard = SpyInvalidateMyCardCacheUseCase()
+        let viewModel = makeViewModel(
+            profile: makeStubProfileData(), repository: mock, contacts: contacts,
+            invalidateMyCard: invalidateMyCard
         )
-        #expect(sent[.github] == "https://github.com/new")
-        #expect(sent[.instagram] == "https://instagram.com/tester")
-        #expect(sent[.personal] == "https://tester.dev")
+        await viewModel.loadContactSettings()
+
+        viewModel.contactSettings.links[.github]?.value = "https://github.com/new"
+        viewModel.contactSettings.links[.instagram]?.isPublic = false
+        try await viewModel.submitProfileUpdate()
+
+        let sent = try #require(contacts.received)
+        #expect(mock.updateProfileImageCallCount == 0)
+        #expect(contacts.updateCallCount == 1)
+        #expect(sent.link(.github).value == "https://github.com/new")
+        #expect(sent.link(.instagram).isPublic == false)
+        #expect(sent.isEmailPublic == makeStoredContacts().isEmailPublic)
+        #expect(viewModel.savedContactSettings == .loaded(sent))
+        #expect(viewModel.canSubmit == false)
+        #expect(invalidateMyCard.callCount == 1)
     }
 
-    @Test("이미지+링크 동시 변경 시 두 UseCase 모두 호출")
-    func submitImageAndLinkCallsBothUseCases() async throws {
+    @Test("이미지+연락처 동시 변경 시 두 UseCase 모두 호출")
+    func submitImageAndContactCallsBothUseCases() async throws {
         let mock = MockMyPageRepository()
         mock.updateProfileImageResult = .success(makeStubProfileData(challengeId: 100))
-        mock.updateProfileLinksResult = .success(makeStubProfileData(challengeId: 200))
-        let viewModel = makeViewModel(profile: makeStubProfileData(profileLink: []), repository: mock)
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        let viewModel = makeViewModel(
+            profile: makeStubProfileData(), repository: mock, contacts: contacts
+        )
+        await viewModel.loadContactSettings()
 
         await viewModel.didLoadImage(image: makeStubImage())
-        viewModel.profileData.profileLink = [
-            ProfileLink(type: .blog, url: "https://blog.example.com")
-        ]
+        viewModel.contactSettings.links[.blog]?.value = "https://blog.example.com"
         try await viewModel.submitProfileUpdate()
 
         #expect(mock.updateProfileImageCallCount == 1)
-        #expect(mock.updateProfileLinksCallCount == 1)
+        #expect(contacts.updateCallCount == 1)
     }
 
-    @Test("이미지 업로드 실패 — 에러 전파 + 링크 UseCase 미호출 + 진행 플래그 복구 + 재시도용 pending 유지")
+    @Test("바뀐 링크 형식이 틀리면 검증 오류를 던지고 사진도 올리지 않는다")
+    func submitInvalidLinkThrowsBeforeAnyRequest() async {
+        let mock = MockMyPageRepository()
+        mock.updateProfileImageResult = .success(makeStubProfileData())
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        let viewModel = makeViewModel(
+            profile: makeStubProfileData(), repository: mock, contacts: contacts
+        )
+        await viewModel.loadContactSettings()
+
+        await viewModel.didLoadImage(image: makeStubImage())
+        viewModel.contactSettings.links[.github]?.value = "github.com/no-scheme"
+        await #expect(throws: AppError.self) {
+            try await viewModel.submitProfileUpdate()
+        }
+
+        #expect(mock.updateProfileImageCallCount == 0)
+        #expect(contacts.updateCallCount == 0)
+        #expect(viewModel.canSubmit == true)
+    }
+
+    @Test("이미지 업로드 실패 — 에러 전파 + 연락처 UseCase 미호출 + 진행 플래그 복구 + 재시도용 pending 유지")
     func submitImageFailurePropagatesAndKeepsPendingState() async {
         let mock = MockMyPageRepository()
         mock.updateProfileImageResult = .failure(MyPageTestError.boom)
-        let viewModel = makeViewModel(profile: makeStubProfileData(challengeId: 1), repository: mock)
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        let viewModel = makeViewModel(
+            profile: makeStubProfileData(challengeId: 1), repository: mock, contacts: contacts
+        )
+        await viewModel.loadContactSettings()
 
         await viewModel.didLoadImage(image: makeStubImage())
+        viewModel.contactSettings.links[.blog]?.value = "https://blog.example.com"
         await #expect(throws: MyPageTestError.boom) {
             try await viewModel.submitProfileUpdate()
         }
 
         #expect(mock.updateProfileImageCallCount == 1)
-        // 이미지 단계에서 throw되므로 링크 단계는 실행되지 않음
-        #expect(mock.updateProfileLinksCallCount == 0)
+        // 이미지 단계에서 throw되므로 연락처 단계는 실행되지 않음
+        #expect(contacts.updateCallCount == 0)
         #expect(viewModel.profileData.challengeId == 1)
         // defer로 진행 플래그 복구 + 선택 이미지가 남아 있어 재시도 가능
         #expect(viewModel.isUpdatingProfileImage == false)
         #expect(viewModel.canSubmit == true)
     }
 
-    @Test("링크 수정 실패 — 에러 전파 + 진행 플래그 복구 + 링크 diff 보존")
-    func submitLinkFailurePropagatesAndKeepsLinkDiff() async {
-        let mock = MockMyPageRepository()
-        mock.updateProfileLinksResult = .failure(MyPageTestError.boom)
-        let viewModel = makeViewModel(profile: makeStubProfileData(challengeId: 1, profileLink: []), repository: mock)
+    @Test("연락처 저장 실패 — 에러 전파 + 진행 플래그 복구 + 변경 보존")
+    func submitContactFailurePropagatesAndKeepsDiff() async {
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        contacts.updateError = MyPageTestError.boom
+        let invalidateMyCard = SpyInvalidateMyCardCacheUseCase()
+        let viewModel = makeViewModel(
+            profile: makeStubProfileData(challengeId: 1), contacts: contacts,
+            invalidateMyCard: invalidateMyCard
+        )
+        await viewModel.loadContactSettings()
 
-        viewModel.profileData.profileLink = [
-            ProfileLink(type: .github, url: "https://github.com/tester")
-        ]
+        viewModel.contactSettings.links[.github]?.value = "https://github.com/tester"
         await #expect(throws: MyPageTestError.boom) {
             try await viewModel.submitProfileUpdate()
         }
 
-        #expect(mock.updateProfileImageCallCount == 0)
-        #expect(mock.updateProfileLinksCallCount == 1)
-        #expect(viewModel.profileData.challengeId == 1)
-        // 스냅샷이 갱신되지 않아 링크 diff가 남아 있어야 재시도 가능
+        #expect(contacts.updateCallCount == 1)
+        #expect(viewModel.savedContactSettings == .loaded(makeStoredContacts()))
         #expect(viewModel.isUpdatingProfileImage == false)
         #expect(viewModel.canSubmit == true)
+        // 응답만 못 받았을 수도 있어 명함 캐시는 실패해도 비운다.
+        #expect(invalidateMyCard.callCount == 1)
     }
 
-    @Test("이미지 성공 후 링크 실패 — 에러 전파 + 서버 응답 미반영 + 이미지/링크 pending 모두 보존")
-    func submitLinkFailureAfterImageSuccessKeepsBothPendingStates() async {
+    @Test("이미지 성공 후 연락처 실패 — 에러 전파 + 서버 응답 미반영 + 이미지/연락처 pending 모두 보존")
+    func submitContactFailureAfterImageSuccessKeepsBothPendingStates() async {
         let mock = MockMyPageRepository()
         mock.updateProfileImageResult = .success(makeStubProfileData(challengeId: 100))
-        mock.updateProfileLinksResult = .failure(MyPageTestError.boom)
-        let viewModel = makeViewModel(profile: makeStubProfileData(challengeId: 1, profileLink: []), repository: mock)
+        let contacts = StubCardContactUseCase(stored: makeStoredContacts())
+        contacts.updateError = MyPageTestError.boom
+        let viewModel = makeViewModel(
+            profile: makeStubProfileData(challengeId: 1), repository: mock, contacts: contacts
+        )
+        await viewModel.loadContactSettings()
 
         await viewModel.didLoadImage(image: makeStubImage())
-        viewModel.profileData.profileLink = [
-            ProfileLink(type: .blog, url: "https://blog.example.com")
-        ]
+        viewModel.contactSettings.links[.blog]?.value = "https://blog.example.com"
         await #expect(throws: MyPageTestError.boom) {
             try await viewModel.submitProfileUpdate()
         }
 
         #expect(mock.updateProfileImageCallCount == 1)
-        #expect(mock.updateProfileLinksCallCount == 1)
-        // 링크 단계에서 throw되어 이미지 응답(challengeId 100)도 반영되지 않음
+        #expect(contacts.updateCallCount == 1)
+        // 연락처 단계에서 throw되어 이미지 응답(challengeId 100)도 반영되지 않음
         #expect(viewModel.profileData.challengeId == 1)
         #expect(viewModel.isUpdatingProfileImage == false)
         #expect(viewModel.canSubmit == true)
@@ -427,7 +516,9 @@ private func makeViewModel(
     repository: MockMyPageRepository = MockMyPageRepository(),
     fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol = StubFetchMyOAuthUseCase(result: .success([])),
     deleteMemberOAuthUseCase: SpyDeleteMemberOAuthUseCase = SpyDeleteMemberOAuthUseCase(),
-    linkPriority: StubLinkPriorityUseCase = StubLinkPriorityUseCase()
+    contacts: StubCardContactUseCase = StubCardContactUseCase(stored: makeStoredContacts()),
+    linkPriority: StubLinkPriorityUseCase = StubLinkPriorityUseCase(),
+    invalidateMyCard: SpyInvalidateMyCardCacheUseCase = SpyInvalidateMyCardCacheUseCase()
 ) -> MyPageProfileViewModel {
     // GoogleLoginManaging은 MainActor 격리라 파라미터 기본값으로 만들 수 없어 본문에서 생성한다.
     MyPageProfileViewModel(
@@ -435,8 +526,11 @@ private func makeViewModel(
         useCaseProvider: makeUseCaseProvider(repository),
         fetchMyOAuthUseCase: fetchMyOAuthUseCase,
         deleteMemberOAuthUseCase: deleteMemberOAuthUseCase,
+        fetchCardContactSettingsUseCase: contacts,
+        updateCardContactSettingsUseCase: contacts,
         fetchCardLinkPriorityUseCase: linkPriority,
         saveCardLinkPriorityUseCase: linkPriority,
+        invalidateMyCardCacheUseCase: invalidateMyCard,
         kakaoLoginManager: StubKakaoLoginManager(),
         googleLoginManager: StubGoogleLoginManager()
     )
@@ -468,6 +562,59 @@ private final class StubLinkPriorityUseCase:
     func execute(_ priority: [CardLinkType]) async throws {
         if let saveError { throw saveError }
         saved = priority
+    }
+}
+
+// MARK: - Stubs (명함 연락처·링크)
+
+/// 서버에 저장된 연락처·링크 — 이메일과 GitHub·Instagram이 채워져 있다.
+private func makeStoredContacts() -> CardContactSettings {
+    CardContactSettings(
+        isEmailPublic: true,
+        links: [
+            .github: CardContactItem(value: "https://github.com/umc", isPublic: true),
+            .linkedin: .empty,
+            .blog: .empty,
+            .instagram: CardContactItem(value: "https://instagram.com/umc", isPublic: true),
+            .personal: .empty
+        ]
+    )
+}
+
+/// 조회·저장 UseCase를 한 객체로 흉내 낸다 — 저장하면 그 값을 새 저장값으로 돌려준다.
+private final class StubCardContactUseCase:
+    FetchCardContactSettingsUseCaseProtocol, UpdateCardContactSettingsUseCaseProtocol {
+    private let stored: CardContactSettings
+    var fetchError: Error?
+    var updateError: Error?
+    private(set) var fetchCallCount = 0
+    private(set) var updateCallCount = 0
+    private(set) var received: CardContactSettings?
+
+    init(stored: CardContactSettings) {
+        self.stored = stored
+    }
+
+    func execute() async throws -> CardContactSettings {
+        fetchCallCount += 1
+        if let fetchError { throw fetchError }
+        return stored
+    }
+
+    func execute(_ settings: CardContactSettings) async throws -> CardContactSettings {
+        updateCallCount += 1
+        received = settings
+        if let updateError { throw updateError }
+        return settings.normalized
+    }
+}
+
+private final class SpyInvalidateMyCardCacheUseCase:
+    InvalidateMyCardCacheUseCaseProtocol, @unchecked Sendable {
+    private(set) var callCount = 0
+
+    func execute() async {
+        callCount += 1
     }
 }
 
