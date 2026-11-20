@@ -44,6 +44,9 @@ struct MessageComposer: View {
     static let maxImageSelection = CommunityThreadRoomUseCase.imageMaxCount
 
     @Binding var text: String
+    /// 입력창 포커스. 화면이 롱프레스 메뉴를 열 때 키보드를 내리고, 답장·수정을 고르면 다시
+    /// 올린다 (#1684).
+    let isFocused: FocusState<Bool>.Binding
 
     let canSend: Bool
     /// 답장 인용 칩. `nil` 이면 칩 자리가 아예 없다 (시안 #22).
@@ -117,6 +120,7 @@ struct MessageComposer: View {
     private var inputRow: some View {
         VStack(spacing: 0) {
             TextField(Constants.placeholder, text: $text, axis: .vertical)
+                .focused(isFocused)
                 .accessibilityIdentifier("community.message.draft")
                 .appFont(.subheadline)
                 .lineLimit(Constants.lineLimit)
@@ -306,12 +310,14 @@ struct MessageComposer: View {
 #if DEBUG
 #Preview {
     @Previewable @State var text = "@김"
+    @Previewable @FocusState var isFocused: Bool
 
     VStack {
         Spacer()
 
         MessageComposer(
             text: $text,
+            isFocused: $isFocused,
             canSend: true,
             replyTarget: ThreadMessageReply(
                 messageId: "1",
