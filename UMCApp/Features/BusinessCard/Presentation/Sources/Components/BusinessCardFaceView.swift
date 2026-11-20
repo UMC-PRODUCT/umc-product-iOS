@@ -20,13 +20,15 @@ import UIKit
 /// 둔다. 다크 단색으로 갈아엎으면 라이트/다크(#1234)·대비(#1235) 기준을 처음부터 다시 잡아야
 /// 하는데, 카드가 얻는 건 톤 하나뿐이라 값이 맞지 않는다.
 ///
-/// 앞면은 이름 행·파트 행·발급 행(학교 · 기수), 뒷면은 시리얼과 **QR + 외부 링크 3줄**
-/// (github · linkedIn · blog)이다. 헤더와 하단 버튼 두 개는 양면 공통이다.
+/// 양면 모두 왼쪽에 프로필 사진을 둔다(#1679). 앞면은 이름 행·파트 행·발급 행(학교 · 기수),
+/// 뒷면은 이메일과 우선순위 맨 위 링크 한 줄이고(``MyCard/primaryLink``) 둘 다 없으면 빈 상태
+/// 문구를 보인다. 줄을 누르면 메일 작성이나 링크가 열린다. 접근성 글자 크기에서는 사진을 글자
+/// 위로 올린다(``faceLayout``).
+/// 헤더와 하단 버튼 두 개는 양면 공통이다.
 ///
 /// 면 상태는 들지 않는다 — 뒤집힘 여부의 정본은 소유자이고 ``isFlipped`` 로 내려준다.
 /// 뷰가 드는 것은 **진행 중인 회전 각도뿐**이다. 끄는 손가락·관성은 소유자가 알 필요가 없고,
 /// 면이 달라지는 순간에만 ``onFlip`` 으로 토글을 요청한다.
-/// QR 도 마찬가지로 생성은 UseCase 의 일이라 완성된 이미지를 받는다.
 ///
 /// 면 전환은 Y축 원근 회전이다(#1348). ``CardFlip`` 이 면 경계에서 면을 갈아 끼우고 뒷면을
 /// 미리 반 바퀴 돌려 둬 거울상을 막는다. #1390 부터 헤더 버튼 대신 카드를 가로로 끌어
@@ -38,7 +40,8 @@ public struct BusinessCardFaceView: View {
 
     private let card: MyCard
     private let isFlipped: Bool
-    private let qrImage: CGImage?
+    /// 뒷면 빈 상태에서 프로필 정보 편집을 안내할지. 받은 명함에는 편집할 길이 없다.
+    private let showsEditHint: Bool
     private let onFlip: (() -> Void)?
     private let onExchange: (() -> Void)?
     private let onQR: (() -> Void)?
@@ -55,17 +58,16 @@ public struct BusinessCardFaceView: View {
     /// 관성 스핀은 손을 뗀 뒤 저절로 도는 모션이라 이 설정이 이긴다. 끄는 동안 따라
     /// 도는 것도 막는다 — 큰 3D 회전은 손이 만든 것이라도 어지러움을 부른다.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private enum Constants {
-        static let title = "UMC LICENSE"
-        static let serialPrefix = "SERIAL. "
+        static let title = "BUSINESS CARD"
         static let generationPrefix = "GEN. "
         static let exchangeIcon = "shareplay"
         static let exchangeTitle = "명함 교환"
         static let qrIcon = "qrcode"
         static let qrTitle = "QR 코드"
-        static let qrLabel = "내 명함 QR 코드"
-        static let qrUnavailable = "QR 코드를 만들지 못했어요"
         static let flipToBack = "명함 뒷면 보기"
         static let flipToFront = "명함 앞면 보기"
     }
@@ -85,11 +87,12 @@ public struct BusinessCardFaceView: View {
         static let blockSpacing: CGFloat = 24
         /// 헤더 행과 그 아래 본문 사이. 여백을 넓힌 만큼 함께 벌린다(#1401).
         static let headerSpacing: CGFloat = 12
-        /// QR 과 오른쪽 링크 블록 사이.
+        /// 프로필 사진과 오른쪽 정보 블록 사이 (시안 16).
         static let contentSpacing: CGFloat = 16
         /// 앞면 블록(이름·파트 행 · 발급 행) 사이.
         static let faceBlockSpacing: CGFloat = 12
-        static let qrSize: CGFloat = 70
+        /// 양면 왼쪽 프로필 사진 (시안 70×70).
+        static let avatarSize: CGFloat = 70
         /// 이름 행과 파트 행 사이.
         static let nameSpacing: CGFloat = 6
         static let logoWidth: CGFloat = 47
@@ -99,9 +102,11 @@ public struct BusinessCardFaceView: View {
         static let buttonRadius: CGFloat = 40
         static let buttonIconSize: CGFloat = 19
         static let linkSpacing: CGFloat = 8
-        static let linkIconSize: CGFloat = 18
-        static let qrRadius: CGFloat = 6.18
-        static let qrBorderWidth: CGFloat = 0.26
+        /// 뒷면 연락처 줄 아이콘 16×16 · 줄 간격 6. 시안은 18pt 줄 4개를 92pt 에 둔다.
+        static let contactIconSize: CGFloat = 16
+        static let contactSpacing: CGFloat = 6
+        /// 빈 상태 제목과 안내 사이 (시안 2).
+        static let emptyTextSpacing: CGFloat = 2
         /// 라이선스 어법의 넓은 자간. 고정값이라 AX 크기에서는 상대적으로 좁아지는데,
         /// 그쪽에서는 자간보다 한 줄에 글자가 들어갈 폭이 급하므로 의도한 방향이다.
         static let tracking: CGFloat = 1.2
@@ -167,7 +172,7 @@ public struct BusinessCardFaceView: View {
         static let reducedMotionFlipVelocity: CGFloat = 300
     }
 
-    /// 카드 배경 · QR 테두리. 전부 코어 토큰이다 (#1237).
+    /// 카드 배경. 전부 코어 토큰이다 (#1237).
     ///
     /// 시안 실측은 `linear-gradient(112.185deg, rgba(114,142,253,0.8), #5468FC)` ·
     /// 테두리 `#E5E8ED` 였고 그동안 `BusinessCardPalette` 가 그 raw 값을 들고 있었다.
@@ -178,7 +183,6 @@ public struct BusinessCardFaceView: View {
     private enum Palette {
         static let gradientStart = Color.teal400
         static let gradientEnd = Color.teal500
-        static let qrBorder = Color.grey200
         /// 회전 그림자. 토큰(`grey900`)이 아니라 검정인 이유는 같은 피처의 `CardQRView`
         /// 와 맞추기 위해서다 — 바탕을 눌러 카드를 띄우는 역할만 한다.
         static let shadow = Color.black
@@ -189,14 +193,14 @@ public struct BusinessCardFaceView: View {
     public init(
         card: MyCard,
         isFlipped: Bool = false,
-        qrImage: CGImage? = nil,
+        showsEditHint: Bool = true,
         onFlip: (() -> Void)? = nil,
         onExchange: (() -> Void)? = nil,
         onQR: (() -> Void)? = nil
     ) {
         self.card = card
         self.isFlipped = isFlipped
-        self.qrImage = qrImage
+        self.showsEditHint = showsEditHint
         self.onFlip = onFlip
         self.onExchange = onExchange
         self.onQR = onQR
@@ -224,7 +228,7 @@ public struct BusinessCardFaceView: View {
                     onEnded: endDrag(translation:velocity:)
                 )
             )
-            // 컨테이너가 접근성 요소가 아니라 자식 요소마다 붙는다 — 앞면 라벨·QR·링크 행
+            // 컨테이너가 접근성 요소가 아니라 자식 요소마다 붙는다 — 앞면·뒷면 라벨
             // 어디에 포커스가 있어도 로터에 뜬다.
             .accessibilityActions {
                 if let onFlip {
@@ -307,7 +311,8 @@ public struct BusinessCardFaceView: View {
     }
 
     /// 레퍼런스에 있던 두 요소는 의도적으로 빼 뒀다. 되살리기 전에 근거부터 확인할 것:
-    /// **QR 은 뒷면에 그대로 둔다** — 양면에 QR 을 두면 같은 값이 두 번 나올 뿐이다.
+    /// **QR 은 그리지 않는다** — 뒷면에 있던 QR 도 #1679 에서 뺐다. 교환 QR 은
+    /// 「QR 코드」 화면이 맡는다.
     /// **호(arc) 게이지도 그리지 않는다** — 대응하는 진척률이 도메인에 없어서 그리는 순간
     /// 없는 수치를 지어내게 된다.
     ///
@@ -318,9 +323,13 @@ public struct BusinessCardFaceView: View {
     /// #1374 에서 **기수 칩**도 뺐다. 기수는 발급 행 오른쪽 `GEN. {기수}` 로 옮겨 한 줄을
     /// 줄였다 — 칩과 학교가 각각 한 줄씩 차지해 카드 오른쪽 절반이 비어 있었다.
     private var frontFace: some View {
-        VStack(alignment: .leading, spacing: Metrics.faceBlockSpacing) {
-            identityBlock
-            issuerRow
+        faceLayout {
+            avatar
+
+            VStack(alignment: .leading, spacing: Metrics.faceBlockSpacing) {
+                identityBlock
+                issuerRow
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         // 이름·파트·학교·기수가 따로 읽히면 누구 명함인지 조립해야 알 수 있다.
@@ -358,111 +367,160 @@ public struct BusinessCardFaceView: View {
     /// 왔다(#1374) — 「몇 기에 발급된 카드인가」라 뜻도 맞는다.
     ///
     /// 폭이 모자라면 학교가 먼저 말줄임된다. 기수는 짧고, 잘리면 숫자가 통째로 사라진다.
+    /// 접근성 글자 크기에서는 학교와 기수를 두 줄로 나눠 학교를 자르지 않는다.
     private var issuerRow: some View {
         VStack(alignment: .leading, spacing: Metrics.linkSpacing) {
             Rectangle()
                 .fill(Color.white.opacity(Metrics.dividerOpacity))
                 .frame(height: Metrics.dividerHeight)
 
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                // 한글이라 모노·대문자 대상이 아니다. 자간만 라이선스 어법에 맞춘다.
-                Text(card.university)
-                    .appFont(.caption1, color: Color.white)
-                    .tracking(Metrics.tracking)
-                    .lineLimit(1)
-
-                Spacer(minLength: Metrics.linkSpacing)
-
-                licenseText(Constants.generationPrefix + card.generation)
-                    .lineLimit(1)
-                    .layoutPriority(1)
-            }
-        }
-    }
-
-    /// 뒷면은 시리얼 한 줄 아래에 QR 과 링크 3줄이 온다.
-    private var backFace: some View {
-        VStack(alignment: .leading, spacing: Metrics.linkSpacing) {
-            licenseText(Constants.serialPrefix + card.licenseSerial)
-
-            HStack(alignment: .top, spacing: Metrics.contentSpacing) {
-                qrThumbnail
-
-                VStack(alignment: .leading, spacing: Metrics.linkSpacing) {
-                    // github·linkedIn 은 시안 브랜드 SVG(18×18, 흰색 모노).
-                    // blog 만 시안도 SF Symbol `link` 다.
-                    linkRow(value: card.github) { brandIcon(Image.githubMono) }
-                    linkRow(value: card.linkedIn) { brandIcon(Image.linkedInMono) }
-                    linkRow(value: card.blog) { symbolIcon("link") }
-                }
-
-                Spacer(minLength: 0)
-            }
-        }
-    }
-
-    /// 시안 70×70 흰 박스 · radius 6.18 · 0.26pt 테두리.
-    @ViewBuilder
-    private var qrThumbnail: some View {
-        let shape = RoundedRectangle(cornerRadius: Metrics.qrRadius)
-
-        Group {
-            if let qrImage {
-                Image(decorative: qrImage, scale: 1)
-                    // QR 은 확대해도 흐려지면 안 된다 — 보간을 끈다.
-                    .interpolation(.none)
-                    .resizable()
-                    .scaledToFit()
-                    .padding(Metrics.linkSpacing)
+            if dynamicTypeSize.isAccessibilitySize {
+                universityText
+                generationText
             } else {
-                Color.clear
-            }
-        }
-        .frame(width: Metrics.qrSize, height: Metrics.qrSize)
-        // QR 은 어느 모드에서도 흰 바탕이어야 인식된다 — 여기만 토큰을 쓰지 않는다.
-        .background(Color.white, in: shape)
-        .overlay { shape.stroke(Palette.qrBorder, lineWidth: Metrics.qrBorderWidth) }
-        .accessibilityElement()
-        .accessibilityLabel(qrImage == nil ? Constants.qrUnavailable : Constants.qrLabel)
-    }
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    universityText
 
-    /// 값이 없어도 줄을 지운다 — 시안이 3줄 고정이지만 빈 줄은 서버 미입력을
-    /// 링크가 있는 것처럼 보이게 한다.
-    @ViewBuilder
-    private func linkRow(
-        value: String?,
-        @ViewBuilder icon: () -> some View
-    ) -> some View {
-        if let value, !value.isEmpty {
-            HStack(alignment: .bottom, spacing: Metrics.linkSpacing) {
-                icon()
+                    Spacer(minLength: Metrics.linkSpacing)
 
-                Text(value)
-                    .appFont(.footnote, color: Color.white)
-                    .lineLimit(1)
+                    generationText
+                        .layoutPriority(1)
+                }
             }
-            .accessibilityElement(children: .combine)
         }
     }
 
-    /// 브랜드 SVG 아이콘(에셋 원본이 흰색이라 틴트 없이 크기만 잡는다).
+    /// 한글이라 모노·대문자 대상이 아니다. 자간만 라이선스 어법에 맞춘다.
+    private var universityText: some View {
+        Text(card.university)
+            .appFont(.caption1, color: Color.white)
+            .tracking(Metrics.tracking)
+            .lineLimit(1)
+    }
+
+    private var generationText: some View {
+        licenseText(Constants.generationPrefix + card.generation)
+            .lineLimit(1)
+    }
+
+    /// 사진과 글자 묶음의 배치. 평소에는 사진을 왼쪽에 두고, 접근성 글자 크기에서는 위로 올린다.
     ///
-    /// VoiceOver 에는 숨긴다 — 링크 값 텍스트가 바로 옆에 있어 에셋 이름까지 읽으면
-    /// "githubMono, github.com/umc" 처럼 겹쳐 들린다.
-    private func brandIcon(_ image: Image) -> some View {
-        image
-            .resizable()
-            .scaledToFit()
-            .frame(width: Metrics.linkIconSize, height: Metrics.linkIconSize)
-            .accessibilityHidden(true)
+    /// 사진이 왼쪽에 남으면 글자가 카드 폭의 절반 남짓만 쓰게 돼, AX 크기에서 파트명이 단어
+    /// 중간에서 끊기고("Enginee / r") 이름·학교·이메일이 말줄임된다. 글자 크기에 상한을 두지
+    /// 않는 건 명함 화면이 AX5 까지 늘어나도록 맞춘 결정(#1234)을 따르기 위해서다.
+    private var faceLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Metrics.contentSpacing))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: Metrics.contentSpacing))
     }
 
-    /// SF Symbol 아이콘 — 브랜드 아이콘과 같은 18×18 틀에 맞춘다.
-    private func symbolIcon(_ systemName: String) -> some View {
-        Image(systemName: systemName)
-            .font(.system(size: AppFont.footnote.size))
-            .foregroundStyle(Color.white)
-            .frame(width: Metrics.linkIconSize, height: Metrics.linkIconSize)
+    /// 양면 프로필 사진. 사진이 없으면 ``RemoteImage`` 가 UMC 기본 프로필을 그린다.
+    private var avatar: some View {
+        RemoteImage(
+            urlString: card.avatarURL ?? "",
+            size: CGSize(width: Metrics.avatarSize, height: Metrics.avatarSize)
+        )
+        // 이름이 바로 옆에 있어 사진은 따로 읽지 않는다.
+        .accessibilityHidden(true)
+    }
+
+    /// 뒷면은 연락처·링크 줄이다. 줄마다 따로 읽으면 어느 면인지 모른 채 값만 이어지므로
+    /// 앞면처럼 한 덩어리로 읽는다. 그러면 줄 버튼에 닿을 수 없어 여는 동작은 줄마다
+    /// 액션으로 단다.
+    private var backFace: some View {
+        backFaceContent
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(card.backFaceAccessibilityLabel)
+            .accessibilityActions {
+                ForEach(card.backFaceContacts, id: \.self) { contact in
+                    if let url = contact.url {
+                        Button(contact.openActionName) { openURL(url) }
+                    }
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var backFaceContent: some View {
+        let contacts = card.backFaceContacts
+        if contacts.isEmpty {
+            emptyContacts
+        } else {
+            faceLayout {
+                avatar
+
+                VStack(alignment: .leading, spacing: Metrics.contactSpacing) {
+                    ForEach(contacts, id: \.self) { contact in
+                        contactRow(contact)
+                    }
+                }
+            }
+        }
+    }
+
+    /// 시안 `90:3045` — 사진 없이 카드 가운데에 두 줄을 둔다. 받은 명함에는 편집 안내를 뺀다.
+    ///
+    /// 최소 높이를 사진 크기로 잡아 앞면과 같은 높이의 가운데에 선다.
+    private var emptyContacts: some View {
+        VStack(spacing: Metrics.emptyTextSpacing) {
+            Text(CardFaceCopy.emptyContactsTitle)
+                .appFont(.subheadline, weight: .semibold, color: Color.white)
+
+            if showsEditHint {
+                Text(CardFaceCopy.emptyContactsHint)
+                    .appFont(.footnote, color: Color.white)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity, minHeight: Metrics.avatarSize)
+    }
+
+    /// 누르면 이메일은 메일 작성, 링크는 브라우저로 연다. 열 수 없는 값은 텍스트로만 둔다 —
+    /// 눌러도 아무 일 없는 줄을 만들지 않는다(``ReceivedCardDetailView`` 와 같은 규칙).
+    ///
+    /// 카드 회전 팬은 이동이 있어야 시작하므로 줄 탭과 겹치지 않는다.
+    @ViewBuilder
+    private func contactRow(_ contact: CardContact) -> some View {
+        if let url = contact.url {
+            Button {
+                openURL(url)
+            } label: {
+                contactLabel(contact)
+            }
+            .buttonStyle(.plain)
+        } else {
+            contactLabel(contact)
+        }
+    }
+
+    /// 글자 밖 빈 곳도 누르도록 줄 폭 전체를 누르는 영역으로 잡는다. 줄 높이가 낮아
+    /// 글자만 누르게 하면 짧은 값은 맞히기 어렵다.
+    private func contactLabel(_ contact: CardContact) -> some View {
+        HStack(alignment: .center, spacing: Metrics.linkSpacing) {
+            contactIcon(contact.kind)
+                .resizable()
+                .scaledToFit()
+                .frame(width: Metrics.contactIconSize, height: Metrics.contactIconSize)
+
+            Text(contact.value)
+                .appFont(.footnote, color: Color.white)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+
+    /// 아이콘 에셋은 흰색 원본이라 틴트 없이 크기만 잡는다. Blog 와 개인링크는 시안이 같은
+    /// 링크 아이콘을 쓴다.
+    private func contactIcon(_ kind: CardContact.Kind) -> Image {
+        switch kind {
+        case .email: .mailMono
+        case .github: .githubMono
+        case .linkedIn: .linkedInMono
+        case .blog, .personal: .linkMono
+        case .instagram: .instagramMono
+        }
     }
 
     /// 라이선스 어법 텍스트 — **시스템 모노스페이스 + 넓은 자간**.
@@ -628,7 +686,7 @@ public struct BusinessCardFaceView: View {
 
             content(geometry.showsBack)
                 // 뒷면을 미리 반 바퀴 돌려 둔다. 바깥 회전과 합쳐 360° 의 배수가 되므로
-                // 회전이 끝난 뒷면의 텍스트·QR 이 거울상이 아니라 정방향으로 읽힌다.
+                // 회전이 끝난 뒷면의 텍스트가 거울상이 아니라 정방향으로 읽힌다.
                 .rotation3DEffect(.degrees(geometry.counterTurn), axis: Metrics.flipAxis)
                 .rotation3DEffect(
                     .degrees(angle),
@@ -803,5 +861,27 @@ struct CardFlipGeometry {
         .padding(.horizontal, 14)
         .frame(maxHeight: .infinity)
         .background(Color.grey100)
+}
+
+#Preview("뒷면 · 정보 없음") {
+    BusinessCardFaceView(
+        card: MyCard(
+            memberId: "preview",
+            name: "김유엠",
+            nickname: "유엠",
+            part: .front(type: .ios),
+            generation: "12",
+            university: "한양대학교",
+            email: nil,
+            github: nil,
+            linkedIn: nil,
+            blog: nil,
+            avatarURL: nil
+        ),
+        isFlipped: true
+    )
+    .padding(.horizontal, 14)
+    .frame(maxHeight: .infinity)
+    .background(Color.grey100)
 }
 #endif

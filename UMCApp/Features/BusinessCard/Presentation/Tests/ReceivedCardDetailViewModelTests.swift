@@ -130,7 +130,6 @@ private func makeSUT(
         card: card,
         deleteReceivedCard: delete,
         updateExchangeContext: update,
-        generateCardQR: StubGenerateCardQR(),
         errorHandler: errorHandler
     )
 }
@@ -168,12 +167,5 @@ private final class StubUpdateExchangeContext:
         callCount += 1
         lastContext = context
         return card.updatingExchangeContext(context)
-    }
-}
-
-private final class StubGenerateCardQR: GenerateCardQRUseCaseProtocol, @unchecked Sendable {
-
-    func execute(for card: MyCard) throws -> CGImage {
-        throw StubError.boom
     }
 }

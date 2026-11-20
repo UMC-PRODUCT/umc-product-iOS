@@ -6,6 +6,7 @@
 //
 
 import AuthDomain
+import BusinessCardDomain
 import CoreDI
 import CoreDomain
 import CoreUIComponents
@@ -52,7 +53,13 @@ public struct MyPageProfileView: View {
                 profileData: profileData,
                 useCaseProvider: container.resolve(MyPageUseCaseProviding.self),
                 fetchMyOAuthUseCase: container.resolve(FetchMyOAuthUseCaseProtocol.self),
-                deleteMemberOAuthUseCase: container.resolve(DeleteMemberOAuthUseCaseProtocol.self)
+                deleteMemberOAuthUseCase: container.resolve(DeleteMemberOAuthUseCaseProtocol.self),
+                fetchCardLinkPriorityUseCase: container.resolve(
+                    FetchCardLinkPriorityUseCaseProtocol.self
+                ),
+                saveCardLinkPriorityUseCase: container.resolve(
+                    SaveCardLinkPriorityUseCaseProtocol.self
+                )
             )
         )
     }
@@ -62,6 +69,12 @@ public struct MyPageProfileView: View {
     public var body: some View {
         Form {
             sectionContent($viewModel.profileData)
+        }
+        // 설정 앱 「선호하는 언어」처럼 링크 줄 손잡이를 늘 보인다 (#1679). 편집 상태는 목록
+        // 단위로만 켜져서 폼에 건다 — 손잡이는 `.onMove` 가 붙은 링크 줄에만 생긴다.
+        .environment(\.editMode, .constant(.active))
+        .task {
+            await viewModel.loadLinkPriority()
         }
         .navigation(naviTitle: NavigationTitle.MyPage.cardEdit, displayMode: .inline)
         .umcDefaultBackground()
@@ -130,7 +143,9 @@ public struct MyPageProfileView: View {
 
         ProfileLinkEditSection(
             profileLink: profile.profileLink,
-            header: Constants.profileLinkHeader
+            linkPriority: viewModel.linkPriority,
+            header: Constants.profileLinkHeader,
+            onMove: viewModel.moveLinks(fromOffsets:toOffset:)
         )
     }
 
@@ -152,7 +167,7 @@ public struct MyPageProfileView: View {
 
     // MARK: - Function
 
-    /// 프로필 수정(이미지·링크)을 서버에 제출하고 완료 시 화면을 닫습니다.
+    /// 프로필 수정(이미지·링크·링크 순서)을 저장하고 완료 시 화면을 닫습니다.
     private func submitProfileUpdate() {
         Task {
             do {

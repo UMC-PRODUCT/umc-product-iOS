@@ -11,48 +11,87 @@ import Testing
 import UMCFoundation
 @testable import BusinessCardPresentation
 
-/// 라이선스 카드 표기(#1347) 중 **눈으로 못 보는 두 규칙**만 본다.
+/// 명함 면 표기 중 **눈으로 못 보는 규칙**만 본다.
 ///
 /// 레이아웃은 프리뷰가 보여주므로 테스트하지 않는다. 조용히 틀려도 화면상으로는 멀쩡한 것,
-/// 즉 「시리얼이 원본 ID 를 흘리는가」와 「앞면 라벨이 화면에 남은 항목만 화면 순서대로
-/// 읽는가」(#1363 · #1374) 두 가지만 단정한다.
-@Suite("라이선스 카드 표기")
+/// 즉 「뒷면이 이메일과 우선순위 맨 위 링크 하나만 싣는가」(#1679)와 「앞면·뒷면 라벨이 화면에
+/// 남은 항목만 화면 순서대로 읽는가」(#1363 · #1374)를 단정한다.
+@Suite("명함 면 표기")
 struct CardLicenseFaceTests {
 
-    // MARK: - 1. 뒷면 시리얼
+    // MARK: - 1. 뒷면 연락처·링크 줄
 
-    @Test("같은 회원은 언제나 같은 시리얼이다")
-    func serialIsDeterministic() {
-        let serial = card(memberId: Constants.memberId).licenseSerial
+    @Test("뒷면에는 이메일과 링크 하나만 싣고, 기본 순서의 첫 링크는 GitHub 이다")
+    func backFaceShowsEmailAndOneLink() {
+        let kinds = card(
+            email: "one@umc.dev",
+            github: "github.com/umc",
+            linkedIn: "linkedin.com/in/umc",
+            blog: "umc.tistory.com",
+            instagram: "instagram.com/umc",
+            personal: "umc.dev"
+        ).backFaceContacts.map(\.kind)
 
-        #expect(serial == card(memberId: Constants.memberId).licenseSerial)
+        #expect(kinds == [.email, .github])
     }
 
-    @Test("다른 회원은 다른 시리얼이다")
-    func serialDiffersByMember() {
-        #expect(card(memberId: "1").licenseSerial != card(memberId: "2").licenseSerial)
+    @Test("사용자가 정한 우선순위에서 맨 위 링크를 싣는다")
+    func backFaceFollowsLinkPriority() {
+        let contacts = card(
+            email: "one@umc.dev",
+            github: "github.com/umc",
+            instagram: "instagram.com/umc",
+            linkPriority: [.instagram, .github]
+        ).backFaceContacts
+
+        #expect(contacts.map(\.kind) == [.email, .instagram])
+        #expect(contacts.map(\.value) == ["one@umc.dev", "instagram.com/umc"])
     }
 
-    /// 시리얼은 `memberId` 를 **잘라 쓴 값이 아니어야** 한다 — 카드를 찍은 사진 한 장으로
-    /// 남의 프로필 딥링크를 조립할 수 있게 되면 안 된다.
-    @Test("시리얼에 memberId 원문이 남지 않는다")
-    func serialHidesMemberId() {
-        let serial = card(memberId: Constants.memberId).licenseSerial
-        let hex = serial.replacingOccurrences(of: "-", with: "")
+    @Test("값이 없거나 공백뿐인 항목은 빼고, 맨 위 링크가 비면 다음 순서 링크를 싣는다")
+    func backFaceContactsSkipEmptyValues() {
+        let contacts = card(
+            email: "  ",
+            linkedIn: "  ",
+            blog: "umc.tistory.com",
+            personal: "umc.dev",
+            linkPriority: [.linkedIn, .personal, .blog]
+        ).backFaceContacts
 
-        #expect(!serial.contains(Constants.memberId))
-        // 「앞 8자만 잘라 쓰기」 같은 축약이면 원본 어딘가에 그대로 들어 있다.
-        #expect(!Constants.memberId.uppercased().contains(hex))
+        #expect(contacts.map(\.kind) == [.personal])
+        #expect(contacts.map(\.value) == ["umc.dev"])
     }
 
-    @Test("시리얼은 XXXX-XXXX 대문자 hex 다")
-    func serialUsesFixedFormat() {
-        let serial = card(memberId: Constants.memberId).licenseSerial
-        let blocks = serial.split(separator: "-")
+    @Test("줄을 누르면 이메일은 mailto, 스킴 없는 링크는 https 로 열고, 웹이 아닌 스킴은 열지 않는다")
+    func backFaceContactsOpenMailOrWebOnly() {
+        func urls(_ card: MyCard) -> [String?] {
+            card.backFaceContacts.map(\.url?.absoluteString)
+        }
 
-        #expect(blocks.count == 2)
-        #expect(blocks.allSatisfy { $0.count == 4 })
-        #expect(serial.allSatisfy { $0 == "-" || ($0.isHexDigit && !$0.isLowercase) })
+        #expect(urls(card(email: "one@umc.dev", github: "github.com/umc"))
+            == ["mailto:one@umc.dev", "https://github.com/umc"])
+        #expect(urls(card(linkedIn: "HTTP://www.linkedin.com/in/umc/"))
+            == ["HTTP://www.linkedin.com/in/umc/"])
+        #expect(urls(card(blog: "https://")) == [nil])
+        #expect(urls(card(instagram: "instagram://user?username=umc")) == [nil])
+    }
+
+    @Test("링크 줄은 스킴·www·끝 슬래시를 떼고 보이고, 이메일은 그대로 둔다")
+    func backFaceLinksDropURLDecoration() {
+        let github = card(email: "one@umc.dev", github: "https://github.com/umc/")
+        let instagram = card(instagram: "HTTP://www.instagram.com/umc")
+
+        #expect(github.backFaceContacts.map(\.value) == ["one@umc.dev", "github.com/umc"])
+        #expect(instagram.backFaceContacts.map(\.value) == ["instagram.com/umc"])
+    }
+
+    @Test("뒷면 라벨은 화면 순서대로 값을 읽고, 줄이 없으면 빈 상태 문구를 읽는다")
+    func backFaceLabelReadsContactsOrEmptyState() {
+        let filled = card(email: "one@umc.dev", personal: "umc.dev").backFaceAccessibilityLabel
+        let empty = card().backFaceAccessibilityLabel
+
+        #expect(filled == "뒷면. one@umc.dev, umc.dev")
+        #expect(empty == "뒷면. 등록된 연락처와 소개 링크가 없어요")
     }
 
     // MARK: - 2. 앞면 접근성 라벨
@@ -77,7 +116,17 @@ struct CardLicenseFaceTests {
 
     // MARK: - Helper
 
-    private func card(memberId: String, part: UMCPartType = .front(type: .ios)) -> MyCard {
+    private func card(
+        memberId: String = Constants.memberId,
+        part: UMCPartType = .front(type: .ios),
+        email: String? = nil,
+        github: String? = nil,
+        linkedIn: String? = nil,
+        blog: String? = nil,
+        instagram: String? = nil,
+        personal: String? = nil,
+        linkPriority: [CardLinkType] = CardLinkType.allCases
+    ) -> MyCard {
         MyCard(
             memberId: memberId,
             name: "김유엠",
@@ -85,17 +134,18 @@ struct CardLicenseFaceTests {
             part: part,
             generation: "12",
             university: "한양대학교",
-            email: nil,
-            github: nil,
-            linkedIn: nil,
-            blog: nil,
-            avatarURL: nil
+            email: email,
+            github: github,
+            linkedIn: linkedIn,
+            blog: blog,
+            instagram: instagram,
+            personal: personal,
+            avatarURL: nil,
+            linkPriority: linkPriority
         )
     }
 
     private enum Constants {
-        /// 서버 회원 ID 는 짧은 정수 문자열일 수도, UUID 일 수도 있다. 포함 여부 검사가
-        /// 우연히 통과하지 않도록 충분히 긴 값을 쓴다.
         static let memberId = "7F3C1A22-9B0D-4E68-BC51-2D0A6E4F91AB"
     }
 }

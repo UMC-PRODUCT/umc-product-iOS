@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import UMCFoundation
 import AuthDomain
+import BusinessCardDomain
 import CoreDomain
 import CoreNetwork
 import MyPageDomain
@@ -44,6 +45,73 @@ struct MyPageProfileViewModelTests {
             ProfileLink(type: .github, url: "https://github.com/tester")
         ]
 
+        #expect(viewModel.canSubmit == true)
+    }
+
+    // MARK: - 링크 우선순위 (#1679)
+
+    @Test("저장된 링크 순서를 불러오고, 줄을 옮기면 canSubmit은 true")
+    func loadsAndMovesLinkPriority() async {
+        let linkPriority = StubLinkPriorityUseCase()
+        linkPriority.stored = [.blog, .github, .linkedIn, .instagram, .personal]
+        let viewModel = makeViewModel(profile: makeStubProfileData(), linkPriority: linkPriority)
+
+        await viewModel.loadLinkPriority()
+        #expect(viewModel.linkPriority == [.blog, .github, .linkedin, .instagram, .personal])
+        #expect(viewModel.canSubmit == false)
+
+        viewModel.moveLinks(fromOffsets: IndexSet(integer: 4), toOffset: 0)
+
+        #expect(viewModel.linkPriority.first == .personal)
+        #expect(viewModel.canSubmit == true)
+    }
+
+    @Test("순서를 바꾸는 중에 다시 불러와도 바꾼 순서를 덮지 않는다")
+    func reloadKeepsEditedPriority() async {
+        let viewModel = makeViewModel(profile: makeStubProfileData())
+        await viewModel.loadLinkPriority()
+        viewModel.moveLinks(fromOffsets: IndexSet(integer: 2), toOffset: 0)
+
+        await viewModel.loadLinkPriority()
+
+        #expect(viewModel.linkPriority.first == .blog)
+    }
+
+    @Test("순서만 바꿔 submit하면 기기에만 저장하고 서버 요청은 보내지 않는다")
+    func submitPriorityOnlySavesLocally() async throws {
+        let mock = MockMyPageRepository()
+        let linkPriority = StubLinkPriorityUseCase()
+        let viewModel = makeViewModel(
+            profile: makeStubProfileData(), repository: mock, linkPriority: linkPriority
+        )
+        await viewModel.loadLinkPriority()
+        viewModel.moveLinks(fromOffsets: IndexSet(integer: 4), toOffset: 0)
+
+        try await viewModel.submitProfileUpdate()
+
+        #expect(linkPriority.saved == [.personal, .github, .linkedIn, .blog, .instagram])
+        #expect(mock.updateProfileImageCallCount == 0)
+        #expect(mock.updateProfileLinksCallCount == 0)
+        #expect(viewModel.canSubmit == false)
+    }
+
+    @Test("순서 저장이 실패하면 사진을 올리지 않고, 다시 저장할 수 있게 변경을 남긴다")
+    func priorityFailureStopsBeforeUpload() async {
+        let mock = MockMyPageRepository()
+        let linkPriority = StubLinkPriorityUseCase()
+        linkPriority.saveError = MyPageTestError.boom
+        let viewModel = makeViewModel(
+            profile: makeStubProfileData(), repository: mock, linkPriority: linkPriority
+        )
+        await viewModel.loadLinkPriority()
+        viewModel.moveLinks(fromOffsets: IndexSet(integer: 4), toOffset: 0)
+        await viewModel.didLoadImage(image: makeStubImage())
+
+        await #expect(throws: MyPageTestError.boom) {
+            try await viewModel.submitProfileUpdate()
+        }
+
+        #expect(mock.updateProfileImageCallCount == 0)
         #expect(viewModel.canSubmit == true)
     }
 
@@ -358,7 +426,8 @@ private func makeViewModel(
     profile: ProfileData,
     repository: MockMyPageRepository = MockMyPageRepository(),
     fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol = StubFetchMyOAuthUseCase(result: .success([])),
-    deleteMemberOAuthUseCase: SpyDeleteMemberOAuthUseCase = SpyDeleteMemberOAuthUseCase()
+    deleteMemberOAuthUseCase: SpyDeleteMemberOAuthUseCase = SpyDeleteMemberOAuthUseCase(),
+    linkPriority: StubLinkPriorityUseCase = StubLinkPriorityUseCase()
 ) -> MyPageProfileViewModel {
     // GoogleLoginManaging은 MainActor 격리라 파라미터 기본값으로 만들 수 없어 본문에서 생성한다.
     MyPageProfileViewModel(
@@ -366,6 +435,8 @@ private func makeViewModel(
         useCaseProvider: makeUseCaseProvider(repository),
         fetchMyOAuthUseCase: fetchMyOAuthUseCase,
         deleteMemberOAuthUseCase: deleteMemberOAuthUseCase,
+        fetchCardLinkPriorityUseCase: linkPriority,
+        saveCardLinkPriorityUseCase: linkPriority,
         kakaoLoginManager: StubKakaoLoginManager(),
         googleLoginManager: StubGoogleLoginManager()
     )
@@ -378,6 +449,25 @@ private func makeSolidImage(pixelSize: CGSize) -> UIImage {
     return UIGraphicsImageRenderer(size: pixelSize, format: format).image { context in
         UIColor.red.setFill()
         context.fill(CGRect(origin: .zero, size: pixelSize))
+    }
+}
+
+// MARK: - Stubs (명함 링크 우선순위)
+
+private final class StubLinkPriorityUseCase:
+    FetchCardLinkPriorityUseCaseProtocol, SaveCardLinkPriorityUseCaseProtocol,
+    @unchecked Sendable {
+    var stored: [CardLinkType] = CardLinkType.allCases
+    var saveError: Error?
+    private(set) var saved: [CardLinkType]?
+
+    func execute() async throws -> [CardLinkType] {
+        stored
+    }
+
+    func execute(_ priority: [CardLinkType]) async throws {
+        if let saveError { throw saveError }
+        saved = priority
     }
 }
 

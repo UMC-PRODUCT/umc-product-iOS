@@ -6,38 +6,75 @@
 //
 
 import BusinessCardDomain
-import CryptoKit
 import Foundation
 
 /// 명함 면(面) 표기의 단일 진실 원천.
 ///
 /// 표기 이름은 ``MyCard/nameWithNickname``(#1236) 한 곳에 있고 여기서는 그것을 읽기만 한다.
-/// 라이선스 톤 재설계(#1347)로 늘어난 표기 — 뒷면 시리얼 — 도 여기 모은다.
-/// 앞면과 뒷면이 같은 문자열을 써야 하므로, 파생 규칙이 뷰 안으로 흩어지면 두 면이
-/// 서로 다른 값을 찍게 된다.
+/// 뒷면 연락처·링크 줄(#1679)도 여기 모은다. 화면과 VoiceOver 가 같은 항목을 같은 순서로
+/// 말해야 하므로, 파생 규칙이 뷰 안으로 흩어지면 둘이 서로 다른 값을 말하게 된다.
 ///
 /// 접근성 라벨은 표기 이름과 달리 **면(面)이 있는 카드만** 여기 것을 쓴다.
 /// 명함첩 셀·요약 카드는 뒤집히지 않아 「앞면.」 접두어가 붙으면 없는 뒷면을 암시한다.
 extension MyCard {
 
-    // MARK: - License
+    // MARK: - Contact
 
-    /// 뒷면 시리얼 (`A1B2-C3D4`).
+    /// 뒷면 연락처·링크 줄. 이메일과 우선순위 맨 위 링크(``MyCard/primaryLink``) 하나다.
     ///
-    /// ``memberId`` 를 그대로도, 잘라서도 싣지 않는다 — 회원 식별자는 명함 딥링크
-    /// (``CardLink``)와 교환 페이로드에 그대로 쓰이는 값이라, 카드를 찍은 사진 한 장으로
-    /// 남의 프로필 링크를 조립할 수 있게 된다. 앞 몇 자만 잘라 싣는 것도 같은 노출이다.
+    /// 명함은 간결해야 해서 링크를 다 늘어놓지 않는다 (#1679). 순서는 사용자가 내 정보
+    /// 편집에서 끌어서 정하고, 값 없는 링크는 건너뛴다 — 빈 줄은 서버 미입력을 링크가 있는
+    /// 것처럼 보이게 한다. 링크는 ``linkDisplayText(_:)`` 로 줄여 보이고, 누르면 여는 주소는
+    /// 원래 값으로 만든다.
+    var backFaceContacts: [CardContact] {
+        var contacts: [CardContact] = []
+        if let email = email?.trimmingCharacters(in: .whitespacesAndNewlines), !email.isEmpty {
+            let url = URL(string: Constants.mailScheme + email)
+            contacts.append(CardContact(kind: .email, value: email, url: url))
+        }
+        if let link = primaryLink {
+            contacts.append(
+                CardContact(
+                    kind: CardContact.Kind(link.type),
+                    value: Self.linkDisplayText(link.value),
+                    url: Self.linkURL(link.value)
+                )
+            )
+        }
+        return contacts
+    }
+
+    /// 링크는 입력 그대로(`https://www.github.com/umc/`) 오지만 카드 한 줄 폭이 좁아
+    /// 사람이 읽는 부분만 남긴다. 스킴·`www.`·끝 `/` 는 어느 링크에나 붙어 폭만 차지하고,
+    /// 남겨 두면 정작 아이디가 말줄임으로 잘린다.
+    private static func linkDisplayText(_ url: String) -> String {
+        var text = url
+        for prefix in Constants.linkPrefixes where text.lowercased().hasPrefix(prefix) {
+            text.removeFirst(prefix.count)
+        }
+        while text.hasSuffix("/") {
+            text.removeLast()
+        }
+        return text.isEmpty ? url : text
+    }
+
+    /// 줄을 눌렀을 때 열 웹 주소. 스킴 없이 온 값(`github.com/umc`)은 `https://` 를 붙인다 —
+    /// 그대로 두면 `URL` 이 상대 경로로 읽혀 열리지 않는다.
     ///
-    /// SHA-256 앞 4바이트를 대문자 hex 로 접는다 — 같은 회원은 언제나 같은 시리얼이고
-    /// (결정론적이라 서버 왕복이 필요 없다) 거꾸로 되돌릴 수는 없다. 충돌은 신경 쓰지 않는다:
-    /// 이 값은 조회 키가 아니라 카드가 「발급된 물건」처럼 읽히게 하는 표기일 뿐이다.
-    var licenseSerial: String {
-        let hex = SHA256.hash(data: Data(memberId.utf8))
-            .prefix(Constants.serialByteCount)
-            .map { String(format: "%02X", $0) }
-            .joined()
-        let split = hex.index(hex.startIndex, offsetBy: hex.count / 2)
-        return "\(hex[..<split])\(Constants.serialSeparator)\(hex[split...])"
+    /// `http(s)` 가 아닌 스킴은 열지 않는다. 받은 명함의 값은 상대가 넣은 것이라 다른 앱을
+    /// 여는 주소가 섞여 올 수 있다.
+    private static func linkURL(_ value: String) -> URL? {
+        let lowercased = value.lowercased()
+        let candidate: String
+        if Constants.webSchemes.contains(where: lowercased.hasPrefix) {
+            candidate = value
+        } else if value.contains(Constants.schemeSeparator) {
+            return nil
+        } else {
+            candidate = Constants.defaultWebScheme + value
+        }
+        guard let url = URL(string: candidate), url.host()?.isEmpty == false else { return nil }
+        return url
     }
 
     // MARK: - Accessibility
@@ -59,20 +96,59 @@ extension MyCard {
         return Constants.frontPrefix + items.joined(separator: Constants.separator)
     }
 
-    /// 「뒷면. 시리얼 번호 A1B2-C3D4, QR 코드, github.com/umc, …」.
-    ///
-    /// 값 없는 링크는 빼고 읽는다 — `BusinessCardFaceView.linkRow` 가 「값 없으면 줄 자체를
-    /// 안 그린다」는 규칙과 같다. 빈 줄을 읽으면 서버 미입력이 링크가 있는 것처럼 들린다.
+    /// 「뒷면. one@umc.dev, github.com/umc, …」. 줄이 없으면 빈 상태 문구를 읽는다.
     var backFaceAccessibilityLabel: String {
-        let links = [github, linkedIn, blog].compactMap { link -> String? in
-            guard let link, !link.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                return nil
-            }
-            return link
-        }
-        let head = ["\(Constants.serialLabel)\(licenseSerial)", Constants.qrLabel]
-        return Constants.backPrefix + (head + links).joined(separator: Constants.separator)
+        let values = backFaceContacts.map(\.value)
+        let items = values.isEmpty ? [CardFaceCopy.emptyContactsTitle] : values
+        return Constants.backPrefix + items.joined(separator: Constants.separator)
     }
+}
+
+/// 명함 뒷면의 연락처·링크 한 줄.
+struct CardContact: Hashable {
+    enum Kind: Hashable {
+        case email
+        case github
+        case linkedIn
+        case blog
+        case instagram
+        case personal
+
+        init(_ type: CardLinkType) {
+            switch type {
+            case .github: self = .github
+            case .linkedIn: self = .linkedIn
+            case .blog: self = .blog
+            case .instagram: self = .instagram
+            case .personal: self = .personal
+            }
+        }
+    }
+
+    let kind: Kind
+    /// 카드에 보이는 값. 링크는 스킴·`www.`·끝 `/` 를 뗀 표기다.
+    let value: String
+    /// 줄을 누르면 여는 주소 — 이메일은 `mailto:`, 링크는 웹 주소. 열 수 없는 값이면 `nil` 이고
+    /// 줄은 텍스트로만 둔다.
+    let url: URL?
+
+    /// VoiceOver 액션 이름. 뒷면이 한 덩어리로 읽혀 줄 버튼에 닿을 수 없어 액션으로 연다.
+    var openActionName: String {
+        switch kind {
+        case .email: "메일 보내기"
+        case .github: "GitHub 열기"
+        case .linkedIn: "LinkedIn 열기"
+        case .blog: "블로그 열기"
+        case .instagram: "Instagram 열기"
+        case .personal: "개인 링크 열기"
+        }
+    }
+}
+
+/// 화면과 VoiceOver 가 함께 쓰는 명함 문구.
+enum CardFaceCopy {
+    static let emptyContactsTitle = "등록된 연락처와 소개 링크가 없어요"
+    static let emptyContactsHint = "프로필 정보 편집에서 정보를 추가해 명함을 완성해 보세요."
 }
 
 // MARK: - Constants
@@ -83,9 +159,10 @@ private enum Constants {
     static let separator = ", "
     static let partSuffix = " 파트"
     static let generationSuffix = "기"
-    static let qrLabel = "QR 코드"
-    static let serialLabel = "시리얼 번호 "
-    /// 4바이트 = hex 8자 = `XXXX-XXXX`. 레퍼런스 시리얼과 같은 길이감이면 충분하다.
-    static let serialByteCount = 4
-    static let serialSeparator = "-"
+    static let webSchemes = ["https://", "http://"]
+    static let defaultWebScheme = "https://"
+    static let schemeSeparator = "://"
+    static let mailScheme = "mailto:"
+    /// 앞에서부터 차례로 뗀다 — `https://www.` 처럼 겹쳐 붙은 경우도 둘 다 떨어진다.
+    static let linkPrefixes = webSchemes + ["www."]
 }

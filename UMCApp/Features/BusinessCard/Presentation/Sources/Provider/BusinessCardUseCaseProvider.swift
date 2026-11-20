@@ -45,6 +45,7 @@ public final class BusinessCardUseCaseProvider: BusinessCardUseCaseProviding {
 
     public init(
         businessCardRepository: BusinessCardRepositoryProtocol,
+        linkPriorityRepository: CardLinkPriorityRepositoryProtocol,
         peerCardRepository: PeerCardRepositoryProtocol,
         receivedCardRepository: ReceivedCardRepositoryProtocol,
         activityStatRepository: ActivityStatRepositoryProtocol,
@@ -53,7 +54,10 @@ public final class BusinessCardUseCaseProvider: BusinessCardUseCaseProviding {
         ranging: PeerRangingCoordinator? = nil
     ) {
         let save = SaveReceivedCardUseCase(repository: receivedCardRepository)
-        self.fetchMyCardUseCase = FetchMyCardUseCase(repository: businessCardRepository)
+        self.fetchMyCardUseCase = FetchMyCardUseCase(
+            repository: businessCardRepository,
+            linkPriorityRepository: linkPriorityRepository
+        )
         self.fetchPeerCardUseCase = FetchPeerCardUseCase(repository: peerCardRepository)
         self.fetchReceivedCardsUseCase = FetchReceivedCardsUseCase(
             repository: receivedCardRepository

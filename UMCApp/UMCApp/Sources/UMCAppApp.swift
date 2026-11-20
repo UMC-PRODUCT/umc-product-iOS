@@ -236,6 +236,9 @@ extension UMCAppApp {
     /// 저장된 줄 알고 잃는다 — `AppRootView`가 이 값을 읽어 한 번 고지한다.
     nonisolated(unsafe) private(set) static var isEphemeralStore = false
 
+    /// 기기에만 두는 SwiftData 저장소 이름. iCloud와 동기화하는 기본 저장소와 파일이 갈린다.
+    private static let deviceOnlyStoreName = "DeviceOnly"
+
     /// SwiftData ModelContainer를 생성합니다.
     ///
     /// CloudKit(`iCloud.com.umc.product`) 동기화를 먼저 시도하고, 실패하면 로컬 →
@@ -254,21 +257,37 @@ extension UMCAppApp {
     ///   있으면 그 공유 컨테이너를 자동 선택해, 최초 실행마다 상위 디렉터리 부재로 인한
     ///   CoreData recovery 로그가 발생했다.
     private static func makeModelContainer() -> ModelContainer {
-        let schema = Schema([
+        let syncedModels: [any PersistentModel.Type] = [
             NoticeReadRecord.self,
             AITokenDailyUsageRecord.self,
             NoticeHistoryData.self,
             GenerationMappingRecord.self,
             ReceivedCardRecord.self,
-        ])
+        ]
+        // 기기에만 두는 모델 (#1679 명함 링크 우선순위). 동기화 구성에 넣으면 출시 전에 CloudKit
+        // 운영 스키마를 배포해야 해서, 동기화 없는 구성으로 따로 둔다.
+        let deviceOnlyModels: [any PersistentModel.Type] = [
+            CardLinkPriorityRecord.self,
+        ]
+        let schema = Schema(syncedModels + deviceOnlyModels)
+        let syncedSchema = Schema(syncedModels)
+        let deviceOnlyConfiguration = ModelConfiguration(
+            deviceOnlyStoreName,
+            schema: Schema(deviceOnlyModels),
+            groupContainer: .none,
+            cloudKitDatabase: .none
+        )
 
         do {
             let cloudConfiguration = ModelConfiguration(
-                schema: schema,
+                schema: syncedSchema,
                 groupContainer: .none,
                 cloudKitDatabase: .automatic
             )
-            return try ModelContainer(for: schema, configurations: [cloudConfiguration])
+            return try ModelContainer(
+                for: schema,
+                configurations: [cloudConfiguration, deviceOnlyConfiguration]
+            )
         } catch {
             let cloudReason = error.localizedDescription
             logger.error("SwiftData CloudKit init failed, falling back to local: \(cloudReason)")
@@ -276,11 +295,14 @@ extension UMCAppApp {
 
         do {
             let localConfiguration = ModelConfiguration(
-                schema: schema,
+                schema: syncedSchema,
                 groupContainer: .none,
                 cloudKitDatabase: .none
             )
-            return try ModelContainer(for: schema, configurations: [localConfiguration])
+            return try ModelContainer(
+                for: schema,
+                configurations: [localConfiguration, deviceOnlyConfiguration]
+            )
         } catch {
             let reason = error.localizedDescription
             logger.error("SwiftData local store init failed, falling back to in-memory: \(reason)")

@@ -43,4 +43,21 @@ public extension Image {
     static var linkedInMono: Image {
         Image("linkedInMono", bundle: .module)
     }
+
+    /// 명함 뒷면의 이메일 아이콘, 흰색 모노 (`Figma I1:16640;90:2645`).
+    static var mailMono: Image {
+        Image("mailMono", bundle: .module)
+    }
+
+    /// 명함 뒷면의 링크 아이콘, 흰색 모노 (`Figma I1:16640;90:2654`).
+    ///
+    /// 시안의 외부 링크 목록이 Blog와 개인 사이트에 같은 아이콘을 쓴다 (`Figma 138:17666`·`138:17685`).
+    static var linkMono: Image {
+        Image("linkMono", bundle: .module)
+    }
+
+    /// 명함 뒷면의 Instagram 브랜드 아이콘, 흰색 모노 (`Figma 141:17799`).
+    static var instagramMono: Image {
+        Image("instagramMono", bundle: .module)
+    }
 }

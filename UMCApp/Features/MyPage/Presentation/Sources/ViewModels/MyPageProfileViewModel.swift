@@ -9,6 +9,7 @@ import UMCFoundation
 import SwiftUI
 import PhotosUI
 import AuthDomain
+import BusinessCardDomain
 import CoreNetwork
 import CorePhoto
 import MyPageDomain
@@ -25,6 +26,8 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
     private let useCaseProvider: MyPageUseCaseProviding
     private let fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol
     private let deleteMemberOAuthUseCase: DeleteMemberOAuthUseCaseProtocol
+    private let fetchCardLinkPriorityUseCase: FetchCardLinkPriorityUseCaseProtocol
+    private let saveCardLinkPriorityUseCase: SaveCardLinkPriorityUseCaseProtocol
     private let kakaoLoginManager: KakaoLoginManaging
     private let googleLoginManager: GoogleLoginManaging
 
@@ -50,12 +53,17 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
     
     /// 최초 조회 / 수정 화면 진입 시 링크 스냅샷
     private var initialProfileLinkState: [SocialLinkType: String]
+    /// 편집 중인 링크 우선순위 (#1679). 맨 위에서부터 값 있는 첫 링크가 명함 뒷면에 보인다.
+    public private(set) var linkPriority: [SocialLinkType] = SocialLinkType.allCases
+    /// 기기에 저장된 링크 우선순위. 변경 감지의 기준이다.
+    private var savedLinkPriority: [SocialLinkType] = SocialLinkType.allCases
     /// 활동 이력 추가 성공 문구 자동 복귀 제어 태스크
     private var activityLogAddedResetTask: Task<Void, Never>?
     
     /// 저장 버튼 활성화 여부
     public var canSubmit: Bool {
-        !isUpdatingProfileImage && (hasPendingImageUpdate || hasPendingLinkUpdate)
+        !isUpdatingProfileImage
+            && (hasPendingImageUpdate || hasPendingLinkUpdate || hasPendingLinkPriorityUpdate)
     }
     
     /// 갤러리에서 새 이미지를 선택하여 업로드 대기 중인지 여부
@@ -68,6 +76,11 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         Self.makeProfileLinkState(from: normalizedProfileLinksForSubmit) != initialProfileLinkState
     }
     
+    /// 링크 순서를 바꿔 기기에 저장해야 하는지 여부
+    private var hasPendingLinkPriorityUpdate: Bool {
+        linkPriority != savedLinkPriority
+    }
+
     /// 현재 프로필 링크를 정규화하여 서버 제출용 배열로 반환합니다.
     private var normalizedProfileLinksForSubmit: [ProfileLink] {
         let currentLinks = Self.makeProfileLinkState(from: profileData.profileLink)
@@ -88,6 +101,8 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         useCaseProvider: MyPageUseCaseProviding,
         fetchMyOAuthUseCase: FetchMyOAuthUseCaseProtocol,
         deleteMemberOAuthUseCase: DeleteMemberOAuthUseCaseProtocol,
+        fetchCardLinkPriorityUseCase: FetchCardLinkPriorityUseCaseProtocol,
+        saveCardLinkPriorityUseCase: SaveCardLinkPriorityUseCaseProtocol,
         kakaoLoginManager: KakaoLoginManaging = KakaoLoginManager(),
         googleLoginManager: GoogleLoginManaging = GoogleLoginManager()
     ) {
@@ -95,11 +110,31 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         self.useCaseProvider = useCaseProvider
         self.fetchMyOAuthUseCase = fetchMyOAuthUseCase
         self.deleteMemberOAuthUseCase = deleteMemberOAuthUseCase
+        self.fetchCardLinkPriorityUseCase = fetchCardLinkPriorityUseCase
+        self.saveCardLinkPriorityUseCase = saveCardLinkPriorityUseCase
         self.kakaoLoginManager = kakaoLoginManager
         self.googleLoginManager = googleLoginManager
         self.initialProfileLinkState = Self.makeProfileLinkState(from: profileData.profileLink)
     }
     
+    /// 기기에 저장된 링크 우선순위를 읽습니다 (#1679). 못 읽으면 기본 순서로 둡니다.
+    ///
+    /// 이미 순서를 바꾸고 있으면 덮지 않는다 — 화면이 다시 나타날 때마다 읽는다.
+    @MainActor
+    public func loadLinkPriority() async {
+        guard let priority = try? await fetchCardLinkPriorityUseCase.execute() else { return }
+        let ordered = priority.compactMap(SocialLinkType.init(cardLinkType:))
+        if !hasPendingLinkPriorityUpdate {
+            linkPriority = ordered
+        }
+        savedLinkPriority = ordered
+    }
+
+    /// 링크 줄을 끌어서 옮긴 순서를 반영합니다.
+    public func moveLinks(fromOffsets source: IndexSet, toOffset destination: Int) {
+        linkPriority.move(fromOffsets: source, toOffset: destination)
+    }
+
     /// 갤러리에서 이미지를 선택했을 때 호출되는 콜백입니다.
     /// - Parameter image: 로드된 UIImage 객체
     public func didLoadImage(image: UIImage) async {
@@ -124,12 +159,20 @@ public final class MyPageProfileViewModel: SinglePhotoPickerManageable {
         
         let hasImageUpdate = selectedImageData != nil
         let hasLinkUpdate = hasPendingLinkUpdate
-        guard hasImageUpdate || hasLinkUpdate else {
+        let hasPriorityUpdate = hasPendingLinkPriorityUpdate
+        guard hasImageUpdate || hasLinkUpdate || hasPriorityUpdate else {
             return
         }
         
         isUpdatingProfileImage = true
         defer { isUpdatingProfileImage = false }
+
+        // 순서는 기기에만 저장하므로 서버 요청보다 먼저 한다. 사진을 올린 뒤에 여기서 멈추면
+        // 사진만 저장된 채 실패로 안내하게 된다.
+        if hasPriorityUpdate {
+            try await saveCardLinkPriorityUseCase.execute(linkPriority.compactMap(\.cardLinkType))
+            savedLinkPriority = linkPriority
+        }
         
         var updatedProfile = profileData
         let currentSocialConnections = profileData.socialConnections
