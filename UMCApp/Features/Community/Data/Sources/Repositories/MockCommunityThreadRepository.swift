@@ -132,6 +132,7 @@ public struct MockCommunityThreadRepository: CommunityThreadRepositoryProtocol {
     public func kickMember(threadId: String, memberId: String) async throws {}
     public func changeMemberRole(threadId: String, memberId: String, role: String) async throws {}
     public func leaveThread(threadId: String) async throws {}
+    public func acknowledgeKick(threadId: String) async throws {}
     public func reportMessage(messageId: String, reason: String) async throws {}
 
     // MARK: - Sample

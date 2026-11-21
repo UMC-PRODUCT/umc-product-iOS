@@ -25,11 +25,13 @@ private final class StubListUseCase: CommunityThreadListUseCaseProtocol {
     var pagesByOffset: [Int: CommunityThreadPage] = [:]
     var shouldFailLoad = false
     var shouldFailToggle = false
+    var shouldFailAcknowledge = false
 
     private(set) var requestedOffsets: [Int] = []
     private(set) var requestedQueries: [String?] = []
     private(set) var pinCalls: [(threadId: String, isPinned: Bool)] = []
     private(set) var leaveCalls: [String] = []
+    private(set) var acknowledgeKickCalls: [String] = []
     private(set) var deleteCalls: [String] = []
 
     func loadThreads(
@@ -55,6 +57,11 @@ private final class StubListUseCase: CommunityThreadListUseCaseProtocol {
     func leave(threadId: String) async throws {
         leaveCalls.append(threadId)
         if shouldFailToggle { throw AppError.unknown(message: "실패") }
+    }
+
+    func acknowledgeKick(threadId: String) async throws {
+        acknowledgeKickCalls.append(threadId)
+        if shouldFailAcknowledge { throw AppError.unknown(message: "실패") }
     }
 
     func deleteThread(threadId: String) async throws {
@@ -410,6 +417,49 @@ struct CommunityThreadListViewModelTests {
         await waitUntil { useCase.leaveCalls.isEmpty == false }
 
         #expect(viewModel.state.value?.isEmpty == true)
+    }
+
+    // MARK: - 강퇴 확인
+
+    /// 서버는 확인 전(`KICKED`) 스레드를 목록에 계속 돌려준다. 확인한 뒤 다시 받은 목록에서는 빠진다.
+    @Test("강퇴 확인을 보낸 뒤 목록을 다시 받아, 서버가 뺀 스레드가 사라진다")
+    func acknowledgesKickThenRefreshes() async {
+        let useCase = StubListUseCase()
+        useCase.page = CommunityThreadPage(
+            pinned: [], threads: [makeThread(id: "1"), makeThread(id: "2")],
+            nextOffset: nil, total: "2"
+        )
+        let viewModel = makeViewModel(useCase)
+        await viewModel.load()
+        useCase.page = CommunityThreadPage(
+            pinned: [], threads: [makeThread(id: "2")], nextOffset: nil, total: "1"
+        )
+
+        await viewModel.acknowledgeKick(threadId: "1")
+
+        #expect(useCase.acknowledgeKickCalls == ["1"])
+        #expect(useCase.requestedOffsets == [0, 0])
+        #expect(viewModel.state.value?.map(\.id) == ["2"])
+    }
+
+    /// 확인이 실패하면 서버에 그대로 남는다. 직접 지우면 다음 조회에서 되살아나므로 서버가 준
+    /// 목록을 그대로 보여 주고, 강퇴 안내 화면을 막지 않도록 알리지도 않는다.
+    @Test("강퇴 확인이 실패해도 알리지 않고 서버가 준 목록을 그대로 보여 준다")
+    func keepsServerListWhenAcknowledgeFails() async {
+        let useCase = StubListUseCase()
+        useCase.page = CommunityThreadPage(
+            pinned: [], threads: [makeThread(id: "1")], nextOffset: nil, total: "1"
+        )
+        useCase.shouldFailAcknowledge = true
+        let errorHandler = ErrorHandler()
+        let viewModel = makeViewModel(useCase, errorHandler: errorHandler)
+        await viewModel.load()
+
+        await viewModel.acknowledgeKick(threadId: "1")
+
+        #expect(useCase.acknowledgeKickCalls == ["1"])
+        #expect(viewModel.state.value?.map(\.id) == ["1"])
+        #expect(errorHandler.currentError == nil)
     }
 
     // MARK: - Realtime

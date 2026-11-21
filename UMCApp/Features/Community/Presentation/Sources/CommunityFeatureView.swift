@@ -213,6 +213,9 @@ private struct CommunitySplitContent<DetailRoot: View>: View {
                         onThreadCreated: { viewModel.insertCreated($0) },
                         onThreadUpdated: { viewModel.applyUpdated($0) },
                         onThreadRemoved: { viewModel.removeThread(threadId: $0) },
+                        onThreadKicked: { threadId in
+                            Task { await viewModel.acknowledgeKick(threadId: threadId) }
+                        },
                         onThreadToggled: { viewModel.applyToggles($0) },
                         onComposerChange: { hasComposerChanges = $0 }
                     )

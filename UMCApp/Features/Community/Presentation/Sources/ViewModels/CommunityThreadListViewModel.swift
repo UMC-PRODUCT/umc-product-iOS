@@ -294,6 +294,17 @@ public final class CommunityThreadListViewModel {
         removeRow(threadId: threadId)
     }
 
+    /// 채팅방이 강퇴를 확인했을 때 서버에 알리고 목록을 다시 받는다 (#1682).
+    ///
+    /// 서버는 확인 전(`KICKED`) 스레드를 목록에 계속 돌려준다. 행을 직접 지우지 않고 다시 받는
+    /// 이유는 확인이 실패하면 서버에 그대로 남기 때문이다 — 지웠다가 다음 조회에서 되살아나는 것보다
+    /// 서버가 주는 목록을 그대로 보여 주는 편이 낫다. 실시간 `member.kicked` 도 같은 방식으로 맞춘다.
+    /// 강퇴 안내 화면을 막으면 안 되므로 어느 쪽이 실패해도 알리지 않는다.
+    public func acknowledgeKick(threadId: String) async {
+        try? await listUseCase.acknowledgeKick(threadId: threadId)
+        await refresh(silent: true)
+    }
+
     /// 편집 화면이 돌려준 값을 행에 반영한다.
     ///
     /// 응답 전체로 행을 갈아 끼우지 않고 편집 대상 4개만 옮긴다 — 상세 응답의 `unreadCount`·

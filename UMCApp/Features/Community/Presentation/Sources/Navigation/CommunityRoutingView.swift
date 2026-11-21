@@ -41,6 +41,10 @@ struct CommunityRoutingView: View {
     /// 로도 행이 지워지지만, 그걸 기다리면 루트로 되돌아온 직후 잠깐 남아 있는 행이 보인다.
     let onThreadRemoved: (String) -> Void
 
+    /// 강퇴됐음을 알린다. 서버가 강퇴 확인 전까지 스레드를 목록에 남기므로, 리스트가 확인을 보내고
+    /// 목록을 다시 받는다 (#1682).
+    let onThreadKicked: (String) -> Void
+
     /// 채팅방 ⋯ 메뉴에서 바꾼 고정·알림을 리스트 행에 반영한다 (#1138). 두 값은 나에게만 해당해
     /// 실시간 이벤트가 오지 않으므로, 이 통로가 없으면 돌아온 목록이 옛 상태로 남는다.
     let onThreadToggled: (CommunityThread) -> Void
@@ -65,6 +69,7 @@ struct CommunityRoutingView: View {
                 inviteViewModel: makeInviteViewModel(threadId: threadId),
                 onThreadToggled: onThreadToggled,
                 onThreadRemoved: onThreadRemoved,
+                onThreadKicked: onThreadKicked,
                 onComposerChange: onComposerChange,
                 initialNavigationTitle: title
             )

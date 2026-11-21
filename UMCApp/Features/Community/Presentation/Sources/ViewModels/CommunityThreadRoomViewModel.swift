@@ -61,10 +61,13 @@ public final class CommunityThreadRoomViewModel {
     public private(set) var ejectionNotice: String?
     /// 참여 종료 화면의 이탈 버튼을 눌렀는지. View 가 이걸 보고 리스트로 pop 한다.
     public private(set) var shouldDismiss = false
+    /// 참여 종료 사유가 강퇴인지. View 가 이걸 보고 리스트에 알리고, 리스트가 서버에 강퇴 확인을
+    /// 보낸 뒤 목록을 다시 받는다 — 확인 전(`KICKED`)에는 서버가 스레드를 목록에 계속 돌려준다 (#1682).
+    public private(set) var isKicked = false
     /// 헤더 ⋯ 메뉴로 내가 직접 나갔거나 스레드를 지웠는지 (#1138).
     ///
     /// `shouldDismiss` 와 나누는 이유는 뒤처리가 달라서다 — 이쪽은 리스트 행까지 지워야 하고,
-    /// 강퇴·삭제 통보(`ejectionNotice`)는 실시간 이벤트가 이미 행을 지운 뒤다.
+    /// 삭제 통보는 실시간 이벤트가 이미 행을 지운 뒤다. 강퇴 통보는 ``isKicked`` 가 따로 맡는다.
     /// 갱신은 `CommunityThreadRoomViewModel+ThreadMenu` 가 맡아 setter 를 모듈 내부로 연다.
     public internal(set) var didLeave = false
     /// 429 쿨다운 안내. `nil` 이 아닌 동안 전송이 잠긴다 (스펙 §7).
@@ -354,8 +357,8 @@ public final class CommunityThreadRoomViewModel {
             guard !(error is CancellationError) else { return }
             // 강퇴(403)·삭제(404/410)는 재시도해도 같은 거절만 반복된다 — 재시도 버튼이 달린
             // 실패 화면 대신 "참여 종료됨" 으로 안내하고 리스트로 돌려보낸다.
-            if let notice = Self.ejectionMessage(for: error) {
-                eject(message: notice)
+            if let ejection = Self.ejection(for: error) {
+                eject(ejection)
                 return
             }
             header = .failed(AppError.from(error))
@@ -649,7 +652,7 @@ public final class CommunityThreadRoomViewModel {
 
         case .threadDeleted:
             // 삭제는 수신자 전원에게 같은 의미다 — 팬아웃 모호성이 없다.
-            eject(message: Constants.deletedMessage)
+            eject(.deleted)
 
         case .threadInvited:
             // 읽기 전용으로 보던 방에 초대됐다. 헤더를 다시 받아 쓰기를 열고, 실시간이 없던 동안의
@@ -830,20 +833,20 @@ public final class CommunityThreadRoomViewModel {
             let thread = try await useCase.loadThread(threadId: threadId)
             header = .loaded(thread)
         } catch {
-            guard let notice = Self.ejectionMessage(for: error) else { return }
-            eject(message: notice)
+            guard let ejection = Self.ejection(for: error) else { return }
+            eject(ejection)
         }
     }
 
     /// 더는 볼 수 없는 방인지. 열람이 전체 공개라 비참여자도 200 을 받는다 — 거절은 강퇴(403)와
     /// 삭제(404 없음·410 삭제됨)뿐이고, 어느 쪽이든 재시도해도 결과가 같다.
-    private static func ejectionMessage(for error: Error) -> String? {
+    private static func ejection(for error: Error) -> Ejection? {
         guard case .network(.requestFailed(let statusCode, _)) = AppError.from(error) else {
             return nil
         }
         switch statusCode {
-        case 403: return Constants.ejectedMessage
-        case 404, 410: return Constants.deletedMessage
+        case 403: return .kicked
+        case 404, 410: return .deleted
         default: return nil
         }
     }
@@ -866,9 +869,10 @@ public final class CommunityThreadRoomViewModel {
     /// 떠 있던 알림은 함께 내린다. 볼 수 없게 된 방에서는 그쪽 선택지가 더 이상 의미가 없다.
     /// 내가 직접 나간 뒤에는 띄우지 않는다 — 내 `member.left` 도 팬아웃으로 되돌아와, 리스트로
     /// 빠지는 중인 화면에 "다른 기기에서 나갔어요" 가 한 프레임 스쳐 지나간다 (#1138).
-    private func eject(message: String) {
+    private func eject(_ ejection: Ejection) {
         guard ejectionNotice == nil, !didLeave else { return }
-        ejectionNotice = message
+        ejectionNotice = ejection.message
+        isKicked = ejection == .kicked
         alertPrompt = nil
     }
 
@@ -1077,4 +1081,19 @@ fileprivate enum Constants {
     static let sendCooldown: Duration = .seconds(5)
     static let ejectedMessage = "이 스레드에서 내보내졌어요."
     static let deletedMessage = "이 스레드가 삭제됐어요."
+}
+
+// MARK: - Ejection
+
+/// 방을 더는 볼 수 없게 된 사유. 안내 문구와, 서버에 강퇴 확인을 보낼지가 함께 갈린다 (#1682).
+fileprivate enum Ejection {
+    case kicked
+    case deleted
+
+    var message: String {
+        switch self {
+        case .kicked: return Constants.ejectedMessage
+        case .deleted: return Constants.deletedMessage
+        }
+    }
 }

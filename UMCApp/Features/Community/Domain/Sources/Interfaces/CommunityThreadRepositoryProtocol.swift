@@ -116,6 +116,12 @@ public protocol CommunityThreadRepositoryProtocol: Sendable {
     /// `OWNER` 는 거절된다(409 `COMMUNITY-0041`) — 소유권 이전이 선행돼야 한다.
     func leaveThread(threadId: String) async throws
 
+    /// `POST /threads/{threadId}/kick/acknowledge` (COMMUNITY-THREAD-012).
+    ///
+    /// 강퇴 안내를 봤다고 알린다. 서버는 이 뒤부터 목록 조회에서 스레드를 뺀다 — 확인 전(`KICKED`)
+    /// 에는 목록에 계속 남는다. 확인 전 상태가 아니면 409 `COMMUNITY-0047` 로 거절된다.
+    func acknowledgeKick(threadId: String) async throws
+
     /// `POST /messages/{messageId}/report`.
     ///
     /// 경로가 `/threads/...` 하위가 아니라 `threadId` 를 받지 않는다 — messageId 하나로 신고한다.
