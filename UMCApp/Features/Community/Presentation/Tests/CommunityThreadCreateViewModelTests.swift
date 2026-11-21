@@ -240,6 +240,33 @@ struct CommunityThreadCreateViewModelTests {
         #expect(viewModel.inviteeCapacityNotice != nil)
     }
 
+    /// 서버는 개설자를 먼저 넣은 뒤 초대 목록에서 본인을 다시 만나면 생성 전체를 거절한다.
+    /// 검색 시트가 본인을 숨겨도 CSV 처럼 검색을 거치지 않는 경로가 있다 (#1675).
+    @Test("본인을 고르면 초대 목록에서 빠지고 생성 요청에도 실리지 않는다")
+    func dropsSelfFromInvitees() async {
+        let useCase = StubCreateUseCase()
+        let viewModel = makeViewModel(useCase: useCase, currentMemberId: "1")
+        viewModel.title = "iOS 스터디"
+        viewModel.threadDescription = "매주 화요일 8시"
+
+        viewModel.invitees = [makeChallenger(memberId: "1"), makeChallenger(memberId: "7")]
+        _ = await viewModel.submit()
+
+        #expect(viewModel.invitees.map(\.memberId) == ["7"])
+        #expect(useCase.calls.first?.memberIds == ["7"])
+        // 본인은 서버가 알아서 넣는 사람이라 뺀 사실을 알릴 이유가 없다.
+        #expect(viewModel.inviteeCapacityNotice == nil)
+    }
+
+    @Test("세션에 memberId 가 없으면 아무도 빼지 않는다")
+    func keepsInviteesWithoutCurrentMemberId() {
+        let viewModel = makeViewModel(currentMemberId: nil)
+
+        viewModel.invitees = [makeChallenger(memberId: "1"), makeChallenger(memberId: "7")]
+
+        #expect(viewModel.invitees.map(\.memberId) == ["1", "7"])
+    }
+
     @Test("실패하면 인라인 에러가 뜨고 입력값은 그대로 남는다")
     func keepsInputOnFailure() async {
         let useCase = StubCreateUseCase()
@@ -469,16 +496,21 @@ struct CommunityThreadCreateViewModelTests {
 
 /// `useCase` 기본값을 `nil` 로 두는 이유: 기본 인자 식은 호출 지점에서 평가되는데 그 자리가
 /// nonisolated 라, `@MainActor` 대역을 기본값에 그대로 쓰면 격리 위반이 된다.
+///
+/// `currentMemberId` 기본값을 `nil` 로 두는 이유: ViewModel 기본값은 기기 `UserDefaults` 를 읽어,
+/// 테스트를 돌린 기기에 남은 로그인 정보에 따라 초대 목록 결과가 달라진다.
 @MainActor
 private func makeViewModel(
     useCase: StubCreateUseCase? = nil,
     classifier: StubClassifier = StubClassifier(),
-    refiner: StubDescriptionRefiner = StubDescriptionRefiner()
+    refiner: StubDescriptionRefiner = StubDescriptionRefiner(),
+    currentMemberId: String? = nil
 ) -> CommunityThreadCreateViewModel {
     CommunityThreadCreateViewModel(
         useCase: useCase ?? StubCreateUseCase(),
         classifier: classifier,
-        descriptionRefiner: refiner
+        descriptionRefiner: refiner,
+        currentMemberId: currentMemberId
     )
 }
 

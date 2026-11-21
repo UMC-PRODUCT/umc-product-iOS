@@ -81,18 +81,23 @@ public struct CommunityThreadRepository: CommunityThreadRepositoryProtocol, @unc
     ) async throws -> CommunityThread {
         // 201 응답 본문이 상세와 같은 스키마라 `fetchThread` 와 같은 DTO 를 쓴다.
         // 초대한 인원까지 센 `memberCount` 가 함께 오므로 생성 직후 화면이 바로 맞는다.
-        try await payload(
-            CommunityThreadDTO.self,
-            from: .createThread(
-                body: CreateThreadBody(
-                    title: title,
-                    description: description,
-                    category: category,
-                    icon: icon,
-                    memberIds: memberIds
+        do {
+            return try await payload(
+                CommunityThreadDTO.self,
+                from: .createThread(
+                    body: CreateThreadBody(
+                        title: title,
+                        description: description,
+                        category: category,
+                        icon: icon,
+                        memberIds: memberIds
+                    )
                 )
-            )
-        ).toDomain
+            ).toDomain
+        } catch {
+            // 생성 시점 초대도 서버가 초대와 같은 검사를 거쳐 같은 코드로 거절한다 (#1675).
+            throw Self.inviteError(from: error)
+        }
     }
 
     /// 보낼 필드가 하나도 없으면 요청 자체를 생략하고 서버 재조회로 최신 상태만 돌려준다 —
