@@ -75,6 +75,9 @@ struct CommunityThreadRoomView: View {
     /// 오버레이를 닫은 뒤 VoiceOver 포커스를 원래 말풍선으로 돌려보낸다.
     @AccessibilityFocusState private var focusedMessageID: String?
 
+    /// 입력창 포커스. 롱프레스 메뉴를 열 때 키보드를 내리는 데 쓴다 (#1684).
+    @FocusState private var isComposerFocused: Bool
+
     /// 최하단 근처를 보고 있는지. `defaultScrollAnchor(.bottom)` 으로 진입 직후는 항상 최하단이고,
     /// 스크롤이 일어나기 전에는 geometry 콜백이 오지 않으므로 초기값이 곧 실제 상태다.
     @State private var isNearBottom = true
@@ -226,6 +229,7 @@ struct CommunityThreadRoomView: View {
                 } else if viewModel.header.error == nil {
                     MessageComposer(
                         text: $viewModel.draft,
+                        isFocused: $isComposerFocused,
                         canSend: viewModel.canSend,
                         replyTarget: viewModel.replyTarget,
                         editingSnippet: viewModel.editTarget?.content,
@@ -723,6 +727,9 @@ struct CommunityThreadRoomView: View {
     /// 오버레이의 반응 바·답장·신고·삭제는 모두 쓰기라 비참여자에게는 띄우지 않는다 (#1432).
     private func showActions(for message: ThreadMessage) {
         guard viewModel.canWrite || viewModel.canBlock(message) else { return }
+        // 오버레이는 키보드를 뺀 높이를 모른다. 키보드가 떠 있으면 말풍선 아래로 놓인 메뉴가
+        // 그 밑에 깔린다 (#1684). 초안은 ViewModel 의 `draft` 에 남으므로 포커스만 내린다.
+        isComposerFocused = false
         withAnimation(reduceMotion ? nil : .snappy) { actionTargetID = message.id }
     }
 
@@ -738,10 +745,13 @@ struct CommunityThreadRoomView: View {
         switch action {
         case .reply:
             viewModel.requestReply(message)
+            // 메뉴를 열 때 내린 키보드를 되돌린다. 답장·수정은 고르자마자 입력이 이어진다.
+            isComposerFocused = true
         case .copy:
             viewModel.copyContent(message)
         case .edit:
             viewModel.requestEdit(message)
+            isComposerFocused = true
         case .report:
             viewModel.requestReport(message)
         case .delete:
