@@ -218,6 +218,7 @@ struct MyPageView: View {
             BusinessCardFaceView(
                 card: card,
                 isFlipped: isCardFlipped,
+                style: .license(qrImage: viewModel.qrImage),
                 onFlip: { isCardFlipped.toggle() }
             )
 
@@ -241,7 +242,10 @@ struct MyPageView: View {
     /// (어긋난 값으로 편집이 시작되는 것을 막기 위함)다.
     private var cardEditAction: (() -> Void)? {
         guard let profile = viewModel.profileData.value else { return nil }
-        return { onSelectDestination(.cardEdit(profileData: profile)) }
+        return {
+            viewModel.prepareForCardEdit()
+            onSelectDestination(.cardEdit(profileData: profile))
+        }
     }
 
     /// 활동 이력 목록으로 이동하는 액션. ``cardEditAction``과 같은 규칙 — 스냅샷이 없으면

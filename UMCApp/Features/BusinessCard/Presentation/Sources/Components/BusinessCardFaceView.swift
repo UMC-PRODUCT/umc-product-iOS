@@ -20,11 +20,8 @@ import UIKit
 /// 둔다. 다크 단색으로 갈아엎으면 라이트/다크(#1234)·대비(#1235) 기준을 처음부터 다시 잡아야
 /// 하는데, 카드가 얻는 건 톤 하나뿐이라 값이 맞지 않는다.
 ///
-/// 양면 모두 왼쪽에 프로필 사진을 둔다(#1679). 앞면은 이름 행·파트 행·발급 행(학교 · 기수),
-/// 뒷면은 이메일과 우선순위 맨 위 링크 한 줄이고(``MyCard/primaryLink``) 둘 다 없으면 빈 상태
-/// 문구를 보인다. 줄을 누르면 메일 작성이나 링크가 열린다. 접근성 글자 크기에서는 사진을 글자
-/// 위로 올린다(``faceLayout``).
-/// 헤더와 하단 버튼 두 개는 양면 공통이다.
+/// 마이페이지의 라이선스 앞면에는 이름·파트·학교·기수, 뒷면에는 시리얼·교환 QR·공개 연락처를 표시한다.
+/// 받은 명함은 양면에 사진을 두며 뒷면에서 공개 연락처를 열 수 있다.
 ///
 /// 면 상태는 들지 않는다 — 뒤집힘 여부의 정본은 소유자이고 ``isFlipped`` 로 내려준다.
 /// 뷰가 드는 것은 **진행 중인 회전 각도뿐**이다. 끄는 손가락·관성은 소유자가 알 필요가 없고,
@@ -38,6 +35,17 @@ public struct BusinessCardFaceView: View {
 
     // MARK: - Property
 
+    public enum Style {
+        case businessCard
+        case license(qrImage: CGImage?)
+
+        fileprivate var showsLicense: Bool {
+            if case .license = self { return true }
+            return false
+        }
+    }
+
+    private let style: Style
     private let card: MyCard
     private let isFlipped: Bool
     /// 뒷면 빈 상태에서 프로필 정보 편집을 안내할지. 받은 명함에는 편집할 길이 없다.
@@ -63,6 +71,8 @@ public struct BusinessCardFaceView: View {
 
     private enum Constants {
         static let title = "BUSINESS CARD"
+        static let licenseTitle = "UMC LICENSE"
+        static let serialPrefix = "SERIAL. "
         static let generationPrefix = "GEN. "
         static let exchangeIcon = "shareplay"
         static let exchangeTitle = "명함 교환"
@@ -93,6 +103,9 @@ public struct BusinessCardFaceView: View {
         static let faceBlockSpacing: CGFloat = 12
         /// 양면 왼쪽 프로필 사진 (시안 70×70).
         static let avatarSize: CGFloat = 70
+        static let qrSize: CGFloat = 70
+        static let qrRadius: CGFloat = 6.18
+        static let qrBorderWidth: CGFloat = 0.26
         /// 이름 행과 파트 행 사이.
         static let nameSpacing: CGFloat = 6
         static let logoWidth: CGFloat = 47
@@ -193,11 +206,13 @@ public struct BusinessCardFaceView: View {
     public init(
         card: MyCard,
         isFlipped: Bool = false,
+        style: Style = .businessCard,
         showsEditHint: Bool = true,
         onFlip: (() -> Void)? = nil,
         onExchange: (() -> Void)? = nil,
         onQR: (() -> Void)? = nil
     ) {
+        self.style = style
         self.card = card
         self.isFlipped = isFlipped
         self.showsEditHint = showsEditHint
@@ -306,30 +321,18 @@ public struct BusinessCardFaceView: View {
                 // 옆의 타이틀 텍스트가 같은 뜻을 말한다 — 중복 낭독 방지.
                 .accessibilityHidden(true)
 
-            licenseText(Constants.title)
+            licenseText(style.showsLicense ? Constants.licenseTitle : Constants.title)
         }
     }
 
-    /// 레퍼런스에 있던 두 요소는 의도적으로 빼 뒀다. 되살리기 전에 근거부터 확인할 것:
-    /// **QR 은 그리지 않는다** — 뒷면에 있던 QR 도 #1679 에서 뺐다. 교환 QR 은
-    /// 「QR 코드」 화면이 맡는다.
-    /// **호(arc) 게이지도 그리지 않는다** — 대응하는 진척률이 도메인에 없어서 그리는 순간
-    /// 없는 수치를 지어내게 된다.
-    ///
-    /// #1363 에서 둘을 더 뺐다. **기록 슬롯 4칸** — 마이페이지에서는 카드 바로 아래 섹션이
-    /// 같은 카운트를 다시 보여 주고, 받은 명함 상세에서는 상대 카운트가 없어 늘 `-` 였다.
-    /// **파트 칩** — 이름 행에 있던 파트와 같은 값을 한 번 더 말할 뿐이었다.
-    ///
-    /// #1374 에서 **기수 칩**도 뺐다. 기수는 발급 행 오른쪽 `GEN. {기수}` 로 옮겨 한 줄을
-    /// 줄였다 — 칩과 학교가 각각 한 줄씩 차지해 카드 오른쪽 절반이 비어 있었다.
     private var frontFace: some View {
         faceLayout {
-            avatar
-
+            if !style.showsLicense { avatar }
             VStack(alignment: .leading, spacing: Metrics.faceBlockSpacing) {
                 identityBlock
                 issuerRow
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         // 이름·파트·학교·기수가 따로 읽히면 누구 명함인지 조립해야 알 수 있다.
@@ -431,7 +434,7 @@ public struct BusinessCardFaceView: View {
         backFaceContent
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(card.backFaceAccessibilityLabel)
+            .accessibilityLabel(backAccessibilityLabel)
             .accessibilityActions {
                 ForEach(card.backFaceContacts, id: \.self) { contact in
                     if let url = contact.url {
@@ -443,20 +446,54 @@ public struct BusinessCardFaceView: View {
 
     @ViewBuilder
     private var backFaceContent: some View {
-        let contacts = card.backFaceContacts
-        if contacts.isEmpty {
-            emptyContacts
-        } else {
-            faceLayout {
-                avatar
-
-                VStack(alignment: .leading, spacing: Metrics.contactSpacing) {
-                    ForEach(contacts, id: \.self) { contact in
-                        contactRow(contact)
-                    }
+        switch style {
+        case .license(let qrImage):
+            VStack(alignment: .leading, spacing: Metrics.linkSpacing) {
+                licenseText(Constants.serialPrefix + card.licenseSerial)
+                faceLayout {
+                    qrThumbnail(qrImage)
+                    if !card.backFaceContacts.isEmpty { contactRows }
+                }
+            }
+        case .businessCard:
+            if card.backFaceContacts.isEmpty {
+                emptyContacts
+            } else {
+                faceLayout {
+                    avatar
+                    contactRows
                 }
             }
         }
+    }
+
+    private var contactRows: some View {
+        VStack(alignment: .leading, spacing: Metrics.contactSpacing) {
+            ForEach(card.backFaceContacts, id: \.self) { contact in
+                contactRow(contact)
+            }
+        }
+    }
+
+    private func qrThumbnail(_ image: CGImage?) -> some View {
+        let shape = RoundedRectangle(cornerRadius: Metrics.qrRadius)
+        return ZStack {
+            shape.fill(Color.white)
+            if let image {
+                Image(decorative: image, scale: 1)
+                    .interpolation(.none)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(Metrics.linkSpacing)
+            }
+        }
+        .frame(width: Metrics.qrSize, height: Metrics.qrSize)
+        .overlay { shape.stroke(Color.grey200, lineWidth: Metrics.qrBorderWidth) }
+    }
+
+    private var backAccessibilityLabel: String {
+        guard case .license(let qrImage) = style else { return card.backFaceAccessibilityLabel }
+        return card.licenseBackAccessibilityLabel(hasQR: qrImage != nil)
     }
 
     /// 시안 `90:3045` — 사진 없이 카드 가운데에 두 줄을 둔다. 받은 명함에는 편집 안내를 뺀다.

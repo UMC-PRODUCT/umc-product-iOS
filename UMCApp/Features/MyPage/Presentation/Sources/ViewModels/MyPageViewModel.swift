@@ -60,12 +60,14 @@ public final class MyPageViewModel {
     /// 채워져 오므로(``ActivityStat/empty``) 별도 실패 상태를 두지 않는다.
     public private(set) var activityStat: ActivityStat = .empty
 
+    /// 현재 명함의 교환 딥링크를 담은 QR 이미지.
+    public private(set) var qrImage: CGImage?
+
     /// Alert 표시를 위한 프롬프트 상태 (확인/취소 다이얼로그).
     public var alertPrompt: AlertPrompt?
 
-    /// `loadBusinessCard` 중복 호출 가드. 로드된 카드를 유지한 채 재조회하는 동안에는
-    /// `myCard`가 `.loading`이 아니라서 상태만으로는 인플라이트를 알 수 없다.
-    private var isCardLoadInFlight = false
+    /// 진행 중인 명함 조회. 편집을 시작하면 기존 조회가 나중에 끝나도 공개 연락처를 복원하지 않는다.
+    private var cardLoadID: UUID?
 
     /// `fetchProfile` 중복 호출 가드. 위와 같은 이유 — 로드된 프로필을 유지한 채
     /// 재조회하는 동안 `profileData`는 `.loading`이 아니다.
@@ -160,43 +162,74 @@ public final class MyPageViewModel {
     /// 뒷면 공개 여부(MEMBER-105)도 명함 저장소가 메모리에 들고 있다 (#1678).
     /// 에러 분기는 `fetchProfile`과 동일한 규칙을 따른다.
     ///
-    /// 이미 로드된 카드가 있으면 그대로 보여 둔 채 재조회한다(stale-while-revalidate) —
-    /// pop 복귀 재조회마다 `.loading`으로 밀면 카드 전체가 깜빡인다. 그래서 중복 호출 가드도
-    /// 상태(`.loading`)가 아니라
-    /// 별도 플래그로 건다. 처음 진입·실패 후 재시도만 로딩 상태를 그린다.
+    /// 재조회 중에는 기존 카드와 QR을 유지한다. 편집에 들어갈 때 숨긴 연락처는 성공한 조회에서 갱신한다.
+    /// 처음 진입하거나 표시할 카드가 없는 경우에만 로딩 상태를 그린다.
     ///
     /// - Parameter forceRefresh: `true`이면 프로필 캐시를 우회해 서버 최신으로 갱신한다.
     @MainActor
     public func loadBusinessCard(forceRefresh: Bool = false) async {
-        if isCardLoadInFlight { return }
-        isCardLoadInFlight = true
-        defer { isCardLoadInFlight = false }
+        guard cardLoadID == nil else { return }
+        let loadID = UUID()
+        cardLoadID = loadID
+        defer {
+            if cardLoadID == loadID { cardLoadID = nil }
+        }
 
         let previousState = myCard
         if myCard.value == nil {
             myCard = .loading
+            qrImage = nil
         }
 
-        activityStat = await businessCardProvider.fetchActivityStatUseCase.execute()
+        let stat = await businessCardProvider.fetchActivityStatUseCase.execute()
+        guard cardLoadID == loadID else { return }
+        activityStat = stat
 
+        let result: Loadable<MyCard>
         do {
             let card = try await businessCardProvider.fetchMyCardUseCase.execute(
                 forceRefresh: forceRefresh
             )
-            myCard = .loaded(card)
+            guard cardLoadID == loadID else { return }
+            qrImage = try? businessCardProvider.generateCardQRUseCase.execute(for: card)
+            result = .loaded(card)
         } catch is CancellationError {
-            myCard = previousState
+            result = previousState
         } catch let error as AppError {
-            myCard = Self.failureState(error, previous: previousState)
+            result = Self.failureState(error, previous: previousState)
         } catch let error as NSError
             where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
-            myCard = previousState
+            result = previousState
         } catch {
-            myCard = Self.failureState(
+            result = Self.failureState(
                 .unknown(message: error.localizedDescription),
                 previous: previousState
             )
         }
+        guard cardLoadID == loadID else { return }
+        myCard = result
+    }
+
+    /// 편집 화면에서 공개 범위를 좁힐 수 있으므로 기존 연락처와 편집 전 조회 결과를 숨긴다.
+    @MainActor
+    func prepareForCardEdit() {
+        cardLoadID = nil
+        guard let card = myCard.value else { return }
+        myCard = .loaded(MyCard(
+            memberId: card.memberId,
+            name: card.name,
+            nickname: card.nickname,
+            part: card.part,
+            generation: card.generation,
+            university: card.university,
+            email: nil,
+            github: nil,
+            linkedIn: nil,
+            blog: nil,
+            avatarURL: card.avatarURL,
+            partRaw: card.partRaw,
+            linkPriority: card.linkPriority
+        ))
     }
 
     /// 재조회 실패를 어떤 상태로 실을지 정한다.

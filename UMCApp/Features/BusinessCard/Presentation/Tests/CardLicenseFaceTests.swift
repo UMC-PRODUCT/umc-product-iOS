@@ -19,6 +19,42 @@ import UMCFoundation
 @Suite("명함 면 표기")
 struct CardLicenseFaceTests {
 
+    // MARK: - 뒷면 시리얼
+
+    @Test("같은 회원은 언제나 같은 시리얼이다")
+    func serialIsDeterministic() {
+        let serial = card(memberId: Constants.memberId).licenseSerial
+
+        #expect(serial == card(memberId: Constants.memberId).licenseSerial)
+    }
+
+    @Test("다른 회원은 다른 시리얼이다")
+    func serialDiffersByMember() {
+        #expect(card(memberId: "1").licenseSerial != card(memberId: "2").licenseSerial)
+    }
+
+    /// 시리얼은 `memberId` 를 **잘라 쓴 값이 아니어야** 한다 — 카드를 찍은 사진 한 장으로
+    /// 남의 프로필 딥링크를 조립할 수 있게 되면 안 된다.
+    @Test("시리얼에 memberId 원문이 남지 않는다")
+    func serialHidesMemberId() {
+        let serial = card(memberId: Constants.memberId).licenseSerial
+        let hex = serial.replacingOccurrences(of: "-", with: "")
+
+        #expect(!serial.contains(Constants.memberId))
+        // 「앞 8자만 잘라 쓰기」 같은 축약이면 원본 어딘가에 그대로 들어 있다.
+        #expect(!Constants.memberId.uppercased().contains(hex))
+    }
+
+    @Test("시리얼은 XXXX-XXXX 대문자 hex 다")
+    func serialUsesFixedFormat() {
+        let serial = card(memberId: Constants.memberId).licenseSerial
+        let blocks = serial.split(separator: "-")
+
+        #expect(blocks.count == 2)
+        #expect(blocks.allSatisfy { $0.count == 4 })
+        #expect(serial.allSatisfy { $0 == "-" || ($0.isHexDigit && !$0.isLowercase) })
+    }
+
     // MARK: - 1. 뒷면 연락처·링크 줄
 
     @Test("뒷면에는 이메일과 링크 하나만 싣고, 기본 순서의 첫 링크는 GitHub 이다")
@@ -92,6 +128,20 @@ struct CardLicenseFaceTests {
 
         #expect(filled == "뒷면. one@umc.dev, umc.dev")
         #expect(empty == "뒷면. 등록된 연락처와 소개 링크가 없어요")
+    }
+
+    @Test("라이선스 뒷면은 시리얼·QR 다음에 공개 이메일과 우선순위 첫 링크를 읽는다")
+    func licenseBackLabelReadsDisplayedContacts() {
+        let filled = card(
+            email: "one@umc.dev", github: "github.com/umc", personal: "umc.dev",
+            linkPriority: [.personal, .github]
+        )
+        let empty = card()
+
+        #expect(filled.licenseBackAccessibilityLabel(hasQR: true)
+            == "뒷면. 시리얼 번호 \(filled.licenseSerial), 내 명함 QR 코드, one@umc.dev, umc.dev")
+        #expect(empty.licenseBackAccessibilityLabel(hasQR: false)
+            == "뒷면. 시리얼 번호 \(empty.licenseSerial), QR 코드를 만들지 못했어요")
     }
 
     // MARK: - 2. 앞면 접근성 라벨
