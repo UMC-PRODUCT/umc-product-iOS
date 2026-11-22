@@ -278,7 +278,7 @@ featureProject(
   `UIUserInterfaceStyle: Light` 고정, 권한 문구는 `Project.swift` infoPlist 에 주석과 함께 관리.
   iPhone 전용이지만 창 크기가 실행 중 바뀌는 환경(폴더블 iPhone Duo 등)에 맞춰 컨테이너 폭 기준으로 배치한다
   — `UMCApp/Docs/iPhone-Duo-Adaptive-Layout.md`
-- **앱 테스트 타겟**: `UMCAppTests`(단위) · `UMCAppAdaptiveUITests`(UI, `UMCApp/UITests/`). CI 의 `make test` 는
+- **앱 테스트 타겟**: `UMCAppTests`(단위) · `UMCAppAdaptiveUITests`(UI, `UMCApp/UMCApp/UITests/`). CI 의 `make test` 는
   `UMCApp` 스킴 test action 에 든 `UMCAppTests` 만 돌리고, Core 모듈은 `SCHEME=` 으로 따로 돌린다
 - **버전**: `MARKETING_VERSION` 은 `Settings+Recommended.swift`(배포마다 develop 동기화 PR 로 올리므로 값은 파일에서 확인),
   `CURRENT_PROJECT_VERSION` 은 배포 브랜치명에서 유도("빌드 번호" 참고). `DEVELOPMENT_TEAM`(`8B8B4462NV`)·`CODE_SIGN_STYLE` 도 매니페스트 고정
@@ -316,7 +316,8 @@ iOS 앱과 watchOS 앱은 로그인 토큰용 공유 그룹 `$(AppIdentifierPref
   `KeychainTokenStore.readTokens()` 는 쌍 항목이 없으면 레거시 두 항목을 `kSecMatchLimitAll` + `kSecReturnAttributes`
   로 전 그룹에서 읽어 **같은 access group 끼리 짝지은 뒤** 쌍 항목으로 저장하고 레거시를 지운다. 저장·삭제
   순서는 actor 내부 대기열(`acquireOperation`)로 직렬화되므로, 이 흐름을 건드릴 때는
-  `Tests/Auth/KeychainTokenStoreTests.swift` 와 `UMCApp/Tests/AquilaKeychainIntegrationTests.swift` 를 같이 본다.
+  `UMCApp/Core/Network/Tests/Auth/KeychainTokenStoreTests.swift` 와
+  `UMCApp/UMCApp/Tests/AquilaKeychainIntegrationTests.swift` 를 같이 본다.
 - **워치는 배선까지 확인한다.** `watchAppProject(entitlements: .file(path: "UMCWatchApp.entitlements"))` 로
   인자를 넘겨야 실제로 적용된다. 파일만 만들고 인자를 안 넘기면 무효다 — #1147 유실이 정확히 이 형태였다.
 - **watchOS 는 keychain 을 공유하지 않는다.** Apple Watch 는 자체 keychain 을 가진 별개 기기라 access

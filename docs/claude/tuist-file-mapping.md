@@ -87,7 +87,7 @@
 | `Data/DTOs/StudyGroupScheduleCreateRequestDTO.swift` | ActivityData |
 | `Data/DTOs/StudyGroupUpdateRequestDTO.swift` | ActivityData |
 | `Data/DTOs/V2AttendanceParticipantDTO.swift` | ActivityData |
-| `Data/Provider/ActivityRepositoryProvider.swift` | **superseded → `UMCApp/Sources/DIContainer+Activity.swift`** — Repository 조립은 앱 타깃 DIContainer 확장이 담당 |
+| `Data/Provider/ActivityRepositoryProvider.swift` | **superseded → `UMCApp/UMCApp/Sources/DIContainer+Activity.swift`** — Repository 조립은 앱 타깃 DIContainer 확장이 담당 |
 | `Data/Repositories/ActivityRepository.swift` | **분해 → `StudyRepository`·`MemberRepository`·`AttendanceRepository`** (ActivityData) — 레거시 단일 Repository 를 도메인별로 쪼갬 |
 | `Data/Repositories/AttendanceRepository.swift` | ActivityData |
 | `Data/Repositories/MemberRepository.swift` | ActivityData |
@@ -182,7 +182,7 @@
 | `Presentation/Components/StudyManagementCard.swift` | ActivityPresentation · **보류 — #999 선행** — `CoreStudyManagementList` 와 한 쌍. 레거시 외부 소비자 0건이라 단독 이식 금지. 운영 스터디 목록은 `StudyGroupCard` 가, 멤버 관리는 `CoreMemberManagementRow` 가 이미 담당 |
 | `Presentation/Enum/AttendancePeriodPreset.swift` | ActivityPresentation |
 | `Presentation/Extensions/OperatorSessionStatus+UI.swift` | ActivityPresentation |
-| `Presentation/Provider/ActivityUseCaseProvider.swift` | **superseded → `UMCApp/Sources/DIContainer+Activity.swift`** |
+| `Presentation/Provider/ActivityUseCaseProvider.swift` | **superseded → `UMCApp/UMCApp/Sources/DIContainer+Activity.swift`** |
 | `Presentation/ViewModels/ActivityViewModel.swift` | ActivityPresentation |
 | `Presentation/ViewModels/Challenger/ChallengerAttendanceViewModel.swift` | ActivityPresentation |
 | `Presentation/ViewModels/Map/BaseMapViewModel.swift` | ActivityPresentation |
@@ -238,7 +238,7 @@
 | `Data/DTOs/TokenRenewResponseDTO.swift` | **superseded → `CoreNetwork` 토큰 갱신 파이프라인** (위 Request 와 한 쌍) |
 | `Data/DTOs/VerifyEmailCodeRequestDTO.swift` | AuthData |
 | `Data/DTOs/VerifyEmailCodeResponseDTO.swift` | AuthData |
-| `Data/Provider/AuthRepositoryProvider.swift` | **superseded → `UMCApp/Sources/DIContainer+Auth.swift`** |
+| `Data/Provider/AuthRepositoryProvider.swift` | **superseded → `UMCApp/UMCApp/Sources/DIContainer+Auth.swift`** |
 | `Data/Repositories/AuthRepository.swift` | AuthData |
 | `Data/Repositories/Mock/MockAuthRepository.swift` | AuthData |
 | `Data/Router/AuthRouter.swift` | AuthData |
@@ -297,7 +297,7 @@
 | `Presentation/Enum/SignUpByIdPwField.swift` | AuthPresentation (`SignUpFocusField` 로 개명) |
 | `Presentation/Enum/SignUpFieldType.swift` | **superseded → `SignUpFocusField` + `FormTextField`/`FormEmailField`/`FormPickerField`** — 필드 종류를 열거형 한 곳에 모으는 대신 컴포넌트로 분리 |
 | `Presentation/Models/PostRegisterLoginContext.swift` | CoreFoundation (AppFlow) — `AppFlow.showSignUp`가 Core에서 이 타입을 요구해 이관(#944 Q6, `SocialType`과 동일 사유) |
-| `Presentation/Provider/AuthUseCaseProvider.swift` | **superseded → `UMCApp/Sources/DIContainer+Auth.swift`** |
+| `Presentation/Provider/AuthUseCaseProvider.swift` | **superseded → `UMCApp/UMCApp/Sources/DIContainer+Auth.swift`** |
 | `Presentation/ViewModels/ChangePasswordViewModel.swift` | AuthPresentation |
 | `Presentation/ViewModels/FailedVerificationUMCViewModel.swift` | AuthPresentation |
 | `Presentation/ViewModels/LoginByIdPwViewModel.swift` | AuthPresentation (`EmailLoginViewModel` 로 개명). 내부 `IdPwLoginDestination` 은 `PathStore` 라우팅으로 대체돼 이식 제외 |
@@ -508,7 +508,7 @@
 | `Presentation/Enum/ScheduleGenerationType.swift` | **superseded → 각 View 의 `fileprivate enum Constants` + `PlaceSelectView(placeholder:)`** — 폼 placeholder 를 열거형 한 곳에 모으는 설계를 버렸다. 레거시 소비자(`ScheduleRegistrationView`·`PlaceSelectView`)는 UMCApp 에서 각자 상수를 갖는다 |
 | `Presentation/Enum/ScheduleMode.swift` | HomePresentation |
 | `Presentation/Enum/SeasonType.swift` | HomeDomain (`Models/SeasonType.swift` — Presentation 아님) |
-| `Presentation/Provider/HomeUseCaseProvider.swift` | **superseded → `UMCApp/Sources/DIContainer+Home.swift`** — 레거시 유일 소비자는 `Core/DIContainer/DIContainer.swift`. UseCase 조립은 앱 타깃 DIContainer 확장이 담당 |
+| `Presentation/Provider/HomeUseCaseProvider.swift` | **superseded → `UMCApp/UMCApp/Sources/DIContainer+Home.swift`** — 레거시 유일 소비자는 `Core/DIContainer/DIContainer.swift`. UseCase 조립은 앱 타깃 DIContainer 확장이 담당 |
 | `Presentation/ViewModels/HomeViewModel.swift` | HomePresentation |
 | `Presentation/ViewModels/InlineMapPickerState.swift` | **이식 제외(dead)** — 텍스트 장소 검색 체인. 아래 ⓟ 주석 참조 |
 | `Presentation/ViewModels/ScheduleDetailViewModel.swift` | HomePresentation |
