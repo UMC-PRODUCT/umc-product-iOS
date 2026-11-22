@@ -6,6 +6,7 @@
 //
 
 import BusinessCardDomain
+import CryptoKit
 import Foundation
 
 /// 명함 면(面) 표기의 단일 진실 원천.
@@ -17,6 +18,16 @@ import Foundation
 /// 접근성 라벨은 표기 이름과 달리 **면(面)이 있는 카드만** 여기 것을 쓴다.
 /// 명함첩 셀·요약 카드는 뒤집히지 않아 「앞면.」 접두어가 붙으면 없는 뒷면을 암시한다.
 extension MyCard {
+
+    /// 라이선스 카드에 표시할 회원별 시리얼. SHA-256의 앞 네 바이트를 두 그룹으로 나눈다.
+    var licenseSerial: String {
+        let hex = SHA256.hash(data: Data(memberId.utf8))
+            .prefix(Constants.serialByteCount)
+            .map { String(format: "%02X", $0) }
+            .joined()
+        let split = hex.index(hex.startIndex, offsetBy: hex.count / 2)
+        return "\(hex[..<split])\(Constants.serialSeparator)\(hex[split...])"
+    }
 
     // MARK: - Contact
 
@@ -96,6 +107,12 @@ extension MyCard {
         return Constants.frontPrefix + items.joined(separator: Constants.separator)
     }
 
+    func licenseBackAccessibilityLabel(hasQR: Bool) -> String {
+        let items = ["시리얼 번호 \(licenseSerial)", hasQR ? "내 명함 QR 코드" : "QR 코드를 만들지 못했어요"]
+            + backFaceContacts.map(\.value)
+        return Constants.backPrefix + items.joined(separator: Constants.separator)
+    }
+
     /// 「뒷면. one@umc.dev, github.com/umc, …」. 줄이 없으면 빈 상태 문구를 읽는다.
     var backFaceAccessibilityLabel: String {
         let values = backFaceContacts.map(\.value)
@@ -154,6 +171,8 @@ enum CardFaceCopy {
 // MARK: - Constants
 
 private enum Constants {
+    static let serialByteCount = 4
+    static let serialSeparator = "-"
     static let frontPrefix = "앞면. "
     static let backPrefix = "뒷면. "
     static let separator = ", "

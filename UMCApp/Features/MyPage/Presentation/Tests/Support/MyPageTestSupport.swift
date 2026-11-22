@@ -154,6 +154,15 @@ func makeStubImage() -> UIImage {
     }
 }
 
+/// QR 생성 스텁이 반환할 1x1 더미 CGImage. `UIGraphicsImageRenderer`가 만든 `UIImage`는
+/// 항상 `cgImage`를 갖는다 (nil이 되는 경우는 벡터 전용 컨텍스트뿐, 여기선 해당 없음).
+func makeStubCGImage() -> CGImage {
+    guard let image = makeStubImage().cgImage else {
+        fatalError("UIGraphicsImageRenderer 결과에는 항상 cgImage가 있다")
+    }
+    return image
+}
+
 // MARK: - Provider Helper
 
 /// Mock Repository를 실제 UseCase Provider에 주입합니다.
@@ -171,10 +180,12 @@ func makeUseCaseProvider(_ repository: MockMyPageRepository) -> MyPageUseCasePro
 struct StubBusinessCardUseCaseProvider: BusinessCardUseCaseProviding {
     var fetchMyCardResult: Result<MyCard, Error> = .failure(StubBusinessCardError.notStubbed)
     var activityStat: ActivityStat = .empty
-    /// 마이페이지는 QR 을 만들지 않지만(#1679) 프로토콜이 요구해 실패 스텁을 둔다.
+    /// 기본값은 실패 — `loadBusinessCard`가 `try?`로 삼키므로 QR을 신경 쓰지 않는 테스트는
+    /// `qrImage == nil`인 채로 통과한다. QR을 검증하는 테스트만 `.success`로 override한다.
     var generateCardQRResult: Result<CGImage, Error> = .failure(StubBusinessCardError.notStubbed)
     /// 호출 기록(횟수·인자)이 필요한 테스트가 기본 스텁 대신 주입한다.
     var fetchMyCardUseCaseOverride: FetchMyCardUseCaseProtocol?
+    var generateCardQRUseCaseOverride: GenerateCardQRUseCaseProtocol?
 
     var fetchMyCardUseCase: FetchMyCardUseCaseProtocol {
         fetchMyCardUseCaseOverride ?? StubFetchMyCardUseCase(result: fetchMyCardResult)
@@ -183,7 +194,7 @@ struct StubBusinessCardUseCaseProvider: BusinessCardUseCaseProviding {
         StubFetchActivityStatUseCase(stat: activityStat)
     }
     var generateCardQRUseCase: GenerateCardQRUseCaseProtocol {
-        StubGenerateCardQRUseCase(result: generateCardQRResult)
+        generateCardQRUseCaseOverride ?? StubGenerateCardQRUseCase(result: generateCardQRResult)
     }
 
     var fetchPeerCardUseCase: FetchPeerCardUseCaseProtocol { NotStubbedFetchPeerCardUseCase() }
