@@ -34,6 +34,7 @@ public struct MyPageProfileView: View {
     @State private var showAddActivityLogAlert: Bool = false
     @State private var challengerCode: String = ""
     @State private var alertPrompt: AlertPrompt?
+    @State private var linkEditMode: EditMode = .inactive
 
     private enum Constants {
         static let schoolHeader = "학교"
@@ -80,9 +81,7 @@ public struct MyPageProfileView: View {
         Form {
             sectionContent($viewModel.profileData)
         }
-        // 설정 앱 「선호하는 언어」처럼 링크 줄 손잡이를 늘 보인다 (#1679). 편집 상태는 목록
-        // 단위로만 켜져서 폼에 건다 — 손잡이는 `.onMove` 가 붙은 링크 줄에만 생긴다.
-        .environment(\.editMode, .constant(.active))
+        .environment(\.editMode, $linkEditMode)
         .task {
             await viewModel.loadLinkPriority()
         }
