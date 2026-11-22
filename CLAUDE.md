@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **App Statement**: "Focus on Growth, We Handle the Ops"
 - **목적**: 동아리 운영 도구 일원화 (디스코드/구글시트/노션 분산 문제 해결)
 - **주요 모듈**: 인증/온보딩, 홈 대시보드, 공지사항, 운영/학교 관리, 스터디/활동, 커뮤니티, 프로젝트 지원·심사, 명함 교환, 마이페이지, watchOS 앱, Live Activity
-- **구현 기능 예시**: The Ping, GPS 스마트 출석, STOMP 커뮤니티(사진 메시지·사용자 차단/신고 포함), 운영진 멤버·상벌점 관리, 프로젝트 목록·운영진 관리·지원(기간 내 수정)·지원자 심사, 명함 근거리 교환, Apple Intelligence 안내, 출석 Live Activity, 공개 입력 금지어 검증, iPhone Duo(창 크기 변경) 적응형 화면
+- **구현 기능 예시**: The Ping, GPS 스마트 출석, STOMP 커뮤니티(사진 메시지 최대 4장·회원 프로필 보기·사용자 차단/신고 포함), 운영진 멤버·상벌점 관리, 프로젝트 목록·운영진 관리·지원(기간 내 수정)·지원자 심사, 명함 근거리 교환(이메일·링크 공개 여부와 링크 순서 설정 포함), Apple Intelligence 안내, 출석 Live Activity, 공개 입력 금지어 검증, iPhone Duo(창 크기 변경) 적응형 화면
 - **App Store 릴리즈**: 최신 배포 브랜치 `release/5.3.0/125`(5.3.0) — `UMCApp/`(Tuist) 빌드. 릴리즈 태그는 `v4.0.0`까지 달려 있다.
   `develop`의 `MARKETING_VERSION`은 `UMCApp/Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift`에서 관리하며 배포 뒤 동기화 PR로 올린다.
   3.0.0 이후 릴리즈는 전부 `UMCApp/`에서 나갔고, 레거시 `AppProduct/`는 마지막 릴리즈 2.2.0(태그 `v2.2.0`) 상태로 동결돼 있다.
@@ -126,7 +126,7 @@ cd AppProductTestServer && make integration
 |------|------|----------|
 | 빌드 & Tuist 모듈 구조 | `docs/claude/build-and-modules.md` | 모듈 추가, 빌드 설정, 의존성 |
 | Tuist 파일별 이관 매핑 | `docs/claude/tuist-file-mapping.md` | 레거시 파일을 어느 모듈/레이어로 옮길지 확인할 때 (필수 참조) |
-| 아키텍처 / Observation / 에러 | `docs/claude/architecture.md` | ViewModel·UseCase·에러 처리 작업 |
+| 아키텍처 / Observation / 에러 | `docs/claude/architecture.md` | ViewModel·UseCase·에러 처리 작업, SwiftData `@Model` 추가(동기화 구성 vs 기기 전용 구성) |
 | Network Router (Moya) & 전송 계층(Aquila) | `docs/claude/network-router.md` | API 엔드포인트/DTO 추가, `NetworkClient`·토큰 갱신·STOMP·로그 마스킹 수정 |
 | Response DTO 디코딩 | `docs/claude/response-dto-decoding.md` | Response DTO 작성/수정 |
 | 디자인 시스템 & 성능 | `docs/claude/design-system.md` | UI/토큰/Glass/렌더링 최적화 |
@@ -146,7 +146,7 @@ Apple 프레임워크 API — 신규 Apple API를 다룰 때:
 | 모음 | 인덱스 | 언제 읽나 |
 |------|--------|----------|
 | Apple 프레임워크 가이드(20종) | `docs/claude/apple-frameworks/INDEX.md` | `glassEffect`·`GlassEffectContainer`(Liquid Glass) · 툴바 신규 API · `AttributedString`/리치 텍스트 · FoundationModels(온디바이스 LLM) · SwiftData 상속 · `@MainActor`/actor/async 동시성 · Swift Charts 3D · WebKit·AlarmKit·MapKit·StoreKit 연동 |
-| Apple 스킬팩(11종 · reference 87종, Apple 원문 · Xcode 27.2 RC 기준) | `docs/claude/apple-frameworks/INDEX.md` §3 | **SwiftUI·App Intents 코드를 새로 쓰거나 리뷰할 때, 성능을 측정할 때.** `@Observable`/`@State`/`@Binding` 소유권 · `@Environment`/`@Entry` 무효화 경고 · `ForEach`/`List` identity(`id: \.self` 안티패턴) · soft-deprecated API 확인(`NavigationView`, 구 `onChange`) · 조건부 `.if` 모디파이어 · 뷰 분해/init 비용 · `Animatable` · App Intents 스키마/`AppEnum` · UIKit 현대화·창 크기 변경/iPhone Duo 대응 · Xcode 보안 빌드 설정(Enhanced Security·MTE·Checked Pointer Arithmetic) · `xctrace`(Instruments CLI)로 멈춤(hang)·CPU·메모리 분석 |
+| Apple 스킬팩(9종 · reference 76종, Apple 원문 · Xcode 27.2 정식(27B52) 번들과 동일) | `docs/claude/apple-frameworks/INDEX.md` §3 | **SwiftUI·App Intents 코드를 새로 쓰거나 리뷰할 때, 성능을 측정할 때.** `@Observable`/`@State`/`@Binding` 소유권 · `@Environment`/`@Entry` 무효화 경고 · `ForEach`/`List` identity(`id: \.self` 안티패턴) · soft-deprecated API 확인(`NavigationView`, 구 `onChange`) · 조건부 `.if` 모디파이어 · 뷰 분해/init 비용 · `Animatable` · App Intents 스키마/`AppEnum` · UIKit 현대화·창 크기 변경/iPhone Duo 대응 · Xcode 보안 빌드 설정(Enhanced Security·MTE·Checked Pointer Arithmetic) · `xctrace`(Instruments CLI)로 멈춤(hang)·CPU·메모리 분석 |
 
 기획·설계 문서 — 기존 개인 기획 레포는 삭제되었다. 별도 기획 레포를 전제로 하지 않는다.
 

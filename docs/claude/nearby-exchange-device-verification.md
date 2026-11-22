@@ -42,12 +42,12 @@ Automatic signing 이 프로비저닝 프로파일을 받지 못해 실기기 �
 
 ### 2-1) 공통 전제 (2대 모두)
 
-- **iOS 26.4 이상** — Deployment Target (`UMCApp/Project.swift:15`)
+- **iOS 26.4 이상** — Deployment Target (`UMCApp/Project.swift:20`)
 - **Debug 빌드** — 검증 하네스 전체가 `#if DEBUG` 라 릴리스 빌드에는 없다
 - **Wi-Fi · Bluetooth 켜짐** — MPC 는 이 둘 위에서 피어를 찾는다. 같은 Wi-Fi 에 붙이는 것이
   가장 안정적이다 (에어플레인 모드 금지)
 - **로컬 네트워크 권한 허용** — 첫 교환 세션 시작 때 팝업이 뜬다. 거부하면 발견·광고가
-  둘 다 실패한다 (`UMCApp/Project.swift:44-52` 의 `NSLocalNetworkUsageDescription` /
+  둘 다 실패한다 (`UMCApp/Project.swift:61-69` 의 `NSLocalNetworkUsageDescription` /
   `NSBonjourServices` 선언 근거)
 
 ### 2-2) UWB(거리 표시) 요건
@@ -81,7 +81,7 @@ UWB 미탑재 기기는 토큰 없이 미리보기만 보내고, 받는 쪽은 �
 ## 3) 조직 팀 `8B8B4462NV` App ID capability 체크리스트
 
 서명 설정은 매니페스트에 고정되어 있다
-(`UMCApp/Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift:37-38`):
+(`UMCApp/Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift:52-53`):
 
 ```swift
 "DEVELOPMENT_TEAM": "8B8B4462NV",
@@ -92,7 +92,7 @@ Automatic signing 이 프로파일을 받으려면 **포털의 App ID 에 entitl
 capability 가 전부 켜져 있어야 한다.** 아래 목록은 `UMCApp/UMCApp.entitlements` 실제 내용에서
 역산한 것이다. 포털 경로: Certificates, Identifiers & Profiles → Identifiers →
 `com.umc.product` (App Store 기존 앱 레코드와 같은 Bundle ID — 바꾸면 카카오/Firebase/Google
-OAuth 등록이 전부 무효화된다, `UMCApp/Project.swift:12-14`).
+OAuth 등록이 전부 무효화된다, `UMCApp/Project.swift:17-19`).
 
 > 아래 체크박스의 실제 on/off 상태는 **포털에서 직접 확인해야 한다** — 이 레포에서는
 > entitlements 파일로 "무엇이 필요한지"까지만 확정할 수 있다.
@@ -117,13 +117,16 @@ OAuth 등록이 전부 무효화된다, `UMCApp/Project.swift:12-14`).
 
 - [ ] **`com.umc.product.widget`** (Widget Extension) — **App Groups** 켜고 같은
   `group.com.umc.product.widget` 연결 (`UMCApp/UMCAppWidget/UMCAppWidget.entitlements`)
-- [ ] **`com.umc.product.watchkitapp`** (watchOS) — 별도 entitlements 파일 없음
-  (`UMCApp/UMCWatchApp/Project.swift:6`), App ID 존재만 확인
+- [ ] **`com.umc.product.watchkitapp`** (watchOS) — **App Groups** 켜고
+  `group.com.umc.product.watch` 연결 (`UMCApp/UMCWatchApp/UMCWatchApp.entitlements`,
+  `UMCApp/UMCWatchApp/Project.swift:14`). 워치 entitlements 의 `keychain-access-groups` 는 팀 접두사 기반이라
+  포털에서 따로 켤 capability 가 없다. 워치 App Group 은 Complication 스냅샷 공유용이며
+  절차는 `watch-complications.md` 를 따른다
 
 ### 3-3) 포털에서 켤 것이 **없는** 항목
 
 다음은 App ID capability 가 아니라 **Info.plist 키만으로 동작한다** — 포털에서 스위치를
-찾아 헤매지 않아도 된다 (`UMCApp/Project.swift:33-52`):
+찾아 헤매지 않아도 된다 (`UMCApp/Project.swift:45-69`):
 
 - 로컬 네트워크 / Bonjour (`NSLocalNetworkUsageDescription`, `NSBonjourServices`)
 - 카메라 (`NSCameraUsageDescription`), 사진 추가 (`NSPhotoLibraryAddUsageDescription`)
@@ -150,23 +153,24 @@ OAuth 등록이 전부 무효화된다, `UMCApp/Project.swift:12-14`).
 3. **팀 확인 — Xcode UI 에서 바꾸지 말 것.** Signing & Capabilities 탭에서 Team 이
    `8B8B4462NV` 조직 팀으로 잡혀 있는지 **확인만** 한다. UI 에서 팀을 골라도
    `tuist generate` 가 `.xcodeproj` 을 재생성하며 날아간다 — 바꿔야 한다면
-   `Settings+Recommended.swift` 매니페스트에서만 바꾼다 (같은 파일 27-28행 주석).
+   `Settings+Recommended.swift` 매니페스트에서만 바꾼다 (같은 파일 37-38행 주석).
 4. **시크릿** — `Scripts/verify-secrets.sh` 는 Release 빌드에서만 시크릿
    (`Secrets/Secrets.xcconfig` 의 `KAKAO_KEY` 등 4종 + `GoogleService-Info.plist`) 누락 시
-   빌드를 중단하고, **Debug 는 경고만 남기고 통과한다** (`verify-secrets.sh:15-19`).
+   빌드를 중단하고, **Debug 는 경고만 남기고 통과한다** (`verify-secrets.sh:15-24`).
    이 검증은 Debug 빌드라 시크릿 없이도 설치·실행이 되지만, 카카오 로그인·FCM 은 동작하지
-   않는다 — 기본 stub 세션(4-5)이라 교환 검증에는 지장이 없다.
+   않는다 — stub 세션(4장 6번)으로 돌리면 교환 검증에는 지장이 없다.
 5. **스킴 실행 인자 `-bcHarness`** — 검증 하네스의 **유일한 진입 경로**다. Product → Scheme →
-   Edit Scheme… → Run → Arguments Passed On Launch 에 `-bcHarness` 를 추가한다. 앱 시작 시
-   마이페이지 탭 위에 검증 화면이 push 된다
-   (`UMCApp/UMCApp/Sources/RootTab/RootTabView.swift:79-84`). 스킴도 generate 대상이므로
+   Edit Scheme… → Run → Arguments Passed On Launch 에 `-bcHarness` 를 추가한다(stub 세션으로
+   돌릴 거면 `UMCApp-Stub` 스킴에 넣는다 — 6번). 앱 시작 시 마이페이지 탭 위에 검증 화면이 push 된다
+   (`UMCApp/UMCApp/Sources/RootTab/RootTabView.swift:111-123`). 스킴도 generate 대상이므로
    `make generate` 후에는 인자가 사라졌는지 확인하고 다시 넣는다.
-6. **세션 모드** — DEBUG 기본값은 stub 세션이라 **로그인 없이** 홈에 진입하고, 내 명함도
-   `StubMemberProfileRepository` 의 stub 프로필로 로드된다
-   (`UMCApp/UMCApp/Sources/Debug/StubSession/DIContainer+StubSession.swift:31-33`).
-   교환 검증은 stub 세션으로 충분하다. 실서버 응답이 필요한 검증(QR 딥링크 조회)만
-   실행 인자 `-realSession` 또는 검증 도구의 토글로 전환한다
-   (`StubSessionMode.swift:19-27` — 전환은 앱 재시작 후 반영).
+6. **세션 모드** — DEBUG 빌드도 **기본값은 실서버**다(#1342). 로그인 없이 검증하려면
+   `UMCApp-Stub` 스킴을 고르거나 실행 인자 `-stubSession` 을 넣는다(`build-and-modules.md` 「실행 스킴」).
+   stub 세션은 **로그인 없이** 홈에 진입하고, 내 명함도 `StubMemberProfileRepository` 의 stub 프로필로
+   로드된다 (`UMCApp/UMCApp/Sources/Debug/StubSession/DIContainer+StubSession.swift:35-37`).
+   교환 검증은 stub 세션으로 충분하다. 실서버 응답이 필요한 검증(QR 딥링크 조회)만 `-stubSession` 을
+   빼거나, 켜 둔 채 실행 인자 `-realSession`·검증 도구의 토글로 실서버를 강제한다
+   (`StubSessionMode.swift:19-44` — 전환은 앱 재시작 후 반영).
 
 ## 5) 실기기 2대 검증 절차
 
@@ -179,7 +183,7 @@ OAuth 등록이 전부 무효화된다, `UMCApp/Project.swift:12-14`).
    - **기대**: 앱이 뜨고 마이페이지 탭에 「마이페이지」 검증 화면이 자동으로 push 된다.
      상단에 명함 카드(이름/닉네임·파트·기수 칩)가 로드된다. 카드가 「명함 로드 실패」면
      5-4 트러블슈팅이 아니라 세션 모드(4장 6번)부터 확인한다 — 명함 없이는 교환을 시작할 수
-     없다 (`BusinessCardDebugViewModel.swift:265-268`).
+     없다 (`BusinessCardDebugViewModel.swift:288-291`).
 2. 명함 카드의 **「명함 교환」** 버튼 → `DebugExchangeView` 진입.
    - **기대**: 「전송 방식」 세그먼트가 **MPC (권장)** 이고 「주입된 transport」 가
      `MPCTransport` 다. 실기기 기본값이 MPC 라 보통 손댈 것이 없다
@@ -255,9 +259,9 @@ xcrun devicectl device copy from --device <id> \
 |---|---|---|
 | 서명 실패 — "provisioning profile doesn't include the … entitlement" | App ID 에 대응 capability 미활성 (특히 Nearby Interaction) | 3장 체크리스트대로 포털에서 켜고 Xcode 에서 다시 빌드 (Automatic 이 프로파일을 재발급) |
 | 서명 실패 — 기기가 프로파일에 없음 | 기기 미등록 | 4장 2번 — Devices and Simulators 인식 또는 포털 Devices 등록 |
-| 빌드마다 서명 팀이 풀림 | Xcode UI 에서 팀을 바꿈 → `tuist generate` 가 재생성하며 유실 | UI 에서 바꾸지 않는다. `Settings+Recommended.swift:37-38` 이 유일한 진실 원천 |
+| 빌드마다 서명 팀이 풀림 | Xcode UI 에서 팀을 바꿈 → `tuist generate` 가 재생성하며 유실 | UI 에서 바꾸지 않는다. `Settings+Recommended.swift:52-53` 이 유일한 진실 원천 |
 | 피어가 서로 안 보임 (레이더에서 멈춤) | 로컬 네트워크 권한 거부 | 설정 → 개인 정보 보호 및 보안 → 로컬 네트워크에서 UMC 허용 후 재시도. 진단 영역의 transport 실패 원문(빨간 글씨)으로 브라우저/광고 실패 여부를 가른다 (`MPCTransport.swift:581-589`, `:644-653`) |
-| 〃 | `NSBonjourServices` 와 `MPCTransport.serviceType` 불일치 — 브라우저·광고가 **둘 다 조용히 실패**한다 | `UMCApp/Project.swift:49-52` (`_umc-card._tcp/_udp`) 와 `MPCTransport.swift:43` (`"umc-card"`) 이 같은지 확인. 둘 중 하나만 고친 커밋이 없는지 본다 |
+| 〃 | `NSBonjourServices` 와 `MPCTransport.serviceType` 불일치 — 브라우저·광고가 **둘 다 조용히 실패**한다 | `UMCApp/Project.swift:66-69` (`_umc-card._tcp/_udp`) 와 `MPCTransport.swift:43` (`"umc-card"`) 이 같은지 확인. 둘 중 하나만 고친 커밋이 없는지 본다 |
 | 〃 | 다른 네트워크 / Wi-Fi·BT 꺼짐 / 에어플레인 모드 | 2-1 전제 복구. 같은 Wi-Fi 에 붙인다 |
 | 〃 | `MockNearbyTransport` 가 주입돼 있음 | `DebugExchangeView` 의 「주입된 transport」 확인 → 피커에서 MPC 선택 → **앱 재시작** (DI 는 시작 시 1회만 읽는다) |
 | 「연결됨 0」 인데 로그도 안 변함 | 진단 폴링 정지 — transport 값은 계산 프로퍼티라 tick 없이는 화면이 안 바뀐다 (`BusinessCardDebugViewModel.swift:88-100`) | 진단 영역 우측 `·N` 이 도는지 먼저 본다. 멈췄으면 화면을 나갔다 재진입 (고장난 계기를 읽고 "연결 안 됨"으로 오판한 전례가 있다) |
@@ -268,25 +272,25 @@ xcrun devicectl device copy from --device <id> \
 | 권한 팝업이 안 뜸 | 이미 한 번 거부해서 다시 묻지 않음 | 설정 앱에서 해당 권한(로컬 네트워크·카메라·Nearby Interaction)을 직접 켠다. 그래도 안 되면 앱 삭제 후 재설치로 권한 상태 초기화 |
 | 전송은 되는데 수신이 안 됨 | `startAdvertising()` 이 수신 continuation 을 닫는 회귀 (`MPCTransport.swift:183-189` 주석의 함정) | 최신 develop 빌드인지 확인. 재발이면 해당 주석 지점을 의심 |
 | 첫 탭은 20초 뒤 실패, 두 번째 탭은 성공 | 초대 경쟁 — 타이브레이크를 무시한 구버전 증상 (`MPCTransport.swift:395-403` 주석) | 현재 코드는 `inviteIfNeeded` 단일 경로로 해결됨. 이 증상이 보이면 구 빌드가 설치된 것 |
-| 「내 명함이 없어 교환을 시작할 수 없다」 | 내 명함 로드 실패 — 실서버 세션 강제 상태에서 미로그인 등 | 검증 도구 → 「memberId로 명함 조회」 의 세션 모드 확인. stub 로 되돌리고 앱 재시작 (4장 6번) |
+| 「내 명함이 없어 교환을 시작할 수 없다」 | 내 명함 로드 실패 — 실서버 세션(기본값)에서 미로그인 등 | 검증 도구 → 「memberId로 명함 조회」 의 세션 모드 확인. `UMCApp-Stub` 스킴(`-stubSession`)으로 바꾸고 앱 재시작 (4장 6번) |
 
 ## 7) 관련 파일
 
 | 역할 | 경로 |
 |---|---|
-| 서명 설정 (`DEVELOPMENT_TEAM`·`CODE_SIGN_STYLE`) | `UMCApp/Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift:37-38` |
-| Bundle ID · Info.plist 권한 키 · `NSBonjourServices` | `UMCApp/Project.swift:14`, `:33-52` |
+| 서명 설정 (`DEVELOPMENT_TEAM`·`CODE_SIGN_STYLE`) | `UMCApp/Tuist/ProjectDescriptionHelpers/Settings+Recommended.swift:52-53` |
+| Bundle ID · Info.plist 권한 키 · `NSBonjourServices` | `UMCApp/Project.swift:19`, `:45-69` |
 | 앱 entitlements (capability 근거) | `UMCApp/UMCApp.entitlements` |
 | 위젯 entitlements (App Group) | `UMCApp/UMCAppWidget/UMCAppWidget.entitlements` |
 | `APS_ENVIRONMENT` 주입 | `UMCApp/Secrets/Shared.xcconfig:25-26` |
-| 시크릿 검증 (Release 중단 / Debug 경고) | `UMCApp/Scripts/verify-secrets.sh:15-19` |
+| 시크릿 검증 (Release 중단 / Debug 경고) | `UMCApp/Scripts/verify-secrets.sh:15-24` |
 | MPC transport (`serviceType`·초대 타이브레이크·핸드셰이크) | `UMCApp/Core/NearbyExchange/Sources/Transports/MPCTransport.swift:43`, `:404-419`, `:690-702` |
 | UWB 조율 (`isSupported`·대칭 조건·피어당 세션 1개) | `UMCApp/Core/NearbyExchange/Sources/Ranging/PeerRangingCoordinator.swift:37-59` |
-| 하네스 진입 (`-bcHarness`) | `UMCApp/UMCApp/Sources/RootTab/RootTabView.swift:79-84` |
+| 하네스 진입 (`-bcHarness`) | `UMCApp/UMCApp/Sources/RootTab/RootTabView.swift:111-123` |
 | transport 주입 (실기기 MPC / 시뮬레이터 Mock) | `UMCApp/UMCApp/Sources/DIContainer+BusinessCard.swift:25-35` |
 | 검증 화면 (명함 카드 → 「명함 교환」) | `UMCApp/UMCApp/Sources/Debug/BusinessCard/BusinessCardDebugView.swift` |
 | 전송 계층 선택 · 세션 시작 | `UMCApp/UMCApp/Sources/Debug/BusinessCard/DebugExchangeView.swift` |
 | 시안 배치 교환 화면 (자동 세션 · 진단 영역) | `UMCApp/UMCApp/Sources/Debug/BusinessCard/DebugNearbyExchangeView.swift` |
 | UWB 단독 검증 섹션 (QR 토큰 채널) | `UMCApp/UMCApp/Sources/Debug/BusinessCard/NearbyRangingSection.swift` |
 | 파일 로그 · `devicectl` 회수 명령 | `UMCApp/UMCApp/Sources/Debug/DebugFileLog.swift:17-21` |
-| stub 세션 토글 (`-realSession`) | `UMCApp/UMCApp/Sources/Debug/StubSession/StubSessionMode.swift:19-27` |
+| stub 세션 토글 (`-stubSession` / `-realSession`) | `UMCApp/UMCApp/Sources/Debug/StubSession/StubSessionMode.swift:19-44` |

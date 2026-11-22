@@ -587,9 +587,9 @@
 | `Domain/UseCases/Implementations/FetchMyScrappedPostsUseCase.swift` | **제거됨(#1677)** — 옛 게시판 「커뮤니티 활동」(내가 쓴 글·댓글 단 글·스크랩) 화면·API 철거. 커뮤니티는 스레드로 대체됐다. 다시 이식하지 말 것 |
 | `Domain/UseCases/Implementations/FetchTermsUseCase.swift` | MyPageDomain |
 | `Domain/UseCases/Implementations/UpdateMyPageProfileImageUseCase.swift` | MyPageDomain |
-| `Domain/UseCases/Implementations/UpdateMyPageProfileLinksUseCase.swift` | MyPageDomain |
+| `Domain/UseCases/Implementations/UpdateMyPageProfileLinksUseCase.swift` | **제거됨(#1678)** — 옛 링크 수정 API(`PATCH /member/profile/links`)를 명함 수정 API(MEMBER-105 조회·MEMBER-006 저장)로 바꾸며 철거. 대체: `CardContactSettingsUseCase`(MyPageDomain). 다시 이식하지 말 것 |
 | `Domain/UseCases/UpdateMyPageProfileImageUseCaseProtocol.swift` | MyPageDomain |
-| `Domain/UseCases/UpdateMyPageProfileLinksUseCaseProtocol.swift` | MyPageDomain |
+| `Domain/UseCases/UpdateMyPageProfileLinksUseCaseProtocol.swift` | **제거됨(#1678)** — 옛 링크 수정 API(`PATCH /member/profile/links`)를 명함 수정 API(MEMBER-105 조회·MEMBER-006 저장)로 바꾸며 철거. 대체: `CardContactSettingsUseCaseProtocol`(MyPageDomain). 다시 이식하지 말 것 |
 | `Presentation/Components/Row/MyPageProfileView/ReadOnlyTextField.swift` | MyPagePresentation |
 | `Presentation/Components/Row/MyPageRow/ActiveLogRow.swift` | MyPagePresentation |
 | `Presentation/Components/Row/MyPageRow/MyPageSectionRow.swift` | MyPagePresentation |

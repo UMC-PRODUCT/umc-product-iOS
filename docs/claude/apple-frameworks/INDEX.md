@@ -1,14 +1,27 @@
 # Apple 프레임워크 가이드 인덱스
 
 > Apple Xcode 27에 내장된 AI 어시스턴트용 프레임워크 문서 **전량**입니다.
-> 출처: [artemnovichkov/xcode-27-system-prompts](https://github.com/artemnovichkov/xcode-27-system-prompts)
+> 정본: 설치된 Xcode 번들의
+> `Xcode.app/Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources/` (§5-1).
+> 보조 출처: [artemnovichkov/xcode-27-system-prompts](https://github.com/artemnovichkov/xcode-27-system-prompts)
 > (이전 출처였던 `xcode-26-system-prompts` 는 더 이상 갱신되지 않는다.)
 >
-> **동기화 기준 커밋**: [`801762d7`](https://github.com/artemnovichkov/xcode-27-system-prompts/commit/801762d709c9a280b2c7c9f9f375656aa7bdfff2) (2026-10-27, "Update with Xcode 27.2 RC")
-> — 여기 있는 파일은 전부 이 커밋에서 무손실 복사한 것이다.
-> 다음 갱신 때 이 SHA를 기준으로 `git diff` 하면 무엇이 바뀌었는지 바로 나온다 (§5).
+> **동기화 기준**: **Xcode 27.2 정식(27B52)** 번들 — 여기 있는 파일은 전부 이 번들에서 무손실 복사한 것과
+> 바이트 단위로 같다(2026-11-22 `diff -rq` 확인).
+> 업스트림 기준 커밋은 [`801762d7`](https://github.com/artemnovichkov/xcode-27-system-prompts/commit/801762d709c9a280b2c7c9f9f375656aa7bdfff2)
+> (2026-10-27, "Update with Xcode 27.2 RC")이고, 이 커밋 이후 업스트림 새 커밋은 없다.
+> 다음 갱신 때 이 SHA를 기준으로 `git diff` 하면 업스트림에서 무엇이 바뀌었는지 바로 나온다 (§5-2).
 >
-> **직전 동기화**: `e132fcf8`(2026-09-29) → `801762d7` 반영분(2026-11-15): Xcode 27.2 beta 3 에서 스킬팩
+> **직전 동기화**(2026-11-22): 업스트림 `801762d7` 과 Xcode 27.2 정식 번들의 공통 파일은 바이트 동일했다.
+> 대신 업스트림이 지우지 않고 남겨 둔 **Xcode 27 beta 1 잔존물 4건을 삭제**했다. 현재 Xcode 는 배포하지 않고,
+> 어떤 `SKILL.md` 도 참조하지 않는 파일이다.
+> `skills/c-bounds-safety/`(beta 3 에 `adopt-c-bounds-safety` 로 대체),
+> `skills/uikit-app-modernization/`(27.2 beta 2 에 `app-resizability` 로 대체),
+> `swiftui-whats-new-27/references/document-based-apps.md`(beta 5 에 `building-document-based-swiftui-applications` 로 분리),
+> `swiftui-whats-new-27/references/deprecations.md`(같은 beta 5 에 `SKILL.md` 목록에서 빠짐).
+> 지운 원문이 필요하면 업스트림 `b52f3441`(Xcode 27 beta 1)에서 본다.
+>
+> 그 이전 `e132fcf8`(2026-09-29) → `801762d7` 반영분(2026-11-15, #1662): Xcode 27.2 beta 3 에서 스킬팩
 > **`xctrace` 신규**(Instruments CLI 로 트레이스 수집·`.trace`/`.atrc` 읽기·행(hang) 분류, reference 2종).
 > 27.2 RC 는 `AgentVersions.plist`·`IDEIntelligenceChat.xcplugindata` 만 바꿨다. 기존 프레임워크 가이드 20종과
 > 스킬팩 10종(reference 85종)은 바이트 동일하다.
@@ -32,9 +45,9 @@
 
 | 위치 | 내용 |
 |------|------|
-| `*.md` (이 폴더 바로 아래) | 프레임워크 개별 가이드 20종 — 업스트림 `AdditionalDocumentation/` |
-| `skills/<이름>/SKILL.md` | Apple이 작성한 스킬팩 진입 문서 11종 — 언제 어떤 reference를 읽어야 하는지 안내 |
-| `skills/<이름>/references/*.md` | 스킬팩 본문 87종 — 실제 API 설명·코드 예시 |
+| `*.md` (이 폴더 바로 아래) | 프레임워크 개별 가이드 20종 — Xcode 번들 `AdditionalDocumentation/` |
+| `skills/<이름>/SKILL.md` | Apple이 작성한 스킬팩 진입 문서 9종 — 언제 어떤 reference를 읽어야 하는지 안내 |
+| `skills/<이름>/references/*.md` | 스킬팩 본문 76종 — 실제 API 설명·코드 예시 |
 | `skills/audit-xcode-security-settings/scripts/` | 스킬팩에 딸린 보조 스크립트 |
 
 ---
@@ -54,7 +67,7 @@ UMC 앱은 SwiftUI + Liquid Glass + Widget + (Apple Intelligence) 기반이라 �
 | `Swift-Concurrency-Updates.md` | async/await, actor, `@MainActor` 동시성 패턴 |
 | `SwiftData-Class-Inheritance.md` | SwiftData 모델 클래스 상속 |
 | `FoundationModels-Using-on-device-LLM-in-your-app.md` | 온디바이스 LLM (Apple Intelligence 기능) |
-| `skills/swiftui-whats-new-27/` | SDK 27 SwiftUI 신규 API·deprecation (⚠️ 가용성 게이팅 필요) |
+| `skills/swiftui-whats-new-27/` | SDK 27 SwiftUI 신규 API·동작 변경 (⚠️ 가용성 게이팅 필요) |
 | `skills/app-intents-specialist/` | App Intents(Siri/단축어) 작성 규약 — The Ping·딥링크 확장 시 |
 | `skills/xctrace/` | 화면 멈춤·스크롤 끊김·CPU/메모리 과다를 `xctrace`(Instruments CLI)로 기록하고 분석할 때. 행(hang) 분류는 `xctrace-hangs-triage.md` |
 | `Widgets-for-visionOS.md` | visionOS 위젯 |
@@ -63,7 +76,7 @@ UMC 앱은 SwiftUI + Liquid Glass + Widget + (Apple Intelligence) 기반이라 �
 
 ## 2. 프레임워크 개별 가이드 (20종)
 
-업스트림 `AdditionalDocumentation/` 그대로. Xcode 26 시절과 내용이 동일하다(바이트 단위 일치 확인).
+Xcode 번들 `AdditionalDocumentation/` 그대로. Xcode 26 시절과 내용이 동일하다(바이트 단위 일치 확인).
 
 | 문서 | 프레임워크 / 다룰 때 |
 |------|---------------------|
@@ -90,7 +103,7 @@ UMC 앱은 SwiftUI + Liquid Glass + Widget + (Apple Intelligence) 기반이라 �
 
 ---
 
-## 3. Apple 스킬팩 (11종 · reference 87종)
+## 3. Apple 스킬팩 (9종 · reference 76종)
 
 각 스킬은 `SKILL.md`(언제 무엇을 읽을지 안내) + `references/*.md`(본문)로 구성된다.
 **먼저 `SKILL.md` 를 읽고, 필요한 reference만 골라 읽는다.**
@@ -124,8 +137,9 @@ Apple이 직접 쓴 SwiftUI 정석. 성능·구조·데이터 흐름 판단이 �
 | `swipe-actions.md` | `List` 밖(ScrollView·LazyVStack·LazyVGrid)에서의 스와이프 액션 — `swipeActionsContainer()` |
 | `item-binding.md` | `confirmationDialog`/`alert` 의 `item: Binding<T?>` 오버로드 (`sheet(item:)` 형태) |
 | `async-image.md` | `AsyncImage` HTTP 캐싱 기본 적용, `AsyncImage(request:)`, `asyncImageURLSession(_:)` |
-| `document-based-apps.md` | 신규 `ReadableDocument`/`WritableDocument` 프로토콜 — 파일 URL 직접 접근·백그라운드 읽기/쓰기 (`FileDocument` 대체) |
-| `deprecations.md` | SDK 27에서 **hard-deprecated** 된 API 목록 (soft-deprecated 는 `swiftui-specialist/references/soft-deprecated-apis.md`) |
+
+문서 기반 앱(`ReadableDocument`/`WritableDocument`)은 §3-6 스킬팩으로 분리됐다.
+soft-deprecated API 목록은 `swiftui-specialist/references/soft-deprecated-apis.md` 에 있다.
 
 ### 3-3. `skills/app-intents-specialist/` — App Intents 규약 (버전 무관)
 
@@ -165,34 +179,23 @@ Apple이 직접 쓴 SwiftUI 정석. 성능·구조·데이터 흐름 판단이 �
 | `entity-collection.md` | `EntityCollection<Entity>` — 대량 엔티티를 id 우선으로 다뤄 강제 전량 해석 회피 (27) |
 | `union-values.md` | `AppUnionValue` — `@UnionValue` 타입을 Shortcuts 파라미터로 노출 (27) |
 
-### 3-5. `skills/uikit-app-modernization/` — UIKit 멀티윈도우 현대화
+### 3-5. `skills/app-resizability/` — 창 크기가 바뀌는 앱 · 폴더블 iPhone Duo 대응 (Xcode 27.2 beta 2 신규)
 
-레거시 전역 상태 API를 컨텍스트 기반 API로 교체. 이 프로젝트는 SwiftUI 중심이라 우선순위는 낮다.
-업스트림은 이 팩을 그대로 두고 상위 호환인 `app-resizability`(§3-6)를 추가했다 — 새 작업은 3-6 을 먼저 본다.
-
-| reference | 내용 |
-|-----------|------|
-| `uiscreen-task.md` | `UIScreen.main` 제거 및 컨텍스트별 대체 |
-| `orientation-task.md` | 레이아웃용 orientation 체크 → size class / window bounds |
-| `scene-lifecycle-task.md` | AppDelegate → SceneDelegate 마이그레이션 |
-| `safe-area-task.md` | 하드코딩 inset → safe area, 비대칭 safe area 대응 |
-
-### 3-6. `skills/app-resizability/` — 창 크기가 바뀌는 앱 · 폴더블 iPhone Duo 대응 (Xcode 27.2 beta 2 신규)
-
-`uikit-app-modernization` 의 상위 호환이다. 같은 4개 task 에 **`userInterfaceIdiom` 교체**(`idiom-task.md`)가 추가됐고,
+UIKit 멀티윈도우 현대화 스킬팩이다. Xcode 27 beta 1 의 `uikit-app-modernization`(4개 task)을 대체했고(2026-11-22 삭제),
+거기에 **`userInterfaceIdiom` 교체**(`idiom-task.md`)가 추가됐다.
 "iPhone Duo(폴더블) 대비"·"Stage Manager/분할 화면"·"창이 실행 중 크기 변경" 요청이면 Task Registry 전부를 돌리도록 돼 있다.
 SKILL.md 의 Core Principles(TODO 금지·제어 흐름 보존·범위 밖 정리 금지 등 14항)는 UIKit 현대화 작업 전반의 리뷰 기준으로도 쓸 만하다.
 이 프로젝트는 SwiftUI 중심이라 직접 적용할 UIKit 코드는 적지만, `UIScreen.main`·`safeAreaInsets` 를 쓰는 브리지 코드가 생기면 여기를 본다.
 
 | reference | 내용 |
 |-----------|------|
-| `uiscreen-task.md` | `UIScreen.main` → `traitCollection.displayScale`/윈도우·씬 기반 대체 (uikit 판보다 패턴 보강) |
+| `uiscreen-task.md` | `UIScreen.main` → `traitCollection.displayScale`/윈도우·씬 기반 대체 |
 | `orientation-task.md` | 레이아웃용 orientation 체크 → size class / window bounds, deprecated 씬 geometry 콜백 이관 |
-| `scene-lifecycle-task.md` | AppDelegate → SceneDelegate (uikit 판과 동일) |
-| `safe-area-task.md` | `topLayoutGuide`/`bottomLayoutGuide`·하드코딩 inset 제거, 비대칭·실행 중 변하는 safe area 대응 (uikit 판보다 대폭 확장) |
+| `scene-lifecycle-task.md` | AppDelegate → SceneDelegate 마이그레이션 |
+| `safe-area-task.md` | `topLayoutGuide`/`bottomLayoutGuide`·하드코딩 inset 제거, 비대칭·실행 중 변하는 safe area 대응 |
 | `idiom-task.md` | 레이아웃 목적의 `userInterfaceIdiom` 분기 → size class, 꼭 필요한 idiom 은 로컬 trait collection 에서 읽기 |
 
-### 3-7. `skills/building-document-based-swiftui-applications/` — 문서 기반 SwiftUI 앱
+### 3-6. `skills/building-document-based-swiftui-applications/` — 문서 기반 SwiftUI 앱
 
 SDK 27 `Document` 프로토콜 기반. 현재 UMC 앱에는 해당 없음(참고용).
 
@@ -202,7 +205,7 @@ SDK 27 `Document` 프로토콜 기반. 현재 UMC 앱에는 해당 없음(참고
 | `migrating-document-apps.md` | `FileDocument`/`ReferenceFileDocument` → `Document` 마이그레이션 (before/after 예시) |
 | `uniform-type-identifiers.md` | 커스텀 `UTType` 선언·검증 — 상속 계층, export vs import, `uttype` CLI |
 
-### 3-8. `skills/audit-xcode-security-settings/` — Xcode 보안 빌드 설정 감사
+### 3-7. `skills/audit-xcode-security-settings/` — Xcode 보안 빌드 설정 감사
 
 컴파일러 경고·정적 분석·Enhanced Security를 단계적으로 켜는 워크플로. 릴리스 하드닝 검토 시 참고.
 Xcode 27.2 beta 2 반영분: **Checked Pointer Arithmetic**(Apply Step 4, `arm64e.x1` 슬라이스 +
@@ -231,13 +234,13 @@ Xcode 27.2 beta 2 반영분: **Checked Pointer Arithmetic**(Apply Step 4, `arm64
 
 보조 스크립트: `scripts/filter_build_settings.py` — 빌드 설정 JSON을 추적 대상 매크로만 남기고 필터.
 
-### 3-9. `skills/c-bounds-safety/` · 3-10. `skills/adopt-c-bounds-safety/` — C `-fbounds-safety`
+### 3-8. `skills/adopt-c-bounds-safety/` — C `-fbounds-safety`
 
 C 코드용 경계 안전성 언어 확장. 이 프로젝트는 순수 Swift라 **현재 해당 없음**.
-두 스킬은 같은 주제이며 `references/adoption-strategies.md` 와 `SKILL.md` 만 다르다
-(`adopt-` 쪽이 기존 코드 도입 워크플로에 초점). 업스트림에 둘 다 존재해 그대로 보존했다.
+기존 C 코드에 도입하는 워크플로에 초점을 둔다. `audit-xcode-security-settings` 가 `ENABLE_C_BOUNDS_SAFETY` 도입을
+이 스킬로 넘긴다. Xcode 27 beta 1 의 `c-bounds-safety` 를 beta 3 에서 대체했다(2026-11-22 삭제).
 
-| reference (양쪽 공통) | 내용 |
+| reference | 내용 |
 |-----------|------|
 | `language-overview.md` | 포인터 종류·`__counted_by` 등 어노테이션·규칙 |
 | `adoption-strategies.md` | 기존 C 프로젝트 도입 워크플로 (full / header-only 모드) |
@@ -245,7 +248,7 @@ C 코드용 경계 안전성 언어 확장. 이 프로젝트는 순수 Swift라 
 | `build-settings.md` | 컴파일러 플래그·Xcode 빌드 설정·soft trap 모드·`ptrcheck.h` |
 | `runtime-debugging.md` | 경계 위반 런타임 디버깅 — trap 동작, LLDB, 워치포인트, 크래시 로그 |
 
-### 3-11. `skills/xctrace/` — Instruments CLI로 성능 분석 (Xcode 27.2 beta 3 신규)
+### 3-9. `skills/xctrace/` — Instruments CLI로 성능 분석 (Xcode 27.2 beta 3 신규)
 
 `xctrace` 로 트레이스를 기록하고 `.trace`·`.atrc`(Apple Trace) 파일을 터미널에서 읽는다.
 앱이 느리거나 CPU·메모리를 많이 쓰거나 멈출 때, 또는 최적화 전후를 측정할 때 쓴다.
@@ -259,9 +262,9 @@ SKILL.md 지시대로 **`xctrace` 명령을 실행하기 전에 `xctrace-overvie
 
 ---
 
-## 4. 반영하지 않은 업스트림 자료
+## 4. 반영하지 않은 자료
 
-업스트림 나머지 파일은 **Xcode 내장 어시스턴트의 내부 프롬프트 배관**이라 프레임워크 레퍼런스로서의 가치가 없어 가져오지 않았다. 필요하면 원본을 직접 본다.
+Xcode 번들(=업스트림) 나머지 파일은 **Xcode 내장 어시스턴트의 내부 프롬프트 배관**이라 프레임워크 레퍼런스로서의 가치가 없어 가져오지 않았다. 필요하면 원본을 직접 본다.
 
 | 미반영 자료 | 사유 |
 |------------|------|
@@ -269,50 +272,71 @@ SKILL.md 지시대로 **`xctrace` 명령을 실행하기 전에 `xctrace-overvie
 | `AgentVersions.plist` · `IDEIntelligenceChat.xcplugindata` · `bert-estimate.vocab` | 바이너리/설정 자산 |
 | `ChatPromptInput.xclangspec` · `Xcode.SourceCodeLanguage.ChatPromptInput.plist` | Xcode 채팅 입력창의 `@` 참조·`/` 명령 문법 정의 (27.2 beta 3 추가) |
 | `README.md` | 업스트림 저장소 안내문 |
+| 업스트림에만 남은 옛 스킬 (`c-bounds-safety`, `uikit-app-modernization`, `swiftui-whats-new-27` 의 `deprecations`·`document-based-apps`) | 업스트림은 Xcode 가 지운 파일을 따라 지우지 않는다. 현재 Xcode 번들에 없고 어떤 `SKILL.md` 도 참조하지 않는다 |
 
 ## 5. 갱신 방법
 
-업스트림이 다시 바뀌면 아래를 실행한 뒤 이 인덱스의 표를 손본다.
+Xcode 를 올렸거나 업스트림에 새 커밋이 생기면 아래를 **bash 로** 실행한 뒤 이 인덱스의 표를 손본다.
+정본은 설치된 Xcode 번들이다. 업스트림은 Xcode 가 지운 파일을 남겨 두므로 그대로 복사하면 잔존물이 섞인다.
+
+### 5-1. 설치된 Xcode 번들에서 동기화 (정본)
 
 ```bash
-PINNED=801762d709c9a280b2c7c9f9f375656aa7bdfff2   # 현재 반영된 커밋 (문서 상단과 동일하게 유지할 것)
-SRC=/tmp/x27                                        # 작업용 임시 경로 — 아무 데나 괜찮다
+SRC=/Applications/Xcode.app/Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources
 DEST=docs/claude/apple-frameworks
+STAGE=$(mktemp -d)                                   # 정규화한 사본을 먼저 여기에 만든다
 
-git clone https://github.com/artemnovichkov/xcode-27-system-prompts.git "$SRC"   # --depth 1 금지: diff 를 위해 전체 히스토리 필요
+xcodebuild -version                                  # 문서 상단 "동기화 기준"에 적을 버전·빌드 번호
 
-# 1) 무엇이 바뀌었는지 먼저 확인 — 신규 스킬팩/삭제/개명을 여기서 잡는다
-git -C "$SRC" diff --stat "$PINNED"..HEAD
-git -C "$SRC" diff --name-status "$PINNED"..HEAD
-
-# 2) 복사
-
-cp "$SRC"/AdditionalDocumentation/*.md "$DEST"/
-
+# 1) 정규화 복사 — .idechatprompttemplate → SKILL.md, <스킬>-ref-<이름>.md.packaged → references/<이름>.md
+cp "$SRC"/AdditionalDocumentation/*.md "$STAGE"/
 shopt -s nullglob
 cd "$SRC"
 for t in *.idechatprompttemplate; do
     name="${t%.idechatprompttemplate}"
     refs=("$name"-ref-*.md.packaged)
     [ ${#refs[@]} -gt 0 ] || continue          # -ref- 동반 파일이 있는 것만 스킬팩
-    mkdir -p "$OLDPWD/$DEST/skills/$name/references"
-    cp "$t" "$OLDPWD/$DEST/skills/$name/SKILL.md"
+    mkdir -p "$STAGE/skills/$name/references"
+    cp "$t" "$STAGE/skills/$name/SKILL.md"
     for r in "${refs[@]}"; do
         ref="${r#$name-ref-}"; ref="${ref%.packaged}"
-        cp "$r" "$OLDPWD/$DEST/skills/$name/references/$ref"
+        cp "$r" "$STAGE/skills/$name/references/$ref"
     done
     for s in "$name"-script-*; do
-        mkdir -p "$OLDPWD/$DEST/skills/$name/scripts"
-        cp "$s" "$OLDPWD/$DEST/skills/$name/scripts/${s#$name-script-}"
+        mkdir -p "$STAGE/skills/$name/scripts"
+        cp "$s" "$STAGE/skills/$name/scripts/${s#$name-script-}"
     done
 done
+cd "$OLDPWD"
+
+# 2) 무엇이 바뀌었는지 확인 — 신규·삭제·개정을 여기서 잡는다 (INDEX.md 는 이 저장소에만 있다)
+diff -rq "$STAGE" "$DEST" | grep -v 'INDEX.md'
+
+# 3) 반영 — Xcode 가 지운 파일도 같이 지운다
+rsync -a --delete --exclude INDEX.md "$STAGE"/ "$DEST"/
 ```
 
-- `.idechatprompttemplate` → `SKILL.md`, `<스킬>-ref-<이름>.md.packaged` → `references/<이름>.md` 로 정규화한다.
-  (확장자만 바꾼 것이고 내용은 무손실 복사)
-- **작업 후 이 문서 상단의 "동기화 기준 커밋"과 위 `PINNED` 값을 새 SHA로 갱신한다.**
-  이걸 빼먹으면 다음 사람이 diff 기준점을 잃는다.
-- 위 루프는 `-ref-` 동반 파일이 있는 것만 스킬팩으로 본다. 업스트림이 reference 없는 단일 스킬을
-  추가하면 자동으로 누락되므로, 1)의 `--name-status` 출력을 눈으로 확인할 것.
+- 내용은 무손실 복사다. 확장자와 파일 위치만 바꾼다.
+- 위 루프는 `-ref-` 동반 파일이 있는 것만 스킬팩으로 본다. reference 없는 단일 스킬이 추가되면 자동으로
+  누락되므로, `ls "$SRC"/*.idechatprompttemplate` 목록을 §4 미반영 표와 눈으로 대조할 것.
+- **작업 후 문서 상단 "동기화 기준"의 Xcode 버전·빌드 번호와 확인 날짜를 갱신한다.**
+
+### 5-2. 업스트림으로 변경 내역 확인 (보조)
+
+Xcode 를 아직 올리지 않았을 때 베타에서 무엇이 바뀌는지 미리 보거나, 바뀐 시점을 추적할 때 쓴다.
+
+```bash
+PINNED=801762d709c9a280b2c7c9f9f375656aa7bdfff2   # 마지막으로 확인한 업스트림 커밋 (문서 상단과 같게 유지)
+SRC=$(mktemp -d)
+git clone https://github.com/artemnovichkov/xcode-27-system-prompts.git "$SRC"   # --depth 1 금지: diff 에 전체 히스토리 필요
+
+git -C "$SRC" diff --stat "$PINNED"..HEAD
+git -C "$SRC" diff --name-status "$PINNED"..HEAD
+git -C "$SRC" log --oneline -- '<파일명>'          # 특정 파일이 언제 생기거나 바뀌었는지
+```
+
+- 업스트림 저장소 루트가 Xcode 번들의 `Resources/` 와 같은 구조라, 5-1 의 `SRC` 를 clone 경로로 바꾸면 같은 루프로
+  정규화할 수 있다. 다만 Xcode 가 지운 파일이 남아 있으니 `SKILL.md` 가 참조하지 않는 파일은 반영하지 않는다.
+- **확인 후 문서 상단 업스트림 기준 커밋과 위 `PINNED` 값을 새 SHA로 갱신한다.**
 - Xcode 28 이 나오면 업스트림 저장소 이름도 `xcode-28-system-prompts` 로 바뀔 가능성이 높다.
   그 경우 `PINNED` 는 새 저장소의 최초 반영 커밋으로 다시 잡는다.

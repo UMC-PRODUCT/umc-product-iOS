@@ -151,7 +151,7 @@ weight 는 `AppFontWeight`(`.regular` 기본, `Font.app(size:weight:)` 는 `.med
 | `Loading/` | `LoadingView` | 로딩 인디케이터 |
 | `Logo/` | `AuthLogoBlock` | 인증 화면 로고 블록 |
 | `MainButton/` | `MainButton` (+ Size/Environment/Modifiers) | 주요 CTA 버튼 |
-| `Member/` | `MemberSafetyProfileView` · `MemberReportFormViewModel` | 참여자·메시지 발신자 프로필의 차단·신고 공통 메뉴와 신고 폼 (이 폴더 때문에 `CoreUIComponents` 가 `CoreDomain` 에 의존) |
+| `Member/` | `MemberSafetyProfileView` · `MemberReportFormViewModel` | 참여자·메시지 발신자 프로필 시트의 틀 — 닫기·차단·신고 메뉴와 신고 폼. 폼 안의 프로필 내용은 띄우는 쪽이 `content` 로 넣는다(#1681, 스레드는 `ThreadMemberProfileContent`). 이 폴더 때문에 `CoreUIComponents` 가 `CoreDomain` 에 의존 |
 | `PlaceSelectView/` | `PlaceSelectView` · `MapPlacePickerView` · `PlaceSelection` | 장소 선택 (지도 피커·POI 길게 누르기 팁) |
 | `Progress/` | `Progress` (+ `ProgressSize`) | 진행률 표시 |
 | `Schedule/` | `DatePickerRow` · `TimePickerRow` · `DateTimeRow` · `InPersonToggle` · `AttendancePolicyTimeSection` | 일정 등록 폼 행 |
