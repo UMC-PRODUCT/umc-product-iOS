@@ -20,6 +20,9 @@
 > `swiftui-whats-new-27/references/document-based-apps.md`(beta 5 에 `building-document-based-swiftui-applications` 로 분리),
 > `swiftui-whats-new-27/references/deprecations.md`(같은 beta 5 에 `SKILL.md` 목록에서 빠짐).
 > 지운 원문이 필요하면 업스트림 `b52f3441`(Xcode 27 beta 1)에서 본다.
+> `c-bounds-safety` 는 #1264, `uikit-app-modernization` 은 #1567 이 "업스트림에 남아 있으니 보존"하기로 했던 것이다.
+> 이번에 Xcode 번들을 정본으로 삼으면서 이 결정을 뒤집었다. 두 팩이 Xcode 에서 빠진 대체 전 판이라는 것이
+> 확인됐기 때문이다.
 >
 > 그 이전 `e132fcf8`(2026-09-29) → `801762d7` 반영분(2026-11-15, #1662): Xcode 27.2 beta 3 에서 스킬팩
 > **`xctrace` 신규**(Instruments CLI 로 트레이스 수집·`.trace`/`.atrc` 읽기·행(hang) 분류, reference 2종).
