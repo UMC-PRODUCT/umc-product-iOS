@@ -11,14 +11,6 @@ import MyPageDomain
 import SwiftUI
 import UMCFoundation
 
-/// 명함 이메일·외부 링크의 공개 여부를 고르고 링크를 입력·정렬하는 섹션 (#1678 · #1679).
-///
-/// 이메일은 따로 입력받지 않고 계정 이메일을 보여 주기만 한다 — 공개 여부만 고른다.
-/// 링크 줄 순서가 명함 뒷면 우선순위다. 설정 앱 「선호하는 언어」처럼 손잡이가 늘 보이고
-/// 바로 끌어서 옮긴다. 공개한 링크 중 맨 위에서부터 값 있는 첫 링크가 명함에 보인다.
-///
-/// 공개 여부는 서버에서 읽은 뒤에야 알 수 있어, 읽기 전에는 입력칸 대신 진행·실패 행을 둔다 —
-/// 빈 칸을 먼저 보여 주면 입력한 값이 조회 결과에 덮인다.
 struct CardContactEditSection: View {
 
     // MARK: - Property
@@ -31,30 +23,18 @@ struct CardContactEditSection: View {
     private let onMove: (IndexSet, Int) -> Void
     private let onRetry: () -> Void
 
+    @Environment(\.editMode) private var editMode
+    @State private var editingLink: SocialLinkType?
+    @FocusState private var focusedLink: SocialLinkType?
+
     private enum Constants {
-        /// 시안 아이콘 틀 (`Figma item/MypageModify/link` 실측 32×32, 라운드 8).
-        static let iconSize: CGFloat = 32
-        static let iconRadius: CGFloat = 8
         static let emailTitle = "이메일"
-        static let emailIcon = "envelope.fill"
         static let noEmail = "등록된 이메일이 없어요"
         static let publicTitle = "공개"
         static let privateTitle = "비공개"
-        static let publicIcon = "lock.open"
-        static let privateIcon = "lock.fill"
-        static let visibilitySpacing: CGFloat = 4
-        static let visibilityIconWidth: CGFloat = 16
-        static let visibilityMinWidth: CGFloat = 60
-        static let visibilityLabelSuffix = " 공개 여부"
-        static let visibilityHint = "두 번 탭하면 공개 여부를 바꿉니다."
         static let loadingTitle = "연락처·링크를 불러오는 중"
         static let failureTitle = "연락처·링크를 불러오지 못했어요."
         static let retryTitle = "다시 시도"
-        static let footer = """
-            명함 뒷면에는 공개한 링크 중 이 목록에서 링크가 입력된 첫 번째 항목이 보여요. \
-            오른쪽 손잡이를 끌어 순서를 바꿀 수 있어요. \
-            공개한 정보는 다른 회원이 스레드에서 내 프로필을 볼 때도 표시돼요.
-            """
     }
 
     // MARK: - Init
@@ -92,15 +72,52 @@ struct CardContactEditSection: View {
                 ForEach(linkPriority, id: \.rawValue) { type in
                     linkRow(type)
                 }
-                .onMove(perform: onMove)
+                .onMove(perform: isReordering ? onMove : nil)
             }
         }, header: {
-            SectionHeaderView(title: header, weight: .semibold)
+            HStack {
+                SectionHeaderView(title: header, weight: .semibold)
+                Spacer()
+                if case .loaded = loadState {
+                    Button {
+                        endEditing()
+                        editMode?.wrappedValue = isReordering ? .inactive : .active
+                    } label: {
+                        Text(isReordering ? "정렬 마침" : "순서 변경")
+                            .appFont(.footnote, weight: .semibold, color: Color.teal600)
+                            .frame(minHeight: DefaultConstant.minimumTouchTarget)
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel(isReordering ? "링크 정렬 마침" : "링크 순서 변경")
+                }
+            }
         }, footer: {
             if case .loaded = loadState {
-                Text(Constants.footer)
+                VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+                    Text(cardLinkSummary)
+                    Text("공개한 정보는 다른 회원이 스레드에서 내 프로필을 볼 때도 표시돼요.")
+                }
             }
         })
+        .onChange(of: focusedLink) { previous, current in
+            if current == nil, editingLink == previous {
+                editingLink = nil
+            }
+        }
+    }
+
+    private var isReordering: Bool {
+        editMode?.wrappedValue.isEditing == true
+    }
+
+    private var cardLinkSummary: String {
+        let firstLink = linkPriority.first { type in
+            let item = settings.link(type)
+            let address = item.value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return item.isPublic && !address.isEmpty
+        }
+        guard let firstLink else { return "명함 뒷면에 표시할 공개 링크가 없어요." }
+        return "명함 뒷면에 표시되는 링크 · \(firstLink.title)"
     }
 
     // MARK: - View Component
@@ -115,91 +132,122 @@ struct CardContactEditSection: View {
         }
     }
 
-    /// 이메일은 고칠 수 없는 값이라 입력칸이 아니라 글자로 둔다. 순서에도 끼지 않는다 —
-    /// 명함 뒷면에서 이메일은 늘 링크 위다.
     private var emailRow: some View {
-        HStack(spacing: DefaultSpacing.spacing8) {
-            // 브랜드 아이콘처럼 틀을 꽉 채운 색 바탕에 흰 기호를 얹는다. 바탕을 기호 크기에
-            // 맞추면 가로로 긴 봉투 모양을 따라 틀이 납작해진다.
-            iconFrame(
+        VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            rowHeader(title: Constants.emailTitle, isPublic: $settings.isEmailPublic) {
                 Color.accentColor.overlay {
-                    Image(systemName: Constants.emailIcon)
+                    Image(systemName: "envelope.fill")
                         .resizable()
                         .scaledToFit()
                         .padding(DefaultSpacing.spacing8)
                         .foregroundStyle(.white)
                 }
-            )
+            }
 
-            Text(email.isEmpty ? Constants.noEmail : email)
-                .foregroundStyle(email.isEmpty ? .secondary : .primary)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityLabel(Constants.emailTitle)
-                .accessibilityValue(email.isEmpty ? Constants.noEmail : email)
-                .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
-
-            visibilityButton(isPublic: $settings.isEmailPublic, title: Constants.emailTitle)
+            Text(verbatim: email.isEmpty ? Constants.noEmail : email)
+                .font(.app(.subheadline))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
     }
 
     private func linkRow(_ type: SocialLinkType) -> some View {
-        HStack(spacing: DefaultSpacing.spacing8) {
-            // 시안(12804:30609)은 SF Symbol 틴트가 아니라 서비스 브랜드 이미지를 쓴다 —
-            // 설정 화면 외부 링크 행(ProfileLinkSection)과 같은 에셋.
-            iconFrame(
+        let item = linkBinding(type)
+        return VStack(alignment: .leading, spacing: DefaultSpacing.spacing4) {
+            rowHeader(title: type.title, isPublic: item.isPublic) {
                 type.brandIcon
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
-            )
+                    .scaledToFit()
+            }
 
-            TextField("", text: linkBinding(type).value, prompt: Text(type.placeholder))
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .keyboardType(.URL)
-                .accessibilityLabel(type.title)
-                // 구분선은 행의 첫 글자에 맞춰 그려지는데, 입력칸은 글자로 치지 않아 공개 버튼
-                // 문구에 붙는다. 입력칸 앞에서 시작하도록 맞춘다.
-                .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
+            if editingLink == type {
+                TextField(type.placeholder, text: item.value, axis: .vertical)
+                    .font(.app(.subheadline))
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .keyboardType(.URL)
+                    .focused($focusedLink, equals: type)
+                    .onAppear { focusedLink = type }
+                    .accessibilityLabel("\(type.title) 주소")
+            } else {
+                Button {
+                    editingLink = type
+                } label: {
+                    let rawValue = item.wrappedValue.value
+                    let address = rawValue.isEmpty ? type.placeholder : rawValue
+                    Text(verbatim: displayAddress(address))
+                        .font(.app(.subheadline))
+                        .foregroundStyle(rawValue.isEmpty ? .tertiary : .secondary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(
+                            maxWidth: .infinity,
+                            minHeight: DefaultConstant.minimumTouchTarget,
+                            alignment: .leading
+                        )
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(type.title) 주소 편집")
+                .accessibilityValue(item.wrappedValue.value)
+            }
+        }
+        .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
+    }
 
-            visibilityButton(isPublic: linkBinding(type).isPublic, title: type.title)
+    private func rowHeader(
+        title: String,
+        isPublic: Binding<Bool>,
+        @ViewBuilder icon: () -> some View
+    ) -> some View {
+        HStack(spacing: DefaultSpacing.spacing8) {
+            icon()
+                .frame(width: DefaultSpacing.spacing32, height: DefaultSpacing.spacing32)
+                .clipShape(.rect(cornerRadius: DefaultSpacing.spacing8))
+                .accessibilityHidden(true)
+
+            Text(title)
+                .appFont(.callout, weight: .semibold)
+            Spacer(minLength: DefaultSpacing.spacing4)
+            visibilityButton(isPublic: isPublic, title: title)
         }
     }
 
-    /// 장식 — 입력칸 라벨이 이미 어떤 항목인지 말한다.
-    private func iconFrame(_ icon: some View) -> some View {
-        icon
-            .frame(width: Constants.iconSize, height: Constants.iconSize)
-            .clipShape(.rect(cornerRadius: Constants.iconRadius))
-            .accessibilityHidden(true)
-    }
-
-    /// 자물쇠 모양으로 공개·비공개를 바꾸는 버튼 (Android와 같은 위치·문구).
-    ///
-    /// 폭은 더 긴 「비공개」에 맞춰 고정한다. 문구 길이대로 두면 누를 때마다 입력칸 폭이
-    /// 바뀌고, 리스트 행 안의 `Label` 은 문구를 숨기고 아이콘만 남긴다.
     private func visibilityButton(isPublic: Binding<Bool>, title: String) -> some View {
-        Button {
+        let value = isPublic.wrappedValue
+        return Button {
+            endEditing()
             isPublic.wrappedValue.toggle()
         } label: {
-            let icon = isPublic.wrappedValue ? Constants.publicIcon : Constants.privateIcon
-            HStack(spacing: Constants.visibilitySpacing) {
-                Image(systemName: icon)
-                    .frame(width: Constants.visibilityIconWidth)
-                Text(isPublic.wrappedValue ? Constants.publicTitle : Constants.privateTitle)
-            }
+            Label(
+                value ? Constants.publicTitle : Constants.privateTitle,
+                systemImage: value ? "lock.open" : "lock.fill"
+            )
+            .labelStyle(.titleAndIcon)
             .appFont(.footnote, weight: .semibold)
-            .foregroundStyle(isPublic.wrappedValue ? Color.accentColor : Color.secondary)
-            .frame(minWidth: Constants.visibilityMinWidth, alignment: .leading)
-            .fixedSize()
+            .foregroundStyle(value ? Color.teal600 : Color.secondary)
+            .frame(minHeight: DefaultConstant.minimumTouchTarget)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.borderless)
-        .accessibilityLabel(title + Constants.visibilityLabelSuffix)
-        .accessibilityValue(isPublic.wrappedValue ? Constants.publicTitle : Constants.privateTitle)
-        .accessibilityHint(Constants.visibilityHint)
+        .accessibilityLabel("\(title) 공개 여부")
+        .accessibilityValue(value ? Constants.publicTitle : Constants.privateTitle)
+        .accessibilityHint(value ? "비공개로 바꿉니다." : "공개로 바꿉니다.")
     }
 
     // MARK: - Function
+
+    private func endEditing() {
+        focusedLink = nil
+        editingLink = nil
+    }
+
+    private func displayAddress(_ address: String) -> String {
+        let prefix = "https://"
+        guard address.lowercased().hasPrefix(prefix) else { return address }
+        return String(address.dropFirst(prefix.count))
+    }
 
     /// 서버가 링크를 늘 5개 주지만, 빠진 종류가 있어도 입력하는 순간 채운다.
     private func linkBinding(_ type: SocialLinkType) -> Binding<CardContactItem> {
