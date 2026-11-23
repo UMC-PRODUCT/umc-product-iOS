@@ -105,6 +105,26 @@ let useCase = container.resolve(LoginUseCaseProtocol.self)
 - `resetCache()` / `resetCache(for:)`: 로그아웃 시 전체 또는 타입별 초기화.
 - 등록 파일은 Feature 별로 쪼개져 있다: `DIContainer+Auth/Home/Notice/Activity/Community/MyPage/Project/BusinessCard/Maintenance/Authorization/MemberProfile/Certificate/WatchConnectivity.swift`.
 
+### 로컬 영속화 (SwiftData)
+
+앱 전체 `ModelContainer` 는 `UMCAppApp.makeModelContainer()` 하나가 만들고, 저장소를 두 구성으로 나눈다.
+
+| 구성 | 모델 | 동기화 |
+|------|------|--------|
+| 동기화 구성 (기본 저장소) | `NoticeReadRecord` · `AITokenDailyUsageRecord` · `NoticeHistoryData` · `GenerationMappingRecord` · `ReceivedCardRecord` | CloudKit `iCloud.com.umc.product` |
+| 기기 전용 구성 (`DeviceOnly` 저장소) | `CardLinkPriorityRecord`(#1679 명함 링크 우선순위) | 없음 (`cloudKitDatabase: .none`) |
+
+- **새 `@Model` 은 기기 간 동기화가 꼭 필요할 때만 동기화 구성에 넣는다.** 동기화 구성에 넣으면 출시 전에
+  CloudKit 운영 스키마를 배포해야 하고, CloudKit 제약(`@Attribute(.unique)` 금지 등)도 따라야 한다.
+  그렇지 않으면 `deviceOnlyModels` 에 넣는다.
+- CloudKit → 로컬 → 인메모리 순으로 폴백한다. 인메모리로 떨어지면 `UMCAppApp.isEphemeralStore` 를 읽어
+  `AppRootView` 가 "저장되지 않는다"는 안내를 한 번 띄운다.
+- CloudKit 동기화 축은 UMC 계정이 아니라 **Apple ID** 다. 한 Apple ID 로 두 UMC 계정을 쓰면 레코드가 한 저장소에
+  섞이므로, 계정별 데이터는 `ownerMemberId` 열과 저장소의 소유자 술어로 가른다(#1217, `ReceivedCardRecord`·
+  `CardLinkPriorityRecord`).
+- 모든 구성에 `groupContainer: .none` 을 명시한다. 기본값 `.automatic` 은 App Group entitlement 가 있으면
+  위젯용 공유 컨테이너를 저장소 위치로 골라 버린다.
+
 ### 화면 전환 (AppFlow + CoreRouting)
 
 | 계층 | 타입 | 위치 | 역할 |
@@ -121,6 +141,11 @@ let useCase = container.resolve(LoginUseCaseProtocol.self)
 - 넓은 창에서 목록·상세를 나란히 보여 주는 공지·커뮤니티·마이페이지는 `NavigationSplitView` 하나가 목록과 상세를 소유하고,
   상세 경로는 기존 `PathStore` 탭 경로를 그대로 쓴다. 창 크기가 바뀌어도 경로·ViewModel 을 다시 만들지 않으며,
   편집·작성 중인 경로를 목록 선택으로 덮어쓰지 않는다 — `UMCApp/Docs/iPhone-Duo-Adaptive-Layout.md`.
+- 단, **iPhone(`userInterfaceIdiom == .phone`, iPhone Duo 포함)에서는 세 탭 모두 목록을 루트로 둔 단일
+  `NavigationStack`** 을 쓴다(`usesSplitNavigation` — `RootTabView`·`CommunityFeatureView`·`MyPageFeatureView`).
+  접힌 분할 화면이 목록과 상세 사이에 상세 열 루트(빈 안내·프로필 개요)를 끼워 넣어 뒤로 가기가 두 번 필요했기
+  때문이다(#1658·#1683). 앱 destinations 가 `.iPhone` 뿐이라 분할 화면 경로는 지금 실행되지 않는다.
+  고른 항목을 상세 열 루트로 두는 구조로 되살리는 작업은 #1686.
 
 ## Observation 패턴
 

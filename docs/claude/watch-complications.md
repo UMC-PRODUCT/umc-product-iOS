@@ -39,9 +39,9 @@
     → WidgetCenter.reloadAllTimelines() → 워치페이스
 ```
 
-- **워치·익스텐션 어디에도 네트워크 코드가 없다.** 최신값의 유일한 통로는 iPhone 이 `updateApplicationContext` 로 밀어 넣는 `WatchSessionState` 다 (`WatchSessionCoordinator.swift:124-134`, `Models/WatchSessionState.swift:12-16`).
-- 워치 앱은 `didReceiveApplicationContext` 에서 `receivedState` 를 갱신하고 (`WatchSessionCoordinator.swift:302-315`), `ComplicationSyncModifier` 가 이를 관찰해 스냅샷을 저장한다 (`UMCWatchApp/Sources/ComplicationSyncModifier.swift:26-32`). 진입점은 앱 루트의 `.syncsComplication(with:)` 한 줄이다 (`UMCWatchApp/Sources/UMCWatchApp.swift:20-26`).
-- `onChange(…, initial: true)` 인 이유는 **콜드런치 시딩**이다 — WC 활성화 시점에 이미 도착해 있던 컨텍스트에는 델리게이트 콜백이 다시 오지 않아(활성화 완료 시 `receivedApplicationContext` 로 시딩됨, `WatchSessionCoordinator.swift:243-253`), `initial` 이 없으면 첫 값이 그대로 누락된다 (`ComplicationSyncModifier.swift:16-17`).
+- **워치·익스텐션 어디에도 네트워크 코드가 없다.** 최신값의 유일한 통로는 iPhone 이 `updateApplicationContext` 로 밀어 넣는 `WatchSessionState` 다 (`WatchSessionCoordinator.swift:127-138`, `Models/WatchSessionState.swift:12-16`).
+- 워치 앱은 `didReceiveApplicationContext` 에서 `receivedState` 를 갱신하고 (`WatchSessionCoordinator.swift:344-353`, 대입은 `applyReceivedContext` `:258-261`), `ComplicationSyncModifier` 가 이를 관찰해 스냅샷을 저장한다 (`UMCWatchApp/Sources/ComplicationSyncModifier.swift:26-32`). 진입점은 앱 루트의 `.syncsComplication(with:)` 한 줄이다 (`UMCWatchApp/Sources/UMCWatchApp.swift:49`).
+- `onChange(…, initial: true)` 인 이유는 **콜드런치 시딩**이다 — WC 활성화 시점에 이미 도착해 있던 컨텍스트에는 델리게이트 콜백이 다시 오지 않아(활성화 완료 시 `receivedApplicationContext` 로 시딩됨, `WatchSessionCoordinator.swift:310-327`), `initial` 이 없으면 첫 값이 그대로 누락된다 (`ComplicationSyncModifier.swift:16-17`).
 - `WatchSessionState` 를 그대로 저장하지 않고 `ComplicationSnapshot` 으로 줄이는 이유: 워치페이스는 「다음 하나」와 「개수」만 그리는데, 타임라인 리프레시마다 목록 전체를 디코딩하면 매 갱신에 낭비가 붙는다 (`ComplicationSnapshot.swift:13-16`).
 
 ### 2-1) `ComplicationSnapshot` 파생 규칙
@@ -65,13 +65,13 @@
 
 - 파생 로직의 입력이 `WatchSessionState` 라 **WC 계약의 연장**이다. 모듈을 가르면 워치 계약이 바뀔 때마다 두 모듈이 lockstep 으로 움직여야 한다.
 - 익스텐션 타겟은 유닛 테스트에서 import 할 수 없다 — 파생·타임라인 규칙을 익스텐션에 두면 테스트 불가가 된다 (`ComplicationSnapshot.swift:263-266`). Core 에 두면 기존 `CoreWatchConnectivityTests` 스킴이 그대로 잠근다 (§9).
-- 대가로 `CoreWatchConnectivity` 가 `WidgetKit` SDK 를 문다 — `ComplicationStore.save` 가 저장 직후 타임라인을 리로드하기 위해서다. 저장과 리로드를 갈라 두면 호출자가 리로드를 빠뜨려 값이 조용히 낡는다 (`Core/WatchConnectivity/Project.swift:4-5, 13`).
+- 대가로 `CoreWatchConnectivity` 가 `WidgetKit` SDK 를 문다 — `ComplicationStore.save` 가 저장 직후 타임라인을 리로드하기 위해서다. 저장과 리로드를 갈라 두면 호출자가 리로드를 빠뜨려 값이 조용히 낡는다 (`Core/WatchConnectivity/Project.swift:11-12, 20`).
 
 ### 3-2) 익스텐션 타겟 `UMCWatchComplication`
 
-- **번들 ID 는 반드시 워치 앱 번들 ID(`com.umc.product.watchkitapp`)를 prefix 로 가진다** → `com.umc.product.watchkitapp.complication`. 어긋나면 워치 앱이 익스텐션을 임베드하지 못하고 업로드가 거부된다 (`UMCWatchComplication/Project.swift:4-8`).
-- 임베드는 Tuist 가 처리한다 — `UMCWatchApp` 이 `.project(target: "UMCWatchComplication", …)` 을 걸면 워치 앱 PlugIns 에 자동 임베드된다 (`UMCWatchApp/Project.swift:4, 12`). 워크스페이스에도 명시 포함 (`UMCApp/Workspace.swift:11`).
-- 매니페스트는 iOS 위젯(`UMCAppWidget`)과 같은 `widgetExtensionProject` 헬퍼를 쓴다. 헬퍼를 복제하지 않고 `destinations`/`deploymentTargets` 파라미터를 추가한 이유: 익스텐션 Info.plist 의 함정 — `CFBundleDisplayName` 누락 시 ITMS-90360 거부, `CFBundleVersion` 호스트 불일치 시 업로드 거부, `NSExtensionPointIdentifier` — 이 **플랫폼과 무관하게 동일**해서, 두 벌로 가르면 이 지식이 한쪽만 고쳐지는 드리프트가 생긴다 (`Tuist/ProjectDescriptionHelpers/Project+WidgetExtension.swift:16-47`). watchOS 는 `destinations: [.appleWatch]` + `deploymentTargets: .watchOS("26.4")` 만 넘긴다 (`UMCWatchComplication/Project.swift:9-10`).
+- **번들 ID 는 반드시 워치 앱 번들 ID(`com.umc.product.watchkitapp`)를 prefix 로 가진다** → `com.umc.product.watchkitapp.complication`. 어긋나면 워치 앱이 익스텐션을 임베드하지 못하고 업로드가 거부된다 (`UMCWatchComplication/Project.swift:11-15`).
+- 임베드는 Tuist 가 처리한다 — `UMCWatchApp` 이 `.project(target: "UMCWatchComplication", …)` 을 걸면 워치 앱 PlugIns 에 자동 임베드된다 (`UMCWatchApp/Project.swift:25-26`). 워크스페이스에도 명시 포함 (`UMCApp/Workspace.swift:11`).
+- 매니페스트는 iOS 위젯(`UMCAppWidget`)과 같은 `widgetExtensionProject` 헬퍼를 쓴다. 헬퍼를 복제하지 않고 `destinations`/`deploymentTargets` 파라미터를 추가한 이유: 익스텐션 Info.plist 의 함정 — `CFBundleDisplayName` 누락 시 ITMS-90360 거부, `CFBundleVersion` 호스트 불일치 시 업로드 거부, `NSExtensionPointIdentifier` — 이 **플랫폼과 무관하게 동일**해서, 두 벌로 가르면 이 지식이 한쪽만 고쳐지는 드리프트가 생긴다 (`Tuist/ProjectDescriptionHelpers/Project+WidgetExtension.swift:24-57`). watchOS 는 `destinations: [.appleWatch]` + `deploymentTargets: .watchOS("26.4")` 만 넘긴다 (`UMCWatchComplication/Project.swift:16-17`).
 
 ## 4) App Group — `group.com.umc.product.watch`
 
@@ -148,7 +148,7 @@ accented·vibrant 워치페이스에서는 **시스템이 색을 단색으로 �
 | 스위트 | 잠그는 것 |
 |--------|-----------|
 | `ComplicationSnapshotTests` | 다음 세션 선정(끝난 세션 제외·진행 중 우선·동률 규칙), 서버 상태 매핑(§5 표 전체), 창 폴백 3구간, 미확인 개수, 심볼·라벨 유일성, pending 링 배타성 |
-| `ComplicationStoreTests` | 직렬화 왕복(ISO8601 — 소수점 이하 초는 왕복에서 잘린다, `:37-38`), 타임라인 경계 엔트리 순서·상한, 서버 확정 상태의 projection 생존 |
+| `ComplicationStoreTests` | 직렬화 왕복(ISO8601 — 소수점 이하 초는 왕복에서 잘린다, `ComplicationStoreTests.swift:37-38`), 타임라인 경계 엔트리 순서·상한, 서버 확정 상태의 projection 생존 |
 
 실제 App Group 은 서명된 앱에서만 열리므로 스토어 테스트는 임의 suite 이름을 주입한다 — 검증 대상은 컨테이너가 아니라 직렬화와 엔트리 규칙이다 (`Tests/ComplicationStoreTests.swift:12-15, 25-27`).
 
@@ -170,7 +170,7 @@ accented·vibrant 워치페이스에서는 **시스템이 색을 단색으로 �
   - 해결: 쓰기는 항상 `ComplicationStore.shared.save(_:)` 경유
 - 증상: 워치 콜드런치 직후 첫 스냅샷이 워치페이스에 반영 안 됨
   - 원인: `ComplicationSyncModifier` 의 `onChange(…, initial: true)` 가 빠졌다 — 활성화 전에 도착한 컨텍스트는 델리게이트 콜백이 다시 오지 않는다 (`ComplicationSyncModifier.swift:16-17, 28`)
-  - 해결: `initial: true` 유지. 시딩 자체는 `activationDidCompleteWith` 가 담당한다 (`WatchSessionCoordinator.swift:243-253`)
+  - 해결: `initial: true` 유지. 시딩 자체는 `activationDidCompleteWith` 가 담당한다 (`WatchSessionCoordinator.swift:310-327`)
 - 증상: 서버가 새 출석 상태 문자열을 내려보낸 뒤 워치가 창 기반 상태(출석 가능/결석)를 그린다
   - 원인: `from(rawStatus:)` 가 모르는 값은 nil → 창 폴백 (`ComplicationSnapshot.swift:229-241`) — 크래시 대신 의도된 강등이다
   - 해결: 새 문자열을 `from(rawStatus:)` 와 §5 표·테스트에 추가
