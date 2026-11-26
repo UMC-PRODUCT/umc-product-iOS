@@ -308,7 +308,17 @@ struct RootTabView: View {
                         on: .community
                     )
                 },
-                detailRoot: { root in appDestinations(root, tab: .community) }
+                // 스택을 Feature 가 소유해 `tabNavigationStack` 을 거치지 않으므로,
+                // 스택 루트에서 직접 화면 이름을 남긴다 (#1674).
+                detailRoot: { root in
+                    appDestinations(root, tab: .community)
+                        .onAppear {
+                            AppAnalytics.track("screen_view", parameters: [
+                                "screen_name": String(describing: NavigationTab.community),
+                                "screen_class": "RootTabView"
+                            ])
+                        }
+                }
             )
         case .mypage:
             MyPageFeatureView(
@@ -321,7 +331,16 @@ struct RootTabView: View {
                 onOpenProjects: {
                     pathStore.push(ProjectDestination.myProjects, on: .mypage)
                 },
-                detailRoot: { overview in appDestinations(overview, tab: .mypage) }
+                // 커뮤니티와 같은 이유로 스택 루트에서 직접 남긴다 (#1674).
+                detailRoot: { overview in
+                    appDestinations(overview, tab: .mypage)
+                        .onAppear {
+                            AppAnalytics.track("screen_view", parameters: [
+                                "screen_name": String(describing: NavigationTab.mypage),
+                                "screen_class": "RootTabView"
+                            ])
+                        }
+                }
             )
         }
     }
